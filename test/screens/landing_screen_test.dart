@@ -14,7 +14,7 @@ void main() {
   testWidgets('LandingScreen renders branding and tool cards', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
-    expect(find.text('TTRPG Companion Toolkit'), findsOneWidget);
+    expect(find.text('DangerouslyNerdy 5e Toolkit'), findsOneWidget);
     expect(find.text('Select a Tool'), findsOneWidget);
 
     expect(find.text('Animate Objects 5e'), findsOneWidget);

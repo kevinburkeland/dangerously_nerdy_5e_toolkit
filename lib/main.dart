@@ -12,16 +12,16 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase initialization info/warning: $e');
   }
-  runApp(const TtrpgToolkitApp());
+  runApp(const DangerouslyNerdy5eToolkitApp());
 }
 
-class TtrpgToolkitApp extends StatelessWidget {
-  const TtrpgToolkitApp({super.key});
+class DangerouslyNerdy5eToolkitApp extends StatelessWidget {
+  const DangerouslyNerdy5eToolkitApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TTRPG Companion Toolkit',
+      title: 'DangerouslyNerdy 5e Toolkit',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,

@@ -1,5 +1,5 @@
 name: animate_objects_5e
-description: "A D&D 5e Animate Objects spell tracker and batch attack roller app built with Flutter."
+description: "DangerouslyNerdy 5e Toolkit: A D&D 5e combat companion, Animate Objects tracker, and batch dice roller built with Flutter."
 publish_to: 'none'
 version: 1.0.0+1
 

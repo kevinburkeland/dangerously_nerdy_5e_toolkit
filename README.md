@@ -1,6 +1,6 @@
-# 🧙‍♂️ D&D 5e Animate Objects Spell Tracker (Flutter)
+# 🧙‍♂️ DangerouslyNerdy 5e Toolkit
 
-A modern, feature-rich Flutter application designed for Dungeons & Dragons 5th Edition players and DMs to easily track, manage, and batch-attack with animated objects under the *Animate Objects* spell (5th-level Transmutation).
+A modern, feature-rich Flutter application designed for Dungeons & Dragons 5th Edition players and DMs, featuring batch attack rolling for *Animate Objects*, custom dice presets with JSON import/export, and real-time multiplayer dice rooms.
 
 ---
 

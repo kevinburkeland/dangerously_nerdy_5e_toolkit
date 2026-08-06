@@ -17,7 +17,7 @@ class LandingScreen extends StatelessWidget {
             Icon(Icons.widgets, color: Colors.amber, size: 26),
             SizedBox(width: 10),
             Text(
-              'TTRPG Companion Toolkit',
+              'DangerouslyNerdy 5e Toolkit',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -81,7 +81,7 @@ class LandingScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Choose from our suite of 5e D&D player tools designed for quick combat management and dice math.',
+                      'Choose from the DangerouslyNerdy suite of 5e D&D player tools designed for quick combat management, dice math, and room rolls.',
                       style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
                     ),
                   ],
