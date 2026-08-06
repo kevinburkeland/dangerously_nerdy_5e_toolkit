@@ -1,0 +1,79 @@
+# Secrets, Credentials & Local Configs
+*.env
+*.env.*
+.env
+.env.*
+env.json
+key.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+*service_account*.json
+*service-account*.json
+*credentials*.json
+android/local.properties
+**/local.properties
+google-services.json
+GoogleService-Info.plist
+
+# Firebase CLI Logs & Emulators
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
+# Flutter / Dart / Pub related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+**/doc/api/
+**/ephemeral/
+
+# Android Studio / Gradle
+.gradle/
+**/android/.gradle/
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# iOS / macOS
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Pods/
+*.xcworkspace
+*.xcuserdata
+
+# Linux / Windows build outputs
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# IDEs & System files
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
