@@ -62,4 +62,39 @@ void main() {
     expect(find.text('TOTAL DAMAGE'), findsOneWidget);
     expect(find.text('HITS'), findsOneWidget);
   });
+
+  testWidgets('BatchAttackDialog renders cleanly on mobile screen without overflow', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final session = SpellSession(spellLevel: 5);
+    for (int i = 1; i <= 5; i++) {
+      session.addObject(ObjectSize.tiny, customName: 'Silver Coin #$i with a very long name');
+    }
+
+    await tester.pumpWidget(
+      createTestableWidget(
+        BatchAttackDialog(
+          session: session,
+          activeRoomCode: 'MOBILE-99',
+          playerName: 'Mobile Player Merlin',
+        ),
+      ),
+    );
+
+    expect(find.text('Batch Attack Roller'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    final rollButton = find.byType(ElevatedButton).first;
+    await tester.tap(rollButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('TOTAL DAMAGE'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
+
