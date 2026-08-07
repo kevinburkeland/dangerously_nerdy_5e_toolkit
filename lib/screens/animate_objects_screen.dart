@@ -5,6 +5,7 @@ import '../widgets/object_card.dart';
 import '../widgets/batch_attack_dialog.dart';
 import '../widgets/squad_builder.dart';
 import '../widgets/spell_reference.dart';
+import '../widgets/room_banner_widget.dart';
 
 class AnimateObjectsScreen extends StatefulWidget {
   const AnimateObjectsScreen({super.key});
@@ -16,6 +17,10 @@ class AnimateObjectsScreen extends StatefulWidget {
 class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with SingleTickerProviderStateMixin {
   late SpellSession _session;
   late TabController _tabController;
+
+  // Shared Room state
+  String? _activeRoomCode;
+  String? _playerName;
 
   @override
   void initState() {
@@ -35,10 +40,27 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
     super.dispose();
   }
 
+  void _joinRoom(String roomCode, String playerName) {
+    setState(() {
+      _activeRoomCode = roomCode.trim().toUpperCase();
+      _playerName = playerName.trim();
+    });
+  }
+
+  void _leaveRoom() {
+    setState(() {
+      _activeRoomCode = null;
+    });
+  }
+
   void _openBatchAttackDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => BatchAttackDialog(session: _session),
+      builder: (ctx) => BatchAttackDialog(
+        session: _session,
+        activeRoomCode: _activeRoomCode,
+        playerName: _playerName,
+      ),
     );
   }
 
@@ -177,6 +199,16 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           // TAB 1: ACTIVE SQUAD TRACKER
           Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: RoomBannerWidget(
+                  activeRoomCode: _activeRoomCode,
+                  playerName: _playerName,
+                  onJoinRoom: _joinRoom,
+                  onLeaveRoom: _leaveRoom,
+                ),
+              ),
+
               // Point Budget & Quick Action Header
               Container(
                 padding: const EdgeInsets.all(12),

@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
+import '../models/room_roll.dart';
 import '../models/spell_session.dart';
+import '../services/dice_room_service.dart';
 
 class BatchAttackDialog extends StatefulWidget {
   final SpellSession session;
+  final String? activeRoomCode;
+  final String? playerName;
 
-  const BatchAttackDialog({super.key, required this.session});
+  const BatchAttackDialog({
+    super.key,
+    required this.session,
+    this.activeRoomCode,
+    this.playerName,
+  });
 
   @override
   State<BatchAttackDialog> createState() => _BatchAttackDialogState();
@@ -24,6 +33,46 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
         advantageMode: _advantageMode,
         useMaximizedCrits: _useMaximizedCrits,
       );
+
+      if (_summary != null && widget.activeRoomCode != null && widget.playerName != null) {
+        final roomService = DiceRoomService();
+
+        // 1. Broadcast summary roll for overall batch results
+        final summaryRoll = RoomRoll(
+          id: '${DateTime.now().microsecondsSinceEpoch}_summary',
+          roomCode: widget.activeRoomCode!,
+          playerName: widget.playerName!,
+          timestamp: DateTime.now(),
+          formulaString: 'Animate Objects Batch (${_summary!.totalHits}/${_summary!.totalAttacks} Hits vs AC $_targetAc)',
+          total: _summary!.totalDamage,
+          individualRolls: _summary!.results.map((r) => r.totalDamage).toList(),
+          isCrit: _summary!.totalCrits > 0,
+          isFumble: false,
+        );
+        roomService.broadcastRoll(summaryRoll);
+
+        // 2. Broadcast each object attack roll detail
+        for (int i = 0; i < _summary!.results.length; i++) {
+          final res = _summary!.results[i];
+          final obj = res.object;
+
+          String statusText = res.isCrit ? 'CRIT!' : (res.isHit ? 'HIT' : 'MISS');
+          String formulaStr = '${obj.name} (${obj.size.displayName}) +${obj.size.attackBonus} vs AC $_targetAc [$statusText]';
+
+          final objRoll = RoomRoll(
+            id: '${DateTime.now().microsecondsSinceEpoch}_$i',
+            roomCode: widget.activeRoomCode!,
+            playerName: widget.playerName!,
+            timestamp: DateTime.now(),
+            formulaString: formulaStr,
+            total: res.totalDamage,
+            individualRolls: [res.totalToHit, ...res.damageRolls],
+            isCrit: res.isCrit,
+            isFumble: res.finalD20 == 1,
+          );
+          roomService.broadcastRoll(objRoll);
+        }
+      }
     });
   }
 
@@ -52,12 +101,28 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                   children: [
                     const Icon(Icons.flash_on, color: Colors.amber, size: 28),
                     const SizedBox(width: 8),
-                    Text(
-                      'Batch Attack Roller',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.amber,
-                            fontWeight: FontWeight.bold,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Batch Attack Roller',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Colors.amber,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        if (widget.activeRoomCode != null)
+                          Row(
+                            children: [
+                              const Icon(Icons.sensors, color: Colors.cyanAccent, size: 12),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Broadcasting to Room: ${widget.activeRoomCode}',
+                                style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
+                      ],
                     ),
                   ],
                 ),
