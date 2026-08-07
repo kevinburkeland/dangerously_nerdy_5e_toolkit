@@ -17,6 +17,7 @@ android/local.properties
 **/local.properties
 google-services.json
 GoogleService-Info.plist
+lib/firebase_options.dart
 
 # Firebase CLI Logs & Emulators
 firebase-debug.log
