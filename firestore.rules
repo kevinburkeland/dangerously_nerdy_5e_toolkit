@@ -1,14 +1,15 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Shared TTRPG dice rolling rooms and roll history
-    match /rooms/{roomCode} {
-      allow read, write: if true;
-
-      match /rolls/{rollId} {
-        allow read, create: if true;
-        allow update, delete: if false; // Preserve roll integrity (rolls are append-only)
-      }
+    match /rooms/{roomCode}/rolls/{rollId} {
+      allow read: if true;
+      allow create: if request.resource.data.total is number
+                    && request.resource.data.playerName is string
+                    && request.resource.data.playerName.size() > 0
+                    && request.resource.data.playerName.size() <= 30
+                    && request.resource.data.formulaString is string
+                    && request.resource.data.formulaString.size() <= 100;
+      allow update, delete: if false;
     }
   }
 }
