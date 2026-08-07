@@ -143,9 +143,11 @@ class _ImportPresetDialogState extends State<ImportPresetDialog> {
           TextField(
             controller: _importController,
             maxLines: 6,
+            maxLength: 50000,
             style: const TextStyle(
                 color: Colors.white, fontFamily: 'monospace', fontSize: 12),
             decoration: const InputDecoration(
+              counterStyle: TextStyle(color: Colors.white38, fontSize: 10),
               hintText:
                   '[{"name": "Fireball", "dieType": "d6", "count": 8, "modifier": 0}]',
               hintStyle: TextStyle(color: Colors.white24),

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../models/room_roll.dart';
+import '../utils/secure_random.dart';
 
 class RoomSession {
   final String roomCode;
@@ -135,12 +136,10 @@ class DiceRoomService {
   /// Helper to generate a random 4-character uppercase room code
   String generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final random = DateTime.now().microsecondsSinceEpoch;
+    final rng = SecureRng.instance;
     String result = '';
-    int val = random;
     for (int i = 0; i < 4; i++) {
-      result += chars[val % chars.length];
-      val = (val / chars.length).floor();
+      result += chars[rng.nextInt(chars.length)];
     }
     return 'ROOM-$result';
   }

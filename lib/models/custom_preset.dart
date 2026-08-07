@@ -83,5 +83,21 @@ class CustomPreset {
   String toJson() => json.encode(toMap());
 
   factory CustomPreset.fromJson(String source) => CustomPreset.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  CustomPreset copyWith({
+    String? id,
+    String? name,
+    List<DiceEntry>? diceEntries,
+    int? modifier,
+    RollMode? rollMode,
+  }) {
+    return CustomPreset(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      diceEntries: diceEntries ?? this.diceEntries,
+      modifier: modifier ?? this.modifier,
+      rollMode: rollMode ?? this.rollMode,
+    );
+  }
 }
 

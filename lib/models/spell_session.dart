@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'animated_object.dart';
 
+import '../utils/secure_random.dart';
+
 enum RollAdvantage { normal, advantage, disadvantage }
 
 class AttackRollResult {
@@ -60,7 +62,7 @@ class BatchAttackSummary {
 class SpellSession {
   int spellLevel; // 5 to 9
   List<AnimatedObjectInstance> activeObjects;
-  final Random _rng = Random();
+  Random get _rng => SecureRng.instance;
 
   SpellSession({
     this.spellLevel = 5,

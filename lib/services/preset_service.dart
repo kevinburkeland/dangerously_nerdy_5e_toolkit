@@ -87,9 +87,14 @@ class PresetService {
     return const JsonEncoder.withIndent('  ').convert(jsonList);
   }
 
-  /// Imports custom presets from a JSON string
+  /// Imports custom presets from a JSON string with security & payload bounds
   Future<List<CustomPreset>> importPresetsJson(String jsonString) async {
-    final decoded = json.decode(jsonString);
+    final cleanInput = jsonString.trim();
+    if (cleanInput.length > 50000) {
+      throw const FormatException('JSON import payload exceeds maximum size limit (50KB)');
+    }
+
+    final decoded = json.decode(cleanInput);
     List<dynamic> itemsList;
     if (decoded is List) {
       itemsList = decoded;
@@ -99,7 +104,35 @@ class PresetService {
       throw const FormatException('Invalid JSON format for presets');
     }
 
-    final imported = itemsList.map((item) => CustomPreset.fromMap(item as Map<String, dynamic>)).toList();
+    if (itemsList.length > 50) {
+      itemsList = itemsList.take(50).toList();
+    }
+
+    final List<CustomPreset> imported = [];
+    for (final item in itemsList) {
+      if (item is Map<String, dynamic>) {
+        final rawPreset = CustomPreset.fromMap(item);
+
+        final boundedName = rawPreset.name.trim().length > 50
+            ? rawPreset.name.trim().substring(0, 50)
+            : rawPreset.name.trim();
+        final boundedMod = rawPreset.modifier.clamp(-100, 100);
+
+        final boundedEntries = rawPreset.diceEntries.map((e) {
+          final boundedCount = e.count.clamp(1, 100);
+          final boundedSides = e.customSides.clamp(2, 1000);
+          return e.copyWith(count: boundedCount, customSides: boundedSides);
+        }).toList();
+
+        final safePreset = rawPreset.copyWith(
+          name: boundedName.isNotEmpty ? boundedName : 'Custom Preset',
+          modifier: boundedMod,
+          diceEntries: boundedEntries,
+        );
+        imported.add(safePreset);
+      }
+    }
+
     if (imported.isEmpty) return await loadCustomPresets();
 
     if (_cachedPresets == null) {

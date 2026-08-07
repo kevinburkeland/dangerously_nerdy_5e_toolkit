@@ -83,5 +83,33 @@ void main() {
       expect(imported.first.dieType, DieType.d6);
       expect(imported.first.count, 8);
     });
+
+    test('Rejects JSON import exceeding maximum size limit', () async {
+      final service = PresetService();
+      final hugeJson = 'a' * 50001;
+      expect(() => service.importPresetsJson(hugeJson), throwsFormatException);
+    });
+
+    test('Clamps preset count, modifier, and custom sides during JSON import', () async {
+      final service = PresetService();
+      const malformedJson = '''
+      [{
+        "id": "p_malformed",
+        "name": "Very Super Long Name Beyond Fifty Characters Limit Allowed Test",
+        "dieType": "custom",
+        "count": 999,
+        "modifier": 500,
+        "customSides": 9999
+      }]
+      ''';
+
+      final imported = await service.importPresetsJson(malformedJson);
+      expect(imported.length, 1);
+      final item = imported.first;
+      expect(item.name.length, 50);
+      expect(item.count, 100);
+      expect(item.modifier, 100);
+      expect(item.diceEntries.first.customSides, 1000);
+    });
   });
 }
