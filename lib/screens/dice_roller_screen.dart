@@ -250,14 +250,14 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                 onPressed: () => Navigator.pop(context),
               )
             : null,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.casino, color: Colors.cyanAccent, size: 26),
-            SizedBox(width: 10),
-            Text(
+            Image.asset('assets/images/logo.png', width: 28, height: 28),
+            const SizedBox(width: 10),
+            const Text(
               'Dice Roller',
               style: TextStyle(
-                  color: Colors.white,
+                color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 20),
             ),

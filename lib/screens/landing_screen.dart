@@ -12,11 +12,11 @@ class LandingScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E1B2E),
         elevation: 4,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.widgets, color: Colors.amber, size: 26),
-            SizedBox(width: 10),
-            Text(
+            Image.asset('assets/images/logo.png', width: 32, height: 32),
+            const SizedBox(width: 10),
+            const Text(
               'DangerouslyNerdy 5e Toolkit',
               style: TextStyle(
                 color: Colors.white,
@@ -59,12 +59,12 @@ class LandingScreen extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.2),
+                            color: Colors.amber.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.stars, color: Colors.amber, size: 28),
+                          child: Image.asset('assets/images/logo.png', width: 44, height: 44),
                         ),
                         const SizedBox(width: 12),
                         const Expanded(

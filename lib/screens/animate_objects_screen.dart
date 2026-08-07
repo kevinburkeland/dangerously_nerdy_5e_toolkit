@@ -135,11 +135,11 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
                 onPressed: () => Navigator.pop(context),
               )
             : null,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.auto_awesome, color: Colors.amber, size: 24),
-            SizedBox(width: 8),
-            Text(
+            Image.asset('assets/images/logo.png', width: 28, height: 28),
+            const SizedBox(width: 8),
+            const Text(
               'Animate Objects 5e',
               style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 18),
             ),

@@ -107,7 +107,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.flash_on, color: Colors.amber, size: 26),
+                      Image.asset('assets/images/logo.png', width: 28, height: 28),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
