@@ -137,7 +137,7 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
             : null,
         title: Row(
           children: [
-            Image.asset('assets/images/logo.png', width: 28, height: 28),
+            Image.asset('assets/images/logo.png', width: 32, height: 32),
             const SizedBox(width: 8),
             const Text(
               'Animate Objects 5e',

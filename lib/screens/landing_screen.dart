@@ -14,7 +14,7 @@ class LandingScreen extends StatelessWidget {
         elevation: 4,
         title: Row(
           children: [
-            Image.asset('assets/images/logo.png', width: 32, height: 32),
+            Image.asset('assets/images/logo.png', width: 36, height: 36),
             const SizedBox(width: 10),
             const Text(
               'DangerouslyNerdy 5e Toolkit',
@@ -59,20 +59,25 @@ class LandingScreen extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.cyanAccent.withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ],
                           ),
-                          child: Image.asset('assets/images/logo.png', width: 44, height: 44),
+                          child: Image.asset('assets/images/logo.png', width: 68, height: 68),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         const Expanded(
                           child: Text(
                             'Select a Tool',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 22,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
