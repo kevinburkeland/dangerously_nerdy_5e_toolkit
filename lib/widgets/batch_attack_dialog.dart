@@ -3,6 +3,7 @@ import '../models/animated_object.dart';
 import '../models/room_roll.dart';
 import '../models/spell_session.dart';
 import '../services/dice_room_service.dart';
+import 'batch_attack/batch_attack_results_card.dart';
 
 class BatchAttackDialog extends StatefulWidget {
   final SpellSession session;
@@ -330,152 +331,11 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Results Summary Banner
+                      // Results Summary & Detailed Breakdown Card
                       if (_summary != null) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.amber.shade900.withValues(alpha: 0.4),
-                                Colors.purple.shade900.withValues(alpha: 0.4),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.amber, width: 1.5),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: _buildSummaryStat(
-                                    'TOTAL DAMAGE',
-                                    '${_summary!.totalDamage}',
-                                    Colors.orangeAccent,
-                                    fontSize: 22,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: _buildSummaryStat(
-                                    'HITS',
-                                    '${_summary!.totalHits} / ${_summary!.totalAttacks}',
-                                    Colors.greenAccent,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: _buildSummaryStat(
-                                    'CRITS',
-                                    '${_summary!.totalCrits}',
-                                    Colors.yellowAccent,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Detailed Attack Breakdown List
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _summary!.results.length,
-                          itemBuilder: (context, index) {
-                            final res = _summary!.results[index];
-                            final obj = res.object;
-
-                            return Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: res.isHit
-                                    ? Colors.green.withValues(alpha: 0.12)
-                                    : Colors.red.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: res.isCrit
-                                      ? Colors.amber
-                                      : (res.isHit ? Colors.green.withValues(alpha: 0.3) : Colors.red.withValues(alpha: 0.2)),
-                                ),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: obj.size.accentColor,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Flexible(
-                                              child: Text(
-                                                obj.name,
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '(${obj.size.displayName})',
-                                              style: TextStyle(
-                                                color: obj.size.accentColor,
-                                                fontSize: 11,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _formatRollDetail(res),
-                                          style: const TextStyle(color: Colors.white70, fontSize: 11),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  // Result Badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: res.isCrit
-                                          ? Colors.amber
-                                          : (res.isHit ? Colors.green : Colors.red.shade900),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      res.isCrit
-                                          ? '${res.isMaximizedCrit ? "MAX CRIT!" : "CRIT!"} (${res.totalDamage} dmg)'
-                                          : (res.isHit ? '${res.totalDamage} DMG' : 'MISS'),
-                                      style: TextStyle(
-                                        color: res.isCrit ? Colors.black : Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                        BatchAttackResultsCard(
+                          summary: _summary!,
+                          targetAc: _targetAc,
                         ),
                       ],
                     ],
@@ -485,45 +345,6 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
           ],
         ),
       ),
-    );
-  }
-
-
-  String _formatRollDetail(AttackRollResult res) {
-    String rollStr;
-    if (res.d20Roll2 != null) {
-      rollStr = 'd20: [${res.d20Roll1}, ${res.d20Roll2}] -> ${res.finalD20}';
-    } else {
-      rollStr = 'd20: ${res.finalD20}';
-    }
-
-    String toHitStr = '$rollStr + ${res.object.size.attackBonus} = ${res.totalToHit} vs AC $_targetAc';
-
-    if (res.isHit) {
-      String dmgDetails;
-      if (res.isMaximizedCrit && res.maxedRolls != null) {
-        dmgDetails = 'Max: [${res.maxedRolls!.join("+")}] + Roll: [${res.damageRolls.join("+")}] + ${res.damageBonus}';
-      } else {
-        dmgDetails = 'Dice: ${res.damageRolls.join("+")} + ${res.damageBonus}';
-      }
-      return '$toHitStr | $dmgDetails';
-    } else {
-      return toHitStr;
-    }
-  }
-
-  Widget _buildSummaryStat(String label, String value, Color color, {double fontSize = 16}) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white60, fontSize: 10, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          value,
-          style: TextStyle(color: color, fontSize: fontSize, fontWeight: FontWeight.bold),
-        ),
-      ],
     );
   }
 }

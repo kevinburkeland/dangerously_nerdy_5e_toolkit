@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
+import '../widgets/animate_objects/active_session_card.dart';
 import '../widgets/object_card.dart';
 import '../widgets/batch_attack_dialog.dart';
 import '../widgets/squad_builder.dart';
@@ -119,9 +120,6 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
 
   @override
   Widget build(BuildContext context) {
-    final used = _session.usedPoints;
-    final maxPts = _session.maxPoints;
-    final pct = (used / maxPts).clamp(0.0, 1.0);
     final canPop = Navigator.canPop(context);
 
     return Scaffold(
@@ -209,126 +207,14 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
                 ),
               ),
 
-              // Point Budget & Quick Action Header
-              Container(
-                padding: const EdgeInsets.all(12),
-                color: const Color(0xFF191626),
-                child: Column(
-                  children: [
-                    // Budget Bar
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Point Budget: $used / $maxPts points used',
-                          style: TextStyle(
-                            color: used > maxPts ? Colors.redAccent : Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                        Text(
-                          '${_session.activeObjects.length} Objects',
-                          style: const TextStyle(color: Colors.white60, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: pct,
-                        minHeight: 6,
-                        backgroundColor: Colors.white10,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          used > maxPts ? Colors.redAccent : Colors.amber,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Quick Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber,
-                              foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                            ),
-                            onPressed: _openBatchAttackDialog,
-                            icon: const Icon(Icons.flash_on, size: 20),
-                            label: const Text(
-                              'BATCH ATTACK',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3F2B96),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          ),
-                          onPressed: _openSquadBuilder,
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(width: 4),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, color: Colors.white70),
-                          color: const Color(0xFF242038),
-                          onSelected: (val) {
-                            setState(() {
-                              if (val == 'heal') {
-                                _session.healAll();
-                              } else if (val == 'damage') {
-                                _showMassDamageDialog();
-                              } else if (val == 'clear') {
-                                _session.clearAll();
-                              }
-                            });
-                          },
-                          itemBuilder: (ctx) => [
-                            const PopupMenuItem(
-                              value: 'heal',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.health_and_safety, color: Colors.greenAccent, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Heal All Objects', style: TextStyle(color: Colors.white)),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'damage',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.bolt, color: Colors.redAccent, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Apply Group AoE Damage', style: TextStyle(color: Colors.white)),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'clear',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete_sweep, color: Colors.redAccent, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Clear Squad', style: TextStyle(color: Colors.redAccent)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              // Point Budget & Quick Action Header Widget
+              ActiveSessionHeader(
+                session: _session,
+                onBatchAttack: _openBatchAttackDialog,
+                onOpenSquadBuilder: _openSquadBuilder,
+                onHealAll: () => setState(() => _session.healAll()),
+                onShowMassDamageDialog: _showMassDamageDialog,
+                onClearSquad: () => setState(() => _session.clearAll()),
               ),
 
               // Objects List
