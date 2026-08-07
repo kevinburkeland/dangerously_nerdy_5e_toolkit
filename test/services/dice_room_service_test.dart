@@ -39,5 +39,22 @@ void main() {
 
       await service.broadcastRoll(roll);
     });
+
+    test('joinRoom and leaveRoom manage active room session state reactively', () {
+      final service = DiceRoomService();
+      expect(service.activeRoomCode, isNull);
+      expect(service.playerName, isNull);
+
+      service.joinRoom('room-42', 'Legolas');
+      expect(service.activeRoomCode, 'ROOM-42');
+      expect(service.playerName, 'Legolas');
+      expect(service.activeSessionNotifier.value, isNotNull);
+
+      service.leaveRoom();
+      expect(service.activeRoomCode, isNull);
+      expect(service.playerName, isNull);
+      expect(service.activeSessionNotifier.value, isNull);
+    });
   });
 }
+

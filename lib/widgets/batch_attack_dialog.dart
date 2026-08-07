@@ -34,14 +34,17 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
         useMaximizedCrits: _useMaximizedCrits,
       );
 
-      if (_summary != null && widget.activeRoomCode != null && widget.playerName != null) {
+      final activeCode = widget.activeRoomCode ?? DiceRoomService().activeRoomCode;
+      final activePlayer = widget.playerName ?? DiceRoomService().playerName;
+
+      if (_summary != null && activeCode != null && activePlayer != null) {
         final roomService = DiceRoomService();
 
         // 1. Broadcast summary roll for overall batch results
         final summaryRoll = RoomRoll(
           id: '${DateTime.now().microsecondsSinceEpoch}_summary',
-          roomCode: widget.activeRoomCode!,
-          playerName: widget.playerName!,
+          roomCode: activeCode,
+          playerName: activePlayer,
           timestamp: DateTime.now(),
           formulaString: 'Animate Objects Batch (${_summary!.totalHits}/${_summary!.totalAttacks} Hits vs AC $_targetAc)',
           total: _summary!.totalDamage,
@@ -61,8 +64,8 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
 
           final objRoll = RoomRoll(
             id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-            roomCode: widget.activeRoomCode!,
-            playerName: widget.playerName!,
+            roomCode: activeCode,
+            playerName: activePlayer,
             timestamp: DateTime.now(),
             formulaString: formulaStr,
             total: res.totalDamage,
@@ -79,6 +82,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
   @override
   Widget build(BuildContext context) {
     final livingCount = widget.session.activeObjects.where((o) => !o.isDead).length;
+    final currentRoomCode = widget.activeRoomCode ?? DiceRoomService().activeRoomCode;
 
     return Dialog(
       backgroundColor: const Color(0xFF1E1B2E),
@@ -91,7 +95,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
             Row(
@@ -111,13 +115,13 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
-                        if (widget.activeRoomCode != null)
+                        if (currentRoomCode != null)
                           Row(
                             children: [
                               const Icon(Icons.sensors, color: Colors.cyanAccent, size: 12),
                               const SizedBox(width: 4),
                               Text(
-                                'Broadcasting to Room: ${widget.activeRoomCode}',
+                                'Broadcasting to Room: $currentRoomCode',
                                 style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold),
                               ),
                             ],

@@ -76,15 +76,23 @@ class RoomRoll {
       ts = DateTime.now();
     }
 
+    final rawIndiv = map['individualRolls'] as List?;
+    final indivRolls = rawIndiv != null
+        ? rawIndiv.map((e) => (e as num).toInt()).toList()
+        : <int>[];
+
+    final rawDropped = map['droppedRolls'] as List?;
+    final droppedRolls = rawDropped?.map((e) => (e as num).toInt()).toList();
+
     return RoomRoll(
       id: map['id'] as String? ?? '',
       roomCode: map['roomCode'] as String? ?? '',
       playerName: map['playerName'] as String? ?? 'Anonymous',
       timestamp: ts,
       formulaString: map['formulaString'] as String? ?? '',
-      total: map['total'] as int? ?? 0,
-      individualRolls: List<int>.from(map['individualRolls'] as List? ?? []),
-      droppedRolls: map['droppedRolls'] != null ? List<int>.from(map['droppedRolls'] as List) : null,
+      total: (map['total'] as num? ?? 0).toInt(),
+      individualRolls: indivRolls,
+      droppedRolls: droppedRolls,
       isCrit: map['isCrit'] as bool? ?? false,
       isFumble: map['isFumble'] as bool? ?? false,
     );

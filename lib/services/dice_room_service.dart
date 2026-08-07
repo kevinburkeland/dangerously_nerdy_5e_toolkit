@@ -1,12 +1,44 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../models/room_roll.dart';
+
+class RoomSession {
+  final String roomCode;
+  final String playerName;
+
+  RoomSession({
+    required this.roomCode,
+    required this.playerName,
+  });
+}
 
 class DiceRoomService {
   static final DiceRoomService _instance = DiceRoomService._internal();
   factory DiceRoomService() => _instance;
   DiceRoomService._internal();
+
+  // Centralized active room session notifier
+  final ValueNotifier<RoomSession?> activeSessionNotifier = ValueNotifier<RoomSession?>(null);
+
+  String? get activeRoomCode => activeSessionNotifier.value?.roomCode;
+  String? get playerName => activeSessionNotifier.value?.playerName;
+
+  void joinRoom(String roomCode, String playerName) {
+    final cleanCode = roomCode.trim().toUpperCase();
+    final cleanName = playerName.trim();
+    if (cleanCode.isNotEmpty && cleanName.isNotEmpty) {
+      activeSessionNotifier.value = RoomSession(
+        roomCode: cleanCode,
+        playerName: cleanName,
+      );
+    }
+  }
+
+  void leaveRoom() {
+    activeSessionNotifier.value = null;
+  }
 
   // In-memory fallback stream for local/offline testing
   final Map<String, List<RoomRoll>> _localRooms = {};
@@ -122,3 +154,4 @@ class DiceRoomService {
     }
   }
 }
+

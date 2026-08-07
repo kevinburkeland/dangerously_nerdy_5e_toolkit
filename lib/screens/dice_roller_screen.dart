@@ -47,12 +47,6 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     }
   }
 
-  DieType get _primaryDie =>
-      _dicePool.isNotEmpty ? _dicePool.first.dieType : DieType.d20;
-  int get _count => _dicePool.isNotEmpty
-      ? _dicePool.fold(0, (acc, val) => acc + val.count)
-      : 1;
-
   void _addDieToPool(DieType dieType, {int customSides = 6}) {
     final existingIndex = _dicePool.indexWhere(
       (e) =>
@@ -114,7 +108,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
               style: const TextStyle(
                   color: Colors.white, fontWeight: FontWeight.bold),
               decoration: const InputDecoration(
-                labelText: 'Number of Sides',
+                labelText: 'Number of Sides (2 to 1000)',
                 labelStyle: TextStyle(color: Colors.white70),
                 enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white24)),
@@ -136,12 +130,19 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                 foregroundColor: Colors.black),
             onPressed: () {
               final sides = int.tryParse(controller.text.trim());
-              if (sides != null && sides >= 2) {
+              if (sides != null && sides >= 2 && sides <= 1000) {
                 setState(() {
                   _customSides = sides;
                   _onSelectDieChip(DieType.custom, customSides: sides);
                 });
                 Navigator.pop(ctx);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a valid side count between 2 and 1000.'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
               }
             },
             child: const Text('Add Die',
@@ -178,11 +179,13 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
       _history.insert(0, res);
 
       // Broadcast roll to active shared room if connected
-      if (_activeRoomCode != null && _playerName != null) {
+      final roomCode = _roomService.activeRoomCode ?? _activeRoomCode;
+      final player = _roomService.playerName ?? _playerName;
+      if (roomCode != null && player != null) {
         final roomRoll = RoomRoll.fromDiceRollResult(
           id: '${DateTime.now().microsecondsSinceEpoch}',
-          roomCode: _activeRoomCode!,
-          playerName: _playerName!,
+          roomCode: roomCode,
+          playerName: player,
           result: res,
         );
         _roomService.broadcastRoll(roomRoll);
@@ -195,16 +198,6 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
       _dicePool = List<DiceEntry>.from(preset.diceEntries);
       _modifier = preset.modifier;
       _rollMode = preset.rollMode;
-    });
-    _rollDice();
-  }
-
-  void _applyPreset(DieType die, int count, int mod,
-      [RollMode mode = RollMode.normal]) {
-    setState(() {
-      _dicePool = [DiceEntry(dieType: die, count: count)];
-      _modifier = mod;
-      _rollMode = mode;
     });
     _rollDice();
   }
@@ -736,7 +729,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             const SizedBox(height: 24),
 
             // 6. ROLL HISTORY / LIVE ROOM ROLL FEED
-            if (_activeRoomCode != null) ...[
+            if ((_roomService.activeRoomCode ?? _activeRoomCode) != null) ...[
               _buildLiveRoomRollFeed(),
             ] else if (_history.isNotEmpty) ...[
               _buildLocalRollHistory(),
@@ -748,6 +741,8 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   Widget _buildLiveRoomRollFeed() {
+    final activeCode = _roomService.activeRoomCode ?? _activeRoomCode ?? '';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -759,7 +754,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                 const Icon(Icons.sensors, color: Colors.cyanAccent, size: 18),
                 const SizedBox(width: 6),
                 Text(
-                  'Live Feed: $_activeRoomCode',
+                  'Live Feed: $activeCode',
                   style: const TextStyle(
                       color: Colors.cyanAccent,
                       fontWeight: FontWeight.bold,
@@ -775,7 +770,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
         ),
         const SizedBox(height: 8),
         StreamBuilder<List<RoomRoll>>(
-          stream: _roomService.streamRoomRolls(_activeRoomCode!),
+          stream: _roomService.streamRoomRolls(activeCode),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting &&
                 !snapshot.hasData) {

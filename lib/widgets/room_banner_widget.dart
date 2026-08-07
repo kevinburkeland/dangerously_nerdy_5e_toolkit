@@ -5,20 +5,20 @@ import '../services/dice_room_service.dart';
 class RoomBannerWidget extends StatelessWidget {
   final String? activeRoomCode;
   final String? playerName;
-  final Function(String roomCode, String playerName) onJoinRoom;
-  final VoidCallback onLeaveRoom;
+  final Function(String roomCode, String playerName)? onJoinRoom;
+  final VoidCallback? onLeaveRoom;
 
   const RoomBannerWidget({
     super.key,
-    required this.activeRoomCode,
-    required this.playerName,
-    required this.onJoinRoom,
-    required this.onLeaveRoom,
+    this.activeRoomCode,
+    this.playerName,
+    this.onJoinRoom,
+    this.onLeaveRoom,
   });
 
-  void _showJoinCreateRoomDialog(BuildContext context) {
-    final nameController = TextEditingController(text: playerName ?? '');
-    final roomController = TextEditingController(text: activeRoomCode ?? '');
+  void _showJoinCreateRoomDialog(BuildContext context, String? currentName, String? currentRoom) {
+    final nameController = TextEditingController(text: currentName ?? '');
+    final roomController = TextEditingController(text: currentRoom ?? '');
     final DiceRoomService roomService = DiceRoomService();
 
     showDialog(
@@ -49,7 +49,7 @@ class RoomBannerWidget extends StatelessWidget {
                   // Player Name Input
                   TextField(
                     controller: nameController,
-                    autofocus: playerName == null || playerName!.isEmpty,
+                    autofocus: currentName == null || currentName.isEmpty,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Your Display Name',
@@ -119,7 +119,8 @@ class RoomBannerWidget extends StatelessWidget {
                     final name = nameController.text.trim();
                     final room = roomController.text.trim();
                     if (name.isNotEmpty && room.isNotEmpty) {
-                      onJoinRoom(room, name);
+                      DiceRoomService().joinRoom(room, name);
+                      onJoinRoom?.call(room, name);
                       Navigator.pop(ctx);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,83 +144,95 @@ class RoomBannerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isConnected = activeRoomCode != null && activeRoomCode!.isNotEmpty;
+    return ValueListenableBuilder<RoomSession?>(
+      valueListenable: DiceRoomService().activeSessionNotifier,
+      builder: (context, session, _) {
+        final String? effectiveRoom = activeRoomCode ?? session?.roomCode;
+        final String? effectiveName = playerName ?? session?.playerName;
+        final bool isConnected = effectiveRoom != null && effectiveRoom.isNotEmpty;
+        final String roomCode = effectiveRoom ?? '';
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: isConnected ? Colors.cyanAccent.withValues(alpha: 0.1) : const Color(0xFF1E1B2E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isConnected ? Colors.cyanAccent.withValues(alpha: 0.5) : Colors.white12,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isConnected ? Colors.cyanAccent.withValues(alpha: 0.1) : const Color(0xFF1E1B2E),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isConnected ? Colors.cyanAccent.withValues(alpha: 0.5) : Colors.white12,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                isConnected ? Icons.sensors : Icons.sensors_off,
-                color: isConnected ? Colors.cyanAccent : Colors.white38,
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text(
-                    isConnected ? activeRoomCode! : 'Solo Mode',
-                    style: TextStyle(
-                      color: isConnected ? Colors.cyanAccent : Colors.white70,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  Icon(
+                    isConnected ? Icons.sensors : Icons.sensors_off,
+                    color: isConnected ? Colors.cyanAccent : Colors.white38,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isConnected ? roomCode : 'Solo Mode',
+                        style: TextStyle(
+                          color: isConnected ? Colors.cyanAccent : Colors.white70,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        isConnected ? 'Player: ${effectiveName ?? "Anonymous"}' : 'Not connected to a live room',
+                        style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  if (isConnected) ...[
+                    IconButton(
+                      icon: const Icon(Icons.copy, color: Colors.cyanAccent, size: 18),
+                      tooltip: 'Copy Room Code',
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: roomCode));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Copied "$roomCode" to clipboard!'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                  Text(
-                    isConnected ? 'Player: $playerName' : 'Not connected to a live room',
-                    style: const TextStyle(color: Colors.white54, fontSize: 12),
-                  ),
+                    TextButton(
+                      onPressed: () {
+                        DiceRoomService().leaveRoom();
+                        onLeaveRoom?.call();
+                      },
+                      child: const Text('Leave', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
+                    ),
+                  ] else
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),
+                        foregroundColor: Colors.cyanAccent,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      onPressed: () => _showJoinCreateRoomDialog(context, effectiveName, effectiveRoom),
+                      icon: const Icon(Icons.hub, size: 16),
+                      label: const Text('Join / Create Room', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    ),
                 ],
               ),
             ],
           ),
-          Row(
-            children: [
-              if (isConnected) ...[
-                IconButton(
-                  icon: const Icon(Icons.copy, color: Colors.cyanAccent, size: 18),
-                  tooltip: 'Copy Room Code',
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: activeRoomCode!));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Copied "$activeRoomCode" to clipboard!'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                ),
-                TextButton(
-                  onPressed: onLeaveRoom,
-                  child: const Text('Leave', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
-                ),
-              ] else
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),
-                    foregroundColor: Colors.cyanAccent,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  onPressed: () => _showJoinCreateRoomDialog(context),
-                  icon: const Icon(Icons.hub, size: 16),
-                  label: const Text('Join / Create Room', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
+
