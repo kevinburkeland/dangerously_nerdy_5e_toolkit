@@ -4,14 +4,20 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="description" content="DangerouslyNerdy 5e Toolkit - D&D 5e Combat Companion, Animate Objects Tracker, & Dice App">
 
-  <!-- Mobile & PWA meta tags -->
+  <!-- Mobile & Desktop Chrome PWA meta tags -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="5e Toolkit">
   <meta name="theme-color" content="#14121E">
+
+  <!-- Open Graph / Link Previews -->
+  <meta property="og:title" content="DangerouslyNerdy 5e Toolkit">
+  <meta property="og:description" content="D&D 5e Combat Companion, Animate Objects Tracker, & Batch Dice Roller App">
+  <meta property="og:type" content="website">
 
   <!-- Manifest -->
   <link rel="manifest" href="manifest.json">
@@ -19,11 +25,48 @@
   <!-- Favicon and Web App Icons -->
   <link rel="icon" type="image/png" sizes="64x64" href="favicon.png"/>
   <link rel="shortcut icon" type="image/png" href="favicon.png"/>
-  <link rel="apple-touch-icon" href="icons/Icon-192.png"/>
+  <link rel="apple-touch-icon" href="pwa_icons/Icon-192.png"/>
 
   <title>DangerouslyNerdy 5e Toolkit</title>
 </head>
 <body style="background-color: #14121E;">
+  <script>
+    // Register Fetch-enabled Service Worker for Chrome PWA Installation & Offline Support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js').then(function(registration) {
+          console.log('PWA ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('PWA ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+
+    // Capture Chrome beforeinstallprompt event for PWA address bar install button
+    window.deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+      console.log('Chrome PWA beforeinstallprompt captured.');
+    });
+
+    // In-App PWA Install trigger function called by Flutter
+    function triggerPwaInstall() {
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        alert('DangerouslyNerdy 5e Toolkit is already running as an installed application!');
+        return;
+      }
+      if (window.deferredPrompt) {
+        window.deferredPrompt.prompt();
+        window.deferredPrompt.userChoice.then((choiceResult) => {
+          console.log('PWA User choice: ', choiceResult.outcome);
+          window.deferredPrompt = null;
+        });
+      } else {
+        alert('To install DangerouslyNerdy 5e Toolkit on Desktop Chrome:\n\n1. Look at the right side of your Chrome address bar for the Install computer icon.\n2. Or open Chrome Menu (⋮) -> "Save and share" -> "Install 5e Toolkit...".');
+      }
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

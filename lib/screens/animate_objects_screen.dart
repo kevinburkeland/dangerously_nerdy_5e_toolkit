@@ -191,7 +191,11 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           ],
         ),
       ),
-      body: TabBarView(
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: TabBarView(
         controller: _tabController,
         children: [
           // TAB 1: ACTIVE SQUAD TRACKER
@@ -261,6 +265,8 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           const SpellReferenceWidget(),
         ],
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 }

@@ -309,9 +309,13 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 0. SHARED ROOM BANNER
@@ -399,6 +403,8 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 }

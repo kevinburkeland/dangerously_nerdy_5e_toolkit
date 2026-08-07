@@ -1,34 +1,78 @@
 {
+  "id": "5e_toolkit",
   "name": "DangerouslyNerdy 5e Toolkit",
   "short_name": "5e Toolkit",
-  "start_url": ".",
+  "scope": "/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#14121E",
   "theme_color": "#14121E",
   "description": "DangerouslyNerdy 5e Toolkit - D&D 5e Combat Companion, Animate Objects Tracker, & Dice App",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "categories": ["games", "utilities", "entertainment"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Dice Roller",
+      "short_name": "Dice Roller",
+      "description": "Launch 5e Dice Roller",
+      "url": "/",
+      "icons": [{ "src": "pwa_icons/Icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Animate Objects 5e",
+      "short_name": "Animate Objects",
+      "description": "Launch Animate Objects Tracker",
+      "url": "/",
+      "icons": [{ "src": "pwa_icons/Icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "pwa_icons/desktop_screenshot.png",
+      "sizes": "2094x1014",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "DangerouslyNerdy 5e Toolkit Desktop View"
+    },
+    {
+      "src": "pwa_icons/mobile_screenshot.png",
+      "sizes": "500x1024",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "DangerouslyNerdy 5e Toolkit Mobile View"
+    }
+  ],
   "icons": [
     {
-      "src": "icons/Icon-192.png",
+      "src": "pwa_icons/Icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "icons/Icon-512.png",
+      "src": "pwa_icons/Icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "icons/Icon-maskable-192.png",
+      "src": "pwa_icons/Icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icons/Icon-maskable-512.png",
+      "src": "pwa_icons/Icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

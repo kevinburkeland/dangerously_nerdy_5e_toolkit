@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/pwa_helper.dart';
 import 'animate_objects_screen.dart';
 import 'dice_roller_screen.dart';
 
@@ -16,21 +17,35 @@ class LandingScreen extends StatelessWidget {
           children: [
             Image.asset('assets/images/logo.png', width: 36, height: 36),
             const SizedBox(width: 10),
-            const Text(
-              'DangerouslyNerdy 5e Toolkit',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+            const Expanded(
+              child: Text(
+                'DangerouslyNerdy 5e Toolkit',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
               ),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download_for_offline, color: Colors.cyanAccent),
+            tooltip: 'Install App',
+            onPressed: PwaHelper.promptInstall,
+          ),
+        ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Hero Banner
@@ -162,8 +177,10 @@ class LandingScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildToolCard(
     BuildContext context, {
