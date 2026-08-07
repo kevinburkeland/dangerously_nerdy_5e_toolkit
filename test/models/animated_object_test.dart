@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:animate_objects_5e/models/animated_object.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 
 void main() {
   group('ObjectSize Extension Tests', () {

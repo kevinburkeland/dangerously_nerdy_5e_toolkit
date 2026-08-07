@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:animate_objects_5e/widgets/room_banner_widget.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/room_banner_widget.dart';
 
 void main() {
   Widget createTestableWidget(Widget child) {

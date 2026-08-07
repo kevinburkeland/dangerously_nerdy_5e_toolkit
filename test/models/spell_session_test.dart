@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:animate_objects_5e/models/animated_object.dart';
-import 'package:animate_objects_5e/models/spell_session.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
 
 void main() {
   group('SpellSession Budget & Point Tests', () {

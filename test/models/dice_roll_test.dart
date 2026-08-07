@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:animate_objects_5e/models/dice_roll.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 
 void main() {
   group('DiceRollResult Model Tests', () {

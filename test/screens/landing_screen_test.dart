@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:animate_objects_5e/screens/landing_screen.dart';
-import 'package:animate_objects_5e/screens/animate_objects_screen.dart';
-import 'package:animate_objects_5e/screens/dice_roller_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/animate_objects_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
 
 void main() {
   Widget createTestableWidget(Widget child) {

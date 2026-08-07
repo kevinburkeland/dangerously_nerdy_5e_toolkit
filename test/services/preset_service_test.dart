@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:animate_objects_5e/models/custom_preset.dart';
-import 'package:animate_objects_5e/models/dice_roll.dart';
-import 'package:animate_objects_5e/services/preset_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/custom_preset.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/preset_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

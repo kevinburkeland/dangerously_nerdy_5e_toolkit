@@ -2,7 +2,7 @@
     package="com.example.animate_objects_5e">
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="Animate Objects 5e"
+        android:label="DangerouslyNerdy 5e Toolkit"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
