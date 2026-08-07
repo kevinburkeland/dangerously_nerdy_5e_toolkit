@@ -14,6 +14,7 @@ class BatchAttackDialog extends StatefulWidget {
 class _BatchAttackDialogState extends State<BatchAttackDialog> {
   int _targetAc = 15;
   RollAdvantage _advantageMode = RollAdvantage.normal;
+  bool _useMaximizedCrits = false;
   BatchAttackSummary? _summary;
 
   void _rollAttacks() {
@@ -21,6 +22,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
       _summary = widget.session.performBatchAttack(
         targetAc: _targetAc,
         advantageMode: _advantageMode,
+        useMaximizedCrits: _useMaximizedCrits,
       );
     });
   }
@@ -151,7 +153,46 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+
+              // Maximized Criticals Toggle
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _useMaximizedCrits ? Colors.amber : Colors.white12,
+                    width: 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: const Row(
+                      children: [
+                        Icon(Icons.bolt, color: Colors.amber, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          'Maximized Criticals',
+                          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    subtitle: const Text(
+                      'Crits deal max dice damage + a normal dice roll',
+                      style: TextStyle(color: Colors.white60, fontSize: 11),
+                    ),
+                    value: _useMaximizedCrits,
+                    activeThumbColor: Colors.amber,
+                    onChanged: (val) => setState(() => _useMaximizedCrits = val),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
 
               // Roll Button
               ElevatedButton.icon(
@@ -290,7 +331,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                               ),
                               child: Text(
                                 res.isCrit
-                                    ? 'CRIT! (${res.totalDamage} dmg)'
+                                    ? '${res.isMaximizedCrit ? "MAX CRIT!" : "CRIT!"} (${res.totalDamage} dmg)'
                                     : (res.isHit ? '${res.totalDamage} DMG' : 'MISS'),
                                 style: TextStyle(
                                   color: res.isCrit ? Colors.black : Colors.white,
@@ -324,7 +365,12 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     String toHitStr = '$rollStr + ${res.object.size.attackBonus} = ${res.totalToHit} vs AC $_targetAc';
 
     if (res.isHit) {
-      String dmgDetails = 'Dice: ${res.damageRolls.join("+")} + ${res.damageBonus}';
+      String dmgDetails;
+      if (res.isMaximizedCrit && res.maxedRolls != null) {
+        dmgDetails = 'Max: [${res.maxedRolls!.join("+")}] + Roll: [${res.damageRolls.join("+")}] + ${res.damageBonus}';
+      } else {
+        dmgDetails = 'Dice: ${res.damageRolls.join("+")} + ${res.damageBonus}';
+      }
       return '$toHitStr | $dmgDetails';
     } else {
       return toHitStr;

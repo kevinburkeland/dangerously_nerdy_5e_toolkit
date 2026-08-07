@@ -85,5 +85,16 @@ void main() {
       expect(summary.totalAttacks, 1);
       expect(summary.results.length, 1);
     });
+
+    test('performBatchAttack supports useMaximizedCrits toggle', () {
+      final session = SpellSession(spellLevel: 5);
+      session.addObject(ObjectSize.tiny);
+
+      final summaryNormal = session.performBatchAttack(targetAc: 15, useMaximizedCrits: false);
+      expect(summaryNormal.useMaximizedCrits, false);
+
+      final summaryMax = session.performBatchAttack(targetAc: 15, useMaximizedCrits: true);
+      expect(summaryMax.useMaximizedCrits, true);
+    });
   });
 }

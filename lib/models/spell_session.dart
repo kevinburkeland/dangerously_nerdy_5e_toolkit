@@ -13,6 +13,8 @@ class AttackRollResult {
   final bool isNat1;
   final bool isHit;
   final List<int> damageRolls;
+  final List<int>? maxedRolls;
+  final bool isMaximizedCrit;
   final int damageBonus;
   final int totalDamage;
 
@@ -26,6 +28,8 @@ class AttackRollResult {
     required this.isNat1,
     required this.isHit,
     required this.damageRolls,
+    this.maxedRolls,
+    this.isMaximizedCrit = false,
     required this.damageBonus,
     required this.totalDamage,
   });
@@ -34,6 +38,7 @@ class AttackRollResult {
 class BatchAttackSummary {
   final int targetAc;
   final RollAdvantage advantageMode;
+  final bool useMaximizedCrits;
   final List<AttackRollResult> results;
   final int totalAttacks;
   final int totalHits;
@@ -43,6 +48,7 @@ class BatchAttackSummary {
   BatchAttackSummary({
     required this.targetAc,
     required this.advantageMode,
+    this.useMaximizedCrits = false,
     required this.results,
     required this.totalAttacks,
     required this.totalHits,
@@ -121,6 +127,7 @@ class SpellSession {
   BatchAttackSummary performBatchAttack({
     required int targetAc,
     RollAdvantage advantageMode = RollAdvantage.normal,
+    bool useMaximizedCrits = false,
   }) {
     List<AttackRollResult> results = [];
     int totalHits = 0;
@@ -148,19 +155,38 @@ class SpellSession {
       bool isHit = !isNat1 && (isCrit || toHit >= targetAc);
 
       List<int> dmgRolls = [];
+      List<int>? maxedRolls;
+      bool isMaxedCrit = false;
       int totalDmg = 0;
 
       if (isHit) {
         totalHits++;
         if (isCrit) totalCrits++;
 
-        int diceCount = obj.size.damageDiceCount;
-        if (isCrit) diceCount *= 2; // Critical hit doubles damage dice
+        if (isCrit && useMaximizedCrits) {
+          isMaxedCrit = true;
+          // Maximized Critical Rule: Max possible dice damage + normal dice roll + bonus
+          maxedRolls = List.generate(
+            obj.size.damageDiceCount,
+            (_) => obj.size.damageDiceSides,
+          );
+          int maxDiceSum = obj.size.damageDiceCount * obj.size.damageDiceSides;
+          totalDmg += maxDiceSum;
 
-        for (int i = 0; i < diceCount; i++) {
-          int d = _rng.nextInt(obj.size.damageDiceSides) + 1;
-          dmgRolls.add(d);
-          totalDmg += d;
+          for (int i = 0; i < obj.size.damageDiceCount; i++) {
+            int d = _rng.nextInt(obj.size.damageDiceSides) + 1;
+            dmgRolls.add(d);
+            totalDmg += d;
+          }
+        } else {
+          int diceCount = obj.size.damageDiceCount;
+          if (isCrit) diceCount *= 2; // Critical hit doubles damage dice (RAW)
+
+          for (int i = 0; i < diceCount; i++) {
+            int d = _rng.nextInt(obj.size.damageDiceSides) + 1;
+            dmgRolls.add(d);
+            totalDmg += d;
+          }
         }
 
         totalDmg += obj.size.damageBonus;
@@ -178,6 +204,8 @@ class SpellSession {
           isNat1: isNat1,
           isHit: isHit,
           damageRolls: dmgRolls,
+          maxedRolls: maxedRolls,
+          isMaximizedCrit: isMaxedCrit,
           damageBonus: obj.size.damageBonus,
           totalDamage: totalDmg,
         ),
@@ -187,6 +215,7 @@ class SpellSession {
     return BatchAttackSummary(
       targetAc: targetAc,
       advantageMode: advantageMode,
+      useMaximizedCrits: useMaximizedCrits,
       results: results,
       totalAttacks: livingObjects.length,
       totalHits: totalHits,
