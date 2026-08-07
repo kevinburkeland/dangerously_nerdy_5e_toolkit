@@ -10,6 +10,7 @@ void main() {
   group('PresetService Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      PresetService().clearCacheForTesting();
     });
 
     test('Loads default presets list', () {
@@ -72,6 +73,7 @@ void main() {
 
       // Clear preferences to test import into clean state
       SharedPreferences.setMockInitialValues({});
+      PresetService().clearCacheForTesting();
       final cleared = await service.loadCustomPresets();
       expect(cleared.isEmpty, true);
 

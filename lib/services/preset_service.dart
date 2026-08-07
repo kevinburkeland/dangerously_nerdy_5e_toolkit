@@ -10,6 +10,13 @@ class PresetService {
   factory PresetService() => _instance;
   PresetService._internal();
 
+  List<CustomPreset>? _cachedPresets;
+
+  /// Clears in-memory cache (primarily for unit tests)
+  void clearCacheForTesting() {
+    _cachedPresets = null;
+  }
+
   /// Built-in default presets for quick access
   static List<CustomPreset> get defaultPresets => [
         CustomPreset(id: 'def_d20', name: 'd20 Check', dieType: DieType.d20, count: 1, modifier: 0),
@@ -21,41 +28,56 @@ class PresetService {
         CustomPreset(id: 'def_stats', name: 'Stats (4d6)', dieType: DieType.d6, count: 4, modifier: 0),
       ];
 
-  /// Loads custom user presets from SharedPreferences
+  /// Loads custom user presets from SharedPreferences or in-memory cache
   Future<List<CustomPreset>> loadCustomPresets() async {
+    if (_cachedPresets != null) {
+      return List<CustomPreset>.from(_cachedPresets!);
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       final List<String>? jsonList = prefs.getStringList(_storageKey);
       if (jsonList == null || jsonList.isEmpty) {
+        _cachedPresets = [];
         return [];
       }
-      return jsonList.map((str) => CustomPreset.fromJson(str)).toList();
+      _cachedPresets = jsonList.map((str) => CustomPreset.fromJson(str)).toList();
+      return List<CustomPreset>.from(_cachedPresets!);
     } catch (e) {
+      _cachedPresets = [];
       return [];
     }
   }
 
-  /// Saves a new custom preset to local storage
+  /// Saves a new custom preset to local storage and in-memory cache
   Future<List<CustomPreset>> savePreset(CustomPreset preset) async {
-    final current = await loadCustomPresets();
-    current.removeWhere((p) => p.id == preset.id);
-    current.insert(0, preset);
+    if (_cachedPresets == null) {
+      await loadCustomPresets();
+    }
+    _cachedPresets!.removeWhere((p) => p.id == preset.id);
+    _cachedPresets!.insert(0, preset);
 
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = current.map((p) => p.toJson()).toList();
-    await prefs.setStringList(_storageKey, jsonList);
-    return current;
+    _persistToDisk();
+    return List<CustomPreset>.from(_cachedPresets!);
   }
 
-  /// Deletes a custom preset by ID from local storage
+  /// Deletes a custom preset by ID from local storage and in-memory cache
   Future<List<CustomPreset>> deletePreset(String id) async {
-    final current = await loadCustomPresets();
-    current.removeWhere((p) => p.id == id);
+    if (_cachedPresets == null) {
+      await loadCustomPresets();
+    }
+    _cachedPresets!.removeWhere((p) => p.id == id);
 
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = current.map((p) => p.toJson()).toList();
-    await prefs.setStringList(_storageKey, jsonList);
-    return current;
+    _persistToDisk();
+    return List<CustomPreset>.from(_cachedPresets!);
+  }
+
+  /// Helper to persist current cache to SharedPreferences in background
+  Future<void> _persistToDisk() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = (_cachedPresets ?? []).map((p) => p.toJson()).toList();
+      await prefs.setStringList(_storageKey, jsonList);
+    } catch (_) {}
   }
 
   /// Exports custom presets to a formatted JSON string
@@ -80,15 +102,16 @@ class PresetService {
     final imported = itemsList.map((item) => CustomPreset.fromMap(item as Map<String, dynamic>)).toList();
     if (imported.isEmpty) return await loadCustomPresets();
 
-    final current = await loadCustomPresets();
-    for (final newP in imported) {
-      current.removeWhere((p) => p.id == newP.id);
-      current.insert(0, newP);
+    if (_cachedPresets == null) {
+      await loadCustomPresets();
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = current.map((p) => p.toJson()).toList();
-    await prefs.setStringList(_storageKey, jsonList);
-    return current;
+    for (final newP in imported) {
+      _cachedPresets!.removeWhere((p) => p.id == newP.id);
+      _cachedPresets!.insert(0, newP);
+    }
+
+    _persistToDisk();
+    return List<CustomPreset>.from(_cachedPresets!);
   }
 }

@@ -313,32 +313,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
 
             const SizedBox(height: 16),
 
-            // 4. ROLL BUTTON
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.cyanAccent,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 4,
-              ),
-              onPressed: _rollDice,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.casino, size: 24),
-                  const SizedBox(width: 10),
-                  Text(
-                    'ROLL $_count${_selectedDie.label.toUpperCase()}${_modifier != 0 ? (_modifier > 0 ? " + $_modifier" : " - ${_modifier.abs()}") : ""}',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 0.5),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 5. ROLL PRESETS (CUSTOM & BUILT-IN)
+            // 4. ROLL PRESETS (CUSTOM & BUILT-IN)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -379,20 +354,41 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             const SizedBox(height: 8),
 
             // Custom User Presets Section
-            if (_userPresets.isNotEmpty) ...[
-              const Text(
-                'MY SAVED PRESETS',
-                style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-              ),
-              const SizedBox(height: 6),
+            const Text(
+              'MY SAVED PRESETS',
+              style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+            ),
+            const SizedBox(height: 6),
+            if (_userPresets.isNotEmpty)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: _userPresets.map((preset) => _customPresetChip(preset)).toList(),
                 ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF28243D),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.bookmark_border, color: Colors.amber, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'No custom presets yet. Adjust dice & tap "Save Current" to create one!',
+                        style: TextStyle(color: Colors.amber, fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-            ],
+            const SizedBox(height: 12),
 
             // Default Built-in Presets Section
             const Text(
@@ -404,6 +400,31 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: PresetService.defaultPresets.map((preset) => _builtInPresetChip(preset)).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 5. ROLL BUTTON
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyanAccent,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+              ),
+              onPressed: _rollDice,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.casino, size: 24),
+                  const SizedBox(width: 10),
+                  Text(
+                    'ROLL $_count${_selectedDie.label.toUpperCase()}${_modifier != 0 ? (_modifier > 0 ? " + $_modifier" : " - ${_modifier.abs()}") : ""}',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 0.5),
+                  ),
+                ],
               ),
             ),
 
@@ -884,6 +905,9 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isNotEmpty) {
+                final nav = Navigator.of(ctx);
+                final messenger = ScaffoldMessenger.of(context);
+
                 final newPreset = CustomPreset(
                   id: '${DateTime.now().microsecondsSinceEpoch}',
                   name: name,
@@ -892,11 +916,13 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                   modifier: _modifier,
                   rollMode: _rollMode,
                 );
-                Navigator.pop(ctx);
-                await _presetService.savePreset(newPreset);
-                await _loadUserPresets();
+                final updated = await _presetService.savePreset(newPreset);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  setState(() {
+                    _userPresets = updated;
+                  });
+                  nav.pop();
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text('Saved custom preset "$name"!'),
                       backgroundColor: const Color(0xFF28243D),
@@ -931,9 +957,11 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     );
 
     if (confirm == true) {
-      await _presetService.deletePreset(preset.id);
-      await _loadUserPresets();
+      final updated = await _presetService.deletePreset(preset.id);
       if (mounted) {
+        setState(() {
+          _userPresets = updated;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Deleted "${preset.name}"')),
         );
