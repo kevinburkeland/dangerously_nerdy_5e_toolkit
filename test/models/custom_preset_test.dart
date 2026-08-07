@@ -49,5 +49,29 @@ void main() {
       );
       expect(preset2.formulaString, '1d20+4 (Adv)');
     });
+
+    test('Multi-dice preset serializes and formats properly', () {
+      final preset = CustomPreset(
+        id: 'p_multi',
+        name: 'Chaos Strike',
+        diceEntries: [
+          DiceEntry(dieType: DieType.d6, count: 2),
+          DiceEntry(dieType: DieType.custom, count: 1, customSides: 7),
+        ],
+        modifier: 3,
+      );
+
+      expect(preset.formulaString, '2d6+1d7+3');
+
+      final map = preset.toMap();
+      final restored = CustomPreset.fromMap(map);
+
+      expect(restored.name, 'Chaos Strike');
+      expect(restored.diceEntries.length, 2);
+      expect(restored.diceEntries[0].dieType, DieType.d6);
+      expect(restored.diceEntries[1].customSides, 7);
+      expect(restored.formulaString, '2d6+1d7+3');
+    });
   });
 }
+

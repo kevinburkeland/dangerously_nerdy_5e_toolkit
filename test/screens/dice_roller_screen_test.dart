@@ -14,8 +14,9 @@ void main() {
 
     expect(find.text('Dice Roller'), findsOneWidget);
     expect(find.text('Select Die'), findsOneWidget);
-    expect(find.text('D20'), findsOneWidget);
+    expect(find.text('D20'), findsWidgets);
     expect(find.text('D6'), findsOneWidget);
+    expect(find.text('CUSTOM (d7)'), findsOneWidget);
 
     expect(find.text('Tap ROLL to roll the dice!'), findsOneWidget);
   });
@@ -59,4 +60,46 @@ void main() {
 
     expect(find.widgetWithText(ElevatedButton, 'ROLL 1D6'), findsOneWidget);
   });
+
+  testWidgets('Building a multi-dice pool combines multiple dice types', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const DiceRollerScreen()));
+
+    // Tap D6 (replaces initial 1d20 with 1d6)
+    final d6Chip = find.text('D6');
+    await tester.tap(d6Chip);
+    await tester.pumpAndSettle();
+
+    // Tap D8 (adds 1d8 to the pool -> 1d6 + 1d8)
+    final d8Chip = find.text('D8');
+    await tester.tap(d8Chip);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(ElevatedButton, 'ROLL 1D6 + 1D8'), findsOneWidget);
+  });
+
+  testWidgets('Opening Custom Die dialog adds custom sided die to pool', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const DiceRollerScreen()));
+
+    // Tap Custom Die chip
+    final customChip = find.text('CUSTOM (d7)');
+    await tester.tap(customChip);
+    await tester.pumpAndSettle();
+
+    // Dialog title
+    expect(find.text('Custom Sided Die'), findsOneWidget);
+
+    // Enter 14
+    final textField = find.byType(TextField);
+    await tester.enterText(textField, '14');
+    await tester.pumpAndSettle();
+
+    // Tap Add Die
+    final addDieButton = find.widgetWithText(ElevatedButton, 'Add Die');
+    await tester.tap(addDieButton);
+    await tester.pumpAndSettle();
+
+    // Roll button now shows 1d14
+    expect(find.widgetWithText(ElevatedButton, 'ROLL 1D14'), findsOneWidget);
+  });
 }
+

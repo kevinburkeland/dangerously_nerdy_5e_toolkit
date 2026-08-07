@@ -15,8 +15,8 @@ class DiceRollerScreen extends StatefulWidget {
 }
 
 class _DiceRollerScreenState extends State<DiceRollerScreen> {
-  DieType _selectedDie = DieType.d20;
-  int _count = 1;
+  List<DiceEntry> _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
+  int _customSides = 7;
   int _modifier = 0;
   RollMode _rollMode = RollMode.normal;
 
@@ -47,13 +47,117 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     }
   }
 
-  void _rollDice() {
+  DieType get _primaryDie => _dicePool.isNotEmpty ? _dicePool.first.dieType : DieType.d20;
+  int get _count => _dicePool.isNotEmpty ? _dicePool.fold(0, (acc, val) => acc + val.count) : 1;
+
+  void _addDieToPool(DieType dieType, {int customSides = 6}) {
+    final existingIndex = _dicePool.indexWhere(
+      (e) => e.dieType == dieType && (dieType != DieType.custom || e.customSides == customSides),
+    );
+
+    if (existingIndex >= 0) {
+      final existing = _dicePool[existingIndex];
+      _dicePool[existingIndex] = existing.copyWith(count: existing.count + 1);
+    } else {
+      _dicePool.add(DiceEntry(dieType: dieType, count: 1, customSides: customSides));
+    }
+  }
+
+  void _onSelectDieChip(DieType die, {int customSides = 6}) {
     setState(() {
-      final res = DiceRollResult.roll(
-        dieType: _selectedDie,
-        count: _count,
+      // If pool is just the initial single d20 roll, replace it with the selected die
+      if (_dicePool.length == 1 &&
+          _dicePool.first.dieType == DieType.d20 &&
+          _dicePool.first.count == 1 &&
+          die != DieType.d20) {
+        _dicePool = [DiceEntry(dieType: die, count: 1, customSides: customSides)];
+        return;
+      }
+      _addDieToPool(die, customSides: customSides);
+    });
+  }
+
+  void _showCustomDieDialog() {
+    final controller = TextEditingController(text: '$_customSides');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF242038),
+        title: const Row(
+          children: [
+            Icon(Icons.tune, color: Colors.cyanAccent, size: 22),
+            SizedBox(width: 8),
+            Text('Custom Sided Die', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter number of sides (e.g. 7 for d7, 14 for d14, 30 for d30):',
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                labelText: 'Number of Sides',
+                labelStyle: TextStyle(color: Colors.white70),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent, foregroundColor: Colors.black),
+            onPressed: () {
+              final sides = int.tryParse(controller.text.trim());
+              if (sides != null && sides >= 2) {
+                setState(() {
+                  _customSides = sides;
+                  _onSelectDieChip(DieType.custom, customSides: sides);
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Add Die', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _clearPool() {
+    setState(() {
+      _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
+      _rollMode = RollMode.normal;
+    });
+  }
+
+  void _rollDice() {
+    if (_dicePool.isEmpty) {
+      _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
+    }
+
+    setState(() {
+      final isSingleD20 = _dicePool.length == 1 &&
+          _dicePool.first.dieType == DieType.d20 &&
+          _dicePool.first.count == 1;
+
+      final res = DiceRollResult.rollPool(
+        diceEntries: _dicePool,
         modifier: _modifier,
-        rollMode: _selectedDie == DieType.d20 && _count == 1 ? _rollMode : RollMode.normal,
+        rollMode: isSingleD20 ? _rollMode : RollMode.normal,
       );
       _latestResult = res;
       _history.insert(0, res);
@@ -71,10 +175,18 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     });
   }
 
+  void _applyCustomPreset(CustomPreset preset) {
+    setState(() {
+      _dicePool = List<DiceEntry>.from(preset.diceEntries);
+      _modifier = preset.modifier;
+      _rollMode = preset.rollMode;
+    });
+    _rollDice();
+  }
+
   void _applyPreset(DieType die, int count, int mod, [RollMode mode = RollMode.normal]) {
     setState(() {
-      _selectedDie = die;
-      _count = count;
+      _dicePool = [DiceEntry(dieType: die, count: count)];
       _modifier = mod;
       _rollMode = mode;
     });
@@ -100,9 +212,23 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     });
   }
 
+  String get _currentFormulaString {
+    final dicePart = _dicePool.map((e) => e.formulaString).join(' + ');
+    String modStr = '';
+    if (_modifier > 0) {
+      modStr = ' + $_modifier';
+    } else if (_modifier < 0) {
+      modStr = ' - ${_modifier.abs()}';
+    }
+    return '${dicePart.toUpperCase()}$modStr';
+  }
+
   @override
   Widget build(BuildContext context) {
     final canPop = Navigator.canPop(context);
+    final isSingleD20 = _dicePool.length == 1 &&
+        _dicePool.first.dieType == DieType.d20 &&
+        _dicePool.first.count == 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -154,45 +280,62 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
 
             const SizedBox(height: 20),
 
-            // 2. DIE SELECTOR GRID
-            const Text(
-              'Select Die',
-              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14),
+            // 2. DIE SELECTOR & POOL BUILDER
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Select Die',
+                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                if (_dicePool.length > 1 || _dicePool.first.count > 1 || _dicePool.first.dieType != DieType.d20)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    icon: const Icon(Icons.refresh, size: 14, color: Colors.cyanAccent),
+                    label: const Text('Reset Pool', style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+                    onPressed: _clearPool,
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: DieType.values.map((die) {
-                final isSelected = _selectedDie == die;
-                return ChoiceChip(
-                  label: Text(
-                    die.label.toUpperCase(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.black : Colors.white,
+              children: [
+                ...DieType.values.where((d) => d != DieType.custom).map((die) {
+                  final isInPool = _dicePool.any((e) => e.dieType == die);
+                  return ChoiceChip(
+                    label: Text(
+                      die.label.toUpperCase(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isInPool ? Colors.black : Colors.white,
+                      ),
                     ),
+                    selected: isInPool,
+                    selectedColor: Colors.cyanAccent,
+                    backgroundColor: const Color(0xFF28243D),
+                    onSelected: (selected) {
+                      _onSelectDieChip(die);
+                    },
+                  );
+                }),
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 16, color: Colors.cyanAccent),
+                  label: Text(
+                    'CUSTOM (d$_customSides)',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
                   ),
-                  selected: isSelected,
-                  selectedColor: Colors.cyanAccent,
                   backgroundColor: const Color(0xFF28243D),
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() {
-                        _selectedDie = die;
-                        if (_selectedDie != DieType.d20) {
-                          _rollMode = RollMode.normal;
-                        }
-                      });
-                    }
-                  },
-                );
-              }).toList(),
+                  side: const BorderSide(color: Colors.cyanAccent),
+                  onPressed: _showCustomDieDialog,
+                ),
+              ],
             ),
 
             const SizedBox(height: 20),
 
-            // 3. COUNT & MODIFIER CONTROLS
+            // 3. ACTIVE DICE POOL & MODIFIER CONTROLS
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -201,44 +344,105 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                 border: Border.all(color: Colors.white12),
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Quantity Selector
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Quantity', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                      Row(
+                  const Text(
+                    'DICE POOL & MODIFIERS',
+                    style: TextStyle(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Dice Pool Entry Items
+                  ..._dicePool.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final diceEntry = entry.value;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, color: Colors.cyanAccent),
-                            onPressed: _count > 1 ? () => setState(() => _count--) : null,
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.cyanAccent.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+                                ),
+                                child: Text(
+                                  diceEntry.dieLabel.toUpperCase(),
+                                  style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Quantity: ${diceEntry.count}',
+                                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.black38,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$_count',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline, color: Colors.cyanAccent),
-                            onPressed: _count < 50 ? () => setState(() => _count++) : null,
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle_outline, color: Colors.cyanAccent),
+                                onPressed: () {
+                                  setState(() {
+                                    if (diceEntry.count > 1) {
+                                      _dicePool[index] = diceEntry.copyWith(count: diceEntry.count - 1);
+                                    } else {
+                                      if (_dicePool.length > 1) {
+                                        _dicePool.removeAt(index);
+                                      }
+                                    }
+                                  });
+                                },
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black38,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${diceEntry.count}',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add_circle_outline, color: Colors.cyanAccent),
+                                onPressed: () {
+                                  setState(() {
+                                    if (diceEntry.count < 50) {
+                                      _dicePool[index] = diceEntry.copyWith(count: diceEntry.count + 1);
+                                    }
+                                  });
+                                },
+                              ),
+                              if (_dicePool.length > 1)
+                                IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.white38, size: 18),
+                                  onPressed: () {
+                                    setState(() {
+                                      _dicePool.removeAt(index);
+                                    });
+                                  },
+                                ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    );
+                  }),
+
                   const Divider(color: Colors.white10, height: 24),
 
                   // Modifier Selector
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Modifier', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                      const Text('Total Modifier', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
                       Row(
                         children: [
                           IconButton(
@@ -279,8 +483,8 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                     ],
                   ),
 
-                  // Advantage / Disadvantage for d20 single rolls
-                  if (_selectedDie == DieType.d20 && _count == 1) ...[
+                  // Advantage / Disadvantage for single d20 roll
+                  if (isSingleD20) ...[
                     const Divider(color: Colors.white10, height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -420,9 +624,12 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                 children: [
                   const Icon(Icons.casino, size: 24),
                   const SizedBox(width: 10),
-                  Text(
-                    'ROLL $_count${_selectedDie.label.toUpperCase()}${_modifier != 0 ? (_modifier > 0 ? " + $_modifier" : " - ${_modifier.abs()}") : ""}',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 0.5),
+                  Flexible(
+                    child: Text(
+                      'ROLL $_currentFormulaString',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 0.5),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -779,87 +986,106 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Individual Dice Badges
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              ...res.individualRolls.map((val) {
-                bool isMax = res.dieType == DieType.d20 && val == 20;
-                bool isMin = res.dieType == DieType.d20 && val == 1;
+          // Breakdown per Die Group
+          ...res.groupResults.map((group) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${group.entry.dieLabel.toUpperCase()}: ',
+                    style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: group.rolls.map((val) {
+                      bool isMax = group.entry.dieType == DieType.d20 && val == 20;
+                      bool isMin = group.entry.dieType == DieType.d20 && val == 1;
 
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isMax
-                        ? Colors.amber.withValues(alpha: 0.3)
-                        : isMin
-                            ? Colors.redAccent.withValues(alpha: 0.3)
-                            : Colors.black38,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: isMax
-                          ? Colors.amber
-                          : isMin
-                              ? Colors.redAccent
-                              : Colors.white24,
-                    ),
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isMax
+                              ? Colors.amber.withValues(alpha: 0.3)
+                              : isMin
+                                  ? Colors.redAccent.withValues(alpha: 0.3)
+                                  : Colors.black38,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: isMax
+                                ? Colors.amber
+                                : isMin
+                                    ? Colors.redAccent
+                                    : Colors.white24,
+                          ),
+                        ),
+                        child: Text(
+                          '$val',
+                          style: TextStyle(
+                            color: isMax
+                                ? Colors.amber
+                                : isMin
+                                    ? Colors.redAccent
+                                    : Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                  child: Text(
-                    '$val',
-                    style: TextStyle(
-                      color: isMax
-                          ? Colors.amber
-                          : isMin
-                              ? Colors.redAccent
-                              : Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                );
-              }),
-              if (res.droppedRolls != null)
-                ...res.droppedRolls!.map((val) {
+                ],
+              ),
+            );
+          }),
+
+          if (res.droppedRolls != null && res.droppedRolls!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Wrap(
+                spacing: 4,
+                children: res.droppedRolls!.map((val) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.black12,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.white12),
                     ),
                     child: Text(
                       '$val (dropped)',
                       style: const TextStyle(
                         color: Colors.white38,
-                        fontSize: 12,
+                        fontSize: 11,
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
                   );
-                }),
-              if (res.modifier != 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Text(
-                    res.modifier > 0 ? '+ ${res.modifier}' : '- ${res.modifier.abs()}',
-                    style: TextStyle(
-                      color: res.modifier > 0 ? Colors.greenAccent : Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
+                }).toList(),
+              ),
+            ),
+
+          if (res.modifier != 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                'Modifier: ${res.modifier > 0 ? "+${res.modifier}" : "${res.modifier}"}',
+                style: TextStyle(
+                  color: res.modifier > 0 ? Colors.greenAccent : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
                 ),
-            ],
-          ),
+              ),
+            ),
         ],
       ),
     );
   }
 
   void _showSavePresetDialog() {
-    final formulaText = '$_count${_selectedDie.label.toUpperCase()}${_modifier != 0 ? (_modifier > 0 ? "+$_modifier" : "$_modifier") : ""}';
+    final formulaText = _currentFormulaString;
     final nameController = TextEditingController(text: formulaText);
 
     showDialog(
@@ -878,7 +1104,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Config: $_count${_selectedDie.label.toUpperCase()}${_modifier != 0 ? (_modifier > 0 ? " + $_modifier" : " - ${_modifier.abs()}") : ""}${_selectedDie == DieType.d20 && _count == 1 && _rollMode != RollMode.normal ? " (${_rollMode.name})" : ""}',
+              'Config: $_currentFormulaString',
               style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 13),
             ),
             const SizedBox(height: 16),
@@ -911,8 +1137,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                 final newPreset = CustomPreset(
                   id: '${DateTime.now().microsecondsSinceEpoch}',
                   name: name,
-                  dieType: _selectedDie,
-                  count: _count,
+                  diceEntries: _dicePool,
                   modifier: _modifier,
                   rollMode: _rollMode,
                 );
@@ -979,7 +1204,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: () => _applyPreset(preset.dieType, preset.count, preset.modifier, preset.rollMode),
+        onTap: () => _applyCustomPreset(preset),
         child: Padding(
           padding: const EdgeInsets.only(left: 10, right: 6, top: 4, bottom: 4),
           child: Row(
@@ -1172,8 +1397,9 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
         backgroundColor: const Color(0xFF28243D),
         side: const BorderSide(color: Colors.white12),
         label: Text('${preset.name} (${preset.formulaString})', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-        onPressed: () => _applyPreset(preset.dieType, preset.count, preset.modifier, preset.rollMode),
+        onPressed: () => _applyCustomPreset(preset),
       ),
     );
   }
 }
+

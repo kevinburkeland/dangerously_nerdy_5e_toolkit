@@ -71,5 +71,50 @@ void main() {
         expect(result.formulaString, contains('(Dis)'));
       }
     });
+
+    test('Custom sided die rolls within expected range [1, customSides]', () {
+      for (int i = 0; i < 50; i++) {
+        final result = DiceRollResult.roll(
+          dieType: DieType.custom,
+          count: 2,
+          customSides: 7,
+          modifier: 3,
+        );
+
+        expect(result.individualRolls.length, 2);
+        for (final roll in result.individualRolls) {
+          expect(roll, greaterThanOrEqualTo(1));
+          expect(roll, lessThanOrEqualTo(7));
+        }
+        int sum = result.individualRolls.fold(0, (acc, val) => acc + val);
+        expect(result.total, sum + 3);
+        expect(result.formulaString, '2d7 + 3');
+      }
+    });
+
+    test('Multi-dice pool roll combines multiple different die types correctly', () {
+      final pool = [
+        DiceEntry(dieType: DieType.d6, count: 2),
+        DiceEntry(dieType: DieType.d8, count: 1),
+        DiceEntry(dieType: DieType.custom, count: 1, customSides: 14),
+      ];
+
+      final result = DiceRollResult.rollPool(
+        diceEntries: pool,
+        modifier: 5,
+      );
+
+      expect(result.diceEntries.length, 3);
+      expect(result.groupResults.length, 3);
+      expect(result.individualRolls.length, 4); // 2 + 1 + 1 = 4 rolls
+      expect(result.groupResults[0].rolls.length, 2);
+      expect(result.groupResults[1].rolls.length, 1);
+      expect(result.groupResults[2].rolls.length, 1);
+
+      int sum = result.individualRolls.fold(0, (acc, val) => acc + val);
+      expect(result.total, sum + 5);
+      expect(result.formulaString, '2d6 + 1d8 + 1d14 + 5');
+    });
   });
 }
+
