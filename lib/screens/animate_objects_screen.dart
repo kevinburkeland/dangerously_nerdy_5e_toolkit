@@ -78,7 +78,7 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
   }
 
   void _showMassDamageDialog() {
-    TextEditingController controller = TextEditingController();
+    final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -103,7 +103,7 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () {
-              int? dmg = int.tryParse(controller.text);
+              final dmg = int.tryParse(controller.text);
               if (dmg != null && dmg > 0) {
                 setState(() {
                   _session.applyGroupDamage(dmg);

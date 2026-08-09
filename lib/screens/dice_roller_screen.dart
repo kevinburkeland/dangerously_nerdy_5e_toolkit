@@ -4,6 +4,7 @@ import '../models/dice_roll.dart';
 import '../models/room_roll.dart';
 import '../services/dice_room_service.dart';
 import '../services/preset_service.dart';
+import '../utils/secure_random.dart';
 import '../widgets/dialogs/custom_die_dialog.dart';
 import '../widgets/dialogs/preset_import_export_dialogs.dart';
 import '../widgets/dialogs/save_preset_dialog.dart';
@@ -101,36 +102,48 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     });
   }
 
+  DateTime? _lastRollTime;
+
   void _rollDice() {
+    final now = DateTime.now();
+    if (_lastRollTime != null && now.difference(_lastRollTime!).inMilliseconds < 150) {
+      return; // Debounce rapid button mashing (<150ms cooldown)
+    }
+    _lastRollTime = now;
+
     if (_dicePool.isEmpty) {
       _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
     }
 
-    setState(() {
-      final isSingleD20 = _dicePool.length == 1 &&
-          _dicePool.first.dieType == DieType.d20 &&
-          _dicePool.first.count == 1;
+    final isSingleD20 = _dicePool.length == 1 &&
+        _dicePool.first.dieType == DieType.d20 &&
+        _dicePool.first.count == 1;
 
-      final res = DiceRollResult.rollPool(
-        diceEntries: _dicePool,
-        modifier: _modifier,
-        rollMode: isSingleD20 ? _rollMode : RollMode.normal,
-      );
+    final res = DiceRollResult.rollPool(
+      diceEntries: _dicePool,
+      modifier: _modifier,
+      rollMode: isSingleD20 ? _rollMode : RollMode.normal,
+    );
+
+    // Synchronous local UI state update
+    setState(() {
       _latestResult = res;
       _history.insert(0, res);
-
-      final roomCode = _roomService.activeRoomCode ?? _activeRoomCode;
-      final player = _roomService.playerName ?? _playerName;
-      if (roomCode != null && player != null) {
-        final roomRoll = RoomRoll.fromDiceRollResult(
-          id: '${DateTime.now().microsecondsSinceEpoch}',
-          roomCode: roomCode,
-          playerName: player,
-          result: res,
-        );
-        _roomService.broadcastRoll(roomRoll);
-      }
     });
+
+    // Asynchronous network side-effect outside of setState()
+    final roomCode = _roomService.activeRoomCode ?? _activeRoomCode;
+    final player = _roomService.playerName ?? _playerName;
+    if (roomCode != null && player != null) {
+      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${SecureRng.instance.nextInt(1000000)}';
+      final roomRoll = RoomRoll.fromDiceRollResult(
+        id: uniqueId,
+        roomCode: roomCode,
+        playerName: player,
+        result: res,
+      );
+      _roomService.broadcastRoll(roomRoll);
+    }
   }
 
   void _applyCustomPreset(CustomPreset preset) {
@@ -149,13 +162,17 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   void _joinRoom(String roomCode, String playerName) {
+    final cleanCode = roomCode.trim().toUpperCase();
+    final cleanName = playerName.trim();
+    _roomService.joinRoom(cleanCode, cleanName);
     setState(() {
-      _activeRoomCode = roomCode.trim().toUpperCase();
-      _playerName = playerName.trim();
+      _activeRoomCode = cleanCode;
+      _playerName = cleanName;
     });
   }
 
   void _leaveRoom() {
+    _roomService.leaveRoom();
     setState(() {
       _activeRoomCode = null;
     });
@@ -176,8 +193,9 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     final name = await SavePresetDialog.show(context, formulaText: _currentFormulaString);
     if (name != null && name.isNotEmpty && mounted) {
       final messenger = ScaffoldMessenger.of(context);
+      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${SecureRng.instance.nextInt(1000000)}';
       final newPreset = CustomPreset(
-        id: '${DateTime.now().microsecondsSinceEpoch}',
+        id: uniqueId,
         name: name,
         diceEntries: _dicePool,
         modifier: _modifier,
@@ -209,9 +227,10 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel',
-                  style: TextStyle(color: Colors.white70))),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel',
+                style: TextStyle(color: Colors.white70)),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
@@ -222,12 +241,13 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     );
 
     if (confirm == true && mounted) {
+      final messenger = ScaffoldMessenger.of(context);
       final updated = await _presetService.deletePreset(preset.id);
       if (mounted) {
         setState(() {
           _userPresets = updated;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Deleted "${preset.name}"')),
         );
       }
@@ -259,11 +279,11 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             ),
           );
         }
-      } catch (e) {
+      } catch (_) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to import presets: $e'),
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Failed to import presets. Please verify the JSON payload format.'),
               backgroundColor: Colors.redAccent,
             ),
           );
@@ -316,95 +336,95 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 0. SHARED ROOM BANNER
-            RoomBannerWidget(
-              activeRoomCode: _activeRoomCode,
-              playerName: _playerName,
-              onJoinRoom: _joinRoom,
-              onLeaveRoom: _leaveRoom,
-            ),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 0. SHARED ROOM BANNER
+                RoomBannerWidget(
+                  activeRoomCode: _activeRoomCode,
+                  playerName: _playerName,
+                  onJoinRoom: _joinRoom,
+                  onLeaveRoom: _leaveRoom,
+                ),
 
-            const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-            // 1. LATEST ROLL RESULT CARD
-            LatestRollCard(latestResult: _latestResult),
+                // 1. LATEST ROLL RESULT CARD
+                LatestRollCard(latestResult: _latestResult),
 
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            // 2. DIE SELECTOR & POOL BUILDER
-            DicePoolBuilder(
-              dicePool: _dicePool,
-              modifier: _modifier,
-              rollMode: _rollMode,
-              customSides: _customSides,
-              onSelectDie: _onSelectDieChip,
-              onShowCustomDieDialog: _showCustomDieDialog,
-              onResetPool: _clearPool,
-              onUpdateDicePool: (pool) => setState(() => _dicePool = pool),
-              onUpdateModifier: (mod) => setState(() => _modifier = mod),
-              onUpdateRollMode: (mode) => setState(() => _rollMode = mode),
-            ),
+                // 2. DIE SELECTOR & POOL BUILDER
+                DicePoolBuilder(
+                  dicePool: _dicePool,
+                  modifier: _modifier,
+                  rollMode: _rollMode,
+                  customSides: _customSides,
+                  onSelectDie: _onSelectDieChip,
+                  onShowCustomDieDialog: _showCustomDieDialog,
+                  onResetPool: _clearPool,
+                  onUpdateDicePool: (pool) => setState(() => _dicePool = pool),
+                  onUpdateModifier: (mod) => setState(() => _modifier = mod),
+                  onUpdateRollMode: (mode) => setState(() => _rollMode = mode),
+                ),
 
-            const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-            // 3. ROLL PRESETS
-            RollPresetsSection(
-              userPresets: _userPresets,
-              onApplyPreset: _applyCustomPreset,
-              onDeletePreset: _deleteCustomPreset,
-              onSaveCurrentPreset: _showSavePresetDialog,
-              onExportPresets: _showExportPresetDialog,
-              onImportPresets: _showImportPresetDialog,
-            ),
+                // 3. ROLL PRESETS
+                RollPresetsSection(
+                  userPresets: _userPresets,
+                  onApplyPreset: _applyCustomPreset,
+                  onDeletePreset: _deleteCustomPreset,
+                  onSaveCurrentPreset: _showSavePresetDialog,
+                  onExportPresets: _showExportPresetDialog,
+                  onImportPresets: _showImportPresetDialog,
+                ),
 
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            // 4. ROLL BUTTON
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.cyanAccent,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 4,
-              ),
-              onPressed: _rollDice,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.casino, size: 24),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      'ROLL $_currentFormulaString',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 18,
-                          letterSpacing: 0.5),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                // 4. ROLL BUTTON
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyanAccent,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 4,
                   ),
-                ],
-              ),
-            ),
+                  onPressed: _rollDice,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.casino, size: 24),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'ROLL $_currentFormulaString',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 18,
+                              letterSpacing: 0.5),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-            const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-            // 5. ROLL HISTORY / LIVE ROOM ROLL FEED
-            RollHistoryList(
-              localHistory: _history,
-              activeRoomCode: _activeRoomCode,
-              playerName: _playerName,
-              roomService: _roomService,
+                // 5. ROLL HISTORY / LIVE ROOM ROLL FEED
+                RollHistoryList(
+                  localHistory: _history,
+                  activeRoomCode: _activeRoomCode,
+                  playerName: _playerName,
+                  roomService: _roomService,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 }

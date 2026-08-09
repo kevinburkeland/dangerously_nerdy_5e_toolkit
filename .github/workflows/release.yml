@@ -1,0 +1,198 @@
+# =========================================================================
+# DANGEROUSTNERDY 5E TOOLKIT - WEB-FIRST CI/CD RELEASE WORKFLOW
+# =========================================================================
+
+name: DangerouslyNerdy 5e Toolkit - CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+  workflow_dispatch:
+    inputs:
+      build_mobile:
+        description: 'Build native mobile binaries (Android .aab / iOS .ipa)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -----------------------------------------------------------------------
+  # STAGE 1: VALIDATION & TESTING (LINT, ANALYZE, TEST COVERAGE)
+  # -----------------------------------------------------------------------
+  validate:
+    name: 🧪 Validation & Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up Java 17 (JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: 💙 Set up Flutter SDK (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
+
+      - name: 📦 Install Pub Dependencies
+        run: flutter pub get
+
+      - name: 🔍 Static Code Analysis (Zero Warnings Guard)
+        run: flutter analyze
+
+      - name: 🧪 Execute Unit & Widget Test Suite with Coverage
+        run: flutter test --coverage
+
+      - name: 🌐 Compile Web Release Bundle
+        run: flutter build web --release
+
+      - name: 📊 Upload Test Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov-coverage-report
+          path: coverage/lcov.info
+
+  # -----------------------------------------------------------------------
+  # STAGE 2: BUILD WEB PRODUCTION BUNDLE (PRIMARY WEB TARGET)
+  # -----------------------------------------------------------------------
+  build-web:
+    name: 🌐 Build & Package Web Bundle
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 💙 Set up Flutter SDK (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Install Dependencies
+        run: flutter pub get
+
+      - name: 🌐 Build Web Production Artifact
+        run: flutter build web --release
+
+      - name: 📤 Upload Web Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-production-bundle
+          path: build/web/
+
+  # -----------------------------------------------------------------------
+  # STAGE 3: BUILD ANDROID RELEASE (.AAB) - RELEASE OR OPT-IN ONLY
+  # -----------------------------------------------------------------------
+  build-android:
+    name: 🤖 Build Android Release (.aab)
+    needs: validate
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.build_mobile == true)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up Java 17 (JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: 💙 Set up Flutter SDK (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Install Dependencies
+        run: flutter pub get
+
+      - name: 🔑 Decode & Inject Android Keystore Secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_PROPERTIES_BASE64: ${{ secrets.KEY_PROPERTIES_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEY_PROPERTIES_BASE64" ]; then
+            echo "Injecting release keystore and key.properties..."
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+            echo "$KEY_PROPERTIES_BASE64" | base64 --decode > android/key.properties
+          else
+            echo "⚠️ Release keystore secrets missing. Skipping key injection."
+          fi
+
+      - name: 🛠️ Build Signed & Obfuscated Android App Bundle (.aab)
+        run: |
+          flutter build appbundle --release \
+            --obfuscate \
+            --split-debug-info=build/app/outputs/symbols
+
+      - name: 📤 Upload Android AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      - name: 🗺️ Upload Android Debug Symbol Maps
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-symbols
+          path: build/app/outputs/symbols/
+
+  # -----------------------------------------------------------------------
+  # STAGE 4: BUILD IOS RELEASE (.IPA) - RELEASE OR OPT-IN ONLY
+  # -----------------------------------------------------------------------
+  build-ios:
+    name: 🍎 Build iOS Release (.ipa)
+    needs: validate
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.build_mobile == true)
+    runs-on: macos-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 💙 Set up Flutter SDK (Stable)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Install Dependencies
+        run: flutter pub get
+
+      - name: 🛠️ Build Obfuscated iOS App Archive (.ipa)
+        run: |
+          flutter build ipa --release \
+            --obfuscate \
+            --split-debug-info=build/ios/outputs/symbols \
+            --no-codesign
+
+      - name: 📤 Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release-ipa
+          path: build/ios/archive/
+
+      - name: 🗺️ Upload iOS Debug Symbol Maps
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-debug-symbols
+          path: build/ios/outputs/symbols/

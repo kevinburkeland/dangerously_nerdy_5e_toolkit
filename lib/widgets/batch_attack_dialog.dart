@@ -3,6 +3,7 @@ import '../models/animated_object.dart';
 import '../models/room_roll.dart';
 import '../models/spell_session.dart';
 import '../services/dice_room_service.dart';
+import '../utils/secure_random.dart';
 import 'batch_attack/batch_attack_results_card.dart';
 
 class BatchAttackDialog extends StatefulWidget {
@@ -26,58 +27,72 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
   RollAdvantage _advantageMode = RollAdvantage.normal;
   bool _useMaximizedCrits = false;
   BatchAttackSummary? _summary;
+  DateTime? _lastAttackRollTime;
 
   void _rollAttacks() {
+    final now = DateTime.now();
+    if (_lastAttackRollTime != null && now.difference(_lastAttackRollTime!).inMilliseconds < 200) {
+      return; // Debounce rapid button mashing (<200ms cooldown)
+    }
+    _lastAttackRollTime = now;
+
+    final summary = widget.session.performBatchAttack(
+      targetAc: _targetAc,
+      advantageMode: _advantageMode,
+      useMaximizedCrits: _useMaximizedCrits,
+    );
+
+    // Synchronous UI state mutation
     setState(() {
-      _summary = widget.session.performBatchAttack(
-        targetAc: _targetAc,
-        advantageMode: _advantageMode,
-        useMaximizedCrits: _useMaximizedCrits,
+      _summary = summary;
+    });
+
+    // Asynchronous network side-effects executed outside of setState()
+    final activeCode = widget.activeRoomCode ?? DiceRoomService().activeRoomCode;
+    final activePlayer = widget.playerName ?? DiceRoomService().playerName;
+
+    if (activeCode != null && activePlayer != null) {
+      final roomService = DiceRoomService();
+      final timestamp = DateTime.now();
+
+      // 1. Broadcast summary roll for overall batch results
+      final summaryId = '${timestamp.microsecondsSinceEpoch}_summary_${SecureRng.instance.nextInt(1000000)}';
+      final summaryRoll = RoomRoll(
+        id: summaryId,
+        roomCode: activeCode,
+        playerName: activePlayer,
+        timestamp: timestamp,
+        formulaString: 'Animate Objects Batch (${summary.totalHits}/${summary.totalAttacks} Hits vs AC $_targetAc)',
+        total: summary.totalDamage,
+        individualRolls: summary.results.map((r) => r.totalDamage).toList(),
+        isCrit: summary.totalCrits > 0,
+        isFumble: false,
       );
+      roomService.broadcastRoll(summaryRoll);
 
-      final activeCode = widget.activeRoomCode ?? DiceRoomService().activeRoomCode;
-      final activePlayer = widget.playerName ?? DiceRoomService().playerName;
+      // 2. Broadcast each object attack roll detail
+      for (int i = 0; i < summary.results.length; i++) {
+        final res = summary.results[i];
+        final obj = res.object;
 
-      if (_summary != null && activeCode != null && activePlayer != null) {
-        final roomService = DiceRoomService();
+        final statusText = res.isCrit ? 'CRIT!' : (res.isHit ? 'HIT' : 'MISS');
+        final formulaStr = '${obj.name} (${obj.size.displayName}) +${obj.size.attackBonus} vs AC $_targetAc [$statusText]';
+        final objId = '${timestamp.microsecondsSinceEpoch}_${i}_${SecureRng.instance.nextInt(1000000)}';
 
-        // 1. Broadcast summary roll for overall batch results
-        final summaryRoll = RoomRoll(
-          id: '${DateTime.now().microsecondsSinceEpoch}_summary',
+        final objRoll = RoomRoll(
+          id: objId,
           roomCode: activeCode,
           playerName: activePlayer,
-          timestamp: DateTime.now(),
-          formulaString: 'Animate Objects Batch (${_summary!.totalHits}/${_summary!.totalAttacks} Hits vs AC $_targetAc)',
-          total: _summary!.totalDamage,
-          individualRolls: _summary!.results.map((r) => r.totalDamage).toList(),
-          isCrit: _summary!.totalCrits > 0,
-          isFumble: false,
+          timestamp: timestamp,
+          formulaString: formulaStr,
+          total: res.totalDamage,
+          individualRolls: [res.totalToHit, ...res.damageRolls],
+          isCrit: res.isCrit,
+          isFumble: res.finalD20 == 1,
         );
-        roomService.broadcastRoll(summaryRoll);
-
-        // 2. Broadcast each object attack roll detail
-        for (int i = 0; i < _summary!.results.length; i++) {
-          final res = _summary!.results[i];
-          final obj = res.object;
-
-          String statusText = res.isCrit ? 'CRIT!' : (res.isHit ? 'HIT' : 'MISS');
-          String formulaStr = '${obj.name} (${obj.size.displayName}) +${obj.size.attackBonus} vs AC $_targetAc [$statusText]';
-
-          final objRoll = RoomRoll(
-            id: '${DateTime.now().microsecondsSinceEpoch}_$i',
-            roomCode: activeCode,
-            playerName: activePlayer,
-            timestamp: DateTime.now(),
-            formulaString: formulaStr,
-            total: res.totalDamage,
-            individualRolls: [res.totalToHit, ...res.damageRolls],
-            isCrit: res.isCrit,
-            isFumble: res.finalD20 == 1,
-          );
-          roomService.broadcastRoll(objRoll);
-        }
+        roomService.broadcastRoll(objRoll);
       }
-    });
+    }
   }
 
   @override

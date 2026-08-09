@@ -30,9 +30,9 @@ class LandingScreen extends StatelessWidget {
             ),
           ],
         ),
-        actions: [
+        actions: const [
           IconButton(
-            icon: const Icon(Icons.download_for_offline, color: Colors.cyanAccent),
+            icon: Icon(Icons.download_for_offline, color: Colors.cyanAccent),
             tooltip: 'Install App',
             onPressed: PwaHelper.promptInstall,
           ),

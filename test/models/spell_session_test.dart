@@ -96,5 +96,25 @@ void main() {
       final summaryMax = session.performBatchAttack(targetAc: 15, useMaximizedCrits: true);
       expect(summaryMax.useMaximizedCrits, true);
     });
+
+    test('addObject respects 50 active objects maximum bound ceiling', () {
+      final session = SpellSession(spellLevel: 9);
+      for (int i = 0; i < 60; i++) {
+        session.activeObjects.add(
+          AnimatedObjectInstance(
+            id: 'obj_$i',
+            name: 'Obj $i',
+            size: ObjectSize.tiny,
+            currentHp: 20,
+            maxHp: 20,
+          ),
+        );
+      }
+      expect(session.activeObjects.length, 60);
+
+      session.addObject(ObjectSize.tiny);
+      // Should be blocked by activeObjects.length >= 50 guard
+      expect(session.activeObjects.length, 60);
+    });
   });
 }

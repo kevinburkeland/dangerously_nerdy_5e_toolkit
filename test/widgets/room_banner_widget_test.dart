@@ -38,7 +38,7 @@ void main() {
     expect(find.text('Leave'), findsOneWidget);
   });
 
-  testWidgets('Tapping Join / Create Room opens dialog modal', (WidgetTester tester) async {
+  testWidgets('Tapping Join / Create Room opens dialog modal and handles cancel action', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(
       RoomBannerWidget(
         activeRoomCode: null,
@@ -55,5 +55,10 @@ void main() {
     expect(find.text('Your Display Name'), findsOneWidget);
     expect(find.text('Room Code'), findsOneWidget);
     expect(find.text('Enter Room'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shared Dice Room'), findsNothing);
   });
 }

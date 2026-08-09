@@ -13,7 +13,8 @@ class LatestRollCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (latestResult == null) {
       return Container(
-        height: 140,
+        constraints: const BoxConstraints(minHeight: 140),
+        padding: const EdgeInsets.all(16),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: const Color(0xFF1E1B2E),
@@ -48,58 +49,68 @@ class LatestRollCard extends StatelessWidget {
       badgeText = 'NATURAL 1!';
     }
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1B2E),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: borderColor.withValues(alpha: 0.15),
-            blurRadius: 16,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.cyanAccent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  res.formulaString,
-                  style: const TextStyle(
-                      color: Colors.cyanAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
-                ),
-              ),
-              if (badgeText.isNotEmpty)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: res.isCrit ? Colors.amber : Colors.redAccent,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12),
+    final semanticsSummary = 'Latest Roll Result: ${res.total}. Formula: ${res.formulaString}. ${badgeText.isNotEmpty ? badgeText : ''}';
+
+    return Semantics(
+      label: semanticsSummary,
+      container: true,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1B2E),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withValues(alpha: 0.15),
+              blurRadius: 16,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.cyanAccent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      res.formulaString,
+                      style: const TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
-            ],
-          ),
+                if (badgeText.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: res.isCrit ? Colors.amber : Colors.redAccent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           const SizedBox(height: 12),
 
           // Total Number Display
@@ -217,6 +228,7 @@ class LatestRollCard extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

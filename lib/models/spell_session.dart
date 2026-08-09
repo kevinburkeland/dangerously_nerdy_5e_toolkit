@@ -90,6 +90,7 @@ class SpellSession {
 
   void addObject(ObjectSize size, {String? customName, String damageType = 'Bludgeoning'}) {
     if (!canAddObject(size)) return;
+    if (activeObjects.length >= 50) return; // Guard bound overflow to protect frame budget
 
     int count = activeObjects.where((o) => o.size == size).length + 1;
     String name = customName ?? '${size.displayName} Object #$count';

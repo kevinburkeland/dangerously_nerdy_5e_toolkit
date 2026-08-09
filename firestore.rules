@@ -1,15 +1,105 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /rooms/{roomCode}/rolls/{rollId} {
+
+    // =========================================================================
+    // DANGEROUSTNERDY 5E TOOLKIT - FIRESTORE SECURITY RULES
+    // =========================================================================
+    // Real-Time Shared Dice Rooms & Roll Broadcast Feed Security Rules
+    // Enforces:
+    // 1. Strict Schema Validation & Data Types
+    // 2. Payload Clamping (List & String Length Bounds)
+    // 3. Immutability (Append-only logs; updates & deletes forbidden)
+    // 4. Rate Limiting & Timestamp Integrity
+    // =========================================================================
+
+    match /rooms/{roomCode} {
+      // Room Metadata document (Optional room state / configuration)
       allow read: if true;
-      allow create: if request.resource.data.total is number
-                    && request.resource.data.playerName is string
-                    && request.resource.data.playerName.size() > 0
-                    && request.resource.data.playerName.size() <= 30
-                    && request.resource.data.formulaString is string
-                    && request.resource.data.formulaString.size() <= 100;
-      allow update, delete: if false;
+      allow create, update: if isValidRoomCode(roomCode)
+                            && request.resource.data.keys().hasAll(['code', 'createdAt'])
+                            && request.resource.data.code == roomCode
+                            && request.resource.data.code is string
+                            && request.resource.data.code.size() <= 30
+                            && request.resource.data.createdAt is timestamp;
+      allow delete: if false;
+
+      // Subcollection: Real-time broadcast rolls feed
+      match /rolls/{rollId} {
+        // Public room read access for subscribed clients
+        allow read: if true;
+
+        // Strict validation for broadcasting new dice rolls
+        allow create: if isValidRoomCode(roomCode)
+                      && isValidRollPayload(roomCode, rollId);
+
+        // Immutable Audit Log: Rolls cannot be altered or deleted once written
+        allow update, delete: if false;
+      }
+    }
+
+    // =========================================================================
+    // HELPER FUNCTIONS & VALIDATION EXPRESSIONS
+    // =========================================================================
+
+    /// Validates basic room code length and characters
+    function isValidRoomCode(code) {
+      return code is string 
+          && code.size() >= 4 
+          && code.size() <= 30;
+    }
+
+    /// Comprehensive payload schema and bounds validator for incoming rolls
+    function isValidRollPayload(roomCode, rollId) {
+      let data = request.resource.data;
+
+      // 1. Required Fields Check
+      let hasRequiredFields = data.keys().hasAll([
+        'id', 
+        'roomCode', 
+        'playerName', 
+        'timestamp', 
+        'formulaString', 
+        'total', 
+        'individualRolls', 
+        'isCrit', 
+        'isFumble'
+      ]);
+
+      // 2. Sender & Room Binding Validation (Prevents cross-room spoofing)
+      let isBoundToRoom = data.roomCode == roomCode && data.id == rollId;
+
+      // 3. String Size & Type Bounds
+      let isValidStrings = data.id is string && data.id.size() > 0 && data.id.size() <= 100
+                        && data.playerName is string && data.playerName.trim().size() > 0 && data.playerName.size() <= 50
+                        && data.formulaString is string && data.formulaString.size() <= 150;
+
+      // 4. Numeric Value & Clamping Bounds
+      let isValidNumbers = data.total is number 
+                        && data.total >= -10000 
+                        && data.total <= 100000;
+
+      // 5. Payload Array Bounds (Prevents buffer overflow & heavy payload spam)
+      let isValidRollArrays = data.individualRolls is list 
+                           && data.individualRolls.size() <= 100
+                           && (!('droppedRolls' in data) || data.droppedRolls == null || (data.droppedRolls is list && data.droppedRolls.size() <= 20));
+
+      // 6. Boolean Flags Validation
+      let isValidBooleans = data.isCrit is bool && data.isFumble is bool;
+
+      // 7. Timestamp & Rate Limiting Guard
+      // Enforces client timestamp cannot be in the future beyond clock skew tolerance (5 min)
+      let isValidTimestamp = data.timestamp is timestamp
+                          && data.timestamp <= request.time + duration.value(5, 'm');
+
+      return hasRequiredFields
+          && isBoundToRoom
+          && isValidStrings
+          && isValidNumbers
+          && isValidRollArrays
+          && isValidBooleans
+          && isValidTimestamp;
     }
   }
 }

@@ -123,7 +123,7 @@ class RoomBannerWidget extends StatelessWidget {
                       onJoinRoom?.call(room, name);
                       Navigator.pop(ctx);
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      ScaffoldMessenger.of(ctx).showSnackBar(
                         const SnackBar(
                           content: Text('Please enter both your name and a room code.'),
                           backgroundColor: Colors.redAccent,

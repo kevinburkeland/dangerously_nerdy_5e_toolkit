@@ -115,6 +115,16 @@ void main() {
       expect(result.total, sum + 5);
       expect(result.formulaString, '2d6 + 1d8 + 1d14 + 5');
     });
+
+    test('DiceEntry clamps count to [1, 100] and customSides to [2, 1000]', () {
+      final entryOverflow = DiceEntry(dieType: DieType.custom, count: 999, customSides: 9999);
+      expect(entryOverflow.count, 100);
+      expect(entryOverflow.customSides, 1000);
+
+      final entryUnderflow = DiceEntry(dieType: DieType.custom, count: -10, customSides: -5);
+      expect(entryUnderflow.count, 1);
+      expect(entryUnderflow.customSides, 2);
+    });
   });
 }
 

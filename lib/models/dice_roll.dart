@@ -26,9 +26,10 @@ class DiceEntry {
 
   DiceEntry({
     required this.dieType,
-    this.count = 1,
-    this.customSides = 6,
-  });
+    int count = 1,
+    int customSides = 6,
+  })  : count = count.clamp(1, 100),
+        customSides = customSides.clamp(2, 1000);
 
   int get sides => dieType == DieType.custom ? customSides : dieType.sides;
 
