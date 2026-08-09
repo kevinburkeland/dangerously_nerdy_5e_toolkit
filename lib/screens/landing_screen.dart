@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/pwa_helper.dart';
+import '../widgets/legal_dialogs.dart';
 import 'animate_objects_screen.dart';
 import 'dice_roller_screen.dart';
 
@@ -173,6 +174,47 @@ class LandingScreen extends StatelessWidget {
                   );
                 },
               ),
+
+              const SizedBox(height: 40),
+
+              // LEGAL & PRIVACY FOOTER LINKS
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    TextButton(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                      onPressed: () => LegalDialogs.showPrivacyPolicy(context),
+                      child: const Text(
+                        'Privacy Policy',
+                        style: TextStyle(color: Colors.white38, fontSize: 12),
+                      ),
+                    ),
+                    const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
+                    TextButton(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                      onPressed: () => LegalDialogs.showTermsOfService(context),
+                      child: const Text(
+                        'Terms of Service',
+                        style: TextStyle(color: Colors.white38, fontSize: 12),
+                      ),
+                    ),
+                    const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
+                    TextButton(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                      onPressed: () => LegalDialogs.showAttribution(context),
+                      child: const Text(
+                        'Legal & SRD 5.1 Attribution',
+                        style: TextStyle(color: Colors.white38, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         ),
