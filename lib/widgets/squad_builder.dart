@@ -81,8 +81,6 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final session = widget.session;
-
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFF1E1B2E),

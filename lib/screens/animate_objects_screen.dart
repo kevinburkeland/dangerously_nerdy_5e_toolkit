@@ -137,10 +137,10 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           children: [
             Image.asset('assets/images/logo.png', width: 32, height: 32),
             const SizedBox(width: 8),
-            Expanded(
+            const Expanded(
               child: Text(
                 '5e Minion & Squad Toolkit',
-                style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 17),
+                style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 17),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
