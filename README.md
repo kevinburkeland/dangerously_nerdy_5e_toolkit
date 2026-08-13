@@ -5,41 +5,39 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
 
-A modern, high-performance Flutter application designed for Dungeons & Dragons 5th Edition players and Dungeon Masters. Features simultaneous batch attack rolling for *Animate Objects*, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, and a cryptographically secure random number generator.
+A modern, high-performance Flutter application designed for Dungeons & Dragons 5th Edition players and Dungeon Masters. Features a suite of **10 dedicated player tools**, including simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, and a cryptographically secure random number generator.
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features & Suite of Tools
 
-### ⚔️ 1. Animate Objects Companion & Squad Manager
-* **RAW 5e Point Budget Enforcement**: Automatically tracks spell slot level (5th through 9th level) and scales point budget from 10 to 18 points. Enforces size scaling rules RAW:
-  * **Tiny**: 1 pt | HP 20 | AC 18 | +8 to hit | 1d4+4 dmg
-  * **Small**: 1 pt | HP 10 | AC 16 | +6 to hit | 1d8+2 dmg
-  * **Medium**: 2 pts | HP 40 | AC 13 | +5 to hit | 1d10+1 dmg
-  * **Large**: 4 pts | HP 50 | AC 10 | +6 to hit | 2d6+2 dmg
-  * **Huge**: 8 pts | HP 80 | AC 10 | +8 to hit | 2d12+4 dmg
-* **Instant Batch Attack Roller**: Roll attack and damage for up to 10+ animated objects simultaneously against target AC with support for Advantage, Disadvantage, and Normal rolling.
-* **RAW Critical Hit Calculation**: Automatically detects Natural 20s and doubles damage dice per RAW 5e rules.
-* **Live Squad HP Tracker**: Visual progress bars per object with custom object naming (e.g., "Silver Dagger #1", "Marble Statue"), quick +/- HP adjustments, group AoE damage, and group healing.
-* **Squad Presets**: Save and load custom squad setups instantly.
-* **Integrated 5e Rulebook**: Built-in reference tables, stat cards, silvering rules, DPR analysis, and tactical tips.
-
-### 🎲 2. Advanced Dice Roller & Pool Builder
+### 🎲 1. Core Dice Roller & Live Multiplayer Rooms
 * **Multi-Dice Pools**: Roll any combination of standard D&D dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, etc.).
-* **Roll Modes & Flat Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
-* **Detailed Breakdown**: Visual display showing each individual die result, natural 20 / natural 1 highlights, and total sum.
-* **Roll History**: Persistent history logging previous rolls.
+* **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
+* **Detailed Breakdown**: Visual display showing individual die results, natural 20 / natural 1 highlights, and total sums.
+* **JSON Presets**: Save custom dice pools (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.
+* **Live Multiplayer Rooms**: Connect to shared dice rooms powered by Firebase Firestore for real-time party transparency.
 
-### 💾 3. Custom Dice Presets & JSON Sharing
-* **Preset Library**: Create, name, save, and manage frequent dice pools (e.g., "Fireball 8d6", "Rogue Sneak Attack").
-* **JSON Export & Import**: Backup your custom presets to JSON or share preset files across devices and with party members.
+### 🔮 2. Spell Minion Companions
+* **⚔️ Animate Objects Companion**: Enforces RAW point budgets (10 pts at 5th level up to 18 pts at 9th level) across Tiny, Small, Medium, Large, and Huge animated objects.
+* **🐾 Conjure Animals Squad Manager**: Summons 8 Wolves (CR 1/4) at 3rd level up to 32 beasts at 9th level with built-in **Pack Tactics** advantage detection and trip saves.
+* **💀 Animate Dead Squad Tracker**: Manages Skeleton archers and Zombie frontline HP, tracking upcast limits from 1 to 13 undead.
+* **🧟 Create Undead Manager**: Commands 3 Ghouls (6th level) up to 6 Ghouls, Ghasts, Wights, or Mummies at higher slot levels.
+* **🌋 Conjure Elementals Companion**: Manages Air, Earth, Fire, and Water Elementals (CR 5+) and swarms of Mephits/Gargoyles.
+* **🦗 Giant Insect Squad Tracker**: Transforms ordinary insects into Giant Centipedes (10), Giant Wasps (5), or Giant Spiders (3).
 
-### 🌐 4. Live Multiplayer Dice Rooms
-* **Real-Time Sync**: Connect to shared dice rooms powered by Firebase Firestore.
-* **Party Transparency**: View rolls live as party members or DMs roll in the shared room.
+### 📯 3. Magic Item Rollers & Minions
+* **👜 Bag of Tricks Roller**: Interactive puller randomly drawing animals from Gray, Rust, or Tan bags directly into your active squad.
+* **📯 Horn of Valhalla Roller**: Roll variant Berserker squads for Silver (2d4+2), Brass (3d4+3), Bronze (4d4+4), and Iron (5d4+5) horns.
+* **🗿 Figurines of Wondrous Power**: Animates Bronze Griffon, Onyx Dog (with Pack Tactics), and Marble Elephant statblocks with batch rolling.
+
+### ⚔️ 4. Instant Batch Attack Roller & HP Tracker
+* **Batch Attack Engine**: Roll attack and damage for up to 50 minions simultaneously against target AC with Advantage, Disadvantage, Normal rolling, and RAW Critical Hit doubling.
+* **Live Squad HP Tracker**: Visual progress bars per minion, custom object naming, quick +/- HP adjustments, group AoE damage, and group healing.
+* **Integrated SRD 5.1 Rulebook**: Interactive reference tables, stat cards, upcasting rules, and RAW tactical tips per tool.
 
 ### 🔒 5. Cryptographically Secure RNG
-* Built using Dart's native `Random.secure()` (`lib/utils/secure_random.dart`) to ensure completely unbiased, cryptographically secure random distribution for all dice rolls.
+* Built using Dart's native `Random.secure()` (`lib/utils/secure_random.dart`) to ensure completely unbiased, cryptographically secure random distribution.
 
 ### 📱 6. Progressive Web App (PWA) & Cross-Platform
 * Fully responsive web application with offline PWA Service Worker support and native app installation prompt on desktop and mobile web.
@@ -56,15 +54,20 @@ dangerously_nerdy_5e_toolkit/
 │   ├── main.dart                   # Entry point, navigation hub, & theme
 │   ├── firebase_options.dart       # Firebase configuration initialization
 │   ├── models/                     # Core data models
-│   │   ├── animated_object.dart    # 5e stats, budget rules, & HP tracker
+│   │   ├── animated_object.dart    # Minion statblocks, size rules, & HP tracker
 │   │   ├── custom_preset.dart      # Custom dice pool preset data model
 │   │   ├── dice_roll.dart          # Roll pool breakdown & calculation
 │   │   ├── room_roll.dart          # Live room multiplayer roll event
-│   │   └── spell_session.dart      # Spell session state & batch roller
+│   │   ├── spell_session.dart      # Spell session state, upcasting, & batch roller
+│   │   └── srd_summons/            # SRD 5.1 summon presets & statblocks
+│   │       ├── magic_items/        # Bag of Tricks, Horn of Valhalla, Figurines
+│   │       ├── spells/             # Animate Objects, Beasts, Undead, Elementals, Insects
+│   │       └── srd_summons_library.dart # Preset catalog library
 │   ├── screens/                    # Application screens
-│   │   ├── animate_objects_screen.dart # Animate Objects tracker & squad manager
+│   │   ├── animate_objects_screen.dart # Animate Objects tool wrapper
 │   │   ├── dice_roller_screen.dart # Dice roller, presets, & multiplayer room
-│   │   └── landing_screen.dart     # Central feature dashboard
+│   │   ├── landing_screen.dart     # Categorized dashboard with 10 dedicated tool cards
+│   │   └── minion_tool_screen.dart # Parametric dedicated minion tool screen
 │   ├── services/                   # Data services & external integrations
 │   │   ├── base_room_service.dart  # Abstract interface for room syncing
 │   │   ├── dice_room_service.dart  # Firebase Firestore real-time room sync
@@ -78,13 +81,17 @@ dangerously_nerdy_5e_toolkit/
 │       ├── dice_roller/            # Dice pool builders, roll history, & presets
 │       ├── dialogs/                # Modals for presets, custom dice, & JSON IO
 │       ├── batch_attack_dialog.dart# Batch attack modal
-│       ├── object_card.dart        # Individual animated object HP card
+│       ├── object_card.dart        # Individual minion HP card
 │       ├── room_banner_widget.dart # Live room connection status banner
 │       ├── spell_reference.dart   # Interactive 5e spell rulebook table
 │       └── squad_builder.dart      # Quick squad configuration builder
 ├── scripts/
 │   └── build_web.sh                # PWA web build script
 ├── test/                           # Unit & widget test suites
+│   ├── models/                     # Model tests & upcasting audit suite
+│   ├── screens/                    # Screen navigation & tool tests
+│   ├── services/                   # Service & preset tests
+│   └── widgets/                    # Component & dialog widget tests
 ├── web/                            # Web platform manifest & service worker
 ├── pubspec.yaml                    # Flutter dependencies & metadata
 ├── LICENSE                         # MIT License file
@@ -132,7 +139,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To run the automated unit and widget test suite:
+To run the automated unit and widget test suite (75 tests):
 ```bash
 flutter test
 ```
@@ -143,8 +150,8 @@ flutter test
 
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
-- Implementation of batch attack algorithms, RAW 5e rule validation, and cryptographically secure RNG utilities.
-- Writing unit and widget tests.
+- Implementation of batch attack algorithms, RAW 5e upcasting rules, and cryptographically secure RNG utilities.
+- Writing comprehensive unit and widget tests.
 - UI styling, responsive layout refinements, and documentation.
 
 All AI-generated contributions were thoroughly audited, tested, verified, and refined by human developers to ensure high code quality, security, and accuracy to 5e RAW rules.
@@ -154,5 +161,3 @@ All AI-generated contributions were thoroughly audited, tested, verified, and re
 ## 📄 License
 
 This project is open-source and licensed under the **[MIT License](LICENSE)**.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies.

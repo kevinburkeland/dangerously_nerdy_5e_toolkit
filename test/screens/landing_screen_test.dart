@@ -47,7 +47,7 @@ void main() {
     expect(find.text('Active Squad'), findsOneWidget);
   });
 
-  testWidgets('Tapping Conjure Animals launches Conjure Animals tool screen', (WidgetTester tester) async {
+  testWidgets('Tapping Conjure Animals launches Conjure Animals tool screen with 8 Wolves', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
     final conjureAnimalsCard = find.text('Conjure Animals');
@@ -61,7 +61,26 @@ void main() {
 
     expect(find.byType(MinionToolScreen), findsOneWidget);
     expect(find.text('Conjure Animals Squad Manager'), findsOneWidget);
+    expect(find.text('8 Objects'), findsOneWidget);
     expect(find.text('Wolf #1'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Create Undead launches Create Undead tool screen with 3 Ghouls', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const LandingScreen()));
+
+    final createUndeadCard = find.text('Create Undead');
+    expect(createUndeadCard, findsOneWidget);
+
+    await tester.ensureVisible(createUndeadCard);
+    await tester.pumpAndSettle();
+
+    await tester.tap(createUndeadCard);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MinionToolScreen), findsOneWidget);
+    expect(find.text('Create Undead Manager'), findsOneWidget);
+    expect(find.text('3 Objects'), findsOneWidget);
+    expect(find.text('Ghoul #1'), findsOneWidget);
   });
 
   testWidgets('Tapping Bag of Tricks launches Bag of Tricks tool screen', (WidgetTester tester) async {

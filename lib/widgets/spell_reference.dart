@@ -20,6 +20,16 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
   }
 
   @override
+  void didUpdateWidget(covariant SpellReferenceWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialPreset != null && widget.initialPreset != oldWidget.initialPreset) {
+      setState(() {
+        _selectedPreset = widget.initialPreset!;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final p = _selectedPreset;
 

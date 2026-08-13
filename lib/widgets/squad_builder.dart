@@ -47,7 +47,18 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   void _addMinions(MinionStatBlock statBlock, int count) {
     for (int i = 0; i < count; i++) {
-      widget.session.addMinionFromStatBlock(statBlock);
+      if (widget.session.remainingPoints > 0) {
+        widget.session.addMinionFromStatBlock(statBlock);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reached max capacity limit (${widget.session.maxPoints}) for slot level ${widget.session.spellLevel}!'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        break;
+      }
     }
     setState(() {});
     widget.onSquadUpdated();

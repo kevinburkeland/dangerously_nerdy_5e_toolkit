@@ -75,10 +75,29 @@ class SpellSession {
         activeObjects = activeObjects ?? [];
 
   int get maxPoints {
-    if (activePreset.id == 'animate_objects') {
-      return 10 + (spellLevel - 5).clamp(0, 4) * 2;
+    switch (activePreset.id) {
+      case 'animate_objects':
+        return 10 + (spellLevel - 5).clamp(0, 4) * 2;
+      case 'conjure_animals':
+        if (spellLevel < 5) return 8;
+        if (spellLevel < 7) return 16;
+        if (spellLevel < 9) return 24;
+        return 32;
+      case 'animate_dead':
+        return 1 + (spellLevel - 3).clamp(0, 6) * 2;
+      case 'create_undead':
+        return (3 + (spellLevel - 6).clamp(0, 3));
+      case 'conjure_minor_elementals':
+        if (spellLevel < 6) return 8;
+        if (spellLevel < 8) return 16;
+        return 24;
+      case 'conjure_elemental':
+        return 1;
+      case 'giant_insect':
+        return 10;
+      default:
+        return 50;
     }
-    return 50;
   }
 
   int get usedPoints {
@@ -98,7 +117,7 @@ class SpellSession {
     if (activePreset.id == 'animate_objects') {
       return remainingPoints >= size.pointCost;
     }
-    return activeObjects.length < 50;
+    return remainingPoints > 0;
   }
 
   void switchPreset(SummonPreset newPreset) {

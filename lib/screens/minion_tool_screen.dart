@@ -59,10 +59,21 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       _session.rollHornOfValhalla('silver');
     } else if (widget.preset.statBlocks.isNotEmpty) {
       final defaultStat = widget.preset.statBlocks.first;
-      int count = 4;
-      if (id == 'conjure_elemental') count = 1;
-      if (id == 'figurines_of_wondrous_power') count = 1;
-      if (id == 'giant_insect') count = 2;
+      int count = 1;
+
+      if (id == 'conjure_animals') {
+        count = 8; // 8 Beasts of CR 1/4 (e.g. 8 Wolves) at 3rd level
+      } else if (id == 'create_undead') {
+        count = 3; // 3 Ghouls at 6th level
+      } else if (id == 'animate_dead') {
+        count = 1; // 1 Skeleton / Zombie at 3rd level
+      } else if (id == 'conjure_minor_elementals') {
+        count = 4; // 4 Elementals of CR 1/2 (e.g. 4 Mephits) at 4th level
+      } else if (id == 'giant_insect') {
+        count = 10; // Up to 10 Centipedes at 4th level
+      } else if (id == 'conjure_elemental' || id == 'figurines_of_wondrous_power') {
+        count = 1;
+      }
 
       for (int i = 0; i < count; i++) {
         _session.addMinionFromStatBlock(defaultStat);
@@ -304,7 +315,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
               ),
 
               // TAB 2: SPELL REFERENCE
-              SpellReferenceWidget(initialPreset: widget.preset),
+              SpellReferenceWidget(initialPreset: _session.activePreset),
             ],
           ),
         ),
