@@ -12,7 +12,7 @@ void main() {
   testWidgets('AnimateObjectsScreen loads with default 10 Tiny silver coins preset', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(const AnimateObjectsScreen()));
 
-    expect(find.text('5e Minion & Squad Toolkit'), findsOneWidget);
+    expect(find.text('Animate Objects Companion'), findsOneWidget);
     expect(find.text('Active Squad'), findsOneWidget);
     expect(find.text('Minion Rulebook'), findsOneWidget);
 

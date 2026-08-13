@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import '../models/srd_summons.dart';
 
 class SpellReferenceWidget extends StatefulWidget {
-  const SpellReferenceWidget({super.key});
+  final SummonPreset? initialPreset;
+
+  const SpellReferenceWidget({super.key, this.initialPreset});
 
   @override
   State<SpellReferenceWidget> createState() => _SpellReferenceWidgetState();
 }
 
 class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
-  SummonPreset _selectedPreset = SrdSummonsLibrary.allPresets.first;
+  late SummonPreset _selectedPreset;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPreset = widget.initialPreset ?? SrdSummonsLibrary.allPresets.first;
+  }
 
   @override
   Widget build(BuildContext context) {

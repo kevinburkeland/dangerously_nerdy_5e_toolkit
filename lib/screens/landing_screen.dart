@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/srd_summons.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/legal_dialogs.dart';
-import 'animate_objects_screen.dart';
 import 'dice_roller_screen.dart';
+import 'minion_tool_screen.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -102,7 +103,7 @@ class LandingScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Choose from the DangerouslyNerdy suite of 5e D&D player tools designed for quick minion combat management, dice math, and room rolls.',
+                          'Choose from the DangerouslyNerdy suite of dedicated 5e D&D player tools designed for minion combat management, magic item rollers, dice math, and live party rooms.',
                           style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
                         ),
                       ],
@@ -111,68 +112,192 @@ class LandingScreen extends StatelessWidget {
 
                   const SizedBox(height: 28),
 
-                  const Text(
-                    'ACTIVE TOOLS',
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
+                  // CATEGORY 1: GENERAL UTILITIES (CORE APP AT TOP)
+                  _buildSectionHeader('🎲 CORE UTILITIES', Colors.cyanAccent),
+                  const SizedBox(height: 12),
+                  _buildToolGrid(
+                    context,
+                    children: [
+                      _buildToolCard(
+                        context,
+                        title: 'Dice Roller & Party Rooms',
+                        badgeText: 'Core Utility',
+                        badgeColor: Colors.cyanAccent,
+                        icon: Icons.casino,
+                        accentColor: Colors.cyanAccent,
+                        description:
+                            'Roll d4-d100, custom modifiers, advantage/disadvantage, JSON preset sharing, & live multiplayer party rooms.',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
+                          );
+                        },
+                      ),
+                    ],
                   ),
 
+                  const SizedBox(height: 32),
+
+                  // CATEGORY 2: SPELL MINION TOOLS
+                  _buildSectionHeader('🔮 SPELL MINION COMPANIONS', Colors.amber),
                   const SizedBox(height: 12),
+                  _buildToolGrid(
+                    context,
+                    children: [
+                      _buildToolCard(
+                        context,
+                        title: 'Animate Objects',
+                        badgeText: '5th-Level Spell',
+                        badgeColor: Colors.amber,
+                        icon: Icons.auto_awesome,
+                        accentColor: Colors.amber,
+                        description:
+                            'Track 10-18 object HP, point budget, and batch roll attack/damage for Tiny to Huge animated objects.',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: AnimateObjectsSummon.preset,
+                          title: 'Animate Objects Companion',
+                          defaultSlot: 5,
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Conjure Animals',
+                        badgeText: '3rd-Level Spell',
+                        badgeColor: Colors.lightGreenAccent,
+                        icon: Icons.pets,
+                        accentColor: Colors.lightGreenAccent,
+                        description:
+                            'Summon & batch roll for Wolves, Dire Wolves, Giant Hyenas, Giant Spiders, Apes, and Boars with Pack Tactics!',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: BeastSummons.conjureAnimalsPreset,
+                          title: 'Conjure Animals Squad Manager',
+                          defaultSlot: 3,
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Animate Dead',
+                        badgeText: '3rd-Level Spell',
+                        badgeColor: Colors.redAccent,
+                        icon: Icons.dangerous,
+                        accentColor: Colors.redAccent,
+                        description:
+                            'Manage Skeleton archers and Zombie frontline HP, initiative, and batch ranged/melee attacks.',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: UndeadSummons.animateDeadPreset,
+                          title: 'Animate Dead Squad Tracker',
+                          defaultSlot: 3,
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Create Undead',
+                        badgeText: '6th-Level Spell',
+                        badgeColor: Colors.deepOrangeAccent,
+                        icon: Icons.coronavirus,
+                        accentColor: Colors.deepOrangeAccent,
+                        description:
+                            'Command higher-tier undead squads: Ghouls, Ghasts, Wights, and Mummies with full stat tracking.',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: UndeadSummons.createUndeadPreset,
+                          title: 'Create Undead Manager',
+                          defaultSlot: 6,
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Conjure Elementals',
+                        badgeText: '4th-5th Level Spells',
+                        badgeColor: Colors.orangeAccent,
+                        icon: Icons.local_fire_department,
+                        accentColor: Colors.orangeAccent,
+                        description:
+                            'Summon Air, Earth, Fire, and Water Elementals, or swarm mephits and gargoyles with batch rolling.',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: ElementalSummons.conjureElementalPreset,
+                          title: 'Conjure Elementals Companion',
+                          defaultSlot: 5,
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Giant Insect',
+                        badgeText: '4th-Level Spell',
+                        badgeColor: Colors.lime,
+                        icon: Icons.bug_report,
+                        accentColor: Colors.lime,
+                        description:
+                            'Transform ordinary insects into Giant Centipedes or Giant Wasps with poisonous batch attacks.',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: InsectSummons.giantInsectPreset,
+                          title: 'Giant Insect Squad Tracker',
+                          defaultSlot: 4,
+                        ),
+                      ),
+                    ],
+                  ),
 
-                  // Tool Cards Grid / List
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      int crossAxisCount = constraints.maxWidth > 700 ? 2 : 1;
-                      return GridView.count(
-                        crossAxisCount: crossAxisCount,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: crossAxisCount == 2 ? 1.6 : 1.7,
-                        children: [
-                          // TOOL 1: 5E MINION & SQUAD TOOLKIT
-                          _buildToolCard(
-                            context,
-                            title: '5e Minion Squad Manager',
-                            badgeText: 'SRD 5.1 Spells & Items',
-                            badgeColor: Colors.amber,
-                            icon: Icons.auto_awesome,
-                            accentColor: Colors.amber,
-                            description:
-                                'Manage squad HP, budgets, and batch roll attack/damage for Animate Objects, Conjure Animals, Animate Dead, Bag of Tricks, and more!',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const AnimateObjectsScreen()),
-                              );
-                            },
-                          ),
+                  const SizedBox(height: 32),
 
-                          // TOOL 2: DICE ROLLER
-                          _buildToolCard(
-                            context,
-                            title: 'Dice Roller',
-                            badgeText: 'Utility',
-                            badgeColor: Colors.cyanAccent,
-                            icon: Icons.casino,
-                            accentColor: Colors.cyanAccent,
-                            description:
-                                'Roll d4 to d100, custom modifiers, advantage/disadvantage, with crit highlights and history.',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
-                              );
-                            },
-                          ),
-                        ],
-                      );
-                    },
+                  // CATEGORY 3: MAGIC ITEM TOOLS
+                  _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS', Colors.purpleAccent),
+                  const SizedBox(height: 12),
+                  _buildToolGrid(
+                    context,
+                    children: [
+                      _buildToolCard(
+                        context,
+                        title: 'Bag of Tricks',
+                        badgeText: 'Magic Item',
+                        badgeColor: Colors.purpleAccent,
+                        icon: Icons.casino_outlined,
+                        accentColor: Colors.purpleAccent,
+                        description:
+                            'Interactive bag puller! Randomly pull beasts from Gray, Rust, or Tan Bags of Tricks directly into your active squad.',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: BagOfTricksSummons.bagOfTricksPreset,
+                          title: 'Bag of Tricks Roller',
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Horn of Valhalla',
+                        badgeText: 'Magic Item',
+                        badgeColor: Colors.deepOrange,
+                        icon: Icons.sports_kabaddi,
+                        accentColor: Colors.deepOrange,
+                        description:
+                            'Blow the Silver, Brass, Bronze, or Iron Horn to roll random Berserker squads (2d4+2 up to 5d4+5).',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: ValhallaSummons.hornOfValhallaPreset,
+                          title: 'Horn of Valhalla Roller',
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Figurines of Wondrous Power',
+                        badgeText: 'Magic Item',
+                        badgeColor: Colors.tealAccent,
+                        icon: Icons.token,
+                        accentColor: Colors.tealAccent,
+                        description:
+                            'Animate Bronze Griffon, Onyx Dog, or Marble Elephant statblocks with quick batch attack rolling.',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: FigurinesSummons.figurinesPreset,
+                          title: 'Figurines of Wondrous Power',
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 40),
@@ -224,6 +349,66 @@ class LandingScreen extends StatelessWidget {
     );
   }
 
+  void _launchTool(
+    BuildContext context, {
+    required SummonPreset preset,
+    required String title,
+    int defaultSlot = 5,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MinionToolScreen(
+          preset: preset,
+          customTitle: title,
+          defaultSpellLevel: defaultSlot,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 18,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToolGrid(BuildContext context, {required List<Widget> children}) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = constraints.maxWidth > 700 ? 2 : 1;
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: crossAxisCount == 2 ? 1.6 : 1.7,
+          children: children,
+        );
+      },
+    );
+  }
+
   Widget _buildToolCard(
     BuildContext context, {
     required String title,
@@ -259,7 +444,7 @@ class LandingScreen extends StatelessWidget {
                       color: accentColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(icon, color: accentColor, size: 28),
+                    child: Icon(icon, color: accentColor, size: 26),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
