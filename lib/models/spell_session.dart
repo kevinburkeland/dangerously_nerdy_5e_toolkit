@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'animated_object.dart';
-
+import 'srd_summons.dart';
 import '../utils/secure_random.dart';
 
 enum RollAdvantage { normal, advantage, disadvantage }
@@ -15,6 +15,7 @@ class AttackRollResult {
   final bool isNat1;
   final bool isHit;
   final List<int> damageRolls;
+  final List<int>? secondaryDamageRolls;
   final List<int>? maxedRolls;
   final bool isMaximizedCrit;
   final int damageBonus;
@@ -30,6 +31,7 @@ class AttackRollResult {
     required this.isNat1,
     required this.isHit,
     required this.damageRolls,
+    this.secondaryDamageRolls,
     this.maxedRolls,
     this.isMaximizedCrit = false,
     required this.damageBonus,
@@ -60,41 +62,57 @@ class BatchAttackSummary {
 }
 
 class SpellSession {
-  int spellLevel; // 5 to 9
+  SummonPreset activePreset;
+  int spellLevel; // 1 to 9
   List<AnimatedObjectInstance> activeObjects;
   Random get _rng => SecureRng.instance;
 
   SpellSession({
+    SummonPreset? activePreset,
     this.spellLevel = 5,
     List<AnimatedObjectInstance>? activeObjects,
-  }) : activeObjects = activeObjects ?? [];
+  })  : activePreset = activePreset ?? SrdSummonsLibrary.allPresets.first,
+        activeObjects = activeObjects ?? [];
 
   int get maxPoints {
-    // 5th level = 10 points. +2 points per level above 5th.
-    return 10 + (spellLevel - 5) * 2;
+    if (activePreset.id == 'animate_objects') {
+      return 10 + (spellLevel - 5).clamp(0, 4) * 2;
+    }
+    return 50;
   }
 
   int get usedPoints {
-    int total = 0;
-    for (var obj in activeObjects) {
-      total += obj.size.pointCost;
+    if (activePreset.id == 'animate_objects') {
+      int total = 0;
+      for (var obj in activeObjects) {
+        total += obj.size.pointCost;
+      }
+      return total;
     }
-    return total;
+    return activeObjects.length;
   }
 
   int get remainingPoints => maxPoints - usedPoints;
 
   bool canAddObject(ObjectSize size) {
-    return remainingPoints >= size.pointCost;
+    if (activePreset.id == 'animate_objects') {
+      return remainingPoints >= size.pointCost;
+    }
+    return activeObjects.length < 50;
+  }
+
+  void switchPreset(SummonPreset newPreset) {
+    activePreset = newPreset;
+    activeObjects.clear();
   }
 
   void addObject(ObjectSize size, {String? customName, String damageType = 'Bludgeoning'}) {
     if (!canAddObject(size)) return;
-    if (activeObjects.length >= 50) return; // Guard bound overflow to protect frame budget
+    if (activeObjects.length >= 50) return;
 
     int count = activeObjects.where((o) => o.size == size).length + 1;
     String name = customName ?? '${size.displayName} Object #$count';
-    
+
     activeObjects.add(
       AnimatedObjectInstance(
         id: '${DateTime.now().microsecondsSinceEpoch}_${activeObjects.length}',
@@ -105,6 +123,65 @@ class SpellSession {
         damageType: damageType,
       ),
     );
+  }
+
+  void addMinionFromStatBlock(MinionStatBlock statBlock, {String? customName}) {
+    if (activeObjects.length >= 50) return;
+    int count = activeObjects.where((o) => o.name.startsWith(statBlock.name)).length + 1;
+    String name = customName ?? '${statBlock.name} #$count';
+
+    activeObjects.add(
+      AnimatedObjectInstance.fromStatBlock(
+        statBlock,
+        id: '${DateTime.now().microsecondsSinceEpoch}_${activeObjects.length}',
+        customName: name,
+      ),
+    );
+  }
+
+  // Bag of Tricks Random Pull Generator
+  MinionStatBlock rollBagOfTricks() {
+    final list = [
+      SrdSummonsLibrary.wolf,
+      SrdSummonsLibrary.boar,
+      SrdSummonsLibrary.giantHyena,
+      SrdSummonsLibrary.ape,
+      SrdSummonsLibrary.direWolf,
+      SrdSummonsLibrary.giantSpider,
+    ];
+    final selected = list[_rng.nextInt(list.length)];
+    addMinionFromStatBlock(selected, customName: 'Bag of Tricks: ${selected.name}');
+    return selected;
+  }
+
+  // Horn of Valhalla Variant Roller (Silver: 2d4+2, Brass: 3d4+3, Bronze: 4d4+4, Iron: 5d4+5)
+  int rollHornOfValhalla(String variant) {
+    int diceCount = 2;
+    int bonus = 2;
+    if (variant == 'brass') {
+      diceCount = 3;
+      bonus = 3;
+    } else if (variant == 'bronze') {
+      diceCount = 4;
+      bonus = 4;
+    } else if (variant == 'iron') {
+      diceCount = 5;
+      bonus = 5;
+    }
+
+    int count = bonus;
+    for (int i = 0; i < diceCount; i++) {
+      count += _rng.nextInt(4) + 1;
+    }
+
+    String variantTitle = '${variant[0].toUpperCase()}${variant.substring(1)}';
+    for (int i = 0; i < count; i++) {
+      addMinionFromStatBlock(
+        SrdSummonsLibrary.berserker,
+        customName: '$variantTitle Berserker #${activeObjects.length + 1}',
+      );
+    }
+    return count;
   }
 
   void removeObject(String id) {
@@ -140,24 +217,30 @@ class SpellSession {
     final livingObjects = activeObjects.where((o) => !o.isDead).toList();
 
     for (var obj in livingObjects) {
+      RollAdvantage effectiveAdv = advantageMode;
+      if (effectiveAdv == RollAdvantage.normal && obj.hasPackTactics) {
+        effectiveAdv = RollAdvantage.advantage;
+      }
+
       int roll1 = _rng.nextInt(20) + 1;
       int? roll2;
       int finalD20 = roll1;
 
-      if (advantageMode == RollAdvantage.advantage) {
+      if (effectiveAdv == RollAdvantage.advantage) {
         roll2 = _rng.nextInt(20) + 1;
         finalD20 = max(roll1, roll2);
-      } else if (advantageMode == RollAdvantage.disadvantage) {
+      } else if (effectiveAdv == RollAdvantage.disadvantage) {
         roll2 = _rng.nextInt(20) + 1;
         finalD20 = min(roll1, roll2);
       }
 
       bool isCrit = (finalD20 == 20);
       bool isNat1 = (finalD20 == 1);
-      int toHit = finalD20 + obj.size.attackBonus;
+      int toHit = finalD20 + obj.attackBonus;
       bool isHit = !isNat1 && (isCrit || toHit >= targetAc);
 
       List<int> dmgRolls = [];
+      List<int>? secDmgRolls;
       List<int>? maxedRolls;
       bool isMaxedCrit = false;
       int totalDmg = 0;
@@ -168,31 +251,42 @@ class SpellSession {
 
         if (isCrit && useMaximizedCrits) {
           isMaxedCrit = true;
-          // Maximized Critical Rule: Max possible dice damage + normal dice roll + bonus
           maxedRolls = List.generate(
-            obj.size.damageDiceCount,
-            (_) => obj.size.damageDiceSides,
+            obj.damageDiceCount,
+            (_) => obj.damageDiceSides,
           );
-          int maxDiceSum = obj.size.damageDiceCount * obj.size.damageDiceSides;
+          int maxDiceSum = obj.damageDiceCount * obj.damageDiceSides;
           totalDmg += maxDiceSum;
 
-          for (int i = 0; i < obj.size.damageDiceCount; i++) {
-            int d = _rng.nextInt(obj.size.damageDiceSides) + 1;
+          for (int i = 0; i < obj.damageDiceCount; i++) {
+            int d = _rng.nextInt(obj.damageDiceSides) + 1;
             dmgRolls.add(d);
             totalDmg += d;
           }
         } else {
-          int diceCount = obj.size.damageDiceCount;
-          if (isCrit) diceCount *= 2; // Critical hit doubles damage dice (RAW)
+          int diceCount = obj.damageDiceCount;
+          if (isCrit) diceCount *= 2;
 
           for (int i = 0; i < diceCount; i++) {
-            int d = _rng.nextInt(obj.size.damageDiceSides) + 1;
+            int d = _rng.nextInt(obj.damageDiceSides) + 1;
             dmgRolls.add(d);
             totalDmg += d;
           }
         }
 
-        totalDmg += obj.size.damageBonus;
+        totalDmg += obj.damageBonus;
+
+        if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
+          secDmgRolls = [];
+          int secDiceCount = obj.secondaryDamageDiceCount;
+          if (isCrit) secDiceCount *= 2;
+          for (int i = 0; i < secDiceCount; i++) {
+            int d = _rng.nextInt(obj.secondaryDamageDiceSides) + 1;
+            secDmgRolls.add(d);
+            totalDmg += d;
+          }
+        }
+
         totalDamageSum += totalDmg;
       }
 
@@ -207,9 +301,10 @@ class SpellSession {
           isNat1: isNat1,
           isHit: isHit,
           damageRolls: dmgRolls,
+          secondaryDamageRolls: secDmgRolls,
           maxedRolls: maxedRolls,
           isMaximizedCrit: isMaxedCrit,
-          damageBonus: obj.size.damageBonus,
+          damageBonus: obj.damageBonus,
           totalDamage: totalDmg,
         ),
       );

@@ -17,17 +17,17 @@ void main() {
     expect(find.text('DangerouslyNerdy 5e Toolkit'), findsOneWidget);
     expect(find.text('Select a Tool'), findsOneWidget);
 
-    expect(find.text('Animate Objects 5e'), findsOneWidget);
+    expect(find.text('5e Minion Squad Manager'), findsOneWidget);
     expect(find.text('Dice Roller'), findsOneWidget);
   });
 
-  testWidgets('Tapping Animate Objects 5e launches AnimateObjectsScreen', (WidgetTester tester) async {
+  testWidgets('Tapping 5e Minion Squad Manager launches AnimateObjectsScreen', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
-    final animateObjectsCard = find.text('Animate Objects 5e');
-    expect(animateObjectsCard, findsOneWidget);
+    final minionCard = find.text('5e Minion Squad Manager');
+    expect(minionCard, findsOneWidget);
 
-    await tester.tap(animateObjectsCard);
+    await tester.tap(minionCard);
     await tester.pumpAndSettle();
 
     expect(find.byType(AnimateObjectsScreen), findsOneWidget);

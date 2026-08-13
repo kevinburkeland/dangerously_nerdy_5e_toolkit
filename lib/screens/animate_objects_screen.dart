@@ -90,7 +90,7 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           autofocus: true,
           style: const TextStyle(color: Colors.white),
           decoration: const InputDecoration(
-            labelText: 'Damage Amount to ALL objects',
+            labelText: 'Damage Amount to ALL minions',
             labelStyle: TextStyle(color: Colors.white70),
             enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.redAccent)),
           ),
@@ -137,9 +137,12 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           children: [
             Image.asset('assets/images/logo.png', width: 32, height: 32),
             const SizedBox(width: 8),
-            const Text(
-              'Animate Objects 5e',
-              style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 18),
+            Expanded(
+              child: Text(
+                '5e Minion & Squad Toolkit',
+                style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 17),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -158,14 +161,13 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
                 value: _session.spellLevel,
                 dropdownColor: const Color(0xFF242038),
                 icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
-                items: List.generate(5, (index) {
-                  int lvl = 5 + index;
-                  int pts = 10 + index * 2;
+                items: List.generate(9, (index) {
+                  int lvl = index + 1;
                   return DropdownMenuItem(
                     value: lvl,
                     child: Text(
-                      '${lvl}th Level ($pts pts)',
-                      style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13),
+                      'Slot Lvl $lvl',
+                      style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   );
                 }),
@@ -187,7 +189,7 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
           unselectedLabelColor: Colors.white54,
           tabs: const [
             Tab(icon: Icon(Icons.shield_outlined), text: 'Active Squad'),
-            Tab(icon: Icon(Icons.menu_book), text: 'Spell Rules'),
+            Tab(icon: Icon(Icons.menu_book), text: 'Minion Rulebook'),
           ],
         ),
       ),
@@ -196,77 +198,77 @@ class _AnimateObjectsScreenState extends State<AnimateObjectsScreen> with Single
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1000),
           child: TabBarView(
-        controller: _tabController,
-        children: [
-          // TAB 1: ACTIVE SQUAD TRACKER
-          Column(
+            controller: _tabController,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: RoomBannerWidget(
-                  activeRoomCode: _activeRoomCode,
-                  playerName: _playerName,
-                  onJoinRoom: _joinRoom,
-                  onLeaveRoom: _leaveRoom,
-                ),
+              // TAB 1: ACTIVE SQUAD TRACKER
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: RoomBannerWidget(
+                      activeRoomCode: _activeRoomCode,
+                      playerName: _playerName,
+                      onJoinRoom: _joinRoom,
+                      onLeaveRoom: _leaveRoom,
+                    ),
+                  ),
+
+                  // Point Budget & Quick Action Header Widget
+                  ActiveSessionHeader(
+                    session: _session,
+                    onBatchAttack: _openBatchAttackDialog,
+                    onOpenSquadBuilder: _openSquadBuilder,
+                    onHealAll: () => setState(() => _session.healAll()),
+                    onShowMassDamageDialog: _showMassDamageDialog,
+                    onClearSquad: () => setState(() => _session.clearAll()),
+                  ),
+
+                  // Objects List
+                  Expanded(
+                    child: _session.activeObjects.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.blur_on, size: 64, color: Colors.white24),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No active minions in ${_session.activePreset.name}',
+                                  style: const TextStyle(color: Colors.white54, fontSize: 16),
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                                  onPressed: _openSquadBuilder,
+                                  icon: const Icon(Icons.add, color: Colors.black),
+                                  label: const Text('Assemble Squad', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _session.activeObjects.length,
+                            itemBuilder: (context, index) {
+                              final obj = _session.activeObjects[index];
+                              return ObjectCard(
+                                key: ValueKey(obj.id),
+                                object: obj,
+                                onDelete: () => setState(() => _session.removeObject(obj.id)),
+                                onHpChanged: (delta) => setState(() => obj.currentHp = (obj.currentHp + delta).clamp(0, obj.maxHp)),
+                                onNameChanged: (name) => setState(() => obj.name = name),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
 
-              // Point Budget & Quick Action Header Widget
-              ActiveSessionHeader(
-                session: _session,
-                onBatchAttack: _openBatchAttackDialog,
-                onOpenSquadBuilder: _openSquadBuilder,
-                onHealAll: () => setState(() => _session.healAll()),
-                onShowMassDamageDialog: _showMassDamageDialog,
-                onClearSquad: () => setState(() => _session.clearAll()),
-              ),
-
-              // Objects List
-              Expanded(
-                child: _session.activeObjects.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.blur_on, size: 64, color: Colors.white24),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No animated objects currently active',
-                              style: TextStyle(color: Colors.white54, fontSize: 16),
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                              onPressed: _openSquadBuilder,
-                              icon: const Icon(Icons.add, color: Colors.black),
-                              label: const Text('Assemble Squad', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _session.activeObjects.length,
-                        itemBuilder: (context, index) {
-                          final obj = _session.activeObjects[index];
-                          return ObjectCard(
-                            key: ValueKey(obj.id),
-                            object: obj,
-                            onDelete: () => setState(() => _session.removeObject(obj.id)),
-                            onHpChanged: (delta) => setState(() => obj.currentHp = (obj.currentHp + delta).clamp(0, obj.maxHp)),
-                            onNameChanged: (name) => setState(() => obj.name = name),
-                          );
-                        },
-                      ),
-              ),
+              // TAB 2: SPELL REFERENCE
+              const SpellReferenceWidget(),
             ],
           ),
-
-          // TAB 2: SPELL REFERENCE
-          const SpellReferenceWidget(),
-        ],
+        ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 }

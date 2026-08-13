@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'srd_summons.dart';
 
 enum ObjectSize { tiny, small, medium, large, huge }
 
@@ -190,8 +191,21 @@ class AnimatedObjectInstance {
   final ObjectSize size;
   int currentHp;
   final int maxHp;
-  String damageType; // Bludgeoning, Piercing, Slashing
+  String damageType; // Bludgeoning, Piercing, Slashing, Fire, etc.
   bool isSilvered;
+
+  // Optional custom stat block overrides for generic minion summons
+  final int? customAc;
+  final int? customAttackBonus;
+  final int? customDamageDiceCount;
+  final int? customDamageDiceSides;
+  final int? customDamageBonus;
+  final int secondaryDamageDiceCount;
+  final int secondaryDamageDiceSides;
+  final String? secondaryDamageType;
+  final bool hasPackTactics;
+  final String? specialTrait;
+  final Color? customAccentColor;
 
   AnimatedObjectInstance({
     required this.id,
@@ -201,10 +215,68 @@ class AnimatedObjectInstance {
     required this.maxHp,
     this.damageType = 'Bludgeoning',
     this.isSilvered = false,
+    this.customAc,
+    this.customAttackBonus,
+    this.customDamageDiceCount,
+    this.customDamageDiceSides,
+    this.customDamageBonus,
+    this.secondaryDamageDiceCount = 0,
+    this.secondaryDamageDiceSides = 0,
+    this.secondaryDamageType,
+    this.hasPackTactics = false,
+    this.specialTrait,
+    this.customAccentColor,
   });
 
-  bool get isDead => currentHp <= 0;
+  factory AnimatedObjectInstance.fromStatBlock(MinionStatBlock statBlock, {required String id, String? customName}) {
+    ObjectSize sizeEnum = ObjectSize.medium;
+    if (statBlock.sizeDisplay.toLowerCase().contains('tiny')) {
+      sizeEnum = ObjectSize.tiny;
+    } else if (statBlock.sizeDisplay.toLowerCase().contains('small')) {
+      sizeEnum = ObjectSize.small;
+    } else if (statBlock.sizeDisplay.toLowerCase().contains('large')) {
+      sizeEnum = ObjectSize.large;
+    } else if (statBlock.sizeDisplay.toLowerCase().contains('huge')) {
+      sizeEnum = ObjectSize.huge;
+    }
 
+    return AnimatedObjectInstance(
+      id: id,
+      name: customName ?? statBlock.name,
+      size: sizeEnum,
+      currentHp: statBlock.maxHp,
+      maxHp: statBlock.maxHp,
+      damageType: statBlock.damageType,
+      customAc: statBlock.ac,
+      customAttackBonus: statBlock.attackBonus,
+      customDamageDiceCount: statBlock.damageDiceCount,
+      customDamageDiceSides: statBlock.damageDiceSides,
+      customDamageBonus: statBlock.damageBonus,
+      secondaryDamageDiceCount: statBlock.secondaryDamageDiceCount,
+      secondaryDamageDiceSides: statBlock.secondaryDamageDiceSides,
+      secondaryDamageType: statBlock.secondaryDamageType,
+      hasPackTactics: statBlock.hasPackTactics,
+      specialTrait: statBlock.specialTrait,
+      customAccentColor: statBlock.accentColor,
+    );
+  }
+
+  int get ac => customAc ?? size.ac;
+  int get attackBonus => customAttackBonus ?? size.attackBonus;
+  int get damageDiceCount => customDamageDiceCount ?? size.damageDiceCount;
+  int get damageDiceSides => customDamageDiceSides ?? size.damageDiceSides;
+  int get damageBonus => customDamageBonus ?? size.damageBonus;
+  Color get accentColor => customAccentColor ?? size.accentColor;
+
+  String get damageFormula {
+    final base = '${damageDiceCount}d$damageDiceSides${damageBonus >= 0 ? "+$damageBonus" : "$damageBonus"}';
+    if (secondaryDamageDiceCount > 0 && secondaryDamageType != null) {
+      return '$base $damageType + ${secondaryDamageDiceCount}d$secondaryDamageDiceSides $secondaryDamageType';
+    }
+    return '$base $damageType';
+  }
+
+  bool get isDead => currentHp <= 0;
   double get hpPercent => (currentHp / maxHp).clamp(0.0, 1.0);
 
   void takeDamage(int amount) {
@@ -223,6 +295,17 @@ class AnimatedObjectInstance {
     int? maxHp,
     String? damageType,
     bool? isSilvered,
+    int? customAc,
+    int? customAttackBonus,
+    int? customDamageDiceCount,
+    int? customDamageDiceSides,
+    int? customDamageBonus,
+    int? secondaryDamageDiceCount,
+    int? secondaryDamageDiceSides,
+    String? secondaryDamageType,
+    bool? hasPackTactics,
+    String? specialTrait,
+    Color? customAccentColor,
   }) {
     return AnimatedObjectInstance(
       id: id ?? this.id,
@@ -232,6 +315,17 @@ class AnimatedObjectInstance {
       maxHp: maxHp ?? this.maxHp,
       damageType: damageType ?? this.damageType,
       isSilvered: isSilvered ?? this.isSilvered,
+      customAc: customAc ?? this.customAc,
+      customAttackBonus: customAttackBonus ?? this.customAttackBonus,
+      customDamageDiceCount: customDamageDiceCount ?? this.customDamageDiceCount,
+      customDamageDiceSides: customDamageDiceSides ?? this.customDamageDiceSides,
+      customDamageBonus: customDamageBonus ?? this.customDamageBonus,
+      secondaryDamageDiceCount: secondaryDamageDiceCount ?? this.secondaryDamageDiceCount,
+      secondaryDamageDiceSides: secondaryDamageDiceSides ?? this.secondaryDamageDiceSides,
+      secondaryDamageType: secondaryDamageType ?? this.secondaryDamageType,
+      hasPackTactics: hasPackTactics ?? this.hasPackTactics,
+      specialTrait: specialTrait ?? this.specialTrait,
+      customAccentColor: customAccentColor ?? this.customAccentColor,
     );
   }
 }

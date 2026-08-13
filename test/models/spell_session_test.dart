@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons.dart';
 
 void main() {
   group('SpellSession Budget & Point Tests', () {
-    test('5th level spell slot max points is 10', () {
+    test('5th level spell slot max points is 10 for Animate Objects', () {
       final session = SpellSession(spellLevel: 5);
       expect(session.maxPoints, 10);
       expect(session.usedPoints, 0);
@@ -97,24 +98,47 @@ void main() {
       expect(summaryMax.useMaximizedCrits, true);
     });
 
-    test('addObject respects 50 active objects maximum bound ceiling', () {
-      final session = SpellSession(spellLevel: 9);
-      for (int i = 0; i < 60; i++) {
-        session.activeObjects.add(
-          AnimatedObjectInstance(
-            id: 'obj_$i',
-            name: 'Obj $i',
-            size: ObjectSize.tiny,
-            currentHp: 20,
-            maxHp: 20,
-          ),
-        );
-      }
-      expect(session.activeObjects.length, 60);
+    test('SRD Summons support: addMinionFromStatBlock & rollBagOfTricks', () {
+      final session = SpellSession(spellLevel: 5);
+      session.addMinionFromStatBlock(SrdSummonsLibrary.wolf);
+      session.addMinionFromStatBlock(SrdSummonsLibrary.direWolf);
+      session.addMinionFromStatBlock(SrdSummonsLibrary.giantSpider);
 
-      session.addObject(ObjectSize.tiny);
-      // Should be blocked by activeObjects.length >= 50 guard
-      expect(session.activeObjects.length, 60);
+      expect(session.activeObjects.length, 3);
+      expect(session.activeObjects[0].hasPackTactics, true);
+      expect(session.activeObjects[2].secondaryDamageDiceCount, 2);
+
+      // Test Bag of Tricks pull
+      final pulled = session.rollBagOfTricks();
+      expect(session.activeObjects.length, 4);
+      expect(pulled.name.isNotEmpty, true);
+    });
+
+    test('rollHornOfValhalla generates correct Berserker counts per variant', () {
+      final session = SpellSession(spellLevel: 5);
+      
+      // Silver: 2d4+2 (range 4 to 10)
+      final countSilver = session.rollHornOfValhalla('silver');
+      expect(countSilver >= 4 && countSilver <= 10, true);
+      expect(session.activeObjects.length, countSilver);
+      session.clearAll();
+
+      // Brass: 3d4+3 (range 6 to 15)
+      final countBrass = session.rollHornOfValhalla('brass');
+      expect(countBrass >= 6 && countBrass <= 15, true);
+      expect(session.activeObjects.length, countBrass);
+      session.clearAll();
+
+      // Bronze: 4d4+4 (range 8 to 20)
+      final countBronze = session.rollHornOfValhalla('bronze');
+      expect(countBronze >= 8 && countBronze <= 20, true);
+      expect(session.activeObjects.length, countBronze);
+      session.clearAll();
+
+      // Iron: 5d4+5 (range 10 to 25)
+      final countIron = session.rollHornOfValhalla('iron');
+      expect(countIron >= 10 && countIron <= 25, true);
+      expect(session.activeObjects.length, countIron);
     });
   });
 }

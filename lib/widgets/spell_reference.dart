@@ -1,16 +1,58 @@
 import 'package:flutter/material.dart';
-import '../models/animated_object.dart';
+import '../models/srd_summons.dart';
 
-class SpellReferenceWidget extends StatelessWidget {
+class SpellReferenceWidget extends StatefulWidget {
   const SpellReferenceWidget({super.key});
 
   @override
+  State<SpellReferenceWidget> createState() => _SpellReferenceWidgetState();
+}
+
+class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
+  SummonPreset _selectedPreset = SrdSummonsLibrary.allPresets.first;
+
+  @override
   Widget build(BuildContext context) {
+    final p = _selectedPreset;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Filter Selector
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF252236),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<SummonPreset>(
+                value: _selectedPreset,
+                dropdownColor: const Color(0xFF252236),
+                isExpanded: true,
+                icon: const Icon(Icons.menu_book, color: Colors.amber),
+                items: SrdSummonsLibrary.allPresets.map((preset) {
+                  return DropdownMenuItem<SummonPreset>(
+                    value: preset,
+                    child: Text(
+                      '${preset.name} (${preset.levelDisplay})',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedPreset = val);
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // Header Card
           Container(
             padding: const EdgeInsets.all(16),
@@ -20,21 +62,21 @@ class SpellReferenceWidget extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Animate Objects',
-                  style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  p.name,
+                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  '5th-level Transmutation | Casting Time: 1 Action | Range: 120 feet',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  '${p.levelDisplay} | Casting Time: ${p.castingTime} | Range: ${p.range}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 Text(
-                  'Components: V, S | Duration: Concentration, up to 1 minute',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  'Components: ${p.components} | Duration: ${p.duration}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -43,25 +85,31 @@ class SpellReferenceWidget extends StatelessWidget {
 
           // Spell Description
           const Text(
-            'SPELL DESCRIPTION',
+            'SPELL / ITEM DESCRIPTION',
             style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Objects come to life at your command. Choose up to ten nonmagical objects within range that are not being worn or carried. Medium targets count as two objects, Large targets count as four objects, Huge targets count as eight objects. You can\'t animate an object larger than Huge.',
-            style: TextStyle(color: Color(0xE6FFFFFF), height: 1.4),
+          Text(
+            p.description,
+            style: const TextStyle(color: Color(0xE6FFFFFF), height: 1.4),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
+
           const Text(
-            'As a bonus action, you can mentally command any object you made with this spell if the object is within 500 feet of you. If you command multiple objects, you can give the same command to each of them.',
-            style: TextStyle(color: Color(0xE6FFFFFF), height: 1.4),
+            'UPCASTING & SCALING RULES',
+            style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            p.upcastRules,
+            style: const TextStyle(color: Color(0xE6FFFFFF), height: 1.4),
           ),
           const SizedBox(height: 20),
 
           // RAW Stat Table
-          const Text(
-            'OBJECT STATISTICS TABLE',
-            style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+          Text(
+            '${p.name.toUpperCase()} STATISTICS TABLE',
+            style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
 
@@ -72,24 +120,24 @@ class SpellReferenceWidget extends StatelessWidget {
               dataRowColor: WidgetStateProperty.all(const Color(0xFF1E1B2E)),
               border: TableBorder.all(color: Colors.white24, width: 0.5),
               columns: const [
-                DataColumn(label: Text('Size', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('Pts', style: TextStyle(color: Colors.amber))),
+                DataColumn(label: Text('Name', style: TextStyle(color: Colors.amber))),
+                DataColumn(label: Text('Size / CR', style: TextStyle(color: Colors.amber))),
                 DataColumn(label: Text('HP', style: TextStyle(color: Colors.amber))),
                 DataColumn(label: Text('AC', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('Attack', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('Damage', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('STR/DEX', style: TextStyle(color: Colors.amber))),
+                DataColumn(label: Text('Attack Bonus', style: TextStyle(color: Colors.amber))),
+                DataColumn(label: Text('Damage Formula', style: TextStyle(color: Colors.amber))),
+                DataColumn(label: Text('Special Traits', style: TextStyle(color: Colors.amber))),
               ],
-              rows: ObjectSize.values.map((size) {
+              rows: p.statBlocks.map((sb) {
                 return DataRow(
                   cells: [
-                    DataCell(Text(size.displayName, style: TextStyle(color: size.accentColor, fontWeight: FontWeight.bold))),
-                    DataCell(Text('${size.pointCost}', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${size.maxHp}', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${size.ac}', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('+${size.attackBonus} to hit', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text(size.damageFormula, style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${size.strScore} / ${size.dexScore}', style: const TextStyle(color: Colors.white70))),
+                    DataCell(Text(sb.name, style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.bold))),
+                    DataCell(Text('${sb.sizeDisplay} (${sb.crDisplay})', style: const TextStyle(color: Colors.white))),
+                    DataCell(Text('${sb.maxHp}', style: const TextStyle(color: Colors.white))),
+                    DataCell(Text('${sb.ac}', style: const TextStyle(color: Colors.white))),
+                    DataCell(Text('+${sb.attackBonus} to hit', style: const TextStyle(color: Colors.white))),
+                    DataCell(Text(sb.fullDamageFormula, style: const TextStyle(color: Colors.white))),
+                    DataCell(Text(sb.specialTrait ?? (sb.hasPackTactics ? 'Pack Tactics' : 'None'), style: const TextStyle(color: Colors.white70, fontSize: 11))),
                   ],
                 );
               }).toList(),
@@ -104,16 +152,12 @@ class SpellReferenceWidget extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _buildTipCard(
-            'Maximum Damage Output (DPR)',
-            '10 Tiny objects (e.g. silver coins or daggers) yield 10 attacks at +8 to hit dealing 1d4+4 each (avg 65 damage/round if all hit). This is widely considered the highest single-target DPR option.',
+            'SRD 5.1 Legal Notice',
+            'All text, formulas, and creature stats above are strictly taken from the SRD 5.1 under Creative Commons CC-BY-4.0 attribution.',
           ),
           _buildTipCard(
-            'Damage Types & Resistance',
-            'Animated objects deal nonmagical bludgeoning, piercing, or slashing damage depending on their form. Silvering coins or daggers overcomes resistance to nonmagical attacks for silver-susceptible creatures!',
-          ),
-          _buildTipCard(
-            'Upcasting',
-            'If you cast this spell using a slot of 6th level or higher, you can animate two additional objects for each slot level above 5th (+2 points per spell slot level above 5th).',
+            'Action Economy & Squad Management',
+            'Summoning multiple creatures allows you to split attacks, control space, absorb incoming damage, or trigger Pack Tactics for team advantage!',
           ),
         ],
       ),

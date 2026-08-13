@@ -47,182 +47,182 @@ class LandingScreen extends StatelessWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Hero Banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF2E2452), Color(0xFF1E1B2E)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.cyanAccent.withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Image.asset('assets/images/logo.png', width: 68, height: 68),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Hero Banner
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF2E2452), Color(0xFF1E1B2E)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Text(
-                            'Select a Tool',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.cyanAccent.withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: Image.asset('assets/images/logo.png', width: 68, height: 68),
                             ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Text(
+                                'Select a Tool',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Choose from the DangerouslyNerdy suite of 5e D&D player tools designed for quick minion combat management, dice math, and room rolls.',
+                          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  const Text(
+                    'ACTIVE TOOLS',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Tool Cards Grid / List
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      int crossAxisCount = constraints.maxWidth > 700 ? 2 : 1;
+                      return GridView.count(
+                        crossAxisCount: crossAxisCount,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: crossAxisCount == 2 ? 1.6 : 1.7,
+                        children: [
+                          // TOOL 1: 5E MINION & SQUAD TOOLKIT
+                          _buildToolCard(
+                            context,
+                            title: '5e Minion Squad Manager',
+                            badgeText: 'SRD 5.1 Spells & Items',
+                            badgeColor: Colors.amber,
+                            icon: Icons.auto_awesome,
+                            accentColor: Colors.amber,
+                            description:
+                                'Manage squad HP, budgets, and batch roll attack/damage for Animate Objects, Conjure Animals, Animate Dead, Bag of Tricks, and more!',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const AnimateObjectsScreen()),
+                              );
+                            },
+                          ),
+
+                          // TOOL 2: DICE ROLLER
+                          _buildToolCard(
+                            context,
+                            title: 'Dice Roller',
+                            badgeText: 'Utility',
+                            badgeColor: Colors.cyanAccent,
+                            icon: Icons.casino,
+                            accentColor: Colors.cyanAccent,
+                            description:
+                                'Roll d4 to d100, custom modifiers, advantage/disadvantage, with crit highlights and history.',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // LEGAL & PRIVACY FOOTER LINKS
+                  Center(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        TextButton(
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          onPressed: () => LegalDialogs.showPrivacyPolicy(context),
+                          child: const Text(
+                            'Privacy Policy',
+                            style: TextStyle(color: Colors.white38, fontSize: 12),
+                          ),
+                        ),
+                        const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
+                        TextButton(
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          onPressed: () => LegalDialogs.showTermsOfService(context),
+                          child: const Text(
+                            'Terms of Service',
+                            style: TextStyle(color: Colors.white38, fontSize: 12),
+                          ),
+                        ),
+                        const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
+                        TextButton(
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          onPressed: () => LegalDialogs.showAttribution(context),
+                          child: const Text(
+                            'Legal & SRD 5.1 Attribution',
+                            style: TextStyle(color: Colors.white38, fontSize: 12),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Choose from the DangerouslyNerdy suite of 5e D&D player tools designed for quick combat management, dice math, and room rolls.',
-                      style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
-
-              const SizedBox(height: 28),
-
-              const Text(
-                'ACTIVE TOOLS',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Tool Cards Grid / List
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  int crossAxisCount = constraints.maxWidth > 700 ? 2 : 1;
-                  return GridView.count(
-                    crossAxisCount: crossAxisCount,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: crossAxisCount == 2 ? 1.6 : 1.7,
-                    children: [
-                      // TOOL 1: ANIMATE OBJECTS
-                      _buildToolCard(
-                        context,
-                        title: 'Animate Objects 5e',
-                        badgeText: '5e Spell Tracker',
-                        badgeColor: Colors.amber,
-                        icon: Icons.auto_awesome,
-                        accentColor: Colors.amber,
-                        description:
-                            'Track squad HP, point budgets, and batch roll mass attack & damage for Animated Objects.',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const AnimateObjectsScreen()),
-                          );
-                        },
-                      ),
-
-                      // TOOL 2: DICE ROLLER
-                      _buildToolCard(
-                        context,
-                        title: 'Dice Roller',
-                        badgeText: 'Utility',
-                        badgeColor: Colors.cyanAccent,
-                        icon: Icons.casino,
-                        accentColor: Colors.cyanAccent,
-                        description:
-                            'Roll d4 to d100, custom modifiers, advantage/disadvantage, with crit highlights and history.',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
-
-              const SizedBox(height: 40),
-
-              // LEGAL & PRIVACY FOOTER LINKS
-              Center(
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 12,
-                  runSpacing: 8,
-                  children: [
-                    TextButton(
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                      onPressed: () => LegalDialogs.showPrivacyPolicy(context),
-                      child: const Text(
-                        'Privacy Policy',
-                        style: TextStyle(color: Colors.white38, fontSize: 12),
-                      ),
-                    ),
-                    const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
-                    TextButton(
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                      onPressed: () => LegalDialogs.showTermsOfService(context),
-                      child: const Text(
-                        'Terms of Service',
-                        style: TextStyle(color: Colors.white38, fontSize: 12),
-                      ),
-                    ),
-                    const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
-                    TextButton(
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                      onPressed: () => LegalDialogs.showAttribution(context),
-                      child: const Text(
-                        'Legal & SRD 5.1 Attribution',
-                        style: TextStyle(color: Colors.white38, fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 
   Widget _buildToolCard(
     BuildContext context, {

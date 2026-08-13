@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
+import '../models/srd_summons.dart';
 
 class SquadBuilderBottomSheet extends StatefulWidget {
   final SpellSession session;
@@ -17,7 +18,15 @@ class SquadBuilderBottomSheet extends StatefulWidget {
 }
 
 class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
-  void _addPreset(ObjectSize size, int count, {String? customName}) {
+  late SummonPreset _selectedPreset;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPreset = widget.session.activePreset;
+  }
+
+  void _addPresetObjects(ObjectSize size, int count, {String? customName}) {
     for (int i = 0; i < count; i++) {
       if (widget.session.canAddObject(size)) {
         widget.session.addObject(size, customName: customName);
@@ -32,6 +41,40 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
         break;
       }
     }
+    setState(() {});
+    widget.onSquadUpdated();
+  }
+
+  void _addMinions(MinionStatBlock statBlock, int count) {
+    for (int i = 0; i < count; i++) {
+      widget.session.addMinionFromStatBlock(statBlock);
+    }
+    setState(() {});
+    widget.onSquadUpdated();
+  }
+
+  void _rollBagOfTricks() {
+    final pulled = widget.session.rollBagOfTricks();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('🎲 Pulled a ${pulled.name} from the Bag of Tricks!'),
+        backgroundColor: Colors.purpleAccent,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+    setState(() {});
+    widget.onSquadUpdated();
+  }
+
+  void _rollHornOfValhalla(String variant, String label) {
+    final count = widget.session.rollHornOfValhalla(variant);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('📯 Blew the $label and summoned $count Berserkers!'),
+        backgroundColor: Colors.deepOrange,
+        duration: const Duration(seconds: 2),
+      ),
+    );
     setState(() {});
     widget.onSquadUpdated();
   }
@@ -64,98 +107,179 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             ),
             const SizedBox(height: 14),
 
-            // Header & Budget
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Add Animated Objects',
-                  style: TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
+            // Header & Preset Picker
+            const Text(
+              '🔮 SELECT SPELL OR ITEM',
+              style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2C2840),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<SummonPreset>(
+                  value: _selectedPreset,
+                  dropdownColor: const Color(0xFF2C2840),
+                  isExpanded: true,
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
+                  items: SrdSummonsLibrary.allPresets.map((preset) {
+                    return DropdownMenuItem<SummonPreset>(
+                      value: preset,
+                      child: Text(
+                        '${preset.name} (${preset.levelDisplay})',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (newVal) {
+                    if (newVal != null) {
+                      setState(() {
+                        _selectedPreset = newVal;
+                        widget.session.switchPreset(newVal);
+                      });
+                      widget.onSquadUpdated();
+                    }
+                  },
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: session.remainingPoints > 0 ? Colors.amber.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: session.remainingPoints > 0 ? Colors.amber : Colors.red),
-                  ),
-                  child: Text(
-                    'Budget: ${session.usedPoints} / ${session.maxPoints} pts',
-                    style: TextStyle(
-                      color: session.remainingPoints > 0 ? Colors.amber : Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 16),
 
-            // Quick Presets Header
+            // Bag of Tricks Special Action
+            if (_selectedPreset.isRandomTable) ...[
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.casino),
+                label: const Text('🎲 Roll & Pull Random Animal from Bag', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                onPressed: _rollBagOfTricks,
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Horn of Valhalla Special Variant Rollers
+            if (_selectedPreset.id == 'horn_of_valhalla') ...[
+              const Text(
+                '📯 ROLL HORN OF VALHALLA VARIANTS',
+                style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildChip('📯 Silver (2d4+2)', () => _rollHornOfValhalla('silver', 'Silver Horn')),
+                  _buildChip('📯 Brass (3d4+3)', () => _rollHornOfValhalla('brass', 'Brass Horn')),
+                  _buildChip('📯 Bronze (4d4+4)', () => _rollHornOfValhalla('bronze', 'Bronze Horn')),
+                  _buildChip('📯 Iron (5d4+5)', () => _rollHornOfValhalla('iron', 'Iron Horn')),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Quick Add Section for Current Preset
             const Text(
-              '⚡ QUICK PRESETS',
+              '⚡ QUICK ADD MINIONS',
               style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildPresetButton('10x Tiny (Coins/Needles)', () => _addPreset(ObjectSize.tiny, 10, customName: 'Animated Coin')),
-                _buildPresetButton('5x Small (Daggers/Chairs)', () => _addPreset(ObjectSize.small, 5, customName: 'Animated Dagger')),
-                _buildPresetButton('5x Medium (Swords/Tables)', () => _addPreset(ObjectSize.medium, 5, customName: 'Animated Greatsword')),
-                _buildPresetButton('2x Large (Statues/Carts)', () => _addPreset(ObjectSize.large, 2, customName: 'Animated Statue')),
-                _buildPresetButton('1x Huge (Boulders/Wagons)', () => _addPreset(ObjectSize.huge, 1, customName: 'Animated Boulder')),
-              ],
-            ),
+
+            if (_selectedPreset.id == 'animate_objects') ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildChip('10x Tiny (Coins)', () => _addPresetObjects(ObjectSize.tiny, 10, customName: 'Animated Coin')),
+                  _buildChip('5x Small (Daggers)', () => _addPresetObjects(ObjectSize.small, 5, customName: 'Animated Dagger')),
+                  _buildChip('5x Medium (Swords)', () => _addPresetObjects(ObjectSize.medium, 5, customName: 'Animated Sword')),
+                  _buildChip('2x Large (Statues)', () => _addPresetObjects(ObjectSize.large, 2, customName: 'Animated Statue')),
+                  _buildChip('1x Huge (Boulders)', () => _addPresetObjects(ObjectSize.huge, 1, customName: 'Animated Boulder')),
+                ],
+              ),
+            ] else ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _selectedPreset.statBlocks.map((sb) {
+                  return _buildChip('+1 ${sb.name}', () => _addMinions(sb, 1));
+                }).toList(),
+              ),
+            ],
+
             const SizedBox(height: 20),
 
-            // Individual Object Size Buttons
-            const Text(
-              '➕ ADD INDIVIDUAL SIZES',
-              style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold),
+            // Stat Block Cards List for active preset
+            Text(
+              '➕ AVAILABLE ${widget.session.activePreset.name.toUpperCase()} CREATURES',
+              style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
+
             Column(
-              children: ObjectSize.values.map((size) {
-                final canAdd = session.canAddObject(size);
+              children: _selectedPreset.statBlocks.map((sb) {
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.black26,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: size.accentColor.withValues(alpha: 0.4)),
+                    border: Border.all(color: sb.accentColor.withValues(alpha: 0.4)),
                   ),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: size.accentColor.withValues(alpha: 0.2),
+                      backgroundColor: sb.accentColor.withValues(alpha: 0.2),
                       child: Text(
-                        '${size.pointCost}p',
-                        style: TextStyle(color: size.accentColor, fontWeight: FontWeight.bold, fontSize: 12),
+                        sb.crDisplay,
+                        style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.bold, fontSize: 10),
                       ),
                     ),
-                    title: Text(
-                      size.displayName,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    title: Row(
+                      children: [
+                        Text(sb.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        if (sb.hasPackTactics) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text('Pack Tactics', style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ],
                     ),
                     subtitle: Text(
-                      'HP ${size.maxHp} | AC ${size.ac} | +${size.attackBonus} to hit | ${size.damageFormula}',
+                      'HP ${sb.maxHp} | AC ${sb.ac} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
                       style: const TextStyle(color: Colors.white60, fontSize: 11),
                     ),
-                    trailing: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: canAdd ? size.accentColor : Colors.grey.shade800,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      onPressed: canAdd ? () => _addPreset(size, 1) : null,
-                      child: const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.add_circle, color: Colors.amber),
+                          onPressed: () => _addMinions(sb, 1),
+                        ),
+                        if (_selectedPreset.id != 'animate_objects')
+                          TextButton(
+                            onPressed: () => _addMinions(sb, 4),
+                            child: const Text('+4', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                          ),
+                      ],
                     ),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white10,
@@ -171,7 +295,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
     );
   }
 
-  Widget _buildPresetButton(String label, VoidCallback onTap) {
+  Widget _buildChip(String label, VoidCallback onTap) {
     return ActionChip(
       backgroundColor: const Color(0xFF2C2840),
       side: const BorderSide(color: Colors.amber, width: 1),
