@@ -59,9 +59,5 @@ class A11yService {
         'Batch attack against Armor Class $targetAc completed: $hitCount of $totalAttacks attacks hit$critStr, dealing $totalDamage total damage.';
     announce(announcement);
   }
-
-  /// Announce a quick DM action or rules lookup
-  static void announceAction(String message) {
-    announce(message);
-  }
 }
+

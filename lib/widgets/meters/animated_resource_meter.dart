@@ -47,12 +47,27 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
-    final performanceMode = SettingsScope.maybeOf(context)?.settings.performanceMode ?? false;
+    _syncAnimation();
+  }
 
-    if (systemDisableAnimations || performanceMode) {
+  @override
+  void didUpdateWidget(covariant AnimatedResourceMeter oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentValue != widget.currentValue || oldWidget.maxValue != widget.maxValue) {
+      _syncAnimation();
+    }
+  }
+
+  void _syncAnimation() {
+    final systemDisableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final performanceMode = SettingsScope.maybeOf(context)?.settings.performanceMode ?? false;
+    final ratio = widget.maxValue > 0 ? (widget.currentValue / widget.maxValue).clamp(0.0, 1.0) : 0.0;
+    final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;
+
+    if (systemDisableAnimations || performanceMode || !isCritical) {
       if (_pulseController.isAnimating) {
         _pulseController.stop();
+        _pulseController.value = 1.0;
       }
     } else {
       if (!_pulseController.isAnimating) {
@@ -73,7 +88,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     final performanceMode = SettingsScope.of(context).settings.performanceMode;
     final tabletop = Theme.of(context).extension<TabletopColors>();
     final ratio = widget.maxValue > 0 ? (widget.currentValue / widget.maxValue).clamp(0.0, 1.0) : 0.0;
-    final isCritical = ratio <= 0.25 && widget.currentValue > 0;
+    final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;
     final activeColor = isCritical ? (widget.lowResourceColor ?? tabletop?.fumbleRed ?? Colors.red) : widget.fillColor;
 
     final semanticDescription =

@@ -48,11 +48,6 @@ void main() {
       expect(17.dndProficiencyBonus, 6);
       expect(20.dndProficiencyBonus, 6);
     });
-
-    test('Dnd5eRulesEngine static helpers mirror extension behavior', () {
-      expect(Dnd5eRulesEngine.calculateModifier(16), 3);
-      expect(Dnd5eRulesEngine.formatModifier(16), '+3');
-      expect(Dnd5eRulesEngine.calculateProficiencyBonus(5), 3);
-    });
   });
 }
+

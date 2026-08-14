@@ -7,18 +7,13 @@ final Random secureRandom = _initSecureRandom();
 Random _initSecureRandom() {
   try {
     return Random.secure();
-  } catch (e) {
-    LoggingService().logWarning(
-      'Cryptographic secure random unavailable on platform; falling back to standard Random',
+  } catch (e, stackTrace) {
+    LoggingService().logNonFatal(
       e,
+      stackTrace,
+      reason: 'Cryptographic Random.secure() unavailable on platform; falling back to standard Random',
     );
     return Random();
   }
 }
 
-/// Backward-compatibility wrapper for legacy call sites.
-@Deprecated('Use top-level secureRandom directly instead of SecureRng.instance')
-abstract final class SecureRng {
-  /// Global cryptographically secure Random instance
-  static Random get instance => secureRandom;
-}

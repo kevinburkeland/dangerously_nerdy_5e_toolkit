@@ -27,6 +27,29 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
     _selectedPreset = widget.session.activePreset;
   }
 
+  void _showFeedback(String message, {bool isError = false, Color? customColor, String? prefixIcon}) {
+    A11yService.announce(message);
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    final displayContent = prefixIcon != null ? '$prefixIcon $message' : message;
+    final bgColor = customColor ?? (isError ? Colors.redAccent : const Color(0xFF3F2B96));
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(displayContent),
+        backgroundColor: bgColor,
+        duration: Duration(seconds: isError ? 4 : 3),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: messenger.hideCurrentSnackBar,
+        ),
+      ),
+    );
+  }
+
   void _addPresetObjects(ObjectSize size, int count, {String? customName}) {
     int added = 0;
     for (int i = 0; i < count; i++) {
@@ -34,26 +57,15 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
         widget.session.addObject(size, customName: customName);
         added++;
       } else {
-        final msg = 'Not enough remaining point capacity for more ${size.displayName} objects!';
-        A11yService.announce(msg);
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: Colors.redAccent,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Dismiss',
-              textColor: Colors.white,
-              onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-            ),
-          ),
+        _showFeedback(
+          'Not enough remaining point capacity for more ${size.displayName} objects!',
+          isError: true,
         );
         break;
       }
     }
     if (added > 0) {
-      A11yService.announce('Added $added ${customName ?? size.displayName} to squad.');
+      _showFeedback('Added $added ${customName ?? size.displayName} to squad.');
     }
     setState(() {});
     widget.onSquadUpdated();
@@ -70,25 +82,12 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
         final msg = maxAllowed <= 0
             ? '${statBlock.name} is not available at spell slot level ${widget.session.spellLevel}!'
             : 'Reached limit ($maxAllowed) for ${statBlock.name} at slot level ${widget.session.spellLevel}!';
-        A11yService.announce(msg);
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(msg),
-            backgroundColor: Colors.redAccent,
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Dismiss',
-              textColor: Colors.white,
-              onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-            ),
-          ),
-        );
+        _showFeedback(msg, isError: true);
         break;
       }
     }
     if (added > 0) {
-      A11yService.announce('Added $added ${statBlock.name} to squad.');
+      _showFeedback('Added $added ${statBlock.name} to squad.');
     }
     setState(() {});
     widget.onSquadUpdated();
@@ -96,20 +95,10 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   void _rollBagOfTricks() {
     final pulled = widget.session.rollBagOfTricks();
-    final msg = 'Pulled a ${pulled.name} from the Bag of Tricks!';
-    A11yService.announce(msg);
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('🎲 $msg'),
-        backgroundColor: Colors.purpleAccent,
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Dismiss',
-          textColor: Colors.white,
-          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-        ),
-      ),
+    _showFeedback(
+      'Pulled a ${pulled.name} from the Bag of Tricks!',
+      prefixIcon: '🎲',
+      customColor: Colors.purpleAccent,
     );
     setState(() {});
     widget.onSquadUpdated();
@@ -117,20 +106,10 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   void _rollHornOfValhalla(String variant, String label) {
     final count = widget.session.rollHornOfValhalla(variant);
-    final msg = 'Blew the $label and summoned $count Berserkers!';
-    A11yService.announce(msg);
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('📯 $msg'),
-        backgroundColor: Colors.deepOrange,
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Dismiss',
-          textColor: Colors.white,
-          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-        ),
-      ),
+    _showFeedback(
+      'Blew the $label and summoned $count Berserkers!',
+      prefixIcon: '📯',
+      customColor: Colors.deepOrange,
     );
     setState(() {});
     widget.onSquadUpdated();

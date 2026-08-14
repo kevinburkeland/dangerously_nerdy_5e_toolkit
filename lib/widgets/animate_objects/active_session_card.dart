@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/spell_session.dart';
+import '../../theme/app_theme.dart';
+import '../meters/animated_resource_meter.dart';
 
 class ActiveSessionHeader extends StatelessWidget {
   final SpellSession session;
@@ -25,41 +27,38 @@ class ActiveSessionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tabletop = theme.extension<TabletopColors>();
     final used = session.usedPoints;
     final maxPts = session.maxPoints;
-    final pct = (used / maxPts).clamp(0.0, 1.0);
+    final isOverBudget = used > maxPts;
 
     return Container(
       padding: const EdgeInsets.all(12),
-      color: const Color(0xFF191626),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
+        ),
+      ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Point Budget: $used / $maxPts points used',
-                style: TextStyle(
-                  color: used > maxPts ? Colors.redAccent : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-              Text(
-                '${session.activeObjects.length} Objects',
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 6,
-              backgroundColor: Colors.white10,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                used > maxPts ? Colors.redAccent : Colors.amber,
+          AnimatedResourceMeter(
+            currentValue: used,
+            maxValue: maxPts,
+            label: 'Point Budget: $used / $maxPts points used',
+            fillColor: isOverBudget
+                ? (tabletop?.fumbleRed ?? Colors.redAccent)
+                : theme.colorScheme.primary,
+            height: 8,
+            trailing: Text(
+              '${session.activeObjects.length} Objects',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
