@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/a11y_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/batch_attack/batch_attack_results_card.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/dialogs/creature_stat_block_dialog.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/srd_summons.dart';
+import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';

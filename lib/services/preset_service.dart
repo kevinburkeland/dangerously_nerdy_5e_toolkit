@@ -140,21 +140,12 @@ class PresetService {
           final mapItem = Map<String, dynamic>.from(item);
           final rawPreset = CustomPreset.fromMap(mapItem);
 
-          final boundedName = rawPreset.name.trim().length > 50
-              ? rawPreset.name.trim().substring(0, 50)
-              : rawPreset.name.trim();
-          final boundedMod = rawPreset.modifier.clamp(-100, 100);
-
-          final boundedEntries = rawPreset.diceEntries.map((e) {
-            final boundedCount = e.count.clamp(1, 100);
-            final boundedSides = e.customSides.clamp(2, 1000);
-            return e.copyWith(count: boundedCount, customSides: boundedSides);
-          }).toList();
-
+          final cleanName = rawPreset.name.trim();
           final safePreset = rawPreset.copyWith(
-            name: boundedName.isNotEmpty ? boundedName : 'Custom Preset',
-            modifier: boundedMod,
-            diceEntries: boundedEntries,
+            name: cleanName.isNotEmpty
+                ? (cleanName.length > 50 ? cleanName.substring(0, 50) : cleanName)
+                : 'Custom Preset',
+            modifier: rawPreset.modifier.clamp(-100, 100),
           );
           imported.add(safePreset);
         } catch (e, stackTrace) {

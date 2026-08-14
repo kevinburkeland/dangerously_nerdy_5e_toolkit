@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
-import '../models/srd_summons.dart';
+import '../models/srd_summons/srd_summons_library.dart';
 import '../services/a11y_service.dart';
 
 class SquadBuilderBottomSheet extends StatefulWidget {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/batch_attack_dialog.dart';
 
 void main() {

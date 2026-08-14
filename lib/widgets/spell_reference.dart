@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/srd_summons.dart';
+import '../models/srd_summons/srd_summons_library.dart';
 import 'dialogs/creature_stat_block_dialog.dart';
 
 class SpellReferenceWidget extends StatefulWidget {

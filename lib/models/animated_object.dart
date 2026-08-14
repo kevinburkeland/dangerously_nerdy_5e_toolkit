@@ -1,6 +1,6 @@
 import 'dart:ui';
 import '../utils/dice_formatters.dart';
-import 'srd_summons.dart';
+import 'srd_summons/srd_summons_library.dart';
 
 /// Represents standard 5e animated object size classifications and combat metrics.
 enum ObjectSize {
@@ -15,7 +15,7 @@ enum ObjectSize {
     damageBonus: 4,
     strScore: 4,
     dexScore: 18,
-    accentColor: Color(0xFF4CAF50), // Green
+    accentColor: Color(0xFF4CAF50),
     defaultExample: 'Silver Coin / Needle',
   ),
   small(
@@ -29,7 +29,7 @@ enum ObjectSize {
     damageBonus: 2,
     strScore: 6,
     dexScore: 14,
-    accentColor: Color(0xFF03A9F4), // Light Blue
+    accentColor: Color(0xFF03A9F4),
     defaultExample: 'Dagger / Chair',
   ),
   medium(
@@ -43,7 +43,7 @@ enum ObjectSize {
     damageBonus: 1,
     strScore: 10,
     dexScore: 12,
-    accentColor: Color(0xFFFF9800), // Amber
+    accentColor: Color(0xFFFF9800),
     defaultExample: 'Sword / Table',
   ),
   large(
@@ -57,7 +57,7 @@ enum ObjectSize {
     damageBonus: 2,
     strScore: 14,
     dexScore: 10,
-    accentColor: Color(0xFFE91E63), // Pink/Red
+    accentColor: Color(0xFFE91E63),
     defaultExample: 'Cart / Statue',
   ),
   huge(
@@ -71,7 +71,7 @@ enum ObjectSize {
     damageBonus: 4,
     strScore: 18,
     dexScore: 6,
-    accentColor: Color(0xFF9C27B0), // Purple
+    accentColor: Color(0xFF9C27B0),
     defaultExample: 'Bouldering Pillar / Wagon',
   );
 

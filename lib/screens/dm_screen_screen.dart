@@ -25,7 +25,6 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
   DmCategory? _selectedCategory;
   bool _showOnlyChangedIn2024 = false;
   bool _showOnlyPinned = false;
-  final Set<String> _fallbackPinnedIds = <String>{};
 
   // Quick DM Scratchpad / Roller state
   String? _lastQuickRollLabel;
@@ -45,47 +44,28 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
   }
 
   Set<String> _getPinnedIds(BuildContext context) {
-    final settingsProvider = SettingsScope.maybeOf(context);
-    return settingsProvider?.settings.pinnedRuleIds ?? _fallbackPinnedIds;
+    return SettingsScope.of(context).settings.pinnedRuleIds;
   }
 
   void _togglePinRule(BuildContext context, String ruleId) {
     HapticService.selectionTick(context);
-    final settingsProvider = SettingsScope.maybeOf(context);
-    if (settingsProvider != null) {
-      settingsProvider.togglePinRule(ruleId);
-    } else {
-      setState(() {
-        if (_fallbackPinnedIds.contains(ruleId)) {
-          _fallbackPinnedIds.remove(ruleId);
-        } else {
-          _fallbackPinnedIds.add(ruleId);
-        }
-      });
-    }
+    SettingsScope.of(context).togglePinRule(ruleId);
   }
 
   void _clearAllPinnedRules(BuildContext context) {
     HapticService.selectionTick(context);
-    final settingsProvider = SettingsScope.maybeOf(context);
-    if (settingsProvider != null) {
-      settingsProvider.clearPinnedRules();
-    } else {
-      setState(() {
-        _fallbackPinnedIds.clear();
-      });
-    }
+    SettingsScope.of(context).clearPinnedRules();
   }
 
   void _onEditionChanged(BuildContext context, DmRulesEdition newEdition) {
-    final settingsProvider = SettingsScope.maybeOf(context);
-    final current = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final settingsProvider = SettingsScope.of(context);
+    final current = _localEditionOverride ?? settingsProvider.settings.rulesEdition;
     if (current == newEdition) return;
     HapticService.selectionTick(context);
     setState(() {
       _localEditionOverride = newEdition;
     });
-    settingsProvider?.setRulesEdition(newEdition);
+    settingsProvider.setRulesEdition(newEdition);
   }
 
   void _performQuickRoll(int sides, String label) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
-import '../models/srd_summons.dart';
+import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
 import '../widgets/animate_objects/active_session_card.dart';

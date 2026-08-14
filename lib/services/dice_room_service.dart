@@ -50,11 +50,11 @@ class DiceRoomService {
   final Map<String, List<RoomRoll>> _localRooms = {};
   final Map<String, StreamController<List<RoomRoll>>> _localControllers = {};
 
+  /// Deterministically checks if Firebase Core has been initialized with active apps.
   bool get isFirebaseAvailable {
     try {
       return Firebase.apps.isNotEmpty;
-    } catch (e) {
-      LoggingService().logWarning('Firebase availability probe returned false', e);
+    } catch (_) {
       return false;
     }
   }

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'animated_object.dart';
 import 'dice_roll.dart';
-import 'srd_summons.dart';
+import 'srd_summons/srd_summons_library.dart';
 import '../utils/secure_random.dart';
 
 class AttackRollResult {
