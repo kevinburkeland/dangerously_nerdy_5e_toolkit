@@ -134,7 +134,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       dexMod = first.size.dexScore.dndModifier;
       minionName = first.name;
     }
-    final natRoll = SecureRng.instance.nextInt(20) + 1;
+    final natRoll = secureRandom.nextInt(20) + 1;
     final total = natRoll + dexMod;
 
     showDialog(

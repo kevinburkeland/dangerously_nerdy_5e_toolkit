@@ -88,7 +88,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
 
     if (activeCode != null && activePlayer != null) {
       final timestamp = DateTime.now();
-      final summaryId = '${timestamp.microsecondsSinceEpoch}_batch_${SecureRng.instance.nextInt(1000000)}';
+      final summaryId = '${timestamp.microsecondsSinceEpoch}_batch_${secureRandom.nextInt(1000000)}';
       final summaryRoll = RoomRoll(
         id: summaryId,
         roomCode: activeCode,

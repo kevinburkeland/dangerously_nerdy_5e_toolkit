@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../utils/dice_formatters.dart';
 import 'dice_roll.dart';
 
 class CustomPreset {
@@ -31,8 +32,12 @@ class CustomPreset {
 
   String get formulaString {
     final diceStr = diceEntries.map((e) => e.formulaString).join('+');
-    final modStr = modifier != 0 ? (modifier > 0 ? '+$modifier' : '$modifier') : '';
-    final modeStr = rollMode == RollMode.advantage ? ' (Adv)' : (rollMode == RollMode.disadvantage ? ' (Dis)' : '');
+    final modStr = DiceFormatters.formatBonus(modifier);
+    final modeStr = switch (rollMode) {
+      RollMode.advantage => ' (Adv)',
+      RollMode.disadvantage => ' (Dis)',
+      RollMode.normal => '',
+    };
     return '$diceStr$modStr$modeStr';
   }
 

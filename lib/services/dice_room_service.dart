@@ -54,7 +54,19 @@ class DiceRoomService {
   bool get isFirebaseAvailable {
     try {
       return Firebase.apps.isNotEmpty;
-    } catch (_) {
+    } on FirebaseException catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'FirebaseException during availability check; using in-memory mode',
+      );
+      return false;
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Unexpected error during Firebase availability check; using in-memory mode',
+      );
       return false;
     }
   }
@@ -157,10 +169,9 @@ class DiceRoomService {
   /// Helper to generate a random 6-character uppercase room code
   String generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final rng = SecureRng.instance;
     String result = '';
     for (int i = 0; i < 6; i++) {
-      result += chars[rng.nextInt(chars.length)];
+      result += chars[secureRandom.nextInt(chars.length)];
     }
     return 'ROOM-$result';
   }

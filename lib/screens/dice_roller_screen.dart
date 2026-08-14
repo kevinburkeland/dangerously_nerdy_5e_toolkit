@@ -8,6 +8,7 @@ import '../services/dice_room_service.dart';
 import '../services/haptic_service.dart';
 import '../services/logging_service.dart';
 import '../services/preset_service.dart';
+import '../utils/dice_formatters.dart';
 import '../utils/secure_random.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
@@ -170,7 +171,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     final currentPlayerName = _roomService.playerName;
     if (currentRoomCode != null && currentPlayerName != null) {
       final roomRoll = RoomRoll.fromDiceRollResult(
-        id: '${DateTime.now().microsecondsSinceEpoch}_${SecureRng.instance.nextInt(1000000)}',
+        id: '${DateTime.now().microsecondsSinceEpoch}_${secureRandom.nextInt(1000000)}',
         roomCode: currentRoomCode,
         playerName: currentPlayerName,
         result: res,
@@ -198,12 +199,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
 
   String get _currentFormulaString {
     final dicePart = _dicePool.map((e) => e.formulaString).join(' + ');
-    String modStr = '';
-    if (_modifier > 0) {
-      modStr = ' + $_modifier';
-    } else if (_modifier < 0) {
-      modStr = ' - ${_modifier.abs()}';
-    }
+    final modStr = DiceFormatters.formatModifierExpression(_modifier);
     return '${dicePart.toUpperCase()}$modStr';
   }
 
@@ -212,7 +208,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     final name = await SavePresetDialog.show(context, formulaText: _currentFormulaString);
     if (name != null && name.isNotEmpty && mounted) {
       final messenger = ScaffoldMessenger.of(context);
-      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${SecureRng.instance.nextInt(1000000)}';
+      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${secureRandom.nextInt(1000000)}';
       final newPreset = CustomPreset(
         id: uniqueId,
         name: name,

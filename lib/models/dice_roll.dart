@@ -110,7 +110,7 @@ class DiceRollResult {
   // Backwards compatibility getters
   DieType get dieType => diceEntries.isNotEmpty ? diceEntries.first.dieType : DieType.d20;
   int get count => diceEntries.isNotEmpty ? diceEntries.fold(0, (sum, e) => sum + e.count) : 1;
-  static Random get _rng => SecureRng.instance;
+  static Random get _rng => secureRandom;
 
   static DiceRollResult roll({
     required DieType dieType,

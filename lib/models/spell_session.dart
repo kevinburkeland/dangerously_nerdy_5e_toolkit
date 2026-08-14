@@ -64,7 +64,7 @@ class SpellSession {
   SummonPreset activePreset;
   int spellLevel; // 1 to 9
   List<AnimatedObjectInstance> activeObjects;
-  Random get _rng => SecureRng.instance;
+  Random get _rng => secureRandom;
 
   SpellSession({
     SummonPreset? activePreset,

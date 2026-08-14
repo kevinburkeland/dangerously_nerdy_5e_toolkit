@@ -70,7 +70,7 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
 
   void _performQuickRoll(int sides, String label) {
     HapticService.lightImpact(context);
-    final result = SecureRng.instance.nextInt(sides) + 1;
+    final result = secureRandom.nextInt(sides) + 1;
     A11yService.announce('Quick roll for $label: rolled $result on d$sides.');
     setState(() {
       _lastQuickRollLabel = '$label: $result';
