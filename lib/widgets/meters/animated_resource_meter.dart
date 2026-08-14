@@ -60,7 +60,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
 
   void _syncAnimation() {
     final systemDisableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final performanceMode = SettingsScope.maybeOf(context)?.settings.performanceMode ?? false;
+    final performanceMode = SettingsScope.settingsOf(context, listen: false).performanceMode;
     final ratio = widget.maxValue > 0 ? (widget.currentValue / widget.maxValue).clamp(0.0, 1.0) : 0.0;
     final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;
 
@@ -85,7 +85,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
   @override
   Widget build(BuildContext context) {
     final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
-    final performanceMode = SettingsScope.of(context).settings.performanceMode;
+    final performanceMode = SettingsScope.settingsOf(context).performanceMode;
     final tabletop = Theme.of(context).extension<TabletopColors>();
     final ratio = widget.maxValue > 0 ? (widget.currentValue / widget.maxValue).clamp(0.0, 1.0) : 0.0;
     final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;

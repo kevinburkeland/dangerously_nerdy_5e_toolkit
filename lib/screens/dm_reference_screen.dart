@@ -3,9 +3,9 @@ import '../models/dm_screen_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
-import '../theme/app_theme.dart';
 import '../utils/secure_random.dart';
-import '../widgets/interactive/pressable_card.dart';
+import '../widgets/dm_reference/dm_rule_card.dart';
+import '../widgets/dm_reference/dm_rule_comparison_dialog.dart';
 
 class DmReferenceScreen extends StatefulWidget {
   final DmRulesEdition? initialEdition;
@@ -27,7 +27,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
   bool _showOnlyChangedIn2024 = false;
   bool _showOnlyPinned = false;
 
-  // Quick DM Scratchpad / Roller state
   String? _lastQuickRollLabel;
 
   @override
@@ -79,198 +78,11 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
   }
 
   void _showCompareDialog(BuildContext context, DmReferenceItem item) {
-    HapticService.selectionTick(context);
-    final theme = Theme.of(context);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (dialogCtx, setDialogState) {
-          final isPinned = _getPinnedIds(context).contains(item.id);
-
-          return Dialog(
-            backgroundColor: theme.colorScheme.surface,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 800, maxHeight: 750),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: item.color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(item.icon, color: item.color, size: 24),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              '2014 vs 2024 Rule Comparison',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                          color: isPinned ? Colors.amber : Colors.white54,
-                          size: 22,
-                        ),
-                        tooltip: isPinned ? 'Unpin rule' : 'Pin rule to top',
-                        onPressed: () {
-                          _togglePinRule(context, item.id);
-                          setDialogState(() {});
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white54),
-                        tooltip: 'Close comparison dialog',
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Diff Summary Banner if changed
-                  if (item.isChangedIn2024 && item.diffSummary != null) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.auto_awesome, color: Colors.amber, size: 18),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              item.diffSummary!,
-                              style: const TextStyle(
-                                color: Colors.amber,
-                                fontSize: 13,
-                                height: 1.35,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Side-by-side or stacked rule blocks
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth > 550;
-                          if (isWide) {
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(child: _buildEditionBox('2014 (5e RAW)', item.rules2014, Colors.blueGrey)),
-                                const SizedBox(width: 14),
-                                Expanded(child: _buildEditionBox('2024 (Revised 5e)', item.rules2024, Colors.cyanAccent)),
-                              ],
-                            );
-                          } else {
-                            return Column(
-                              children: [
-                                _buildEditionBox('2014 (5e RAW)', item.rules2014, Colors.blueGrey),
-                                const SizedBox(height: 12),
-                                _buildEditionBox('2024 (Revised 5e)', item.rules2024, Colors.cyanAccent),
-                              ],
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildEditionBox(String title, List<String> rules, Color accentColor) {
-    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: tabletop.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.bookmark_outline, color: accentColor, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  color: accentColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 16, color: Colors.white12),
-          ...rules.map((r) => _buildBulletRule(r, accentColor)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBulletRule(String text, Color bulletColor) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('• ', style: TextStyle(color: bulletColor, fontWeight: FontWeight.bold)),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.35),
-            ),
-          ),
-        ],
-      ),
+    DmRuleComparisonDialog.show(
+      context,
+      item: item,
+      isPinned: _getPinnedIds(context).contains(item.id),
+      onTogglePin: () => _togglePinRule(context, item.id),
     );
   }
 
@@ -320,7 +132,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           ],
         ),
         actions: [
-          // 2014 vs 2024 Segmented Toggle in AppBar
           Container(
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
             decoration: BoxDecoration(
@@ -356,23 +167,14 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Edition Banner & Quick Info
                   _buildHeaderBanner(theme, edition),
                   const SizedBox(height: 14),
-
-                  // Quick DM Roller Bar
                   _buildQuickRollBar(theme),
                   const SizedBox(height: 16),
-
-                  // Search Bar & Filter Controls
                   _buildSearchAndFilters(theme, pinnedIds.length),
                   const SizedBox(height: 16),
-
-                  // Category Selector Chips
                   _buildCategoryChips(theme),
                   const SizedBox(height: 16),
-
-                  // Results Count & Active Mode Indicator
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -406,7 +208,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Display Pinned Rules Section at the top if any exist
                   if (pinnedFilteredItems.isNotEmpty) ...[
                     _buildPinnedSectionHeader(theme, pinnedFilteredItems.length),
                     const SizedBox(height: 10),
@@ -414,7 +215,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                     const SizedBox(height: 24),
                   ],
 
-                  // Display Other / Remaining Rules
                   if (otherFilteredItems.isNotEmpty) ...[
                     if (pinnedFilteredItems.isNotEmpty) ...[
                       _buildSectionHeader(
@@ -428,7 +228,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                     _buildItemsGrid(context, otherFilteredItems, edition, pinnedIds),
                   ],
 
-                  // Empty State if no rules match
                   if (filteredItems.isEmpty)
                     _buildEmptyState(theme),
 
@@ -721,7 +520,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
       children: [
         Row(
           children: [
-            // Search Input
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -758,8 +556,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           ],
         ),
         const SizedBox(height: 8),
-
-        // Filter Chips Row (2024 Changes & Pinned Only)
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -821,7 +617,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          // All category
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
@@ -883,144 +678,17 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           children: items
               .map((item) => SizedBox(
                     width: itemWidth,
-                    child: _buildRuleCard(context, item, edition, isPinned: pinnedIds.contains(item.id)),
+                    child: DmRuleCard(
+                      item: item,
+                      edition: edition,
+                      isPinned: pinnedIds.contains(item.id),
+                      onTogglePin: () => _togglePinRule(context, item.id),
+                      onTap: () => _showCompareDialog(context, item),
+                    ),
                   ))
               .toList(),
         );
       },
-    );
-  }
-
-  Widget _buildRuleCard(
-    BuildContext context,
-    DmReferenceItem item,
-    DmRulesEdition edition, {
-    required bool isPinned,
-  }) {
-    final theme = Theme.of(context);
-    final activeRules = item.getRules(edition);
-
-    return PressableCard(
-      onTap: () => _showCompareDialog(context, item),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: isPinned ? Colors.amber.withValues(alpha: 0.7) : item.color.withValues(alpha: 0.35),
-          width: isPinned ? 1.5 : 1.2,
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: item.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(item.icon, color: item.color, size: 22),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.category.label,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (item.isChangedIn2024) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome, color: Colors.amber, size: 11),
-                      SizedBox(width: 3),
-                      Text(
-                        '2024 Diff',
-                        style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              IconButton(
-                icon: Icon(
-                  isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                  color: isPinned ? Colors.amber : Colors.white38,
-                  size: 20,
-                ),
-                tooltip: isPinned ? 'Unpin rule from top' : 'Pin rule to top',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                splashRadius: 18,
-                onPressed: () => _togglePinRule(context, item.id),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Summary
-          Text(
-            item.summary,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          const Divider(height: 16, color: Colors.white10),
-
-          // Rule Bullet points for current edition
-          ...activeRules.map((rule) => _buildBulletRule(rule, item.color)),
-
-          const SizedBox(height: 8),
-
-          // Bottom Action: Tap to Compare
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                'Compare 2014 vs 2024',
-                style: TextStyle(
-                  color: item.color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11.5,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.compare_arrows, color: item.color, size: 14),
-            ],
-          ),
-        ],
-      ),
     );
   }
 

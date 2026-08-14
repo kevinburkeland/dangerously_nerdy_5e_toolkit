@@ -305,98 +305,100 @@ class SpellSession {
     return (rolls: poolResult.individualRolls, maxedRolls: null, damage: poolResult.total);
   }
 
+  /// Evaluates an attack for a single squad minion against a target AC.
+  AttackRollResult resolveIndividualAttack({
+    required AnimatedObjectInstance object,
+    required int targetAc,
+    RollMode requestedAdvantage = RollMode.normal,
+    bool useMaximizedCrits = false,
+  }) {
+    RollMode effectiveAdv = requestedAdvantage;
+    if (effectiveAdv == RollMode.normal && object.hasPackTactics) {
+      effectiveAdv = RollMode.advantage;
+    }
+
+    final roll1 = _rng.nextInt(20) + 1;
+    final roll2 = (effectiveAdv != RollMode.normal) ? _rng.nextInt(20) + 1 : null;
+    
+    final finalD20 = switch (effectiveAdv) {
+      RollMode.advantage => max(roll1, roll2!),
+      RollMode.disadvantage => min(roll1, roll2!),
+      RollMode.normal => roll1,
+    };
+
+    final isCrit = (finalD20 == 20);
+    final isNat1 = (finalD20 == 1);
+    final totalToHit = finalD20 + object.attackBonus;
+    final isHit = !isNat1 && (isCrit || totalToHit >= targetAc);
+
+    List<int> dmgRolls = const [];
+    List<int>? secDmgRolls;
+    List<int>? maxedRolls;
+    bool isMaxedCrit = false;
+    int totalDmg = 0;
+
+    if (isHit) {
+      if (isCrit) {
+        isMaxedCrit = useMaximizedCrits;
+      }
+
+      final primaryResult = _rollDiceDamage(
+        diceCount: object.damageDiceCount,
+        diceSides: object.damageDiceSides,
+        isCrit: isCrit,
+        isMaximizedCrit: useMaximizedCrits,
+      );
+      dmgRolls = primaryResult.rolls;
+      maxedRolls = primaryResult.maxedRolls;
+      totalDmg += primaryResult.damage;
+
+      if (object.secondaryDamageDiceCount > 0 && object.secondaryDamageDiceSides > 0) {
+        final secondaryResult = _rollDiceDamage(
+          diceCount: object.secondaryDamageDiceCount,
+          diceSides: object.secondaryDamageDiceSides,
+          isCrit: isCrit,
+          isMaximizedCrit: useMaximizedCrits,
+        );
+        secDmgRolls = secondaryResult.rolls;
+        totalDmg += secondaryResult.damage;
+      }
+
+      totalDmg += object.damageBonus;
+    }
+
+    return AttackRollResult(
+      object: object,
+      d20Roll1: roll1,
+      d20Roll2: roll2,
+      finalD20: finalD20,
+      totalToHit: totalToHit,
+      isCrit: isCrit,
+      isNat1: isNat1,
+      isHit: isHit,
+      damageRolls: dmgRolls,
+      secondaryDamageRolls: secDmgRolls,
+      maxedRolls: maxedRolls,
+      isMaximizedCrit: isMaxedCrit,
+      damageBonus: object.damageBonus,
+      totalDamage: totalDmg,
+    );
+  }
+
+  /// Evaluates batch attacks across all currently living minions.
   BatchAttackSummary performBatchAttack({
     required int targetAc,
     RollMode advantageMode = RollMode.normal,
     bool useMaximizedCrits = false,
   }) {
-    List<AttackRollResult> results = [];
-    int totalHits = 0;
-    int totalCrits = 0;
-    int totalDamageSum = 0;
-
-    final livingObjects = activeObjects.where((o) => !o.isDead).toList();
-
-    for (var obj in livingObjects) {
-      RollMode effectiveAdv = advantageMode;
-      if (effectiveAdv == RollMode.normal && obj.hasPackTactics) {
-        effectiveAdv = RollMode.advantage;
-      }
-
-      int roll1 = _rng.nextInt(20) + 1;
-      int? roll2;
-      int finalD20 = roll1;
-
-      if (effectiveAdv == RollMode.advantage) {
-        roll2 = _rng.nextInt(20) + 1;
-        finalD20 = max(roll1, roll2);
-      } else if (effectiveAdv == RollMode.disadvantage) {
-        roll2 = _rng.nextInt(20) + 1;
-        finalD20 = min(roll1, roll2);
-      }
-
-      bool isCrit = (finalD20 == 20);
-      bool isNat1 = (finalD20 == 1);
-      int toHit = finalD20 + obj.attackBonus;
-      bool isHit = !isNat1 && (isCrit || toHit >= targetAc);
-
-      List<int> dmgRolls = [];
-      List<int>? secDmgRolls;
-      List<int>? maxedRolls;
-      bool isMaxedCrit = false;
-      int totalDmg = 0;
-
-      if (isHit) {
-        totalHits++;
-        if (isCrit) {
-          totalCrits++;
-          isMaxedCrit = useMaximizedCrits;
-        }
-
-        final primaryResult = _rollDiceDamage(
-          diceCount: obj.damageDiceCount,
-          diceSides: obj.damageDiceSides,
-          isCrit: isCrit,
-          isMaximizedCrit: useMaximizedCrits,
-        );
-        dmgRolls = primaryResult.rolls;
-        maxedRolls = primaryResult.maxedRolls;
-        totalDmg += primaryResult.damage;
-
-        if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
-          final secondaryResult = _rollDiceDamage(
-            diceCount: obj.secondaryDamageDiceCount,
-            diceSides: obj.secondaryDamageDiceSides,
-            isCrit: isCrit,
-            isMaximizedCrit: useMaximizedCrits,
-          );
-          secDmgRolls = secondaryResult.rolls;
-          totalDmg += secondaryResult.damage;
-        }
-
-        totalDmg += obj.damageBonus;
-        totalDamageSum += totalDmg;
-      }
-
-      results.add(
-        AttackRollResult(
-          object: obj,
-          d20Roll1: roll1,
-          d20Roll2: roll2,
-          finalD20: finalD20,
-          totalToHit: toHit,
-          isCrit: isCrit,
-          isNat1: isNat1,
-          isHit: isHit,
-          damageRolls: dmgRolls,
-          secondaryDamageRolls: secDmgRolls,
-          maxedRolls: maxedRolls,
-          isMaximizedCrit: isMaxedCrit,
-          damageBonus: obj.damageBonus,
-          totalDamage: totalDmg,
-        ),
-      );
-    }
+    final livingObjects = activeObjects.where((o) => !o.isDead).toList(growable: false);
+    final results = livingObjects
+        .map((obj) => resolveIndividualAttack(
+              object: obj,
+              targetAc: targetAc,
+              requestedAdvantage: advantageMode,
+              useMaximizedCrits: useMaximizedCrits,
+            ))
+        .toList(growable: false);
 
     return BatchAttackSummary(
       targetAc: targetAc,
@@ -404,9 +406,9 @@ class SpellSession {
       useMaximizedCrits: useMaximizedCrits,
       results: results,
       totalAttacks: livingObjects.length,
-      totalHits: totalHits,
-      totalCrits: totalCrits,
-      totalDamage: totalDamageSum,
+      totalHits: results.where((r) => r.isHit).length,
+      totalCrits: results.where((r) => r.isCrit).length,
+      totalDamage: results.fold<int>(0, (sum, r) => sum + r.totalDamage),
     );
   }
 }

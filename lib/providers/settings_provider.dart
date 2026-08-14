@@ -125,10 +125,20 @@ class SettingsScope extends InheritedNotifier<SettingsProvider> {
     required super.child,
   }) : super(notifier: notifier);
 
-  static SettingsProvider of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<SettingsScope>();
-    assert(scope != null, 'SettingsScope.of() called without a SettingsScope ancestor in the widget tree.');
-    return scope!.notifier!;
+  static final SettingsProvider _fallbackProvider = SettingsProvider();
+
+  /// Obtains the [SettingsProvider], falling back safely to a default instance
+  /// if no [SettingsScope] is present in the widget tree (e.g. during headless widget tests).
+  static SettingsProvider of(BuildContext context, {bool listen = true}) {
+    final scope = listen
+        ? context.dependOnInheritedWidgetOfExactType<SettingsScope>()
+        : context.getInheritedWidgetOfExactType<SettingsScope>();
+    return scope?.notifier ?? _fallbackProvider;
+  }
+
+  /// Direct accessor for current immutable [AppSettings].
+  static AppSettings settingsOf(BuildContext context, {bool listen = true}) {
+    return of(context, listen: listen).settings;
   }
 
   static SettingsProvider? maybeOf(BuildContext context) {

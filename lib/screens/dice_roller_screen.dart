@@ -134,7 +134,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   void _rollDice() {
-    final settings = SettingsScope.of(context).settings;
+    final settings = SettingsScope.settingsOf(context, listen: false);
     final res = DiceRollResult.rollPool(
       diceEntries: _dicePool,
       modifier: _modifier,
@@ -339,7 +339,6 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                 ],
               ),
               actions: [
-                // Quick Toggle for Animated 3D/Rolling Dice Overlay
                 IconButton(
                   icon: Icon(
                     settings.enable3dDiceOverlays ? Icons.auto_awesome_motion : Icons.auto_awesome_motion_outlined,
@@ -378,17 +377,10 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // 0. SHARED ROOM BANNER
                       RoomBannerWidget(roomService: _roomService),
-
                       const SizedBox(height: 16),
-
-                      // 1. LATEST ROLL RESULT CARD
                       LatestRollCard(latestResult: _latestResult),
-
                       const SizedBox(height: 20),
-
-                      // 2. DIE SELECTOR & POOL BUILDER
                       DicePoolBuilder(
                         dicePool: _dicePool,
                         modifier: _modifier,
@@ -401,10 +393,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                         onUpdateModifier: (mod) => setState(() => _modifier = mod),
                         onUpdateRollMode: (mode) => setState(() => _rollMode = mode),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // 3. ROLL PRESETS
                       RollPresetsSection(
                         userPresets: _userPresets,
                         onApplyPreset: _applyCustomPreset,
