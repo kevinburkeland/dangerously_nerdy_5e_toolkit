@@ -1,6 +1,11 @@
 import '../models/custom_preset.dart';
 
 /// Interface defining storage and persistence contract for user custom presets.
+///
+/// Architecture note (OWASP MASVS-STORAGE-1):
+/// Implementations can back onto plaintext SharedPreferences for public non-sensitive
+/// presets or wrap encrypted storage backends (such as flutter_secure_storage or SQLCipher)
+/// when managing sensitive campaign data or authenticated player profiles.
 abstract class IPresetService {
   /// Loads custom user presets from storage or in-memory cache
   Future<List<CustomPreset>> loadCustomPresets();
@@ -17,3 +22,4 @@ abstract class IPresetService {
   /// Imports custom presets from a JSON string with security & payload bounds
   Future<List<CustomPreset>> importPresetsJson(String jsonString);
 }
+

@@ -125,26 +125,31 @@ class PresetService implements IPresetService {
 
     final List<CustomPreset> imported = [];
     for (final item in itemsList) {
-      if (item is Map<String, dynamic>) {
-        final rawPreset = CustomPreset.fromMap(item);
+      if (item is Map) {
+        try {
+          final mapItem = Map<String, dynamic>.from(item);
+          final rawPreset = CustomPreset.fromMap(mapItem);
 
-        final boundedName = rawPreset.name.trim().length > 50
-            ? rawPreset.name.trim().substring(0, 50)
-            : rawPreset.name.trim();
-        final boundedMod = rawPreset.modifier.clamp(-100, 100);
+          final boundedName = rawPreset.name.trim().length > 50
+              ? rawPreset.name.trim().substring(0, 50)
+              : rawPreset.name.trim();
+          final boundedMod = rawPreset.modifier.clamp(-100, 100);
 
-        final boundedEntries = rawPreset.diceEntries.map((e) {
-          final boundedCount = e.count.clamp(1, 100);
-          final boundedSides = e.customSides.clamp(2, 1000);
-          return e.copyWith(count: boundedCount, customSides: boundedSides);
-        }).toList();
+          final boundedEntries = rawPreset.diceEntries.map((e) {
+            final boundedCount = e.count.clamp(1, 100);
+            final boundedSides = e.customSides.clamp(2, 1000);
+            return e.copyWith(count: boundedCount, customSides: boundedSides);
+          }).toList();
 
-        final safePreset = rawPreset.copyWith(
-          name: boundedName.isNotEmpty ? boundedName : 'Custom Preset',
-          modifier: boundedMod,
-          diceEntries: boundedEntries,
-        );
-        imported.add(safePreset);
+          final safePreset = rawPreset.copyWith(
+            name: boundedName.isNotEmpty ? boundedName : 'Custom Preset',
+            modifier: boundedMod,
+            diceEntries: boundedEntries,
+          );
+          imported.add(safePreset);
+        } catch (_) {
+          // Skip corrupt or unparseable individual preset
+        }
       }
     }
 

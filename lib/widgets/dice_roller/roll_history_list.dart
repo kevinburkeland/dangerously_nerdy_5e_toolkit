@@ -61,6 +61,7 @@ class RollHistoryList extends StatelessWidget {
           itemBuilder: (context, index) {
             final item = localHistory[index];
             return Container(
+              key: ValueKey('local_roll_${item.timestamp.microsecondsSinceEpoch}_$index'),
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
@@ -194,6 +195,31 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
         StreamBuilder<List<RoomRoll>>(
           stream: _rollStream,
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.sync_problem, color: Colors.redAccent, size: 20),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Live room feed unavailable. Check network or room connection.',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             if (snapshot.connectionState == ConnectionState.waiting &&
                 !snapshot.hasData) {
               return const Padding(
@@ -230,6 +256,7 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                 final bool isSelf = item.playerName == (widget.roomService.playerName ?? widget.playerName);
 
                 return Container(
+                  key: ValueKey('room_roll_${item.id}_$index'),
                   margin: const EdgeInsets.only(bottom: 8),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

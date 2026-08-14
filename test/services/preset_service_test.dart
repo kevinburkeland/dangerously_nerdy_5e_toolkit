@@ -111,5 +111,21 @@ void main() {
       expect(item.modifier, 100);
       expect(item.diceEntries.first.customSides, 1000);
     });
+
+    test('Imports valid presets even when batch contains malformed items', () async {
+      final service = PresetService();
+      const mixedBatchJson = '''
+      [
+        {"id": "valid_1", "name": "Valid Preset", "dieType": "d6", "count": 2},
+        "bad_primitive_string_entry",
+        {"id": "valid_2", "name": "Second Valid", "dieType": "d20", "count": 1}
+      ]
+      ''';
+
+      final imported = await service.importPresetsJson(mixedBatchJson);
+      expect(imported.length, 2);
+      expect(imported.any((p) => p.id == 'valid_1'), true);
+      expect(imported.any((p) => p.id == 'valid_2'), true);
+    });
   });
 }

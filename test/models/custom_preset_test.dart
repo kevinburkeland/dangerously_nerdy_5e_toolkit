@@ -72,6 +72,28 @@ void main() {
       expect(restored.diceEntries[1].customSides, 7);
       expect(restored.formulaString, '2d6+1d7+3');
     });
+
+    test('Gracefully handles malformed JSON and type mismatches', () {
+      final malformedMap = <String, dynamic>{
+        'id': 12345, // int instead of string
+        'name': 999, // int instead of string
+        'diceEntries': [
+          'invalid_entry_string',
+          {'dieType': 'd8', 'count': 4.0, 'customSides': 8.0},
+        ],
+        'modifier': 3.5, // double instead of int
+        'rollMode': 'unknown_mode',
+      };
+
+      final preset = CustomPreset.fromMap(malformedMap);
+      expect(preset.id, '12345');
+      expect(preset.name, '999');
+      expect(preset.diceEntries.length, 1);
+      expect(preset.diceEntries.first.dieType, DieType.d8);
+      expect(preset.diceEntries.first.count, 4);
+      expect(preset.modifier, 3);
+      expect(preset.rollMode, RollMode.normal);
+    });
   });
 }
 

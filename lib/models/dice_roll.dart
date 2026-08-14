@@ -58,15 +58,15 @@ class DiceEntry {
   }
 
   factory DiceEntry.fromMap(Map<String, dynamic> map) {
-    final dtStr = map['dieType'] as String? ?? 'd6';
+    final dtStr = map['dieType']?.toString() ?? 'd6';
     final dt = DieType.values.firstWhere(
       (d) => d.name == dtStr,
       orElse: () => DieType.d6,
     );
     return DiceEntry(
       dieType: dt,
-      count: map['count'] as int? ?? 1,
-      customSides: map['customSides'] as int? ?? 6,
+      count: (map['count'] as num?)?.toInt() ?? 1,
+      customSides: (map['customSides'] as num?)?.toInt() ?? 6,
     );
   }
 }

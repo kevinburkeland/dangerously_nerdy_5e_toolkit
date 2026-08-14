@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import '../models/room_roll.dart';
 import '../utils/secure_random.dart';
 import 'base_room_service.dart';
+import 'logging_service.dart';
 
 class RoomSession {
   final String roomCode;
@@ -81,6 +82,13 @@ class DiceRoomService implements BaseRoomService {
             .snapshots()
             .map((snapshot) {
           return snapshot.docs.map((doc) => RoomRoll.fromMap(doc.data())).toList();
+        }).handleError((error, stackTrace) {
+          LoggingService().logNonFatal(
+            error,
+            stackTrace,
+            reason: 'Firestore streamRoomRolls error for room $cleanCode',
+          );
+          return <RoomRoll>[];
         });
       } catch (e) {
         // Fallback to local memory stream if Firestore query fails

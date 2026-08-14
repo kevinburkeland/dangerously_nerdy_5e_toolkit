@@ -50,31 +50,42 @@ class CustomPreset {
 
   factory CustomPreset.fromMap(Map<String, dynamic> map) {
     List<DiceEntry> parsedEntries = [];
-    if (map['diceEntries'] is List && (map['diceEntries'] as List).isNotEmpty) {
-      parsedEntries = (map['diceEntries'] as List)
-          .map((item) => DiceEntry.fromMap(item as Map<String, dynamic>))
-          .toList();
-    } else {
+    final rawEntries = map['diceEntries'];
+    if (rawEntries is List && rawEntries.isNotEmpty) {
+      for (final item in rawEntries) {
+        if (item is Map) {
+          try {
+            parsedEntries.add(DiceEntry.fromMap(Map<String, dynamic>.from(item)));
+          } catch (_) {
+            // Skip individual malformed entry
+          }
+        }
+      }
+    }
+
+    if (parsedEntries.isEmpty) {
+      final dtStr = map['dieType']?.toString() ?? 'd6';
       final dt = DieType.values.firstWhere(
-        (d) => d.name == map['dieType'],
+        (d) => d.name == dtStr,
         orElse: () => DieType.d6,
       );
       parsedEntries = [
         DiceEntry(
           dieType: dt,
-          count: map['count'] as int? ?? 1,
-          customSides: map['customSides'] as int? ?? 6,
+          count: (map['count'] as num?)?.toInt() ?? 1,
+          customSides: (map['customSides'] as num?)?.toInt() ?? 6,
         )
       ];
     }
 
+    final rawRollMode = map['rollMode']?.toString() ?? 'normal';
     return CustomPreset(
-      id: map['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
-      name: map['name'] as String? ?? 'Custom Preset',
+      id: map['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      name: map['name']?.toString() ?? 'Custom Preset',
       diceEntries: parsedEntries,
-      modifier: map['modifier'] as int? ?? 0,
+      modifier: (map['modifier'] as num?)?.toInt() ?? 0,
       rollMode: RollMode.values.firstWhere(
-        (m) => m.name == map['rollMode'],
+        (m) => m.name == rawRollMode,
         orElse: () => RollMode.normal,
       ),
     );
@@ -82,7 +93,13 @@ class CustomPreset {
 
   String toJson() => json.encode(toMap());
 
-  factory CustomPreset.fromJson(String source) => CustomPreset.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory CustomPreset.fromJson(String source) {
+    final decoded = json.decode(source);
+    if (decoded is Map) {
+      return CustomPreset.fromMap(Map<String, dynamic>.from(decoded));
+    }
+    throw const FormatException('Invalid JSON format for CustomPreset');
+  }
 
   CustomPreset copyWith({
     String? id,
