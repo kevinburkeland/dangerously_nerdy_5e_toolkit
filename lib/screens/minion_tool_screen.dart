@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons.dart';
@@ -109,7 +108,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   void _openBatchAttackDialog() {
-    HapticFeedback.mediumImpact();
+    HapticService.mediumImpact(context);
     showDialog(
       context: context,
       builder: (ctx) => BatchAttackDialog(
@@ -121,7 +120,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   void _openSquadBuilder() {
-    HapticFeedback.selectionClick();
+    HapticService.selectionTick(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -145,7 +144,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   void _rollSquadInitiative() {
-    HapticFeedback.mediumImpact();
+    HapticService.mediumImpact(context);
     int dexMod = 0;
     String minionName = widget.preset.name;
     if (_session.activeObjects.isNotEmpty) {

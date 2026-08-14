@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../models/dice_roll.dart';
 import '../../models/room_roll.dart';
-import '../../services/base_room_service.dart';
+import '../../services/dice_room_service.dart';
 
 class RollHistoryList extends StatelessWidget {
   final List<DiceRollResult> localHistory;
   final String? activeRoomCode;
   final String? playerName;
-  final BaseRoomService roomService;
+  final DiceRoomService roomService;
 
   const RollHistoryList({
     super.key,
@@ -134,7 +134,7 @@ class RollHistoryList extends StatelessWidget {
 class LiveRoomRollFeed extends StatefulWidget {
   final String roomCode;
   final String? playerName;
-  final BaseRoomService roomService;
+  final DiceRoomService roomService;
 
   const LiveRoomRollFeed({
     super.key,

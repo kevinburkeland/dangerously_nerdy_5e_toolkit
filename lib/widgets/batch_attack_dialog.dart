@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../models/dice_roll.dart';
 import '../models/room_roll.dart';
 import '../models/spell_session.dart';
 import '../services/a11y_service.dart';
-import '../services/base_room_service.dart';
 import '../services/dice_room_service.dart';
+import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
 import 'batch_attack/batch_attack_results_card.dart';
 
@@ -13,14 +13,14 @@ class BatchAttackDialog extends StatefulWidget {
   final SpellSession session;
   final String? activeRoomCode;
   final String? playerName;
-  final BaseRoomService roomService;
+  final DiceRoomService roomService;
 
   BatchAttackDialog({
     super.key,
     required this.session,
     this.activeRoomCode,
     this.playerName,
-    BaseRoomService? roomService,
+    DiceRoomService? roomService,
   }) : roomService = roomService ?? DiceRoomService();
 
   @override
@@ -29,7 +29,7 @@ class BatchAttackDialog extends StatefulWidget {
 
 class _BatchAttackDialogState extends State<BatchAttackDialog> {
   int _targetAc = 15;
-  RollAdvantage _advantageMode = RollAdvantage.normal;
+  RollMode _advantageMode = RollMode.normal;
   bool _useMaximizedCrits = false;
   bool _showTacticalConditions = false;
   bool _targetProne = false;
@@ -46,7 +46,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     // If minions in squad have pack tactics (e.g. wolves), pre-enable hint
     if (widget.session.activeObjects.any((o) => o.hasPackTactics)) {
       _packTactics = true;
-      _advantageMode = RollAdvantage.advantage;
+      _advantageMode = RollMode.advantage;
     }
   }
 
@@ -56,13 +56,13 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
 
     setState(() {
       if (hasAdv && hasDis) {
-        _advantageMode = RollAdvantage.normal;
+        _advantageMode = RollMode.normal;
       } else if (hasAdv) {
-        _advantageMode = RollAdvantage.advantage;
+        _advantageMode = RollMode.advantage;
       } else if (hasDis) {
-        _advantageMode = RollAdvantage.disadvantage;
+        _advantageMode = RollMode.disadvantage;
       } else {
-        _advantageMode = RollAdvantage.normal;
+        _advantageMode = RollMode.normal;
       }
     });
   }
@@ -74,7 +74,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     }
     _lastAttackRollTime = now;
 
-    HapticFeedback.heavyImpact();
+    HapticService.heavyImpact(context);
 
     final summary = widget.session.performBatchAttack(
       targetAc: _targetAc,
@@ -253,7 +253,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                               const SizedBox(height: 4),
                               FittedBox(
                                 fit: BoxFit.scaleDown,
-                                child: SegmentedButton<RollAdvantage>(
+                                child: SegmentedButton<RollMode>(
                                   style: ButtonStyle(
                                     visualDensity: VisualDensity.compact,
                                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -268,9 +268,9 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                     }),
                                   ),
                                   segments: const [
-                                    ButtonSegment(value: RollAdvantage.disadvantage, label: Text('Dis', style: TextStyle(fontSize: 12))),
-                                    ButtonSegment(value: RollAdvantage.normal, label: Text('Norm', style: TextStyle(fontSize: 12))),
-                                    ButtonSegment(value: RollAdvantage.advantage, label: Text('Adv', style: TextStyle(fontSize: 12))),
+                                    ButtonSegment(value: RollMode.disadvantage, label: Text('Dis', style: TextStyle(fontSize: 12))),
+                                    ButtonSegment(value: RollMode.normal, label: Text('Norm', style: TextStyle(fontSize: 12))),
+                                    ButtonSegment(value: RollMode.advantage, label: Text('Adv', style: TextStyle(fontSize: 12))),
                                   ],
                                   selected: {_advantageMode},
                                   onSelectionChanged: (set) => setState(() => _advantageMode = set.first),
@@ -338,9 +338,9 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Text(
-                                          _advantageMode == RollAdvantage.advantage
+                                          _advantageMode == RollMode.advantage
                                               ? 'Advantage Active'
-                                              : (_advantageMode == RollAdvantage.disadvantage ? 'Disadvantage Active' : 'Cancelled Out'),
+                                              : (_advantageMode == RollMode.disadvantage ? 'Disadvantage Active' : 'Cancelled Out'),
                                           style: const TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold),
                                         ),
                                       ),

@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../models/room_roll.dart';
 import '../utils/secure_random.dart';
-import 'base_room_service.dart';
 import 'logging_service.dart';
 
 class RoomSession {
@@ -17,21 +16,17 @@ class RoomSession {
   });
 }
 
-class DiceRoomService implements BaseRoomService {
+class DiceRoomService {
   static final DiceRoomService _instance = DiceRoomService._internal();
   factory DiceRoomService() => _instance;
   DiceRoomService._internal();
 
   // Centralized active room session notifier
-  @override
   final ValueNotifier<RoomSession?> activeSessionNotifier = ValueNotifier<RoomSession?>(null);
 
-  @override
   String? get activeRoomCode => activeSessionNotifier.value?.roomCode;
-  @override
   String? get playerName => activeSessionNotifier.value?.playerName;
 
-  @override
   void joinRoom(String roomCode, String playerName) {
     final cleanCode = roomCode.trim().toUpperCase();
     final cleanName = playerName.trim();
@@ -43,7 +38,6 @@ class DiceRoomService implements BaseRoomService {
     }
   }
 
-  @override
   void leaveRoom() {
     final currentCode = activeRoomCode;
     if (currentCode != null) {
@@ -65,7 +59,6 @@ class DiceRoomService implements BaseRoomService {
   }
 
   /// Returns a stream of real-time rolls for a given room code (from last 24 hours, up to 100 rolls)
-  @override
   Stream<List<RoomRoll>> streamRoomRolls(String roomCode) {
     final cleanCode = roomCode.trim().toUpperCase();
     final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
@@ -119,7 +112,6 @@ class DiceRoomService implements BaseRoomService {
   }
 
   /// Broadcasts a roll to the specified room
-  @override
   Future<void> broadcastRoll(RoomRoll roll) async {
     final cleanCode = roll.roomCode.trim().toUpperCase();
 
@@ -162,7 +154,6 @@ class DiceRoomService implements BaseRoomService {
   }
 
   /// Helper to generate a random 6-character uppercase room code
-  @override
   String generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rng = SecureRng.instance;

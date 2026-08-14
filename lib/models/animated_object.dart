@@ -291,31 +291,6 @@ class AnimatedObjectInstance {
     _tempHp = amount < 0 ? 0 : amount;
   }
 
-  /// Pure state mutation returning a new instance with updated HP (with Temp HP absorption).
-  AnimatedObjectInstance applyDamage(int amount) {
-    if (amount <= 0) return this;
-    int updatedTemp = _tempHp;
-    int remaining = amount;
-    if (updatedTemp > 0) {
-      if (remaining <= updatedTemp) {
-        updatedTemp -= remaining;
-        return copyWith(tempHp: updatedTemp);
-      } else {
-        remaining -= updatedTemp;
-        updatedTemp = 0;
-      }
-    }
-    final updatedHp = (_currentHp - remaining).clamp(0, maxHp);
-    return copyWith(currentHp: updatedHp, tempHp: updatedTemp);
-  }
-
-  /// Pure state mutation returning a new instance with replenished HP.
-  AnimatedObjectInstance applyHealing(int amount) {
-    if (amount <= 0) return this;
-    final updated = (_currentHp + amount).clamp(0, maxHp);
-    return copyWith(currentHp: updated);
-  }
-
   AnimatedObjectInstance copyWith({
     String? id,
     String? name,

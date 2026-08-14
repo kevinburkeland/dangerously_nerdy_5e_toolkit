@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/dm_screen_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
@@ -760,7 +759,7 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 18),
                             onPressed: () {
-                              HapticFeedback.selectionClick();
+                              HapticService.selectionTick(context);
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
@@ -1093,7 +1092,7 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
               foregroundColor: theme.colorScheme.onPrimary,
             ),
             onPressed: () {
-              HapticFeedback.selectionClick();
+              HapticService.selectionTick(context);
               _searchController.clear();
               setState(() {
                 _searchQuery = '';

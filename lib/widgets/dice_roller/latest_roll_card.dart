@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../models/dice_roll.dart';
+import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
 
 class LatestRollCard extends StatefulWidget {
@@ -44,11 +44,11 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
 
   void _triggerFeedback(DiceRollResult result) {
     if (result.isCrit) {
-      HapticFeedback.heavyImpact();
+      HapticService.heavyImpact(context);
     } else if (result.isFumble) {
-      HapticFeedback.vibrate();
+      HapticService.heavyImpact(context);
     } else {
-      HapticFeedback.mediumImpact();
+      HapticService.mediumImpact(context);
     }
   }
 

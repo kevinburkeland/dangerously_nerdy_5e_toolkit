@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/animated_object.dart';
 import '../services/a11y_service.dart';
+import '../services/haptic_service.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/edit_object_name_dialog.dart';
 import 'dialogs/set_object_hp_dialog.dart';
@@ -24,7 +24,7 @@ class ObjectCard extends StatelessWidget {
   });
 
   Future<void> _showEditNameDialog(BuildContext context) async {
-    HapticFeedback.selectionClick();
+    HapticService.selectionTick(context);
     final newName = await EditObjectNameDialog.show(context, initialName: object.name);
     if (newName != null && newName.isNotEmpty) {
       onNameChanged(newName);
@@ -32,7 +32,7 @@ class ObjectCard extends StatelessWidget {
   }
 
   Future<void> _showCustomHpDialog(BuildContext context) async {
-    HapticFeedback.selectionClick();
+    HapticService.selectionTick(context);
     final result = await SetObjectHpDialog.show(
       context,
       objectName: object.name,
@@ -133,7 +133,7 @@ class ObjectCard extends StatelessWidget {
                   icon: const Icon(Icons.close, size: 20, color: Colors.white38),
                   tooltip: 'Remove Minion',
                   onPressed: () {
-                    HapticFeedback.lightImpact();
+                    HapticService.lightImpact(context);
                     onDelete();
                   },
                 ),
@@ -176,7 +176,7 @@ class ObjectCard extends StatelessWidget {
                   tooltip: '-1 HP',
                   semanticLabel: 'Decrease 1 HP for ${object.name}',
                   onTap: () {
-                    HapticFeedback.lightImpact();
+                    HapticService.lightImpact(context);
                     final newHp = (object.currentHp - 1).clamp(0, object.maxHp);
                     A11yService.announceHpChange(
                       object.name,
@@ -267,7 +267,7 @@ class ObjectCard extends StatelessWidget {
                   tooltip: '+1 HP',
                   semanticLabel: 'Increase 1 HP for ${object.name}',
                   onTap: () {
-                    HapticFeedback.lightImpact();
+                    HapticService.lightImpact(context);
                     final newHp = (object.currentHp + 1).clamp(0, object.maxHp);
                     A11yService.announceHpChange(
                       object.name,

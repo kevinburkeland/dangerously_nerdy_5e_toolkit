@@ -133,7 +133,7 @@ void main() {
 
       final summary = BatchAttackSummary(
         targetAc: 15,
-        advantageMode: RollAdvantage.normal,
+        advantageMode: RollMode.normal,
         totalAttacks: 1,
         totalHits: 1,
         totalCrits: 0,

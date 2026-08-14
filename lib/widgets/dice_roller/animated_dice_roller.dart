@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../models/dice_roll.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import 'geometry/dice_vector_math.dart';
+import 'geometry/polyhedral_mesh.dart';
 
 /// Authentic 3D Polyhedral Dice Rolling Simulation with real 3D mesh rendering & physics
 class AnimatedDiceRollOverlay extends StatefulWidget {
@@ -203,358 +205,13 @@ class _AnimatedDiceRollOverlayState extends State<AnimatedDiceRollOverlay> with 
 }
 
 // ---------------------------------------------------------------------------
-// 3D Vector & Mesh Data Structures
-// ---------------------------------------------------------------------------
-
-class _Vec3 {
-  final double x, y, z;
-  const _Vec3(this.x, this.y, this.z);
-
-  _Vec3 operator +(_Vec3 o) => _Vec3(x + o.x, y + o.y, z + o.z);
-  _Vec3 operator -(_Vec3 o) => _Vec3(x - o.x, y - o.y, z - o.z);
-  _Vec3 operator -() => _Vec3(-x, -y, -z);
-  _Vec3 operator *(double s) => _Vec3(x * s, y * s, z * s);
-
-  double dot(_Vec3 o) => x * o.x + y * o.y + z * o.z;
-
-  _Vec3 cross(_Vec3 o) => _Vec3(
-        y * o.z - z * o.y,
-        z * o.x - x * o.z,
-        x * o.y - y * o.x,
-      );
-
-  _Vec3 normalized() {
-    final len = sqrt(x * x + y * y + z * z);
-    return len > 0 ? _Vec3(x / len, y / len, z / len) : const _Vec3(0, 0, 1);
-  }
-
-  _Vec3 rotateX(double rad) {
-    final cosR = cos(rad);
-    final sinR = sin(rad);
-    return _Vec3(x, y * cosR - z * sinR, y * sinR + z * cosR);
-  }
-
-  _Vec3 rotateY(double rad) {
-    final cosR = cos(rad);
-    final sinR = sin(rad);
-    return _Vec3(x * cosR + z * sinR, y, -x * sinR + z * cosR);
-  }
-
-  _Vec3 rotateZ(double rad) {
-    final cosR = cos(rad);
-    final sinR = sin(rad);
-    return _Vec3(x * cosR - y * sinR, x * sinR + y * cosR, z);
-  }
-
-  _Vec3 rotateAxis(_Vec3 axis, double rad) {
-    final cosR = cos(rad);
-    final sinR = sin(rad);
-    final dotR = dot(axis);
-    final crossR = axis.cross(this);
-    return this * cosR + crossR * sinR + axis * (dotR * (1.0 - cosR));
-  }
-}
-
-class _Polygon3D {
-  final List<int> vertexIndices;
-  final int? faceNumber;
-
-  const _Polygon3D(this.vertexIndices, {this.faceNumber});
-}
-
-class _FaceRenderData {
-  final int faceIndex;
-  final _Polygon3D face;
-  final _Vec3 normal;
-  final double depth;
-  final Path path;
-  final Offset centerPt;
-  final double diffuse;
-
-  _FaceRenderData({
-    required this.faceIndex,
-    required this.face,
-    required this.normal,
-    required this.depth,
-    required this.path,
-    required this.centerPt,
-    required this.diffuse,
-  });
-}
-
-class _PolyhedronMesh {
-  final List<_Vec3> vertices;
-  final List<_Polygon3D> faces;
-  final double radius;
-
-  const _PolyhedronMesh({
-    required this.vertices,
-    required this.faces,
-    required this.radius,
-  });
-
-  /// 3D Canonical Top-Down Regular Icosahedron (d20) Geometry
-  /// Full 20-facet 3D solid with canonical C3 face-centered orientation.
-  static _PolyhedronMesh createD20({double radius = 72.0}) {
-    final r1 = sqrt(2.0 * (5.0 - sqrt(5.0)) / 15.0); // ~0.607062 (top face vertex radius)
-    final z1 = sqrt((5.0 + 2.0 * sqrt(5.0)) / 15.0); // ~0.794654 (top face depth)
-    final r2 = sqrt(2.0 * (5.0 + sqrt(5.0)) / 15.0); // ~0.982247 (mid-belt vertex radius)
-    final z2 = sqrt((5.0 - 2.0 * sqrt(5.0)) / 15.0); // ~0.187592 (mid-belt depth)
-
-    const deg90 = pi / 2.0;
-    const deg210 = 7.0 * pi / 6.0;
-    const deg330 = 11.0 * pi / 6.0;
-    const deg30 = pi / 6.0;
-    const deg150 = 5.0 * pi / 6.0;
-    const deg270 = 3.0 * pi / 2.0;
-
-    final vertices = [
-      // Tier 1: Top Face Equilateral Triangle (Vertices 0, 1, 2)
-      _Vec3(r1 * cos(deg90), r1 * sin(deg90), z1),   // 0: Top-Center
-      _Vec3(r1 * cos(deg210), r1 * sin(deg210), z1), // 1: Bottom-Left
-      _Vec3(r1 * cos(deg330), r1 * sin(deg330), z1), // 2: Bottom-Right
-
-      // Tier 2: Upper-Middle Ring (Vertices 3, 4, 5)
-      _Vec3(r2 * cos(deg330 + deg60(1)), r2 * sin(deg330 + deg60(1)), z2), // 3: Right
-      _Vec3(r2 * cos(deg90 + deg60(1)), r2 * sin(deg90 + deg60(1)), z2),   // 4: Top-Left
-      _Vec3(r2 * cos(deg210 + deg60(1)), r2 * sin(deg210 + deg60(1)), z2), // 5: Bottom
-
-      // Tier 3: Lower-Middle Ring (Vertices 6, 7, 8)
-      _Vec3(r2 * cos(deg90), r2 * sin(deg90), -z2),   // 6: Top
-      _Vec3(r2 * cos(deg210), r2 * sin(deg210), -z2), // 7: Bottom-Left
-      _Vec3(r2 * cos(deg330), r2 * sin(deg330), -z2), // 8: Bottom-Right
-
-      // Tier 4: Bottom Face Equilateral Triangle (Vertices 9, 10, 11)
-      _Vec3(r1 * cos(deg270), r1 * sin(deg270), -z1), // 9: Bottom
-      _Vec3(r1 * cos(deg30), r1 * sin(deg30), -z1),   // 10: Top-Right
-      _Vec3(r1 * cos(deg150), r1 * sin(deg150), -z1), // 11: Top-Left
-    ];
-
-    const faces = [
-      // 1. PRIMARY TOP-DOWN FACE: Centered equilateral triangle facing viewer (Face 20)
-      _Polygon3D([0, 1, 2], faceNumber: 20),
-
-      // 2. Three closest adjacent faces directly connected to the top face
-      _Polygon3D([0, 2, 3], faceNumber: 14), // Right slope
-      _Polygon3D([0, 4, 1], faceNumber: 2),  // Left slope
-      _Polygon3D([1, 5, 2], faceNumber: 8),  // Bottom slope
-
-      // 3. Outer upper corner faces (rendered as shaded 3D facets without text crowding)
-      _Polygon3D([0, 3, 4], faceNumber: 18),
-      _Polygon3D([2, 5, 3], faceNumber: 6),
-      _Polygon3D([1, 4, 5], faceNumber: 12),
-
-      // 4. Middle belt triangles
-      _Polygon3D([4, 6, 0], faceNumber: 10),
-      _Polygon3D([3, 8, 2], faceNumber: 16),
-      _Polygon3D([5, 7, 1], faceNumber: 4),
-
-      _Polygon3D([4, 3, 6], faceNumber: 15),
-      _Polygon3D([3, 5, 8], faceNumber: 7),
-      _Polygon3D([5, 4, 7], faceNumber: 11),
-
-      _Polygon3D([6, 8, 3], faceNumber: 19),
-      _Polygon3D([8, 7, 5], faceNumber: 3),
-      _Polygon3D([7, 6, 4], faceNumber: 17),
-
-      // 5. Lower adjacent faces
-      _Polygon3D([6, 10, 8], faceNumber: 9),
-      _Polygon3D([8, 9, 7], faceNumber: 13),
-      _Polygon3D([7, 11, 6], faceNumber: 5),
-
-      // 6. Bottom Face
-      _Polygon3D([9, 10, 11], faceNumber: 1),
-    ];
-
-    return _PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
-  }
-
-  static double deg60(int count) => count * pi / 3.0;
-
-  /// 3D Tetrahedron (d4) Geometry (Canonical 3-facet apex top-down view)
-  static _PolyhedronMesh createD4({double radius = 64.0}) {
-    const h = 0.8165; // sqrt(2/3)
-    const r = 0.8660; // sqrt(3)/2
-    final vertices = [
-      const _Vec3(0, 0, 1.0), // 0: Top Apex
-      const _Vec3(0, r, -h / 2),    // 1: Top-Center
-      _Vec3(-r * sqrt(3) / 2, -r / 2, -h / 2), // 2: Bottom-Left
-      _Vec3(r * sqrt(3) / 2, -r / 2, -h / 2),  // 3: Bottom-Right
-    ];
-
-    const faces = [
-      _Polygon3D([0, 1, 3], faceNumber: 4),
-      _Polygon3D([0, 2, 1], faceNumber: 2),
-      _Polygon3D([0, 3, 2], faceNumber: 3),
-      _Polygon3D([1, 2, 3], faceNumber: 1), // Base
-    ];
-
-    return _PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
-  }
-
-  /// 3D Cube (d6) Geometry (Canonical top-down square face)
-  static _PolyhedronMesh createD6({double radius = 56.0}) {
-    const s = 0.57735; // 1 / sqrt(3)
-    final vertices = [
-      const _Vec3(-s, -s, -s), const _Vec3(s, -s, -s), const _Vec3(s, s, -s), const _Vec3(-s, s, -s),
-      const _Vec3(-s, -s, s), const _Vec3(s, -s, s), const _Vec3(s, s, s), const _Vec3(-s, s, s),
-    ];
-
-    const faces = [
-      _Polygon3D([4, 5, 6, 7], faceNumber: 6), // Top Face
-      _Polygon3D([1, 0, 3, 2], faceNumber: 1), // Bottom Face
-      _Polygon3D([0, 4, 7, 3], faceNumber: 2), // Left Face
-      _Polygon3D([5, 1, 2, 6], faceNumber: 5), // Right Face
-      _Polygon3D([7, 6, 2, 3], faceNumber: 3), // Upper Face
-      _Polygon3D([0, 1, 5, 4], faceNumber: 4), // Lower Face
-    ];
-
-    return _PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
-  }
-
-  /// 3D Regular Octahedron (d8) Geometry (Canonical top-down face)
-  static _PolyhedronMesh createD8({double radius = 62.0}) {
-    final r1 = sqrt(2.0 / 3.0);
-    final z1 = 1.0 / sqrt(3.0);
-    final vertices = [
-      _Vec3(0, r1, z1),
-      _Vec3(-r1 * sqrt(3) / 2, -r1 / 2, z1),
-      _Vec3(r1 * sqrt(3) / 2, -r1 / 2, z1),
-      _Vec3(0, -r1, -z1),
-      _Vec3(r1 * sqrt(3) / 2, r1 / 2, -z1),
-      _Vec3(-r1 * sqrt(3) / 2, r1 / 2, -z1),
-    ];
-
-    const faces = [
-      _Polygon3D([0, 1, 2], faceNumber: 8), // Top center face
-      _Polygon3D([0, 2, 4], faceNumber: 6), // Right slope
-      _Polygon3D([0, 5, 1], faceNumber: 4), // Left slope
-      _Polygon3D([1, 3, 2], faceNumber: 2), // Bottom slope
-    ];
-
-    return _PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
-  }
-
-  /// 3D Iconic Pentagonal Trapezohedron (d10 & d100) Geometry
-  static _PolyhedronMesh createD10({double radius = 70.0, bool isD100 = false}) {
-    const zFront = 0.40;
-    const zBack = -0.45;
-    const zApex = -0.60;
-
-    final vertices = [
-      // Primary Face 0: Front-facing flat kite (Vertices 0, 1, 2, 3)
-      const _Vec3(0.0, 0.90, zFront),   // 0: Top corner of front kite
-      const _Vec3(0.68, 0.12, zFront),  // 1: Right corner of front kite
-      const _Vec3(0.0, -0.68, zFront),  // 2: Bottom corner of front kite
-      const _Vec3(-0.68, 0.12, zFront), // 3: Left corner of front kite
-
-      // Outer belt vertices (sloping away to back)
-      const _Vec3(0.78, 0.65, zBack),   // 4: Upper-right outer
-      const _Vec3(0.82, -0.42, zBack),  // 5: Lower-right outer
-      const _Vec3(-0.82, -0.42, zBack), // 6: Lower-left outer
-      const _Vec3(-0.78, 0.65, zBack),  // 7: Upper-left outer
-
-      // Top and Bottom Back Apexes
-      const _Vec3(0.0, 1.05, zApex),    // 8: Top polar apex
-      const _Vec3(0.0, -0.98, zApex),   // 9: Bottom polar apex
-      const _Vec3(0.0, 0.0, -0.85),     // 10: Rear center
-    ];
-
-    final faces = [
-      // 1. PRIMARY TOP-DOWN FACE: Centered kite facing viewer (Face 0)
-      _Polygon3D(const [0, 1, 2, 3], faceNumber: isD100 ? 0 : 10),
-
-      // 2. Front-visible sloping side facets
-      _Polygon3D(const [0, 8, 4, 1], faceNumber: isD100 ? 20 : 2),
-      _Polygon3D(const [1, 4, 5, 2], faceNumber: isD100 ? 40 : 4),
-      _Polygon3D(const [2, 5, 9, 6], faceNumber: isD100 ? 60 : 6),
-      _Polygon3D(const [3, 2, 6, 7], faceNumber: isD100 ? 80 : 8),
-      _Polygon3D(const [0, 3, 7, 8], faceNumber: isD100 ? 10 : 1),
-
-      // 3. Rear facets
-      _Polygon3D(const [8, 7, 10, 4], faceNumber: isD100 ? 30 : 3),
-      _Polygon3D(const [4, 10, 5], faceNumber: isD100 ? 50 : 5),
-      _Polygon3D(const [9, 5, 10, 6], faceNumber: isD100 ? 70 : 7),
-      _Polygon3D(const [7, 6, 10], faceNumber: isD100 ? 90 : 9),
-    ];
-
-    return _PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
-  }
-
-  /// 3D Mathematically Exact Regular Dodecahedron (d12) Geometry
-  static _PolyhedronMesh createD12({double radius = 68.0}) {
-    final phi = (1.0 + sqrt(5.0)) / 2.0; // Golden ratio ~1.6180339887
-    final invPhi = 1.0 / phi;
-
-    // 20 vertices of regular dodecahedron: (±1, ±1, ±1), (0, ±1/phi, ±phi), (±1/phi, ±phi, 0), (±phi, 0, ±1/phi) normalized
-    final scale = 1.0 / sqrt(3.0);
-    final rawVertices = <_Vec3>[
-      // 8 cube vertices (indices 0..7)
-      _Vec3(-scale, -scale, -scale), _Vec3(scale, -scale, -scale),
-      _Vec3(-scale, scale, -scale), _Vec3(scale, scale, -scale),
-      _Vec3(-scale, -scale, scale), _Vec3(scale, -scale, scale),
-      _Vec3(-scale, scale, scale), _Vec3(scale, scale, scale),
-
-      // 4 vertices in YZ plane (indices 8..11)
-      _Vec3(0, -invPhi * scale, -phi * scale), _Vec3(0, invPhi * scale, -phi * scale),
-      _Vec3(0, -invPhi * scale, phi * scale), _Vec3(0, invPhi * scale, phi * scale),
-
-      // 4 vertices in XY plane (indices 12..15)
-      _Vec3(-invPhi * scale, -phi * scale, 0), _Vec3(invPhi * scale, -phi * scale, 0),
-      _Vec3(-invPhi * scale, phi * scale, 0), _Vec3(invPhi * scale, phi * scale, 0),
-
-      // 4 vertices in XZ plane (indices 16..19)
-      _Vec3(-phi * scale, 0, -invPhi * scale), _Vec3(phi * scale, 0, -invPhi * scale),
-      _Vec3(-phi * scale, 0, invPhi * scale), _Vec3(phi * scale, 0, invPhi * scale),
-    ];
-
-    const rawFaces = [
-      _Polygon3D([11, 10, 4, 18, 6], faceNumber: 12),
-      _Polygon3D([10, 11, 7, 19, 5], faceNumber: 9),
-      _Polygon3D([11, 6, 14, 2, 9], faceNumber: 3),
-      _Polygon3D([10, 5, 13, 0, 8], faceNumber: 7),
-      _Polygon3D([4, 10, 8, 12, 18], faceNumber: 2),
-      _Polygon3D([7, 11, 9, 15, 19], faceNumber: 6),
-      _Polygon3D([6, 18, 16, 14, 2], faceNumber: 4),
-      _Polygon3D([5, 19, 17, 13, 0], faceNumber: 10),
-      _Polygon3D([2, 14, 15, 3, 9], faceNumber: 5),
-      _Polygon3D([0, 13, 12, 1, 8], faceNumber: 11),
-      _Polygon3D([18, 12, 1, 16, 4], faceNumber: 8),
-      _Polygon3D([19, 15, 3, 17, 7], faceNumber: 1),
-    ];
-
-    // Compute normal of Face 0 and rotate entire dodecahedron so Face 0 is flat facing +Z
-    final v0 = rawVertices[rawFaces[0].vertexIndices[0]];
-    final v1 = rawVertices[rawFaces[0].vertexIndices[1]];
-    final v2 = rawVertices[rawFaces[0].vertexIndices[2]];
-    final c0 = rawFaces[0].vertexIndices.map((i) => rawVertices[i]).reduce((a, b) => a + b) * 0.2;
-
-    var n0 = (v1 - v0).cross(v2 - v0).normalized();
-    if (n0.dot(c0) < 0) n0 = -n0;
-
-    final rotAxis = n0.cross(const _Vec3(0, 0, 1)).normalized();
-    final rotAngle = acos(n0.z.clamp(-1.0, 1.0));
-
-    var rotated = rawVertices.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
-
-    // Align top edge horizontally
-    final p0 = rotated[rawFaces[0].vertexIndices[0]];
-    final p1 = rotated[rawFaces[0].vertexIndices[1]];
-    final edgeAngle = atan2(p1.y - p0.y, p1.x - p0.x);
-    rotated = rotated.map((v) => v.rotateZ(-edgeAngle)).toList();
-
-    return _PolyhedronMesh(vertices: rotated, faces: rawFaces, radius: radius);
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Simulated 3D Die Entity
 // ---------------------------------------------------------------------------
 
 class _Simulated3DDie {
   final DieType dieType;
   final int finalValue;
-  final _PolyhedronMesh mesh;
+  final PolyhedronMesh mesh;
   final double startX;
   final double startY;
   final double targetX;
@@ -588,29 +245,29 @@ class _Simulated3DDie {
     final isSingle = totalCount == 1;
     final dieRadius = isSingle ? 74.0 : (totalCount <= 3 ? 58.0 : 46.0);
 
-    _PolyhedronMesh mesh;
+    PolyhedronMesh mesh;
     switch (dieType) {
       case DieType.d4:
-        mesh = _PolyhedronMesh.createD4(radius: dieRadius);
+        mesh = PolyhedronMesh.createD4(radius: dieRadius);
         break;
       case DieType.d6:
-        mesh = _PolyhedronMesh.createD6(radius: dieRadius);
+        mesh = PolyhedronMesh.createD6(radius: dieRadius);
         break;
       case DieType.d8:
-        mesh = _PolyhedronMesh.createD8(radius: dieRadius);
+        mesh = PolyhedronMesh.createD8(radius: dieRadius);
         break;
       case DieType.d10:
-        mesh = _PolyhedronMesh.createD10(radius: dieRadius, isD100: false);
+        mesh = PolyhedronMesh.createD10(radius: dieRadius, isD100: false);
         break;
       case DieType.d100:
-        mesh = _PolyhedronMesh.createD10(radius: dieRadius, isD100: true);
+        mesh = PolyhedronMesh.createD10(radius: dieRadius, isD100: true);
         break;
       case DieType.d12:
-        mesh = _PolyhedronMesh.createD12(radius: dieRadius);
+        mesh = PolyhedronMesh.createD12(radius: dieRadius);
         break;
       case DieType.d20:
       case DieType.custom:
-        mesh = _PolyhedronMesh.createD20(radius: dieRadius);
+        mesh = PolyhedronMesh.createD20(radius: dieRadius);
         break;
     }
 
@@ -667,7 +324,7 @@ class _Polyhedral3DDicePainter extends CustomPainter {
   final ThemeData theme;
   final TabletopColors? tabletop;
 
-  final _Vec3 _lightDir = const _Vec3(-0.5, -0.7, 1.0).normalized();
+  final Vec3 _lightDir = const Vec3(-0.5, -0.7, 1.0).normalized();
   final Paint _facetPaint = Paint()..style = PaintingStyle.fill;
   final Paint _edgePaint = Paint()
     ..style = PaintingStyle.stroke
@@ -715,14 +372,14 @@ class _Polyhedral3DDicePainter extends CustomPainter {
       );
 
       // 4. Transform all 3D mesh vertices
-      final transformedVertices = <_Vec3>[];
+      final transformedVertices = <Vec3>[];
       for (final v in die.mesh.vertices) {
         var tv = v.rotateX(angleX).rotateY(angleY).rotateZ(angleZ);
         transformedVertices.add(tv);
       }
 
       // 5. Compute outward face normals and filter visible front-facing facets
-      final visibleFaces = <_FaceRenderData>[];
+      final visibleFaces = <FaceRenderData>[];
       int winningFaceIndex = -1;
       double maxNormalZ = -999.0;
 
@@ -769,7 +426,7 @@ class _Polyhedral3DDicePainter extends CustomPainter {
 
           final centerPt = screenPoints.reduce((a, b) => a + b) / screenPoints.length.toDouble();
 
-          visibleFaces.add(_FaceRenderData(
+          visibleFaces.add(FaceRenderData(
             faceIndex: i,
             face: face,
             normal: normal,

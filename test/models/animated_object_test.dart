@@ -108,23 +108,6 @@ void main() {
       expect(obj.currentHp, 20); // Clamped at maxHp
     });
 
-    test('applyDamage and applyHealing return updated immutable copies', () {
-      final obj = AnimatedObjectInstance(
-        id: '1',
-        name: 'Test Silver Coin',
-        size: ObjectSize.tiny,
-        currentHp: 20,
-        maxHp: 20,
-      );
-
-      final damaged = obj.applyDamage(8);
-      expect(damaged.currentHp, 12);
-      expect(obj.currentHp, 20); // Original unchanged
-
-      final healed = damaged.applyHealing(5);
-      expect(healed.currentHp, 17);
-    });
-
     test('hpPercent protects against divide by zero', () {
       final obj = AnimatedObjectInstance(
         id: 'zero',
@@ -155,7 +138,7 @@ void main() {
       expect(copy.maxHp, 20);
     });
 
-    test('Temp HP absorbs damage before current HP in takeDamage and applyDamage', () {
+    test('Temp HP absorbs damage before current HP in takeDamage', () {
       final obj = AnimatedObjectInstance(
         id: 'temp_1',
         name: 'Warded Wolf',
@@ -181,13 +164,6 @@ void main() {
       // 3. Granting new Temp HP
       obj.grantTempHp(15);
       expect(obj.tempHp, 15);
-
-      // 4. Immutable applyDamage pipeline
-      final afterDmg = obj.applyDamage(20); // 15 temp absorbed, 5 to HP
-      expect(afterDmg.tempHp, 0);
-      expect(afterDmg.currentHp, 11);
-      expect(obj.tempHp, 15); // Original unchanged
-      expect(obj.currentHp, 16);
     });
 
     test('Serialization toMap and fromMap round-trips cleanly with tempHp', () {

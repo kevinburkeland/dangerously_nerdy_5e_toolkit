@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/srd_summons.dart';
 import '../services/haptic_service.dart';
 import '../utils/pwa_helper.dart';
@@ -336,7 +335,7 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   void _clearSearch() {
-    HapticFeedback.selectionClick();
+    HapticService.selectionTick(context);
     _searchController.clear();
     setState(() {
       _searchQuery = '';
@@ -688,7 +687,7 @@ class _LandingScreenState extends State<LandingScreen> {
     required String title,
     int defaultSlot = 5,
   }) {
-    HapticFeedback.selectionClick();
+    HapticService.selectionTick(context);
     Navigator.push(
       context,
       MaterialPageRoute(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../../services/haptic_service.dart';
 
 class CreatureStatBlockDialog extends StatelessWidget {
   final MinionStatBlock statBlock;
@@ -17,7 +17,7 @@ class CreatureStatBlockDialog extends StatelessWidget {
     required MinionStatBlock statBlock,
     VoidCallback? onAddToSquad,
   }) {
-    HapticFeedback.selectionClick();
+    HapticService.selectionTick(context);
     return showDialog<void>(
       context: context,
       builder: (ctx) => CreatureStatBlockDialog(
@@ -309,7 +309,7 @@ class CreatureStatBlockDialog extends StatelessWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         onPressed: () {
-                          HapticFeedback.mediumImpact();
+                          HapticService.mediumImpact(context);
                           Navigator.of(context).pop();
                           onAddToSquad!();
                         },

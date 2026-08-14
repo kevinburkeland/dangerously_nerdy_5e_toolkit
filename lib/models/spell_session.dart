@@ -1,9 +1,8 @@
 import 'dart:math';
 import 'animated_object.dart';
+import 'dice_roll.dart';
 import 'srd_summons.dart';
 import '../utils/secure_random.dart';
-
-enum RollAdvantage { normal, advantage, disadvantage }
 
 class AttackRollResult {
   final AnimatedObjectInstance object;
@@ -41,7 +40,7 @@ class AttackRollResult {
 
 class BatchAttackSummary {
   final int targetAc;
-  final RollAdvantage advantageMode;
+  final RollMode advantageMode;
   final bool useMaximizedCrits;
   final List<AttackRollResult> results;
   final int totalAttacks;
@@ -296,7 +295,7 @@ class SpellSession {
 
   BatchAttackSummary performBatchAttack({
     required int targetAc,
-    RollAdvantage advantageMode = RollAdvantage.normal,
+    RollMode advantageMode = RollMode.normal,
     bool useMaximizedCrits = false,
   }) {
     List<AttackRollResult> results = [];
@@ -307,19 +306,19 @@ class SpellSession {
     final livingObjects = activeObjects.where((o) => !o.isDead).toList();
 
     for (var obj in livingObjects) {
-      RollAdvantage effectiveAdv = advantageMode;
-      if (effectiveAdv == RollAdvantage.normal && obj.hasPackTactics) {
-        effectiveAdv = RollAdvantage.advantage;
+      RollMode effectiveAdv = advantageMode;
+      if (effectiveAdv == RollMode.normal && obj.hasPackTactics) {
+        effectiveAdv = RollMode.advantage;
       }
 
       int roll1 = _rng.nextInt(20) + 1;
       int? roll2;
       int finalD20 = roll1;
 
-      if (effectiveAdv == RollAdvantage.advantage) {
+      if (effectiveAdv == RollMode.advantage) {
         roll2 = _rng.nextInt(20) + 1;
         finalD20 = max(roll1, roll2);
-      } else if (effectiveAdv == RollAdvantage.disadvantage) {
+      } else if (effectiveAdv == RollMode.disadvantage) {
         roll2 = _rng.nextInt(20) + 1;
         finalD20 = min(roll1, roll2);
       }

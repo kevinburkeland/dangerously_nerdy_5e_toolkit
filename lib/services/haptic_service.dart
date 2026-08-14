@@ -23,6 +23,17 @@ class HapticService {
     HapticFeedback.lightImpact();
   }
 
+  /// Medium impact for standard button presses, modal launches, and dice impacts
+  static void mediumImpact(BuildContext context) {
+    final level = _getLevel(context);
+    if (level == HapticFeedbackLevel.off) return;
+    if (level == HapticFeedbackLevel.heavy) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.lightImpact();
+    }
+  }
+
   /// Heavy impact for critical fumbles, taking damage, or severe state changes
   static void heavyImpact(BuildContext context) {
     final level = _getLevel(context);

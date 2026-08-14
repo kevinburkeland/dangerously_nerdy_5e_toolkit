@@ -4,11 +4,10 @@ import '../models/dice_roll.dart';
 import '../models/room_roll.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
-import '../services/base_room_service.dart';
 import '../services/dice_room_service.dart';
 import '../services/haptic_service.dart';
+import '../services/logging_service.dart';
 import '../services/preset_service.dart';
-import '../services/preset_service_interface.dart';
 import '../utils/secure_random.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
@@ -24,8 +23,8 @@ import '../widgets/fx/critical_effect_overlay.dart';
 import '../widgets/room_banner_widget.dart';
 
 class DiceRollerScreen extends StatefulWidget {
-  final IPresetService? presetService;
-  final BaseRoomService? roomService;
+  final PresetService? presetService;
+  final DiceRoomService? roomService;
 
   const DiceRollerScreen({
     super.key,
@@ -54,11 +53,11 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   // Shared Room state
   String? _activeRoomCode;
   String? _playerName;
-  late final BaseRoomService _roomService;
+  late final DiceRoomService _roomService;
 
   // Custom Presets State
   List<CustomPreset> _userPresets = [];
-  late final IPresetService _presetService;
+  late final PresetService _presetService;
 
   @override
   void initState() {
@@ -317,7 +316,12 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             ),
           );
         }
-      } catch (_) {
+      } catch (e, stackTrace) {
+        LoggingService().logNonFatal(
+          e,
+          stackTrace,
+          reason: 'Failed to import presets JSON in dice roller',
+        );
         if (mounted) {
           messenger.showSnackBar(
             const SnackBar(
