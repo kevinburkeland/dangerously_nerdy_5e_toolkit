@@ -62,11 +62,7 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
   }
 
   void trigger(CritEffectType type) {
-    bool areCritAllowed = true;
-    try {
-      areCritAllowed = SettingsScope.of(context).settings.areCritFxAllowed;
-    } catch (_) {}
-
+    final areCritAllowed = SettingsScope.maybeOf(context)?.settings.areCritFxAllowed ?? true;
     if (!areCritAllowed) return;
 
     _activeType = type;
@@ -96,10 +92,8 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
   @override
   Widget build(BuildContext context) {
     final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
-    bool areCritAllowed = !systemDisableAnimations;
-    try {
-      areCritAllowed = areCritAllowed && SettingsScope.of(context).settings.areCritFxAllowed;
-    } catch (_) {}
+    final areCritAllowed = !systemDisableAnimations &&
+        SettingsScope.of(context).settings.areCritFxAllowed;
 
     return AnimatedBuilder(
       animation: _animController,

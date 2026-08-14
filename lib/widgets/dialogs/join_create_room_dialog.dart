@@ -72,23 +72,32 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E1B2E),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.hub, color: Colors.cyanAccent),
-          SizedBox(width: 10),
-          Text('Shared Dice Room', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Icon(Icons.hub, color: colorScheme.primary),
+          const SizedBox(width: 10),
+          Text(
+            'Shared Dice Room',
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
         ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Join or create a live shared dice room to see everyone\'s rolls in real time.',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 16),
 
@@ -100,15 +109,12 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9 _\-\'\.]")),
             ],
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: colorScheme.onSurface),
             decoration: InputDecoration(
               counterText: '',
               labelText: 'Your Display Name',
-              labelStyle: const TextStyle(color: Colors.cyanAccent),
               hintText: 'e.g. Gandalf, Gimli',
-              hintStyle: const TextStyle(color: Colors.white30),
-              filled: true,
-              fillColor: Colors.black26,
+              hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
@@ -127,16 +133,13 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
                       (oldVal, newVal) => newVal.copyWith(text: newVal.text.toUpperCase()),
                     ),
                   ],
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
                   textCapitalization: TextCapitalization.characters,
                   decoration: InputDecoration(
                     counterText: '',
                     labelText: 'Room Code',
-                    labelStyle: const TextStyle(color: Colors.cyanAccent),
                     hintText: 'e.g. ROOM-A82F',
-                    hintStyle: const TextStyle(color: Colors.white30),
-                    filled: true,
-                    fillColor: Colors.black26,
+                    hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
@@ -144,8 +147,8 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
               const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),
-                  foregroundColor: Colors.cyanAccent,
+                  backgroundColor: colorScheme.primaryContainer,
+                  foregroundColor: colorScheme.onPrimaryContainer,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
                 ),
                 onPressed: () {
@@ -167,12 +170,12 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          child: Text('Cancel', style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.cyanAccent,
-            foregroundColor: Colors.black,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
           ),
           onPressed: _submit,
           icon: const Icon(Icons.meeting_room, size: 18),

@@ -90,8 +90,12 @@ class DiceRoomService implements BaseRoomService {
           );
           return <RoomRoll>[];
         });
-      } catch (e) {
-        // Fallback to local memory stream if Firestore query fails
+      } catch (e, stackTrace) {
+        LoggingService().logNonFatal(
+          e,
+          stackTrace,
+          reason: 'Firestore stream initialization failed for room $cleanCode; falling back to in-memory',
+        );
       }
     }
 
@@ -128,8 +132,12 @@ class DiceRoomService implements BaseRoomService {
             .doc(roll.id)
             .set(roll.toMap());
         return;
-      } catch (e) {
-        // Fallback to local
+      } catch (e, stackTrace) {
+        LoggingService().logNonFatal(
+          e,
+          stackTrace,
+          reason: 'Firestore broadcastRoll failed for room $cleanCode; falling back to in-memory',
+        );
       }
     }
 

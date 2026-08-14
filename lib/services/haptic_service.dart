@@ -6,11 +6,7 @@ import '../providers/settings_provider.dart';
 /// Centralized haptic dispatcher respecting the user's configured HapticFeedbackLevel
 class HapticService {
   static HapticFeedbackLevel _getLevel(BuildContext context) {
-    try {
-      return SettingsScope.of(context).settings.hapticLevel;
-    } catch (_) {
-      return HapticFeedbackLevel.light;
-    }
+    return SettingsScope.maybeOf(context)?.settings.hapticLevel ?? HapticFeedbackLevel.light;
   }
 
   /// Fast 10ms tactile tick for button taps, chip selections, and segmented switches

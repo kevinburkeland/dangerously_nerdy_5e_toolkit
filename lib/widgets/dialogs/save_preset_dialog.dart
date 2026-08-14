@@ -43,13 +43,23 @@ class _SavePresetDialogState extends State<SavePresetDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF242038),
-      title: const Row(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
         children: [
-          Icon(Icons.bookmark_add, color: Colors.amber, size: 22),
-          SizedBox(width: 8),
-          Text('Save Custom Preset', style: TextStyle(color: Colors.white)),
+          Icon(Icons.bookmark_add, color: colorScheme.primary, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'Save Custom Preset',
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
         ],
       ),
       content: Column(
@@ -58,23 +68,23 @@ class _SavePresetDialogState extends State<SavePresetDialog> {
         children: [
           Text(
             'Config: ${widget.formulaText}',
-            style: const TextStyle(
-                color: Colors.cyanAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 13),
+            style: TextStyle(
+              color: colorScheme.secondary,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _nameController,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
+            style: TextStyle(color: colorScheme.onSurface),
+            decoration: InputDecoration(
               labelText: 'Preset Name (e.g. Sneak Attack)',
-              labelStyle: TextStyle(color: Colors.white70),
-              enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24)),
+              border: const OutlineInputBorder(),
               focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.amber)),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
+              ),
             ),
             onSubmitted: (_) => _submit(),
           ),
@@ -83,14 +93,18 @@ class _SavePresetDialogState extends State<SavePresetDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          child: Text('Cancel', style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber, foregroundColor: Colors.black),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+          ),
           onPressed: _submit,
-          child: const Text('Save Preset',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          child: const Text(
+            'Save Preset',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );

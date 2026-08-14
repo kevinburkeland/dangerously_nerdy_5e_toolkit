@@ -38,30 +38,53 @@ class _MassDamageDialogState extends State<MassDamageDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final damageColor = colorScheme.error;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF242038),
-      title: const Text('Apply Group Damage (e.g. AoE spell)', style: TextStyle(color: Colors.redAccent)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(Icons.local_fire_department, color: damageColor, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Apply Group Damage (e.g. AoE spell)',
+              style: TextStyle(
+                color: damageColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+          ),
+        ],
+      ),
       content: TextField(
         controller: _controller,
         keyboardType: TextInputType.number,
         autofocus: true,
-        style: const TextStyle(color: Colors.white),
-        decoration: const InputDecoration(
+        style: TextStyle(color: colorScheme.onSurface),
+        decoration: InputDecoration(
           labelText: 'Damage Amount to ALL minions',
-          labelStyle: TextStyle(color: Colors.white70),
-          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.redAccent)),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: damageColor, width: 2),
+          ),
         ),
         onSubmitted: (_) => _submit(),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          child: Text('Cancel', style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: damageColor,
+            foregroundColor: colorScheme.onError,
+          ),
           onPressed: _submit,
-          child: const Text('Apply Damage', style: TextStyle(color: Colors.white)),
+          child: const Text('Apply Damage', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );

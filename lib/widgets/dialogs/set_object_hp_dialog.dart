@@ -74,18 +74,24 @@ class _SetObjectHpDialogState extends State<SetObjectHpDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF242038),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          const Icon(Icons.favorite, color: Colors.amber, size: 22),
+          Icon(Icons.favorite, color: colorScheme.primary, size: 22),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Set HP: ${widget.objectName}',
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.amber, fontSize: 18),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -99,13 +105,13 @@ class _SetObjectHpDialogState extends State<SetObjectHpDialog> {
               controller: _hpController,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 labelText: 'Current HP (Max ${widget.maxHp})',
-                labelStyle: const TextStyle(color: Colors.white70),
                 prefixIcon: const Icon(Icons.shield_outlined, color: Colors.greenAccent),
-                enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
-                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.amber, width: 2)),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                ),
               ),
               onSubmitted: (_) => _submit(),
             ),
@@ -113,13 +119,13 @@ class _SetObjectHpDialogState extends State<SetObjectHpDialog> {
             TextField(
               controller: _tempHpController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.cyanAccent),
-              decoration: const InputDecoration(
+              style: TextStyle(color: colorScheme.secondary),
+              decoration: InputDecoration(
                 labelText: 'Temporary HP (Absorbs damage first)',
-                labelStyle: TextStyle(color: Colors.cyanAccent),
-                prefixIcon: Icon(Icons.health_and_safety, color: Colors.cyanAccent),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent, width: 2)),
+                prefixIcon: Icon(Icons.health_and_safety, color: colorScheme.secondary),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorScheme.secondary, width: 2),
+                ),
               ),
               onSubmitted: (_) => _submit(),
             ),
@@ -129,12 +135,15 @@ class _SetObjectHpDialogState extends State<SetObjectHpDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          child: Text('Cancel', style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+          ),
           onPressed: _submit,
-          child: const Text('Save HP', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          child: const Text('Save HP', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );

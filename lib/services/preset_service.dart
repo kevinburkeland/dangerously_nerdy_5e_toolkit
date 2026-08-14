@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
+import 'logging_service.dart';
 import 'preset_service_interface.dart';
 
 class PresetService implements IPresetService {
@@ -47,13 +48,22 @@ class PresetService implements IPresetService {
         try {
           final preset = CustomPreset.fromJson(str);
           loaded.add(preset);
-        } catch (_) {
-          // Skip individual corrupted item
+        } catch (e, stackTrace) {
+          LoggingService().logNonFatal(
+            e,
+            stackTrace,
+            reason: 'Skipping corrupted custom dice preset string',
+          );
         }
       }
       _cachedPresets = loaded;
       return List<CustomPreset>.from(_cachedPresets!);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to load custom dice presets from SharedPreferences',
+      );
       _cachedPresets = [];
       return [];
     }
@@ -90,7 +100,13 @@ class PresetService implements IPresetService {
       final prefs = await SharedPreferences.getInstance();
       final jsonList = (_cachedPresets ?? []).map((p) => p.toJson()).toList();
       await prefs.setStringList(_storageKey, jsonList);
-    } catch (_) {}
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to persist custom dice presets to SharedPreferences',
+      );
+    }
   }
 
   /// Exports custom presets to a formatted JSON string

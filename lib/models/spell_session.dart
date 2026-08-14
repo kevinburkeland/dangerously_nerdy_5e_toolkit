@@ -270,6 +270,30 @@ class SpellSession {
     }
   }
 
+  ({List<int> rolls, List<int>? maxedRolls, int damage}) _rollDiceDamage({
+    required int diceCount,
+    required int diceSides,
+    required bool isCrit,
+    required bool isMaximizedCrit,
+  }) {
+    if (diceCount <= 0 || diceSides <= 0) {
+      return (rolls: const <int>[], maxedRolls: null, damage: 0);
+    }
+
+    if (isCrit && isMaximizedCrit) {
+      final maxed = List<int>.generate(diceCount, (_) => diceSides);
+      final rolled = List<int>.generate(diceCount, (_) => _rng.nextInt(diceSides) + 1);
+      final int rolledSum = rolled.fold<int>(0, (int a, int b) => a + b);
+      final int total = (diceCount * diceSides) + rolledSum;
+      return (rolls: rolled, maxedRolls: maxed, damage: total);
+    }
+
+    final totalDice = isCrit ? diceCount * 2 : diceCount;
+    final rolled = List<int>.generate(totalDice, (_) => _rng.nextInt(diceSides) + 1);
+    final int total = rolled.fold<int>(0, (int a, int b) => a + b);
+    return (rolls: rolled, maxedRolls: null, damage: total);
+  }
+
   BatchAttackSummary performBatchAttack({
     required int targetAc,
     RollAdvantage advantageMode = RollAdvantage.normal,
@@ -313,53 +337,30 @@ class SpellSession {
 
       if (isHit) {
         totalHits++;
-        if (isCrit) totalCrits++;
+        if (isCrit) {
+          totalCrits++;
+          isMaxedCrit = useMaximizedCrits;
+        }
 
-        if (isCrit && useMaximizedCrits) {
-          isMaxedCrit = true;
-          maxedRolls = List.generate(
-            obj.damageDiceCount,
-            (_) => obj.damageDiceSides,
+        final primaryResult = _rollDiceDamage(
+          diceCount: obj.damageDiceCount,
+          diceSides: obj.damageDiceSides,
+          isCrit: isCrit,
+          isMaximizedCrit: useMaximizedCrits,
+        );
+        dmgRolls = primaryResult.rolls;
+        maxedRolls = primaryResult.maxedRolls;
+        totalDmg += primaryResult.damage;
+
+        if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
+          final secondaryResult = _rollDiceDamage(
+            diceCount: obj.secondaryDamageDiceCount,
+            diceSides: obj.secondaryDamageDiceSides,
+            isCrit: isCrit,
+            isMaximizedCrit: useMaximizedCrits,
           );
-          int maxDiceSum = obj.damageDiceCount * obj.damageDiceSides;
-          totalDmg += maxDiceSum;
-
-          for (int i = 0; i < obj.damageDiceCount; i++) {
-            int d = _rng.nextInt(obj.damageDiceSides) + 1;
-            dmgRolls.add(d);
-            totalDmg += d;
-          }
-
-          if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
-            secDmgRolls = [];
-            int secMaxSum = obj.secondaryDamageDiceCount * obj.secondaryDamageDiceSides;
-            totalDmg += secMaxSum;
-            for (int i = 0; i < obj.secondaryDamageDiceCount; i++) {
-              int d = _rng.nextInt(obj.secondaryDamageDiceSides) + 1;
-              secDmgRolls.add(d);
-              totalDmg += d;
-            }
-          }
-        } else {
-          int diceCount = obj.damageDiceCount;
-          if (isCrit) diceCount *= 2;
-
-          for (int i = 0; i < diceCount; i++) {
-            int d = _rng.nextInt(obj.damageDiceSides) + 1;
-            dmgRolls.add(d);
-            totalDmg += d;
-          }
-
-          if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
-            secDmgRolls = [];
-            int secDiceCount = obj.secondaryDamageDiceCount;
-            if (isCrit) secDiceCount *= 2;
-            for (int i = 0; i < secDiceCount; i++) {
-              int d = _rng.nextInt(obj.secondaryDamageDiceSides) + 1;
-              secDmgRolls.add(d);
-              totalDmg += d;
-            }
-          }
+          secDmgRolls = secondaryResult.rolls;
+          totalDmg += secondaryResult.damage;
         }
 
         totalDmg += obj.damageBonus;

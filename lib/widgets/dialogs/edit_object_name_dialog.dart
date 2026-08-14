@@ -43,29 +43,50 @@ class _EditObjectNameDialogState extends State<EditObjectNameDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF242038),
-      title: const Text('Rename Object', style: TextStyle(color: Colors.amber)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(Icons.edit_note, color: colorScheme.primary, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'Rename Object',
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        ],
+      ),
       content: TextField(
         controller: _controller,
         autofocus: true,
-        style: const TextStyle(color: Colors.white),
-        decoration: const InputDecoration(
+        style: TextStyle(color: colorScheme.onSurface),
+        decoration: InputDecoration(
           hintText: 'Enter custom object name',
-          hintStyle: TextStyle(color: Colors.white54),
-          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
+          hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.5)),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+          ),
         ),
         onSubmitted: (_) => _submit(),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          child: Text('Cancel', style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+          ),
           onPressed: _submit,
-          child: const Text('Save', style: TextStyle(color: Colors.black)),
+          child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );

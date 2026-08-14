@@ -50,37 +50,48 @@ class _CustomDieDialogState extends State<CustomDieDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF242038),
-      title: const Row(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
         children: [
-          Icon(Icons.tune, color: Colors.cyanAccent, size: 22),
-          SizedBox(width: 8),
-          Text('Custom Sided Die', style: TextStyle(color: Colors.white)),
+          Icon(Icons.tune, color: colorScheme.primary, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'Custom Sided Die',
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
         ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Enter number of sides (e.g. 7 for d7, 14 for d14, 30 for d30):',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _controller,
             keyboardType: TextInputType.number,
             autofocus: true,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
-            decoration: const InputDecoration(
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+            ),
+            decoration: InputDecoration(
               labelText: 'Number of Sides (2 to 1000)',
-              labelStyle: TextStyle(color: Colors.white70),
-              enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24)),
+              border: const OutlineInputBorder(),
               focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.cyanAccent)),
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
+              ),
             ),
             onSubmitted: (_) => _submit(),
           ),
@@ -89,15 +100,18 @@ class _CustomDieDialogState extends State<CustomDieDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          child: Text('Cancel', style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.cyanAccent,
-              foregroundColor: Colors.black),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+          ),
           onPressed: _submit,
-          child: const Text('Add Die',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          child: const Text(
+            'Add Die',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );

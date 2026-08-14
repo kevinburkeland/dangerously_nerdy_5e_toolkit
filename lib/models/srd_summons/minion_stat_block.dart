@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/rules/dnd_5e_rules_engine.dart';
 
 enum SummonCategory { spell, magicItem }
 
@@ -118,7 +119,7 @@ class MinionStatBlock {
   });
 
   // Ability Score Modifiers
-  static int calcModifier(int score) => ((score - 10) / 2).floor();
+  static int calcModifier(int score) => Dnd5eRulesEngine.calculateModifier(score);
 
   int get strMod => calcModifier(strScore);
   int get dexMod => calcModifier(dexScore);

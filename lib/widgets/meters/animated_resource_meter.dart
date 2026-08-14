@@ -48,10 +48,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
   void didChangeDependencies() {
     super.didChangeDependencies();
     final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
-    bool performanceMode = false;
-    try {
-      performanceMode = SettingsScope.maybeOf(context)?.settings.performanceMode ?? false;
-    } catch (_) {}
+    final performanceMode = SettingsScope.maybeOf(context)?.settings.performanceMode ?? false;
 
     if (systemDisableAnimations || performanceMode) {
       if (_pulseController.isAnimating) {
@@ -73,11 +70,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
   @override
   Widget build(BuildContext context) {
     final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
-    bool performanceMode = false;
-    try {
-      performanceMode = SettingsScope.of(context).settings.performanceMode;
-    } catch (_) {}
-
+    final performanceMode = SettingsScope.of(context).settings.performanceMode;
     final tabletop = Theme.of(context).extension<TabletopColors>();
     final ratio = widget.maxValue > 0 ? (widget.currentValue / widget.maxValue).clamp(0.0, 1.0) : 0.0;
     final isCritical = ratio <= 0.25 && widget.currentValue > 0;
