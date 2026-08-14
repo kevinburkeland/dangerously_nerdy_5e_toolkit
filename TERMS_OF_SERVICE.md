@@ -1,8 +1,8 @@
 # Terms of Service & End User License Agreement (EULA)
 
-**Last Updated:** August 8, 2026
+**Last Updated:** August 14, 2026
 
-Welcome to **DangerouslyNerdy 5e Toolkit** ("Application", "Service", "we", "us", or "our"). By accessing or using our web application, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not access or use the Service.
+**Welcome to DangerouslyNerdy 5e Toolkit** ("Application", "Service", "we", "us", or "our"). By accessing or using our web application, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not access or use the Service.
 
 ---
 
