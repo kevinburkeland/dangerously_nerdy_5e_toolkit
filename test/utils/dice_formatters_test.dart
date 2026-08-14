@@ -17,6 +17,30 @@ void main() {
       expect(DiceFormatters.formatFormula(count: 8, sides: 6), '8d6');
       expect(DiceFormatters.formatFormula(count: 1, sides: 20, bonus: 5), '1d20+5');
     });
+
+    test('formatCompositeFormula formats composite and single damage formulas accurately', () {
+      expect(
+        DiceFormatters.formatCompositeFormula(
+          primaryCount: 2,
+          primarySides: 6,
+          primaryBonus: 3,
+          primaryDamageType: 'Slashing',
+          secondaryCount: 1,
+          secondarySides: 6,
+          secondaryDamageType: 'Fire',
+        ),
+        '2d6+3 Slashing + 1d6 Fire',
+      );
+      expect(
+        DiceFormatters.formatCompositeFormula(
+          primaryCount: 1,
+          primarySides: 4,
+          primaryBonus: 4,
+          primaryDamageType: 'Bludgeoning',
+        ),
+        '1d4+4 Bludgeoning',
+      );
+    });
   });
 
   group('Dnd5eScoreMath and Dnd5eRulesEngine Tests', () {

@@ -132,21 +132,13 @@ class MinionStatBlock {
         bonus: damageBonus,
       );
 
-  String get fullDamageFormula {
-    final primary = DiceFormatters.formatFormula(
-      count: damageDiceCount,
-      sides: damageDiceSides,
-      bonus: damageBonus,
-      damageType: damageType,
-    );
-    if (secondaryDamageDiceCount > 0 && secondaryDamageType != null && secondaryDamageType!.isNotEmpty) {
-      final secondary = DiceFormatters.formatFormula(
-        count: secondaryDamageDiceCount,
-        sides: secondaryDamageDiceSides,
-        damageType: secondaryDamageType,
+  String get fullDamageFormula => DiceFormatters.formatCompositeFormula(
+        primaryCount: damageDiceCount,
+        primarySides: damageDiceSides,
+        primaryBonus: damageBonus,
+        primaryDamageType: damageType,
+        secondaryCount: secondaryDamageDiceCount,
+        secondarySides: secondaryDamageDiceSides,
+        secondaryDamageType: secondaryDamageType,
       );
-      return '$primary + $secondary';
-    }
-    return primary;
-  }
 }

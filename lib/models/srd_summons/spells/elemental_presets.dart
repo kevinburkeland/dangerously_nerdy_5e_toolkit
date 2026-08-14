@@ -744,6 +744,8 @@ class ElementalSummons {
     description: 'You call forth an elemental servant. Choose an area of air, earth, fire, or water that fills a 10-foot cube within range to summon an Elemental of CR 5 or lower.',
     upcastRules: 'Summon an elemental with CR increased by 1 for each slot level above 5th.',
     statBlocks: [airElemental, earthElemental, fireElemental, waterElemental, salamander, xorn],
+    budgetCalculator: _calculateConjureElementalBudget,
+    defaultMinionCount: 1,
   );
 
   static const conjureMinorElementalsPreset = SummonPreset(
@@ -758,5 +760,15 @@ class ElementalSummons {
     description: 'You summon elementals: 1 of CR 2 or lower, 2 of CR 1 or lower, 4 of CR 1/2 or lower, or 8 of CR 1/4 or lower.',
     upcastRules: 'Twice as many with 6th-level slot; three times as many with 8th-level slot.',
     statBlocks: [gargoyle, fireSnake, dustMephit, iceMephit, magmaMephit, steamMephit],
+    budgetCalculator: _calculateConjureMinorElementalsBudget,
+    defaultMinionCount: 4,
   );
+
+  static int _calculateConjureElementalBudget(int spellLevel) => 1;
+
+  static int _calculateConjureMinorElementalsBudget(int spellLevel) {
+    if (spellLevel < 6) return 8;
+    if (spellLevel < 8) return 16;
+    return 24;
+  }
 }

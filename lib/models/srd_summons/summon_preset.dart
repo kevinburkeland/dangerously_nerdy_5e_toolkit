@@ -1,5 +1,7 @@
 import 'minion_stat_block.dart';
 
+typedef BudgetCalculator = int Function(int spellLevel);
+
 class SummonPreset {
   final String id;
   final String name;
@@ -13,6 +15,8 @@ class SummonPreset {
   final String upcastRules;
   final List<MinionStatBlock> statBlocks;
   final bool isRandomTable; // e.g., Bag of Tricks
+  final BudgetCalculator? budgetCalculator;
+  final int defaultMinionCount;
 
   const SummonPreset({
     required this.id,
@@ -27,5 +31,15 @@ class SummonPreset {
     required this.upcastRules,
     required this.statBlocks,
     this.isRandomTable = false,
+    this.budgetCalculator,
+    this.defaultMinionCount = 1,
   });
+
+  int calculateMaxPoints(int spellLevel) {
+    if (budgetCalculator != null) {
+      return budgetCalculator!(spellLevel);
+    }
+    return 50;
+  }
 }
+

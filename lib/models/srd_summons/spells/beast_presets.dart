@@ -1189,5 +1189,14 @@ class BeastSummons {
       saberToothedTiger,
       giantConstrictorSnake,
     ],
+    budgetCalculator: _calculateConjureAnimalsBudget,
+    defaultMinionCount: 8,
   );
+
+  static int _calculateConjureAnimalsBudget(int spellLevel) {
+    if (spellLevel < 5) return 8;
+    if (spellLevel < 7) return 16;
+    if (spellLevel < 9) return 24;
+    return 32;
+  }
 }

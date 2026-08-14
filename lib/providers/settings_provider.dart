@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
 import '../models/dm_screen_data.dart';
-import '../services/rules/dnd_5e_rules_engine.dart';
 
 class SettingsProvider extends ChangeNotifier {
   static const _kThemeMode = 'setting_theme_mode';
@@ -38,15 +37,15 @@ class SettingsProvider extends ChangeNotifier {
     final pinnedList = prefs.getStringList(_kPinnedRuleIds);
 
     _settings = AppSettings(
-      themeMode: ThemeMode.values.safeByIndex(themeIndex, _settings.themeMode),
-      fantasyAccent: FantasyAccent.values.safeByIndex(accentIndex, _settings.fantasyAccent),
+      themeMode: ThemeMode.values.elementAtOrNull(themeIndex ?? -1) ?? _settings.themeMode,
+      fantasyAccent: FantasyAccent.values.elementAtOrNull(accentIndex ?? -1) ?? _settings.fantasyAccent,
       oledPitchBlack: oled ?? _settings.oledPitchBlack,
-      hapticLevel: HapticFeedbackLevel.values.safeByIndex(hapticIndex, _settings.hapticLevel),
+      hapticLevel: HapticFeedbackLevel.values.elementAtOrNull(hapticIndex ?? -1) ?? _settings.hapticLevel,
       enableCritFumbleFx: critFx ?? _settings.enableCritFumbleFx,
       enableSpellParticles: particles ?? _settings.enableSpellParticles,
       enable3dDiceOverlays: dice ?? _settings.enable3dDiceOverlays,
       performanceMode: perf ?? _settings.performanceMode,
-      rulesEdition: DmRulesEdition.values.safeByIndex(editionIndex, _settings.rulesEdition),
+      rulesEdition: DmRulesEdition.values.elementAtOrNull(editionIndex ?? -1) ?? _settings.rulesEdition,
       pinnedRuleIds: pinnedList?.toSet() ?? _settings.pinnedRuleIds,
     );
     notifyListeners();

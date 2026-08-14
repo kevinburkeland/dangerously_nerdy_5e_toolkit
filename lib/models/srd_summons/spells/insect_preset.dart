@@ -159,5 +159,9 @@ class InsectSummons {
     description: 'You transform up to ten centipedes, three spiders, five wasps, or one scorpion into giant versions under your command.',
     upcastRules: 'No additional count scaling in SRD 5.1.',
     statBlocks: [giantCentipede, giantWasp, BeastSummons.giantSpider, giantScorpion],
+    budgetCalculator: _calculateGiantInsectBudget,
+    defaultMinionCount: 10,
   );
+
+  static int _calculateGiantInsectBudget(int spellLevel) => 10;
 }

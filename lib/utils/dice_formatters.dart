@@ -29,4 +29,33 @@ class DiceFormatters {
     }
     return base;
   }
+
+  /// Formats a composite primary + secondary damage formula expression (e.g., "2d6+3 Slashing + 1d6 Fire").
+  static String formatCompositeFormula({
+    required int primaryCount,
+    required int primarySides,
+    int primaryBonus = 0,
+    String? primaryDamageType,
+    int secondaryCount = 0,
+    int secondarySides = 0,
+    String? secondaryDamageType,
+  }) {
+    final primary = formatFormula(
+      count: primaryCount,
+      sides: primarySides,
+      bonus: primaryBonus,
+      damageType: primaryDamageType,
+    );
+    if (secondaryCount > 0 &&
+        secondaryDamageType != null &&
+        secondaryDamageType.trim().isNotEmpty) {
+      final secondary = formatFormula(
+        count: secondaryCount,
+        sides: secondarySides,
+        damageType: secondaryDamageType,
+      );
+      return '$primary + $secondary';
+    }
+    return primary;
+  }
 }

@@ -265,5 +265,10 @@ class AnimateObjectsSummon {
     description: 'Objects come to life at your command. Choose up to ten nonmagical objects within range. Tiny/Small count as 1 pt, Medium counts as 2 pts, Large counts as 4 pts, Huge counts as 8 pts (up to 10 pts total at 5th level).',
     upcastRules: '+2 points per spell slot level above 5th level.',
     statBlocks: [tinyObject, smallObject, mediumObject, largeObject, hugeObject],
+    budgetCalculator: _calculateAnimateObjectsBudget,
+    defaultMinionCount: 10,
   );
+
+  static int _calculateAnimateObjectsBudget(int spellLevel) =>
+      10 + (spellLevel - 5).clamp(0, 4) * 2;
 }

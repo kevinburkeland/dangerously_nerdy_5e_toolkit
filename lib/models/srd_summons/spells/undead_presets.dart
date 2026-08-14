@@ -348,6 +348,8 @@ class UndeadSummons {
     description: 'This spell creates an undead servant. Choose a pile of bones or a corpse of a Medium or Small humanoid within range to animate a Skeleton or Zombie.',
     upcastRules: 'Animate or reassert control over 2 additional undead creatures for each slot level above 3rd.',
     statBlocks: [skeleton, zombie],
+    budgetCalculator: _calculateAnimateDeadBudget,
+    defaultMinionCount: 1,
   );
 
   static const createUndeadPreset = SummonPreset(
@@ -362,5 +364,13 @@ class UndeadSummons {
     description: 'You can animate up to three Ghouls from corpses within range. Higher levels allow Ghasts, Wights, or Mummies.',
     upcastRules: '7th level: 4 Ghouls or 2 Ghasts/Wights. 8th level: 5 Ghouls, 3 Ghasts/Wights, or 2 Mummies. 9th level: 6 Ghouls, 4 Ghasts/Wights, or 3 Mummies.',
     statBlocks: [ghoul, ghast, wight, mummy],
+    budgetCalculator: _calculateCreateUndeadBudget,
+    defaultMinionCount: 3,
   );
+
+  static int _calculateAnimateDeadBudget(int spellLevel) =>
+      1 + (spellLevel - 3).clamp(0, 6) * 2;
+
+  static int _calculateCreateUndeadBudget(int spellLevel) =>
+      3 + (spellLevel - 6).clamp(0, 3);
 }

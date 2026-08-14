@@ -111,11 +111,13 @@ enum ObjectSize {
         bonus: damageBonus,
       );
 
-  /// Safe parser mapping raw string inputs to [ObjectSize] with fallback.
+  /// Safe parser mapping raw string inputs (e.g., 'Large Beast', 'Tiny') to [ObjectSize] with fallback.
   static ObjectSize fromString(String rawSize) {
     final normalized = rawSize.trim().toLowerCase();
+    final tokens = normalized.split(RegExp(r'\s+'));
     for (final size in ObjectSize.values) {
-      if (normalized.contains(size.name)) {
+      if (tokens.contains(size.name) ||
+          tokens.contains(size.displayName.toLowerCase())) {
         return size;
       }
     }
@@ -250,23 +252,15 @@ class AnimatedObjectInstance {
   Color get accentColor => customAccentColor ?? size.accentColor;
 
   /// Formatted damage formula string (e.g., "1d4+4 Bludgeoning").
-  String get damageFormula {
-    final primary = DiceFormatters.formatFormula(
-      count: damageDiceCount,
-      sides: damageDiceSides,
-      bonus: damageBonus,
-      damageType: damageType,
-    );
-    if (secondaryDamageDiceCount > 0 && secondaryDamageType != null && secondaryDamageType!.isNotEmpty) {
-      final secondary = DiceFormatters.formatFormula(
-        count: secondaryDamageDiceCount,
-        sides: secondaryDamageDiceSides,
-        damageType: secondaryDamageType,
+  String get damageFormula => DiceFormatters.formatCompositeFormula(
+        primaryCount: damageDiceCount,
+        primarySides: damageDiceSides,
+        primaryBonus: damageBonus,
+        primaryDamageType: damageType,
+        secondaryCount: secondaryDamageDiceCount,
+        secondarySides: secondaryDamageDiceSides,
+        secondaryDamageType: secondaryDamageType,
       );
-      return '$primary + $secondary';
-    }
-    return primary;
-  }
 
   bool get isDead => _currentHp <= 0;
 

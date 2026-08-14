@@ -51,25 +51,7 @@ class DiceRoomService {
   final Map<String, StreamController<List<RoomRoll>>> _localControllers = {};
 
   /// Deterministically checks if Firebase Core has been initialized with active apps.
-  bool get isFirebaseAvailable {
-    try {
-      return Firebase.apps.isNotEmpty;
-    } on FirebaseException catch (e, stackTrace) {
-      LoggingService().logNonFatal(
-        e,
-        stackTrace,
-        reason: 'FirebaseException during availability check; using in-memory mode',
-      );
-      return false;
-    } catch (e, stackTrace) {
-      LoggingService().logNonFatal(
-        e,
-        stackTrace,
-        reason: 'Unexpected error during Firebase availability check; using in-memory mode',
-      );
-      return false;
-    }
-  }
+  bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;
 
   /// Returns a stream of real-time rolls for a given room code (from last 24 hours, up to 100 rolls)
   Stream<List<RoomRoll>> streamRoomRolls(String roomCode) {
