@@ -8,6 +8,7 @@ import '../services/preset_service.dart';
 import '../services/preset_service_interface.dart';
 import '../utils/secure_random.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
+import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/dialogs/custom_die_dialog.dart';
 import '../widgets/dialogs/preset_import_export_dialogs.dart';
 import '../widgets/dialogs/save_preset_dialog.dart';
@@ -337,6 +338,11 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
             icon: const Icon(Icons.flash_on, color: Colors.amber),
             tooltip: 'Combat Action Economy Guide',
             onPressed: () => ActionEconomyDialog.show(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.medical_information_outlined, color: Colors.cyanAccent),
+            tooltip: 'Status Effects & Conditions Guide',
+            onPressed: () => ConditionReferenceDialog.show(context),
           ),
           if (_history.isNotEmpty)
             IconButton(

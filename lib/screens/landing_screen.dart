@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/srd_summons.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
+import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/legal_dialogs.dart';
 import 'dice_roller_screen.dart';
 import 'minion_tool_screen.dart';
@@ -38,6 +39,11 @@ class LandingScreen extends StatelessWidget {
             icon: const Icon(Icons.flash_on, color: Colors.amber),
             tooltip: 'Combat Action Economy Guide',
             onPressed: () => ActionEconomyDialog.show(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.medical_information_outlined, color: Colors.cyanAccent),
+            tooltip: 'Status Effects & Conditions Guide',
+            onPressed: () => ConditionReferenceDialog.show(context),
           ),
           const IconButton(
             icon: Icon(Icons.download_for_offline, color: Colors.cyanAccent),

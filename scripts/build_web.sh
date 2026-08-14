@@ -10,7 +10,11 @@ cd "$ROOT_DIR"
 echo "Building Flutter Web application from $ROOT_DIR..."
 flutter build web
 
-echo "Patching build/web/flutter_service_worker.js with active PWA Service Worker..."
-cp "$ROOT_DIR/web/sw.js" "$ROOT_DIR/build/web/flutter_service_worker.js"
+BUILD_TIMESTAMP=$(date +%s)
+echo "Injecting dynamic build version ($BUILD_TIMESTAMP) into service workers..."
 
-echo "Build complete! Web bundle in build/web is PWA install ready."
+# Substitute placeholder with epoch timestamp
+sed "s/BUILD_TIMESTAMP_PLACEHOLDER/$BUILD_TIMESTAMP/g" "$ROOT_DIR/web/sw.js" > "$ROOT_DIR/build/web/sw.js"
+cp "$ROOT_DIR/build/web/sw.js" "$ROOT_DIR/build/web/flutter_service_worker.js"
+
+echo "Build complete! Web bundle in build/web is PWA install ready with version $BUILD_TIMESTAMP."

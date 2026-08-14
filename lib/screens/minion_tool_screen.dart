@@ -9,6 +9,7 @@ import '../widgets/batch_attack_dialog.dart';
 import '../widgets/squad_builder.dart';
 import '../widgets/spell_reference.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
+import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/dialogs/mass_damage_dialog.dart';
 import '../widgets/room_banner_widget.dart';
 
@@ -324,6 +325,11 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
             icon: const Icon(Icons.flash_on, color: Colors.amber),
             tooltip: 'Combat Action Economy Guide',
             onPressed: () => ActionEconomyDialog.show(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.medical_information_outlined, color: Colors.cyanAccent),
+            tooltip: 'Status Effects & Conditions Guide',
+            onPressed: () => ConditionReferenceDialog.show(context),
           ),
           // Spell Slot Level Picker Dropdown (for spell presets)
           if (!widget.preset.isRandomTable && widget.preset.id != 'figurines_of_wondrous_power')
