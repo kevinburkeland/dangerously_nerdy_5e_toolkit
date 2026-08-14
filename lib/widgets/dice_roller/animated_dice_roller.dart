@@ -54,12 +54,9 @@ class _AnimatedDiceRollOverlayState extends State<AnimatedDiceRollOverlay> with 
       if (count >= 10) break;
     }
 
-    _physicsController.addListener(() {
-      if (mounted) setState(() {});
-    });
-
     _physicsController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        if (mounted) setState(() {});
         HapticService.heavyImpact(context);
       }
     });
@@ -78,7 +75,6 @@ class _AnimatedDiceRollOverlayState extends State<AnimatedDiceRollOverlay> with 
     final theme = Theme.of(context);
     final tabletop = theme.extension<TabletopColors>();
     final isSettled = _physicsController.isCompleted;
-    final progress = _physicsController.value;
     final res = widget.result;
 
     return GestureDetector(
@@ -91,13 +87,18 @@ class _AnimatedDiceRollOverlayState extends State<AnimatedDiceRollOverlay> with 
             // 3D Polyhedral Tumbling Canvas
             Positioned.fill(
               child: RepaintBoundary(
-                child: CustomPaint(
-                  painter: _Polyhedral3DDicePainter(
-                    dice: _diceList,
-                    progress: progress,
-                    theme: theme,
-                    tabletop: tabletop,
-                  ),
+                child: AnimatedBuilder(
+                  animation: _physicsController,
+                  builder: (context, _) {
+                    return CustomPaint(
+                      painter: _Polyhedral3DDicePainter(
+                        dice: _diceList,
+                        progress: _physicsController.value,
+                        theme: theme,
+                        tabletop: tabletop,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -366,7 +367,7 @@ class _PolyhedronMesh {
     const r = 0.8660; // sqrt(3)/2
     final vertices = [
       const _Vec3(0, 0, 1.0), // 0: Top Apex
-      _Vec3(0, r, -h / 2),    // 1: Top-Center
+      const _Vec3(0, r, -h / 2),    // 1: Top-Center
       _Vec3(-r * sqrt(3) / 2, -r / 2, -h / 2), // 2: Bottom-Left
       _Vec3(r * sqrt(3) / 2, -r / 2, -h / 2),  // 3: Bottom-Right
     ];
@@ -599,7 +600,6 @@ class _Simulated3DDie {
         break;
       case DieType.d20:
       case DieType.custom:
-      default:
         mesh = _PolyhedronMesh.createD20(radius: dieRadius);
         break;
     }

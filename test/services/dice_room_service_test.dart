@@ -4,12 +4,12 @@ import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 
 void main() {
   group('DiceRoomService Tests', () {
-    test('generateRoomCode produces 4-character uppercase room format', () {
+    test('generateRoomCode produces 6-character uppercase room format', () {
       final service = DiceRoomService();
       final code = service.generateRoomCode();
 
       expect(code, startsWith('ROOM-'));
-      expect(code.length, 9); // 'ROOM-' (5) + 4 chars
+      expect(code.length, 11); // 'ROOM-' (5) + 6 chars
     });
 
     test('broadcasting roll updates real-time stream subscriber', () async {

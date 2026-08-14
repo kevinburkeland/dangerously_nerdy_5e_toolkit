@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'models/app_settings.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
 import 'services/logging_service.dart';

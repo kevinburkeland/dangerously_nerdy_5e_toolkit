@@ -182,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const Divider(height: 1),
                   SwitchListTile.adaptive(
-                    activeColor: Colors.orangeAccent,
+                    activeThumbColor: Colors.orangeAccent,
                     secondary: const Icon(Icons.battery_saver, color: Colors.orangeAccent),
                     title: const Text('Performance / Battery Saver Mode'),
                     subtitle: const Text('Disables continuous tickers, particles, and heavy shaders'),

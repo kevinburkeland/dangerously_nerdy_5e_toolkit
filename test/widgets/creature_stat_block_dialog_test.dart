@@ -7,7 +7,7 @@ void main() {
   group('CreatureStatBlockDialog Tests', () {
     testWidgets('renders full 5e SRD stat block fields for Wolf', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CreatureStatBlockDialog(
               statBlock: SrdSummonsLibrary.wolf,
@@ -29,7 +29,7 @@ void main() {
 
     testWidgets('renders elemental traits and special actions for Fire Elemental', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CreatureStatBlockDialog(
               statBlock: SrdSummonsLibrary.fireElemental,

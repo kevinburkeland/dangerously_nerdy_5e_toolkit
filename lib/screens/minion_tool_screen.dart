@@ -212,58 +212,64 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
 
   Future<void> _grantGroupTempHp() async {
     final controller = TextEditingController(text: '5');
-    final amount = await showDialog<int>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF242038),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.health_and_safety, color: Colors.cyanAccent, size: 22),
-            SizedBox(width: 8),
-            Text('Grant Group Temp HP', style: TextStyle(color: Colors.cyanAccent, fontSize: 18)),
+    int? amount;
+    try {
+      amount = await showDialog<int>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF242038),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.health_and_safety, color: Colors.cyanAccent, size: 22),
+              SizedBox(width: 8),
+              Text('Grant Group Temp HP', style: TextStyle(color: Colors.cyanAccent, fontSize: 18)),
+            ],
+          ),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Temporary HP Amount',
+              labelStyle: TextStyle(color: Colors.cyanAccent),
+              prefixIcon: Icon(Icons.shield, color: Colors.cyanAccent),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent, width: 2)),
+            ),
+            onSubmitted: (val) => Navigator.pop(ctx, int.tryParse(val)?.clamp(1, 999)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+              onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)?.clamp(1, 999)),
+              child: const Text('Grant Temp HP', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            labelText: 'Temporary HP Amount',
-            labelStyle: TextStyle(color: Colors.cyanAccent),
-            prefixIcon: Icon(Icons.shield, color: Colors.cyanAccent),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent, width: 2)),
-          ),
-          onSubmitted: (val) => Navigator.pop(ctx, int.tryParse(val)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
-            onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)),
-            child: const Text('Grant Temp HP', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      controller.dispose();
+    }
 
-    if (amount != null && amount > 0 && mounted) {
+    final safeAmount = amount;
+    if (safeAmount != null && safeAmount > 0 && mounted) {
       HapticService.heavyImpact(context);
       setState(() {
         for (final obj in _session.activeObjects) {
           if (!obj.isDead) {
-            obj.grantTempHp(amount);
+            obj.grantTempHp(safeAmount);
           }
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Granted +$amount Temp HP to all living minions!'),
+          content: Text('Granted +$safeAmount Temp HP to all living minions!'),
         ),
       );
     }

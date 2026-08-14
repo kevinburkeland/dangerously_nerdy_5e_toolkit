@@ -141,13 +141,13 @@ class DiceRoomService implements BaseRoomService {
     _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
   }
 
-  /// Helper to generate a random 4-character uppercase room code
+  /// Helper to generate a random 6-character uppercase room code
   @override
   String generateRoomCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rng = SecureRng.instance;
     String result = '';
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 6; i++) {
       result += chars[rng.nextInt(chars.length)];
     }
     return 'ROOM-$result';

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/room_roll.dart';
@@ -90,43 +91,20 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
       final roomService = DiceRoomService();
       final timestamp = DateTime.now();
 
-      // 1. Broadcast summary roll for overall batch results
-      final summaryId = '${timestamp.microsecondsSinceEpoch}_summary_${SecureRng.instance.nextInt(1000000)}';
+      // Broadcast single consolidated summary roll for overall batch results
+      final summaryId = '${timestamp.microsecondsSinceEpoch}_batch_${SecureRng.instance.nextInt(1000000)}';
       final summaryRoll = RoomRoll(
         id: summaryId,
         roomCode: activeCode,
         playerName: activePlayer,
         timestamp: timestamp,
-        formulaString: 'Animate Objects Batch (${summary.totalHits}/${summary.totalAttacks} Hits vs AC $_targetAc)',
+        formulaString: 'Batch Attack (${summary.totalHits}/${summary.totalAttacks} Hits vs AC $_targetAc)',
         total: summary.totalDamage,
         individualRolls: summary.results.map((r) => r.totalDamage).toList(),
         isCrit: summary.totalCrits > 0,
         isFumble: false,
       );
-      roomService.broadcastRoll(summaryRoll);
-
-      // 2. Broadcast each object attack roll detail
-      for (int i = 0; i < summary.results.length; i++) {
-        final res = summary.results[i];
-        final obj = res.object;
-
-        final statusText = res.isCrit ? 'CRIT!' : (res.isHit ? 'HIT' : 'MISS');
-        final formulaStr = '${obj.name} (${obj.size.displayName}) +${obj.attackBonus} vs AC $_targetAc [$statusText]';
-        final objId = '${timestamp.microsecondsSinceEpoch}_${i}_${SecureRng.instance.nextInt(1000000)}';
-
-        final objRoll = RoomRoll(
-          id: objId,
-          roomCode: activeCode,
-          playerName: activePlayer,
-          timestamp: timestamp,
-          formulaString: formulaStr,
-          total: res.totalDamage,
-          individualRolls: [res.totalToHit, ...res.damageRolls],
-          isCrit: res.isCrit,
-          isFumble: res.finalD20 == 1,
-        );
-        roomService.broadcastRoll(objRoll);
-      }
+      unawaited(roomService.broadcastRoll(summaryRoll));
     }
   }
 

@@ -51,9 +51,7 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
-    )..addListener(() {
-        if (mounted) setState(() {});
-      });
+    );
   }
 
   @override
