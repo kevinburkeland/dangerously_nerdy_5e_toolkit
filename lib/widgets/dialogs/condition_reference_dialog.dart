@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/a11y_service.dart';
 import '../../services/haptic_service.dart';
 
 class ConditionReferenceDialog extends StatefulWidget {
@@ -331,10 +332,13 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                 children: [
                   const Icon(Icons.medical_information_outlined, color: Colors.cyanAccent, size: 24),
                   const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      '5e Status Effects & Conditions',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: const Text(
+                        '5e Status Effects & Conditions',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                   // Edition Toggle Button
@@ -353,6 +357,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                           isActive: !is2024,
                           onTap: () {
                             HapticService.selectionTick(context);
+                            A11yService.announce('Switched to 2014 rules edition');
                             setState(() => _localEditionOverride = DmRulesEdition.v2014);
                             settingsProvider?.setRulesEdition(DmRulesEdition.v2014);
                           },
@@ -362,6 +367,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                           isActive: is2024,
                           onTap: () {
                             HapticService.selectionTick(context);
+                            A11yService.announce('Switched to 2024 revised rules edition');
                             setState(() => _localEditionOverride = DmRulesEdition.v2024);
                             settingsProvider?.setRulesEdition(DmRulesEdition.v2024);
                           },
@@ -371,6 +377,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white54),
+                    tooltip: 'Close dialog',
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -519,21 +526,31 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
   }
 
   Widget _buildEditionChip({required String label, required bool isActive, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.cyanAccent : Colors.transparent,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+      child: Semantics(
+        button: true,
+        selected: isActive,
+        label: '$label Edition Rules',
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? Colors.black : Colors.white70,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isActive ? Colors.cyanAccent : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isActive ? Colors.black : Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -11,6 +11,10 @@ class PressableCard extends StatefulWidget {
   final double pressedScale;
   final Color? color;
   final ShapeBorder? shape;
+  final String? semanticLabel;
+  final String? semanticHint;
+  final bool? excludeChildSemantics;
+  final bool isButton;
 
   const PressableCard({
     super.key,
@@ -22,6 +26,10 @@ class PressableCard extends StatefulWidget {
     this.pressedScale = 0.97,
     this.color,
     this.shape,
+    this.semanticLabel,
+    this.semanticHint,
+    this.excludeChildSemantics,
+    this.isButton = true,
   });
 
   @override
@@ -31,6 +39,7 @@ class PressableCard extends StatefulWidget {
 class _PressableCardState extends State<PressableCard> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
+  bool _isFocused = false;
 
   @override
   void initState() {
@@ -67,11 +76,21 @@ class _PressableCardState extends State<PressableCard> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isInteractive = widget.onTap != null || widget.onLongPress != null;
+    final shouldExcludeChildSemantics = widget.excludeChildSemantics ?? (widget.semanticLabel != null);
+
+    ShapeBorder effectiveShape = widget.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
+    if (_isFocused) {
+      effectiveShape = RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.colorScheme.primary, width: 2.5),
+      );
+    }
 
     final card = Card(
       color: widget.color,
-      shape: widget.shape,
+      shape: effectiveShape,
       margin: widget.margin ?? EdgeInsets.zero,
       child: Padding(
         padding: widget.padding ?? const EdgeInsets.all(12),
@@ -79,15 +98,30 @@ class _PressableCardState extends State<PressableCard> with SingleTickerProvider
       ),
     );
 
-    if (!isInteractive) return card;
+    if (!isInteractive) {
+      if (widget.semanticLabel != null) {
+        return Semantics(
+          label: widget.semanticLabel,
+          hint: widget.semanticHint,
+          excludeSemantics: shouldExcludeChildSemantics,
+          container: true,
+          child: card,
+        );
+      }
+      return card;
+    }
 
-    return GestureDetector(
+    final interactiveWidget = InkWell(
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       onTapDown: _handleTapDown,
       onTapUp: _handleTapUp,
       onTapCancel: _handleTapCancel,
-      onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
-      behavior: HitTestBehavior.opaque,
+      onFocusChange: (focused) {
+        setState(() => _isFocused = focused);
+      },
+      borderRadius: BorderRadius.circular(16),
+      focusColor: theme.colorScheme.primary.withValues(alpha: 0.15),
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) => Transform.scale(
@@ -96,6 +130,19 @@ class _PressableCardState extends State<PressableCard> with SingleTickerProvider
         ),
         child: card,
       ),
+    );
+
+    return Semantics(
+      label: widget.semanticLabel,
+      hint: widget.semanticHint,
+      button: widget.isButton,
+      enabled: isInteractive,
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      container: true,
+      excludeSemantics: shouldExcludeChildSemantics,
+      explicitChildNodes: !shouldExcludeChildSemantics,
+      child: interactiveWidget,
     );
   }
 }

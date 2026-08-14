@@ -37,11 +37,31 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
+    );
 
     _pulseAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
+    bool performanceMode = false;
+    try {
+      performanceMode = SettingsScope.maybeOf(context)?.settings.performanceMode ?? false;
+    } catch (_) {}
+
+    if (systemDisableAnimations || performanceMode) {
+      if (_pulseController.isAnimating) {
+        _pulseController.stop();
+      }
+    } else {
+      if (!_pulseController.isAnimating) {
+        _pulseController.repeat(reverse: true);
+      }
+    }
   }
 
   @override
@@ -52,6 +72,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
 
   @override
   Widget build(BuildContext context) {
+    final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
     bool performanceMode = false;
     try {
       performanceMode = SettingsScope.of(context).settings.performanceMode;
@@ -62,68 +83,79 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     final isCritical = ratio <= 0.25 && widget.currentValue > 0;
     final activeColor = isCritical ? (widget.lowResourceColor ?? tabletop?.fumbleRed ?? Colors.red) : widget.fillColor;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              widget.label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-            widget.trailing ??
-                Text(
-                  '${widget.currentValue} / ${widget.maxValue}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Container(
-          height: widget.height,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(widget.height / 2),
-            border: Border.all(
-              color: isCritical ? activeColor.withValues(alpha: 0.6) : Colors.transparent,
-              width: 1.5,
-            ),
+    final semanticDescription =
+        '${widget.label}: ${widget.currentValue} of ${widget.maxValue}${isCritical ? ", Warning: Low resource critical alert" : ""}. ${(ratio * 100).toInt()} percent remaining.';
+
+    return Semantics(
+      label: semanticDescription,
+      value: '${widget.currentValue}',
+      maxValue: '${widget.maxValue}',
+      excludeSemantics: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.label,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+              widget.trailing ??
+                  Text(
+                    '${widget.currentValue} / ${widget.maxValue}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+            ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(widget.height / 2),
-            child: Stack(
-              children: [
-                AnimatedFractionallySizedBox(
-                  duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCubic,
-                  widthFactor: ratio,
-                  alignment: Alignment.centerLeft,
-                  child: AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, child) {
-                      final opacity = (!performanceMode && isCritical) ? _pulseAnimation.value : 1.0;
-                      return Opacity(
-                        opacity: opacity,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [activeColor.withValues(alpha: 0.75), activeColor],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
+          const SizedBox(height: 6),
+          Container(
+            height: widget.height,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(widget.height / 2),
+              border: Border.all(
+                color: isCritical ? activeColor.withValues(alpha: 0.6) : Colors.transparent,
+                width: 1.5,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(widget.height / 2),
+              child: Stack(
+                children: [
+                  AnimatedFractionallySizedBox(
+                    duration: systemDisableAnimations ? Duration.zero : const Duration(milliseconds: 350),
+                    curve: Curves.easeOutCubic,
+                    widthFactor: ratio,
+                    alignment: Alignment.centerLeft,
+                    child: AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) {
+                        final opacity = (!performanceMode && !systemDisableAnimations && isCritical)
+                            ? _pulseAnimation.value
+                            : 1.0;
+                        return Opacity(
+                          opacity: opacity,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [activeColor.withValues(alpha: 0.75), activeColor],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

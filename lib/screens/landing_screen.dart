@@ -355,15 +355,22 @@ class _LandingScreenState extends State<LandingScreen> {
         elevation: 2,
         title: Row(
           children: [
-            Image.asset('assets/images/logo.png', width: 36, height: 36),
+            Semantics(
+              label: 'DangerouslyNerdy Logo',
+              image: true,
+              child: Image.asset('assets/images/logo.png', width: 36, height: 36),
+            ),
             const SizedBox(width: 10),
-            const Expanded(
-              child: Text(
-                'DangerouslyNerdy 5e Toolkit',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: const Text(
+                  'DangerouslyNerdy 5e Toolkit',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
               ),
             ),
@@ -443,16 +450,23 @@ class _LandingScreenState extends State<LandingScreen> {
                                   ),
                                 ],
                               ),
-                              child: Image.asset('assets/images/logo.png', width: 68, height: 68),
+                              child: Semantics(
+                                label: 'DangerouslyNerdy Dragon Logo',
+                                image: true,
+                                child: Image.asset('assets/images/logo.png', width: 68, height: 68),
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: Text(
-                                'Select a Tool',
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurface,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                              child: Semantics(
+                                header: true,
+                                child: Text(
+                                  'Select a Tool',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -688,15 +702,18 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   Widget _buildSectionHeader(String title, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: color,
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.2,
+    return Semantics(
+      header: true,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 4.0),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
         ),
       ),
     );
@@ -748,6 +765,8 @@ class _LandingScreenState extends State<LandingScreen> {
 
     return PressableCard(
       onTap: onTap,
+      semanticLabel: '$title, $badgeText. $description. Tap to launch tool.',
+      excludeChildSemantics: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: accentColor.withValues(alpha: 0.35), width: 1.5),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/animated_object.dart';
+import '../services/a11y_service.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/edit_object_name_dialog.dart';
 import 'dialogs/set_object_hp_dialog.dart';
@@ -151,15 +152,15 @@ class ObjectCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatBlock('AC', '${object.ac}', Colors.lightBlueAccent, isHero: true),
+                  _buildStatBlock('AC', '${object.ac}', Colors.lightBlueAccent, semanticName: 'Armor Class', isHero: true),
                   _buildDivider(),
-                  _buildStatBlock('TO HIT', '+${object.attackBonus}', Colors.amberAccent, isHero: true),
+                  _buildStatBlock('TO HIT', '+${object.attackBonus}', Colors.amberAccent, semanticName: 'Attack Bonus', isHero: true),
                   _buildDivider(),
-                  _buildStatBlock('DMG', object.damageFormula, Colors.orangeAccent, isHero: true),
+                  _buildStatBlock('DMG', object.damageFormula, Colors.orangeAccent, semanticName: 'Damage Formula', isHero: true),
                   _buildDivider(),
-                  _buildStatBlock('STR', '${size.strScore}', Colors.white70),
+                  _buildStatBlock('STR', '${size.strScore}', Colors.white70, semanticName: 'Strength Score'),
                   _buildDivider(),
-                  _buildStatBlock('DEX', '${size.dexScore}', Colors.white70),
+                  _buildStatBlock('DEX', '${size.dexScore}', Colors.white70, semanticName: 'Dexterity Score'),
                 ],
               ),
             ),
@@ -173,73 +174,88 @@ class ObjectCard extends StatelessWidget {
                   color: Colors.redAccent,
                   enabled: !isDead,
                   tooltip: '-1 HP',
+                  semanticLabel: 'Decrease 1 HP for ${object.name}',
                   onTap: () {
                     HapticFeedback.lightImpact();
+                    final newHp = (object.currentHp - 1).clamp(0, object.maxHp);
+                    A11yService.announceHpChange(
+                      object.name,
+                      currentHp: newHp,
+                      maxHp: object.maxHp,
+                      delta: -1,
+                      tempHp: object.tempHp,
+                      isDead: newHp <= 0,
+                    );
                     onHpChanged(-1);
                   },
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => _showCustomHpDialog(context),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  isDead ? '💀 DESTROYED' : 'HP: ${object.currentHp} / ${object.maxHp}',
-                                  style: TextStyle(
-                                    color: isDead ? customColors.fumbleRed : Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                if (object.tempHp > 0 && !isDead) ...[
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: customColors.tempHpCyan.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: customColors.tempHpCyan, width: 1),
+                  child: Semantics(
+                    label: '${object.name} Hit Points: ${isDead ? "Destroyed" : "${object.currentHp} of ${object.maxHp}"}${object.tempHp > 0 ? ", plus ${object.tempHp} temporary HP" : ""}. ${(object.hpPercent * 100).toInt()} percent remaining. Tap to edit custom HP.',
+                    button: true,
+                    excludeSemantics: true,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => _showCustomHpDialog(context),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    isDead ? '💀 DESTROYED' : 'HP: ${object.currentHp} / ${object.maxHp}',
+                                    style: TextStyle(
+                                      color: isDead ? customColors.fumbleRed : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
                                     ),
-                                    child: Text(
-                                      '+${object.tempHp} TEMP',
-                                      style: TextStyle(
-                                        color: customColors.tempHpCyan,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 10,
+                                  ),
+                                  if (object.tempHp > 0 && !isDead) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: customColors.tempHpCyan.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: customColors.tempHpCyan, width: 1),
+                                      ),
+                                      child: Text(
+                                        '+${object.tempHp} TEMP',
+                                        style: TextStyle(
+                                          color: customColors.tempHpCyan,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 10,
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 ],
-                              ],
-                            ),
-                            Text(
-                              '${(object.hpPercent * 100).toInt()}%',
-                              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: object.hpPercent,
-                            minHeight: 10,
-                            backgroundColor: Colors.white12,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              object.hpPercent > 0.5
-                                  ? customColors.hitGreen
-                                  : (object.hpPercent > 0.2 ? Colors.amber : customColors.fumbleRed),
+                              ),
+                              Text(
+                                '${(object.hpPercent * 100).toInt()}%',
+                                style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: LinearProgressIndicator(
+                              value: object.hpPercent,
+                              minHeight: 10,
+                              backgroundColor: Colors.white12,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                object.hpPercent > 0.5
+                                    ? customColors.hitGreen
+                                    : (object.hpPercent > 0.2 ? Colors.amber : customColors.fumbleRed),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -249,8 +265,17 @@ class ObjectCard extends StatelessWidget {
                   color: customColors.hitGreen,
                   enabled: object.currentHp < object.maxHp,
                   tooltip: '+1 HP',
+                  semanticLabel: 'Increase 1 HP for ${object.name}',
                   onTap: () {
                     HapticFeedback.lightImpact();
+                    final newHp = (object.currentHp + 1).clamp(0, object.maxHp);
+                    A11yService.announceHpChange(
+                      object.name,
+                      currentHp: newHp,
+                      maxHp: object.maxHp,
+                      delta: 1,
+                      tempHp: object.tempHp,
+                    );
                     onHpChanged(1);
                   },
                 ),
@@ -262,29 +287,33 @@ class ObjectCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatBlock(String label, String value, Color color, {bool isHero = false}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: isHero ? 10 : 9,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
+  Widget _buildStatBlock(String label, String value, Color color, {required String semanticName, bool isHero = false}) {
+    return Semantics(
+      label: '$semanticName: $value',
+      excludeSemantics: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: isHero ? 10 : 9,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: isHero ? 15 : 13,
-            fontWeight: FontWeight.w900,
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: isHero ? 15 : 13,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -301,25 +330,35 @@ class ObjectCard extends StatelessWidget {
     required Color color,
     required bool enabled,
     required String tooltip,
+    String? semanticLabel,
     required VoidCallback onTap,
   }) {
-    return SizedBox(
-      width: 44,
-      height: 44,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minWidth: 48,
+        minHeight: 48,
+      ),
       child: Tooltip(
         message: tooltip,
-        child: Material(
-          color: enabled ? color.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-              color: enabled ? color.withValues(alpha: 0.6) : Colors.transparent,
+        child: Semantics(
+          button: true,
+          label: semanticLabel ?? tooltip,
+          enabled: enabled,
+          child: Material(
+            color: enabled ? color.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: enabled ? color.withValues(alpha: 0.6) : Colors.transparent,
+              ),
             ),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: enabled ? onTap : null,
-            child: Icon(icon, color: enabled ? color : Colors.white24, size: 22),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: enabled ? onTap : null,
+              child: Center(
+                child: Icon(icon, color: enabled ? color : Colors.white24, size: 24),
+              ),
+            ),
           ),
         ),
       ),

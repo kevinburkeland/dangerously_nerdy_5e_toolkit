@@ -13,55 +13,88 @@ class BatchAttackResultsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    final isLargeScale = textScaler.scale(14) > 18;
+
+    final summaryA11yLabel =
+        'Batch Attack Summary: ${summary.totalDamage} total damage, ${summary.totalHits} of ${summary.totalAttacks} attacks hit, ${summary.totalCrits} critical hits.';
+
     return Column(
       children: [
         // Summary Stat Banner
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.amber.shade900.withValues(alpha: 0.4),
-                Colors.purple.shade900.withValues(alpha: 0.4),
-              ],
+        Semantics(
+          label: summaryA11yLabel,
+          excludeSemantics: true,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.amber.shade900.withValues(alpha: 0.4),
+                  Colors.purple.shade900.withValues(alpha: 0.4),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.amber, width: 1.5),
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.amber, width: 1.5),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: _buildSummaryStat(
-                    'TOTAL DAMAGE',
-                    '${summary.totalDamage}',
-                    Colors.orangeAccent,
-                    fontSize: 22,
+            child: isLargeScale
+                ? Column(
+                    children: [
+                      _buildSummaryStat(
+                        'TOTAL DAMAGE',
+                        '${summary.totalDamage}',
+                        Colors.orangeAccent,
+                        fontSize: 22,
+                      ),
+                      const Divider(color: Colors.white24, height: 12),
+                      _buildSummaryStat(
+                        'HITS',
+                        '${summary.totalHits} / ${summary.totalAttacks}',
+                        Colors.greenAccent,
+                      ),
+                      const Divider(color: Colors.white24, height: 12),
+                      _buildSummaryStat(
+                        'CRITS',
+                        '${summary.totalCrits}',
+                        Colors.yellowAccent,
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: _buildSummaryStat(
+                            'TOTAL DAMAGE',
+                            '${summary.totalDamage}',
+                            Colors.orangeAccent,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: _buildSummaryStat(
+                            'HITS',
+                            '${summary.totalHits} / ${summary.totalAttacks}',
+                            Colors.greenAccent,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: _buildSummaryStat(
+                            'CRITS',
+                            '${summary.totalCrits}',
+                            Colors.yellowAccent,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: _buildSummaryStat(
-                    'HITS',
-                    '${summary.totalHits} / ${summary.totalAttacks}',
-                    Colors.greenAccent,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: _buildSummaryStat(
-                    'CRITS',
-                    '${summary.totalCrits}',
-                    Colors.yellowAccent,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
         const SizedBox(height: 12),
@@ -75,92 +108,98 @@ class BatchAttackResultsCard extends StatelessWidget {
             final res = summary.results[index];
             final obj = res.object;
 
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: res.isHit
-                    ? Colors.green.withValues(alpha: 0.12)
-                    : Colors.red.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: res.isCrit
-                      ? Colors.amber
-                      : (res.isHit
-                          ? Colors.green.withValues(alpha: 0.3)
-                          : Colors.red.withValues(alpha: 0.2)),
+            final itemA11yLabel =
+                '${obj.name} (${obj.size.displayName}): rolled ${res.finalD20} with bonus ${res.object.attackBonus} equals ${res.totalToHit} against Armor Class $targetAc. ${res.isCrit ? (res.isMaximizedCrit ? "Maximized Critical Hit!" : "Critical Hit!") : (res.isHit ? "Hit!" : "Miss.")} ${res.isHit ? "${res.totalDamage} damage dealt." : ""}';
+
+            return Semantics(
+              label: itemA11yLabel,
+              excludeSemantics: true,
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: res.isHit
+                      ? const Color(0xFF1B5E20).withValues(alpha: 0.2)
+                      : const Color(0xFFB71C1C).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: res.isCrit
+                        ? const Color(0xFFFFD54F)
+                        : (res.isHit
+                            ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
+                            : const Color(0xFFE57373).withValues(alpha: 0.3)),
+                  ),
                 ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: obj.size.accentColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                obj.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '(${obj.size.displayName})',
-                              style: TextStyle(
-                                color: obj.size.accentColor,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _formatRollDetail(res),
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  // Result Badge
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: res.isCrit
-                          ? Colors.amber
-                          : (res.isHit ? Colors.green : Colors.red.shade900),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      res.isCrit
-                          ? '${res.isMaximizedCrit ? "MAX CRIT!" : "CRIT!"} (${res.totalDamage} dmg)'
-                          : (res.isHit ? '${res.totalDamage} DMG' : 'MISS'),
-                      style: TextStyle(
-                        color: res.isCrit ? Colors.black : Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: obj.size.accentColor,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  obj.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '(${obj.size.displayName})',
+                                style: TextStyle(
+                                  color: obj.size.accentColor,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _formatRollDetail(res),
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // WCAG 2.2 AA Compliant Result Badge (>= 4.5:1 contrast)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: res.isCrit
+                            ? const Color(0xFFFFD54F)
+                            : (res.isHit ? const Color(0xFF1B5E20) : const Color(0xFFB71C1C)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        res.isCrit
+                            ? '${res.isMaximizedCrit ? "MAX CRIT!" : "CRIT!"} (${res.totalDamage} dmg)'
+                            : (res.isHit ? '${res.totalDamage} DMG' : 'MISS'),
+                        style: TextStyle(
+                          color: res.isCrit ? const Color(0xFF1A1A1A) : Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },

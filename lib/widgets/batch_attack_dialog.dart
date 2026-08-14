@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/room_roll.dart';
 import '../models/spell_session.dart';
+import '../services/a11y_service.dart';
 import '../services/base_room_service.dart';
 import '../services/dice_room_service.dart';
 import '../utils/secure_random.dart';
@@ -85,6 +86,8 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     setState(() {
       _summary = summary;
     });
+
+    A11yService.announceBatchAttack(summary, _targetAc);
 
     // Asynchronous network side-effects executed outside of setState()
     final activeCode = widget.activeRoomCode ?? widget.roomService.activeRoomCode;
@@ -175,6 +178,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white54),
+                  tooltip: 'Close dialog',
                   onPressed: () => Navigator.pop(context),
                 ),
               ],

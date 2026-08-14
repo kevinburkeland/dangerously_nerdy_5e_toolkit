@@ -95,9 +95,10 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
 
   @override
   Widget build(BuildContext context) {
-    bool areCritAllowed = true;
+    final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
+    bool areCritAllowed = !systemDisableAnimations;
     try {
-      areCritAllowed = SettingsScope.of(context).settings.areCritFxAllowed;
+      areCritAllowed = areCritAllowed && SettingsScope.of(context).settings.areCritFxAllowed;
     } catch (_) {}
 
     return AnimatedBuilder(
@@ -107,10 +108,10 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
         final progress = _animController.value;
         final isFumble = _activeType == CritEffectType.critFumble;
 
-        // Spring-damped screen shake for Critical Fumbles
+        // Spring-damped screen shake for Critical Fumbles (disabled when animations are disabled)
         final shakeDecay = (1.0 - progress);
-        final dx = (isAnimating && isFumble) ? sin(progress * 35) * 10.0 * shakeDecay : 0.0;
-        final dy = (isAnimating && isFumble) ? cos(progress * 28) * 6.0 * shakeDecay : 0.0;
+        final dx = (isAnimating && isFumble && !systemDisableAnimations) ? sin(progress * 35) * 10.0 * shakeDecay : 0.0;
+        final dy = (isAnimating && isFumble && !systemDisableAnimations) ? cos(progress * 28) * 6.0 * shakeDecay : 0.0;
 
         return Transform.translate(
           offset: Offset(dx, dy),

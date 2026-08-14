@@ -38,12 +38,15 @@ class DicePoolBuilder extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Select Die',
-              style: TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14),
+            Semantics(
+              header: true,
+              child: const Text(
+                'Select Die',
+                style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14),
+              ),
             ),
             if (dicePool.length > 1 ||
                 dicePool.first.count > 1 ||
@@ -65,32 +68,41 @@ class DicePoolBuilder extends StatelessWidget {
           children: [
             ...DieType.values.where((d) => d != DieType.custom).map((die) {
               final isInPool = dicePool.any((e) => e.dieType == die);
-              return ChoiceChip(
-                label: Text(
-                  die.label.toUpperCase(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isInPool ? Colors.black : Colors.white,
-                  ),
-                ),
+              return Semantics(
+                button: true,
                 selected: isInPool,
-                selectedColor: Colors.cyanAccent,
-                backgroundColor: const Color(0xFF28243D),
-                onSelected: (selected) {
-                  onSelectDie(die);
-                },
+                label: 'Add ${die.label} to dice pool',
+                child: ChoiceChip(
+                  label: Text(
+                    die.label.toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isInPool ? Colors.black : Colors.white,
+                    ),
+                  ),
+                  selected: isInPool,
+                  selectedColor: Colors.cyanAccent,
+                  backgroundColor: const Color(0xFF28243D),
+                  onSelected: (selected) {
+                    onSelectDie(die);
+                  },
+                ),
               );
             }),
-            ActionChip(
-              avatar: const Icon(Icons.add, size: 16, color: Colors.cyanAccent),
-              label: Text(
-                'CUSTOM (d$customSides)',
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+            Semantics(
+              button: true,
+              label: 'Configure custom d$customSides die',
+              child: ActionChip(
+                avatar: const Icon(Icons.add, size: 16, color: Colors.cyanAccent),
+                label: Text(
+                  'CUSTOM (d$customSides)',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                ),
+                backgroundColor: const Color(0xFF28243D),
+                side: const BorderSide(color: Colors.cyanAccent),
+                onPressed: onShowCustomDieDialog,
               ),
-              backgroundColor: const Color(0xFF28243D),
-              side: const BorderSide(color: Colors.cyanAccent),
-              onPressed: onShowCustomDieDialog,
             ),
           ],
         ),
@@ -108,13 +120,16 @@ class DicePoolBuilder extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'DICE POOL & MODIFIERS',
-                style: TextStyle(
-                    color: Colors.cyanAccent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.8),
+              Semantics(
+                header: true,
+                child: const Text(
+                  'DICE POOL & MODIFIERS',
+                  style: TextStyle(
+                      color: Colors.cyanAccent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8),
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -163,6 +178,7 @@ class DicePoolBuilder extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline,
                                 color: Colors.cyanAccent),
+                            tooltip: 'Decrease quantity of ${diceEntry.dieLabel}',
                             onPressed: () {
                               final updatedPool = List<DiceEntry>.from(dicePool);
                               if (diceEntry.count > 1) {
@@ -194,6 +210,7 @@ class DicePoolBuilder extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline,
                                 color: Colors.cyanAccent),
+                            tooltip: 'Increase quantity of ${diceEntry.dieLabel}',
                             onPressed: () {
                               final updatedPool = List<DiceEntry>.from(dicePool);
                               if (diceEntry.count < 50) {
@@ -207,6 +224,7 @@ class DicePoolBuilder extends StatelessWidget {
                             IconButton(
                               icon: const Icon(Icons.close,
                                   color: Colors.white38, size: 18),
+                              tooltip: 'Remove ${diceEntry.dieLabel} from pool',
                               onPressed: () {
                                 final updatedPool = List<DiceEntry>.from(dicePool);
                                 updatedPool.removeAt(index);
@@ -236,6 +254,7 @@ class DicePoolBuilder extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline,
                             color: Colors.orangeAccent),
+                        tooltip: 'Decrease modifier by 1',
                         onPressed: () => onUpdateModifier(modifier - 1),
                       ),
                       Container(
@@ -261,6 +280,7 @@ class DicePoolBuilder extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline,
                             color: Colors.orangeAccent),
+                        tooltip: 'Increase modifier by 1',
                         onPressed: () => onUpdateModifier(modifier + 1),
                       ),
                       if (modifier != 0)
@@ -268,7 +288,7 @@ class DicePoolBuilder extends StatelessWidget {
                           icon: const Icon(Icons.refresh,
                               color: Colors.white38, size: 18),
                           onPressed: () => onUpdateModifier(0),
-                          tooltip: 'Reset modifier',
+                          tooltip: 'Reset modifier to 0',
                         ),
                     ],
                   ),

@@ -215,31 +215,39 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(6),
-                    onTap: () => CreatureStatBlockDialog.show(context, statBlock: sb),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: sb.accentColor.withValues(alpha: 0.18),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Semantics(
+                      button: true,
+                      label: 'View ${sb.name} Full Creature Stat Block',
+                      excludeSemantics: true,
+                      child: InkWell(
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: sb.accentColor.withValues(alpha: 0.6), width: 1),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.menu_book, size: 13, color: sb.accentColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            'STAT BLOCK',
-                            style: TextStyle(
-                              color: sb.accentColor,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 10,
-                              letterSpacing: 0.5,
-                            ),
+                        onTap: () => CreatureStatBlockDialog.show(context, statBlock: sb),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: sb.accentColor.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: sb.accentColor.withValues(alpha: 0.6), width: 1),
                           ),
-                        ],
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.menu_book, size: 14, color: sb.accentColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                'STAT BLOCK',
+                                style: TextStyle(
+                                  color: sb.accentColor,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 10,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -253,10 +261,10 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _buildCombatBadge('HP', '${sb.maxHp}', Colors.greenAccent),
-              _buildCombatBadge('AC', '${sb.ac}', Colors.lightBlueAccent),
-              _buildCombatBadge('ATK', '+${sb.attackBonus}', Colors.amberAccent),
-              _buildCombatBadge('DMG', sb.fullDamageFormula, Colors.orangeAccent),
+              _buildCombatBadge('HP', '${sb.maxHp}', Colors.greenAccent, semanticName: 'Hit Points'),
+              _buildCombatBadge('AC', '${sb.ac}', Colors.lightBlueAccent, semanticName: 'Armor Class'),
+              _buildCombatBadge('ATK', '+${sb.attackBonus}', Colors.amberAccent, semanticName: 'Attack Bonus'),
+              _buildCombatBadge('DMG', sb.fullDamageFormula, Colors.orangeAccent, semanticName: 'Damage Formula'),
             ],
           ),
           if (sb.specialTrait != null || sb.hasPackTactics) ...[
@@ -282,26 +290,30 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
     );
   }
 
-  Widget _buildCombatBadge(String label, String val, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: '$label ',
-              style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 10, fontWeight: FontWeight.bold),
-            ),
-            TextSpan(
-              text: val,
-              style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
-            ),
-          ],
+  Widget _buildCombatBadge(String label, String val, Color color, {required String semanticName}) {
+    return Semantics(
+      label: '$semanticName: $val',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '$label ',
+                style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+              TextSpan(
+                text: val,
+                style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
         ),
       ),
     );

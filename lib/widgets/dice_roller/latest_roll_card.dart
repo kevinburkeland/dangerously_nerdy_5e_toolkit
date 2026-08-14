@@ -103,13 +103,19 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
       badgeText = '💀 NATURAL 1! CRITICAL FUMBLE';
     }
 
-    final semanticsSummary = 'Latest Roll Result: ${res.total}. Formula: ${res.formulaString}. ${badgeText.isNotEmpty ? badgeText : ''}';
+    final diceBreakdown = res.groupResults.map((g) => '${g.entry.dieLabel}: ${g.rolls.join(", ")}').join("; ");
+    final droppedStr = (res.droppedRolls != null && res.droppedRolls!.isNotEmpty) ? '. Dropped dice: ${res.droppedRolls!.join(", ")}' : '';
+    final modStr = res.modifier != 0 ? '. Modifier: ${res.modifier > 0 ? "+${res.modifier}" : "${res.modifier}"}' : '';
+    final semanticsSummary =
+        'Latest Roll Result: ${res.total}. Formula: ${res.formulaString}. Dice rolled: $diceBreakdown$droppedStr$modStr. ${badgeText.isNotEmpty ? badgeText : ''}';
 
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Semantics(
         label: semanticsSummary,
+        liveRegion: true,
         container: true,
+        excludeSemantics: true,
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -152,13 +158,13 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: res.isCrit ? customColors.critGold : customColors.fumbleRed,
+                        color: res.isCrit ? customColors.critGold : const Color(0xFFB71C1C),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         badgeText,
-                        style: const TextStyle(
-                          color: Colors.black,
+                        style: TextStyle(
+                          color: res.isCrit ? Colors.black : Colors.white,
                           fontWeight: FontWeight.w900,
                           fontSize: 11,
                         ),

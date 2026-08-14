@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/dm_screen_data.dart';
 import '../providers/settings_provider.dart';
+import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
 import '../widgets/interactive/pressable_card.dart';
@@ -91,6 +92,7 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
   void _performQuickRoll(int sides, String label) {
     HapticService.lightImpact(context);
     final result = SecureRng.instance.nextInt(sides) + 1;
+    A11yService.announce('Quick roll for $label: rolled $result on d$sides.');
     setState(() {
       _lastQuickRollLabel = '$label: $result';
     });
@@ -165,6 +167,7 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white54),
+                        tooltip: 'Close comparison dialog',
                         onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
@@ -317,15 +320,18 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.shield_outlined, color: Colors.amber),
-            SizedBox(width: 10),
+            const Icon(Icons.shield_outlined, color: Colors.amber),
+            const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                "DM's Screen",
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontWeight: FontWeight.bold),
+              child: Semantics(
+                header: true,
+                child: const Text(
+                  "DM's Screen",
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -454,66 +460,72 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
   }
 
   Widget _buildPinnedSectionHeader(ThemeData theme, int count) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+    return Semantics(
+      header: true,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                ),
+                child: const Icon(Icons.push_pin, color: Colors.amber, size: 16),
               ),
-              child: const Icon(Icons.push_pin, color: Colors.amber, size: 16),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'PINNED RULES ($count)',
-              style: const TextStyle(
-                color: Colors.amber,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.1,
+              const SizedBox(width: 8),
+              Text(
+                'PINNED RULES ($count)',
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.1,
+                ),
               ),
-            ),
-          ],
-        ),
-        TextButton.icon(
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            visualDensity: VisualDensity.compact,
-            foregroundColor: Colors.white60,
+            ],
           ),
-          onPressed: () => _clearAllPinnedRules(context),
-          icon: const Icon(Icons.clear_all, size: 16),
-          label: const Text('Unpin All', style: TextStyle(fontSize: 12)),
-        ),
-      ],
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              visualDensity: VisualDensity.compact,
+              foregroundColor: Colors.white60,
+            ),
+            onPressed: () => _clearAllPinnedRules(context),
+            icon: const Icon(Icons.clear_all, size: 16),
+            label: const Text('Unpin All', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildSectionHeader(ThemeData theme, String title) {
-    return Row(
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
+    return Semantics(
+      header: true,
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.1,
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Divider(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-            thickness: 1,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Divider(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              thickness: 1,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -523,22 +535,27 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
     required bool isActive,
   }) {
     final theme = Theme.of(context);
-    return InkWell(
-      onTap: () => _onEditionChanged(context, edition),
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isActive ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+    return Semantics(
+      button: true,
+      selected: isActive,
+      label: '$label Edition Rules',
+      child: InkWell(
+        onTap: () => _onEditionChanged(context, edition),
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isActive ? theme.colorScheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
@@ -579,12 +596,15 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      is2024 ? '2024 Revised 5e Rulebook' : '2014 (SRD 5.1 RAW) Rulebook',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        is2024 ? '2024 Revised 5e Rulebook' : '2014 (SRD 5.1 RAW) Rulebook',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -643,12 +663,15 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
             children: [
               const Icon(Icons.casino_outlined, color: Colors.amber, size: 18),
               const SizedBox(width: 6),
-              Text(
-                'Quick Roller:',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+              Semantics(
+                header: true,
+                child: Text(
+                  'Quick Roller:',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -688,19 +711,23 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
   }
 
   Widget _buildDiceButton(String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2E2A44),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.white24),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+    return Semantics(
+      button: true,
+      label: 'Quick roll $label',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2E2A44),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
         ),
       ),
     );

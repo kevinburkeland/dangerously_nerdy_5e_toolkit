@@ -74,118 +74,128 @@ class _AnimatedDiceRollOverlayState extends State<AnimatedDiceRollOverlay> with 
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tabletop = theme.extension<TabletopColors>();
-    final isSettled = _physicsController.isCompleted;
+    final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
+    final isSettled = _physicsController.isCompleted || systemDisableAnimations;
     final res = widget.result;
 
-    return GestureDetector(
-      onTap: widget.onDismiss,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.75),
-        child: Stack(
-          children: [
-            // 3D Polyhedral Tumbling Canvas
-            Positioned.fill(
-              child: RepaintBoundary(
-                child: AnimatedBuilder(
-                  animation: _physicsController,
-                  builder: (context, _) {
-                    return CustomPaint(
-                      painter: _Polyhedral3DDicePainter(
-                        dice: _diceList,
-                        progress: _physicsController.value,
-                        theme: theme,
-                        tabletop: tabletop,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
+    final bannerLabel =
+        'Dice Roll Result: ${res.total}. Formula: ${res.formulaString}.${res.isCrit ? " Natural 20 Critical Hit!" : ""}${res.isFumble ? " Natural 1 Critical Fumble!" : ""} Tap anywhere to return to table.';
 
-            // Roll Result Banner (Springs up when dice come to rest)
-            if (isSettled)
-              Positioned(
-                bottom: 40,
-                left: 20,
-                right: 20,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutBack,
-                  builder: (context, val, child) => Transform.scale(
-                    scale: val,
-                    child: Opacity(opacity: val.clamp(0.0, 1.0), child: child),
+    return Semantics(
+      label: bannerLabel,
+      button: true,
+      onTap: widget.onDismiss,
+      child: GestureDetector(
+        onTap: widget.onDismiss,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.75),
+          child: Stack(
+            children: [
+              // 3D Polyhedral Tumbling Canvas (hidden if system animations disabled)
+              if (!systemDisableAnimations)
+                Positioned.fill(
+                  child: RepaintBoundary(
+                    child: AnimatedBuilder(
+                      animation: _physicsController,
+                      builder: (context, _) {
+                        return CustomPaint(
+                          painter: _Polyhedral3DDicePainter(
+                            dice: _diceList,
+                            progress: _physicsController.value,
+                            theme: theme,
+                            tabletop: tabletop,
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  child: Center(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: res.isCrit
-                              ? (tabletop?.critGold ?? Colors.amber)
-                              : (res.isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary),
-                          width: 2.5,
+                ),
+
+              // Roll Result Banner (Springs up when dice come to rest)
+              if (isSettled)
+                Positioned(
+                  bottom: 40,
+                  left: 20,
+                  right: 20,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: systemDisableAnimations ? 1.0 : 0.0, end: 1.0),
+                    duration: systemDisableAnimations ? Duration.zero : const Duration(milliseconds: 260),
+                    curve: Curves.easeOutBack,
+                    builder: (context, val, child) => Transform.scale(
+                      scale: val,
+                      child: Opacity(opacity: val.clamp(0.0, 1.0), child: child),
+                    ),
+                    child: Center(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: res.isCrit
+                                ? (tabletop?.critGold ?? Colors.amber)
+                                : (res.isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary),
+                            width: 2.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (res.isCrit
+                                      ? (tabletop?.critGold ?? Colors.amber)
+                                      : (res.isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary))
+                                  .withValues(alpha: 0.4),
+                              blurRadius: 24,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (res.isCrit
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              res.formulaString,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${res.total}',
+                              style: TextStyle(
+                                fontSize: 52,
+                                fontWeight: FontWeight.w900,
+                                height: 1.0,
+                                color: res.isCrit
                                     ? (tabletop?.critGold ?? Colors.amber)
-                                    : (res.isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary))
-                                .withValues(alpha: 0.4),
-                            blurRadius: 24,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            res.formulaString,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                    : (res.isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${res.total}',
-                            style: TextStyle(
-                              fontSize: 52,
-                              fontWeight: FontWeight.w900,
-                              height: 1.0,
-                              color: res.isCrit
-                                  ? (tabletop?.critGold ?? Colors.amber)
-                                  : (res.isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary),
+                            if (res.isCrit) ...[
+                              const SizedBox(height: 4),
+                              const Text('🔥 NATURAL 20! CRITICAL HIT 🔥',
+                                  style: TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.w900, fontSize: 13)),
+                            ],
+                            if (res.isFumble) ...[
+                              const SizedBox(height: 4),
+                              const Text('💀 NATURAL 1! CRITICAL FUMBLE 💀',
+                                  style: TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.w900, fontSize: 13)),
+                            ],
+                            const SizedBox(height: 10),
+                            Text(
+                              'Tap anywhere to return to table',
+                              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12),
                             ),
-                          ),
-                          if (res.isCrit) ...[
-                            const SizedBox(height: 4),
-                            const Text('🔥 NATURAL 20! CRITICAL HIT 🔥',
-                                style: TextStyle(color: Color(0xFFFFD54F), fontWeight: FontWeight.w900, fontSize: 13)),
                           ],
-                          if (res.isFumble) ...[
-                            const SizedBox(height: 4),
-                            const Text('💀 NATURAL 1! CRITICAL FUMBLE 💀',
-                                style: TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.w900, fontSize: 13)),
-                          ],
-                          const SizedBox(height: 10),
-                          Text(
-                            'Tap anywhere to return to table',
-                            style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 12),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

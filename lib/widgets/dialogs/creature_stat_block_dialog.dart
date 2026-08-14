@@ -85,9 +85,8 @@ class CreatureStatBlockDialog extends StatelessWidget {
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70, size: 20),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      icon: const Icon(Icons.close, color: Colors.white70, size: 22),
+                      tooltip: 'Close stat block',
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -353,30 +352,56 @@ class CreatureStatBlockDialog extends StatelessWidget {
     );
   }
 
+  String _expandAbilityName(String abbr) {
+    switch (abbr.toUpperCase()) {
+      case 'STR':
+        return 'Strength';
+      case 'DEX':
+        return 'Dexterity';
+      case 'CON':
+        return 'Constitution';
+      case 'INT':
+        return 'Intelligence';
+      case 'WIS':
+        return 'Wisdom';
+      case 'CHA':
+        return 'Charisma';
+      default:
+        return abbr;
+    }
+  }
+
   Widget _buildAbilityScoreBox(String name, int score, int mod) {
     final modStr = MinionStatBlock.formatMod(mod);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          name,
-          style: const TextStyle(
-            color: Color(0xFFFFD54F),
-            fontWeight: FontWeight.w900,
-            fontSize: 11,
-            letterSpacing: 0.5,
+    final fullName = _expandAbilityName(name);
+    final semanticLabel = '$fullName: $score, modifier ${mod >= 0 ? "plus $mod" : "$mod"}';
+
+    return Semantics(
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: const TextStyle(
+              color: Color(0xFFFFD54F),
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          '$score ($modStr)',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+          const SizedBox(height: 2),
+          Text(
+            '$score ($modStr)',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

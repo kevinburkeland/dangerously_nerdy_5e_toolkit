@@ -3,6 +3,7 @@ import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
 import '../models/room_roll.dart';
 import '../providers/settings_provider.dart';
+import '../services/a11y_service.dart';
 import '../services/base_room_service.dart';
 import '../services/dice_room_service.dart';
 import '../services/haptic_service.dart';
@@ -164,6 +165,8 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
         _showAnimatedRoll = true;
       }
     });
+
+    A11yService.announceRoll(res);
 
     if (res.isCrit) {
       _critController.trigger(CritEffectType.critSuccess);

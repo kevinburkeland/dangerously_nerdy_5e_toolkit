@@ -354,10 +354,13 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                 children: [
                   const Icon(Icons.flash_on, color: Colors.amber, size: 24),
                   const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      '5e Combat Action Economy',
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: const Text(
+                        '5e Combat Action Economy',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                   // Edition Toggle Button
@@ -394,6 +397,7 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white54),
+                    tooltip: 'Close dialog',
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -457,21 +461,26 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
   }
 
   Widget _buildEditionChip({required String label, required bool isActive, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.amber : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? Colors.black : Colors.white70,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+    return Semantics(
+      button: true,
+      selected: isActive,
+      label: '$label Edition Rules',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isActive ? Colors.amber : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive ? Colors.black : Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),

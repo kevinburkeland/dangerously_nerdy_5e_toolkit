@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons.dart';
+import '../services/a11y_service.dart';
 
 class SquadBuilderBottomSheet extends StatefulWidget {
   final SpellSession session;
@@ -27,42 +28,67 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
   }
 
   void _addPresetObjects(ObjectSize size, int count, {String? customName}) {
+    int added = 0;
     for (int i = 0; i < count; i++) {
       if (widget.session.canAddObject(size)) {
         widget.session.addObject(size, customName: customName);
+        added++;
       } else {
+        final msg = 'Not enough remaining point capacity for more ${size.displayName} objects!';
+        A11yService.announce(msg);
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Not enough remaining point capacity for more ${size.displayName} objects!'),
+            content: Text(msg),
             backgroundColor: Colors.redAccent,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+            ),
           ),
         );
         break;
       }
+    }
+    if (added > 0) {
+      A11yService.announce('Added $added ${customName ?? size.displayName} to squad.');
     }
     setState(() {});
     widget.onSquadUpdated();
   }
 
   void _addMinions(MinionStatBlock statBlock, int count) {
+    int added = 0;
     for (int i = 0; i < count; i++) {
       if (widget.session.canAddMinion(statBlock)) {
         widget.session.addMinionFromStatBlock(statBlock);
+        added++;
       } else {
         final maxAllowed = widget.session.getMaxAllowedCount(statBlock.id);
         final msg = maxAllowed <= 0
             ? '${statBlock.name} is not available at spell slot level ${widget.session.spellLevel}!'
             : 'Reached limit ($maxAllowed) for ${statBlock.name} at slot level ${widget.session.spellLevel}!';
+        A11yService.announce(msg);
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(msg),
             backgroundColor: Colors.redAccent,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+            ),
           ),
         );
         break;
       }
+    }
+    if (added > 0) {
+      A11yService.announce('Added $added ${statBlock.name} to squad.');
     }
     setState(() {});
     widget.onSquadUpdated();
@@ -70,11 +96,19 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   void _rollBagOfTricks() {
     final pulled = widget.session.rollBagOfTricks();
+    final msg = 'Pulled a ${pulled.name} from the Bag of Tricks!';
+    A11yService.announce(msg);
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('🎲 Pulled a ${pulled.name} from the Bag of Tricks!'),
+        content: Text('🎲 $msg'),
         backgroundColor: Colors.purpleAccent,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        ),
       ),
     );
     setState(() {});
@@ -83,11 +117,19 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   void _rollHornOfValhalla(String variant, String label) {
     final count = widget.session.rollHornOfValhalla(variant);
+    final msg = 'Blew the $label and summoned $count Berserkers!';
+    A11yService.announce(msg);
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('📯 Blew the $label and summoned $count Berserkers!'),
+        content: Text('📯 $msg'),
         backgroundColor: Colors.deepOrange,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+        ),
       ),
     );
     setState(() {});
@@ -289,12 +331,18 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.add_circle, color: Colors.amber),
+                          tooltip: 'Add 1 ${sb.name} to squad',
                           onPressed: () => _addMinions(sb, 1),
                         ),
                         if (_selectedPreset.id != 'animate_objects')
-                          TextButton(
-                            onPressed: () => _addMinions(sb, 4),
-                            child: const Text('+4', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                          Semantics(
+                            label: 'Add 4 ${sb.name} to squad',
+                            button: true,
+                            excludeSemantics: true,
+                            child: TextButton(
+                              onPressed: () => _addMinions(sb, 4),
+                              child: const Text('+4', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                            ),
                           ),
                       ],
                     ),

@@ -29,7 +29,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       controller: _testCritController,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Preferences & Visual Polish'),
+          title: Semantics(
+            header: true,
+            child: const Text('Preferences & Visual Polish'),
+          ),
         ),
         body: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -310,22 +313,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
-              color: Theme.of(context).colorScheme.primary,
+    return Semantics(
+      header: true,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 4, bottom: 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Text(
+              title.toUpperCase(),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.1,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
