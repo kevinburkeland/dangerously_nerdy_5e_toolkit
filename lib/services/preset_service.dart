@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
+import 'preset_service_interface.dart';
 
-class PresetService {
+class PresetService implements IPresetService {
   static const String _storageKey = 'user_custom_dice_presets';
 
   static final PresetService _instance = PresetService._internal();
@@ -29,6 +30,7 @@ class PresetService {
       ];
 
   /// Loads custom user presets from SharedPreferences or in-memory cache
+  @override
   Future<List<CustomPreset>> loadCustomPresets() async {
     if (_cachedPresets != null) {
       return List<CustomPreset>.from(_cachedPresets!);
@@ -49,6 +51,7 @@ class PresetService {
   }
 
   /// Saves a new custom preset to local storage and in-memory cache
+  @override
   Future<List<CustomPreset>> savePreset(CustomPreset preset) async {
     if (_cachedPresets == null) {
       await loadCustomPresets();
@@ -61,6 +64,7 @@ class PresetService {
   }
 
   /// Deletes a custom preset by ID from local storage and in-memory cache
+  @override
   Future<List<CustomPreset>> deletePreset(String id) async {
     if (_cachedPresets == null) {
       await loadCustomPresets();
@@ -81,6 +85,7 @@ class PresetService {
   }
 
   /// Exports custom presets to a formatted JSON string
+  @override
   Future<String> exportPresetsJson() async {
     final customList = await loadCustomPresets();
     final jsonList = customList.map((p) => p.toMap()).toList();
@@ -88,6 +93,7 @@ class PresetService {
   }
 
   /// Imports custom presets from a JSON string with security & payload bounds
+  @override
   Future<List<CustomPreset>> importPresetsJson(String jsonString) async {
     final cleanInput = jsonString.trim();
     if (cleanInput.length > 50000) {

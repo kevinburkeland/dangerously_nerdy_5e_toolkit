@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons.dart';
+import '../utils/secure_random.dart';
 import '../widgets/animate_objects/active_session_card.dart';
 import '../widgets/object_card.dart';
 import '../widgets/batch_attack_dialog.dart';
 import '../widgets/squad_builder.dart';
 import '../widgets/spell_reference.dart';
+import '../widgets/dialogs/action_economy_dialog.dart';
+import '../widgets/dialogs/mass_damage_dialog.dart';
 import '../widgets/room_banner_widget.dart';
 
 class MinionToolScreen extends StatefulWidget {
@@ -123,23 +126,107 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     );
   }
 
-  void _showMassDamageDialog() {
-    final controller = TextEditingController();
+  Future<void> _showMassDamageDialog() async {
+    final dmg = await MassDamageDialog.show(context);
+    if (dmg != null && dmg > 0 && mounted) {
+      setState(() {
+        _session.applyGroupDamage(dmg);
+      });
+    }
+  }
+
+  void _rollSquadInitiative() {
+    int dexMod = 0;
+    String minionName = widget.preset.name;
+    if (_session.activeObjects.isNotEmpty) {
+      final first = _session.activeObjects.first;
+      dexMod = ((first.size.dexScore - 10) / 2).floor();
+      minionName = first.name;
+    }
+    final natRoll = SecureRng.instance.nextInt(20) + 1;
+    final total = natRoll + dexMod;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF242038),
-        title: const Text('Apply Group Damage (e.g. AoE spell)', style: TextStyle(color: Colors.redAccent)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.casino, color: Colors.amber, size: 24),
+            SizedBox(width: 8),
+            Text('Squad Initiative Roll', style: TextStyle(color: Colors.amber, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$total',
+              style: const TextStyle(
+                color: Colors.amberAccent,
+                fontSize: 54,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'd20 ($natRoll) ${dexMod >= 0 ? "+$dexMod" : "$dexMod"} DEX modifier',
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Rolled for $minionName squad',
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            icon: const Icon(Icons.refresh, color: Colors.black, size: 16),
+            label: const Text('Re-roll', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _rollSquadInitiative();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _grantGroupTempHp() async {
+    final controller = TextEditingController(text: '5');
+    final amount = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF242038),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.health_and_safety, color: Colors.cyanAccent, size: 22),
+            SizedBox(width: 8),
+            Text('Grant Group Temp HP', style: TextStyle(color: Colors.cyanAccent, fontSize: 18)),
+          ],
+        ),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
           style: const TextStyle(color: Colors.white),
           decoration: const InputDecoration(
-            labelText: 'Damage Amount to ALL minions',
-            labelStyle: TextStyle(color: Colors.white70),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.redAccent)),
+            labelText: 'Temporary HP Amount',
+            labelStyle: TextStyle(color: Colors.cyanAccent),
+            prefixIcon: Icon(Icons.shield, color: Colors.cyanAccent),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent, width: 2)),
           ),
+          onSubmitted: (val) => Navigator.pop(ctx, int.tryParse(val)),
         ),
         actions: [
           TextButton(
@@ -147,21 +234,60 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
             child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
-              final dmg = int.tryParse(controller.text);
-              if (dmg != null && dmg > 0) {
-                setState(() {
-                  _session.applyGroupDamage(dmg);
-                });
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Apply Damage', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
+            onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)),
+            child: const Text('Grant Temp HP', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
+
+    if (amount != null && amount > 0 && mounted) {
+      setState(() {
+        for (final obj in _session.activeObjects) {
+          if (!obj.isDead) {
+            obj.grantTempHp(amount);
+          }
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Granted +$amount Temp HP to all ${_session.activeObjects.where((o) => !o.isDead).length} living minions!'),
+          backgroundColor: const Color(0xFF242038),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmClearSquad() async {
+    if (_session.activeObjects.isEmpty) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF242038),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Clear Active Squad?', style: TextStyle(color: Colors.redAccent)),
+        content: Text(
+          'This will remove all ${_session.activeObjects.length} active minions from your active session. This cannot be undone.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Clear Squad', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true && mounted) {
+      setState(() => _session.clearAll());
+    }
   }
 
   @override
@@ -194,6 +320,11 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.flash_on, color: Colors.amber),
+            tooltip: 'Combat Action Economy Guide',
+            onPressed: () => ActionEconomyDialog.show(context),
+          ),
           // Spell Slot Level Picker Dropdown (for spell presets)
           if (!widget.preset.isRandomTable && widget.preset.id != 'figurines_of_wondrous_power')
             Container(
@@ -266,9 +397,11 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
                     session: _session,
                     onBatchAttack: _openBatchAttackDialog,
                     onOpenSquadBuilder: _openSquadBuilder,
+                    onRollInitiative: _rollSquadInitiative,
+                    onGrantGroupTempHp: _grantGroupTempHp,
                     onHealAll: () => setState(() => _session.healAll()),
                     onShowMassDamageDialog: _showMassDamageDialog,
-                    onClearSquad: () => setState(() => _session.clearAll()),
+                    onClearSquad: _confirmClearSquad,
                   ),
 
                   // Objects / Minions List
@@ -305,7 +438,21 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
                                 key: ValueKey(obj.id),
                                 object: obj,
                                 onDelete: () => setState(() => _session.removeObject(obj.id)),
-                                onHpChanged: (delta) => setState(() => obj.currentHp = (obj.currentHp + delta).clamp(0, obj.maxHp)),
+                                onHpChanged: (delta) {
+                                  setState(() {
+                                    if (delta < 0) {
+                                      obj.takeDamage(-delta);
+                                    } else {
+                                      obj.heal(delta);
+                                    }
+                                  });
+                                },
+                                onHpDataSet: (newHp, newTemp) {
+                                  setState(() {
+                                    obj.currentHp = newHp;
+                                    obj.tempHp = newTemp;
+                                  });
+                                },
                                 onNameChanged: (name) => setState(() => obj.name = name),
                               );
                             },

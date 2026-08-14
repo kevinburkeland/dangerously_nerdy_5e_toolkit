@@ -135,6 +135,7 @@ class DiceRollResult {
     required List<DiceEntry> diceEntries,
     int modifier = 0,
     RollMode rollMode = RollMode.normal,
+    bool isCritDamage = false,
   }) {
     List<DiceGroupResult> groupResults = [];
     List<int> allRolls = [];
@@ -142,55 +143,55 @@ class DiceRollResult {
     bool crit = false;
     bool fumble = false;
 
-    // Single d20 roll with advantage/disadvantage special handling
-    final isSingleD20 = diceEntries.length == 1 &&
-        diceEntries.first.dieType == DieType.d20 &&
-        diceEntries.first.count == 1;
+    final effectiveEntries = isCritDamage
+        ? diceEntries.map((e) => e.copyWith(count: e.count * 2)).toList()
+        : diceEntries;
 
-    if (isSingleD20 && rollMode != RollMode.normal) {
-      int r1 = _rng.nextInt(20) + 1;
-      int r2 = _rng.nextInt(20) + 1;
-      int kept, drop;
-      if (rollMode == RollMode.advantage) {
-        kept = max(r1, r2);
-        drop = min(r1, r2);
+    final hasD20 = effectiveEntries.any((e) => e.dieType == DieType.d20);
+
+    for (final entry in effectiveEntries) {
+      List<int> groupRolls = [];
+      final maxSides = max(2, entry.sides);
+
+      if (entry.dieType == DieType.d20 && entry.count == 1 && rollMode != RollMode.normal && hasD20) {
+        int r1 = _rng.nextInt(20) + 1;
+        int r2 = _rng.nextInt(20) + 1;
+        int kept, drop;
+        if (rollMode == RollMode.advantage) {
+          kept = max(r1, r2);
+          drop = min(r1, r2);
+        } else {
+          kept = min(r1, r2);
+          drop = max(r1, r2);
+        }
+        groupRolls.add(kept);
+        allRolls.add(kept);
+        dropped = [drop];
+
+        if (kept == 20) crit = true;
+        if (kept == 1) fumble = true;
       } else {
-        kept = min(r1, r2);
-        drop = max(r1, r2);
-      }
-      allRolls = [kept];
-      dropped = [drop];
-      crit = kept == 20;
-      fumble = kept == 1;
-
-      groupResults.add(DiceGroupResult(
-        entry: diceEntries.first,
-        rolls: allRolls,
-      ));
-    } else {
-      for (final entry in diceEntries) {
-        List<int> groupRolls = [];
-        final maxSides = max(2, entry.sides);
         for (int i = 0; i < entry.count; i++) {
           int r = _rng.nextInt(maxSides) + 1;
           groupRolls.add(r);
           allRolls.add(r);
         }
-        groupResults.add(DiceGroupResult(entry: entry, rolls: groupRolls));
 
-        // Check natural 20/1 for d20 single roll
-        if (entry.dieType == DieType.d20 && entry.count == 1 && diceEntries.length == 1) {
-          crit = groupRolls.first == 20;
-          fumble = groupRolls.first == 1;
+        // Check natural 20/1 for d20 roll
+        if (entry.dieType == DieType.d20 && entry.count == 1) {
+          if (groupRolls.first == 20) crit = true;
+          if (groupRolls.first == 1) fumble = true;
         }
       }
+
+      groupResults.add(DiceGroupResult(entry: entry, rolls: groupRolls));
     }
 
     int sum = allRolls.fold(0, (acc, val) => acc + val) + modifier;
 
     return DiceRollResult(
       timestamp: DateTime.now(),
-      diceEntries: List.unmodifiable(diceEntries),
+      diceEntries: List.unmodifiable(effectiveEntries),
       groupResults: groupResults,
       modifier: modifier,
       rollMode: rollMode,

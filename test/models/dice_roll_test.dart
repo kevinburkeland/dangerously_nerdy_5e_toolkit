@@ -125,6 +125,45 @@ void main() {
       expect(entryUnderflow.count, 1);
       expect(entryUnderflow.customSides, 2);
     });
+
+    test('Mixed dice pool with d20 supports Advantage and drops lower die', () {
+      final pool = [
+        DiceEntry(dieType: DieType.d20, count: 1),
+        DiceEntry(dieType: DieType.d4, count: 1),
+      ];
+
+      for (int i = 0; i < 20; i++) {
+        final result = DiceRollResult.rollPool(
+          diceEntries: pool,
+          modifier: 3,
+          rollMode: RollMode.advantage,
+        );
+
+        expect(result.droppedRolls, isNotNull);
+        expect(result.droppedRolls!.length, 1);
+        expect(result.individualRolls.length, 2); // d20 (kept) + d4
+        expect(result.formulaString, contains('(Adv)'));
+      }
+    });
+
+    test('isCritDamage doubles dice count while preserving flat modifier', () {
+      final pool = [
+        DiceEntry(dieType: DieType.d8, count: 1),
+        DiceEntry(dieType: DieType.d6, count: 2),
+      ];
+
+      final result = DiceRollResult.rollPool(
+        diceEntries: pool,
+        modifier: 4,
+        isCritDamage: true,
+      );
+
+      // Doubled: 2d8 + 4d6 + 4
+      expect(result.diceEntries[0].count, 2);
+      expect(result.diceEntries[1].count, 4);
+      expect(result.individualRolls.length, 6);
+      expect(result.modifier, 4);
+    });
   });
 }
 

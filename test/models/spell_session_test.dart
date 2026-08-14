@@ -99,23 +99,27 @@ void main() {
     });
 
     test('SRD Summons support: addMinionFromStatBlock & rollBagOfTricks', () {
-      final session = SpellSession(spellLevel: 5);
-      session.addMinionFromStatBlock(SrdSummonsLibrary.wolf);
-      session.addMinionFromStatBlock(SrdSummonsLibrary.direWolf);
-      session.addMinionFromStatBlock(SrdSummonsLibrary.giantSpider);
+      final beastSession = SpellSession(
+        activePreset: BeastSummons.conjureAnimalsPreset,
+        spellLevel: 5,
+      );
+      beastSession.addMinionFromStatBlock(SrdSummonsLibrary.wolf);
+      beastSession.addMinionFromStatBlock(SrdSummonsLibrary.direWolf);
+      beastSession.addMinionFromStatBlock(SrdSummonsLibrary.giantSpider);
 
-      expect(session.activeObjects.length, 3);
-      expect(session.activeObjects[0].hasPackTactics, true);
-      expect(session.activeObjects[2].secondaryDamageDiceCount, 2);
+      expect(beastSession.activeObjects.length, 3);
+      expect(beastSession.activeObjects[0].hasPackTactics, true);
+      expect(beastSession.activeObjects[2].secondaryDamageDiceCount, 2);
 
       // Test Bag of Tricks pull
-      final pulled = session.rollBagOfTricks();
-      expect(session.activeObjects.length, 4);
+      final bagSession = SpellSession(activePreset: BagOfTricksSummons.grayBagPreset);
+      final pulled = bagSession.rollBagOfTricks();
+      expect(bagSession.activeObjects.length, 1);
       expect(pulled.name.isNotEmpty, true);
     });
 
     test('rollHornOfValhalla generates correct Berserker counts per variant', () {
-      final session = SpellSession(spellLevel: 5);
+      final session = SpellSession(activePreset: ValhallaSummons.hornOfValhallaPreset);
       
       // Silver: 2d4+2 (range 4 to 10)
       final countSilver = session.rollHornOfValhalla('silver');
@@ -139,6 +143,44 @@ void main() {
       final countIron = session.rollHornOfValhalla('iron');
       expect(countIron >= 10 && countIron <= 25, true);
       expect(session.activeObjects.length, countIron);
+    });
+
+    test('Create Undead restricts Ghasts/Wights and Mummies by slot level', () {
+      final session = SpellSession(
+        activePreset: UndeadSummons.createUndeadPreset,
+        spellLevel: 6,
+      );
+
+      // At 6th level: Ghouls (up to 3), no Ghasts/Wights or Mummies
+      expect(session.getMaxAllowedCount(UndeadSummons.ghoul.id), 3);
+      expect(session.getMaxAllowedCount(UndeadSummons.ghast.id), 0);
+      expect(session.getMaxAllowedCount(UndeadSummons.mummy.id), 0);
+      expect(session.canAddMinion(UndeadSummons.ghoul), true);
+      expect(session.canAddMinion(UndeadSummons.ghast), false);
+
+      // At 7th level: 4 Ghouls, 2 Ghasts/Wights, no Mummies
+      session.spellLevel = 7;
+      expect(session.getMaxAllowedCount(UndeadSummons.ghoul.id), 4);
+      expect(session.getMaxAllowedCount(UndeadSummons.ghast.id), 2);
+      expect(session.getMaxAllowedCount(UndeadSummons.mummy.id), 0);
+
+      // At 8th level: 5 Ghouls, 3 Ghasts, 2 Mummies
+      session.spellLevel = 8;
+      expect(session.getMaxAllowedCount(UndeadSummons.ghoul.id), 5);
+      expect(session.getMaxAllowedCount(UndeadSummons.ghast.id), 3);
+      expect(session.getMaxAllowedCount(UndeadSummons.mummy.id), 2);
+    });
+
+    test('Giant Insect enforces per-insect limits', () {
+      final session = SpellSession(
+        activePreset: InsectSummons.giantInsectPreset,
+        spellLevel: 4,
+      );
+
+      expect(session.getMaxAllowedCount(InsectSummons.giantCentipede.id), 10);
+      expect(session.getMaxAllowedCount(InsectSummons.giantWasp.id), 5);
+      expect(session.getMaxAllowedCount(BeastSummons.giantSpider.id), 3);
+      expect(session.getMaxAllowedCount(InsectSummons.giantScorpion.id), 1);
     });
   });
 }

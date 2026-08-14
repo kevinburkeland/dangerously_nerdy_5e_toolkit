@@ -29,9 +29,7 @@ class DicePoolBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSingleD20 = dicePool.length == 1 &&
-        dicePool.first.dieType == DieType.d20 &&
-        dicePool.first.count == 1;
+    final hasD20 = dicePool.any((e) => e.dieType == DieType.d20);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -277,8 +275,8 @@ class DicePoolBuilder extends StatelessWidget {
                 ],
               ),
 
-              // Advantage / Disadvantage for single d20 roll
-              if (isSingleD20) ...[
+              // Advantage / Disadvantage for d20 roll pools
+              if (hasD20) ...[
                 const Divider(color: Colors.white10, height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

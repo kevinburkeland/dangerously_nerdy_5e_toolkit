@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import '../models/animated_object.dart';
+import 'dialogs/edit_object_name_dialog.dart';
+import 'dialogs/set_object_hp_dialog.dart';
 
 class ObjectCard extends StatelessWidget {
   final AnimatedObjectInstance object;
   final VoidCallback onDelete;
   final Function(int delta) onHpChanged;
   final Function(String name) onNameChanged;
+  final Function(int currentHp, int tempHp)? onHpDataSet;
 
   const ObjectCard({
     super.key,
@@ -13,82 +16,32 @@ class ObjectCard extends StatelessWidget {
     required this.onDelete,
     required this.onHpChanged,
     required this.onNameChanged,
+    this.onHpDataSet,
   });
 
-  void _showEditNameDialog(BuildContext context) {
-    TextEditingController controller = TextEditingController(text: object.name);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF242038),
-        title: const Text('Rename Object', style: TextStyle(color: Colors.amber)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Enter custom object name',
-            hintStyle: TextStyle(color: Colors.white54),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                onNameChanged(controller.text.trim());
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Save', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
-    );
+  Future<void> _showEditNameDialog(BuildContext context) async {
+    final newName = await EditObjectNameDialog.show(context, initialName: object.name);
+    if (newName != null && newName.isNotEmpty) {
+      onNameChanged(newName);
+    }
   }
 
-  void _showCustomHpDialog(BuildContext context) {
-    TextEditingController controller = TextEditingController(text: '${object.currentHp}');
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF242038),
-        title: Text('Set HP for ${object.name}', style: const TextStyle(color: Colors.amber)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            labelText: 'Current HP (Max ${object.maxHp})',
-            labelStyle: const TextStyle(color: Colors.white70),
-            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-            onPressed: () {
-              int? newHp = int.tryParse(controller.text);
-              if (newHp != null) {
-                onHpChanged(newHp - object.currentHp);
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Set HP', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
+  Future<void> _showCustomHpDialog(BuildContext context) async {
+    final result = await SetObjectHpDialog.show(
+      context,
+      objectName: object.name,
+      currentHp: object.currentHp,
+      maxHp: object.maxHp,
+      tempHp: object.tempHp,
     );
+    if (result != null) {
+      if (onHpDataSet != null) {
+        onHpDataSet!(result.currentHp, result.tempHp);
+      } else {
+        object.tempHp = result.tempHp;
+        onHpChanged(result.currentHp - object.currentHp);
+      }
+    }
   }
 
   @override
@@ -180,9 +133,9 @@ class ObjectCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatPill('AC', '${size.ac}', Colors.lightBlueAccent),
-                _buildStatPill('Hit', '+${size.attackBonus}', Colors.amber),
-                _buildStatPill('Dmg', size.damageFormula, Colors.orangeAccent),
+                _buildStatPill('AC', '${object.ac}', Colors.lightBlueAccent),
+                _buildStatPill('Hit', '+${object.attackBonus}', Colors.amber),
+                _buildStatPill('Dmg', object.damageFormula, Colors.orangeAccent),
                 _buildStatPill('STR', '${size.strScore}', Colors.white70),
                 _buildStatPill('DEX', '${size.dexScore}', Colors.white70),
               ],
@@ -207,13 +160,36 @@ class ObjectCard extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              isDead ? 'DESTROYED' : 'HP: ${object.currentHp} / ${object.maxHp}',
-                              style: TextStyle(
-                                color: isDead ? Colors.redAccent : Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  isDead ? 'DESTROYED' : 'HP: ${object.currentHp} / ${object.maxHp}',
+                                  style: TextStyle(
+                                    color: isDead ? Colors.redAccent : Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                if (object.tempHp > 0 && !isDead) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: Colors.cyanAccent.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.cyanAccent, width: 0.8),
+                                    ),
+                                    child: Text(
+                                      '+${object.tempHp} Temp',
+                                      style: const TextStyle(
+                                        color: Colors.cyanAccent,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             Text(
                               '${(object.hpPercent * 100).toInt()}%',

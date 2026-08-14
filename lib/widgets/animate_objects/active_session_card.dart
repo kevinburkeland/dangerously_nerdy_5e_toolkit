@@ -8,6 +8,8 @@ class ActiveSessionHeader extends StatelessWidget {
   final VoidCallback onHealAll;
   final VoidCallback onShowMassDamageDialog;
   final VoidCallback onClearSquad;
+  final VoidCallback? onRollInitiative;
+  final VoidCallback? onGrantGroupTempHp;
 
   const ActiveSessionHeader({
     super.key,
@@ -17,6 +19,8 @@ class ActiveSessionHeader extends StatelessWidget {
     required this.onHealAll,
     required this.onShowMassDamageDialog,
     required this.onClearSquad,
+    this.onRollInitiative,
+    this.onGrantGroupTempHp,
   });
 
   @override
@@ -82,6 +86,17 @@ class ActiveSessionHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              if (onRollInitiative != null)
+                IconButton.filled(
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.amber.withValues(alpha: 0.2),
+                    foregroundColor: Colors.amber,
+                  ),
+                  icon: const Icon(Icons.casino_outlined, size: 20),
+                  tooltip: 'Roll Squad Initiative',
+                  onPressed: onRollInitiative,
+                ),
+              const SizedBox(width: 4),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3F2B96),
@@ -97,7 +112,11 @@ class ActiveSessionHeader extends StatelessWidget {
                 icon: const Icon(Icons.more_vert, color: Colors.white70),
                 color: const Color(0xFF242038),
                 onSelected: (val) {
-                  if (val == 'heal') {
+                  if (val == 'initiative') {
+                    onRollInitiative?.call();
+                  } else if (val == 'tempHp') {
+                    onGrantGroupTempHp?.call();
+                  } else if (val == 'heal') {
                     onHealAll();
                   } else if (val == 'damage') {
                     onShowMassDamageDialog();
@@ -106,6 +125,26 @@ class ActiveSessionHeader extends StatelessWidget {
                   }
                 },
                 itemBuilder: (ctx) => [
+                  const PopupMenuItem(
+                    value: 'initiative',
+                    child: Row(
+                      children: [
+                        Icon(Icons.casino, color: Colors.amber, size: 18),
+                        SizedBox(width: 8),
+                        Text('Roll Squad Initiative', style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'tempHp',
+                    child: Row(
+                      children: [
+                        Icon(Icons.health_and_safety_outlined, color: Colors.cyanAccent, size: 18),
+                        SizedBox(width: 8),
+                        Text('Grant Group Temp HP', style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'heal',
                     child: Row(

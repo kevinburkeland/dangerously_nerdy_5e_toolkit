@@ -44,7 +44,7 @@ class UndeadSummons {
     maxHp: 22,
     attackBonus: 4,
     damageDiceCount: 2,
-    damageDiceSides: 6,
+    damageDiceSides: 4,
     damageBonus: 2,
     damageType: 'Slashing',
     specialTrait: 'Claws (DC 10 Con save or paralyzed for 1 min)',

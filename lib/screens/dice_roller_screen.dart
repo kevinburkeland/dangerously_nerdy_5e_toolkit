@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
 import '../models/room_roll.dart';
+import '../services/base_room_service.dart';
 import '../services/dice_room_service.dart';
 import '../services/preset_service.dart';
+import '../services/preset_service_interface.dart';
 import '../utils/secure_random.dart';
+import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/custom_die_dialog.dart';
 import '../widgets/dialogs/preset_import_export_dialogs.dart';
 import '../widgets/dialogs/save_preset_dialog.dart';
@@ -15,7 +18,14 @@ import '../widgets/dice_roller/roll_presets_section.dart';
 import '../widgets/room_banner_widget.dart';
 
 class DiceRollerScreen extends StatefulWidget {
-  const DiceRollerScreen({super.key});
+  final IPresetService? presetService;
+  final BaseRoomService? roomService;
+
+  const DiceRollerScreen({
+    super.key,
+    this.presetService,
+    this.roomService,
+  });
 
   @override
   State<DiceRollerScreen> createState() => _DiceRollerScreenState();
@@ -33,15 +43,17 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   // Shared Room state
   String? _activeRoomCode;
   String? _playerName;
-  final DiceRoomService _roomService = DiceRoomService();
+  late final BaseRoomService _roomService;
 
   // Custom Presets State
   List<CustomPreset> _userPresets = [];
-  final PresetService _presetService = PresetService();
+  late final IPresetService _presetService;
 
   @override
   void initState() {
     super.initState();
+    _roomService = widget.roomService ?? DiceRoomService();
+    _presetService = widget.presetService ?? PresetService();
     _loadUserPresets();
   }
 
@@ -321,6 +333,11 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.flash_on, color: Colors.amber),
+            tooltip: 'Combat Action Economy Guide',
+            onPressed: () => ActionEconomyDialog.show(context),
+          ),
           if (_history.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.white60),

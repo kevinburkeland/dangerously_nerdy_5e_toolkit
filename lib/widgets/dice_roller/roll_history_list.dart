@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../models/dice_roll.dart';
 import '../../models/room_roll.dart';
-import '../../services/dice_room_service.dart';
+import '../../services/base_room_service.dart';
 
 class RollHistoryList extends StatelessWidget {
   final List<DiceRollResult> localHistory;
   final String? activeRoomCode;
   final String? playerName;
-  final DiceRoomService roomService;
+  final BaseRoomService roomService;
 
   const RollHistoryList({
     super.key,
@@ -22,14 +22,149 @@ class RollHistoryList extends StatelessWidget {
     final effectiveRoomCode = roomService.activeRoomCode ?? activeRoomCode;
 
     if (effectiveRoomCode != null) {
-      return _buildLiveRoomRollFeed(effectiveRoomCode);
+      return LiveRoomRollFeed(
+        roomCode: effectiveRoomCode,
+        playerName: playerName,
+        roomService: roomService,
+      );
     } else if (localHistory.isNotEmpty) {
       return _buildLocalRollHistory();
     }
     return const SizedBox.shrink();
   }
 
-  Widget _buildLiveRoomRollFeed(String activeCode) {
+  Widget _buildLocalRollHistory() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Roll History',
+              style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14),
+            ),
+            Text(
+              '${localHistory.length} rolls',
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: localHistory.length,
+          itemBuilder: (context, index) {
+            final item = localHistory[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1B2E),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.formulaString,
+                        style: const TextStyle(
+                            color: Colors.cyanAccent,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Rolls: ${item.individualRolls.join(', ')}${item.droppedRolls != null ? ' (dropped ${item.droppedRolls!.join(', ')})' : ''}',
+                        style: const TextStyle(
+                            color: Colors.white60, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: item.isCrit
+                          ? Colors.amber.withValues(alpha: 0.2)
+                          : item.isFumble
+                              ? Colors.redAccent.withValues(alpha: 0.2)
+                              : Colors.black26,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: item.isCrit
+                            ? Colors.amber
+                            : item.isFumble
+                                ? Colors.redAccent
+                                : Colors.white12,
+                      ),
+                    ),
+                    child: Text(
+                      '${item.total}',
+                      style: TextStyle(
+                        color: item.isCrit
+                            ? Colors.amber
+                            : item.isFumble
+                                ? Colors.redAccent
+                                : Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class LiveRoomRollFeed extends StatefulWidget {
+  final String roomCode;
+  final String? playerName;
+  final BaseRoomService roomService;
+
+  const LiveRoomRollFeed({
+    super.key,
+    required this.roomCode,
+    required this.playerName,
+    required this.roomService,
+  });
+
+  @override
+  State<LiveRoomRollFeed> createState() => _LiveRoomRollFeedState();
+}
+
+class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
+  late Stream<List<RoomRoll>> _rollStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _rollStream = widget.roomService.streamRoomRolls(widget.roomCode);
+  }
+
+  @override
+  void didUpdateWidget(covariant LiveRoomRollFeed oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.roomCode != widget.roomCode || oldWidget.roomService != widget.roomService) {
+      _rollStream = widget.roomService.streamRoomRolls(widget.roomCode);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -41,7 +176,7 @@ class RollHistoryList extends StatelessWidget {
                 const Icon(Icons.sensors, color: Colors.cyanAccent, size: 18),
                 const SizedBox(width: 6),
                 Text(
-                  'Live Feed: $activeCode',
+                  'Live Feed: ${widget.roomCode}',
                   style: const TextStyle(
                       color: Colors.cyanAccent,
                       fontWeight: FontWeight.bold,
@@ -57,7 +192,7 @@ class RollHistoryList extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         StreamBuilder<List<RoomRoll>>(
-          stream: roomService.streamRoomRolls(activeCode),
+          stream: _rollStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting &&
                 !snapshot.hasData) {
@@ -92,7 +227,7 @@ class RollHistoryList extends StatelessWidget {
               itemCount: roomRolls.length,
               itemBuilder: (context, index) {
                 final item = roomRolls[index];
-                final bool isSelf = item.playerName == (roomService.playerName ?? playerName);
+                final bool isSelf = item.playerName == (widget.roomService.playerName ?? widget.playerName);
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -185,10 +320,10 @@ class RollHistoryList extends StatelessWidget {
                           '${item.total}',
                           style: TextStyle(
                             color: item.isCrit
-                                ? Colors.amber
-                                : item.isFumble
-                                    ? Colors.redAccent
-                                    : Colors.white,
+                              ? Colors.amber
+                              : item.isFumble
+                                  ? Colors.redAccent
+                                  : Colors.white,
                             fontWeight: FontWeight.w900,
                             fontSize: 16,
                           ),
@@ -198,102 +333,6 @@ class RollHistoryList extends StatelessWidget {
                   ),
                 );
               },
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLocalRollHistory() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Roll History',
-              style: TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14),
-            ),
-            Text(
-              '${localHistory.length} rolls',
-              style: const TextStyle(color: Colors.white38, fontSize: 12),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: localHistory.length,
-          itemBuilder: (context, index) {
-            final item = localHistory[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1B2E),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.formulaString,
-                        style: const TextStyle(
-                            color: Colors.cyanAccent,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Rolls: ${item.individualRolls.join(', ')}${item.droppedRolls != null ? ' (dropped ${item.droppedRolls!.join(', ')})' : ''}',
-                        style: const TextStyle(
-                            color: Colors.white60, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: item.isCrit
-                          ? Colors.amber.withValues(alpha: 0.2)
-                          : item.isFumble
-                              ? Colors.redAccent.withValues(alpha: 0.2)
-                              : Colors.black26,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: item.isCrit
-                            ? Colors.amber
-                            : item.isFumble
-                                ? Colors.redAccent
-                                : Colors.white12,
-                      ),
-                    ),
-                    child: Text(
-                      '${item.total}',
-                      style: TextStyle(
-                        color: item.isCrit
-                            ? Colors.amber
-                            : item.isFumble
-                                ? Colors.redAccent
-                                : Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             );
           },
         ),

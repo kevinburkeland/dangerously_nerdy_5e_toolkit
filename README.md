@@ -5,14 +5,14 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
 
-A modern, high-performance Flutter application designed for Dungeons & Dragons 5th Edition players and Dungeon Masters. Features a suite of **10 dedicated player tools**, including simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, and a cryptographically secure random number generator.
+A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **10 dedicated player tools**, including simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, and a cryptographically secure random number generator.
 
 ---
 
 ## ✨ Key Features & Suite of Tools
 
 ### 🎲 1. Core Dice Roller & Live Multiplayer Rooms
-* **Multi-Dice Pools**: Roll any combination of standard D&D dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, etc.).
+* **Multi-Dice Pools**: Roll any combination of standard polyhedral RPG dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, etc.).
 * **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
 * **Detailed Breakdown**: Visual display showing individual die results, natural 20 / natural 1 highlights, and total sums.
 * **JSON Presets**: Save custom dice pools (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.

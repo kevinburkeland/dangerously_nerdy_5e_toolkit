@@ -113,6 +113,57 @@ class SpellSession {
 
   int get remainingPoints => maxPoints - usedPoints;
 
+  int getMaxAllowedCount(String statBlockId) {
+    if (activePreset.id == 'create_undead') {
+      switch (statBlockId) {
+        case 'undead_ghoul':
+          return 3 + (spellLevel - 6).clamp(0, 3); // 3 (6th), 4 (7th), 5 (8th), 6 (9th)
+        case 'undead_ghast':
+        case 'undead_wight':
+          if (spellLevel < 7) return 0;
+          return 2 + (spellLevel - 7).clamp(0, 2); // 2 (7th), 3 (8th), 4 (9th)
+        case 'undead_mummy':
+          if (spellLevel < 8) return 0;
+          return 2 + (spellLevel - 8).clamp(0, 1); // 2 (8th), 3 (9th)
+        default:
+          return 0;
+      }
+    }
+    if (activePreset.id == 'giant_insect') {
+      switch (statBlockId) {
+        case 'insect_centipede':
+          return 10;
+        case 'insect_wasp':
+          return 5;
+        case 'beast_giant_spider':
+          return 3;
+        case 'insect_scorpion':
+          return 1;
+        default:
+          return 1;
+      }
+    }
+    return maxPoints;
+  }
+
+  bool canAddMinion(MinionStatBlock statBlock) {
+    if (activeObjects.length >= 50) return false;
+    if (activePreset.category == SummonCategory.magicItem) {
+      return true;
+    }
+    if (activePreset.id == 'create_undead') {
+      final maxAllowed = getMaxAllowedCount(statBlock.id);
+      if (maxAllowed <= 0) return false;
+      return activeObjects.length < maxAllowed;
+    }
+    if (activePreset.id == 'giant_insect') {
+      final maxAllowed = getMaxAllowedCount(statBlock.id);
+      final currentCount = activeObjects.where((o) => o.name.toLowerCase().contains(statBlock.name.toLowerCase())).length;
+      return currentCount < maxAllowed && remainingPoints > 0;
+    }
+    return remainingPoints > 0;
+  }
+
   bool canAddObject(ObjectSize size) {
     if (activePreset.id == 'animate_objects') {
       return remainingPoints >= size.pointCost;
@@ -145,6 +196,7 @@ class SpellSession {
   }
 
   void addMinionFromStatBlock(MinionStatBlock statBlock, {String? customName}) {
+    if (!canAddMinion(statBlock)) return;
     if (activeObjects.length >= 50) return;
     int count = activeObjects.where((o) => o.name.startsWith(statBlock.name)).length + 1;
     String name = customName ?? '${statBlock.name} #$count';
@@ -277,6 +329,17 @@ class SpellSession {
             dmgRolls.add(d);
             totalDmg += d;
           }
+
+          if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
+            secDmgRolls = [];
+            int secMaxSum = obj.secondaryDamageDiceCount * obj.secondaryDamageDiceSides;
+            totalDmg += secMaxSum;
+            for (int i = 0; i < obj.secondaryDamageDiceCount; i++) {
+              int d = _rng.nextInt(obj.secondaryDamageDiceSides) + 1;
+              secDmgRolls.add(d);
+              totalDmg += d;
+            }
+          }
         } else {
           int diceCount = obj.damageDiceCount;
           if (isCrit) diceCount *= 2;
@@ -286,21 +349,20 @@ class SpellSession {
             dmgRolls.add(d);
             totalDmg += d;
           }
-        }
 
-        totalDmg += obj.damageBonus;
-
-        if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
-          secDmgRolls = [];
-          int secDiceCount = obj.secondaryDamageDiceCount;
-          if (isCrit) secDiceCount *= 2;
-          for (int i = 0; i < secDiceCount; i++) {
-            int d = _rng.nextInt(obj.secondaryDamageDiceSides) + 1;
-            secDmgRolls.add(d);
-            totalDmg += d;
+          if (obj.secondaryDamageDiceCount > 0 && obj.secondaryDamageDiceSides > 0) {
+            secDmgRolls = [];
+            int secDiceCount = obj.secondaryDamageDiceCount;
+            if (isCrit) secDiceCount *= 2;
+            for (int i = 0; i < secDiceCount; i++) {
+              int d = _rng.nextInt(obj.secondaryDamageDiceSides) + 1;
+              secDmgRolls.add(d);
+              totalDmg += d;
+            }
           }
         }
 
+        totalDmg += obj.damageBonus;
         totalDamageSum += totalDmg;
       }
 

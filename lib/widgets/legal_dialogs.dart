@@ -129,26 +129,26 @@ class LegalDialogs {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Wizards of the Coast Fan Content Notice',
+                  'Compatibility & Legal Disclaimer',
                   style: TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 15),
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'DangerouslyNerdy 5e Toolkit is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. '
-                  'Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.',
+                  'DangerouslyNerdy 5e Toolkit is an independent software companion compatible with the 5th Edition (5e) tabletop roleplaying game rules. '
+                  'This application is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC.',
                   style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
                 ),
                 SizedBox(height: 14),
                 Text(
-                  'System Reference Document 5.1 (SRD 5.1)',
+                  'System Reference Document 5.1 (SRD 5.1) License',
                   style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 15),
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at dnd.wizards.com. '
-                  'The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License (CC-BY-4.0).\n\n'
-                  'Attribution Notice: System Reference Document 5.1 Copyright 2021, Wizards of the Coast LLC, a subsidiary of Hasbro, Inc. '
-                  'Authors: Christopher Perkins, James Wyatt, Rodney Thompson, Robert J. Schwalb, Peter Lee, Steve Townshend, Bruce R. Cordell, based on original material by E. Gary Gygax and Dave Arneson.',
+                  'This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. '
+                  'The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License (CC-BY-4.0) available at https://creativecommons.org/licenses/by/4.0/legalcode.\n\n'
+                  'Attribution Notice:\n'
+                  'System Reference Document 5.1 Copyright 2016, Wizards of the Coast LLC, a subsidiary of Hasbro, Inc.; Authors Mike Mearls, Jeremy Crawford, Chris Perkins, Rodney Thompson, Peter Lee, James Wyatt, Robert J. Schwalb, Bruce R. Cordell, Chris Sims, and Steve Townshend, based on original material by E. Gary Gygax and Dave Arneson.',
                   style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
                 ),
               ],

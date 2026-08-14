@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/animated_object.dart';
 import '../../models/spell_session.dart';
 
 class BatchAttackResultsCard extends StatelessWidget {
@@ -179,17 +178,26 @@ class BatchAttackResultsCard extends StatelessWidget {
     }
 
     String toHitStr =
-        '$rollStr + ${res.object.size.attackBonus} = ${res.totalToHit} vs AC $targetAc';
+        '$rollStr + ${res.object.attackBonus} = ${res.totalToHit} vs AC $targetAc';
 
     if (res.isHit) {
       String dmgDetails;
       if (res.isMaximizedCrit && res.maxedRolls != null) {
         dmgDetails =
-            'Max: [${res.maxedRolls!.join("+")}] + Roll: [${res.damageRolls.join("+")}] + ${res.damageBonus}';
+            'Max: [${res.maxedRolls!.join("+")}] + Roll: [${res.damageRolls.join("+")}]';
       } else {
         dmgDetails =
-            'Dice: ${res.damageRolls.join("+")} + ${res.damageBonus}';
+            'Dice: [${res.damageRolls.join("+")}]';
       }
+
+      if (res.secondaryDamageRolls != null && res.secondaryDamageRolls!.isNotEmpty) {
+        dmgDetails += ' + Sec: [${res.secondaryDamageRolls!.join("+")}]';
+      }
+
+      if (res.damageBonus != 0) {
+        dmgDetails += ' + ${res.damageBonus}';
+      }
+
       return '$toHitStr | $dmgDetails';
     } else {
       return toHitStr;

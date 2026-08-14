@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/dice_room_service.dart';
+import 'dialogs/join_create_room_dialog.dart';
 
 class RoomBannerWidget extends StatelessWidget {
   final String? activeRoomCode;
@@ -17,128 +18,11 @@ class RoomBannerWidget extends StatelessWidget {
   });
 
   void _showJoinCreateRoomDialog(BuildContext context, String? currentName, String? currentRoom) {
-    final nameController = TextEditingController(text: currentName ?? '');
-    final roomController = TextEditingController(text: currentRoom ?? '');
-    final DiceRoomService roomService = DiceRoomService();
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF1E1B2E),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Row(
-                children: [
-                  Icon(Icons.hub, color: Colors.cyanAccent),
-                  SizedBox(width: 10),
-                  Text('Shared Dice Room', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Join or create a live shared dice room to see everyone\'s rolls in real time.',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Player Name Input
-                  TextField(
-                    controller: nameController,
-                    autofocus: currentName == null || currentName.isEmpty,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: 'Your Display Name',
-                      labelStyle: const TextStyle(color: Colors.cyanAccent),
-                      hintText: 'e.g. Gandalf, Gimli',
-                      hintStyle: const TextStyle(color: Colors.white30),
-                      filled: true,
-                      fillColor: Colors.black26,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Room Code Input with Generator
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: roomController,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          textCapitalization: TextCapitalization.characters,
-                          decoration: InputDecoration(
-                            labelText: 'Room Code',
-                            labelStyle: const TextStyle(color: Colors.cyanAccent),
-                            hintText: 'e.g. ROOM-A82F',
-                            hintStyle: const TextStyle(color: Colors.white30),
-                            filled: true,
-                            fillColor: Colors.black26,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),
-                          foregroundColor: Colors.cyanAccent,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
-                        ),
-                        onPressed: () {
-                          setDialogState(() {
-                            roomController.text = roomService.generateRoomCode();
-                          });
-                        },
-                        child: const Column(
-                          children: [
-                            Icon(Icons.autorenew, size: 18),
-                            Text('New', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyanAccent,
-                    foregroundColor: Colors.black,
-                  ),
-                  onPressed: () {
-                    final name = nameController.text.trim();
-                    final room = roomController.text.trim();
-                    if (name.isNotEmpty && room.isNotEmpty) {
-                      DiceRoomService().joinRoom(room, name);
-                      onJoinRoom?.call(room, name);
-                      Navigator.pop(ctx);
-                    } else {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please enter both your name and a room code.'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.meeting_room, size: 18),
-                  label: const Text('Enter Room', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    JoinCreateRoomDialog.show(
+      context,
+      initialPlayerName: currentName,
+      initialRoomCode: currentRoom,
+      onJoinRoom: onJoinRoom,
     );
   }
 

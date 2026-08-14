@@ -28,7 +28,7 @@ class ValhallaSummons {
     range: 'Self (60-foot radius)',
     components: 'Action (Wind Instrument)',
     duration: '1 Hour',
-    description: 'You blow the horn to summon heroic warrior spirits from Ysgard. Silver summons 2d4+2, Brass summons 3d4+3, Bronze summons 4d4+4, Iron summons 5d4+5 Berserkers.',
+    description: 'You blow the horn to summon heroic warrior spirits from Valhalla. Silver summons 2d4+2, Brass summons 3d4+3, Bronze summons 4d4+4, Iron summons 5d4+5 Berserkers.',
     upcastRules: 'Cannot be used again for 7 days.',
     statBlocks: [berserker],
   );

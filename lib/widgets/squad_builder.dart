@@ -47,12 +47,16 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   void _addMinions(MinionStatBlock statBlock, int count) {
     for (int i = 0; i < count; i++) {
-      if (widget.session.remainingPoints > 0) {
+      if (widget.session.canAddMinion(statBlock)) {
         widget.session.addMinionFromStatBlock(statBlock);
       } else {
+        final maxAllowed = widget.session.getMaxAllowedCount(statBlock.id);
+        final msg = maxAllowed <= 0
+            ? '${statBlock.name} is not available at spell slot level ${widget.session.spellLevel}!'
+            : 'Reached limit ($maxAllowed) for ${statBlock.name} at slot level ${widget.session.spellLevel}!';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Reached max capacity limit (${widget.session.maxPoints}) for slot level ${widget.session.spellLevel}!'),
+            content: Text(msg),
             backgroundColor: Colors.redAccent,
             duration: const Duration(seconds: 2),
           ),

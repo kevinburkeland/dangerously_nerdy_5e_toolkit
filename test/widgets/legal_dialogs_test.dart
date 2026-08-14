@@ -73,11 +73,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Legal & SRD 5.1 Attribution'), findsOneWidget);
-    expect(find.text('Wizards of the Coast Fan Content Notice'), findsOneWidget);
+    expect(find.text('Compatibility & Legal Disclaimer'), findsOneWidget);
+    expect(find.text('System Reference Document 5.1 (SRD 5.1) License'), findsOneWidget);
 
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Wizards of the Coast Fan Content Notice'), findsNothing);
+    expect(find.text('Compatibility & Legal Disclaimer'), findsNothing);
   });
 }

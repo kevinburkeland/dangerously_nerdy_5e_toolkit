@@ -7,7 +7,7 @@
   "display": "standalone",
   "background_color": "#14121E",
   "theme_color": "#14121E",
-  "description": "DangerouslyNerdy 5e Toolkit - D&D 5e Combat Companion, Animate Objects Tracker, & Dice App",
+  "description": "DangerouslyNerdy 5e Toolkit - 5e Combat Companion, Animate Objects Tracker, & Dice App",
   "orientation": "any",
   "categories": ["games", "utilities", "entertainment"],
   "prefer_related_applications": false,

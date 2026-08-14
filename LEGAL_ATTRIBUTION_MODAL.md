@@ -1,14 +1,16 @@
-# Legal Attribution & Open Game License (SRD 5.1) Notice
+# Legal Attribution & System Reference Document 5.1 (SRD 5.1) Notice
 
 **DangerouslyNerdy 5e Toolkit**  
 *Version 1.0.0*
 
 ---
 
-## 1. Wizards of the Coast Fan Content Disclaimer
+## 1. Compatibility & Legal Disclaimer
 
-> **Unofficial Fan Content Notice**  
-> DangerouslyNerdy 5e Toolkit is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.
+> **Independent Publication & Compatibility Notice**  
+> DangerouslyNerdy 5e Toolkit is an independent software companion compatible with the 5th Edition (5e) tabletop roleplaying game rules.  
+> This application is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC.  
+> Dungeons & Dragons and D&D are registered trademarks of Wizards of the Coast LLC.
 
 ---
 
@@ -21,7 +23,7 @@ The SRD 5.1 is licensed under the **Creative Commons Attribution 4.0 Internation
 https://creativecommons.org/licenses/by/4.0/legalcode
 
 ### Mandatory Attribution Notice:
-*System Reference Document 5.1 Copyright 2021, Wizards of the Coast LLC, a subsidiary of Hasbro, Inc. Authors: Christopher Perkins, James Wyatt, Rodney Thompson, Robert J. Schwalb, Peter Lee, Steve Townshend, Bruce R. Cordell, based on original material by E. Gary Gygax and Dave Arneson.*
+*System Reference Document 5.1 Copyright 2016, Wizards of the Coast LLC, a subsidiary of Hasbro, Inc.; Authors Mike Mearls, Jeremy Crawford, Chris Perkins, Rodney Thompson, Peter Lee, James Wyatt, Robert J. Schwalb, Bruce R. Cordell, Chris Sims, and Steve Townshend, based on original material by E. Gary Gygax and Dave Arneson.*
 
 ---
 

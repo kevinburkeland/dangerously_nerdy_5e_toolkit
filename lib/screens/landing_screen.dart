@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/srd_summons.dart';
 import '../utils/pwa_helper.dart';
+import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/legal_dialogs.dart';
 import 'dice_roller_screen.dart';
 import 'minion_tool_screen.dart';
@@ -32,8 +33,13 @@ class LandingScreen extends StatelessWidget {
             ),
           ],
         ),
-        actions: const [
+        actions: [
           IconButton(
+            icon: const Icon(Icons.flash_on, color: Colors.amber),
+            tooltip: 'Combat Action Economy Guide',
+            onPressed: () => ActionEconomyDialog.show(context),
+          ),
+          const IconButton(
             icon: Icon(Icons.download_for_offline, color: Colors.cyanAccent),
             tooltip: 'Install App',
             onPressed: PwaHelper.promptInstall,
@@ -103,7 +109,7 @@ class LandingScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Choose from the DangerouslyNerdy suite of dedicated 5e D&D player tools designed for minion combat management, magic item rollers, dice math, and live party rooms.',
+                          'Choose from the DangerouslyNerdy suite of dedicated 5th Edition (5e) compatible player tools designed for minion combat management, magic item rollers, dice math, and live party rooms.',
                           style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
                         ),
                       ],

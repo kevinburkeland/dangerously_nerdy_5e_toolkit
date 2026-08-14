@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/animated_object.dart';
 import '../models/room_roll.dart';
 import '../models/spell_session.dart';
 import '../services/dice_room_service.dart';
@@ -26,8 +25,41 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
   int _targetAc = 15;
   RollAdvantage _advantageMode = RollAdvantage.normal;
   bool _useMaximizedCrits = false;
+  bool _showTacticalConditions = false;
+  bool _targetProne = false;
+  bool _packTactics = false;
+  bool _targetIncapacitated = false;
+  bool _attackerImpaired = false;
+
   BatchAttackSummary? _summary;
   DateTime? _lastAttackRollTime;
+
+  @override
+  void initState() {
+    super.initState();
+    // If minions in squad have pack tactics (e.g. wolves), pre-enable hint
+    if (widget.session.activeObjects.any((o) => o.hasPackTactics)) {
+      _packTactics = true;
+      _advantageMode = RollAdvantage.advantage;
+    }
+  }
+
+  void _recalculateTacticalAdvantage() {
+    final hasAdv = _targetProne || _packTactics || _targetIncapacitated;
+    final hasDis = _attackerImpaired;
+
+    setState(() {
+      if (hasAdv && hasDis) {
+        _advantageMode = RollAdvantage.normal;
+      } else if (hasAdv) {
+        _advantageMode = RollAdvantage.advantage;
+      } else if (hasDis) {
+        _advantageMode = RollAdvantage.disadvantage;
+      } else {
+        _advantageMode = RollAdvantage.normal;
+      }
+    });
+  }
 
   void _rollAttacks() {
     final now = DateTime.now();
@@ -76,7 +108,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
         final obj = res.object;
 
         final statusText = res.isCrit ? 'CRIT!' : (res.isHit ? 'HIT' : 'MISS');
-        final formulaStr = '${obj.name} (${obj.size.displayName}) +${obj.size.attackBonus} vs AC $_targetAc [$statusText]';
+        final formulaStr = '${obj.name} (${obj.size.displayName}) +${obj.attackBonus} vs AC $_targetAc [$statusText]';
         final objId = '${timestamp.microsecondsSinceEpoch}_${i}_${SecureRng.instance.nextInt(1000000)}';
 
         final objRoll = RoomRoll(
@@ -280,7 +312,116 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                           );
                         },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
+
+                      // Tactical Modifiers Accordion
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF252236),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: (_targetProne || _packTactics || _targetIncapacitated || _attackerImpaired)
+                                ? Colors.cyanAccent.withValues(alpha: 0.6)
+                                : Colors.white12,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap: () => setState(() => _showTacticalConditions = !_showTacticalConditions),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.flash_on, color: Colors.cyanAccent, size: 18),
+                                    const SizedBox(width: 6),
+                                    const Expanded(
+                                      child: Text(
+                                        'Tactical Combat Conditions',
+                                        style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
+                                    ),
+                                    if (_targetProne || _packTactics || _targetIncapacitated || _attackerImpaired)
+                                      Container(
+                                        margin: const EdgeInsets.only(right: 6),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.cyanAccent.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          _advantageMode == RollAdvantage.advantage
+                                              ? 'Advantage Active'
+                                              : (_advantageMode == RollAdvantage.disadvantage ? 'Disadvantage Active' : 'Cancelled Out'),
+                                          style: const TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    Icon(
+                                      _showTacticalConditions ? Icons.expand_less : Icons.expand_more,
+                                      color: Colors.cyanAccent,
+                                      size: 18,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (_showTacticalConditions) ...[
+                              const Divider(height: 1, color: Colors.white12),
+                              Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    FilterChip(
+                                      label: const Text('Target Prone (Melee)', style: TextStyle(fontSize: 11)),
+                                      selected: _targetProne,
+                                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                                      checkmarkColor: Colors.cyanAccent,
+                                      onSelected: (val) {
+                                        _targetProne = val;
+                                        _recalculateTacticalAdvantage();
+                                      },
+                                    ),
+                                    FilterChip(
+                                      label: const Text('Pack Tactics (Ally 5ft)', style: TextStyle(fontSize: 11)),
+                                      selected: _packTactics,
+                                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                                      checkmarkColor: Colors.cyanAccent,
+                                      onSelected: (val) {
+                                        _packTactics = val;
+                                        _recalculateTacticalAdvantage();
+                                      },
+                                    ),
+                                    FilterChip(
+                                      label: const Text('Target Stunned/Restrained', style: TextStyle(fontSize: 11)),
+                                      selected: _targetIncapacitated,
+                                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                                      checkmarkColor: Colors.cyanAccent,
+                                      onSelected: (val) {
+                                        _targetIncapacitated = val;
+                                        _recalculateTacticalAdvantage();
+                                      },
+                                    ),
+                                    FilterChip(
+                                      label: const Text('Attacker Poisoned/Blinded', style: TextStyle(fontSize: 11)),
+                                      selected: _attackerImpaired,
+                                      selectedColor: Colors.redAccent.withValues(alpha: 0.3),
+                                      checkmarkColor: Colors.redAccent,
+                                      onSelected: (val) {
+                                        _attackerImpaired = val;
+                                        _recalculateTacticalAdvantage();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
 
                       // Maximized Criticals Toggle
                       Container(
