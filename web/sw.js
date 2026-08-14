@@ -5,7 +5,6 @@ const RESOURCES_TO_CACHE = [
   'index.html',
   'manifest.json',
   'favicon.png',
-  'assets/images/logo.png',
   'pwa_icons/Icon-192.png',
   'pwa_icons/Icon-512.png',
   'pwa_icons/Icon-maskable-192.png',
@@ -18,8 +17,19 @@ const RESOURCES_TO_CACHE = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(RESOURCES_TO_CACHE);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await Promise.allSettled(
+        RESOURCES_TO_CACHE.map(async (url) => {
+          try {
+            const response = await fetch(url);
+            if (response && response.ok) {
+              await cache.put(url, response);
+            }
+          } catch (err) {
+            console.warn('[ServiceWorker] Pre-cache skip for:', url, err);
+          }
+        })
+      );
     })
   );
 });
