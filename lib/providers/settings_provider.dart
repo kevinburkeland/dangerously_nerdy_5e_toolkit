@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_settings.dart';
+import '../models/dm_screen_data.dart';
 
 class SettingsProvider extends ChangeNotifier {
   static const _kThemeMode = 'setting_theme_mode';
@@ -11,6 +12,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _kSpellParticles = 'setting_spell_particles';
   static const _k3dDice = 'setting_3d_dice';
   static const _kPerformanceMode = 'setting_performance_mode';
+  static const _kRulesEdition = 'setting_rules_edition';
 
   AppSettings _settings;
   AppSettings get settings => _settings;
@@ -30,6 +32,7 @@ class SettingsProvider extends ChangeNotifier {
     final particles = prefs.getBool(_kSpellParticles);
     final dice = prefs.getBool(_k3dDice);
     final perf = prefs.getBool(_kPerformanceMode);
+    final editionIndex = prefs.getInt(_kRulesEdition);
 
     _settings = AppSettings(
       themeMode: themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length
@@ -46,6 +49,9 @@ class SettingsProvider extends ChangeNotifier {
       enableSpellParticles: particles ?? _settings.enableSpellParticles,
       enable3dDiceOverlays: dice ?? _settings.enable3dDiceOverlays,
       performanceMode: perf ?? _settings.performanceMode,
+      rulesEdition: editionIndex != null && editionIndex >= 0 && editionIndex < DmRulesEdition.values.length
+          ? DmRulesEdition.values[editionIndex]
+          : _settings.rulesEdition,
     );
     notifyListeners();
   }
@@ -64,6 +70,7 @@ class SettingsProvider extends ChangeNotifier {
       prefs.setBool(_kSpellParticles, newSettings.enableSpellParticles),
       prefs.setBool(_k3dDice, newSettings.enable3dDiceOverlays),
       prefs.setBool(_kPerformanceMode, newSettings.performanceMode),
+      prefs.setInt(_kRulesEdition, newSettings.rulesEdition.index),
     ]);
   }
 
@@ -75,6 +82,7 @@ class SettingsProvider extends ChangeNotifier {
   void setSpellParticles(bool value) => updateSettings(_settings.copyWith(enableSpellParticles: value));
   void set3dDiceOverlays(bool value) => updateSettings(_settings.copyWith(enable3dDiceOverlays: value));
   void setPerformanceMode(bool value) => updateSettings(_settings.copyWith(performanceMode: value));
+  void setRulesEdition(DmRulesEdition edition) => updateSettings(_settings.copyWith(rulesEdition: edition));
 }
 
 class SettingsScope extends InheritedNotifier<SettingsProvider> {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
+import '../models/dm_screen_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
@@ -33,6 +34,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
         body: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           children: [
+            _buildSectionHeader(context, '5e Rules Edition & Mechanics', Icons.menu_book),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Global Rulebook Edition', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Applies across the DM Screen, Tactical Guides, Condition References, and Combat Action Economy.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<DmRulesEdition>(
+                        segments: const [
+                          ButtonSegment(
+                            value: DmRulesEdition.v2024,
+                            label: Text('2024 Revised'),
+                            icon: Icon(Icons.auto_awesome),
+                          ),
+                          ButtonSegment(
+                            value: DmRulesEdition.v2014,
+                            label: Text('2014 5e RAW'),
+                            icon: Icon(Icons.history_edu),
+                          ),
+                        ],
+                        selected: {s.rulesEdition},
+                        onSelectionChanged: (set) {
+                          HapticService.selectionTick(context);
+                          settingsProvider.setRulesEdition(set.first);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             _buildSectionHeader(context, 'Theme & Appearance', Icons.palette_outlined),
             Card(
               child: Padding(

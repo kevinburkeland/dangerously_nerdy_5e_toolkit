@@ -52,8 +52,32 @@ void main() {
     await tester.tap(exhaustionChip);
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(Card, 'Exhaustion (6 Cumulative Levels)'), findsOneWidget);
+    expect(find.byType(Card), findsOneWidget);
     expect(find.widgetWithText(Card, 'Grappled'), findsNothing);
+  });
+
+  testWidgets('ConditionReferenceDialog toggles between 2014 and 2024 editions', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1200, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(createTestWidget());
+    await tester.pumpAndSettle();
+
+    // Select Exhaustion category so card is front and center
+    final exhaustionChip = find.widgetWithText(FilterChip, 'Exhaustion');
+    await tester.ensureVisible(exhaustionChip);
+    await tester.tap(exhaustionChip);
+    await tester.pumpAndSettle();
+
+    // Default 2024: Exhaustion shows cumulative 10 total levels
+    expect(find.textContaining('Cumulative penalty across 10 total levels'), findsOneWidget);
+
+    // Switch to 2014
+    await tester.tap(find.text('2014'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Level 1: Disadvantage on ability checks'), findsOneWidget);
   });
 
   testWidgets('ConditionReferenceDialog search filters conditions by name or mechanic', (WidgetTester tester) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dm_screen_data.dart';
 
 /// Available fantasy accent palettes with distinct primary and secondary luminescence
 enum FantasyAccent {
@@ -34,6 +35,7 @@ class AppSettings {
   final bool enableSpellParticles;
   final bool enable3dDiceOverlays;
   final bool performanceMode;
+  final DmRulesEdition rulesEdition;
 
   const AppSettings({
     this.themeMode = ThemeMode.dark,
@@ -44,6 +46,7 @@ class AppSettings {
     this.enableSpellParticles = true,
     this.enable3dDiceOverlays = true,
     this.performanceMode = false,
+    this.rulesEdition = DmRulesEdition.v2024,
   });
 
   /// Whether particle and continuous visual FX are permitted to render
@@ -61,6 +64,7 @@ class AppSettings {
     bool? enableSpellParticles,
     bool? enable3dDiceOverlays,
     bool? performanceMode,
+    DmRulesEdition? rulesEdition,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -71,6 +75,7 @@ class AppSettings {
       enableSpellParticles: enableSpellParticles ?? this.enableSpellParticles,
       enable3dDiceOverlays: enable3dDiceOverlays ?? this.enable3dDiceOverlays,
       performanceMode: performanceMode ?? this.performanceMode,
+      rulesEdition: rulesEdition ?? this.rulesEdition,
     );
   }
 
@@ -86,7 +91,8 @@ class AppSettings {
           enableCritFumbleFx == other.enableCritFumbleFx &&
           enableSpellParticles == other.enableSpellParticles &&
           enable3dDiceOverlays == other.enable3dDiceOverlays &&
-          performanceMode == other.performanceMode;
+          performanceMode == other.performanceMode &&
+          rulesEdition == other.rulesEdition;
 
   @override
   int get hashCode => Object.hash(
@@ -98,5 +104,6 @@ class AppSettings {
         enableSpellParticles,
         enable3dDiceOverlays,
         performanceMode,
+        rulesEdition,
       );
 }

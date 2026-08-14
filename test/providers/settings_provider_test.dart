@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 
 void main() {
@@ -24,6 +25,7 @@ void main() {
       expect(settings.performanceMode, isFalse);
       expect(settings.areParticlesAllowed, isTrue);
       expect(settings.areCritFxAllowed, isTrue);
+      expect(settings.rulesEdition, DmRulesEdition.v2024);
     });
 
     test('performanceMode disables particle and crit effects getters', () {
@@ -37,6 +39,7 @@ void main() {
     test('initializes and updates settings correctly', () async {
       final provider = SettingsProvider();
       expect(provider.settings.themeMode, ThemeMode.dark);
+      expect(provider.settings.rulesEdition, DmRulesEdition.v2024);
 
       provider.setThemeMode(ThemeMode.light);
       expect(provider.settings.themeMode, ThemeMode.light);
@@ -53,6 +56,9 @@ void main() {
       provider.setPerformanceMode(true);
       expect(provider.settings.performanceMode, isTrue);
       expect(provider.settings.areParticlesAllowed, isFalse);
+
+      provider.setRulesEdition(DmRulesEdition.v2014);
+      expect(provider.settings.rulesEdition, DmRulesEdition.v2014);
     });
 
     test('hydrates preferences from stored values', () async {
@@ -65,6 +71,7 @@ void main() {
         'setting_spell_particles': false,
         'setting_3d_dice': false,
         'setting_performance_mode': true,
+        'setting_rules_edition': DmRulesEdition.v2014.index,
       });
 
       final provider = SettingsProvider();
@@ -76,6 +83,7 @@ void main() {
       expect(provider.settings.hapticLevel, HapticFeedbackLevel.off);
       expect(provider.settings.enableCritFumbleFx, isFalse);
       expect(provider.settings.performanceMode, isTrue);
+      expect(provider.settings.rulesEdition, DmRulesEdition.v2014);
     });
   });
 }

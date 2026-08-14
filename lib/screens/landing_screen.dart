@@ -8,6 +8,7 @@ import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/legal_dialogs.dart';
 import 'dice_roller_screen.dart';
+import 'dm_screen_screen.dart';
 import 'minion_tool_screen.dart';
 import 'settings_screen.dart';
 
@@ -83,6 +84,42 @@ class _LandingScreenState extends State<LandingScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
+          );
+        },
+      ),
+      _LandingToolItem(
+        id: 'dm_screen',
+        title: "DM's Screen & Rulebook",
+        category: 'Core Utilities',
+        badgeText: '2014 & 2024 Rules',
+        badgeColor: Colors.amberAccent,
+        icon: Icons.shield_outlined,
+        accentColor: Colors.amberAccent,
+        description:
+            "Instant rules reference with 2014 RAW vs 2024 Revised switch, side-by-side comparison, conditions, DC tables, and quick roller.",
+        keywords: [
+          'dm',
+          'dungeon master',
+          'screen',
+          'rules',
+          '2024',
+          '2014',
+          'conditions',
+          'actions',
+          'dc',
+          'cover',
+          'exhaustion',
+          'grapple',
+          'potion',
+          'rest',
+          'concentration',
+          'travel',
+          'revised'
+        ],
+        onLaunch: (context) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DmScreenScreen()),
           );
         },
       ),
@@ -333,6 +370,13 @@ class _LandingScreenState extends State<LandingScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.shield_outlined, color: Colors.amberAccent),
+            tooltip: "DM's Screen & Rulebook (2014 / 2024)",
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DmScreenScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.flash_on, color: Colors.amber),
             tooltip: 'Combat Action Economy Guide',

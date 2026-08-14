@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
+import '../../providers/settings_provider.dart';
+import '../../services/haptic_service.dart';
 
 class ActionEconomyDialog extends StatefulWidget {
-  const ActionEconomyDialog({super.key});
+  final DmRulesEdition? initialEdition;
 
-  static void show(BuildContext context) {
+  const ActionEconomyDialog({super.key, this.initialEdition});
+
+  static void show(BuildContext context, {DmRulesEdition? edition}) {
     showDialog(
       context: context,
-      builder: (ctx) => const ActionEconomyDialog(),
+      builder: (ctx) => ActionEconomyDialog(initialEdition: edition),
     );
   }
 
@@ -16,12 +21,16 @@ class ActionEconomyDialog extends StatefulWidget {
 
 class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  DmRulesEdition? _localEditionOverride;
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    if (widget.initialEdition != null) {
+      _localEditionOverride = widget.initialEdition;
+    }
   }
 
   @override
@@ -30,13 +39,13 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
     super.dispose();
   }
 
-  static const _standardActions = [
+  static const _standardActions2014 = [
     (
       title: 'Attack',
       cost: '1 Action',
       icon: Icons.sports_kabaddi,
       color: Colors.amber,
-      desc: 'Make one melee or ranged weapon/unarmed attack. Features like Extra Attack allow multiple attacks per Attack action.',
+      desc: 'Make one melee or ranged weapon/unarmed attack. Features like Extra Attack allow multiple attacks per Attack action. Draw/sheathe only 1 weapon for free on your turn.',
     ),
     (
       title: 'Cast a Spell',
@@ -78,7 +87,7 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
       cost: '1 Action',
       icon: Icons.visibility_off,
       color: Colors.blueGrey,
-      desc: 'Make a Dexterity (Stealth) check to become unseen and unheard. You gain Advantage on attacks while hidden.',
+      desc: 'Make a Dexterity (Stealth) check contested by enemies\' Passive Perception to become unseen and unheard.',
     ),
     (
       title: 'Ready',
@@ -102,22 +111,123 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
       desc: 'Interact with a second object on your turn, or use a complex item (like applying a potion or pulling a lever).',
     ),
     (
-      title: 'Grapple',
+      title: 'Drink / Administer a Potion (2014 RAW)',
+      cost: '1 Action',
+      icon: Icons.liquor,
+      color: Colors.redAccent,
+      desc: 'Drinking a potion or administering a potion to an unconscious ally requires 1 Action in 2014 rules.',
+    ),
+    (
+      title: 'Grapple (2014 Contested)',
       cost: '1 Attack (Part of Attack Action)',
       icon: Icons.sports_mma,
       color: Colors.deepOrangeAccent,
-      desc: 'Athletics check contested by target Athletics/Acrobatics. Target Speed becomes 0 if successful (target must be no more than 1 size larger).',
+      desc: 'Strength (Athletics) check contested by target Athletics or Acrobatics. Target Speed becomes 0 if successful.',
     ),
     (
-      title: 'Shove / Push',
+      title: 'Shove / Push (2014 Contested)',
       cost: '1 Attack (Part of Attack Action)',
       icon: Icons.swipe_right,
       color: Colors.deepOrange,
-      desc: 'Athletics check contested by target Athletics/Acrobatics. Knock the target Prone or push it 5 feet away.',
+      desc: 'Strength (Athletics) check contested by target Athletics or Acrobatics. Knock the target Prone or push it 5 feet away.',
     ),
   ];
 
-  static const _bonusActions = [
+  static const _standardActions2024 = [
+    (
+      title: 'Attack & Weapon Swapping',
+      cost: '1 Action',
+      icon: Icons.sports_kabaddi,
+      color: Colors.amber,
+      desc: 'Make one attack with a weapon or Unarmed Strike (Damage, Grapple, or Shove). You can draw or stow one weapon before or after EACH attack.',
+    ),
+    (
+      title: 'Cast a Spell (2024 Slot Limit)',
+      cost: '1 Action (or Bonus Action / Reaction)',
+      icon: Icons.auto_awesome,
+      color: Colors.purpleAccent,
+      desc: 'Cast a spell. On your turn, you can expend only ONE spell slot (you may cast multiple spells if only one uses a slot, e.g., slot + cantrip).',
+    ),
+    (
+      title: 'Dash',
+      cost: '1 Action',
+      icon: Icons.directions_run,
+      color: Colors.cyanAccent,
+      desc: 'Gain extra movement for the current turn equal to your Speed.',
+    ),
+    (
+      title: 'Disengage',
+      cost: '1 Action',
+      icon: Icons.transit_enterexit,
+      color: Colors.greenAccent,
+      desc: 'Your movement does not provoke opportunity attacks for the rest of the turn.',
+    ),
+    (
+      title: 'Dodge',
+      cost: '1 Action',
+      icon: Icons.shield,
+      color: Colors.blueAccent,
+      desc: 'Until your next turn, attacks against you have Disadvantage (if visible), and you have Advantage on DEX saves.',
+    ),
+    (
+      title: 'Help',
+      cost: '1 Action',
+      icon: Icons.handshake,
+      color: Colors.tealAccent,
+      desc: 'Give an ally Advantage on their next ability check (if you are proficient), or Advantage on an attack roll against a creature within 5 ft.',
+    ),
+    (
+      title: 'Hide (2024 DC 15)',
+      cost: '1 Action',
+      icon: Icons.visibility_off,
+      color: Colors.blueGrey,
+      desc: 'Make a DC 15 Dexterity (Stealth) check while heavily obscured or behind 3/4+ cover. On success, you gain the Invisible condition!',
+    ),
+    (
+      title: 'Study (2024 New Action)',
+      cost: '1 Action',
+      icon: Icons.menu_book,
+      color: Colors.teal,
+      desc: 'Make an Intelligence check (Arcana, History, Nature, Religion, Investigation) to deduce monster stats, traits, weaknesses, or lore.',
+    ),
+    (
+      title: 'Influence (2024 New Action)',
+      cost: '1 Action',
+      icon: Icons.record_voice_over,
+      color: Colors.pinkAccent,
+      desc: 'Influence an NPC attitude: Friendly DC 10, Indifferent DC 15, Hostile DC 20 with Persuasion, Deception, Animal Handling, or Intimidation.',
+    ),
+    (
+      title: 'Search (2024 Codified)',
+      cost: '1 Action',
+      icon: Icons.search,
+      color: Colors.lightGreenAccent,
+      desc: 'Make a Wisdom check (Insight, Perception, Survival) to discern motives or locate concealed creatures/items.',
+    ),
+    (
+      title: 'Ready',
+      cost: '1 Action + Reaction',
+      icon: Icons.hourglass_top,
+      color: Colors.orangeAccent,
+      desc: 'Specify a trigger and action. Readied spells require concentration until released as a reaction.',
+    ),
+    (
+      title: 'Grapple (2024 Save DC)',
+      cost: '1 Unarmed Strike (Attack Action)',
+      icon: Icons.sports_mma,
+      color: Colors.deepOrangeAccent,
+      desc: 'Target makes STR/DEX save vs DC = 8 + STR + Prof. On fail, gains Grappled (Disadvantage on attacks against anyone other than grappler).',
+    ),
+    (
+      title: 'Shove (2024 Save DC)',
+      cost: '1 Unarmed Strike (Attack Action)',
+      icon: Icons.swipe_right,
+      color: Colors.deepOrange,
+      desc: 'Target makes STR/DEX save vs DC = 8 + STR + Prof. On fail, target is knocked Prone or pushed 5 feet away.',
+    ),
+  ];
+
+  static const _bonusActions2014 = [
     (
       title: 'Two-Weapon Fighting (Off-Hand)',
       cost: '1 Bonus Action',
@@ -126,11 +236,11 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
       desc: 'When you take the Attack action with a light melee weapon in one hand, attack with a different light melee weapon in the other hand (no ability mod to damage unless negative).',
     ),
     (
-      title: 'Bonus Action Spells',
+      title: 'Bonus Action Spells (2014 Rule)',
       cost: '1 Bonus Action',
       icon: Icons.bolt,
       color: Colors.purpleAccent,
-      desc: 'If you cast a spell as a Bonus Action (e.g. Healing Word, Misty Step), you cannot cast another spell on the same turn except for a Cantrip with a casting time of 1 Action.',
+      desc: 'If you cast a Bonus Action spell (e.g. Healing Word, Misty Step), you cannot cast another spell on the same turn except for a Cantrip with a casting time of 1 Action.',
     ),
     (
       title: 'Class & Item Features',
@@ -138,6 +248,37 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
       icon: Icons.star,
       color: Colors.cyanAccent,
       desc: 'Features explicitly designated as Bonus Actions (Cunning Action, Bardic Inspiration, Rage, Second Wind, Command Minions).',
+    ),
+  ];
+
+  static const _bonusActions2024 = [
+    (
+      title: 'Drink or Administer a Potion (2024)',
+      cost: '1 Bonus Action',
+      icon: Icons.liquor,
+      color: Colors.redAccent,
+      desc: 'In the 2024 rules, drinking any potion or administering a potion to an ally requires only 1 Bonus Action!',
+    ),
+    (
+      title: 'Two-Weapon Fighting (Light Property)',
+      cost: '1 Bonus Action (or Part of Attack with Nick)',
+      icon: Icons.content_cut,
+      color: Colors.amber,
+      desc: 'Attack with an off-hand Light weapon. With the Nick weapon mastery property, this extra attack is part of the Attack action itself without using a Bonus Action.',
+    ),
+    (
+      title: 'Bonus Action Spells',
+      cost: '1 Bonus Action',
+      icon: Icons.bolt,
+      color: Colors.purpleAccent,
+      desc: 'Cast a spell with a casting time of 1 Bonus Action. Follows the 1-spell-slot-per-turn limitation.',
+    ),
+    (
+      title: 'Class Features',
+      cost: '1 Bonus Action',
+      icon: Icons.star,
+      color: Colors.cyanAccent,
+      desc: 'Cunning Action, Bardic Inspiration, Second Wind, Rage, and specialized bonus action spells/abilities.',
     ),
   ];
 
@@ -191,6 +332,13 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider = SettingsScope.maybeOf(context);
+    final edition = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final is2024 = edition == DmRulesEdition.v2024;
+
+    final standardActions = is2024 ? _standardActions2024 : _standardActions2014;
+    final bonusActions = is2024 ? _bonusActions2024 : _bonusActions2014;
+
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       backgroundColor: const Color(0xFF1E1B2E),
@@ -212,6 +360,38 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                       style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
+                  // Edition Toggle Button
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF252236),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildEditionChip(
+                          label: '2014',
+                          isActive: !is2024,
+                          onTap: () {
+                            HapticService.selectionTick(context);
+                            setState(() => _localEditionOverride = DmRulesEdition.v2014);
+                            settingsProvider?.setRulesEdition(DmRulesEdition.v2014);
+                          },
+                        ),
+                        _buildEditionChip(
+                          label: '2024',
+                          isActive: is2024,
+                          onTap: () {
+                            HapticService.selectionTick(context);
+                            setState(() => _localEditionOverride = DmRulesEdition.v2024);
+                            settingsProvider?.setRulesEdition(DmRulesEdition.v2024);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white54),
                     onPressed: () => Navigator.pop(context),
@@ -226,7 +406,7 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
               child: TextField(
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Search actions (e.g., Dodge, Cover, Grapple, Reaction)...',
+                  hintText: 'Search actions (e.g., Dodge, Cover, Grapple, Potion)...',
                   hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
                   prefixIcon: const Icon(Icons.search, color: Colors.amber, size: 18),
                   filled: true,
@@ -263,14 +443,36 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildList(_standardActions),
-                  _buildList(_bonusActions),
+                  _buildList(standardActions),
+                  _buildList(bonusActions),
                   _buildList(_reactions),
                   _buildList(_coverRules),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditionChip({required String label, required bool isActive, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.amber : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? Colors.black : Colors.white70,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

@@ -4,16 +4,22 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-126%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-139%20Passing-brightgreen.svg)](test)
 [![SRD 5.1](https://img.shields.io/badge/Rules-SRD%205.1%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
-A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **12 dedicated player tools**, including simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, rich theme customization, and a cryptographically secure random number generator.
+A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **13 dedicated player & DM tools**, including a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, rich theme customization, and a cryptographically secure random number generator.
 
 ---
 
 ## ✨ Key Features & Suite of Tools
 
-### 🎲 1. Core Dice Roller & 3D Polyhedral Physics
+### 🛡️ 1. DM's Screen & Dual Rulebook Engine (2014 RAW vs 2024 Revised)
+* **2014 vs 2024 Rules Switch**: Seamlessly toggle between 2014 5e RAW rules and the 2024 Revised rules across all combat mechanics, conditions, environment hazards, DCs, resting, and spell limits.
+* **Side-by-Side Edition Comparison**: Interactive comparison dialogs and "2024 Diff" badges highlighting every major rule revision (e.g., -2 Exhaustion per level, Unarmed Strike Save DCs, Bonus Action potions, and Disadvantage Initiative for surprise).
+* **Instant Keyword Search & Category Filters**: Search across all rule definitions, conditions, actions, exploration rates, and improvised damage tables.
+* **Quick DM Roller**: Instant d20, d100, d12, d8, and d6 roller bar directly inside the DM screen.
+
+### 🎲 2. Core Dice Roller & 3D Polyhedral Physics
 * **Multi-Dice Pools**: Roll any combination of standard polyhedral RPG dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, `d1000`, etc.).
 * **3D Polyhedral Visualizer**: Real-time 3D rendered dice rolling with realistic angular momentum, winning-face illumination, natural 20 critical burst particle effects, and screen shake.
 * **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
@@ -21,13 +27,13 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **JSON Presets**: Save custom dice formulas (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.
 * **Haptic Feedback**: Multi-level tactile vibration triggers (Off, Light Ticks, Heavy Combat Rumble) for dice clicks, roll animations, and critical successes.
 
-### 🌐 2. Live Multiplayer Dice Rooms
+### 🌐 3. Live Multiplayer Dice Rooms
 * **Real-Time Synchronization**: Connect to shared dice rooms powered by Firebase Firestore for live party transparency.
 * **6-Character Room Codes**: Simple 6-character alphanumeric room codes (`ROOM-XXXXXX`) with input sanitization and random code generation.
 * **Live Connection Status**: Visual status banner indicating active room connection, participant display names, and real-time roll event feeds.
 * **Ephemeral Architecture**: Stream-only roll broadcasts designed for privacy and minimal latency without permanent data harvesting.
 
-### 🔮 3. Spell Minion Companions (6 Tools)
+### 🔮 4. Spell Minion Companions (6 Tools)
 * **⚔️ Animate Objects Companion**: Enforces RAW point budgets (10 pts at 5th level up to 18 pts at 9th level) across Tiny, Small, Medium, Large, and Huge animated objects.
 * **🐾 Conjure Animals Squad Manager**: Summons 8 Wolves (CR 1/4) at 3rd level up to 32 beasts at 9th level with built-in **Pack Tactics** advantage detection.
 * **💀 Animate Dead Squad Tracker**: Manages Skeleton archers and Zombie frontline HP, tracking upcast limits from 1 to 13 undead.
@@ -35,32 +41,32 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **🌋 Conjure Elementals Companion**: Manages Air, Earth, Fire, and Water Elementals (CR 5+) and swarms of Mephits/Gargoyles.
 * **🦗 Giant Insect Squad Tracker**: Transforms ordinary insects into Giant Centipedes (10), Giant Wasps (5), or Giant Spiders (3).
 
-### 📯 4. Magic Item Rollers & Minions (5 Tools)
+### 📯 5. Magic Item Rollers & Minions (5 Tools)
 * **👜 Gray Bag of Tricks**: Roll d8 on the Gray Bag table (Weasel, Giant Rat, Badger, Boar, Panther, Giant Badger, Dire Wolf, or Giant Elk).
 * **👜 Rust Bag of Tricks**: Roll d8 on the Rust Bag table (Rat, Owl, Mastiff, Goat, Giant Goat, Giant Boar, Lion, or Brown Bear).
 * **👜 Tan Bag of Tricks**: Roll d8 on the Tan Bag table (Jackal, Ape, Baboon, Axe Beak, Black Bear, Giant Weasel, Giant Hyena, or Tiger).
 * **📯 Horn of Valhalla Roller**: Roll variant Berserker squads for Silver (2d4+2), Brass (3d4+3), Bronze (4d4+4), and Iron (5d4+5) horns.
 * **🗿 Figurines of Wondrous Power**: Animates Bronze Griffon, Onyx Dog (with Pack Tactics), and Marble Elephant statblocks with batch rolling.
 
-### ⚔️ 5. Instant Batch Attack Roller & HP Tracker
+### ⚔️ 6. Instant Batch Attack Roller & HP Tracker
 * **Batch Attack Engine**: Roll attack and damage for up to 50 minions simultaneously against target AC with Advantage, Disadvantage, Normal rolling, and RAW Critical Hit doubling.
 * **Live Squad HP Tracker**: Visual progress bars per minion, custom creature naming, quick +/- HP adjustments, direct HP input, and damage resistance markers.
 * **Mass Damage & Group Healing**: AoE damage and healing modal to apply group HP changes across all minions or selected squads with full/half damage saving throw calculations.
 * **Creature Stat Block Dialog**: Interactive full statblock inspection for every summoned minion (AC, HP, Speed, Ability Scores, Actions, Traits, Senses, and Languages).
 
-### 📖 6. Tactical Reference & Rules Engine
+### 📖 7. Tactical Reference & Rules Engine
 * **Action Economy Guide**: Interactive breakdown of Actions, Bonus Actions, Reactions, Movement, and Free Object Interactions.
 * **5e Condition Reference**: Instant lookup for all 15 SRD conditions (Blinded, Charmed, Frightened, Grappled, Paralyzed, Poisoned, Prone, Restrained, Stunned, etc.) with tactical effects.
 * **Integrated SRD 5.1 Rulebook**: Interactive reference tables, stat cards, upcasting rules, and RAW tactical tips per tool.
 
-### 🎨 7. Theme Engine & User Preferences
+### 🎨 8. Theme Engine & User Preferences
 * **Theme Modes**: System, Dark Mode (default), and Light Mode.
 * **OLED Pitch Black**: Pure `#000000` background for AMOLED battery savings.
 * **Fantasy Accent Palettes**: Choose between `Paladin Gold`, `Eldritch Purple`, `Ranger Emerald`, and `Necrotic Slate`.
 * **Micro-Interactions & Performance**: Fine-grained toggles for Critical Hit & Fumble Effects (screen shake, rumble, and ember bursts), Spell Particle Canvas FX, 3D Dice Overlays, and a Performance/Battery Saver mode.
 * **Preferences Persistence**: Automatically saves user settings locally via `SharedPreferences`.
 
-### 🔒 8. Cryptographically Secure RNG & Production Security
+### 🔒 9. Cryptographically Secure RNG & Production Security
 * Built using Dart's native `Random.secure()` (`lib/utils/secure_random.dart`) to ensure completely unbiased, cryptographically secure random distribution.
 * **Strict Content Security Policy (CSP)** and Firebase security rules ensure robust client-side isolation and safe multi-user interactions.
 * **Data Minimization**: Zero PII collection, no account registration required, and complete user data sovereignty.

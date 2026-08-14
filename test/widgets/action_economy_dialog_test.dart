@@ -26,7 +26,7 @@ void main() {
     expect(find.text('Cover Rules'), findsOneWidget);
 
     // Standard action items visible
-    expect(find.text('Attack'), findsOneWidget);
+    expect(find.text('Attack & Weapon Swapping'), findsOneWidget);
     expect(find.text('Dash'), findsOneWidget);
     expect(find.text('Disengage'), findsOneWidget);
   });
@@ -45,7 +45,7 @@ void main() {
 
     expect(find.widgetWithText(Card, 'Dodge'), findsOneWidget);
     expect(find.widgetWithText(Card, 'Dash'), findsNothing);
-    expect(find.widgetWithText(Card, 'Attack'), findsNothing);
+    expect(find.widgetWithText(Card, 'Attack & Weapon Swapping'), findsNothing);
 
     // Clear search
     await tester.enterText(find.byType(TextField), '');
@@ -66,7 +66,7 @@ void main() {
     await tester.tap(find.text('Bonus Action'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Two-Weapon Fighting (Off-Hand)'), findsOneWidget);
+    expect(find.text('Drink or Administer a Potion (2024)'), findsOneWidget);
     expect(find.text('Bonus Action Spells'), findsOneWidget);
 
     // Tap Reaction tab
@@ -75,5 +75,25 @@ void main() {
 
     expect(find.text('Opportunity Attack'), findsOneWidget);
     expect(find.text('Reaction Spells'), findsOneWidget);
+  });
+
+  testWidgets('ActionEconomyDialog toggles to 2014 edition', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1200, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(createTestWidget());
+    await tester.pumpAndSettle();
+
+    // Default 2024: Attack card is "Attack & Weapon Swapping"
+    expect(find.text('Attack & Weapon Swapping'), findsOneWidget);
+
+    // Toggle 2014
+    await tester.tap(find.text('2014'));
+    await tester.pumpAndSettle();
+
+    // In 2014: Attack card title is "Attack"
+    expect(find.text('Attack'), findsOneWidget);
+    expect(find.text('Attack & Weapon Swapping'), findsNothing);
   });
 }
