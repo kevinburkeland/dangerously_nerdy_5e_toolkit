@@ -84,4 +84,30 @@ void main() {
 
     expect(find.text('Solo Mode'), findsOneWidget);
   });
+
+  testWidgets('JoinCreateRoomDialog submits and joins room when Enter key is pressed', (WidgetTester tester) async {
+    final roomService = DiceRoomService();
+    roomService.leaveRoom();
+
+    await tester.pumpWidget(createTestableWidget(
+      RoomBannerWidget(roomService: roomService),
+    ));
+
+    await tester.tap(find.text('Join / Create Room'));
+    await tester.pumpAndSettle();
+
+    // Enter name
+    await tester.enterText(find.widgetWithText(TextField, 'Your Display Name'), 'Legolas');
+    // Enter room code and submit via Enter (onSubmitted)
+    await tester.enterText(find.widgetWithText(TextField, 'Room Code'), 'ROOM-ELVEN');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('ROOM-ELVEN'), findsOneWidget);
+    expect(find.text('Player: Legolas'), findsOneWidget);
+    expect(roomService.activeRoomCode, 'ROOM-ELVEN');
+    expect(roomService.playerName, 'Legolas');
+
+    roomService.leaveRoom();
+  });
 }

@@ -19,19 +19,24 @@ class RollHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveRoomCode = activeRoomCode ?? roomService.activeRoomCode;
-    final effectivePlayerName = playerName ?? roomService.playerName;
+    return ValueListenableBuilder<RoomSession?>(
+      valueListenable: roomService.activeSessionNotifier,
+      builder: (context, session, _) {
+        final effectiveRoomCode = activeRoomCode ?? session?.roomCode ?? roomService.activeRoomCode;
+        final effectivePlayerName = playerName ?? session?.playerName ?? roomService.playerName;
 
-    if (effectiveRoomCode != null) {
-      return LiveRoomRollFeed(
-        roomCode: effectiveRoomCode,
-        playerName: effectivePlayerName,
-        roomService: roomService,
-      );
-    } else if (localHistory.isNotEmpty) {
-      return _buildLocalRollHistory();
-    }
-    return const SizedBox.shrink();
+        if (effectiveRoomCode != null && effectiveRoomCode.isNotEmpty) {
+          return LiveRoomRollFeed(
+            roomCode: effectiveRoomCode,
+            playerName: effectivePlayerName,
+            roomService: roomService,
+          );
+        } else if (localHistory.isNotEmpty) {
+          return _buildLocalRollHistory();
+        }
+        return const SizedBox.shrink();
+      },
+    );
   }
 
   Widget _buildLocalRollHistory() {

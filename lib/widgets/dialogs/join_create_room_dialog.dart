@@ -106,6 +106,8 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
             controller: _nameController,
             autofocus: widget.initialPlayerName == null || widget.initialPlayerName!.isEmpty,
             maxLength: 50,
+            textInputAction: TextInputAction.next,
+            onSubmitted: (_) => _submit(),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9 _\-\'\.]")),
             ],
@@ -127,6 +129,8 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
                 child: TextField(
                   controller: _roomController,
                   maxLength: 30,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _submit(),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\-]')),
                     TextInputFormatter.withFunction(

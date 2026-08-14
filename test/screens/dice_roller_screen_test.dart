@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 
 void main() {
   Widget createTestableWidget(Widget child) {
@@ -100,6 +101,31 @@ void main() {
 
     // Roll button now shows 1d14
     expect(find.widgetWithText(ElevatedButton, 'ROLL 1D14'), findsOneWidget);
+  });
+
+  testWidgets('Joining a room in DiceRollerScreen immediately activates Live Feed without manual state trigger', (WidgetTester tester) async {
+    final roomService = DiceRoomService();
+    roomService.leaveRoom();
+
+    await tester.pumpWidget(createTestableWidget(
+      DiceRollerScreen(roomService: roomService),
+    ));
+
+    // Initially no live feed
+    expect(find.textContaining('Live Feed:'), findsNothing);
+
+    // Join room via room service
+    roomService.joinRoom('ROOM-ALPHA', 'Frodo');
+    await tester.pumpAndSettle();
+
+    // Live room feed appears immediately without requiring any other user interaction
+    expect(find.text('Live Feed: ROOM-ALPHA'), findsOneWidget);
+    expect(find.text('Real-Time Sync'), findsOneWidget);
+
+    roomService.leaveRoom();
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Live Feed:'), findsNothing);
   });
 }
 
