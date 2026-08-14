@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
-import 'package:dangerously_nerdy_5e_toolkit/screens/dm_screen_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/dm_reference_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 
 void main() {
@@ -15,9 +15,9 @@ void main() {
     );
   }
 
-  group('DmScreenScreen Widget Tests', () {
+  group('DmReferenceScreen Widget Tests', () {
     testWidgets('renders DM Screen with title, quick roller, and cards', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       expect(find.text("DM's Screen"), findsOneWidget);
       expect(find.text('Quick Roller:'), findsOneWidget);
@@ -31,7 +31,7 @@ void main() {
     });
 
     testWidgets('toggling between 2014 and 2024 updates rule display', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen(initialEdition: DmRulesEdition.v2024)));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen(initialEdition: DmRulesEdition.v2024)));
 
       expect(find.text('Active: 2024 Revised'), findsOneWidget);
       expect(find.text('2024 Revised 5e Rulebook'), findsOneWidget);
@@ -47,7 +47,7 @@ void main() {
     });
 
     testWidgets('filtering by search query filters cards dynamically', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       final searchField = find.byType(TextField);
       expect(searchField, findsOneWidget);
@@ -60,7 +60,7 @@ void main() {
     });
 
     testWidgets('tapping quick dice rolls a result and displays banner', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       final d20Btn = find.text('d20');
       await tester.tap(d20Btn);
@@ -70,7 +70,7 @@ void main() {
     });
 
     testWidgets('tapping card opens Compare 2014 vs 2024 dialog', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       final attackCard = find.text('Attack Action & Extra Attack');
       expect(attackCard, findsOneWidget);
@@ -91,7 +91,7 @@ void main() {
     });
 
     testWidgets('tapping pin button on card pins rule to top section', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       // Initially no Pinned section header
       expect(find.textContaining('PINNED RULES'), findsNothing);
@@ -126,7 +126,7 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       // Pin first two cards
       final pinButtons = find.byTooltip('Pin rule to top');
@@ -151,7 +151,7 @@ void main() {
     });
 
     testWidgets('Pinned Only filter chip filters to only pinned rules', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       final pinButton = find.byTooltip('Pin rule to top').first;
       await tester.ensureVisible(pinButton);
@@ -173,7 +173,7 @@ void main() {
     });
 
     testWidgets('pin button inside compare dialog toggles pinned state', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+      await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       final attackCard = find.text('Attack Action & Extra Attack');
       await tester.ensureVisible(attackCard);
@@ -202,7 +202,7 @@ void main() {
       expect(find.text('PINNED RULES (1)'), findsOneWidget);
     });
 
-    testWidgets('LandingScreen launches DmScreenScreen from card and AppBar', (WidgetTester tester) async {
+    testWidgets('LandingScreen launches DmReferenceScreen from card and AppBar', (WidgetTester tester) async {
       await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
       // Find DM screen tool card
@@ -215,7 +215,7 @@ void main() {
       await tester.tap(dmCard);
       await tester.pumpAndSettle();
 
-      expect(find.byType(DmScreenScreen), findsOneWidget);
+      expect(find.byType(DmReferenceScreen), findsOneWidget);
       expect(find.text("DM's Screen"), findsOneWidget);
     });
   });

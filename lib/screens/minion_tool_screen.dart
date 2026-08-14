@@ -9,7 +9,9 @@ import '../widgets/animate_objects/active_session_card.dart';
 import '../widgets/batch_attack_dialog.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
+import '../widgets/dialogs/grant_temp_hp_dialog.dart';
 import '../widgets/dialogs/mass_damage_dialog.dart';
+import '../widgets/dialogs/squad_initiative_dialog.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
 import '../widgets/object_card.dart';
 import '../widgets/room_banner_widget.dart';
@@ -137,118 +139,32 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     final natRoll = secureRandom.nextInt(20) + 1;
     final total = natRoll + dexMod;
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.casino, color: Colors.amber, size: 24),
-            SizedBox(width: 8),
-            Text('Squad Initiative Roll', style: TextStyle(color: Colors.amber, fontSize: 18)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '$total',
-              style: const TextStyle(
-                color: Colors.amberAccent,
-                fontSize: 54,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'd20 ($natRoll) ${dexMod >= 0 ? "+$dexMod" : "$dexMod"} DEX modifier',
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Rolled for $minionName squad',
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close', style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-            icon: const Icon(Icons.refresh, color: Colors.black, size: 16),
-            label: const Text('Re-roll', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _rollSquadInitiative();
-            },
-          ),
-        ],
-      ),
+    SquadInitiativeDialog.show(
+      context,
+      total: total,
+      natRoll: natRoll,
+      dexMod: dexMod,
+      minionName: minionName,
+      onReroll: _rollSquadInitiative,
     );
   }
 
   Future<void> _grantGroupTempHp() async {
-    final controller = TextEditingController(text: '5');
-    int? amount;
-    try {
-      amount = await showDialog<int>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.health_and_safety, color: Colors.cyanAccent, size: 22),
-              SizedBox(width: 8),
-              Text('Grant Group Temp HP', style: TextStyle(color: Colors.cyanAccent, fontSize: 18)),
-            ],
-          ),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              labelText: 'Temporary HP Amount',
-              labelStyle: TextStyle(color: Colors.cyanAccent),
-              prefixIcon: Icon(Icons.shield, color: Colors.cyanAccent),
-              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent)),
-              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.cyanAccent, width: 2)),
-            ),
-            onSubmitted: (val) => Navigator.pop(ctx, int.tryParse(val)?.clamp(1, 999)),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.cyanAccent),
-              onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)?.clamp(1, 999)),
-              child: const Text('Grant Temp HP', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
+    HapticService.selectionTick(context);
+    final amount = await GrantTempHpDialog.show(context);
 
-    final safeAmount = amount;
-    if (safeAmount != null && safeAmount > 0 && mounted) {
+    if (amount != null && amount > 0 && mounted) {
       HapticService.heavyImpact(context);
       setState(() {
         for (final obj in _session.activeObjects) {
           if (!obj.isDead) {
-            obj.grantTempHp(safeAmount);
+            obj.grantTempHp(amount);
           }
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Granted +$safeAmount Temp HP to all living minions!'),
+          content: Text('Granted +$amount Temp HP to all living minions!'),
         ),
       );
     }
@@ -460,7 +376,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
                           obj.tempHp = newTemp;
                         });
                       },
-                      onNameChanged: (name) => setState(() => obj.name = name),
+                      onNameChanged: (name) => setState(() => _session.renameObject(obj.id, name)),
                     );
                   },
                 ),

@@ -103,7 +103,6 @@ enum ObjectSize {
     required this.defaultExample,
   });
 
-  int get armorClass => ac;
 
   String get damageFormula => DiceFormatters.formatFormula(
         count: damageDiceCount,

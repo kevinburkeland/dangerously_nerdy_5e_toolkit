@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
-import 'package:dangerously_nerdy_5e_toolkit/screens/dm_screen_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/dm_reference_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/interactive/pressable_card.dart';
 
 void main() {
@@ -60,7 +60,7 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('DmScreenScreen exposes header semantics on title and sections', (tester) async {
+    testWidgets('DmReferenceScreen exposes header semantics on title and sections', (tester) async {
       final handle = tester.ensureSemantics();
       tester.view.physicalSize = const Size(1200, 2000);
       tester.view.devicePixelRatio = 1.0;
@@ -68,7 +68,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: DmScreenScreen(),
+          home: DmReferenceScreen(),
         ),
       );
       await tester.pumpAndSettle();

@@ -183,7 +183,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   void _applyCustomPreset(CustomPreset preset) {
     HapticService.selectionTick(context);
     setState(() {
-      _dicePool = preset.diceEntries.map((e) => e.copyWith()).toList();
+      _dicePool = List.of(preset.diceEntries);
       _modifier = preset.modifier;
       _rollMode = preset.rollMode;
     });

@@ -7,19 +7,19 @@ import '../theme/app_theme.dart';
 import '../utils/secure_random.dart';
 import '../widgets/interactive/pressable_card.dart';
 
-class DmScreenScreen extends StatefulWidget {
+class DmReferenceScreen extends StatefulWidget {
   final DmRulesEdition? initialEdition;
 
-  const DmScreenScreen({
+  const DmReferenceScreen({
     super.key,
     this.initialEdition,
   });
 
   @override
-  State<DmScreenScreen> createState() => _DmScreenScreenState();
+  State<DmReferenceScreen> createState() => _DmReferenceScreenState();
 }
 
-class _DmScreenScreenState extends State<DmScreenScreen> {
+class _DmReferenceScreenState extends State<DmReferenceScreen> {
   DmRulesEdition? _localEditionOverride;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -250,21 +250,23 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
             ],
           ),
           const Divider(height: 16, color: Colors.white12),
-          ...rules.map(
-            (r) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('• ', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
-                  Expanded(
-                    child: Text(
-                      r,
-                      style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.35),
-                    ),
-                  ),
-                ],
-              ),
+          ...rules.map((r) => _buildBulletRule(r, accentColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBulletRule(String text, Color bulletColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('• ', style: TextStyle(color: bulletColor, fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.35),
             ),
           ),
         ],
@@ -997,27 +999,7 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
           const Divider(height: 16, color: Colors.white10),
 
           // Rule Bullet points for current edition
-          ...activeRules.map(
-            (rule) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('• ', style: TextStyle(color: item.color, fontWeight: FontWeight.bold, fontSize: 13)),
-                  Expanded(
-                    child: Text(
-                      rule,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
-                        fontSize: 12.5,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          ...activeRules.map((rule) => _buildBulletRule(rule, item.color)),
 
           const SizedBox(height: 8),
 

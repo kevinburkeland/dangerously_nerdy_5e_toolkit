@@ -253,6 +253,11 @@ class SpellSession {
     activeObjects.removeWhere((obj) => obj.id == id);
   }
 
+  void renameObject(String id, String name) {
+    final obj = activeObjects.firstWhere((o) => o.id == id);
+    obj.name = name;
+  }
+
   void clearAll() {
     activeObjects.clear();
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../screens/dice_roller_screen.dart';
-import '../screens/dm_screen_screen.dart';
+import '../screens/dm_reference_screen.dart';
 import '../screens/minion_tool_screen.dart';
 import '../services/haptic_service.dart';
 
@@ -129,7 +129,7 @@ class LandingToolRegistry {
           onLaunch: (context) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const DmScreenScreen()),
+              MaterialPageRoute(builder: (_) => const DmReferenceScreen()),
             );
           },
         ),

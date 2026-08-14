@@ -1,7 +1,9 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
-/// Production-grade Logging and Crash Analytics Wrapper Service
-/// Handles PII redaction, non-fatal exception tracking, and debug logging.
+/// Logging and crash reporting wrapper.
+/// Outputs to [debugPrint] in debug builds. Forwards errors to
+/// FirebaseCrashlytics on non-web platforms (Crashlytics does not support web).
 class LoggingService {
   static final LoggingService _instance = LoggingService._internal();
   factory LoggingService() => _instance;
@@ -34,7 +36,8 @@ class LoggingService {
     }
   }
 
-  /// Logs non-fatal exceptions (e.g. caught Firestore timeouts or parse failures)
+  /// Logs non-fatal exceptions (e.g. caught Firestore timeouts or parse failures).
+  /// Forwards to FirebaseCrashlytics on non-web platforms.
   void logNonFatal(dynamic exception, StackTrace? stackTrace, {String? reason}) {
     final sanitizedReason = reason != null ? sanitizeMessage(reason) : 'Non-fatal error caught';
     if (kDebugMode) {
@@ -43,14 +46,31 @@ class LoggingService {
         debugPrint(stackTrace.toString());
       }
     }
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(
+        exception,
+        stackTrace,
+        reason: sanitizedReason,
+        fatal: false,
+      );
+    }
   }
 
-  /// Logs critical unhandled crashes captured by global error zones
+  /// Logs critical unhandled crashes captured by global error zones.
+  /// Forwards to FirebaseCrashlytics on non-web platforms.
   void logFatal(dynamic exception, StackTrace stackTrace, {String? reason}) {
     final sanitizedReason = reason != null ? sanitizeMessage(reason) : 'Unhandled fatal error';
     if (kDebugMode) {
       debugPrint('[FATAL CRASH] $sanitizedReason: $exception');
       debugPrint(stackTrace.toString());
+    }
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(
+        exception,
+        stackTrace,
+        reason: sanitizedReason,
+        fatal: true,
+      );
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,6 +22,9 @@ void main() {
         details.stack ?? StackTrace.current,
         reason: 'FlutterError.onError: ${details.context}',
       );
+      if (!kIsWeb) {
+        FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+      }
     };
 
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {

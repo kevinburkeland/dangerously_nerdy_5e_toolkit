@@ -6,7 +6,7 @@ import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/legal_dialogs.dart';
-import 'dm_screen_screen.dart';
+import 'dm_reference_screen.dart';
 import 'settings_screen.dart';
 
 class LandingScreen extends StatefulWidget {
@@ -86,7 +86,7 @@ class _LandingScreenState extends State<LandingScreen> {
             icon: const Icon(Icons.shield_outlined, color: Colors.amberAccent),
             tooltip: "DM's Screen & Rulebook (2014 / 2024)",
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DmScreenScreen()),
+              MaterialPageRoute(builder: (_) => const DmReferenceScreen()),
             ),
           ),
           IconButton(

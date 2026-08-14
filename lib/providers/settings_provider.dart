@@ -54,7 +54,7 @@ class SettingsProvider extends ChangeNotifier {
       rulesEdition: editionIndex != null && editionIndex >= 0 && editionIndex < DmRulesEdition.values.length
           ? DmRulesEdition.values[editionIndex]
           : _settings.rulesEdition,
-      pinnedRuleIds: pinnedList != null ? pinnedList.toSet() : _settings.pinnedRuleIds,
+      pinnedRuleIds: pinnedList?.toSet() ?? _settings.pinnedRuleIds,
     );
     notifyListeners();
   }
@@ -125,11 +125,10 @@ class SettingsScope extends InheritedNotifier<SettingsProvider> {
     required super.child,
   }) : super(notifier: notifier);
 
-  static final SettingsProvider _defaultInstance = SettingsProvider();
-
   static SettingsProvider of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<SettingsScope>();
-    return scope?.notifier ?? _defaultInstance;
+    assert(scope != null, 'SettingsScope.of() called without a SettingsScope ancestor in the widget tree.');
+    return scope!.notifier!;
   }
 
   static SettingsProvider? maybeOf(BuildContext context) {
