@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/srd_summons.dart';
+import '../services/haptic_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
+import '../widgets/interactive/pressable_card.dart';
 import '../widgets/legal_dialogs.dart';
 import 'dice_roller_screen.dart';
 import 'minion_tool_screen.dart';
+import 'settings_screen.dart';
 
 class _LandingToolItem {
   final String id;
@@ -308,12 +311,11 @@ class _LandingScreenState extends State<LandingScreen> {
     final query = _searchQuery.trim();
     final isSearching = query.isNotEmpty;
     final searchResults = _tools.where((t) => t.matches(query)).toList();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF14121E),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1B2E),
-        elevation: 4,
+        elevation: 2,
         title: Row(
           children: [
             Image.asset('assets/images/logo.png', width: 36, height: 36),
@@ -323,7 +325,6 @@ class _LandingScreenState extends State<LandingScreen> {
                 'DangerouslyNerdy 5e Toolkit',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
                 ),
@@ -338,12 +339,19 @@ class _LandingScreenState extends State<LandingScreen> {
             onPressed: () => ActionEconomyDialog.show(context),
           ),
           IconButton(
-            icon: const Icon(Icons.medical_information_outlined, color: Colors.cyanAccent),
+            icon: Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary),
             tooltip: 'Status Effects & Conditions Guide',
             onPressed: () => ConditionReferenceDialog.show(context),
           ),
-          const IconButton(
-            icon: Icon(Icons.download_for_offline, color: Colors.cyanAccent),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Preferences & Theme Settings',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.download_for_offline, color: theme.colorScheme.primary),
             tooltip: 'Install App',
             onPressed: PwaHelper.promptInstall,
           ),
@@ -364,16 +372,12 @@ class _LandingScreenState extends State<LandingScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF2E2452), Color(0xFF1E1B2E)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.4),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -389,7 +393,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.cyanAccent.withValues(alpha: 0.3),
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                                     blurRadius: 12,
                                     spreadRadius: 2,
                                   ),
@@ -398,11 +402,11 @@ class _LandingScreenState extends State<LandingScreen> {
                               child: Image.asset('assets/images/logo.png', width: 68, height: 68),
                             ),
                             const SizedBox(width: 16),
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Select a Tool',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: theme.colorScheme.onSurface,
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -411,9 +415,13 @@ class _LandingScreenState extends State<LandingScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Choose from the DangerouslyNerdy suite of dedicated 5th Edition (5e) compatible player tools designed for minion combat management, magic item rollers, dice math, and live party rooms.',
-                          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ),
@@ -424,15 +432,15 @@ class _LandingScreenState extends State<LandingScreen> {
                   // HIGH-CONTRAST SEARCH BAR
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1B2E),
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSearching ? Colors.cyanAccent.withValues(alpha: 0.6) : Colors.white12,
+                        color: isSearching ? theme.colorScheme.primary : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
                         width: 1.2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: isSearching ? Colors.cyanAccent.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.2),
+                          color: isSearching ? theme.colorScheme.primary.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -441,15 +449,15 @@ class _LandingScreenState extends State<LandingScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: _onSearchChanged,
-                      style: const TextStyle(color: Colors.white, fontSize: 15),
-                      cursorColor: Colors.cyanAccent,
+                      style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15),
+                      cursorColor: theme.colorScheme.primary,
                       decoration: InputDecoration(
                         hintText: 'Search tools, spells, summons (e.g. wolves, dice, undead, bag)...',
-                        hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
-                        prefixIcon: const Icon(Icons.search, color: Colors.cyanAccent, size: 22),
+                        hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 14),
+                        prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary, size: 22),
                         suffixIcon: isSearching
                             ? IconButton(
-                                icon: const Icon(Icons.clear_rounded, color: Colors.white60, size: 20),
+                                icon: Icon(Icons.clear_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), size: 20),
                                 tooltip: 'Clear Search',
                                 onPressed: _clearSearch,
                               )
@@ -466,7 +474,7 @@ class _LandingScreenState extends State<LandingScreen> {
                     // SEARCH RESULTS SECTION
                     _buildSectionHeader(
                       '🔍 SEARCH RESULTS (${searchResults.length})',
-                      Colors.cyanAccent,
+                      theme.colorScheme.primary,
                     ),
                     const SizedBox(height: 12),
                     if (searchResults.isNotEmpty)
@@ -479,30 +487,30 @@ class _LandingScreenState extends State<LandingScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1E1B2E),
+                          color: theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white12),
+                          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.search_off, size: 48, color: Colors.white38),
+                            Icon(Icons.search_off, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
                             const SizedBox(height: 12),
                             Text(
                               'No tools found matching "$query"',
-                              style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               'Try searching for spells, monsters, or dice keywords.',
-                              style: TextStyle(color: Colors.white38, fontSize: 13),
+                              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 13),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.cyanAccent,
-                                foregroundColor: Colors.black,
+                                backgroundColor: theme.colorScheme.primary,
+                                foregroundColor: theme.colorScheme.onPrimary,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
                               onPressed: _clearSearch,
@@ -514,7 +522,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       ),
                   ] else ...[
                     // CATEGORY 1: GENERAL UTILITIES (CORE APP AT TOP)
-                    _buildSectionHeader('🎲 CORE UTILITIES', Colors.cyanAccent),
+                    _buildSectionHeader('🎲 CORE UTILITIES', theme.colorScheme.primary),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -524,10 +532,10 @@ class _LandingScreenState extends State<LandingScreen> {
                           .toList(),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
-                    // CATEGORY 2: SPELL MINION TOOLS
-                    _buildSectionHeader('🔮 SPELL MINION COMPANIONS', Colors.amber),
+                    // CATEGORY 2: SPELL MINION COMPANIONS (ANIMATE OBJECTS & CONJURE SPELLS)
+                    _buildSectionHeader('🔮 SPELL MINION COMPANIONS', theme.colorScheme.secondary),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -537,10 +545,10 @@ class _LandingScreenState extends State<LandingScreen> {
                           .toList(),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
-                    // CATEGORY 3: MAGIC ITEM TOOLS
-                    _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS', Colors.purpleAccent),
+                    // CATEGORY 3: MAGIC ITEMS & SUMMONING ARTIFACTS
+                    _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS', Colors.amberAccent),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -553,44 +561,60 @@ class _LandingScreenState extends State<LandingScreen> {
 
                   const SizedBox(height: 40),
 
-                  // LEGAL & PRIVACY FOOTER LINKS
+                  // FOOTER
                   Center(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 12,
-                      runSpacing: 8,
+                    child: Column(
                       children: [
-                        TextButton(
-                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                          onPressed: () => LegalDialogs.showPrivacyPolicy(context),
-                          child: const Text(
-                            'Privacy Policy',
-                            style: TextStyle(color: Colors.white38, fontSize: 12),
+                        Text(
+                          'DangerouslyNerdy 5e Toolkit • D&D 5e / SRD 5.1 Compatible Combat System',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            fontSize: 12,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
-                        TextButton(
-                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                          onPressed: () => LegalDialogs.showTermsOfService(context),
-                          child: const Text(
-                            'Terms of Service',
-                            style: TextStyle(color: Colors.white38, fontSize: 12),
-                          ),
-                        ),
-                        const Text('•', style: TextStyle(color: Colors.white24, fontSize: 12)),
-                        TextButton(
-                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                          onPressed: () => LegalDialogs.showAttribution(context),
-                          child: const Text(
-                            'Legal & SRD 5.1 Attribution',
-                            style: TextStyle(color: Colors.white38, fontSize: 12),
-                          ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 12,
+                          children: [
+                            TextButton(
+                              onPressed: () => LegalDialogs.showPrivacyPolicy(context),
+                              child: Text(
+                                'Privacy Policy',
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => LegalDialogs.showTermsOfService(context),
+                              child: Text(
+                                'Terms of Service',
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => LegalDialogs.showAttribution(context),
+                              child: Text(
+                                'Legal & SRD 5.1 Attribution',
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -620,42 +644,31 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   Widget _buildSectionHeader(String title, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 18,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 4.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
         ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: TextStyle(
-            color: color,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildToolGrid(BuildContext context, {required List<Widget> children}) {
+    final width = MediaQuery.of(context).size.width;
+    final int crossAxisCount = width > 900 ? 3 : (width > 600 ? 2 : 1);
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        int crossAxisCount = constraints.maxWidth > 700 ? 2 : 1;
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: crossAxisCount == 2 ? 1.6 : 1.7,
-          children: children,
+        final double itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 16)) / crossAxisCount;
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: children.map((c) => SizedBox(width: itemWidth, child: c)).toList(),
         );
       },
     );
@@ -671,7 +684,7 @@ class _LandingScreenState extends State<LandingScreen> {
       accentColor: item.accentColor,
       description: item.description,
       onTap: () {
-        HapticFeedback.selectionClick();
+        HapticService.selectionTick(context);
         item.onLaunch(context);
       },
     );
@@ -687,86 +700,85 @@ class _LandingScreenState extends State<LandingScreen> {
     required String description,
     required VoidCallback onTap,
   }) {
-    return Card(
-      color: const Color(0xFF1E1B2E),
-      elevation: 4,
+    final theme = Theme.of(context);
+
+    return PressableCard(
+      onTap: onTap,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: accentColor.withValues(alpha: 0.3), width: 1.5),
+        side: BorderSide(color: accentColor.withValues(alpha: 0.35), width: 1.5),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(18.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icon, color: accentColor, size: 26),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
-                    ),
-                    child: Text(
-                      badgeText,
-                      style: TextStyle(
-                        color: badgeColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Icon(icon, color: accentColor, size: 26),
               ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white60, fontSize: 13, height: 1.3),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Launch Tool',
-                    style: TextStyle(
-                      color: accentColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    color: badgeColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
-                ],
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontSize: 13,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                'Launch Tool',
+                style: TextStyle(
+                  color: accentColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.arrow_forward_ios, color: accentColor, size: 14),
+            ],
+          ),
+        ],
       ),
     );
   }

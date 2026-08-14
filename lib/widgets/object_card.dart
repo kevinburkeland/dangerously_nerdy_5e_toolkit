@@ -66,7 +66,9 @@ class ObjectCard extends StatelessWidget {
           width: isDead ? 1 : 1.5,
         ),
       ),
-      color: isDead ? const Color(0xFF14121A) : const Color(0xFF1E1A2E),
+      color: isDead
+          ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+          : (theme.cardTheme.color ?? theme.colorScheme.surface),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(

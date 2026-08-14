@@ -3,16 +3,18 @@ import 'package:flutter/services.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons.dart';
+import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
 import '../widgets/animate_objects/active_session_card.dart';
-import '../widgets/object_card.dart';
 import '../widgets/batch_attack_dialog.dart';
-import '../widgets/squad_builder.dart';
-import '../widgets/spell_reference.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/dialogs/mass_damage_dialog.dart';
+import '../widgets/fx/critical_effect_overlay.dart';
+import '../widgets/object_card.dart';
 import '../widgets/room_banner_widget.dart';
+import '../widgets/spell_reference.dart';
+import '../widgets/squad_builder.dart';
 
 class MinionToolScreen extends StatefulWidget {
   final SummonPreset preset;
@@ -33,6 +35,7 @@ class MinionToolScreen extends StatefulWidget {
 class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerProviderStateMixin {
   late SpellSession _session;
   late TabController _tabController;
+  final CriticalEffectController _critController = CriticalEffectController();
 
   // Shared Room state
   String? _activeRoomCode;
@@ -133,7 +136,8 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   Future<void> _showMassDamageDialog() async {
     final dmg = await MassDamageDialog.show(context);
     if (dmg != null && dmg > 0 && mounted) {
-      HapticFeedback.heavyImpact();
+      HapticService.heavyImpact(context);
+      _critController.trigger(CritEffectType.critFumble);
       setState(() {
         _session.applyGroupDamage(dmg);
       });
@@ -249,7 +253,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     );
 
     if (amount != null && amount > 0 && mounted) {
-      HapticFeedback.mediumImpact();
+      HapticService.heavyImpact(context);
       setState(() {
         for (final obj in _session.activeObjects) {
           if (!obj.isDead) {
@@ -259,30 +263,23 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Granted +$amount Temp HP to all ${_session.activeObjects.where((o) => !o.isDead).length} living minions!'),
-          backgroundColor: const Color(0xFF242038),
-          behavior: SnackBarBehavior.floating,
+          content: Text('Granted +$amount Temp HP to all living minions!'),
         ),
       );
     }
   }
 
   Future<void> _confirmClearSquad() async {
-    if (_session.activeObjects.isEmpty) return;
+    HapticService.selectionTick(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF242038),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Clear Active Squad?', style: TextStyle(color: Colors.redAccent)),
-        content: Text(
-          'This will remove all ${_session.activeObjects.length} active minions from your active session. This cannot be undone.',
-          style: const TextStyle(color: Colors.white70),
-        ),
+        title: const Text('Clear Squad'),
+        content: const Text('Remove all summoned minions and reset squad points?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -293,7 +290,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       ),
     );
     if (confirm == true && mounted) {
-      HapticFeedback.mediumImpact();
+      HapticService.heavyImpact(context);
       setState(() => _session.clearAll());
     }
   }
@@ -304,127 +301,130 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     final titleText = widget.customTitle ?? widget.preset.name;
     final screenWidth = MediaQuery.of(context).size.width;
     final isDualPane = screenWidth >= 950;
+    final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1B2E),
-        elevation: 4,
-        leading: canPop
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.amber),
-                tooltip: 'Back to Hub',
-                onPressed: () => Navigator.pop(context),
-              )
-            : null,
-        title: Row(
-          children: [
-            Image.asset('assets/images/logo.png', width: 32, height: 32),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                titleText,
-                style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 17),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.flash_on, color: Colors.amber),
-            tooltip: 'Combat Action Economy Guide',
-            onPressed: () => ActionEconomyDialog.show(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.medical_information_outlined, color: Colors.cyanAccent),
-            tooltip: 'Status Effects & Conditions Guide',
-            onPressed: () => ConditionReferenceDialog.show(context),
-          ),
-          // Spell Slot Level Picker Dropdown (for spell presets)
-          if (!widget.preset.isRandomTable && widget.preset.id != 'figurines_of_wondrous_power')
-            Container(
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black38,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: _session.spellLevel,
-                  dropdownColor: const Color(0xFF242038),
-                  icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
-                  items: List.generate(9, (index) {
-                    int lvl = index + 1;
-                    return DropdownMenuItem(
-                      value: lvl,
-                      child: Text(
-                        'Slot Lvl $lvl',
-                        style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    );
-                  }),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() {
-                        _session.spellLevel = val;
-                      });
-                    }
-                  },
+    return CriticalEffectOverlay(
+      controller: _critController,
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 2,
+          leading: canPop
+              ? IconButton(
+                  icon: Icon(Icons.arrow_back, color: theme.colorScheme.primary),
+                  tooltip: 'Back to Hub',
+                  onPressed: () => Navigator.pop(context),
+                )
+              : null,
+          title: Row(
+            children: [
+              Image.asset('assets/images/logo.png', width: 32, height: 32),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  titleText,
+                  style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 17),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.flash_on, color: Colors.amber),
+              tooltip: 'Combat Action Economy Guide',
+              onPressed: () => ActionEconomyDialog.show(context),
             ),
-        ],
-        bottom: isDualPane
-            ? null
-            : TabBar(
-                controller: _tabController,
-                indicatorColor: Colors.amber,
-                labelColor: Colors.amber,
-                unselectedLabelColor: Colors.white54,
-                tabs: const [
-                  Tab(icon: Icon(Icons.shield_outlined), text: 'Active Squad'),
-                  Tab(icon: Icon(Icons.menu_book), text: 'Minion Rulebook'),
-                ],
-              ),
-      ),
-      body: isDualPane
-          ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // LEFT PANE: SQUAD TRACKER (55% Width)
-                Expanded(
-                  flex: 11,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                      ),
-                    ),
-                    child: _buildActiveSquadView(),
+            IconButton(
+              icon: Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary),
+              tooltip: 'Status Effects & Conditions Guide',
+              onPressed: () => ConditionReferenceDialog.show(context),
+            ),
+            // Spell Slot Level Picker Dropdown (for spell presets)
+            if (!widget.preset.isRandomTable && widget.preset.id != 'figurines_of_wondrous_power')
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.4)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _session.spellLevel,
+                    dropdownColor: theme.colorScheme.surface,
+                    icon: Icon(Icons.arrow_drop_down, color: theme.colorScheme.primary),
+                    items: List.generate(9, (index) {
+                      int lvl = index + 1;
+                      return DropdownMenuItem(
+                        value: lvl,
+                        child: Text(
+                          'Slot Lvl $lvl',
+                          style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      );
+                    }),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _session.spellLevel = val;
+                        });
+                      }
+                    },
                   ),
                 ),
-                // RIGHT PANE: RULEBOOK & CREATURE PROFILES (45% Width)
-                Expanded(
-                  flex: 9,
-                  child: SpellReferenceWidget(initialPreset: _session.activePreset),
-                ),
-              ],
-            )
-          : Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1000),
-                child: TabBarView(
+              ),
+          ],
+          bottom: isDualPane
+              ? null
+              : TabBar(
                   controller: _tabController,
-                  children: [
-                    _buildActiveSquadView(),
-                    SpellReferenceWidget(initialPreset: _session.activePreset),
+                  indicatorColor: theme.colorScheme.primary,
+                  labelColor: theme.colorScheme.primary,
+                  unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                  tabs: const [
+                    Tab(icon: Icon(Icons.shield_outlined), text: 'Active Squad'),
+                    Tab(icon: Icon(Icons.menu_book), text: 'Minion Rulebook'),
                   ],
                 ),
+        ),
+        body: isDualPane
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // LEFT PANE: SQUAD TRACKER (55% Width)
+                  Expanded(
+                    flex: 11,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                        ),
+                      ),
+                      child: _buildActiveSquadView(),
+                    ),
+                  ),
+                  // RIGHT PANE: RULEBOOK & CREATURE PROFILES (45% Width)
+                  Expanded(
+                    flex: 9,
+                    child: SpellReferenceWidget(initialPreset: _session.activePreset),
+                  ),
+                ],
+              )
+            : Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildActiveSquadView(),
+                      SpellReferenceWidget(initialPreset: _session.activePreset),
+                    ],
+                  ),
+                ),
               ),
-            ),
+      ),
     );
   }
 

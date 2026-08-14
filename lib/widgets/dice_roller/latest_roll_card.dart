@@ -60,34 +60,37 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final customColors = theme.extension<TabletopColors>() ?? TabletopColors.dark;
+
     if (widget.latestResult == null) {
       return Container(
         constraints: const BoxConstraints(minHeight: 76),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1B2E),
+          color: theme.cardTheme.color ?? theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.casino_outlined, size: 28, color: Colors.white24),
-            SizedBox(width: 10),
-            Text('Tap ROLL to roll the dice!',
-                style: TextStyle(color: Colors.white54, fontSize: 14)),
+            Icon(Icons.casino_outlined, size: 28, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+            const SizedBox(width: 10),
+            Text(
+              'Tap ROLL to roll the dice!',
+              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+            ),
           ],
         ),
       );
     }
 
-    final theme = Theme.of(context);
-    final customColors = theme.extension<TabletopColors>() ?? TabletopColors.dark;
     final res = widget.latestResult!;
 
-    Color borderColor = Colors.cyanAccent.withValues(alpha: 0.5);
-    Color totalColor = Colors.cyanAccent;
+    Color borderColor = theme.colorScheme.primary.withValues(alpha: 0.5);
+    Color totalColor = theme.colorScheme.primary;
     String badgeText = '';
 
     if (res.isCrit) {
@@ -110,7 +113,7 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF1B172B),
+            color: theme.cardTheme.color ?? theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: borderColor, width: res.isCrit || res.isFumble ? 2.5 : 1.5),
             boxShadow: [
