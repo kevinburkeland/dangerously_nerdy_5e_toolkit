@@ -1,0 +1,43 @@
+name: ✨ Feature Request
+description: Propose a new 5e companion tool, dice rolling option, or quality-of-life feature.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make DangerouslyNerdy 5e Toolkit even more useful for players and DMs? Share it below!
+
+  - type: textarea
+    id: feature_summary
+    attributes:
+      label: Feature Summary
+      description: A concise summary of the proposed feature or improvement.
+      placeholder: Add a dedicated Initiative & Turn Tracker companion tool.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_solved
+    attributes:
+      label: Problem & Motivation
+      description: What problem does this solve or what game table pain point does this address?
+      placeholder: Managing large combat rounds with multiple players and 10 summons takes too much table time...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution / User Experience
+      description: Describe how the feature should look and work in the app.
+      placeholder: A dual-column layout with drag-to-reorder cards, condition chips, and round counter...
+    validations:
+      required: true
+
+  - type: textarea
+    id: dnd_rules_alignment
+    attributes:
+      label: 5e Rules / SRD Context
+      description: If applicable, cite the 5e SRD rules or table mechanics relevant to this request.
+      placeholder: SRD 5.1 Combat / Initiative rules (2014 & 2024 revisions).
