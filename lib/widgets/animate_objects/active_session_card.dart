@@ -34,7 +34,6 @@ class ActiveSessionHeader extends StatelessWidget {
       color: const Color(0xFF191626),
       child: Column(
         children: [
-          // Budget Bar
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -65,8 +64,6 @@ class ActiveSessionHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-
-          // Quick Action Buttons
           Row(
             children: [
               Expanded(

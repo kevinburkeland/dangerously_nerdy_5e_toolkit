@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../utils/dice_formatters.dart';
 import 'srd_summons.dart';
 
 /// Represents standard 5e animated object size classifications and combat metrics.
@@ -104,8 +105,11 @@ enum ObjectSize {
 
   int get armorClass => ac;
 
-  String get damageFormula =>
-      '${damageDiceCount}d$damageDiceSides${damageBonus > 0 ? "+$damageBonus" : damageBonus < 0 ? "$damageBonus" : ""}';
+  String get damageFormula => DiceFormatters.formatFormula(
+        count: damageDiceCount,
+        sides: damageDiceSides,
+        bonus: damageBonus,
+      );
 
   /// Safe parser mapping raw string inputs to [ObjectSize] with fallback.
   static ObjectSize fromString(String rawSize) {
@@ -247,16 +251,21 @@ class AnimatedObjectInstance {
 
   /// Formatted damage formula string (e.g., "1d4+4 Bludgeoning").
   String get damageFormula {
-    final bonusStr = damageBonus > 0
-        ? '+$damageBonus'
-        : damageBonus < 0
-            ? '$damageBonus'
-            : '';
-    final base = '${damageDiceCount}d$damageDiceSides$bonusStr';
+    final primary = DiceFormatters.formatFormula(
+      count: damageDiceCount,
+      sides: damageDiceSides,
+      bonus: damageBonus,
+      damageType: damageType,
+    );
     if (secondaryDamageDiceCount > 0 && secondaryDamageType != null && secondaryDamageType!.isNotEmpty) {
-      return '$base $damageType + ${secondaryDamageDiceCount}d$secondaryDamageDiceSides $secondaryDamageType';
+      final secondary = DiceFormatters.formatFormula(
+        count: secondaryDamageDiceCount,
+        sides: secondaryDamageDiceSides,
+        damageType: secondaryDamageType,
+      );
+      return '$primary + $secondary';
     }
-    return '$base $damageType';
+    return primary;
   }
 
   bool get isDead => _currentHp <= 0;

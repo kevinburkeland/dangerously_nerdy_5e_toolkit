@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
+import '../../utils/dice_formatters.dart';
 
 enum SummonCategory { spell, magicItem }
 
@@ -118,25 +119,38 @@ class MinionStatBlock {
     this.accentColor = const Color(0xFF673AB7),
   });
 
-  // Ability Score Modifiers
-  static int calcModifier(int score) => Dnd5eRulesEngine.calculateModifier(score);
+  static int calcModifier(int score) => score.dndModifier;
 
-  int get strMod => calcModifier(strScore);
-  int get dexMod => calcModifier(dexScore);
-  int get conMod => calcModifier(conScore);
-  int get intMod => calcModifier(intScore);
-  int get wisMod => calcModifier(wisScore);
-  int get chaMod => calcModifier(chaScore);
+  int get strMod => strScore.dndModifier;
+  int get dexMod => dexScore.dndModifier;
+  int get conMod => conScore.dndModifier;
+  int get intMod => intScore.dndModifier;
+  int get wisMod => wisScore.dndModifier;
+  int get chaMod => chaScore.dndModifier;
 
   static String formatMod(int mod) => mod >= 0 ? '+$mod' : '$mod';
 
-  String get primaryDamageFormula =>
-      '${damageDiceCount}d$damageDiceSides${damageBonus >= 0 ? "+$damageBonus" : "$damageBonus"}';
+  String get primaryDamageFormula => DiceFormatters.formatFormula(
+        count: damageDiceCount,
+        sides: damageDiceSides,
+        bonus: damageBonus,
+      );
 
   String get fullDamageFormula {
-    if (secondaryDamageDiceCount > 0 && secondaryDamageType != null) {
-      return '$primaryDamageFormula $damageType + ${secondaryDamageDiceCount}d$secondaryDamageDiceSides $secondaryDamageType';
+    final primary = DiceFormatters.formatFormula(
+      count: damageDiceCount,
+      sides: damageDiceSides,
+      bonus: damageBonus,
+      damageType: damageType,
+    );
+    if (secondaryDamageDiceCount > 0 && secondaryDamageType != null && secondaryDamageType!.isNotEmpty) {
+      final secondary = DiceFormatters.formatFormula(
+        count: secondaryDamageDiceCount,
+        sides: secondaryDamageDiceSides,
+        damageType: secondaryDamageType,
+      );
+      return '$primary + $secondary';
     }
-    return '$primaryDamageFormula $damageType';
+    return primary;
   }
 }

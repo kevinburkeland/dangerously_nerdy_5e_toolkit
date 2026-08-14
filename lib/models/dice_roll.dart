@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../utils/dice_formatters.dart';
 import '../utils/secure_random.dart';
 
 enum DieType {
@@ -205,13 +206,7 @@ class DiceRollResult {
 
   String get formulaString {
     final dicePart = diceEntries.map((e) => e.formulaString).join(' + ');
-
-    String modStr = '';
-    if (modifier > 0) {
-      modStr = ' + $modifier';
-    } else if (modifier < 0) {
-      modStr = ' - ${modifier.abs()}';
-    }
+    final modStr = DiceFormatters.formatModifierExpression(modifier);
 
     String advStr = '';
     if (rollMode == RollMode.advantage) advStr = ' (Adv)';

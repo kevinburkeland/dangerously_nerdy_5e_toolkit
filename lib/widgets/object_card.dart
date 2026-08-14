@@ -76,7 +76,6 @@ class ObjectCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Row 1: Size Pill, Name, and Quick Delete
             Row(
               children: [
                 Container(
@@ -140,8 +139,6 @@ class ObjectCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-
-            // Row 2: 1-Second Combat Stat HUD
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               decoration: BoxDecoration(
@@ -165,8 +162,6 @@ class ObjectCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-
-            // Row 3: Ergonomic HP Controls
             Row(
               children: [
                 _buildHpButton(
