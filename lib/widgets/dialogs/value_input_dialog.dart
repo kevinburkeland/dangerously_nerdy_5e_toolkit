@@ -80,6 +80,59 @@ class ValueInputDialog<T> extends StatefulWidget {
     );
   }
 
+  // --- Domain-Specific Semantic Helpers ---
+
+  /// Configures a custom polyhedral die with 2 to 1000 sides.
+  static Future<int?> showCustomDie(BuildContext context, {int initialSides = 7}) =>
+      showInt(
+        context,
+        title: 'Custom Sided Die',
+        icon: Icons.tune,
+        labelText: 'Number of Sides (2 to 1000)',
+        initialValue: initialSides,
+        min: 2,
+        max: 1000,
+        confirmLabel: 'Add Die',
+      );
+
+  /// Grants Temporary HP to the entire minion squad.
+  static Future<int?> showGroupTempHp(BuildContext context) =>
+      showInt(
+        context,
+        title: 'Grant Group Temp HP',
+        icon: Icons.health_and_safety,
+        accentColor: Theme.of(context).colorScheme.secondary,
+        labelText: 'Temporary HP Amount',
+        initialValue: 5,
+        min: 1,
+        max: 999,
+        confirmLabel: 'Grant Temp HP',
+      );
+
+  /// Applies AoE damage to all active squad minions.
+  static Future<int?> showMassDamage(BuildContext context) =>
+      showInt(
+        context,
+        title: 'Apply Group Damage',
+        icon: Icons.local_fire_department,
+        accentColor: Theme.of(context).colorScheme.error,
+        labelText: 'Damage Amount to ALL minions',
+        min: 1,
+        max: 999,
+        confirmLabel: 'Apply Damage',
+      );
+
+  /// Renames an active summon or minion instance.
+  static Future<String?> showRename(BuildContext context, {required String initialName}) =>
+      showText(
+        context,
+        title: 'Rename Object',
+        icon: Icons.edit_note,
+        labelText: 'Custom Object Name',
+        initialValue: initialName,
+        confirmLabel: 'Save',
+      );
+
   @override
   State<ValueInputDialog<T>> createState() => _ValueInputDialogState<T>();
 }

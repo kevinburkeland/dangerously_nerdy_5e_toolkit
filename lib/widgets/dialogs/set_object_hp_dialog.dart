@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_dialog_frame.dart';
 
 class SetObjectHpResult {
   final int currentHp;
@@ -77,60 +78,43 @@ class _SetObjectHpDialogState extends State<SetObjectHpDialog> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Row(
+    return AppDialogFrame(
+      icon: Icons.favorite,
+      iconColor: colorScheme.primary,
+      title: 'Set HP: ${widget.objectName}',
+      maxWidth: 320,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.favorite, color: colorScheme.primary, size: 22),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Set HP: ${widget.objectName}',
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: colorScheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+          TextField(
+            controller: _hpController,
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            style: TextStyle(color: colorScheme.onSurface),
+            decoration: InputDecoration(
+              labelText: 'Current HP (Max ${widget.maxHp})',
+              prefixIcon: const Icon(Icons.shield_outlined, color: Colors.greenAccent),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: colorScheme.primary, width: 2),
               ),
             ),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _tempHpController,
+            keyboardType: TextInputType.number,
+            style: TextStyle(color: colorScheme.secondary),
+            decoration: InputDecoration(
+              labelText: 'Temporary HP (Absorbs damage first)',
+              prefixIcon: Icon(Icons.health_and_safety, color: colorScheme.secondary),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: colorScheme.secondary, width: 2),
+              ),
+            ),
+            onSubmitted: (_) => _submit(),
           ),
         ],
-      ),
-      content: SizedBox(
-        width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _hpController,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              style: TextStyle(color: colorScheme.onSurface),
-              decoration: InputDecoration(
-                labelText: 'Current HP (Max ${widget.maxHp})',
-                prefixIcon: const Icon(Icons.shield_outlined, color: Colors.greenAccent),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                ),
-              ),
-              onSubmitted: (_) => _submit(),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tempHpController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: colorScheme.secondary),
-              decoration: InputDecoration(
-                labelText: 'Temporary HP (Absorbs damage first)',
-                prefixIcon: Icon(Icons.health_and_safety, color: colorScheme.secondary),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorScheme.secondary, width: 2),
-                ),
-              ),
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
-        ),
       ),
       actions: [
         TextButton(
@@ -149,3 +133,4 @@ class _SetObjectHpDialogState extends State<SetObjectHpDialog> {
     );
   }
 }
+

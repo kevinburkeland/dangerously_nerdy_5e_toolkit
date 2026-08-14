@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../theme/app_theme.dart';
 
 /// Dynamic animated resource meter with fluid width interpolation and low-resource pulse alerts
@@ -61,7 +62,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
   void _syncAnimation() {
     final systemDisableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final performanceMode = SettingsScope.settingsOf(context, listen: false).performanceMode;
-    final ratio = widget.maxValue > 0 ? (widget.currentValue / widget.maxValue).clamp(0.0, 1.0) : 0.0;
+    final ratio = widget.currentValue.ratioOf(widget.maxValue);
     final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;
 
     if (systemDisableAnimations || performanceMode || !isCritical) {
@@ -87,7 +88,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
     final performanceMode = SettingsScope.settingsOf(context).performanceMode;
     final tabletop = Theme.of(context).extension<TabletopColors>();
-    final ratio = widget.maxValue > 0 ? (widget.currentValue / widget.maxValue).clamp(0.0, 1.0) : 0.0;
+    final ratio = widget.currentValue.ratioOf(widget.maxValue);
     final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;
     final activeColor = isCritical ? (widget.lowResourceColor ?? tabletop?.fumbleRed ?? Colors.red) : widget.fillColor;
 

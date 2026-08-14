@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../services/rules/dnd_5e_rules_engine.dart';
 import '../utils/dice_formatters.dart';
 import 'srd_summons/srd_summons_library.dart';
 
@@ -270,7 +271,7 @@ class AnimatedObjectInstance {
   bool get isDead => _currentHp <= 0;
 
   /// Safe calculation of remaining HP percentage, strictly protected against NaN / division-by-zero.
-  double get hpPercent => maxHp <= 0 ? 0.0 : (_currentHp / maxHp).clamp(0.0, 1.0);
+  double get hpPercent => _currentHp.ratioOf(maxHp);
 
   /// Mutating damage application with Temporary HP absorption (5e RAW).
   void takeDamage(int amount) {

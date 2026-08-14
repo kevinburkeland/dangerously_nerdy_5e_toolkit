@@ -12,9 +12,9 @@ import '../utils/dice_formatters.dart';
 import '../utils/secure_random.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
-import '../widgets/dialogs/custom_die_dialog.dart';
 import '../widgets/dialogs/preset_import_export_dialogs.dart';
 import '../widgets/dialogs/save_preset_dialog.dart';
+import '../widgets/dialogs/value_input_dialog.dart';
 import '../widgets/dice_roller/animated_dice_roller.dart';
 import '../widgets/dice_roller/dice_pool_builder.dart';
 import '../widgets/dice_roller/latest_roll_card.dart';
@@ -124,7 +124,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
 
   Future<void> _showCustomDieDialog() async {
     HapticService.selectionTick(context);
-    final sides = await CustomDieDialog.show(context, initialSides: _customSides);
+    final sides = await ValueInputDialog.showCustomDie(context, initialSides: _customSides);
     if (sides != null) {
       setState(() {
         _customSides = sides;
@@ -278,14 +278,18 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     if (text != null && text.isNotEmpty && mounted) {
       final messenger = ScaffoldMessenger.of(context);
       try {
-        final updated = await _presetService.importPresetsJson(text);
+        final result = await _presetService.importPresetsWithDiagnostics(text);
         if (mounted) {
           setState(() {
-            _userPresets = updated;
+            _userPresets = result.allPresets;
           });
+          final feedbackMsg = result.hasErrors
+              ? 'Imported ${result.newlyImportedCount} preset(s) (${result.failedCount} invalid entry skipped).'
+              : 'Successfully imported ${result.newlyImportedCount} custom preset(s)!';
           messenger.showSnackBar(
             SnackBar(
-              content: Text('Successfully imported ${updated.length} custom presets!'),
+              content: Text(feedbackMsg),
+              backgroundColor: result.hasErrors ? Colors.orangeAccent : null,
             ),
           );
         }

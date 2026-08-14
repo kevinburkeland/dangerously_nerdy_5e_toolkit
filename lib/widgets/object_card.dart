@@ -3,9 +3,9 @@ import '../models/animated_object.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
 import '../theme/app_theme.dart';
-import 'dialogs/edit_object_name_dialog.dart';
-import 'dialogs/set_object_hp_dialog.dart';
 import 'dialogs/creature_stat_block_dialog.dart';
+import 'dialogs/set_object_hp_dialog.dart';
+import 'dialogs/value_input_dialog.dart';
 
 class ObjectCard extends StatelessWidget {
   final AnimatedObjectInstance object;
@@ -25,7 +25,7 @@ class ObjectCard extends StatelessWidget {
 
   Future<void> _showEditNameDialog(BuildContext context) async {
     HapticService.selectionTick(context);
-    final newName = await EditObjectNameDialog.show(context, initialName: object.name);
+    final newName = await ValueInputDialog.showRename(context, initialName: object.name);
     if (newName != null && newName.isNotEmpty) {
       onNameChanged(newName);
     }

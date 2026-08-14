@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_dialog_frame.dart';
 
 class SavePresetDialog extends StatefulWidget {
   final String formulaText;
@@ -46,22 +47,11 @@ class _SavePresetDialogState extends State<SavePresetDialog> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Row(
-        children: [
-          Icon(Icons.bookmark_add, color: colorScheme.primary, size: 22),
-          const SizedBox(width: 8),
-          Text(
-            'Save Custom Preset',
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-        ],
-      ),
+    return AppDialogFrame(
+      icon: Icons.bookmark_add,
+      iconColor: colorScheme.primary,
+      title: 'Save Custom Preset',
+      maxWidth: 360,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,3 +100,4 @@ class _SavePresetDialogState extends State<SavePresetDialog> {
     );
   }
 }
+

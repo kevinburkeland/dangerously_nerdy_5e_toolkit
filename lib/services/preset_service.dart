@@ -4,6 +4,21 @@ import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
 import 'logging_service.dart';
 
+/// Diagnostic result from a JSON preset import operation
+class PresetImportResult {
+  final List<CustomPreset> allPresets;
+  final int newlyImportedCount;
+  final int failedCount;
+
+  const PresetImportResult({
+    required this.allPresets,
+    this.newlyImportedCount = 0,
+    this.failedCount = 0,
+  });
+
+  bool get hasErrors => failedCount > 0;
+}
+
 class PresetService {
   static const String _storageKey = 'user_custom_dice_presets';
 
@@ -112,8 +127,8 @@ class PresetService {
     return const JsonEncoder.withIndent('  ').convert(jsonList);
   }
 
-  /// Imports custom presets from a JSON string with security & payload bounds
-  Future<List<CustomPreset>> importPresetsJson(String jsonString) async {
+  /// Imports custom presets from a JSON string with detailed diagnostics
+  Future<PresetImportResult> importPresetsWithDiagnostics(String jsonString) async {
     final cleanInput = jsonString.trim();
     if (cleanInput.length > 50000) {
       throw const FormatException('JSON import payload exceeds maximum size limit (50KB)');
@@ -133,6 +148,7 @@ class PresetService {
       itemsList = itemsList.take(50).toList();
     }
 
+    int failedCount = 0;
     final List<CustomPreset> imported = [];
     for (final item in itemsList) {
       if (item is Map) {
@@ -149,16 +165,26 @@ class PresetService {
           );
           imported.add(safePreset);
         } catch (e, stackTrace) {
+          failedCount++;
           LoggingService().logNonFatal(
             e,
             stackTrace,
             reason: 'Skipping malformed individual preset during JSON import',
           );
         }
+      } else {
+        failedCount++;
       }
     }
 
-    if (imported.isEmpty) return await loadCustomPresets();
+    if (imported.isEmpty) {
+      final current = await loadCustomPresets();
+      return PresetImportResult(
+        allPresets: current,
+        newlyImportedCount: 0,
+        failedCount: failedCount,
+      );
+    }
 
     if (_cachedPresets == null) {
       await loadCustomPresets();
@@ -170,6 +196,17 @@ class PresetService {
     }
 
     _persistToDisk();
-    return List<CustomPreset>.from(_cachedPresets!);
+    return PresetImportResult(
+      allPresets: List<CustomPreset>.from(_cachedPresets!),
+      newlyImportedCount: imported.length,
+      failedCount: failedCount,
+    );
+  }
+
+  /// Imports custom presets from a JSON string with security & payload bounds
+  Future<List<CustomPreset>> importPresetsJson(String jsonString) async {
+    final result = await importPresetsWithDiagnostics(jsonString);
+    return result.allPresets;
   }
 }
+

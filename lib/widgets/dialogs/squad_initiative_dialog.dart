@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_dialog_frame.dart';
 
 /// Dialog displaying a squad initiative roll result with a re-roll action.
 class SquadInitiativeDialog {
@@ -12,18 +13,11 @@ class SquadInitiativeDialog {
   }) {
     return showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.casino, color: Colors.amber, size: 24),
-            SizedBox(width: 8),
-            Text(
-              'Squad Initiative Roll',
-              style: TextStyle(color: Colors.amber, fontSize: 18),
-            ),
-          ],
-        ),
+      builder: (ctx) => AppDialogFrame(
+        icon: Icons.casino,
+        iconColor: Colors.amber,
+        title: 'Squad Initiative Roll',
+        maxWidth: 320,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -69,3 +63,4 @@ class SquadInitiativeDialog {
     );
   }
 }
+

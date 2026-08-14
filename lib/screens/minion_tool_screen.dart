@@ -9,9 +9,8 @@ import '../widgets/animate_objects/active_session_card.dart';
 import '../widgets/batch_attack_dialog.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
-import '../widgets/dialogs/grant_temp_hp_dialog.dart';
-import '../widgets/dialogs/mass_damage_dialog.dart';
 import '../widgets/dialogs/squad_initiative_dialog.dart';
+import '../widgets/dialogs/value_input_dialog.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
 import '../widgets/object_card.dart';
 import '../widgets/room_banner_widget.dart';
@@ -117,7 +116,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   Future<void> _showMassDamageDialog() async {
-    final dmg = await MassDamageDialog.show(context);
+    final dmg = await ValueInputDialog.showMassDamage(context);
     if (dmg != null && dmg > 0 && mounted) {
       HapticService.heavyImpact(context);
       _critController.trigger(CritEffectType.critFumble);
@@ -151,7 +150,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
 
   Future<void> _grantGroupTempHp() async {
     HapticService.selectionTick(context);
-    final amount = await GrantTempHpDialog.show(context);
+    final amount = await ValueInputDialog.showGroupTempHp(context);
 
     if (amount != null && amount > 0 && mounted) {
       HapticService.heavyImpact(context);
@@ -240,7 +239,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
               tooltip: 'Status Effects & Conditions Guide',
               onPressed: () => ConditionReferenceDialog.show(context),
             ),
-            // Spell Slot Level Picker Dropdown (for spell presets)
             if (!widget.preset.isRandomTable && widget.preset.id != 'figurines_of_wondrous_power')
               Container(
                 margin: const EdgeInsets.only(right: 12),
@@ -293,7 +291,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // LEFT PANE: SQUAD TRACKER (55% Width)
                   Expanded(
                     flex: 11,
                     child: Container(
@@ -305,7 +302,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
                       child: _buildActiveSquadView(),
                     ),
                   ),
-                  // RIGHT PANE: RULEBOOK & CREATURE PROFILES (45% Width)
                   Expanded(
                     flex: 9,
                     child: SpellReferenceWidget(initialPreset: _session.activePreset),
@@ -336,8 +332,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
           padding: const EdgeInsets.all(12.0),
           child: RoomBannerWidget(),
         ),
-
-        // Point Budget & Quick Action Header Widget
         ActiveSessionHeader(
           session: _session,
           onBatchAttack: _openBatchAttackDialog,
@@ -348,8 +342,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
           onShowMassDamageDialog: _showMassDamageDialog,
           onClearSquad: _confirmClearSquad,
         ),
-
-        // Objects / Minions List
         Expanded(
           child: _session.activeObjects.isEmpty
               ? _buildEmptySquadState()
