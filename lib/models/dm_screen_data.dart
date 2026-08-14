@@ -23,7 +23,13 @@ enum DmCategory {
 class DmReferenceItem {
   final String id;
   final String title;
+  final String? title2014;
+  final String? title2024;
   final DmCategory category;
+  final String? subCategory;
+  final String? cost;
+  final String? cost2014;
+  final String? cost2024;
   final IconData icon;
   final Color color;
   final String summary;
@@ -37,7 +43,13 @@ class DmReferenceItem {
   const DmReferenceItem({
     required this.id,
     required this.title,
+    this.title2014,
+    this.title2024,
     required this.category,
+    this.subCategory,
+    this.cost,
+    this.cost2014,
+    this.cost2024,
     required this.icon,
     required this.color,
     required this.summary,
@@ -49,6 +61,18 @@ class DmReferenceItem {
     this.extraData,
   });
 
+  String getTitle(DmRulesEdition edition) {
+    if (edition == DmRulesEdition.v2014 && title2014 != null) return title2014!;
+    if (edition == DmRulesEdition.v2024 && title2024 != null) return title2024!;
+    return title;
+  }
+
+  String? getCost(DmRulesEdition edition) {
+    if (edition == DmRulesEdition.v2014 && cost2014 != null) return cost2014;
+    if (edition == DmRulesEdition.v2024 && cost2024 != null) return cost2024;
+    return cost;
+  }
+
   List<String> getRules(DmRulesEdition edition) {
     return edition == DmRulesEdition.v2014 ? rules2014 : rules2024;
   }
@@ -57,8 +81,12 @@ class DmReferenceItem {
     if (query.isEmpty) return true;
     final q = query.toLowerCase();
     if (title.toLowerCase().contains(q)) return true;
+    if (title2014 != null && title2014!.toLowerCase().contains(q)) return true;
+    if (title2024 != null && title2024!.toLowerCase().contains(q)) return true;
     if (summary.toLowerCase().contains(q)) return true;
     if (category.label.toLowerCase().contains(q)) return true;
+    if (subCategory != null && subCategory!.toLowerCase().contains(q)) return true;
+    if (cost != null && cost!.toLowerCase().contains(q)) return true;
     if (diffSummary != null && diffSummary!.toLowerCase().contains(q)) return true;
     for (final t in tags) {
       if (t.toLowerCase().contains(q)) return true;
@@ -74,18 +102,51 @@ class DmReferenceItem {
 }
 
 class DmScreenLibrary {
+  static const List<String> conditionCategories = [
+    'All',
+    'Incapacitating',
+    'Movement',
+    'Combat / Checks',
+    'Exhaustion',
+  ];
+
+  static List<DmReferenceItem> get conditions =>
+      allItems.where((i) => i.category == DmCategory.conditions).toList();
+
+  static List<DmReferenceItem> standardActions(DmRulesEdition edition) => allItems
+      .where((i) =>
+          i.tags.contains('standard_action') ||
+          (i.id == 'action_potions' && edition == DmRulesEdition.v2014))
+      .toList();
+
+  static List<DmReferenceItem> bonusActions(DmRulesEdition edition) => allItems
+      .where((i) =>
+          i.tags.contains('bonus_action') ||
+          (i.id == 'action_potions' && edition == DmRulesEdition.v2024))
+      .toList();
+
+  static List<DmReferenceItem> get reactions =>
+      allItems.where((i) => i.tags.contains('reaction')).toList();
+
+  static List<DmReferenceItem> get coverRules =>
+      allItems.where((i) => i.tags.contains('cover_rule')).toList();
+
   static const List<DmReferenceItem> allItems = [
     // ==========================================
-    // ACTIONS & COMBAT
+    // ACTIONS & COMBAT (STANDARD ACTIONS)
     // ==========================================
     DmReferenceItem(
       id: 'action_attack',
       title: 'Attack Action & Extra Attack',
+      title2014: 'Attack',
+      title2024: 'Attack & Weapon Swapping',
       category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
       icon: Icons.sports_kabaddi,
       color: Colors.amber,
       summary: 'Make one melee or ranged weapon/unarmed attack.',
-      tags: ['attack', 'melee', 'ranged', 'extra attack', 'weapon', 'unarmed'],
+      tags: ['attack', 'melee', 'ranged', 'extra attack', 'weapon', 'unarmed', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2024 lets you draw/stow a weapon before or after EACH attack, and Unarmed Strikes now offer Damage, Grapple, or Shove options directly.',
       rules2014: [
@@ -101,13 +162,237 @@ class DmScreenLibrary {
       ],
     ),
     DmReferenceItem(
+      id: 'action_cast_spell',
+      title: 'Cast a Spell',
+      title2014: 'Cast a Spell',
+      title2024: 'Cast a Spell (2024 Slot Limit)',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action (or Bonus Action / Reaction)',
+      icon: Icons.auto_awesome,
+      color: Colors.purpleAccent,
+      summary: 'Cast a spell with standard casting time and slot restrictions.',
+      tags: ['cast a spell', 'spell', 'magic', 'cantrip', 'spell slot', 'standard_action'],
+      isChangedIn2024: true,
+      diffSummary: '2024 limits you to expending only ONE spell slot on your turn (allowing Cantrip + Leveled, but preventing Double Leveled Slots).',
+      rules2014: [
+        'Cast a spell with a casting time of 1 Action.',
+        'Observe V, S, M component rules and concentration limits.',
+        'If you cast a Bonus Action spell, you can only cast Cantrips with your Action.',
+      ],
+      rules2024: [
+        'Cast a spell. On your turn, you can expend only ONE spell slot (you may cast multiple spells if only one uses a slot, e.g., slot + cantrip).',
+        'Observe V, S, M components and concentration rules.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_dash',
+      title: 'Dash',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.directions_run,
+      color: Colors.cyanAccent,
+      summary: 'Gain extra movement equal to your Speed for the current turn.',
+      tags: ['dash', 'speed', 'movement', 'standard_action'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Gain extra movement for the current turn equal to your Speed (e.g. 30 ft becomes 60 ft total).',
+      ],
+      rules2024: [
+        'Gain extra movement for the current turn equal to your Speed.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_disengage',
+      title: 'Disengage',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.transit_enterexit,
+      color: Colors.greenAccent,
+      summary: 'Movement does not provoke opportunity attacks for the rest of your turn.',
+      tags: ['disengage', 'movement', 'opportunity attack', 'standard_action'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Your movement does not provoke opportunity attacks for the rest of the turn.',
+      ],
+      rules2024: [
+        'Your movement does not provoke opportunity attacks for the rest of the turn.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_dodge',
+      title: 'Dodge',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.shield,
+      color: Colors.blueAccent,
+      summary: 'Focus entirely on evading incoming attacks and hazard reflex saves.',
+      tags: ['dodge', 'defense', 'advantage', 'disadvantage', 'dex save', 'standard_action'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Until your next turn, attacks against you have Disadvantage (if you can see the attacker), and you have Advantage on DEX saves.',
+        'Benefits lost if you are Incapacitated or your speed drops to 0.',
+      ],
+      rules2024: [
+        'Until your next turn, attacks against you have Disadvantage (if visible), and you have Advantage on DEX saves.',
+        'Benefits end if you have the Incapacitated condition or speed is 0.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_help',
+      title: 'Help',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.handshake,
+      color: Colors.tealAccent,
+      summary: 'Give an ally Advantage on an ability check or their next attack roll.',
+      tags: ['help', 'assist', 'advantage', 'feint', 'standard_action'],
+      isChangedIn2024: true,
+      diffSummary: '2024 specifies that helping on an ability check requires proficiency in the relevant skill.',
+      rules2014: [
+        'Give an ally Advantage on their next ability check, or Advantage on their next attack roll against a creature within 5 ft of you.',
+      ],
+      rules2024: [
+        'Give an ally Advantage on their next ability check (if you are proficient), or Advantage on an attack roll against a creature within 5 ft.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_hide',
+      title: 'Hide Action & Stealth',
+      title2014: 'Hide',
+      title2024: 'Hide (2024 DC 15)',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.visibility_off,
+      color: Colors.blueGrey,
+      summary: 'Conceal yourself from enemies.',
+      tags: ['hide', 'stealth', 'invisible', 'passive perception', 'dc 15', 'unseen', 'standard_action'],
+      isChangedIn2024: true,
+      diffSummary: '2014 was a contested check against enemy Passive Perception. 2024 sets a standardized DC 15 Dexterity (Stealth) check to immediately gain the Invisible condition!',
+      rules2014: [
+        'Make a Dexterity (Stealth) check contested by enemies\' Passive Perception (Wisdom).',
+        'You cannot hide from a creature that can see you clearly.',
+        'Gives you unseen attacker benefits (Advantage on attacks, Disadvantage on attacks against you).',
+        'Revealed immediately if you make noise or make an attack.',
+      ],
+      rules2024: [
+        'Take the Hide action: Make a DC 15 Dexterity (Stealth) check while heavily obscured or behind 3/4 or total cover.',
+        'On a success, you gain the Invisible condition until you make a sound louder than a whisper, hit/miss an attack, cast a spell with verbal components, or an enemy spots you.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_ready',
+      title: 'Ready',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action + Reaction',
+      icon: Icons.hourglass_top,
+      color: Colors.orangeAccent,
+      summary: 'Specify a perceivable trigger and an action to execute as a Reaction.',
+      tags: ['ready', 'reaction', 'trigger', 'concentration', 'standard_action'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Specify a perceivable trigger and an action (or spell) to execute as a Reaction before your next turn.',
+        'Spells require concentration while readied; if trigger does not occur, the spell slot is lost.',
+      ],
+      rules2024: [
+        'Specify a trigger and action. Readied spells require concentration until released as a reaction.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_search',
+      title: 'Search',
+      title2014: 'Search',
+      title2024: 'Search (2024 Codified)',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.search,
+      color: Colors.lightGreenAccent,
+      summary: 'Devote attention to finding something or tracking hidden creatures.',
+      tags: ['search', 'perception', 'investigation', 'survival', 'insight', 'standard_action'],
+      isChangedIn2024: true,
+      diffSummary: '2024 codifies Search under Wisdom checks (Insight, Perception, Survival) to discern motives or locate concealed creatures/items.',
+      rules2014: [
+        'Devote attention to finding something. The DM might call for a Wisdom (Perception) or Intelligence (Investigation) check.',
+      ],
+      rules2024: [
+        'Make a Wisdom check (Insight, Perception, Survival) to discern motives or locate concealed creatures/items.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_study',
+      title: 'Study (2024 New Action)',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.menu_book,
+      color: Colors.teal,
+      summary: 'Deduce monster traits, weaknesses, or historical/arcane lore.',
+      tags: ['study', 'arcana', 'history', 'nature', 'religion', 'investigation', 'monster lore', 'standard_action'],
+      isChangedIn2024: true,
+      diffSummary: '2024 introduces a codified Study action using Intelligence checks to deduce monster stats and weaknesses.',
+      rules2014: [
+        'Handled ad-hoc at DM discretion under knowledge skill checks (Arcana, History, Nature, Religion).',
+      ],
+      rules2024: [
+        'Make an Intelligence check (Arcana, History, Nature, Religion, Investigation) to deduce monster stats, traits, weaknesses, or lore.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_influence',
+      title: 'Influence (2024 New Action)',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.record_voice_over,
+      color: Colors.pinkAccent,
+      summary: 'Social interaction to adjust NPC attitudes and request favors.',
+      tags: ['influence', 'persuasion', 'deception', 'intimidation', 'animal handling', 'social', 'standard_action'],
+      isChangedIn2024: true,
+      diffSummary: '2024 standardizes DCs for social influence: Friendly DC 10, Indifferent DC 15, Hostile DC 20.',
+      rules2014: [
+        'Handled via DM judgment and social check guidelines in the DMG.',
+      ],
+      rules2024: [
+        'Influence an NPC attitude: Friendly DC 10, Indifferent DC 15, Hostile DC 20 with Persuasion, Deception, Animal Handling, or Intimidation.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_use_object',
+      title: 'Use an Object',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.touch_app,
+      color: Colors.pinkAccent,
+      summary: 'Interact with a second object or operate complex mechanical apparatuses.',
+      tags: ['use an object', 'interact', 'item', 'mechanism', 'standard_action'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Interact with a second object on your turn, or use a complex item (like applying a potion or pulling a lever).',
+      ],
+      rules2024: [
+        'Interact with a second object or use complex specialized gear.',
+      ],
+    ),
+    DmReferenceItem(
       id: 'action_grapple_shove',
       title: 'Grapple & Shove (Unarmed Strikes)',
+      title2014: 'Grapple & Shove (2014 Contested)',
+      title2024: 'Grapple & Shove (2024 Save DC)',
       category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Attack (Part of Attack Action)',
       icon: Icons.sports_mma,
       color: Colors.deepOrangeAccent,
       summary: 'Grab or knock down / push a creature.',
-      tags: ['grapple', 'shove', 'push', 'prone', 'unarmed strike', 'athletics', 'save dc'],
+      tags: ['grapple', 'shove', 'push', 'prone', 'unarmed strike', 'athletics', 'save dc', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2014 used contested Athletics checks. 2024 makes Grapple/Shove a saving throw (DC = 8 + STR + Prof) against the target\'s STR/DEX save!',
       rules2014: [
@@ -126,111 +411,15 @@ class DmScreenLibrary {
       ],
     ),
     DmReferenceItem(
-      id: 'action_two_weapon_fighting',
-      title: 'Two-Weapon Fighting & Light Property',
-      category: DmCategory.actions,
-      icon: Icons.content_cut,
-      color: Colors.amberAccent,
-      summary: 'Attacking with dual-wielded weapons.',
-      tags: ['dual wield', 'light weapon', 'off-hand', 'bonus action', 'nick mastery', 'two-weapon'],
-      isChangedIn2024: true,
-      diffSummary: '2014 strictly required a Bonus Action for the off-hand attack. 2024 codifies this in the Light weapon property (and weapon masteries like Nick can make it part of the Attack action with no Bonus Action used).',
-      rules2014: [
-        'When you take the Attack action with a Light melee weapon in one hand, you can use a Bonus Action to attack with a different Light melee weapon in the other hand.',
-        'Do NOT add your ability modifier to the damage of the bonus attack unless that modifier is negative (or you have the Two-Weapon Fighting Style).',
-      ],
-      rules2024: [
-        'When you take the Attack action and attack with a Light weapon, you can make one extra attack with a different Light weapon as a Bonus Action.',
-        'With the Nick weapon mastery property, this extra attack is made as part of the Attack action itself rather than costing a Bonus Action.',
-        'Ability modifier is not added to damage unless negative or with Two-Weapon Fighting style.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'action_dash_disengage_dodge',
-      title: 'Dash, Disengage & Dodge',
-      category: DmCategory.actions,
-      icon: Icons.directions_run,
-      color: Colors.greenAccent,
-      summary: 'Core tactical movement and defense actions.',
-      tags: ['dash', 'disengage', 'dodge', 'speed', 'opportunity attack', 'advantage'],
-      isChangedIn2024: false,
-      diffSummary: 'Core mechanics remain virtually identical across both editions.',
-      rules2014: [
-        'Dash (1 Action): Gain extra movement equal to your Speed for the current turn.',
-        'Disengage (1 Action): Your movement does not provoke opportunity attacks for the rest of your turn.',
-        'Dodge (1 Action): Until your next turn, attacks against you have Disadvantage (if you can see attacker), and you have Advantage on DEX saving throws. Lost if Incapacitated or speed drops to 0.',
-      ],
-      rules2024: [
-        'Dash (1 Action): Gain extra movement equal to your Speed for the current turn.',
-        'Disengage (1 Action): Your movement does not provoke opportunity attacks for the rest of the turn.',
-        'Dodge (1 Action): Until the start of your next turn, attacks against you have Disadvantage (if visible), and you have Advantage on DEX saves. Benefits end if you have the Incapacitated condition or speed is 0.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'action_hide',
-      title: 'Hide Action & Stealth',
-      category: DmCategory.actions,
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      summary: 'Conceal yourself from enemies.',
-      tags: ['hide', 'stealth', 'invisible', 'passive perception', 'dc 15', 'unseen'],
-      isChangedIn2024: true,
-      diffSummary: '2014 was a contested check against enemy Passive Perception. 2024 sets a standardized DC 15 Dexterity (Stealth) check to immediately gain the Invisible condition!',
-      rules2014: [
-        'Make a Dexterity (Stealth) check contested by enemies\' Passive Perception (Wisdom).',
-        'You cannot hide from a creature that can see you clearly.',
-        'Gives you unseen attacker benefits (Advantage on attacks, Disadvantage on attacks against you).',
-        'Revealed immediately if you make noise or make an attack.',
-      ],
-      rules2024: [
-        'Take the Hide action: Make a DC 15 Dexterity (Stealth) check while heavily obscured or behind 3/4 or total cover.',
-        'On a success, you gain the Invisible condition until you make a sound louder than a whisper, hit/miss an attack, cast a spell with verbal components, or an enemy spots you (Passive Perception beats your check roll).',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'action_study_influence',
-      title: 'Study & Influence Actions',
-      category: DmCategory.actions,
-      icon: Icons.menu_book,
-      color: Colors.tealAccent,
-      summary: 'Recall knowledge, analyze monsters, and social interactions.',
-      tags: ['study', 'influence', 'arcana', 'history', 'nature', 'religion', 'persuasion', 'deception', 'intimidation'],
-      isChangedIn2024: true,
-      diffSummary: '2024 introduces codified Study and Influence standard actions for analyzing monster stat traits and formal social interactions.',
-      rules2014: [
-        'Ad-hoc DM rulings for knowledge checks (Arcana, History, Nature, Religion) and social checks (Persuasion, Deception, Intimidation) during combat.',
-        'Usually handled under "Other Activity on Your Turn" or DM discretion.',
-      ],
-      rules2024: [
-        'Study Action (1 Action): Make an Intelligence check (Arcana, History, Nature, Religion, or Investigation) to deduce monster weaknesses, traits, or decipher magical/historical lore.',
-        'Influence Action (1 Action): Attempt to adjust an NPC\'s attitude (Friendly DC 10, Indifferent DC 15, Hostile DC 20) with Animal Handling, Deception, Intimidation, or Persuasion.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'action_help_search_ready',
-      title: 'Help, Search & Ready Actions',
-      category: DmCategory.actions,
-      icon: Icons.hourglass_top,
-      color: Colors.orangeAccent,
-      summary: 'Assisting allies, finding hidden objects, and triggering reactions.',
-      tags: ['help', 'search', 'ready', 'reaction', 'trigger', 'perception', 'investigation'],
-      isChangedIn2024: true,
-      diffSummary: '2024 codifies Search under Wisdom checks (Perception, Insight, Survival) and specifies Help action proficiency interactions.',
-      rules2014: [
-        'Help (1 Action): Feint to grant an ally Advantage on next attack roll against a foe within 5 ft, or grant Advantage on an ability check.',
-        'Search (1 Action): Devote attention to find something (DM calls for Perception or Investigation).',
-        'Ready (1 Action + 1 Reaction): Specify a perceivable trigger and action/spell. If readying a spell, cast it on your turn (uses slot) and hold concentration until reaction triggers.',
-      ],
-      rules2024: [
-        'Help (1 Action): Assist an ally with an ability check (if you have proficiency in the skill) or feint against a creature within 5 ft to give ally Advantage on their next attack before your next turn.',
-        'Search (1 Action): Make a Wisdom check (Insight, Perception, or Survival) to locate hidden creatures, tracks, or discern motives.',
-        'Ready (1 Action + 1 Reaction): Choose a trigger and action. Spells require concentration while readied; if trigger does not occur before your next turn, the spell slot is lost.',
-      ],
-    ),
-    DmReferenceItem(
       id: 'action_potions',
       title: 'Drinking & Administering Potions',
+      title2014: 'Drink / Administer a Potion (2014 RAW)',
+      title2024: 'Drink or Administer a Potion (2024)',
       category: DmCategory.actions,
+      subCategory: 'Standard / Bonus Action',
+      cost: '1 Action (2014) / 1 Bonus Action (2024)',
+      cost2014: '1 Action',
+      cost2024: '1 Bonus Action',
       icon: Icons.liquor,
       color: Colors.redAccent,
       summary: 'Using healing potions and magical elixirs.',
@@ -250,10 +439,12 @@ class DmScreenLibrary {
       id: 'action_death_saves',
       title: 'Death Saving Throws & Stabilizing',
       category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: 'At Start of Turn',
       icon: Icons.favorite_border,
       color: Colors.red,
       summary: 'Dying, death saves, criticals, and stabilization.',
-      tags: ['death saves', 'dying', 'unconscious', 'stabilize', 'medicine', 'nat 20', 'nat 1', '0 hp'],
+      tags: ['death saves', 'dying', 'unconscious', 'stabilize', 'medicine', 'nat 20', 'nat 1', '0 hp', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: 'In 2024, rolling a Natural 20 on a death save lets you regain 1 HP AND immediately stand up / act without losing your turn.',
       rules2014: [
@@ -276,16 +467,442 @@ class DmScreenLibrary {
     ),
 
     // ==========================================
-    // CONDITIONS & STATUSES
+    // ACTIONS & COMBAT (BONUS ACTIONS)
     // ==========================================
+    DmReferenceItem(
+      id: 'action_two_weapon_fighting',
+      title: 'Two-Weapon Fighting & Light Property',
+      title2014: 'Two-Weapon Fighting (Off-Hand)',
+      title2024: 'Two-Weapon Fighting (Light Property)',
+      category: DmCategory.actions,
+      subCategory: 'Bonus Action',
+      cost: '1 Bonus Action',
+      cost2024: '1 Bonus Action (or Part of Attack with Nick)',
+      icon: Icons.content_cut,
+      color: Colors.amber,
+      summary: 'Attacking with dual-wielded light weapons.',
+      tags: ['dual wield', 'light weapon', 'off-hand', 'bonus action', 'nick mastery', 'two-weapon', 'bonus_action'],
+      isChangedIn2024: true,
+      diffSummary: '2014 strictly required a Bonus Action for the off-hand attack. 2024 codifies this in the Light weapon property (and weapon masteries like Nick can make it part of the Attack action with no Bonus Action used).',
+      rules2014: [
+        'When you take the Attack action with a Light melee weapon in one hand, attack with a different Light melee weapon in the other hand (no ability mod to damage unless negative).',
+      ],
+      rules2024: [
+        'When you take the Attack action and attack with a Light weapon, you can make one extra attack with a different Light weapon as a Bonus Action.',
+        'With the Nick weapon mastery property, this extra attack is part of the Attack action itself without using a Bonus Action.',
+        'Ability modifier is not added to damage unless negative or with Two-Weapon Fighting style.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_bonus_action_spells',
+      title: 'Bonus Action Spells',
+      title2014: 'Bonus Action Spells (2014 Rule)',
+      title2024: 'Bonus Action Spells',
+      category: DmCategory.actions,
+      subCategory: 'Bonus Action',
+      cost: '1 Bonus Action',
+      icon: Icons.bolt,
+      color: Colors.purpleAccent,
+      summary: 'Casting swift bonus action spells.',
+      tags: ['bonus action spell', 'healing word', 'misty step', 'slot limit', 'bonus_action'],
+      isChangedIn2024: true,
+      diffSummary: '2014 Bonus Action spell rule limited your Action to Cantrips. 2024 limits you to 1 spell slot per turn.',
+      rules2014: [
+        'If you cast a Bonus Action spell (e.g. Healing Word, Misty Step), you cannot cast another spell on the same turn except for a Cantrip with a casting time of 1 Action.',
+      ],
+      rules2024: [
+        'Cast a spell with a casting time of 1 Bonus Action. Follows the 1-spell-slot-per-turn limitation.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_class_features',
+      title: 'Class & Item Features',
+      title2014: 'Class & Item Features',
+      title2024: 'Class Features',
+      category: DmCategory.actions,
+      subCategory: 'Bonus Action',
+      cost: '1 Bonus Action',
+      icon: Icons.star,
+      color: Colors.cyanAccent,
+      summary: 'Features explicitly designated as Bonus Actions.',
+      tags: ['cunning action', 'bardic inspiration', 'rage', 'second wind', 'command minions', 'bonus_action'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Features explicitly designated as Bonus Actions (Cunning Action, Bardic Inspiration, Rage, Second Wind, Command Minions).',
+      ],
+      rules2024: [
+        'Cunning Action, Bardic Inspiration, Second Wind, Rage, and specialized bonus action spells/abilities.',
+      ],
+    ),
+
+    // ==========================================
+    // ACTIONS & COMBAT (REACTIONS)
+    // ==========================================
+    DmReferenceItem(
+      id: 'action_opportunity_attack',
+      title: 'Opportunity Attack',
+      category: DmCategory.actions,
+      subCategory: 'Reaction',
+      cost: '1 Reaction',
+      icon: Icons.front_hand,
+      color: Colors.redAccent,
+      summary: 'Melee weapon strike when an enemy leaves your reach without Disengaging.',
+      tags: ['opportunity attack', 'reach', 'disengage', 'melee', 'reaction'],
+      isChangedIn2024: false,
+      rules2014: [
+        'When a hostile creature that you can see leaves your reach without Disengaging, make one melee weapon attack against it.',
+      ],
+      rules2024: [
+        'When a hostile creature that you can see leaves your reach without Disengaging, make one melee weapon attack against it.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_reaction_spells',
+      title: 'Reaction Spells',
+      category: DmCategory.actions,
+      subCategory: 'Reaction',
+      cost: '1 Reaction',
+      icon: Icons.security,
+      color: Colors.purpleAccent,
+      summary: 'Triggered magical defenses like Shield, Absorb Elements, or Counterspell.',
+      tags: ['shield', 'absorb elements', 'counterspell', 'feather fall', 'reaction', 'spells'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Triggered by specific circumstances (e.g. Shield triggered by being hit, Absorb Elements by taking elemental damage, Counterspell by seeing a creature cast a spell).',
+      ],
+      rules2024: [
+        'Triggered by specific circumstances (e.g. Shield triggered by being hit, Absorb Elements by taking elemental damage, Counterspell by seeing a creature cast a spell).',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_readied_action_trigger',
+      title: 'Readied Action Trigger',
+      category: DmCategory.actions,
+      subCategory: 'Reaction',
+      cost: '1 Reaction',
+      icon: Icons.alarm_on,
+      color: Colors.orangeAccent,
+      summary: 'Execute your previously Readied action when its designated trigger condition occurs.',
+      tags: ['readied trigger', 'trigger', 'reaction'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Execute your previously Readied action when its designated trigger condition occurs.',
+      ],
+      rules2024: [
+        'Execute your previously Readied action when its designated trigger condition occurs.',
+      ],
+    ),
+
+    // ==========================================
+    // CONDITIONS & STATUSES (INDIVIDUAL ITEMS)
+    // ==========================================
+    DmReferenceItem(
+      id: 'cond_blinded',
+      title: 'Blinded',
+      category: DmCategory.conditions,
+      subCategory: 'Combat / Checks',
+      icon: Icons.visibility_off,
+      color: Colors.blueGrey,
+      summary: 'Cannot see and auto-fails checks requiring sight.',
+      tags: ['blinded', 'sight', 'advantage', 'disadvantage', 'combat / checks'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A blinded creature can’t see and automatically fails any ability check that requires sight.',
+        'Attack rolls against the creature have Advantage.',
+        'The creature’s attack rolls have Disadvantage.',
+      ],
+      rules2024: [
+        'A blinded creature can’t see and automatically fails any ability check that requires sight.',
+        'Attack rolls against the creature have Advantage.',
+        'The creature’s attack rolls have Disadvantage.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_charmed',
+      title: 'Charmed',
+      category: DmCategory.conditions,
+      subCategory: 'Combat / Checks',
+      icon: Icons.favorite,
+      color: Colors.pinkAccent,
+      summary: 'Cannot harm charmer; charmer has social advantage.',
+      tags: ['charmed', 'social', 'charmer', 'combat / checks'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A charmed creature can’t attack the charmer or target the charmer with harmful abilities or magical effects.',
+        'The charmer has Advantage on any ability check to interact socially with the creature.',
+      ],
+      rules2024: [
+        'A charmed creature can’t attack the charmer or target the charmer with harmful abilities or magical effects.',
+        'The charmer has Advantage on any ability check to interact socially with the creature.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_deafened',
+      title: 'Deafened',
+      category: DmCategory.conditions,
+      subCategory: 'Combat / Checks',
+      icon: Icons.hearing_disabled,
+      color: Colors.tealAccent,
+      summary: 'Cannot hear and auto-fails checks requiring hearing.',
+      tags: ['deafened', 'hearing', 'auditory', 'combat / checks'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A deafened creature can’t hear and automatically fails any ability check that requires hearing.',
+      ],
+      rules2024: [
+        'A deafened creature can’t hear and automatically fails any ability check that requires hearing.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_frightened',
+      title: 'Frightened',
+      category: DmCategory.conditions,
+      subCategory: 'Combat / Checks',
+      icon: Icons.sentiment_very_dissatisfied,
+      color: Colors.deepOrangeAccent,
+      summary: 'Disadvantage while source is in sight; cannot willingly move closer.',
+      tags: ['frightened', 'fear', 'disadvantage', 'line of sight', 'combat / checks'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A frightened creature has Disadvantage on ability checks and attack rolls while the source of its fear is within line of sight.',
+        'The creature can’t willingly move closer to the source of its fear.',
+      ],
+      rules2024: [
+        'A frightened creature has Disadvantage on ability checks and attack rolls while the source of its fear is visible.',
+        'The creature can’t willingly move closer to the source of its fear.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_grappled',
+      title: 'Grappled',
+      category: DmCategory.conditions,
+      subCategory: 'Movement',
+      icon: Icons.sports_mma,
+      color: Colors.amber,
+      summary: 'Speed is 0 and held in place by opponent.',
+      tags: ['grappled', 'speed 0', 'escape', 'disadvantage', 'movement'],
+      isChangedIn2024: true,
+      diffSummary: '2024 grappled creatures suffer Disadvantage on attacks against anyone other than the grappler, and make saves at the end of each turn.',
+      rules2014: [
+        'A grappled creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.',
+        'The condition ends if the grappler is Incapacitated.',
+        'The condition also ends if an effect removes the grappled creature from reach (e.g. Thunderwave).',
+        'Grappler can move with target at half speed.',
+      ],
+      rules2024: [
+        'Speed becomes 0 and cannot increase.',
+        'Attacks: You have Disadvantage on attack rolls against anyone other than the grappler.',
+        'Movable: The grappler can drag or carry you at half speed (full speed if you are Tiny or 2+ sizes smaller).',
+        'Escape: Make a STR or DEX saving throw at the end of each of your turns against the escape DC.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_incapacitated',
+      title: 'Incapacitated',
+      category: DmCategory.conditions,
+      subCategory: 'Incapacitating',
+      icon: Icons.do_not_disturb_on,
+      color: Colors.redAccent,
+      summary: 'Cannot take actions, bonus actions, or reactions.',
+      tags: ['incapacitated', 'actions', 'reactions', 'bonus actions', 'initiative', 'concentration', 'incapacitating'],
+      isChangedIn2024: true,
+      diffSummary: '2024 explicitly mentions Bonus Actions, gives incoming attacks Advantage, and gives Disadvantage on Initiative rolls!',
+      rules2014: [
+        'An incapacitated creature can’t take Actions or Reactions.',
+        'Concentration on active spells is immediately broken.',
+      ],
+      rules2024: [
+        'You can’t take Actions, Bonus Actions, or Reactions.',
+        'Your Concentration is immediately broken.',
+        'Attack rolls against you have Advantage.',
+        'You have Disadvantage on Initiative rolls.',
+        'You cannot speak.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_invisible',
+      title: 'Invisible',
+      category: DmCategory.conditions,
+      subCategory: 'Combat / Checks',
+      icon: Icons.blur_on,
+      color: Colors.cyanAccent,
+      summary: 'Unseen by ordinary vision, advantage on attacks & initiative.',
+      tags: ['invisible', 'advantage', 'disadvantage', 'stealth', 'initiative', 'concealed', 'combat / checks'],
+      isChangedIn2024: true,
+      diffSummary: '2024 clarifies that Invisible grants Advantage on Initiative rolls, and you are Concealed from standard sight and darkvision.',
+      rules2014: [
+        'An invisible creature is impossible to see without the aid of magic or a special sense. Heavily obscured for hiding purposes.',
+        'Attack rolls against the creature have Disadvantage.',
+        'The creature’s attack rolls have Advantage.',
+      ],
+      rules2024: [
+        'Concealed: You aren’t affected by any effect that requires its target to be seen (unless special sight).',
+        'Attack rolls against you have Disadvantage; your attack rolls have Advantage.',
+        'Initiative: If invisible when rolling Initiative, you have Advantage on the roll.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_paralyzed',
+      title: 'Paralyzed',
+      category: DmCategory.conditions,
+      subCategory: 'Incapacitating',
+      icon: Icons.offline_bolt,
+      color: Colors.yellowAccent,
+      summary: 'Incapacitated, cannot move or speak, auto-fails STR/DEX saves, melee hits are crits.',
+      tags: ['paralyzed', 'incapacitated', 'auto-fail', 'critical hit', '5 ft', 'incapacitating'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A paralyzed creature is Incapacitated (can’t take actions or reactions) and can’t move or speak.',
+        'The creature automatically fails Strength and Dexterity saving throws.',
+        'Attack rolls against the creature have Advantage.',
+        'Any attack that hits the creature is a Critical Hit if the attacker is within 5 feet.',
+      ],
+      rules2024: [
+        'Incapacitated, can’t move or speak.',
+        'Auto-fails Strength and Dexterity saving throws.',
+        'Attack rolls against have Advantage.',
+        'Any attack that hits from within 5 feet is a Critical Hit.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_petrified',
+      title: 'Petrified',
+      category: DmCategory.conditions,
+      subCategory: 'Incapacitating',
+      icon: Icons.terrain,
+      color: Colors.brown,
+      summary: 'Transformed into solid stone (weight ×10), damage resistance, poison immunity.',
+      tags: ['petrified', 'stone', 'resistance', 'immune', 'incapacitated', 'incapacitating'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Transformed into a solid inanimate substance (usually stone). Weight increases by a factor of ten, and ceases aging.',
+        'The creature is Incapacitated, can’t move or speak, and is unaware of its surroundings.',
+        'Attack rolls against the creature have Advantage.',
+        'The creature automatically fails Strength and Dexterity saving throws.',
+        'The creature has Resistance to all damage and is Immune to poison and disease.',
+      ],
+      rules2024: [
+        'Transformed into solid stone (weight ×10), ceases aging.',
+        'Incapacitated, can’t move or speak, unaware of surroundings.',
+        'Attack rolls against have Advantage. Auto-fails STR and DEX saves.',
+        'Resistance to all damage; Immune to poison damage and the Poisoned condition.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_poisoned',
+      title: 'Poisoned',
+      category: DmCategory.conditions,
+      subCategory: 'Combat / Checks',
+      icon: Icons.science,
+      color: Colors.greenAccent,
+      summary: 'Disadvantage on attack rolls and ability checks.',
+      tags: ['poisoned', 'toxicity', 'disadvantage', 'combat / checks'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A poisoned creature has Disadvantage on attack rolls and ability checks.',
+      ],
+      rules2024: [
+        'A poisoned creature has Disadvantage on attack rolls and ability checks.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_prone',
+      title: 'Prone',
+      category: DmCategory.conditions,
+      subCategory: 'Movement',
+      icon: Icons.airline_seat_flat,
+      color: Colors.lightGreenAccent,
+      summary: 'Lying on ground; crawling costs extra, standing costs half speed.',
+      tags: ['prone', 'crawl', 'stand up', 'melee advantage', 'ranged disadvantage', 'movement'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A prone creature’s only movement option is to crawl, unless it stands up and thereby ends the condition.',
+        'Standing up costs an amount of movement equal to half the creature’s speed.',
+        'The creature has Disadvantage on attack rolls.',
+        'An attack roll against the creature has Advantage if the attacker is within 5 feet of the creature. Otherwise, the attack roll has Disadvantage.',
+      ],
+      rules2024: [
+        'Only movement options are crawling (costs extra movement) or standing up (costs half Speed).',
+        'Disadvantage on attack rolls.',
+        'Attack rolls from within 5 feet have Advantage; other attack rolls have Disadvantage.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_restrained',
+      title: 'Restrained',
+      category: DmCategory.conditions,
+      subCategory: 'Movement',
+      icon: Icons.lock,
+      color: Colors.orangeAccent,
+      summary: 'Speed is 0, attacks against have advantage, disadvantage on DEX saves.',
+      tags: ['restrained', 'speed 0', 'dex save', 'disadvantage', 'movement'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A restrained creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.',
+        'Attack rolls against the creature have Advantage, and the creature’s attack rolls have Disadvantage.',
+        'The creature has Disadvantage on Dexterity saving throws.',
+      ],
+      rules2024: [
+        'Speed becomes 0 and cannot increase.',
+        'Attack rolls against have Advantage, and creature’s attack rolls have Disadvantage.',
+        'Disadvantage on Dexterity saving throws.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_stunned',
+      title: 'Stunned',
+      category: DmCategory.conditions,
+      subCategory: 'Incapacitating',
+      icon: Icons.flash_on,
+      color: Colors.purpleAccent,
+      summary: 'Incapacitated, faltering speech, auto-fails STR/DEX saves, attacks have advantage.',
+      tags: ['stunned', 'incapacitated', 'auto-fail', 'incapacitating'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A stunned creature is Incapacitated, can’t move, and can speak only falteringly.',
+        'The creature automatically fails Strength and Dexterity saving throws.',
+        'Attack rolls against the creature have Advantage.',
+      ],
+      rules2024: [
+        'Incapacitated, can’t move, can speak only falteringly.',
+        'Auto-fails Strength and Dexterity saving throws.',
+        'Attack rolls against have Advantage.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'cond_unconscious',
+      title: 'Unconscious',
+      category: DmCategory.conditions,
+      subCategory: 'Incapacitating',
+      icon: Icons.bedtime,
+      color: Colors.indigoAccent,
+      summary: 'Knocked out, asleep, or reduced to 0 HP; hits within 5 ft are criticals.',
+      tags: ['unconscious', 'asleep', 'incapacitated', 'critical hit', '0 hp', 'prone', 'incapacitating'],
+      isChangedIn2024: true,
+      diffSummary: '2024 clarifies that unconscious creatures roll Initiative with Disadvantage if asleep when combat starts.',
+      rules2014: [
+        'An unconscious creature is Incapacitated, can’t move or speak, and is unaware of its surroundings.',
+        'The creature drops whatever it’s holding and falls Prone.',
+        'The creature automatically fails Strength and Dexterity saving throws.',
+        'Attack rolls against the creature have Advantage.',
+        'Any attack that hits the creature is a Critical Hit if the attacker is within 5 feet of the creature.',
+      ],
+      rules2024: [
+        'Incapacitated, drops held items, falls Prone, unaware of surroundings.',
+        'Auto-fails Strength and Dexterity saving throws.',
+        'Attack rolls against have Advantage; hits from within 5 feet are Critical Hits.',
+        'If asleep when combat begins, rolls Initiative with Disadvantage.',
+      ],
+    ),
     DmReferenceItem(
       id: 'cond_exhaustion',
       title: 'Exhaustion (Fatigue)',
       category: DmCategory.conditions,
+      subCategory: 'Exhaustion',
       icon: Icons.battery_alert,
       color: Colors.red,
       summary: 'Severe physical fatigue and magical drain.',
-      tags: ['exhaustion', 'levels', 'death', 'speed', 'd20 test', 'penalty', 'long rest'],
+      tags: ['exhaustion', 'levels', 'death', 'speed', 'd20 test', 'penalty', 'long rest', 'fatigue'],
       isChangedIn2024: true,
       diffSummary: 'MASSIVE CHANGE: 2014 had 6 rigid tiers (disadvantage, half speed, death). 2024 uses 10 levels with a uniform -2 penalty to D20 tests and -5 ft speed reduction per level!',
       rules2014: [
@@ -298,7 +915,7 @@ class DmScreenLibrary {
         'Finishing a Long Rest with food & water reduces exhaustion level by 1.',
       ],
       rules2024: [
-        'Cumulative penalty: 10 total levels.',
+        'Cumulative penalty across 10 total levels.',
         'D20 Tests: Subtract 2 × your exhaustion level from all D20 Tests (attack rolls, ability checks, saving throws) and your spell save DC.',
         'Speed: Reduce speed by 5 feet × your exhaustion level.',
         'Level 10: Death.',
@@ -306,205 +923,39 @@ class DmScreenLibrary {
       ],
     ),
     DmReferenceItem(
-      id: 'cond_incapacitated',
-      title: 'Incapacitated',
-      category: DmCategory.conditions,
-      icon: Icons.do_not_disturb_on,
-      color: Colors.redAccent,
-      summary: 'Cannot take actions or reactions.',
-      tags: ['incapacitated', 'actions', 'reactions', 'bonus actions', 'initiative', 'concentration'],
-      isChangedIn2024: true,
-      diffSummary: '2024 explicitly mentions Bonus Actions, gives incoming attacks Advantage, and gives Disadvantage on Initiative rolls!',
-      rules2014: [
-        'An incapacitated creature can\'t take Actions or Reactions.',
-        'Concentration on spells is immediately broken.',
-      ],
-      rules2024: [
-        'You can\'t take Actions, Bonus Actions, or Reactions.',
-        'Your Concentration is immediately broken.',
-        'Attack rolls against you have Advantage.',
-        'You have Disadvantage on Initiative rolls.',
-        'You cannot speak.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'cond_invisible',
-      title: 'Invisible',
-      category: DmCategory.conditions,
-      icon: Icons.blur_on,
-      color: Colors.cyanAccent,
-      summary: 'Unseen by ordinary vision.',
-      tags: ['invisible', 'advantage', 'disadvantage', 'stealth', 'initiative', 'concealed'],
-      isChangedIn2024: true,
-      diffSummary: '2024 clarifies that Invisible grants Advantage on Initiative rolls, and you are Concealed from standard sight and darkvision.',
-      rules2014: [
-        'An invisible creature is impossible to see without magic or special senses. Heavily obscured for hiding.',
-        'Attack rolls against the creature have Disadvantage.',
-        'The creature\'s attack rolls have Advantage.',
-      ],
-      rules2024: [
-        'Concealed: You aren\'t affected by any effect that requires its target to be seen unless the creator has a way to see invisible creatures.',
-        'Attacks against you have Disadvantage, and your attack rolls have Advantage.',
-        'Initiative: If you are invisible when rolling Initiative, you have Advantage on the roll.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'cond_grappled',
-      title: 'Grappled',
-      category: DmCategory.conditions,
-      icon: Icons.sports_mma,
-      color: Colors.amber,
-      summary: 'Held in place by an opponent.',
-      tags: ['grappled', 'speed 0', 'escape', 'disadvantage', 'movement'],
-      isChangedIn2024: true,
-      diffSummary: '2024 grappled creatures suffer Disadvantage on attacks against anyone other than the grappler, and make saves at the end of each turn.',
-      rules2014: [
-        'A grappled creature\'s Speed becomes 0, and it cannot benefit from bonuses to speed.',
-        'Condition ends if the grappler is Incapacitated or if an effect moves the grappled creature out of reach.',
-        'Grappler can move with target at half speed.',
-      ],
-      rules2024: [
-        'Speed is 0 and cannot increase.',
-        'Attacks: You have Disadvantage on attack rolls against any target other than the grappler.',
-        'Movable: The grappler can drag or carry you at half speed (full speed if you are Tiny or 2+ sizes smaller).',
-        'Escape: Make a STR or DEX saving throw at the end of each of your turns against the grapple DC.',
-      ],
-    ),
-    DmReferenceItem(
       id: 'cond_surprise',
       title: 'Surprise / Surprised',
       category: DmCategory.conditions,
-      icon: Icons.sentiment_very_dissatisfied,
+      subCategory: 'Combat / Checks',
+      icon: Icons.priority_high,
       color: Colors.deepPurpleAccent,
       summary: 'Caught off-guard at the start of combat.',
-      tags: ['surprise', 'surprised', 'initiative', 'disadvantage', 'ambush', 'round 1'],
+      tags: ['surprise', 'surprised', 'initiative', 'disadvantage', 'ambush', 'round 1', 'combat / checks'],
       isChangedIn2024: true,
       diffSummary: '2014: Skipped whole turn on round 1. 2024: No "surprised condition" — surprised creatures simply roll Initiative with Disadvantage!',
       rules2014: [
-        'If surprised on combat start: You cannot move or take an Action on your first turn.',
+        'If surprised: You cannot move or take an Action on your first turn of combat.',
         'You cannot take a Reaction until that first turn ends.',
       ],
       rules2024: [
-        'There is no Surprised condition in 2024.',
-        'If a creature is surprised when Initiative is rolled, it has Disadvantage on its Initiative roll.',
-        'Creatures can act normally on their turn in round 1.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'cond_blinded_deafened',
-      title: 'Blinded & Deafened',
-      category: DmCategory.conditions,
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      summary: 'Loss of vision or hearing senses.',
-      tags: ['blinded', 'deafened', 'sight', 'hearing', 'advantage', 'disadvantage'],
-      isChangedIn2024: false,
-      diffSummary: 'Rules remain consistent across both 2014 and 2024.',
-      rules2014: [
-        'Blinded: Cannot see. Auto-fails ability checks requiring sight. Attacks against creature have Advantage; creature\'s attacks have Disadvantage.',
-        'Deafened: Cannot hear. Auto-fails ability checks requiring hearing.',
-      ],
-      rules2024: [
-        'Blinded: Can\'t see. Fails checks requiring sight. Attack rolls against have Advantage; its attack rolls have Disadvantage.',
-        'Deafened: Can\'t hear. Fails checks requiring hearing.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'cond_charmed_frightened',
-      title: 'Charmed & Frightened',
-      category: DmCategory.conditions,
-      icon: Icons.favorite,
-      color: Colors.pinkAccent,
-      summary: 'Mental compulsion and terrifying dread.',
-      tags: ['charmed', 'frightened', 'social', 'fear', 'disadvantage', 'line of sight'],
-      isChangedIn2024: false,
-      diffSummary: 'Mechanics remain consistent across both editions.',
-      rules2014: [
-        'Charmed: Cannot attack or target the charmer with harmful effects. Charmer has Advantage on social checks.',
-        'Frightened: Disadvantage on ability checks and attack rolls while source of fear is in line of sight. Cannot willingly move closer.',
-      ],
-      rules2024: [
-        'Charmed: Can\'t cast harmful spells or make attacks targeting the charmer. Charmer has Advantage on ability checks to interact socially.',
-        'Frightened: Disadvantage on ability checks and attack rolls while the source is visible. Can\'t willingly move closer.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'cond_paralyzed_petrified_stunned',
-      title: 'Paralyzed, Petrified & Stunned',
-      category: DmCategory.conditions,
-      icon: Icons.offline_bolt,
-      color: Colors.yellowAccent,
-      summary: 'Severe bodily immobilization and stone transformation.',
-      tags: ['paralyzed', 'petrified', 'stunned', 'incapacitated', 'auto-fail', 'critical hit', 'resistance'],
-      isChangedIn2024: false,
-      diffSummary: 'Mechanics remain consistent across both editions.',
-      rules2014: [
-        'Paralyzed: Incapacitated. Can\'t move or speak. Auto-fails STR and DEX saves. Attacks against have Advantage. Hits within 5 ft are Critical Hits.',
-        'Petrified: Transformed into solid stone (10× weight). Incapacitated, unaware. Auto-fails STR/DEX saves. Resistance to all damage, immune to poison/disease. Attacks against have Advantage.',
-        'Stunned: Incapacitated. Can speak only falteringly. Auto-fails STR/DEX saves. Attacks against have Advantage.',
-      ],
-      rules2024: [
-        'Paralyzed: Incapacitated. Can\'t move or speak. Auto-fails STR/DEX saving throws. Attacks have Advantage. Hits from within 5 ft are Critical Hits.',
-        'Petrified: Incapacitated, weight ×10. Auto-fails STR/DEX saves. Resistance to all damage, immune to poison. Attacks against have Advantage.',
-        'Stunned: Incapacitated. Can speak only falteringly. Auto-fails STR/DEX saves. Attacks against have Advantage.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'cond_poisoned_prone_restrained',
-      title: 'Poisoned, Prone & Restrained',
-      category: DmCategory.conditions,
-      icon: Icons.airline_seat_flat,
-      color: Colors.lightGreenAccent,
-      summary: 'Toxicity, knocked down, and physical bondage.',
-      tags: ['poisoned', 'prone', 'restrained', 'crawl', 'stand up', 'dex save', 'disadvantage'],
-      isChangedIn2024: false,
-      diffSummary: 'Standing up costs half speed in both. Prone grants melee advantage / ranged disadvantage.',
-      rules2014: [
-        'Poisoned: Disadvantage on attack rolls and ability checks.',
-        'Prone: Crawling costs double. Standing up costs half Speed. Disadvantage on attacks. Attacks within 5 ft have Advantage; attacks beyond 5 ft have Disadvantage.',
-        'Restrained: Speed 0. Attacks against have Advantage; its attacks have Disadvantage. Disadvantage on DEX saves.',
-      ],
-      rules2024: [
-        'Poisoned: Disadvantage on attack rolls and ability checks.',
-        'Prone: Must crawl (costs extra movement) or stand up (costs half Speed). Disadvantage on attack rolls. Attacks from within 5 ft have Advantage; other attacks have Disadvantage.',
-        'Restrained: Speed 0. Attacks against have Advantage; its attacks have Disadvantage. Disadvantage on DEX saves.',
-      ],
-    ),
-    DmReferenceItem(
-      id: 'cond_unconscious',
-      title: 'Unconscious',
-      category: DmCategory.conditions,
-      icon: Icons.bedtime,
-      color: Colors.indigoAccent,
-      summary: 'Knocked out, asleep, or reduced to 0 HP.',
-      tags: ['unconscious', 'asleep', 'incapacitated', 'critical hit', '0 hp', 'prone'],
-      isChangedIn2024: true,
-      diffSummary: '2024 clarifies that unconscious creatures roll Initiative with Disadvantage if asleep when combat starts.',
-      rules2014: [
-        'Incapacitated, can\'t move or speak, unaware of surroundings.',
-        'Drops held items and falls Prone.',
-        'Auto-fails STR and DEX saves.',
-        'Attacks against have Advantage. Hits within 5 ft are Critical Hits.',
-      ],
-      rules2024: [
-        'Incapacitated, Prone, unaware of surroundings.',
-        'Drops held items. Auto-fails STR and DEX saves.',
-        'Attacks against have Advantage; hits from within 5 ft are Critical Hits.',
-        'If asleep when combat begins, roll Initiative with Disadvantage.',
+        'No "Surprised" condition exists in 2024.',
+        'If surprised when Initiative is rolled, you have Disadvantage on your Initiative roll.',
+        'You can act normally on your first turn.',
       ],
     ),
 
     // ==========================================
-    // ENVIRONMENT & HAZARDS
+    // ENVIRONMENT & HAZARDS / COVER
     // ==========================================
     DmReferenceItem(
       id: 'env_cover',
       title: 'Cover Rules (+2, +5, Total)',
       category: DmCategory.environment,
+      subCategory: 'Cover',
       icon: Icons.shield,
       color: Colors.tealAccent,
       summary: 'AC and Dexterity saving throw modifiers from physical obstacles.',
-      tags: ['cover', 'half cover', 'three-quarters', 'total cover', 'ac bonus', 'dex save'],
+      tags: ['cover', 'half cover', 'three-quarters', 'total cover', 'ac bonus', 'dex save', 'cover_rule'],
       isChangedIn2024: false,
       diffSummary: 'Cover bonuses (+2, +5, Total) remain identical in 2014 and 2024.',
       rules2014: [
@@ -516,6 +967,60 @@ class DmScreenLibrary {
         'Half Cover: +2 bonus to AC and Dexterity saving throws.',
         'Three-Quarters Cover: +5 bonus to AC and Dexterity saving throws.',
         'Total Cover: Can\'t be targeted directly by an attack or a spell.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'env_cover_half',
+      title: 'Half Cover (+2 AC / +2 DEX Saves)',
+      category: DmCategory.environment,
+      subCategory: 'Cover',
+      cost: 'Environmental',
+      icon: Icons.table_restaurant,
+      color: Colors.lightGreenAccent,
+      summary: 'Target has half cover if an obstacle blocks at least half of its body.',
+      tags: ['half cover', 'ac +2', 'dex save +2', 'obstacle', 'cover_rule'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A target has half cover if an obstacle blocks at least half of its body (e.g. low wall, large furniture, another creature).',
+      ],
+      rules2024: [
+        'A target has half cover if an obstacle blocks at least half of its body (e.g. low wall, large furniture, another creature).',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'env_cover_three_quarters',
+      title: 'Three-Quarters Cover (+5 AC / +5 DEX Saves)',
+      category: DmCategory.environment,
+      subCategory: 'Cover',
+      cost: 'Environmental',
+      icon: Icons.fence,
+      color: Colors.amber,
+      summary: 'Target has three-quarters cover if about three-quarters of its body is covered.',
+      tags: ['three-quarters cover', 'ac +5', 'dex save +5', 'portcullis', 'arrow slit', 'cover_rule'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A target has three-quarters cover if about three-quarters of its body is covered (e.g. portcullis, arrow slit, thick tree trunk).',
+      ],
+      rules2024: [
+        'A target has three-quarters cover if about three-quarters of its body is covered (e.g. portcullis, arrow slit, thick tree trunk).',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'env_cover_total',
+      title: 'Total Cover (Untargetable)',
+      category: DmCategory.environment,
+      subCategory: 'Cover',
+      cost: 'Environmental',
+      icon: Icons.door_front_door,
+      color: Colors.redAccent,
+      summary: 'Target completely concealed by obstacle; cannot be targeted directly.',
+      tags: ['total cover', 'untargetable', 'barrier', 'cover_rule'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A target with total cover cannot be targeted directly by an attack or spell, though some spells can reach it within an area of effect.',
+      ],
+      rules2024: [
+        'A target with total cover cannot be targeted directly by an attack or spell, though some spells can reach it within an area of effect.',
       ],
     ),
     DmReferenceItem(
@@ -784,601 +1289,6 @@ class DmScreenLibrary {
         'Large HP: Fragile 5 / Resilient 27.',
         'Immune to Poison and Psychic damage.',
       ],
-    ),
-  ];
-}
-
-class ConditionItem {
-  final String name;
-  final String category;
-  final IconData icon;
-  final Color color;
-  final List<String> points2014;
-  final List<String> points2024;
-
-  const ConditionItem({
-    required this.name,
-    required this.category,
-    required this.icon,
-    required this.color,
-    required this.points2014,
-    required this.points2024,
-  });
-}
-
-class ConditionLibrary {
-  static const categories = ['All', 'Incapacitating', 'Movement', 'Combat / Checks', 'Exhaustion'];
-
-  static const List<ConditionItem> allConditions = [
-    ConditionItem(
-      name: 'Blinded',
-      category: 'Combat / Checks',
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      points2014: [
-        'A blinded creature can’t see and automatically fails any ability check that requires sight.',
-        'Attack rolls against the creature have Advantage.',
-        'The creature’s attack rolls have Disadvantage.',
-      ],
-      points2024: [
-        'A blinded creature can’t see and automatically fails any ability check that requires sight.',
-        'Attack rolls against the creature have Advantage.',
-        'The creature’s attack rolls have Disadvantage.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Charmed',
-      category: 'Combat / Checks',
-      icon: Icons.favorite,
-      color: Colors.pinkAccent,
-      points2014: [
-        'A charmed creature can’t attack the charmer or target the charmer with harmful abilities or magical effects.',
-        'The charmer has Advantage on any ability check to interact socially with the creature.',
-      ],
-      points2024: [
-        'A charmed creature can’t attack the charmer or target the charmer with harmful abilities or magical effects.',
-        'The charmer has Advantage on any ability check to interact socially with the creature.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Deafened',
-      category: 'Combat / Checks',
-      icon: Icons.hearing_disabled,
-      color: Colors.tealAccent,
-      points2014: [
-        'A deafened creature can’t hear and automatically fails any ability check that requires hearing.',
-      ],
-      points2024: [
-        'A deafened creature can’t hear and automatically fails any ability check that requires hearing.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Frightened',
-      category: 'Combat / Checks',
-      icon: Icons.sentiment_very_dissatisfied,
-      color: Colors.deepOrangeAccent,
-      points2014: [
-        'A frightened creature has Disadvantage on ability checks and attack rolls while the source of its fear is within line of sight.',
-        'The creature can’t willingly move closer to the source of its fear.',
-      ],
-      points2024: [
-        'A frightened creature has Disadvantage on ability checks and attack rolls while the source of its fear is visible.',
-        'The creature can’t willingly move closer to the source of its fear.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Grappled',
-      category: 'Movement',
-      icon: Icons.sports_mma,
-      color: Colors.amber,
-      points2014: [
-        'A grappled creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.',
-        'The condition ends if the grappler is Incapacitated.',
-        'The condition also ends if an effect removes the grappled creature from reach (e.g. Thunderwave).',
-        'Grappler can move with target at half speed.',
-      ],
-      points2024: [
-        'Speed becomes 0 and cannot increase.',
-        'Attacks: You have Disadvantage on attack rolls against anyone other than the grappler.',
-        'Movable: The grappler can drag or carry you at half speed (full speed if you are Tiny or 2+ sizes smaller).',
-        'Escape: Make a STR or DEX saving throw at the end of each of your turns against the escape DC.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Incapacitated',
-      category: 'Incapacitating',
-      icon: Icons.do_not_disturb_on,
-      color: Colors.redAccent,
-      points2014: [
-        'An incapacitated creature can’t take Actions or Reactions.',
-        'Concentration on active spells is immediately broken.',
-      ],
-      points2024: [
-        'You can’t take Actions, Bonus Actions, or Reactions.',
-        'Your Concentration is immediately broken.',
-        'Attack rolls against you have Advantage.',
-        'You have Disadvantage on Initiative rolls.',
-        'You cannot speak.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Invisible',
-      category: 'Combat / Checks',
-      icon: Icons.blur_on,
-      color: Colors.cyanAccent,
-      points2014: [
-        'An invisible creature is impossible to see without the aid of magic or a special sense. Heavily obscured for hiding purposes.',
-        'Attack rolls against the creature have Disadvantage.',
-        'The creature’s attack rolls have Advantage.',
-      ],
-      points2024: [
-        'Concealed: You aren’t affected by any effect that requires its target to be seen (unless special sight).',
-        'Attack rolls against you have Disadvantage; your attack rolls have Advantage.',
-        'Initiative: If invisible when rolling Initiative, you have Advantage on the roll.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Paralyzed',
-      category: 'Incapacitating',
-      icon: Icons.offline_bolt,
-      color: Colors.yellowAccent,
-      points2014: [
-        'A paralyzed creature is Incapacitated (can’t take actions or reactions) and can’t move or speak.',
-        'The creature automatically fails Strength and Dexterity saving throws.',
-        'Attack rolls against the creature have Advantage.',
-        'Any attack that hits the creature is a Critical Hit if the attacker is within 5 feet.',
-      ],
-      points2024: [
-        'Incapacitated, can’t move or speak.',
-        'Auto-fails Strength and Dexterity saving throws.',
-        'Attack rolls against have Advantage.',
-        'Any attack that hits from within 5 feet is a Critical Hit.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Petrified',
-      category: 'Incapacitating',
-      icon: Icons.terrain,
-      color: Colors.brown,
-      points2014: [
-        'Transformed into a solid inanimate substance (usually stone). Weight increases by a factor of ten, and ceases aging.',
-        'The creature is Incapacitated, can’t move or speak, and is unaware of its surroundings.',
-        'Attack rolls against the creature have Advantage.',
-        'The creature automatically fails Strength and Dexterity saving throws.',
-        'The creature has Resistance to all damage and is Immune to poison and disease.',
-      ],
-      points2024: [
-        'Transformed into solid stone (weight ×10), ceases aging.',
-        'Incapacitated, can’t move or speak, unaware of surroundings.',
-        'Attack rolls against have Advantage. Auto-fails STR and DEX saves.',
-        'Resistance to all damage; Immune to poison damage and the Poisoned condition.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Poisoned',
-      category: 'Combat / Checks',
-      icon: Icons.science,
-      color: Colors.greenAccent,
-      points2014: [
-        'A poisoned creature has Disadvantage on attack rolls and ability checks.',
-      ],
-      points2024: [
-        'A poisoned creature has Disadvantage on attack rolls and ability checks.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Prone',
-      category: 'Movement',
-      icon: Icons.airline_seat_flat,
-      color: Colors.lightGreenAccent,
-      points2014: [
-        'A prone creature’s only movement option is to crawl, unless it stands up and thereby ends the condition.',
-        'Standing up costs an amount of movement equal to half the creature’s speed.',
-        'The creature has Disadvantage on attack rolls.',
-        'An attack roll against the creature has Advantage if the attacker is within 5 feet of the creature. Otherwise, the attack roll has Disadvantage.',
-      ],
-      points2024: [
-        'Only movement options are crawling (costs extra movement) or standing up (costs half Speed).',
-        'Disadvantage on attack rolls.',
-        'Attack rolls from within 5 feet have Advantage; other attack rolls have Disadvantage.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Restrained',
-      category: 'Movement',
-      icon: Icons.lock,
-      color: Colors.orangeAccent,
-      points2014: [
-        'A restrained creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.',
-        'Attack rolls against the creature have Advantage, and the creature’s attack rolls have Disadvantage.',
-        'The creature has Disadvantage on Dexterity saving throws.',
-      ],
-      points2024: [
-        'Speed becomes 0 and cannot increase.',
-        'Attack rolls against have Advantage, and creature’s attack rolls have Disadvantage.',
-        'Disadvantage on Dexterity saving throws.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Stunned',
-      category: 'Incapacitating',
-      icon: Icons.flash_on,
-      color: Colors.purpleAccent,
-      points2014: [
-        'A stunned creature is Incapacitated, can’t move, and can speak only falteringly.',
-        'The creature automatically fails Strength and Dexterity saving throws.',
-        'Attack rolls against the creature have Advantage.',
-      ],
-      points2024: [
-        'Incapacitated, can’t move, can speak only falteringly.',
-        'Auto-fails Strength and Dexterity saving throws.',
-        'Attack rolls against have Advantage.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Unconscious',
-      category: 'Incapacitating',
-      icon: Icons.bedtime,
-      color: Colors.indigoAccent,
-      points2014: [
-        'An unconscious creature is Incapacitated, can’t move or speak, and is unaware of its surroundings.',
-        'The creature drops whatever it’s holding and falls Prone.',
-        'The creature automatically fails Strength and Dexterity saving throws.',
-        'Attack rolls against the creature have Advantage.',
-        'Any attack that hits the creature is a Critical Hit if the attacker is within 5 feet of the creature.',
-      ],
-      points2024: [
-        'Incapacitated, drops held items, falls Prone, unaware of surroundings.',
-        'Auto-fails Strength and Dexterity saving throws.',
-        'Attack rolls against have Advantage; hits from within 5 feet are Critical Hits.',
-        'If asleep when combat begins, rolls Initiative with Disadvantage.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Exhaustion',
-      category: 'Exhaustion',
-      icon: Icons.battery_alert,
-      color: Colors.red,
-      points2014: [
-        'Level 1: Disadvantage on ability checks',
-        'Level 2: Speed halved',
-        'Level 3: Disadvantage on attack rolls and saving throws',
-        'Level 4: Hit point maximum halved',
-        'Level 5: Speed reduced to 0',
-        'Level 6: Death',
-        'Finishing a Long Rest with food/drink reduces exhaustion level by 1.',
-      ],
-      points2024: [
-        'Cumulative penalty across 10 total levels.',
-        'D20 Tests: Subtract 2 × exhaustion level from all D20 Tests (attack rolls, ability checks, saves) and spell save DC.',
-        'Speed: Reduce speed by 5 feet × exhaustion level.',
-        'Level 10: Death.',
-        'Finishing a Long Rest with food/drink removes 1 exhaustion level.',
-      ],
-    ),
-    ConditionItem(
-      name: 'Surprise / Surprised',
-      category: 'Combat / Checks',
-      icon: Icons.priority_high,
-      color: Colors.deepPurpleAccent,
-      points2014: [
-        'If surprised: You cannot move or take an Action on your first turn of combat.',
-        'You cannot take a Reaction until that first turn ends.',
-      ],
-      points2024: [
-        'No "Surprised" condition exists in 2024.',
-        'If surprised when Initiative is rolled, you have Disadvantage on your Initiative roll.',
-        'You can act normally on your first turn.',
-      ],
-    ),
-  ];
-}
-
-class CombatActionItem {
-  final String title;
-  final String cost;
-  final IconData icon;
-  final Color color;
-  final String desc;
-
-  const CombatActionItem({
-    required this.title,
-    required this.cost,
-    required this.icon,
-    required this.color,
-    required this.desc,
-  });
-}
-
-class ActionEconomyLibrary {
-  static const standardActions2014 = [
-    CombatActionItem(
-      title: 'Attack',
-      cost: '1 Action',
-      icon: Icons.sports_kabaddi,
-      color: Colors.amber,
-      desc: 'Make one melee or ranged weapon/unarmed attack. Features like Extra Attack allow multiple attacks per Attack action. Draw/sheathe only 1 weapon for free on your turn.',
-    ),
-    CombatActionItem(
-      title: 'Cast a Spell',
-      cost: '1 Action (or Bonus Action / Reaction)',
-      icon: Icons.auto_awesome,
-      color: Colors.purpleAccent,
-      desc: 'Cast a spell with a casting time of 1 Action. Observe V, S, M component rules and concentration limits.',
-    ),
-    CombatActionItem(
-      title: 'Dash',
-      cost: '1 Action',
-      icon: Icons.directions_run,
-      color: Colors.cyanAccent,
-      desc: 'Gain extra movement for the current turn equal to your Speed (e.g. 30 ft becomes 60 ft total).',
-    ),
-    CombatActionItem(
-      title: 'Disengage',
-      cost: '1 Action',
-      icon: Icons.transit_enterexit,
-      color: Colors.greenAccent,
-      desc: 'Your movement does not provoke opportunity attacks for the rest of the turn.',
-    ),
-    CombatActionItem(
-      title: 'Dodge',
-      cost: '1 Action',
-      icon: Icons.shield,
-      color: Colors.blueAccent,
-      desc: 'Until your next turn, attack rolls against you have Disadvantage (if you can see the attacker), and you have Advantage on DEX saves.',
-    ),
-    CombatActionItem(
-      title: 'Help',
-      cost: '1 Action',
-      icon: Icons.handshake,
-      color: Colors.tealAccent,
-      desc: 'Give an ally Advantage on their next ability check, or Advantage on their next attack roll against a creature within 5 ft of you.',
-    ),
-    CombatActionItem(
-      title: 'Hide',
-      cost: '1 Action',
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      desc: 'Make a Dexterity (Stealth) check contested by enemies\' Passive Perception to become unseen and unheard.',
-    ),
-    CombatActionItem(
-      title: 'Ready',
-      cost: '1 Action + Reaction',
-      icon: Icons.hourglass_top,
-      color: Colors.orangeAccent,
-      desc: 'Specify a perceivable trigger and an action (or spell) to execute as a Reaction before your next turn.',
-    ),
-    CombatActionItem(
-      title: 'Search',
-      cost: '1 Action',
-      icon: Icons.search,
-      color: Colors.lightGreenAccent,
-      desc: 'Devote attention to finding something. The DM might call for a Wisdom (Perception) or Intelligence (Investigation) check.',
-    ),
-    CombatActionItem(
-      title: 'Use an Object',
-      cost: '1 Action',
-      icon: Icons.touch_app,
-      color: Colors.pinkAccent,
-      desc: 'Interact with a second object on your turn, or use a complex item (like applying a potion or pulling a lever).',
-    ),
-    CombatActionItem(
-      title: 'Drink / Administer a Potion (2014 RAW)',
-      cost: '1 Action',
-      icon: Icons.liquor,
-      color: Colors.redAccent,
-      desc: 'Drinking a potion or administering a potion to an unconscious ally requires 1 Action in 2014 rules.',
-    ),
-    CombatActionItem(
-      title: 'Grapple (2014 Contested)',
-      cost: '1 Attack (Part of Attack Action)',
-      icon: Icons.sports_mma,
-      color: Colors.deepOrangeAccent,
-      desc: 'Strength (Athletics) check contested by target Athletics or Acrobatics. Target Speed becomes 0 if successful.',
-    ),
-    CombatActionItem(
-      title: 'Shove / Push (2014 Contested)',
-      cost: '1 Attack (Part of Attack Action)',
-      icon: Icons.swipe_right,
-      color: Colors.deepOrange,
-      desc: 'Strength (Athletics) check contested by target Athletics or Acrobatics. Knock the target Prone or push it 5 feet away.',
-    ),
-  ];
-
-  static const standardActions2024 = [
-    CombatActionItem(
-      title: 'Attack & Weapon Swapping',
-      cost: '1 Action',
-      icon: Icons.sports_kabaddi,
-      color: Colors.amber,
-      desc: 'Make one attack with a weapon or Unarmed Strike (Damage, Grapple, or Shove). You can draw or stow one weapon before or after EACH attack.',
-    ),
-    CombatActionItem(
-      title: 'Cast a Spell (2024 Slot Limit)',
-      cost: '1 Action (or Bonus Action / Reaction)',
-      icon: Icons.auto_awesome,
-      color: Colors.purpleAccent,
-      desc: 'Cast a spell. On your turn, you can expend only ONE spell slot (you may cast multiple spells if only one uses a slot, e.g., slot + cantrip).',
-    ),
-    CombatActionItem(
-      title: 'Dash',
-      cost: '1 Action',
-      icon: Icons.directions_run,
-      color: Colors.cyanAccent,
-      desc: 'Gain extra movement for the current turn equal to your Speed.',
-    ),
-    CombatActionItem(
-      title: 'Disengage',
-      cost: '1 Action',
-      icon: Icons.transit_enterexit,
-      color: Colors.greenAccent,
-      desc: 'Your movement does not provoke opportunity attacks for the rest of the turn.',
-    ),
-    CombatActionItem(
-      title: 'Dodge',
-      cost: '1 Action',
-      icon: Icons.shield,
-      color: Colors.blueAccent,
-      desc: 'Until your next turn, attacks against you have Disadvantage (if visible), and you have Advantage on DEX saves.',
-    ),
-    CombatActionItem(
-      title: 'Help',
-      cost: '1 Action',
-      icon: Icons.handshake,
-      color: Colors.tealAccent,
-      desc: 'Give an ally Advantage on their next ability check (if you are proficient), or Advantage on an attack roll against a creature within 5 ft.',
-    ),
-    CombatActionItem(
-      title: 'Hide (2024 DC 15)',
-      cost: '1 Action',
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      desc: 'Make a DC 15 Dexterity (Stealth) check while heavily obscured or behind 3/4+ cover. On success, you gain the Invisible condition!',
-    ),
-    CombatActionItem(
-      title: 'Study (2024 New Action)',
-      cost: '1 Action',
-      icon: Icons.menu_book,
-      color: Colors.teal,
-      desc: 'Make an Intelligence check (Arcana, History, Nature, Religion, Investigation) to deduce monster stats, traits, weaknesses, or lore.',
-    ),
-    CombatActionItem(
-      title: 'Influence (2024 New Action)',
-      cost: '1 Action',
-      icon: Icons.record_voice_over,
-      color: Colors.pinkAccent,
-      desc: 'Influence an NPC attitude: Friendly DC 10, Indifferent DC 15, Hostile DC 20 with Persuasion, Deception, Animal Handling, or Intimidation.',
-    ),
-    CombatActionItem(
-      title: 'Search (2024 Codified)',
-      cost: '1 Action',
-      icon: Icons.search,
-      color: Colors.lightGreenAccent,
-      desc: 'Make a Wisdom check (Insight, Perception, Survival) to discern motives or locate concealed creatures/items.',
-    ),
-    CombatActionItem(
-      title: 'Ready',
-      cost: '1 Action + Reaction',
-      icon: Icons.hourglass_top,
-      color: Colors.orangeAccent,
-      desc: 'Specify a trigger and action. Readied spells require concentration until released as a reaction.',
-    ),
-    CombatActionItem(
-      title: 'Grapple (2024 Save DC)',
-      cost: '1 Unarmed Strike (Attack Action)',
-      icon: Icons.sports_mma,
-      color: Colors.deepOrangeAccent,
-      desc: 'Target makes STR/DEX save vs DC = 8 + STR + Prof. On fail, gains Grappled (Disadvantage on attacks against anyone other than grappler).',
-    ),
-    CombatActionItem(
-      title: 'Shove (2024 Save DC)',
-      cost: '1 Unarmed Strike (Attack Action)',
-      icon: Icons.swipe_right,
-      color: Colors.deepOrange,
-      desc: 'Target makes STR/DEX save vs DC = 8 + STR + Prof. On fail, target is knocked Prone or pushed 5 feet away.',
-    ),
-  ];
-
-  static const bonusActions2014 = [
-    CombatActionItem(
-      title: 'Two-Weapon Fighting (Off-Hand)',
-      cost: '1 Bonus Action',
-      icon: Icons.content_cut,
-      color: Colors.amber,
-      desc: 'When you take the Attack action with a light melee weapon in one hand, attack with a different light melee weapon in the other hand (no ability mod to damage unless negative).',
-    ),
-    CombatActionItem(
-      title: 'Bonus Action Spells (2014 Rule)',
-      cost: '1 Bonus Action',
-      icon: Icons.bolt,
-      color: Colors.purpleAccent,
-      desc: 'If you cast a Bonus Action spell (e.g. Healing Word, Misty Step), you cannot cast another spell on the same turn except for a Cantrip with a casting time of 1 Action.',
-    ),
-    CombatActionItem(
-      title: 'Class & Item Features',
-      cost: '1 Bonus Action',
-      icon: Icons.star,
-      color: Colors.cyanAccent,
-      desc: 'Features explicitly designated as Bonus Actions (Cunning Action, Bardic Inspiration, Rage, Second Wind, Command Minions).',
-    ),
-  ];
-
-  static const bonusActions2024 = [
-    CombatActionItem(
-      title: 'Drink or Administer a Potion (2024)',
-      cost: '1 Bonus Action',
-      icon: Icons.liquor,
-      color: Colors.redAccent,
-      desc: 'In the 2024 rules, drinking any potion or administering a potion to an ally requires only 1 Bonus Action!',
-    ),
-    CombatActionItem(
-      title: 'Two-Weapon Fighting (Light Property)',
-      cost: '1 Bonus Action (or Part of Attack with Nick)',
-      icon: Icons.content_cut,
-      color: Colors.amber,
-      desc: 'Attack with an off-hand Light weapon. With the Nick weapon mastery property, this extra attack is part of the Attack action itself without using a Bonus Action.',
-    ),
-    CombatActionItem(
-      title: 'Bonus Action Spells',
-      cost: '1 Bonus Action',
-      icon: Icons.bolt,
-      color: Colors.purpleAccent,
-      desc: 'Cast a spell with a casting time of 1 Bonus Action. Follows the 1-spell-slot-per-turn limitation.',
-    ),
-    CombatActionItem(
-      title: 'Class Features',
-      cost: '1 Bonus Action',
-      icon: Icons.star,
-      color: Colors.cyanAccent,
-      desc: 'Cunning Action, Bardic Inspiration, Second Wind, Rage, and specialized bonus action spells/abilities.',
-    ),
-  ];
-
-  static const reactions = [
-    CombatActionItem(
-      title: 'Opportunity Attack',
-      cost: '1 Reaction',
-      icon: Icons.front_hand,
-      color: Colors.redAccent,
-      desc: 'When a hostile creature that you can see leaves your reach without Disengaging, make one melee weapon attack against it.',
-    ),
-    CombatActionItem(
-      title: 'Reaction Spells',
-      cost: '1 Reaction',
-      icon: Icons.security,
-      color: Colors.purpleAccent,
-      desc: 'Triggered by specific circumstances (e.g. Shield triggered by being hit, Absorb Elements by taking elemental damage, Counterspell by seeing a creature cast a spell).',
-    ),
-    CombatActionItem(
-      title: 'Readied Action Trigger',
-      cost: '1 Reaction',
-      icon: Icons.alarm_on,
-      color: Colors.orangeAccent,
-      desc: 'Execute your previously Readied action when its designated trigger condition occurs.',
-    ),
-  ];
-
-  static const coverRules = [
-    CombatActionItem(
-      title: 'Half Cover (+2 AC / +2 DEX Saves)',
-      cost: 'Environmental',
-      icon: Icons.table_restaurant,
-      color: Colors.lightGreenAccent,
-      desc: 'A target has half cover if an obstacle blocks at least half of its body (e.g. low wall, large furniture, another creature).',
-    ),
-    CombatActionItem(
-      title: 'Three-Quarters Cover (+5 AC / +5 DEX Saves)',
-      cost: 'Environmental',
-      icon: Icons.fence,
-      color: Colors.amber,
-      desc: 'A target has three-quarters cover if about three-quarters of its body is covered (e.g. portcullis, arrow slit, thick tree trunk).',
-    ),
-    CombatActionItem(
-      title: 'Total Cover (Untargetable)',
-      cost: 'Environmental',
-      icon: Icons.door_front_door,
-      color: Colors.redAccent,
-      desc: 'A target with total cover cannot be targeted directly by an attack or spell, though some spells can reach it within an area of effect.',
     ),
   ];
 }

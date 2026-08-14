@@ -33,8 +33,12 @@ void main() {
         options: DefaultFirebaseOptions.currentPlatform,
       );
       logger.logInfo('Firebase initialized successfully.');
-    } catch (e) {
-      logger.logWarning('Firebase initialization warning', e);
+    } catch (e, stackTrace) {
+      logger.logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Firebase initialization failed; falling back to in-memory dice room mode',
+      );
     }
 
     final settingsProvider = SettingsProvider();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/dice_formatters.dart';
 
 class CreatureStatBlockDialog extends StatelessWidget {
   final MinionStatBlock statBlock;
@@ -372,7 +373,7 @@ class CreatureStatBlockDialog extends StatelessWidget {
   }
 
   Widget _buildAbilityScoreBox(String name, int score, int mod) {
-    final modStr = MinionStatBlock.formatMod(mod);
+    final modStr = DiceFormatters.formatBonus(mod, includeZero: true);
     final fullName = _expandAbilityName(name);
     final semanticLabel = '$fullName: $score, modifier ${mod >= 0 ? "plus $mod" : "$mod"}';
 

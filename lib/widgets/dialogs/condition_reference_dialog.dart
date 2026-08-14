@@ -39,16 +39,12 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
     final edition = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
     final is2024 = edition == DmRulesEdition.v2024;
 
-    final filtered = ConditionLibrary.allConditions.where((c) {
-      if (_selectedCategory != 'All' && c.category != _selectedCategory) {
+    final filtered = DmScreenLibrary.conditions.where((c) {
+      if (_selectedCategory != 'All' && c.subCategory != _selectedCategory) {
         return false;
       }
       if (_searchQuery.isEmpty) return true;
-      final query = _searchQuery.toLowerCase();
-      final matchName = c.name.toLowerCase().contains(query);
-      final points = is2024 ? c.points2024 : c.points2014;
-      final matchPoints = points.any((p) => p.toLowerCase().contains(query));
-      return matchName || matchPoints;
+      return c.matches(_searchQuery);
     }).toList();
 
     return Dialog(
@@ -145,7 +141,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: ConditionLibrary.categories.map((cat) {
+                  children: DmScreenLibrary.conditionCategories.map((cat) {
                     final isSelected = _selectedCategory == cat;
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
@@ -178,7 +174,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
                         final item = filtered[index];
-                        final bulletPoints = is2024 ? item.points2024 : item.points2014;
+                        final bulletPoints = item.getRules(edition);
                         return Card(
                           color: const Color(0xFF252236),
                           margin: const EdgeInsets.only(bottom: 8),
@@ -204,7 +200,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
-                                        item.name,
+                                        item.title,
                                         style: TextStyle(
                                           color: item.color,
                                           fontWeight: FontWeight.bold,
@@ -212,17 +208,18 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                                         ),
                                       ),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white10,
-                                        borderRadius: BorderRadius.circular(4),
+                                    if (item.subCategory != null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white10,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          item.subCategory!,
+                                          style: const TextStyle(color: Colors.white60, fontSize: 10),
+                                        ),
                                       ),
-                                      child: Text(
-                                        item.category,
-                                        style: const TextStyle(color: Colors.white60, fontSize: 10),
-                                      ),
-                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),

@@ -45,8 +45,10 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
     final edition = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
     final is2024 = edition == DmRulesEdition.v2024;
 
-    final standardActions = is2024 ? ActionEconomyLibrary.standardActions2024 : ActionEconomyLibrary.standardActions2014;
-    final bonusActions = is2024 ? ActionEconomyLibrary.bonusActions2024 : ActionEconomyLibrary.bonusActions2014;
+    final standardActions = DmScreenLibrary.standardActions(edition);
+    final bonusActions = DmScreenLibrary.bonusActions(edition);
+    final reactions = DmScreenLibrary.reactions;
+    final coverRules = DmScreenLibrary.coverRules;
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -156,10 +158,10 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildList(standardActions),
-                  _buildList(bonusActions),
-                  _buildList(ActionEconomyLibrary.reactions),
-                  _buildList(ActionEconomyLibrary.coverRules),
+                  _buildList(standardActions, edition),
+                  _buildList(bonusActions, edition),
+                  _buildList(reactions, edition),
+                  _buildList(coverRules, edition),
                 ],
               ),
             ),
@@ -196,12 +198,10 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
     );
   }
 
-  Widget _buildList(List<CombatActionItem> items) {
+  Widget _buildList(List<DmReferenceItem> items, DmRulesEdition edition) {
     final filtered = items.where((i) {
       if (_searchQuery.isEmpty) return true;
-      return i.title.toLowerCase().contains(_searchQuery) ||
-          i.desc.toLowerCase().contains(_searchQuery) ||
-          i.cost.toLowerCase().contains(_searchQuery);
+      return i.matches(_searchQuery);
     }).toList();
 
     if (filtered.isEmpty) {
@@ -218,6 +218,11 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final item = filtered[index];
+        final title = item.getTitle(edition);
+        final cost = item.getCost(edition) ?? item.cost ?? '';
+        final rules = item.getRules(edition);
+        final desc = rules.isNotEmpty ? rules.join(' ') : item.summary;
+
         return Card(
           color: const Color(0xFF252236),
           margin: const EdgeInsets.only(bottom: 8),
@@ -248,26 +253,27 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                         children: [
                           Flexible(
                             child: Text(
-                              item.title,
+                              title,
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: item.color.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(4),
+                          if (cost.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: item.color.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                cost,
+                                style: TextStyle(color: item.color, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
                             ),
-                            child: Text(
-                              item.cost,
-                              style: TextStyle(color: item.color, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        item.desc,
+                        desc,
                         style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
                       ),
                     ],

@@ -3,6 +3,7 @@ import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
+import '../services/rules/dnd_5e_rules_engine.dart';
 import '../utils/secure_random.dart';
 import '../widgets/animate_objects/active_session_card.dart';
 import '../widgets/batch_attack_dialog.dart';
@@ -130,7 +131,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     String minionName = widget.preset.name;
     if (_session.activeObjects.isNotEmpty) {
       final first = _session.activeObjects.first;
-      dexMod = ((first.size.dexScore - 10) / 2).floor();
+      dexMod = first.size.dexScore.dndModifier;
       minionName = first.name;
     }
     final natRoll = SecureRng.instance.nextInt(20) + 1;

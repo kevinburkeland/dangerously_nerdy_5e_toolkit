@@ -119,16 +119,12 @@ class MinionStatBlock {
     this.accentColor = const Color(0xFF673AB7),
   });
 
-  static int calcModifier(int score) => score.dndModifier;
-
   int get strMod => strScore.dndModifier;
   int get dexMod => dexScore.dndModifier;
   int get conMod => conScore.dndModifier;
   int get intMod => intScore.dndModifier;
   int get wisMod => wisScore.dndModifier;
   int get chaMod => chaScore.dndModifier;
-
-  static String formatMod(int mod) => mod >= 0 ? '+$mod' : '$mod';
 
   String get primaryDamageFormula => DiceFormatters.formatFormula(
         count: damageDiceCount,
