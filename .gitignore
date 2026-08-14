@@ -30,7 +30,8 @@ firebase-debug.*.log
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+build/
+**/build/
 /coverage/
 **/doc/api/
 **/ephemeral/
@@ -40,6 +41,8 @@ web/flutter_bootstrap.js
 # Android Studio / Gradle
 .gradle/
 **/android/.gradle/
+android/build/
+android/app/build/
 /android/app/debug
 /android/app/profile
 /android/app/release
