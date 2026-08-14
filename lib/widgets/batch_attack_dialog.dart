@@ -6,6 +6,7 @@ import '../models/spell_session.dart';
 import '../services/a11y_service.dart';
 import '../services/dice_room_service.dart';
 import '../services/haptic_service.dart';
+import '../theme/app_theme.dart';
 import '../utils/secure_random.dart';
 import 'batch_attack/batch_attack_results_card.dart';
 
@@ -62,6 +63,17 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     });
   }
 
+  void _onManualRollModeChanged(RollMode mode) {
+    HapticService.selectionTick(context);
+    setState(() {
+      _advantageMode = mode;
+      _targetProne = false;
+      _packTactics = false;
+      _targetIncapacitated = false;
+      _attackerImpaired = false;
+    });
+  }
+
   void _rollAttacks() {
     final now = DateTime.now();
     if (_lastAttackRollTime != null && now.difference(_lastAttackRollTime!).inMilliseconds < 200) {
@@ -110,10 +122,12 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     final currentRoomCode = widget.roomService.activeRoomCode;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 500;
+    final theme = Theme.of(context);
+    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-      backgroundColor: const Color(0xFF1E1B2E),
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: EdgeInsets.all(isMobile ? 12 : 20),
@@ -264,7 +278,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                     ButtonSegment(value: RollMode.advantage, label: Text('Adv', style: TextStyle(fontSize: 12))),
                                   ],
                                   selected: {_advantageMode},
-                                  onSelectionChanged: (set) => setState(() => _advantageMode = set.first),
+                                  onSelectionChanged: (set) => _onManualRollModeChanged(set.first),
                                 ),
                               ),
                             ],
@@ -295,12 +309,12 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                       // Tactical Modifiers Accordion
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF252236),
+                          color: tabletop.cardBackground,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: (_targetProne || _packTactics || _targetIncapacitated || _attackerImpaired)
                                 ? Colors.cyanAccent.withValues(alpha: 0.6)
-                                : Colors.white12,
+                                : tabletop.cardBorder,
                           ),
                         ),
                         child: Column(

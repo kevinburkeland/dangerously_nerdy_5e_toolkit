@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
+import '../theme/app_theme.dart';
 import 'dialogs/creature_stat_block_dialog.dart';
 
 class SpellReferenceWidget extends StatefulWidget {
@@ -33,6 +34,8 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
   @override
   Widget build(BuildContext context) {
     final p = _selectedPreset;
+    final theme = Theme.of(context);
+    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -43,14 +46,14 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF252236),
+            color: tabletop.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<SummonPreset>(
                 value: _selectedPreset,
-                dropdownColor: const Color(0xFF252236),
+                dropdownColor: tabletop.cardBackground,
                 isExpanded: true,
                 icon: const Icon(Icons.menu_book, color: Colors.amber),
                 items: [
@@ -172,10 +175,11 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
   }
 
   Widget _buildCreatureProfileCard(MinionStatBlock sb) {
+    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1A2E),
+        color: tabletop.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: sb.accentColor.withValues(alpha: 0.4), width: 1.2),
         boxShadow: [
@@ -320,13 +324,14 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
   }
 
   Widget _buildTipCard(String title, String body) {
+    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF252236),
+        color: tabletop.cardBackground,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: tabletop.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

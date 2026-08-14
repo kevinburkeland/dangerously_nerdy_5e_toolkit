@@ -140,7 +140,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF242038),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
@@ -198,7 +197,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       amount = await showDialog<int>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF242038),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Row(
             children: [

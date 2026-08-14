@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/dice_roll.dart';
+import '../../theme/app_theme.dart';
 
 class DicePoolBuilder extends StatelessWidget {
   final List<DiceEntry> dicePool;
@@ -30,6 +31,8 @@ class DicePoolBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasD20 = dicePool.any((e) => e.dieType == DieType.d20);
+    final theme = Theme.of(context);
+    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -82,7 +85,7 @@ class DicePoolBuilder extends StatelessWidget {
                   ),
                   selected: isInPool,
                   selectedColor: Colors.cyanAccent,
-                  backgroundColor: const Color(0xFF28243D),
+                  backgroundColor: tabletop.cardBackground,
                   onSelected: (selected) {
                     onSelectDie(die);
                   },
@@ -99,7 +102,7 @@ class DicePoolBuilder extends StatelessWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.cyanAccent),
                 ),
-                backgroundColor: const Color(0xFF28243D),
+                backgroundColor: tabletop.cardBackground,
                 side: const BorderSide(color: Colors.cyanAccent),
                 onPressed: onShowCustomDieDialog,
               ),
@@ -113,9 +116,9 @@ class DicePoolBuilder extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1B2E),
+            color: tabletop.cardBackground,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: tabletop.cardBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

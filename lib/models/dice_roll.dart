@@ -137,6 +137,7 @@ class DiceRollResult {
     int modifier = 0,
     RollMode rollMode = RollMode.normal,
     bool isCritDamage = false,
+    bool useMaximizedCrits = false,
   }) {
     List<DiceGroupResult> groupResults = [];
     List<int> allRolls = [];
@@ -144,7 +145,7 @@ class DiceRollResult {
     bool crit = false;
     bool fumble = false;
 
-    final effectiveEntries = isCritDamage
+    final effectiveEntries = (isCritDamage && !useMaximizedCrits)
         ? diceEntries.map((e) => e.copyWith(count: e.count * 2)).toList()
         : diceEntries;
 
@@ -172,6 +173,12 @@ class DiceRollResult {
         if (kept == 20) crit = true;
         if (kept == 1) fumble = true;
       } else {
+        if (isCritDamage && useMaximizedCrits) {
+          for (int i = 0; i < entry.count; i++) {
+            groupRolls.add(maxSides);
+            allRolls.add(maxSides);
+          }
+        }
         for (int i = 0; i < entry.count; i++) {
           int r = _rng.nextInt(maxSides) + 1;
           groupRolls.add(r);

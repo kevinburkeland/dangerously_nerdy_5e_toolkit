@@ -399,48 +399,10 @@ class AnimatedObjectInstance {
       identical(this, other) ||
       other is AnimatedObjectInstance &&
           runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name &&
-          size == other.size &&
-          _currentHp == other._currentHp &&
-          maxHp == other.maxHp &&
-          _tempHp == other._tempHp &&
-          damageType == other.damageType &&
-          isSilvered == other.isSilvered &&
-          customAc == other.customAc &&
-          customAttackBonus == other.customAttackBonus &&
-          customDamageDiceCount == other.customDamageDiceCount &&
-          customDamageDiceSides == other.customDamageDiceSides &&
-          customDamageBonus == other.customDamageBonus &&
-          secondaryDamageDiceCount == other.secondaryDamageDiceCount &&
-          secondaryDamageDiceSides == other.secondaryDamageDiceSides &&
-          secondaryDamageType == other.secondaryDamageType &&
-          hasPackTactics == other.hasPackTactics &&
-          specialTrait == other.specialTrait &&
-          customAccentColor == other.customAccentColor;
+          id == other.id;
 
   @override
-  int get hashCode => Object.hashAll([
-        id,
-        name,
-        size,
-        _currentHp,
-        maxHp,
-        _tempHp,
-        damageType,
-        isSilvered,
-        customAc,
-        customAttackBonus,
-        customDamageDiceCount,
-        customDamageDiceSides,
-        customDamageBonus,
-        secondaryDamageDiceCount,
-        secondaryDamageDiceSides,
-        secondaryDamageType,
-        hasPackTactics,
-        specialTrait,
-        customAccentColor,
-      ]);
+  int get hashCode => id.hashCode;
 
   @override
   String toString() =>

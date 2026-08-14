@@ -3,6 +3,7 @@ import '../models/dm_screen_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
+import '../theme/app_theme.dart';
 import '../utils/secure_random.dart';
 import '../widgets/interactive/pressable_card.dart';
 
@@ -88,7 +89,7 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
           final isPinned = _getPinnedIds(context).contains(item.id);
 
           return Dialog(
-            backgroundColor: const Color(0xFF1E1B2E),
+            backgroundColor: theme.colorScheme.surface,
             insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Container(
@@ -223,10 +224,11 @@ class _DmScreenScreenState extends State<DmScreenScreen> {
   }
 
   Widget _buildEditionBox(String title, List<String> rules, Color accentColor) {
+    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF252236),
+        color: tabletop.cardBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: accentColor.withValues(alpha: 0.3)),
       ),

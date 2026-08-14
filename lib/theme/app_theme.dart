@@ -98,6 +98,9 @@ class TabletopColors extends ThemeExtension<TabletopColors> {
     statPillBackground: Color(0x40000000),
     glowAccent: Color(0xFFFFD54F),
   );
+
+  /// Convenience alias for container/card background — mirrors [surfaceSubtle].
+  Color get cardBackground => surfaceSubtle;
 }
 
 class AppTheme {

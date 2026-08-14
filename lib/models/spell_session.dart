@@ -279,18 +279,25 @@ class SpellSession {
       return (rolls: const <int>[], maxedRolls: null, damage: 0);
     }
 
+    final poolResult = DiceRollResult.rollPool(
+      diceEntries: [
+        DiceEntry(
+          dieType: DieType.custom,
+          count: diceCount,
+          customSides: diceSides,
+        ),
+      ],
+      isCritDamage: isCrit,
+      useMaximizedCrits: isMaximizedCrit,
+    );
+
     if (isCrit && isMaximizedCrit) {
-      final maxed = List<int>.generate(diceCount, (_) => diceSides);
-      final rolled = List<int>.generate(diceCount, (_) => _rng.nextInt(diceSides) + 1);
-      final int rolledSum = rolled.fold<int>(0, (int a, int b) => a + b);
-      final int total = (diceCount * diceSides) + rolledSum;
-      return (rolls: rolled, maxedRolls: maxed, damage: total);
+      final maxed = List<int>.filled(diceCount, diceSides);
+      final rolled = poolResult.individualRolls.sublist(diceCount);
+      return (rolls: rolled, maxedRolls: maxed, damage: poolResult.total);
     }
 
-    final totalDice = isCrit ? diceCount * 2 : diceCount;
-    final rolled = List<int>.generate(totalDice, (_) => _rng.nextInt(diceSides) + 1);
-    final int total = rolled.fold<int>(0, (int a, int b) => a + b);
-    return (rolls: rolled, maxedRolls: null, damage: total);
+    return (rolls: poolResult.individualRolls, maxedRolls: null, damage: poolResult.total);
   }
 
   BatchAttackSummary performBatchAttack({

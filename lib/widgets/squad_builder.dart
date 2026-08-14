@@ -3,6 +3,7 @@ import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/a11y_service.dart';
+import '../theme/app_theme.dart';
 
 class SquadBuilderBottomSheet extends StatefulWidget {
   final SpellSession session;
@@ -117,10 +118,12 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1B2E),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: const EdgeInsets.all(20),
       child: SingleChildScrollView(
@@ -150,14 +153,14 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF2C2840),
+              color: tabletop.cardBackground,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<SummonPreset>(
                   value: _selectedPreset,
-                  dropdownColor: const Color(0xFF2C2840),
+                  dropdownColor: tabletop.cardBackground,
                   isExpanded: true,
                   icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
                   items: [
@@ -347,8 +350,9 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
   }
 
   Widget _buildChip(String label, VoidCallback onTap) {
+    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
     return ActionChip(
-      backgroundColor: const Color(0xFF2C2840),
+      backgroundColor: tabletop.cardBackground,
       side: const BorderSide(color: Colors.amber, width: 1),
       label: Text(label, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12)),
       onPressed: onTap,
