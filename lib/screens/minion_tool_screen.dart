@@ -36,10 +36,6 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   late TabController _tabController;
   final CriticalEffectController _critController = CriticalEffectController();
 
-  // Shared Room state
-  String? _activeRoomCode;
-  String? _playerName;
-
   @override
   void initState() {
     super.initState();
@@ -94,27 +90,12 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     super.dispose();
   }
 
-  void _joinRoom(String roomCode, String playerName) {
-    setState(() {
-      _activeRoomCode = roomCode.trim().toUpperCase();
-      _playerName = playerName.trim();
-    });
-  }
-
-  void _leaveRoom() {
-    setState(() {
-      _activeRoomCode = null;
-    });
-  }
-
   void _openBatchAttackDialog() {
     HapticService.mediumImpact(context);
     showDialog(
       context: context,
       builder: (ctx) => BatchAttackDialog(
         session: _session,
-        activeRoomCode: _activeRoomCode,
-        playerName: _playerName,
       ),
     );
   }
@@ -438,12 +419,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       children: [
         Padding(
           padding: const EdgeInsets.all(12.0),
-          child: RoomBannerWidget(
-            activeRoomCode: _activeRoomCode,
-            playerName: _playerName,
-            onJoinRoom: _joinRoom,
-            onLeaveRoom: _leaveRoom,
-          ),
+          child: RoomBannerWidget(),
         ),
 
         // Point Budget & Quick Action Header Widget

@@ -50,9 +50,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   DiceRollResult? _animatingResult;
   bool _showAnimatedRoll = false;
 
-  // Shared Room state
-  String? _activeRoomCode;
-  String? _playerName;
+  // Shared Room Service
   late final DiceRoomService _roomService;
 
   // Custom Presets State
@@ -98,20 +96,35 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
       if (_dicePool.length == 1 &&
           _dicePool.first.dieType == DieType.d20 &&
           _dicePool.first.count == 1 &&
-          die != DieType.d20) {
+          _dicePool.first.customSides == 6 &&
+          _modifier == 0 &&
+          _rollMode == RollMode.normal) {
         _dicePool = [
-          DiceEntry(dieType: die, count: 1, customSides: customSides)
+          DiceEntry(
+            dieType: die,
+            count: 1,
+            customSides: die == DieType.custom ? customSides : die.sides,
+          )
         ];
-        return;
+      } else {
+        _addDieToPool(die, customSides: customSides);
       }
-      _addDieToPool(die, customSides: customSides);
+    });
+  }
+
+  void _clearPool() {
+    HapticService.selectionTick(context);
+    setState(() {
+      _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
+      _modifier = 0;
+      _rollMode = RollMode.normal;
     });
   }
 
   Future<void> _showCustomDieDialog() async {
     HapticService.selectionTick(context);
     final sides = await CustomDieDialog.show(context, initialSides: _customSides);
-    if (sides != null && sides >= 2 && sides <= 1000) {
+    if (sides != null) {
       setState(() {
         _customSides = sides;
         _onSelectDieChip(DieType.custom, customSides: sides);
@@ -119,49 +132,26 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     }
   }
 
-  void _clearPool() {
-    HapticService.selectionTick(context);
-    setState(() {
-      _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
-      _rollMode = RollMode.normal;
-    });
-  }
-
-  DateTime? _lastRollTime;
-
   void _rollDice() {
-    final now = DateTime.now();
-    if (_lastRollTime != null && now.difference(_lastRollTime!).inMilliseconds < 150) {
-      return; // Debounce rapid button mashing (<150ms cooldown)
-    }
-    _lastRollTime = now;
-
-    if (_dicePool.isEmpty) {
-      _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
-    }
-
-    final isSingleD20 = _dicePool.length == 1 &&
-        _dicePool.first.dieType == DieType.d20 &&
-        _dicePool.first.count == 1;
-
+    final settings = SettingsScope.of(context).settings;
     final res = DiceRollResult.rollPool(
       diceEntries: _dicePool,
       modifier: _modifier,
-      rollMode: isSingleD20 ? _rollMode : RollMode.normal,
+      rollMode: _rollMode,
     );
 
-    final settings = SettingsScope.of(context).settings;
+    if (settings.enable3dDiceOverlays && !settings.performanceMode) {
+      setState(() {
+        _animatingResult = res;
+        _showAnimatedRoll = true;
+      });
+    }
 
     setState(() {
       _latestResult = res;
       _history.insert(0, res);
       if (_history.length > 50) {
         _history.removeLast();
-      }
-
-      if (settings.enable3dDiceOverlays && !settings.performanceMode) {
-        _animatingResult = res;
-        _showAnimatedRoll = true;
       }
     });
 
@@ -176,8 +166,8 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     }
 
     // Send roll to room if connected
-    final currentRoomCode = _activeRoomCode;
-    final currentPlayerName = _playerName;
+    final currentRoomCode = _roomService.activeRoomCode;
+    final currentPlayerName = _roomService.playerName;
     if (currentRoomCode != null && currentPlayerName != null) {
       final roomRoll = RoomRoll.fromDiceRollResult(
         id: '${DateTime.now().microsecondsSinceEpoch}_${SecureRng.instance.nextInt(1000000)}',
@@ -203,19 +193,6 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     setState(() {
       _history.clear();
       _latestResult = null;
-    });
-  }
-
-  void _joinRoom(String roomCode, String playerName) {
-    setState(() {
-      _activeRoomCode = roomCode.trim().toUpperCase();
-      _playerName = playerName.trim();
-    });
-  }
-
-  void _leaveRoom() {
-    setState(() {
-      _activeRoomCode = null;
     });
   }
 
@@ -406,12 +383,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // 0. SHARED ROOM BANNER
-                      RoomBannerWidget(
-                        activeRoomCode: _activeRoomCode,
-                        playerName: _playerName,
-                        onJoinRoom: _joinRoom,
-                        onLeaveRoom: _leaveRoom,
-                      ),
+                      RoomBannerWidget(roomService: _roomService),
 
                       const SizedBox(height: 16),
 
@@ -451,8 +423,6 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                       // 4. ROLL HISTORY / LIVE ROOM ROLL FEED
                       RollHistoryList(
                         localHistory: _history,
-                        activeRoomCode: _activeRoomCode,
-                        playerName: _playerName,
                         roomService: _roomService,
                       ),
                     ],

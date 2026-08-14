@@ -157,8 +157,12 @@ class PresetService {
             diceEntries: boundedEntries,
           );
           imported.add(safePreset);
-        } catch (_) {
-          // Skip corrupt or unparseable individual preset
+        } catch (e, stackTrace) {
+          LoggingService().logNonFatal(
+            e,
+            stackTrace,
+            reason: 'Skipping malformed individual preset during JSON import',
+          );
         }
       }
     }

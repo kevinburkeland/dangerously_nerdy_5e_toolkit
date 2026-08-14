@@ -53,12 +53,10 @@ class CustomPreset {
     final rawEntries = map['diceEntries'];
     if (rawEntries is List && rawEntries.isNotEmpty) {
       for (final item in rawEntries) {
-        if (item is Map) {
-          try {
-            parsedEntries.add(DiceEntry.fromMap(Map<String, dynamic>.from(item)));
-          } catch (_) {
-            // Skip individual malformed entry
-          }
+        if (item is Map<String, dynamic>) {
+          parsedEntries.add(DiceEntry.fromMap(item));
+        } else if (item is Map) {
+          parsedEntries.add(DiceEntry.fromMap(Map<String, dynamic>.from(item)));
         }
       }
     }

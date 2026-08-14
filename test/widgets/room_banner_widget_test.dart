@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/room_banner_widget.dart';
 
 void main() {
@@ -60,5 +61,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Shared Dice Room'), findsNothing);
+  });
+
+  testWidgets('RoomBannerWidget updates automatically when DiceRoomService session changes', (WidgetTester tester) async {
+    final roomService = DiceRoomService();
+    roomService.leaveRoom();
+
+    await tester.pumpWidget(createTestableWidget(
+      RoomBannerWidget(roomService: roomService),
+    ));
+
+    expect(find.text('Solo Mode'), findsOneWidget);
+
+    roomService.joinRoom('ROOM-TEST99', 'Aragorn');
+    await tester.pumpAndSettle();
+
+    expect(find.text('ROOM-TEST99'), findsOneWidget);
+    expect(find.text('Player: Aragorn'), findsOneWidget);
+
+    roomService.leaveRoom();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Solo Mode'), findsOneWidget);
   });
 }

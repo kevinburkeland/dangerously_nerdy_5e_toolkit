@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/screens/animate_objects_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/minion_tool_screen.dart';
 
 void main() {
   Widget createTestableWidget(Widget child) {
@@ -9,8 +10,13 @@ void main() {
     );
   }
 
-  testWidgets('AnimateObjectsScreen loads with default 10 Tiny silver coins preset', (WidgetTester tester) async {
-    await tester.pumpWidget(createTestableWidget(const AnimateObjectsScreen()));
+  const animateObjectsWidget = MinionToolScreen(
+    preset: AnimateObjectsSummon.preset,
+    customTitle: 'Animate Objects Companion',
+  );
+
+  testWidgets('MinionToolScreen loads Animate Objects with default 10 Tiny silver coins preset', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(animateObjectsWidget));
 
     expect(find.text('Animate Objects Companion'), findsOneWidget);
     expect(find.text('Active Squad'), findsOneWidget);
@@ -23,7 +29,7 @@ void main() {
   });
 
   testWidgets('Switching tabs displays Minion Rulebook', (WidgetTester tester) async {
-    await tester.pumpWidget(createTestableWidget(const AnimateObjectsScreen()));
+    await tester.pumpWidget(createTestableWidget(animateObjectsWidget));
 
     final spellRulesTab = find.text('Minion Rulebook');
     await tester.tap(spellRulesTab);
@@ -33,7 +39,7 @@ void main() {
   });
 
   testWidgets('Tapping BATCH ATTACK opens attack dialog', (WidgetTester tester) async {
-    await tester.pumpWidget(createTestableWidget(const AnimateObjectsScreen()));
+    await tester.pumpWidget(createTestableWidget(animateObjectsWidget));
 
     final batchAttackBtn = find.text('BATCH ATTACK');
     expect(batchAttackBtn, findsOneWidget);

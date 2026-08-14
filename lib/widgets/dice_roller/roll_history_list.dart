@@ -9,22 +9,23 @@ class RollHistoryList extends StatelessWidget {
   final String? playerName;
   final DiceRoomService roomService;
 
-  const RollHistoryList({
+  RollHistoryList({
     super.key,
     required this.localHistory,
-    required this.activeRoomCode,
-    required this.playerName,
-    required this.roomService,
-  });
+    this.activeRoomCode,
+    this.playerName,
+    DiceRoomService? roomService,
+  }) : roomService = roomService ?? DiceRoomService();
 
   @override
   Widget build(BuildContext context) {
-    final effectiveRoomCode = roomService.activeRoomCode ?? activeRoomCode;
+    final effectiveRoomCode = activeRoomCode ?? roomService.activeRoomCode;
+    final effectivePlayerName = playerName ?? roomService.playerName;
 
     if (effectiveRoomCode != null) {
       return LiveRoomRollFeed(
         roomCode: effectiveRoomCode,
-        playerName: playerName,
+        playerName: effectivePlayerName,
         roomService: roomService,
       );
     } else if (localHistory.isNotEmpty) {

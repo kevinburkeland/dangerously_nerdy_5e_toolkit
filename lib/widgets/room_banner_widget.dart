@@ -4,32 +4,37 @@ import '../services/dice_room_service.dart';
 import 'dialogs/join_create_room_dialog.dart';
 
 class RoomBannerWidget extends StatelessWidget {
+  final DiceRoomService roomService;
   final String? activeRoomCode;
   final String? playerName;
   final Function(String roomCode, String playerName)? onJoinRoom;
   final VoidCallback? onLeaveRoom;
 
-  const RoomBannerWidget({
+  RoomBannerWidget({
     super.key,
+    DiceRoomService? roomService,
     this.activeRoomCode,
     this.playerName,
     this.onJoinRoom,
     this.onLeaveRoom,
-  });
+  }) : roomService = roomService ?? DiceRoomService();
 
   void _showJoinCreateRoomDialog(BuildContext context, String? currentName, String? currentRoom) {
     JoinCreateRoomDialog.show(
       context,
       initialPlayerName: currentName,
       initialRoomCode: currentRoom,
-      onJoinRoom: onJoinRoom,
+      onJoinRoom: (code, name) {
+        roomService.joinRoom(code, name);
+        onJoinRoom?.call(code, name);
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<RoomSession?>(
-      valueListenable: DiceRoomService().activeSessionNotifier,
+      valueListenable: roomService.activeSessionNotifier,
       builder: (context, session, _) {
         final String? effectiveRoom = activeRoomCode ?? session?.roomCode;
         final String? effectiveName = playerName ?? session?.playerName;
@@ -99,7 +104,7 @@ class RoomBannerWidget extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () {
-                        DiceRoomService().leaveRoom();
+                        roomService.leaveRoom();
                         onLeaveRoom?.call();
                       },
                       child: const Text('Leave', style: TextStyle(color: Colors.redAccent, fontSize: 13)),

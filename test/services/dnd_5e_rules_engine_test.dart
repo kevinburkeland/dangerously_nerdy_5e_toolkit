@@ -40,6 +40,14 @@ void main() {
       expect(Dnd5eRulesEngine.calculateProficiencyBonus(17), 6);
       expect(Dnd5eRulesEngine.calculateProficiencyBonus(20), 6);
     });
+
+    test('Dnd5eScoreMath extension getters match rules calculation', () {
+      expect(10.dndModifier, 0);
+      expect(18.dndModifier, 4);
+      expect(1.dndModifier, -5);
+      expect(1.dndProficiencyBonus, 2);
+      expect(5.dndProficiencyBonus, 3);
+      expect(20.dndProficiencyBonus, 6);
+    });
   });
 }
-

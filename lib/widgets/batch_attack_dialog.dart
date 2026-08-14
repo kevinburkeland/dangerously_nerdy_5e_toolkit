@@ -11,15 +11,11 @@ import 'batch_attack/batch_attack_results_card.dart';
 
 class BatchAttackDialog extends StatefulWidget {
   final SpellSession session;
-  final String? activeRoomCode;
-  final String? playerName;
   final DiceRoomService roomService;
 
   BatchAttackDialog({
     super.key,
     required this.session,
-    this.activeRoomCode,
-    this.playerName,
     DiceRoomService? roomService,
   }) : roomService = roomService ?? DiceRoomService();
 
@@ -43,7 +39,6 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
   @override
   void initState() {
     super.initState();
-    // If minions in squad have pack tactics (e.g. wolves), pre-enable hint
     if (widget.session.activeObjects.any((o) => o.hasPackTactics)) {
       _packTactics = true;
       _advantageMode = RollMode.advantage;
@@ -70,7 +65,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
   void _rollAttacks() {
     final now = DateTime.now();
     if (_lastAttackRollTime != null && now.difference(_lastAttackRollTime!).inMilliseconds < 200) {
-      return; // Debounce rapid button mashing (<200ms cooldown)
+      return;
     }
     _lastAttackRollTime = now;
 
@@ -82,21 +77,17 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
       useMaximizedCrits: _useMaximizedCrits,
     );
 
-    // Synchronous UI state mutation
     setState(() {
       _summary = summary;
     });
 
     A11yService.announceBatchAttack(summary, _targetAc);
 
-    // Asynchronous network side-effects executed outside of setState()
-    final activeCode = widget.activeRoomCode ?? widget.roomService.activeRoomCode;
-    final activePlayer = widget.playerName ?? widget.roomService.playerName;
+    final activeCode = widget.roomService.activeRoomCode;
+    final activePlayer = widget.roomService.playerName;
 
     if (activeCode != null && activePlayer != null) {
       final timestamp = DateTime.now();
-
-      // Broadcast single consolidated summary roll for overall batch results
       final summaryId = '${timestamp.microsecondsSinceEpoch}_batch_${SecureRng.instance.nextInt(1000000)}';
       final summaryRoll = RoomRoll(
         id: summaryId,
@@ -116,7 +107,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
   @override
   Widget build(BuildContext context) {
     final livingCount = widget.session.activeObjects.where((o) => !o.isDead).length;
-    final currentRoomCode = widget.activeRoomCode ?? widget.roomService.activeRoomCode;
+    final currentRoomCode = widget.roomService.activeRoomCode;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 500;
 

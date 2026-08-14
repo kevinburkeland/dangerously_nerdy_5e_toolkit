@@ -53,7 +53,8 @@ class DiceRoomService {
   bool get isFirebaseAvailable {
     try {
       return Firebase.apps.isNotEmpty;
-    } catch (_) {
+    } catch (e) {
+      LoggingService().logWarning('Firebase availability probe returned false', e);
       return false;
     }
   }

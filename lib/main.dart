@@ -9,13 +9,11 @@ import 'services/logging_service.dart';
 import 'theme/app_theme.dart';
 
 void main() {
-  // Global Zone Error Wrapper for uncaught asynchronous exceptions
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
     final logger = LoggingService();
 
-    // 1. Intercept Flutter Framework UI Errors (Widget Build/Render crashes)
     FlutterError.onError = (FlutterErrorDetails details) {
       FlutterError.presentError(details);
       logger.logFatal(
@@ -25,13 +23,11 @@ void main() {
       );
     };
 
-    // 2. Intercept Asynchronous Platform Engine Errors
     PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
       logger.logFatal(error, stack, reason: 'PlatformDispatcher.instance.onError');
-      return true; // Prevents crash bubbling if safely handled
+      return true;
     };
 
-    // Initialize Firebase Services
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
@@ -50,7 +46,6 @@ void main() {
       ),
     );
   }, (Object error, StackTrace stack) {
-    // 3. Intercept Uncaught Async Zone Errors
     LoggingService().logFatal(error, stack, reason: 'runZonedGuarded uncaught zone exception');
   });
 }
