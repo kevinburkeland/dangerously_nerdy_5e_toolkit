@@ -42,7 +42,16 @@ class PresetService implements IPresetService {
         _cachedPresets = [];
         return [];
       }
-      _cachedPresets = jsonList.map((str) => CustomPreset.fromJson(str)).toList();
+      final List<CustomPreset> loaded = [];
+      for (final str in jsonList) {
+        try {
+          final preset = CustomPreset.fromJson(str);
+          loaded.add(preset);
+        } catch (_) {
+          // Skip individual corrupted item
+        }
+      }
+      _cachedPresets = loaded;
       return List<CustomPreset>.from(_cachedPresets!);
     } catch (e) {
       _cachedPresets = [];

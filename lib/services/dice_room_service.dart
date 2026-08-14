@@ -44,6 +44,10 @@ class DiceRoomService implements BaseRoomService {
 
   @override
   void leaveRoom() {
+    final currentCode = activeRoomCode;
+    if (currentCode != null) {
+      disposeRoomStream(currentCode);
+    }
     activeSessionNotifier.value = null;
   }
 

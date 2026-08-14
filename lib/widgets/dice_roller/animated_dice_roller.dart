@@ -862,5 +862,10 @@ class _Polyhedral3DDicePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _Polyhedral3DDicePainter oldDelegate) => true;
+  bool shouldRepaint(covariant _Polyhedral3DDicePainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.dice != dice ||
+        oldDelegate.theme != theme ||
+        oldDelegate.tabletop != tabletop;
+  }
 }

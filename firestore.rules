@@ -47,7 +47,8 @@ service cloud.firestore {
     function isValidRoomCode(code) {
       return code is string 
           && code.size() >= 4 
-          && code.size() <= 30;
+          && code.size() <= 30
+          && code.matches('^[a-zA-Z0-9_-]{4,30}$');
     }
 
     /// Comprehensive payload schema and bounds validator for incoming rolls

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/dice_room_service.dart';
 
 class JoinCreateRoomDialog extends StatefulWidget {
@@ -95,8 +96,13 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
           TextField(
             controller: _nameController,
             autofocus: widget.initialPlayerName == null || widget.initialPlayerName!.isEmpty,
+            maxLength: 50,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9 _\-\'\.]")),
+            ],
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
+              counterText: '',
               labelText: 'Your Display Name',
               labelStyle: const TextStyle(color: Colors.cyanAccent),
               hintText: 'e.g. Gandalf, Gimli',
@@ -114,9 +120,17 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
               Expanded(
                 child: TextField(
                   controller: _roomController,
+                  maxLength: 30,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\-]')),
+                    TextInputFormatter.withFunction(
+                      (oldVal, newVal) => newVal.copyWith(text: newVal.text.toUpperCase()),
+                    ),
+                  ],
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   textCapitalization: TextCapitalization.characters,
                   decoration: InputDecoration(
+                    counterText: '',
                     labelText: 'Room Code',
                     labelStyle: const TextStyle(color: Colors.cyanAccent),
                     hintText: 'e.g. ROOM-A82F',

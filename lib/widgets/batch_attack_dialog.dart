@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/room_roll.dart';
 import '../models/spell_session.dart';
+import '../services/base_room_service.dart';
 import '../services/dice_room_service.dart';
 import '../utils/secure_random.dart';
 import 'batch_attack/batch_attack_results_card.dart';
@@ -11,13 +12,15 @@ class BatchAttackDialog extends StatefulWidget {
   final SpellSession session;
   final String? activeRoomCode;
   final String? playerName;
+  final BaseRoomService roomService;
 
-  const BatchAttackDialog({
+  BatchAttackDialog({
     super.key,
     required this.session,
     this.activeRoomCode,
     this.playerName,
-  });
+    BaseRoomService? roomService,
+  }) : roomService = roomService ?? DiceRoomService();
 
   @override
   State<BatchAttackDialog> createState() => _BatchAttackDialogState();
@@ -84,11 +87,10 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     });
 
     // Asynchronous network side-effects executed outside of setState()
-    final activeCode = widget.activeRoomCode ?? DiceRoomService().activeRoomCode;
-    final activePlayer = widget.playerName ?? DiceRoomService().playerName;
+    final activeCode = widget.activeRoomCode ?? widget.roomService.activeRoomCode;
+    final activePlayer = widget.playerName ?? widget.roomService.playerName;
 
     if (activeCode != null && activePlayer != null) {
-      final roomService = DiceRoomService();
       final timestamp = DateTime.now();
 
       // Broadcast single consolidated summary roll for overall batch results
@@ -104,14 +106,14 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
         isCrit: summary.totalCrits > 0,
         isFumble: false,
       );
-      unawaited(roomService.broadcastRoll(summaryRoll));
+      unawaited(widget.roomService.broadcastRoll(summaryRoll));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final livingCount = widget.session.activeObjects.where((o) => !o.isDead).length;
-    final currentRoomCode = widget.activeRoomCode ?? DiceRoomService().activeRoomCode;
+    final currentRoomCode = widget.activeRoomCode ?? widget.roomService.activeRoomCode;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 500;
 
