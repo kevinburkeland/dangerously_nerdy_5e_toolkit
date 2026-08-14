@@ -26,6 +26,7 @@ void main() {
       expect(settings.areParticlesAllowed, isTrue);
       expect(settings.areCritFxAllowed, isTrue);
       expect(settings.rulesEdition, DmRulesEdition.v2024);
+      expect(settings.pinnedRuleIds, isEmpty);
     });
 
     test('performanceMode disables particle and crit effects getters', () {
@@ -40,6 +41,7 @@ void main() {
       final provider = SettingsProvider();
       expect(provider.settings.themeMode, ThemeMode.dark);
       expect(provider.settings.rulesEdition, DmRulesEdition.v2024);
+      expect(provider.settings.pinnedRuleIds, isEmpty);
 
       provider.setThemeMode(ThemeMode.light);
       expect(provider.settings.themeMode, ThemeMode.light);
@@ -59,6 +61,28 @@ void main() {
 
       provider.setRulesEdition(DmRulesEdition.v2014);
       expect(provider.settings.rulesEdition, DmRulesEdition.v2014);
+
+      // Pinned rules operations
+      expect(provider.isRulePinned('action_attack'), isFalse);
+      provider.pinRule('action_attack');
+      expect(provider.isRulePinned('action_attack'), isTrue);
+      expect(provider.settings.pinnedRuleIds, contains('action_attack'));
+
+      provider.togglePinRule('action_grapple');
+      expect(provider.isRulePinned('action_grapple'), isTrue);
+
+      provider.togglePinRule('action_attack');
+      expect(provider.isRulePinned('action_attack'), isFalse);
+
+      provider.unpinRule('action_grapple');
+      expect(provider.isRulePinned('action_grapple'), isFalse);
+
+      provider.pinRule('condition_blinded');
+      provider.pinRule('condition_charmed');
+      expect(provider.settings.pinnedRuleIds.length, 2);
+
+      provider.clearPinnedRules();
+      expect(provider.settings.pinnedRuleIds, isEmpty);
     });
 
     test('hydrates preferences from stored values', () async {
@@ -72,6 +96,7 @@ void main() {
         'setting_3d_dice': false,
         'setting_performance_mode': true,
         'setting_rules_edition': DmRulesEdition.v2014.index,
+        'setting_pinned_rule_ids': ['action_attack', 'condition_exhaustion'],
       });
 
       final provider = SettingsProvider();
@@ -84,6 +109,8 @@ void main() {
       expect(provider.settings.enableCritFumbleFx, isFalse);
       expect(provider.settings.performanceMode, isTrue);
       expect(provider.settings.rulesEdition, DmRulesEdition.v2014);
+      expect(provider.settings.pinnedRuleIds, containsAll(['action_attack', 'condition_exhaustion']));
+      expect(provider.isRulePinned('action_attack'), isTrue);
     });
   });
 }

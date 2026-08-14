@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dm_screen_data.dart';
 
@@ -36,6 +37,7 @@ class AppSettings {
   final bool enable3dDiceOverlays;
   final bool performanceMode;
   final DmRulesEdition rulesEdition;
+  final Set<String> pinnedRuleIds;
 
   const AppSettings({
     this.themeMode = ThemeMode.dark,
@@ -47,6 +49,7 @@ class AppSettings {
     this.enable3dDiceOverlays = true,
     this.performanceMode = false,
     this.rulesEdition = DmRulesEdition.v2024,
+    this.pinnedRuleIds = const <String>{},
   });
 
   /// Whether particle and continuous visual FX are permitted to render
@@ -65,6 +68,7 @@ class AppSettings {
     bool? enable3dDiceOverlays,
     bool? performanceMode,
     DmRulesEdition? rulesEdition,
+    Set<String>? pinnedRuleIds,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -76,6 +80,7 @@ class AppSettings {
       enable3dDiceOverlays: enable3dDiceOverlays ?? this.enable3dDiceOverlays,
       performanceMode: performanceMode ?? this.performanceMode,
       rulesEdition: rulesEdition ?? this.rulesEdition,
+      pinnedRuleIds: pinnedRuleIds ?? this.pinnedRuleIds,
     );
   }
 
@@ -92,7 +97,8 @@ class AppSettings {
           enableSpellParticles == other.enableSpellParticles &&
           enable3dDiceOverlays == other.enable3dDiceOverlays &&
           performanceMode == other.performanceMode &&
-          rulesEdition == other.rulesEdition;
+          rulesEdition == other.rulesEdition &&
+          setEquals(pinnedRuleIds, other.pinnedRuleIds);
 
   @override
   int get hashCode => Object.hash(
@@ -105,5 +111,6 @@ class AppSettings {
         enable3dDiceOverlays,
         performanceMode,
         rulesEdition,
+        Object.hashAll(pinnedRuleIds),
       );
 }

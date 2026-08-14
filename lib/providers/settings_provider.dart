@@ -13,6 +13,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _k3dDice = 'setting_3d_dice';
   static const _kPerformanceMode = 'setting_performance_mode';
   static const _kRulesEdition = 'setting_rules_edition';
+  static const _kPinnedRuleIds = 'setting_pinned_rule_ids';
 
   AppSettings _settings;
   AppSettings get settings => _settings;
@@ -33,6 +34,7 @@ class SettingsProvider extends ChangeNotifier {
     final dice = prefs.getBool(_k3dDice);
     final perf = prefs.getBool(_kPerformanceMode);
     final editionIndex = prefs.getInt(_kRulesEdition);
+    final pinnedList = prefs.getStringList(_kPinnedRuleIds);
 
     _settings = AppSettings(
       themeMode: themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length
@@ -52,6 +54,7 @@ class SettingsProvider extends ChangeNotifier {
       rulesEdition: editionIndex != null && editionIndex >= 0 && editionIndex < DmRulesEdition.values.length
           ? DmRulesEdition.values[editionIndex]
           : _settings.rulesEdition,
+      pinnedRuleIds: pinnedList != null ? pinnedList.toSet() : _settings.pinnedRuleIds,
     );
     notifyListeners();
   }
@@ -71,6 +74,7 @@ class SettingsProvider extends ChangeNotifier {
       prefs.setBool(_k3dDice, newSettings.enable3dDiceOverlays),
       prefs.setBool(_kPerformanceMode, newSettings.performanceMode),
       prefs.setInt(_kRulesEdition, newSettings.rulesEdition.index),
+      prefs.setStringList(_kPinnedRuleIds, newSettings.pinnedRuleIds.toList()),
     ]);
   }
 
@@ -83,6 +87,35 @@ class SettingsProvider extends ChangeNotifier {
   void set3dDiceOverlays(bool value) => updateSettings(_settings.copyWith(enable3dDiceOverlays: value));
   void setPerformanceMode(bool value) => updateSettings(_settings.copyWith(performanceMode: value));
   void setRulesEdition(DmRulesEdition edition) => updateSettings(_settings.copyWith(rulesEdition: edition));
+
+  bool isRulePinned(String ruleId) => _settings.pinnedRuleIds.contains(ruleId);
+
+  void togglePinRule(String ruleId) {
+    final updated = Set<String>.from(_settings.pinnedRuleIds);
+    if (updated.contains(ruleId)) {
+      updated.remove(ruleId);
+    } else {
+      updated.add(ruleId);
+    }
+    updateSettings(_settings.copyWith(pinnedRuleIds: updated));
+  }
+
+  void pinRule(String ruleId) {
+    if (_settings.pinnedRuleIds.contains(ruleId)) return;
+    final updated = Set<String>.from(_settings.pinnedRuleIds)..add(ruleId);
+    updateSettings(_settings.copyWith(pinnedRuleIds: updated));
+  }
+
+  void unpinRule(String ruleId) {
+    if (!_settings.pinnedRuleIds.contains(ruleId)) return;
+    final updated = Set<String>.from(_settings.pinnedRuleIds)..remove(ruleId);
+    updateSettings(_settings.copyWith(pinnedRuleIds: updated));
+  }
+
+  void clearPinnedRules() {
+    if (_settings.pinnedRuleIds.isEmpty) return;
+    updateSettings(_settings.copyWith(pinnedRuleIds: const <String>{}));
+  }
 }
 
 class SettingsScope extends InheritedNotifier<SettingsProvider> {

@@ -86,6 +86,118 @@ void main() {
       expect(find.text('2014 vs 2024 Rule Comparison'), findsNothing);
     });
 
+    testWidgets('tapping pin button on card pins rule to top section', (WidgetTester tester) async {
+      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+
+      // Initially no Pinned section header
+      expect(find.textContaining('PINNED RULES'), findsNothing);
+
+      // Find all pin buttons
+      final pinButtons = find.byTooltip('Pin rule to top');
+      expect(pinButtons, findsWidgets);
+
+      // Tap first pin button
+      await tester.tap(pinButtons.first);
+      await tester.pumpAndSettle();
+
+      // Now PINNED RULES section is displayed
+      expect(find.text('PINNED RULES (1)'), findsOneWidget);
+      expect(find.text('Unpin All'), findsOneWidget);
+
+      // Tap unpin on the card
+      final unpinButton = find.byTooltip('Unpin rule from top');
+      expect(unpinButton, findsOneWidget);
+      await tester.tap(unpinButton);
+      await tester.pumpAndSettle();
+
+      // Pinned section is gone
+      expect(find.textContaining('PINNED RULES'), findsNothing);
+    });
+
+    testWidgets('Unpin All button clears all pinned rules', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+
+      // Pin first two cards
+      final pinButtons = find.byTooltip('Pin rule to top');
+      await tester.ensureVisible(pinButtons.at(0));
+      await tester.tap(pinButtons.at(0));
+      await tester.pumpAndSettle();
+
+      final remainingPinButtons = find.byTooltip('Pin rule to top');
+      await tester.ensureVisible(remainingPinButtons.at(0));
+      await tester.tap(remainingPinButtons.at(0));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PINNED RULES (2)'), findsOneWidget);
+
+      // Tap Unpin All
+      final unpinAll = find.text('Unpin All');
+      await tester.ensureVisible(unpinAll);
+      await tester.tap(unpinAll);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('PINNED RULES'), findsNothing);
+    });
+
+    testWidgets('Pinned Only filter chip filters to only pinned rules', (WidgetTester tester) async {
+      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+
+      final pinButton = find.byTooltip('Pin rule to top').first;
+      await tester.ensureVisible(pinButton);
+      await tester.tap(pinButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('PINNED RULES (1)'), findsOneWidget);
+
+      // Tap Pinned Only filter chip
+      final pinnedOnlyChip = find.text('Pinned Only (1)');
+      expect(pinnedOnlyChip, findsOneWidget);
+      await tester.ensureVisible(pinnedOnlyChip);
+      await tester.tap(pinnedOnlyChip);
+      await tester.pumpAndSettle();
+
+      // Pinned section is showing and other rules section is hidden
+      expect(find.text('PINNED RULES (1)'), findsOneWidget);
+      expect(find.textContaining('ALL RULES'), findsNothing);
+    });
+
+    testWidgets('pin button inside compare dialog toggles pinned state', (WidgetTester tester) async {
+      await tester.pumpWidget(createTestableWidget(const DmScreenScreen()));
+
+      final attackCard = find.text('Attack Action & Extra Attack');
+      await tester.ensureVisible(attackCard);
+      await tester.tap(attackCard);
+      await tester.pumpAndSettle();
+
+      // Find pin button in dialog
+      final dialogPinBtn = find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byTooltip('Pin rule to top'),
+      );
+      expect(dialogPinBtn, findsOneWidget);
+
+      // Tap pin button in dialog
+      await tester.tap(dialogPinBtn);
+      await tester.pumpAndSettle();
+
+      // Now tooltip should update to unpin
+      expect(find.descendant(of: find.byType(Dialog), matching: find.byTooltip('Unpin rule')), findsOneWidget);
+
+      // Close dialog
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+
+      // Verify rule is in Pinned section
+      expect(find.text('PINNED RULES (1)'), findsOneWidget);
+    });
+
     testWidgets('LandingScreen launches DmScreenScreen from card and AppBar', (WidgetTester tester) async {
       await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
