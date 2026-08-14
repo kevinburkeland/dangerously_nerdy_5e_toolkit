@@ -141,6 +141,8 @@ class AnimatedObjectInstance {
   final String? secondaryDamageType;
   final bool hasPackTactics;
   final String? specialTrait;
+  final String? statBlockId;
+  final MinionStatBlock? originalStatBlock;
   final Color? customAccentColor;
 
   AnimatedObjectInstance({
@@ -152,6 +154,8 @@ class AnimatedObjectInstance {
     int tempHp = 0,
     this.damageType = 'Bludgeoning',
     this.isSilvered = false,
+    this.statBlockId,
+    this.originalStatBlock,
     this.customAc,
     this.customAttackBonus,
     this.customDamageDiceCount,
@@ -177,6 +181,31 @@ class AnimatedObjectInstance {
     _tempHp = value < 0 ? 0 : value;
   }
 
+  /// Resolves the full 5e SRD MinionStatBlock for this creature instance.
+  MinionStatBlock get statBlock {
+    if (originalStatBlock != null) return originalStatBlock!;
+    if (statBlockId != null) {
+      final found = SrdSummonsLibrary.findStatBlockById(statBlockId!);
+      if (found != null) return found;
+    }
+    final byName = SrdSummonsLibrary.findStatBlockByName(name);
+    if (byName != null) return byName;
+
+    // Fallback to synthetic Animate Object stat block matching size
+    switch (size) {
+      case ObjectSize.tiny:
+        return SrdSummonsLibrary.tinyObject;
+      case ObjectSize.small:
+        return SrdSummonsLibrary.smallObject;
+      case ObjectSize.medium:
+        return SrdSummonsLibrary.mediumObject;
+      case ObjectSize.large:
+        return SrdSummonsLibrary.largeObject;
+      case ObjectSize.huge:
+        return SrdSummonsLibrary.hugeObject;
+    }
+  }
+
   /// Factory constructor to generate an instance from an SRD MinionStatBlock.
   factory AnimatedObjectInstance.fromStatBlock(
     MinionStatBlock statBlock, {
@@ -192,6 +221,8 @@ class AnimatedObjectInstance {
       maxHp: statBlock.maxHp,
       tempHp: tempHp,
       damageType: statBlock.damageType,
+      statBlockId: statBlock.id,
+      originalStatBlock: statBlock,
       customAc: statBlock.ac,
       customAttackBonus: statBlock.attackBonus,
       customDamageDiceCount: statBlock.damageDiceCount,

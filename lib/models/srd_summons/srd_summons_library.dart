@@ -1,3 +1,4 @@
+import 'minion_stat_block.dart';
 import 'summon_preset.dart';
 import 'spells/animate_objects_preset.dart';
 import 'spells/undead_presets.dart';
@@ -101,4 +102,23 @@ class SrdSummonsLibrary {
     ...spellPresets,
     ...magicItemPresets,
   ];
+
+  static MinionStatBlock? findStatBlockById(String id) {
+    for (final preset in allPresets) {
+      for (final sb in preset.statBlocks) {
+        if (sb.id == id) return sb;
+      }
+    }
+    return null;
+  }
+
+  static MinionStatBlock? findStatBlockByName(String name) {
+    final lower = name.trim().toLowerCase();
+    for (final preset in allPresets) {
+      for (final sb in preset.statBlocks) {
+        if (sb.name.toLowerCase() == lower) return sb;
+      }
+    }
+    return null;
+  }
 }

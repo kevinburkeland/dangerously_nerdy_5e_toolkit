@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/srd_summons.dart';
+import 'dialogs/creature_stat_block_dialog.dart';
 
 class SpellReferenceWidget extends StatefulWidget {
   final SummonPreset? initialPreset;
@@ -199,16 +200,50 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${sb.sizeDisplay} • ${sb.crDisplay}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${sb.sizeDisplay} • ${sb.crDisplay}',
+                      style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => CreatureStatBlockDialog.show(context, statBlock: sb),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: sb.accentColor.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: sb.accentColor.withValues(alpha: 0.6), width: 1),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.menu_book, size: 13, color: sb.accentColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            'STAT BLOCK',
+                            style: TextStyle(
+                              color: sb.accentColor,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 10,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

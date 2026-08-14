@@ -4,6 +4,7 @@ import '../models/animated_object.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/edit_object_name_dialog.dart';
 import 'dialogs/set_object_hp_dialog.dart';
+import 'dialogs/creature_stat_block_dialog.dart';
 
 class ObjectCard extends StatelessWidget {
   final AnimatedObjectInstance object;
@@ -121,6 +122,11 @@ class ObjectCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.info_outline, size: 20, color: accentColor.withValues(alpha: 0.85)),
+                  tooltip: 'Full Creature Stat Block',
+                  onPressed: () => CreatureStatBlockDialog.show(context, statBlock: object.statBlock),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20, color: Colors.white38),
