@@ -102,38 +102,42 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
       areCritAllowed = SettingsScope.of(context).settings.areCritFxAllowed;
     } catch (_) {}
 
-    if (!areCritAllowed || !_animController.isAnimating) {
-      return widget.child;
-    }
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, child) {
+        final isAnimating = _animController.isAnimating && areCritAllowed;
+        final progress = _animController.value;
+        final isFumble = _activeType == CritEffectType.critFumble;
 
-    final progress = _animController.value;
-    final isFumble = _activeType == CritEffectType.critFumble;
+        // Spring-damped screen shake for Critical Fumbles
+        final shakeDecay = (1.0 - progress);
+        final dx = (isAnimating && isFumble) ? sin(progress * 35) * 10.0 * shakeDecay : 0.0;
+        final dy = (isAnimating && isFumble) ? cos(progress * 28) * 6.0 * shakeDecay : 0.0;
 
-    // Spring-damped screen shake for Critical Fumbles
-    final shakeDecay = (1.0 - progress);
-    final dx = isFumble ? sin(progress * 35) * 10.0 * shakeDecay : 0.0;
-    final dy = isFumble ? cos(progress * 28) * 6.0 * shakeDecay : 0.0;
-
-    return Transform.translate(
-      offset: Offset(dx, dy),
-      child: Stack(
-        children: [
-          widget.child,
-          Positioned.fill(
-            child: IgnorePointer(
-              child: RepaintBoundary(
-                child: CustomPaint(
-                  painter: _CritParticlePainter(
-                    particles: _particlePool,
-                    progress: progress,
-                    type: _activeType,
+        return Transform.translate(
+          offset: Offset(dx, dy),
+          child: Stack(
+            children: [
+              child!,
+              if (isAnimating)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: _CritParticlePainter(
+                          particles: _particlePool,
+                          progress: progress,
+                          type: _activeType,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
+      child: widget.child,
     );
   }
 }

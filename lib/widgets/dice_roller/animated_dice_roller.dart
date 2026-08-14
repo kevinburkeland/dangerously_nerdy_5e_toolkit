@@ -460,7 +460,26 @@ class _Polyhedral3DDicePainter extends CustomPainter {
         transformedVertices.add(tv);
       }
 
-      // 5. Render visible 3D facets with backface culling
+      // 5. Compute face normals and determine the single primary front-facing winning face
+      int winningFaceIndex = -1;
+      double maxNormalZ = -999.0;
+      final faceNormals = <_Vec3>[];
+
+      for (int i = 0; i < die.mesh.faces.length; i++) {
+        final face = die.mesh.faces[i];
+        final v0 = transformedVertices[face.vertexIndices[0]];
+        final v1 = transformedVertices[face.vertexIndices[1]];
+        final v2 = transformedVertices[face.vertexIndices[2]];
+
+        final normal = (v1 - v0).cross(v2 - v0).normalized();
+        faceNormals.add(normal);
+
+        if (normal.z > maxNormalZ) {
+          maxNormalZ = normal.z;
+          winningFaceIndex = i;
+        }
+      }
+
       final isCrit = die.dieType == DieType.d20 && die.finalValue == 20;
       final isFumble = die.dieType == DieType.d20 && die.finalValue == 1;
 
@@ -468,16 +487,17 @@ class _Polyhedral3DDicePainter extends CustomPainter {
           ? (tabletop?.critGold ?? Colors.amber)
           : (isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary);
 
-      for (final face in die.mesh.faces) {
-        final v0 = transformedVertices[face.vertexIndices[0]];
-        final v1 = transformedVertices[face.vertexIndices[1]];
-        final v2 = transformedVertices[face.vertexIndices[2]];
+      final totalFaces = die.mesh.faces.length;
 
-        // Calculate surface normal: N = (v1 - v0) x (v2 - v0)
-        final normal = (v1 - v0).cross(v2 - v0).normalized();
+      // 6. Render visible 3D facets with backface culling
+      for (int f = 0; f < die.mesh.faces.length; f++) {
+        final face = die.mesh.faces[f];
+        final normal = faceNormals[f];
 
         // Backface culling: camera looks down Z+ (normal.z > 0 faces camera)
         if (normal.z > 0.05) {
+          final isWinningFace = (f == winningFaceIndex);
+
           // Diffuse lighting intensity: N . L
           final diffuse = (normal.dot(_lightDir)).clamp(0.18, 1.0);
           final faceColor = Color.lerp(Colors.black, baseColor, diffuse * 0.9 + 0.1)!;
@@ -506,18 +526,27 @@ class _Polyhedral3DDicePainter extends CustomPainter {
           _edgePaint.color = Colors.white.withValues(alpha: 0.35 + (diffuse * 0.45));
           canvas.drawPath(path, _edgePaint);
 
-          // Draw facet numbers on prominent front-facing facets
-          if (normal.z > 0.4) {
+          // Draw facet numbers: EXACTLY ONE FACE (the winning face) shows die.finalValue
+          if (normal.z > 0.32) {
             final centerPt = screenPoints.reduce((a, b) => a + b) / screenPoints.length.toDouble();
-            final faceDisplayVal = (isSettled && normal.z > 0.6)
-                ? die.finalValue
-                : (face.faceNumber ?? die.finalValue);
+
+            int faceDisplayVal;
+            if (isWinningFace) {
+              faceDisplayVal = die.finalValue;
+            } else {
+              int num = face.faceNumber ?? (f + 1);
+              if (num == die.finalValue) {
+                num = (num % totalFaces) + 1;
+                if (num == die.finalValue) num = (num % totalFaces) + 1;
+              }
+              faceDisplayVal = num;
+            }
 
             final textSpan = TextSpan(
               text: '$faceDisplayVal',
               style: TextStyle(
                 color: diffuse > 0.5 ? Colors.black : Colors.white70,
-                fontSize: die.mesh.radius * 0.36,
+                fontSize: isWinningFace ? (die.mesh.radius * 0.40) : (die.mesh.radius * 0.32),
                 fontWeight: FontWeight.w900,
                 shadows: [
                   Shadow(color: Colors.white.withValues(alpha: 0.6), blurRadius: 2),

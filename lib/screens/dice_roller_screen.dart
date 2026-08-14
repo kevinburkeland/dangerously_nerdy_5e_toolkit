@@ -543,6 +543,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
           if (_showAnimatedRoll && _animatingResult != null)
             Positioned.fill(
               child: AnimatedDiceRollOverlay(
+                key: ValueKey('dice_anim_${_animatingResult!.timestamp.microsecondsSinceEpoch}'),
                 result: _animatingResult!,
                 onDismiss: () {
                   setState(() {
