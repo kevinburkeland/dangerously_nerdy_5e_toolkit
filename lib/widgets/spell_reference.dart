@@ -135,42 +135,19 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
           ),
           const SizedBox(height: 20),
 
-          // RAW Stat Table
+          // RAW Stat Blocks / Creature Profiles
           Text(
-            '${p.name.toUpperCase()} STATISTICS TABLE',
-            style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+            '${p.name.toUpperCase()} CREATURE PROFILES',
+            style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.5),
           ),
           const SizedBox(height: 10),
 
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(const Color(0xFF242038)),
-              dataRowColor: WidgetStateProperty.all(const Color(0xFF1E1B2E)),
-              border: TableBorder.all(color: Colors.white24, width: 0.5),
-              columns: const [
-                DataColumn(label: Text('Name', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('Size / CR', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('HP', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('AC', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('Attack Bonus', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('Damage Formula', style: TextStyle(color: Colors.amber))),
-                DataColumn(label: Text('Special Traits', style: TextStyle(color: Colors.amber))),
-              ],
-              rows: p.statBlocks.map((sb) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text(sb.name, style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.bold))),
-                    DataCell(Text('${sb.sizeDisplay} (${sb.crDisplay})', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${sb.maxHp}', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${sb.ac}', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('+${sb.attackBonus} to hit', style: const TextStyle(color: Colors.white))),
-                    DataCell(Text(sb.fullDamageFormula, style: const TextStyle(color: Colors.white))),
-                    DataCell(Text(sb.specialTrait ?? (sb.hasPackTactics ? 'Pack Tactics' : 'None'), style: const TextStyle(color: Colors.white70, fontSize: 11))),
-                  ],
-                );
-              }).toList(),
-            ),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: p.statBlocks.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (ctx, i) => _buildCreatureProfileCard(p.statBlocks[i]),
           ),
           const SizedBox(height: 20),
 
@@ -189,6 +166,108 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
             'Summoning multiple creatures allows you to split attacks, control space, absorb incoming damage, or trigger Pack Tactics for team advantage!',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCreatureProfileCard(MinionStatBlock sb) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1A2E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: sb.accentColor.withValues(alpha: 0.4), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  sb.name,
+                  style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.w900, fontSize: 15),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${sb.sizeDisplay} • ${sb.crDisplay}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Stat Badges
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _buildCombatBadge('HP', '${sb.maxHp}', Colors.greenAccent),
+              _buildCombatBadge('AC', '${sb.ac}', Colors.lightBlueAccent),
+              _buildCombatBadge('ATK', '+${sb.attackBonus}', Colors.amberAccent),
+              _buildCombatBadge('DMG', sb.fullDamageFormula, Colors.orangeAccent),
+            ],
+          ),
+          if (sb.specialTrait != null || sb.hasPackTactics) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.purple.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                '⚡ ${sb.specialTrait ?? "Pack Tactics (Advantage when allies within 5ft)"}',
+                style: const TextStyle(color: Color(0xFFE1BEE7), fontSize: 11, fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCombatBadge(String label, String val, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '$label ',
+              style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+            TextSpan(
+              text: val,
+              style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
       ),
     );
   }

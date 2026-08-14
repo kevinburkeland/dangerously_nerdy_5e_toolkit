@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/room_roll.dart';
 import '../models/spell_session.dart';
 import '../services/dice_room_service.dart';
@@ -67,6 +68,8 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
       return; // Debounce rapid button mashing (<200ms cooldown)
     }
     _lastAttackRollTime = now;
+
+    HapticFeedback.heavyImpact();
 
     final summary = widget.session.performBatchAttack(
       targetAc: _targetAc,

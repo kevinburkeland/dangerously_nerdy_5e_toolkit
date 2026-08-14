@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/landing_screen.dart';
 import 'services/logging_service.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   // Global Zone Error Wrapper for uncaught asynchronous exceptions
@@ -54,17 +55,7 @@ class DangerouslyNerdy5eToolkitApp extends StatelessWidget {
     return MaterialApp(
       title: 'DangerouslyNerdy 5e Toolkit',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF14121E),
-        primaryColor: Colors.amber,
-        colorScheme: const ColorScheme.dark(
-          primary: Colors.amber,
-          secondary: Colors.cyanAccent,
-          surface: Color(0xFF1E1B2E),
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.darkTheme,
       home: const LandingScreen(),
     );
   }

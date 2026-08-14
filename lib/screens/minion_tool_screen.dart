@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons.dart';
@@ -105,6 +106,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   void _openBatchAttackDialog() {
+    HapticFeedback.mediumImpact();
     showDialog(
       context: context,
       builder: (ctx) => BatchAttackDialog(
@@ -116,6 +118,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   void _openSquadBuilder() {
+    HapticFeedback.selectionClick();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -130,6 +133,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   Future<void> _showMassDamageDialog() async {
     final dmg = await MassDamageDialog.show(context);
     if (dmg != null && dmg > 0 && mounted) {
+      HapticFeedback.heavyImpact();
       setState(() {
         _session.applyGroupDamage(dmg);
       });
@@ -137,6 +141,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   void _rollSquadInitiative() {
+    HapticFeedback.mediumImpact();
     int dexMod = 0;
     String minionName = widget.preset.name;
     if (_session.activeObjects.isNotEmpty) {
@@ -244,6 +249,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     );
 
     if (amount != null && amount > 0 && mounted) {
+      HapticFeedback.mediumImpact();
       setState(() {
         for (final obj in _session.activeObjects) {
           if (!obj.isDead) {
@@ -287,6 +293,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       ),
     );
     if (confirm == true && mounted) {
+      HapticFeedback.mediumImpact();
       setState(() => _session.clearAll());
     }
   }
@@ -295,6 +302,8 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     final canPop = Navigator.canPop(context);
     final titleText = widget.customTitle ?? widget.preset.name;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDualPane = screenWidth >= 950;
 
     return Scaffold(
       appBar: AppBar(
@@ -367,111 +376,141 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
               ),
             ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.amber,
-          labelColor: Colors.amber,
-          unselectedLabelColor: Colors.white54,
-          tabs: const [
-            Tab(icon: Icon(Icons.shield_outlined), text: 'Active Squad'),
-            Tab(icon: Icon(Icons.menu_book), text: 'Minion Rulebook'),
-          ],
-        ),
-      ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              // TAB 1: ACTIVE SQUAD TRACKER
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: RoomBannerWidget(
-                      activeRoomCode: _activeRoomCode,
-                      playerName: _playerName,
-                      onJoinRoom: _joinRoom,
-                      onLeaveRoom: _leaveRoom,
-                    ),
-                  ),
-
-                  // Point Budget & Quick Action Header Widget
-                  ActiveSessionHeader(
-                    session: _session,
-                    onBatchAttack: _openBatchAttackDialog,
-                    onOpenSquadBuilder: _openSquadBuilder,
-                    onRollInitiative: _rollSquadInitiative,
-                    onGrantGroupTempHp: _grantGroupTempHp,
-                    onHealAll: () => setState(() => _session.healAll()),
-                    onShowMassDamageDialog: _showMassDamageDialog,
-                    onClearSquad: _confirmClearSquad,
-                  ),
-
-                  // Objects / Minions List
-                  Expanded(
-                    child: _session.activeObjects.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.blur_on, size: 64, color: Colors.white24),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'No active minions in ${_session.activePreset.name}',
-                                  style: const TextStyle(color: Colors.white54, fontSize: 16),
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                                  onPressed: _openSquadBuilder,
-                                  icon: const Icon(Icons.add, color: Colors.black),
-                                  label: const Text(
-                                    'Assemble Squad',
-                                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _session.activeObjects.length,
-                            itemBuilder: (context, index) {
-                              final obj = _session.activeObjects[index];
-                              return ObjectCard(
-                                key: ValueKey(obj.id),
-                                object: obj,
-                                onDelete: () => setState(() => _session.removeObject(obj.id)),
-                                onHpChanged: (delta) {
-                                  setState(() {
-                                    if (delta < 0) {
-                                      obj.takeDamage(-delta);
-                                    } else {
-                                      obj.heal(delta);
-                                    }
-                                  });
-                                },
-                                onHpDataSet: (newHp, newTemp) {
-                                  setState(() {
-                                    obj.currentHp = newHp;
-                                    obj.tempHp = newTemp;
-                                  });
-                                },
-                                onNameChanged: (name) => setState(() => obj.name = name),
-                              );
-                            },
-                          ),
-                  ),
+        bottom: isDualPane
+            ? null
+            : TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.amber,
+                labelColor: Colors.amber,
+                unselectedLabelColor: Colors.white54,
+                tabs: const [
+                  Tab(icon: Icon(Icons.shield_outlined), text: 'Active Squad'),
+                  Tab(icon: Icon(Icons.menu_book), text: 'Minion Rulebook'),
                 ],
               ),
+      ),
+      body: isDualPane
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // LEFT PANE: SQUAD TRACKER (55% Width)
+                Expanded(
+                  flex: 11,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+                    ),
+                    child: _buildActiveSquadView(),
+                  ),
+                ),
+                // RIGHT PANE: RULEBOOK & CREATURE PROFILES (45% Width)
+                Expanded(
+                  flex: 9,
+                  child: SpellReferenceWidget(initialPreset: _session.activePreset),
+                ),
+              ],
+            )
+          : Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1000),
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildActiveSquadView(),
+                    SpellReferenceWidget(initialPreset: _session.activePreset),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
 
-              // TAB 2: SPELL REFERENCE
-              SpellReferenceWidget(initialPreset: _session.activePreset),
-            ],
+  Widget _buildActiveSquadView() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: RoomBannerWidget(
+            activeRoomCode: _activeRoomCode,
+            playerName: _playerName,
+            onJoinRoom: _joinRoom,
+            onLeaveRoom: _leaveRoom,
           ),
         ),
+
+        // Point Budget & Quick Action Header Widget
+        ActiveSessionHeader(
+          session: _session,
+          onBatchAttack: _openBatchAttackDialog,
+          onOpenSquadBuilder: _openSquadBuilder,
+          onRollInitiative: _rollSquadInitiative,
+          onGrantGroupTempHp: _grantGroupTempHp,
+          onHealAll: () => setState(() => _session.healAll()),
+          onShowMassDamageDialog: _showMassDamageDialog,
+          onClearSquad: _confirmClearSquad,
+        ),
+
+        // Objects / Minions List
+        Expanded(
+          child: _session.activeObjects.isEmpty
+              ? _buildEmptySquadState()
+              : ListView.builder(
+                  itemCount: _session.activeObjects.length,
+                  itemBuilder: (context, index) {
+                    final obj = _session.activeObjects[index];
+                    return ObjectCard(
+                      key: ValueKey(obj.id),
+                      object: obj,
+                      onDelete: () => setState(() => _session.removeObject(obj.id)),
+                      onHpChanged: (delta) {
+                        setState(() {
+                          if (delta < 0) {
+                            obj.takeDamage(-delta);
+                          } else {
+                            obj.heal(delta);
+                          }
+                        });
+                      },
+                      onHpDataSet: (newHp, newTemp) {
+                        setState(() {
+                          obj.currentHp = newHp;
+                          obj.tempHp = newTemp;
+                        });
+                      },
+                      onNameChanged: (name) => setState(() => obj.name = name),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptySquadState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.blur_on, size: 64, color: Colors.white24),
+          const SizedBox(height: 12),
+          Text(
+            'No active minions in ${_session.activePreset.name}',
+            style: const TextStyle(color: Colors.white54, fontSize: 16),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            onPressed: _openSquadBuilder,
+            icon: const Icon(Icons.add, color: Colors.black),
+            label: const Text(
+              'Assemble Squad',
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }

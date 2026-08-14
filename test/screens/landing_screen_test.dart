@@ -114,4 +114,44 @@ void main() {
     expect(find.byType(DiceRollerScreen), findsOneWidget);
     expect(find.text('Select Die'), findsOneWidget);
   });
+
+  testWidgets('Entering search query filters tools dynamically and shows result count', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const LandingScreen()));
+
+    final searchField = find.byType(TextField);
+    expect(searchField, findsOneWidget);
+
+    // Search for "wolves"
+    await tester.enterText(searchField, 'wolves');
+    await tester.pumpAndSettle();
+
+    // Results header shows 1 match
+    expect(find.text('🔍 SEARCH RESULTS (1)'), findsOneWidget);
+    expect(find.text('Conjure Animals'), findsOneWidget);
+    expect(find.text('Animate Objects'), findsNothing);
+    expect(find.text('Dice Roller & Party Rooms'), findsNothing);
+  });
+
+  testWidgets('Entering non-matching search query shows empty state with Clear Search button', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const LandingScreen()));
+
+    final searchField = find.byType(TextField);
+    await tester.enterText(searchField, 'spaceship');
+    await tester.pumpAndSettle();
+
+    expect(find.text('🔍 SEARCH RESULTS (0)'), findsOneWidget);
+    expect(find.text('No tools found matching "spaceship"'), findsOneWidget);
+
+    // Tap Clear Search button
+    final clearButton = find.widgetWithText(ElevatedButton, 'Clear Search');
+    expect(clearButton, findsOneWidget);
+    await tester.ensureVisible(clearButton);
+    await tester.pumpAndSettle();
+    await tester.tap(clearButton);
+    await tester.pumpAndSettle();
+
+    // Categories restored
+    expect(find.text('🔮 SPELL MINION COMPANIONS'), findsOneWidget);
+    expect(find.text('Animate Objects'), findsOneWidget);
+  });
 }

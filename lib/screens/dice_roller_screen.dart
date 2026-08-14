@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/custom_preset.dart';
 import '../models/dice_roll.dart';
 import '../models/room_roll.dart';
@@ -84,6 +85,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   void _onSelectDieChip(DieType die, {int customSides = 6}) {
+    HapticFeedback.selectionClick();
     setState(() {
       if (_dicePool.length == 1 &&
           _dicePool.first.dieType == DieType.d20 &&
@@ -99,6 +101,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   Future<void> _showCustomDieDialog() async {
+    HapticFeedback.selectionClick();
     final sides = await CustomDieDialog.show(context, initialSides: _customSides);
     if (sides != null && mounted) {
       setState(() {
@@ -109,6 +112,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   void _clearPool() {
+    HapticFeedback.selectionClick();
     setState(() {
       _dicePool = [DiceEntry(dieType: DieType.d20, count: 1)];
       _rollMode = RollMode.normal;
@@ -138,21 +142,22 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
       rollMode: isSingleD20 ? _rollMode : RollMode.normal,
     );
 
-    // Synchronous local UI state update
     setState(() {
       _latestResult = res;
       _history.insert(0, res);
+      if (_history.length > 50) {
+        _history.removeLast();
+      }
     });
 
-    // Asynchronous network side-effect outside of setState()
-    final roomCode = _roomService.activeRoomCode ?? _activeRoomCode;
-    final player = _roomService.playerName ?? _playerName;
-    if (roomCode != null && player != null) {
-      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${SecureRng.instance.nextInt(1000000)}';
+    // Send roll to room if connected
+    final currentRoomCode = _activeRoomCode;
+    final currentPlayerName = _playerName;
+    if (currentRoomCode != null && currentPlayerName != null) {
       final roomRoll = RoomRoll.fromDiceRollResult(
-        id: uniqueId,
-        roomCode: roomCode,
-        playerName: player,
+        id: '${DateTime.now().microsecondsSinceEpoch}_${SecureRng.instance.nextInt(1000000)}',
+        roomCode: currentRoomCode,
+        playerName: currentPlayerName,
         result: res,
       );
       _roomService.broadcastRoll(roomRoll);
@@ -160,32 +165,30 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   void _applyCustomPreset(CustomPreset preset) {
+    HapticFeedback.selectionClick();
     setState(() {
-      _dicePool = List<DiceEntry>.from(preset.diceEntries);
+      _dicePool = preset.diceEntries.map((e) => e.copyWith()).toList();
       _modifier = preset.modifier;
       _rollMode = preset.rollMode;
     });
-    _rollDice();
   }
 
   void _clearHistory() {
+    HapticFeedback.selectionClick();
     setState(() {
       _history.clear();
+      _latestResult = null;
     });
   }
 
   void _joinRoom(String roomCode, String playerName) {
-    final cleanCode = roomCode.trim().toUpperCase();
-    final cleanName = playerName.trim();
-    _roomService.joinRoom(cleanCode, cleanName);
     setState(() {
-      _activeRoomCode = cleanCode;
-      _playerName = cleanName;
+      _activeRoomCode = roomCode.trim().toUpperCase();
+      _playerName = playerName.trim();
     });
   }
 
   void _leaveRoom() {
-    _roomService.leaveRoom();
     setState(() {
       _activeRoomCode = null;
     });
@@ -203,6 +206,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   Future<void> _showSavePresetDialog() async {
+    HapticFeedback.selectionClick();
     final name = await SavePresetDialog.show(context, formulaText: _currentFormulaString);
     if (name != null && name.isNotEmpty && mounted) {
       final messenger = ScaffoldMessenger.of(context);
@@ -268,6 +272,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   Future<void> _showExportPresetDialog() async {
+    HapticFeedback.selectionClick();
     final jsonStr = await _presetService.exportPresetsJson();
     if (mounted) {
       await ExportPresetDialog.show(context, jsonStr);
@@ -275,6 +280,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   Future<void> _showImportPresetDialog() async {
+    HapticFeedback.selectionClick();
     final text = await ImportPresetDialog.show(context);
     if (text != null && text.isNotEmpty && mounted) {
       final messenger = ScaffoldMessenger.of(context);
@@ -357,7 +363,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1000),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -404,39 +410,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
 
                 const SizedBox(height: 20),
 
-                // 4. ROLL BUTTON
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyanAccent,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 4,
-                  ),
-                  onPressed: _rollDice,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.casino, size: 24),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          'ROLL $_currentFormulaString',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18,
-                              letterSpacing: 0.5),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 5. ROLL HISTORY / LIVE ROOM ROLL FEED
+                // 4. ROLL HISTORY / LIVE ROOM ROLL FEED
                 RollHistoryList(
                   localHistory: _history,
                   activeRoomCode: _activeRoomCode,
@@ -446,6 +420,112 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
               ],
             ),
           ),
+        ),
+      ),
+      // PERSISTENT BOTTOM THUMB BAR
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF14121E),
+            border: Border(
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.12), width: 1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.6),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: Align(
+            heightFactor: 1.0,
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Row(
+                children: [
+                  // Quick Advantage / Disadvantage toggle
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF242038),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildThumbModeButton(Icons.shield_outlined, RollMode.normal, 'Normal'),
+                        _buildThumbModeButton(Icons.arrow_upward, RollMode.advantage, 'Advantage', color: Colors.greenAccent),
+                        _buildThumbModeButton(Icons.arrow_downward, RollMode.disadvantage, 'Disadvantage', color: Colors.redAccent),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Ergonomic Primary Roll Button
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.cyanAccent,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                        ),
+                        onPressed: _rollDice,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.casino, size: 24),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                'ROLL $_currentFormulaString',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                  letterSpacing: 0.5,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbModeButton(IconData icon, RollMode mode, String tooltip, {Color? color}) {
+    final isSelected = _rollMode == mode;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _rollMode = mode);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? (color ?? Colors.cyanAccent).withValues(alpha: 0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: isSelected ? (color ?? Colors.cyanAccent) : Colors.white38,
         ),
       ),
     );
