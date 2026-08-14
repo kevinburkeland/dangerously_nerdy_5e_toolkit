@@ -42,6 +42,25 @@ class InsectSummons {
     accentColor: Color(0xFFFBC02D),
   );
 
+  static const giantScorpion = MinionStatBlock(
+    id: 'insect_scorpion',
+    name: 'Giant Scorpion',
+    sizeDisplay: 'Large',
+    crDisplay: 'CR 3',
+    ac: 15,
+    maxHp: 52,
+    attackBonus: 4,
+    damageDiceCount: 1,
+    damageDiceSides: 10,
+    damageBonus: 2,
+    damageType: 'Piercing',
+    secondaryDamageDiceCount: 4,
+    secondaryDamageDiceSides: 10,
+    secondaryDamageType: 'Poison',
+    specialTrait: 'Sting (1d10+2 piercing + 4d10 poison, DC 12 Con save for half) + Multiattack (2 Claws + 1 Sting)',
+    accentColor: Color(0xFFE65100),
+  );
+
   static const giantInsectPreset = SummonPreset(
     id: 'giant_insect',
     name: 'Giant Insect',
@@ -51,8 +70,8 @@ class InsectSummons {
     range: '30 feet',
     components: 'V, S',
     duration: 'Concentration, up to 10 minutes',
-    description: 'You transform up to ten centipedes, three spiders, or five wasps into giant versions under your command.',
+    description: 'You transform up to ten centipedes, three spiders, five wasps, or one scorpion into giant versions under your command.',
     upcastRules: 'No additional count scaling in SRD 5.1.',
-    statBlocks: [giantCentipede, giantWasp, BeastSummons.giantSpider],
+    statBlocks: [giantCentipede, giantWasp, BeastSummons.giantSpider, giantScorpion],
   );
 }

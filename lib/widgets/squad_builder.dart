@@ -135,15 +135,26 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                   dropdownColor: const Color(0xFF2C2840),
                   isExpanded: true,
                   icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
-                  items: SrdSummonsLibrary.allPresets.map((preset) {
-                    return DropdownMenuItem<SummonPreset>(
-                      value: preset,
-                      child: Text(
-                        '${preset.name} (${preset.levelDisplay})',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                    );
-                  }).toList(),
+                  items: [
+                    ...SrdSummonsLibrary.spellPresets.map((preset) {
+                      return DropdownMenuItem<SummonPreset>(
+                        value: preset,
+                        child: Text(
+                          '🔮 ${preset.name} (${preset.levelDisplay})',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      );
+                    }),
+                    ...SrdSummonsLibrary.magicItemPresets.map((preset) {
+                      return DropdownMenuItem<SummonPreset>(
+                        value: preset,
+                        child: Text(
+                          '📯 ${preset.name} (${preset.levelDisplay})',
+                          style: const TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      );
+                    }),
+                  ],
                   onChanged: (newVal) {
                     if (newVal != null) {
                       setState(() {

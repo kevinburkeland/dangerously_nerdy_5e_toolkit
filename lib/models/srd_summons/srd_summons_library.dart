@@ -46,20 +46,39 @@ class SrdSummonsLibrary {
   static const earthElemental = ElementalSummons.earthElemental;
   static const fireElemental = ElementalSummons.fireElemental;
   static const waterElemental = ElementalSummons.waterElemental;
+  static const salamander = ElementalSummons.salamander;
+  static const xorn = ElementalSummons.xorn;
+  static const fireSnake = ElementalSummons.fireSnake;
   static const dustMephit = ElementalSummons.dustMephit;
   static const iceMephit = ElementalSummons.iceMephit;
   static const magmaMephit = ElementalSummons.magmaMephit;
+  static const steamMephit = ElementalSummons.steamMephit;
   static const gargoyle = ElementalSummons.gargoyle;
 
   static const giantCentipede = InsectSummons.giantCentipede;
   static const giantWasp = InsectSummons.giantWasp;
+  static const giantScorpion = InsectSummons.giantScorpion;
+
+  static const rhinoceros = BeastSummons.rhinoceros;
+  static const polarBear = BeastSummons.polarBear;
+  static const giantBoar = BeastSummons.giantBoar;
+  static const saberToothedTiger = BeastSummons.saberToothedTiger;
+  static const giantConstrictorSnake = BeastSummons.giantConstrictorSnake;
+  static const brownBear = BeastSummons.brownBear;
+  static const lion = BeastSummons.lion;
+  static const tiger = BeastSummons.tiger;
+  static const giantToad = BeastSummons.giantToad;
+  static const blackBear = BeastSummons.blackBear;
+  static const crocodile = BeastSummons.crocodile;
+  static const giantPoisonousSnake = BeastSummons.giantPoisonousSnake;
 
   static const berserker = ValhallaSummons.berserker;
   static const bronzeGriffon = FigurinesSummons.bronzeGriffon;
   static const onyxDog = FigurinesSummons.onyxDog;
   static const marbleElephant = FigurinesSummons.marbleElephant;
 
-  static const allPresets = <SummonPreset>[
+  // Decoupled Spell Presets
+  static const spellPresets = <SummonPreset>[
     AnimateObjectsSummon.preset,
     BeastSummons.conjureAnimalsPreset,
     UndeadSummons.animateDeadPreset,
@@ -67,8 +86,19 @@ class SrdSummonsLibrary {
     ElementalSummons.conjureElementalPreset,
     ElementalSummons.conjureMinorElementalsPreset,
     InsectSummons.giantInsectPreset,
+  ];
+
+  // Decoupled Magic Item Presets
+  static const magicItemPresets = <SummonPreset>[
+    BagOfTricksSummons.grayBagPreset,
+    BagOfTricksSummons.rustBagPreset,
+    BagOfTricksSummons.tanBagPreset,
     ValhallaSummons.hornOfValhallaPreset,
-    BagOfTricksSummons.bagOfTricksPreset,
     FigurinesSummons.figurinesPreset,
+  ];
+
+  static const allPresets = <SummonPreset>[
+    ...spellPresets,
+    ...magicItemPresets,
   ];
 }

@@ -52,15 +52,26 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                 dropdownColor: const Color(0xFF252236),
                 isExpanded: true,
                 icon: const Icon(Icons.menu_book, color: Colors.amber),
-                items: SrdSummonsLibrary.allPresets.map((preset) {
-                  return DropdownMenuItem<SummonPreset>(
-                    value: preset,
-                    child: Text(
-                      '${preset.name} (${preset.levelDisplay})',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  );
-                }).toList(),
+                items: [
+                  ...SrdSummonsLibrary.spellPresets.map((preset) {
+                    return DropdownMenuItem<SummonPreset>(
+                      value: preset,
+                      child: Text(
+                        '🔮 ${preset.name} (${preset.levelDisplay})',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    );
+                  }),
+                  ...SrdSummonsLibrary.magicItemPresets.map((preset) {
+                    return DropdownMenuItem<SummonPreset>(
+                      value: preset,
+                      child: Text(
+                        '📯 ${preset.name} (${preset.levelDisplay})',
+                        style: const TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    );
+                  }),
+                ],
                 onChanged: (val) {
                   if (val != null) {
                     setState(() => _selectedPreset = val);

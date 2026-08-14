@@ -25,7 +25,7 @@ void main() {
     // Dedicated tool cards
     expect(find.text('Animate Objects'), findsOneWidget);
     expect(find.text('Conjure Animals'), findsOneWidget);
-    expect(find.text('Bag of Tricks'), findsOneWidget);
+    expect(find.text('Gray Bag of Tricks'), findsOneWidget);
     expect(find.text('Horn of Valhalla'), findsOneWidget);
     expect(find.text('Dice Roller & Party Rooms'), findsOneWidget);
   });
@@ -83,10 +83,10 @@ void main() {
     expect(find.text('Ghoul #1'), findsOneWidget);
   });
 
-  testWidgets('Tapping Bag of Tricks launches Bag of Tricks tool screen', (WidgetTester tester) async {
+  testWidgets('Tapping Gray Bag of Tricks launches Gray Bag of Tricks tool screen', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
-    final bagCard = find.text('Bag of Tricks');
+    final bagCard = find.text('Gray Bag of Tricks');
     expect(bagCard, findsOneWidget);
 
     await tester.ensureVisible(bagCard);
@@ -96,7 +96,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(MinionToolScreen), findsOneWidget);
-    expect(find.text('Bag of Tricks Roller'), findsOneWidget);
+    expect(find.text('Gray Bag of Tricks Roller'), findsOneWidget);
   });
 
   testWidgets('Tapping Dice Roller & Party Rooms launches DiceRollerScreen', (WidgetTester tester) async {

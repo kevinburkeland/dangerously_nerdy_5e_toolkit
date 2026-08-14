@@ -128,5 +128,60 @@ void main() {
       expect(spiderResult.object.secondaryDamageDiceCount, equals(2));
       expect(spiderResult.object.secondaryDamageType, equals('Poison'));
     });
+
+    test('SrdSummonsLibrary decouples spellPresets and magicItemPresets', () {
+      expect(SrdSummonsLibrary.spellPresets.length, equals(7));
+      expect(SrdSummonsLibrary.magicItemPresets.length, equals(5));
+
+      for (var p in SrdSummonsLibrary.spellPresets) {
+        expect(p.category, equals(SummonCategory.spell));
+      }
+      for (var p in SrdSummonsLibrary.magicItemPresets) {
+        expect(p.category, equals(SummonCategory.magicItem));
+      }
+    });
+
+    test('Bag of Tricks variants (Gray, Rust, Tan) have distinct 8-creature tables', () {
+      expect(BagOfTricksSummons.grayBagPreset.statBlocks.length, equals(8));
+      expect(BagOfTricksSummons.rustBagPreset.statBlocks.length, equals(8));
+      expect(BagOfTricksSummons.tanBagPreset.statBlocks.length, equals(8));
+
+      // Gray bag contains Dire Wolf & Giant Elk
+      expect(BagOfTricksSummons.grayBagPreset.statBlocks.map((s) => s.name), containsAll(['Dire Wolf', 'Giant Elk', 'Weasel']));
+
+      // Rust bag contains Lion & Brown Bear
+      expect(BagOfTricksSummons.rustBagPreset.statBlocks.map((s) => s.name), containsAll(['Lion', 'Brown Bear', 'Owl']));
+
+      // Tan bag contains Tiger & Giant Hyena
+      expect(BagOfTricksSummons.tanBagPreset.statBlocks.map((s) => s.name), containsAll(['Tiger', 'Giant Hyena', 'Jackal']));
+    });
+
+    test('Conjure Animals contains full CR 2, CR 1, CR 1/2, and CR 1/4 beast options', () {
+      final names = BeastSummons.conjureAnimalsPreset.statBlocks.map((s) => s.name).toList();
+      // CR 2 beasts
+      expect(names, containsAll(['Rhinoceros', 'Polar Bear', 'Giant Boar', 'Saber-Toothed Tiger', 'Giant Constrictor Snake']));
+      // CR 1 beasts
+      expect(names, containsAll(['Dire Wolf', 'Giant Hyena', 'Giant Spider', 'Giant Eagle', 'Brown Bear', 'Lion', 'Tiger', 'Giant Toad']));
+      // CR 1/2 beasts
+      expect(names, containsAll(['Ape', 'Black Bear', 'Crocodile']));
+      // CR 1/4 beasts
+      expect(names, containsAll(['Wolf', 'Boar', 'Panther', 'Giant Badger', 'Giant Poisonous Snake']));
+    });
+
+    test('Giant Insect contains Giant Scorpion (CR 3)', () {
+      final names = InsectSummons.giantInsectPreset.statBlocks.map((s) => s.name).toList();
+      expect(names, containsAll(['Giant Centipede', 'Giant Wasp', 'Giant Spider', 'Giant Scorpion']));
+      expect(InsectSummons.giantScorpion.crDisplay, equals('CR 3'));
+      expect(InsectSummons.giantScorpion.secondaryDamageType, equals('Poison'));
+    });
+
+    test('Conjure Elemental & Minor Elementals contain Salamander, Xorn, Fire Snake, and Steam Mephit', () {
+      final elemNames = ElementalSummons.conjureElementalPreset.statBlocks.map((s) => s.name).toList();
+      expect(elemNames, containsAll(['Air Elemental', 'Earth Elemental', 'Fire Elemental', 'Water Elemental', 'Salamander', 'Xorn']));
+      expect(ElementalSummons.salamander.secondaryDamageType, equals('Fire'));
+
+      final minorNames = ElementalSummons.conjureMinorElementalsPreset.statBlocks.map((s) => s.name).toList();
+      expect(minorNames, containsAll(['Dust Mephit', 'Ice Mephit', 'Magma Mephit', 'Steam Mephit', 'Fire Snake', 'Gargoyle']));
+    });
   });
 }

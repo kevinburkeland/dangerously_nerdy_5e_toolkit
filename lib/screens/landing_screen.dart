@@ -254,17 +254,47 @@ class LandingScreen extends StatelessWidget {
                     children: [
                       _buildToolCard(
                         context,
-                        title: 'Bag of Tricks',
+                        title: 'Gray Bag of Tricks',
                         badgeText: 'Magic Item',
-                        badgeColor: Colors.purpleAccent,
+                        badgeColor: Colors.blueGrey,
                         icon: Icons.casino_outlined,
-                        accentColor: Colors.purpleAccent,
+                        accentColor: Colors.blueGrey,
                         description:
-                            'Interactive bag puller! Randomly pull beasts from Gray, Rust, or Tan Bags of Tricks directly into your active squad.',
+                            'Roll d8 on the Gray Bag table: Weasel, Giant Rat, Badger, Boar, Panther, Giant Badger, Dire Wolf, or Giant Elk!',
                         onTap: () => _launchTool(
                           context,
-                          preset: BagOfTricksSummons.bagOfTricksPreset,
-                          title: 'Bag of Tricks Roller',
+                          preset: BagOfTricksSummons.grayBagPreset,
+                          title: 'Gray Bag of Tricks Roller',
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Rust Bag of Tricks',
+                        badgeText: 'Magic Item',
+                        badgeColor: Colors.deepOrangeAccent,
+                        icon: Icons.casino_outlined,
+                        accentColor: Colors.deepOrangeAccent,
+                        description:
+                            'Roll d8 on the Rust Bag table: Rat, Owl, Mastiff, Goat, Giant Goat, Giant Boar, Lion, or Brown Bear!',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: BagOfTricksSummons.rustBagPreset,
+                          title: 'Rust Bag of Tricks Roller',
+                        ),
+                      ),
+                      _buildToolCard(
+                        context,
+                        title: 'Tan Bag of Tricks',
+                        badgeText: 'Magic Item',
+                        badgeColor: Colors.amber,
+                        icon: Icons.casino_outlined,
+                        accentColor: Colors.amber,
+                        description:
+                            'Roll d8 on the Tan Bag table: Jackal, Ape, Baboon, Axe Beak, Black Bear, Giant Weasel, Giant Hyena, or Tiger!',
+                        onTap: () => _launchTool(
+                          context,
+                          preset: BagOfTricksSummons.tanBagPreset,
+                          title: 'Tan Bag of Tricks Roller',
                         ),
                       ),
                       _buildToolCard(

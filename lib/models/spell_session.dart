@@ -158,18 +158,13 @@ class SpellSession {
     );
   }
 
-  // Bag of Tricks Random Pull Generator
+  // Bag of Tricks Random Pull Generator (d8 on active bag variant table)
   MinionStatBlock rollBagOfTricks() {
-    final list = [
-      SrdSummonsLibrary.wolf,
-      SrdSummonsLibrary.boar,
-      SrdSummonsLibrary.giantHyena,
-      SrdSummonsLibrary.ape,
-      SrdSummonsLibrary.direWolf,
-      SrdSummonsLibrary.giantSpider,
-    ];
+    final list = activePreset.statBlocks.isNotEmpty
+        ? activePreset.statBlocks
+        : BagOfTricksSummons.grayBagPreset.statBlocks;
     final selected = list[_rng.nextInt(list.length)];
-    addMinionFromStatBlock(selected, customName: 'Bag of Tricks: ${selected.name}');
+    addMinionFromStatBlock(selected, customName: '${activePreset.name}: ${selected.name}');
     return selected;
   }
 
