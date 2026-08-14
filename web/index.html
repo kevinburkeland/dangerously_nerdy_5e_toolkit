@@ -39,50 +39,6 @@
 </head>
 <body style="background-color: #14121E;">
   <script>
-    // Register Fetch-enabled Service Worker for Chrome PWA Installation & Offline Support
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function(registration) {
-          console.log('PWA ServiceWorker registration successful with scope: ', registration.scope);
-
-          // Actively check for updates immediately on load
-          registration.update();
-
-          // Check for updates when user returns to the app from background
-          document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible') {
-              registration.update();
-            }
-          });
-
-          // Detect new service worker installing
-          registration.addEventListener('updatefound', function() {
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', function() {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('New PWA version detected. Triggering immediate update.');
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                }
-              });
-            }
-          });
-        }).catch(function(err) {
-          console.log('PWA ServiceWorker registration failed: ', err);
-        });
-
-        // Auto-refresh when new service worker takes over to seamlessly show newest version
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', function() {
-          if (!refreshing) {
-            refreshing = true;
-            console.log('New service worker active: reloading to display updated app.');
-            window.location.reload();
-          }
-        });
-      });
-    }
-
     // Capture Chrome beforeinstallprompt event for PWA address bar install button
     window.deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {

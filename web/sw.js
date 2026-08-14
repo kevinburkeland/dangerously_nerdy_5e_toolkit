@@ -64,6 +64,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // Strictly only intercept same-origin requests to never interfere with Firebase, Google APIs, Firestore, or external CDNs
+  if (url.origin !== self.location.origin) return;
+
   const isNavigation = event.request.mode === 'navigate';
   const isCodeAsset = url.pathname.endsWith('.js') || 
                       url.pathname.endsWith('.html') || 
@@ -81,14 +85,15 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => {
+        .catch(async () => {
           // Offline fallback
-          return caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            if (isNavigation) {
-              return caches.match('index.html');
-            }
-          });
+          const cachedResponse = await caches.match(event.request);
+          if (cachedResponse) return cachedResponse;
+          if (isNavigation) {
+            const indexResponse = await caches.match('index.html');
+            if (indexResponse) return indexResponse;
+          }
+          return new Response('Network error occurred', { status: 503, statusText: 'Service Unavailable' });
         })
     );
     return;
@@ -103,7 +108,10 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
         return networkResponse;
-      }).catch(() => {});
+      }).catch((err) => {
+        console.warn('[ServiceWorker] Fetch failed for:', event.request.url, err);
+        return cachedResponse || new Response('', { status: 404, statusText: 'Not Found' });
+      });
 
       return cachedResponse || fetchPromise;
     })
