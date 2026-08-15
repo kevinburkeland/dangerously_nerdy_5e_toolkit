@@ -4,7 +4,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-139%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-161%20Passing-brightgreen.svg)](test)
 [![SRD 5.1](https://img.shields.io/badge/Rules-SRD%205.1%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **13 dedicated player & DM tools**, including a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, rich theme customization, and a cryptographically secure random number generator.
@@ -16,14 +16,14 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 ### 🛡️ 1. DM's Screen & Dual Rulebook Engine (2014 RAW vs 2024 Revised)
 * **2014 vs 2024 Rules Switch**: Seamlessly toggle between 2014 5e RAW rules and the 2024 Revised rules across all combat mechanics, conditions, environment hazards, DCs, resting, and spell limits.
 * **Side-by-Side Edition Comparison**: Interactive comparison dialogs and "2024 Diff" badges highlighting every major rule revision (e.g., -2 Exhaustion per level, Unarmed Strike Save DCs, Bonus Action potions, and Disadvantage Initiative for surprise).
-* **Instant Keyword Search & Category Filters**: Search across all rule definitions, conditions, actions, exploration rates, and improvised damage tables.
+* **Rule Pinning & Search**: Pin frequently referenced rules to the top of your screen, with instant real-time keyword search and category filtering.
 * **Quick DM Roller**: Instant d20, d100, d12, d8, and d6 roller bar directly inside the DM screen.
 
 ### 🎲 2. Core Dice Roller & 3D Polyhedral Physics
 * **Multi-Dice Pools**: Roll any combination of standard polyhedral RPG dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, `d1000`, etc.).
 * **3D Polyhedral Visualizer**: Real-time 3D rendered dice rolling with realistic angular momentum, winning-face illumination, natural 20 critical burst particle effects, and screen shake.
 * **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
-* **Detailed Breakdown**: Visual display showing individual die results, dropped rolls, natural 20 / natural 1 highlights, and total sums.
+* **Expandable Roll History**: Visual breakdown showing individual die results, dropped rolls, natural 20 / natural 1 highlights, formulas, and expandable roll detail feeds.
 * **JSON Presets**: Save custom dice formulas (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.
 * **Haptic Feedback**: Multi-level tactile vibration triggers (Off, Light Ticks, Heavy Combat Rumble) for dice clicks, roll animations, and critical successes.
 
@@ -50,7 +50,7 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 
 ### ⚔️ 6. Instant Batch Attack Roller & HP Tracker
 * **Batch Attack Engine**: Roll attack and damage for up to 50 minions simultaneously against target AC with Advantage, Disadvantage, Normal rolling, and RAW Critical Hit doubling.
-* **Live Squad HP Tracker**: Visual progress bars per minion, custom creature naming, quick +/- HP adjustments, direct HP input, and damage resistance markers.
+* **Live Squad HP Tracker**: Visual progress bars per minion, custom creature naming, temporary HP tracking, squad initiative rolling, quick +/- HP adjustments, direct HP input, and damage resistance markers.
 * **Mass Damage & Group Healing**: AoE damage and healing modal to apply group HP changes across all minions or selected squads with full/half damage saving throw calculations.
 * **Creature Stat Block Dialog**: Interactive full statblock inspection for every summoned minion (AC, HP, Speed, Ability Scores, Actions, Traits, Senses, and Languages).
 
@@ -71,7 +71,7 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **Strict Content Security Policy (CSP)** and Firebase security rules ensure robust client-side isolation and safe multi-user interactions.
 * **Data Minimization**: Zero PII collection, no account registration required, and complete user data sovereignty.
 
-### 📱 9. Progressive Web App (PWA) & Cross-Platform
+### 📱 10. Progressive Web App (PWA) & Cross-Platform
 * Fully responsive web application with offline PWA Service Worker caching and native app installation prompt on desktop and mobile web.
 * Ready for deployment across Web, Android, iOS, and Linux desktop.
 
@@ -101,9 +101,9 @@ dangerously_nerdy_5e_toolkit/
 │   ├── providers/                  # State management providers
 │   │   └── settings_provider.dart  # Reactive theme & settings provider
 │   ├── screens/                    # Application screens
-│   │   ├── animate_objects_screen.dart # Animate Objects tool wrapper
 │   │   ├── dice_roller_screen.dart # Dice roller, 3D physics, presets, & multiplayer rooms
-│   │   ├── landing_screen.dart     # Categorized dashboard with 12 dedicated tool cards
+│   │   ├── dm_reference_screen.dart # DM's screen with 2014 vs 2024 rules comparison
+│   │   ├── landing_screen.dart     # Categorized dashboard with 13 dedicated tool cards
 │   │   ├── minion_tool_screen.dart # Parametric dedicated minion tool screen
 │   │   └── settings_screen.dart    # Theme, accent color, haptics, & 3D dice preferences
 │   ├── services/                   # Data services & external integrations
@@ -123,6 +123,7 @@ dangerously_nerdy_5e_toolkit/
 │       ├── batch_attack/           # Batch attack results summary
 │       ├── dice_roller/            # 3D dice visualizer, pool builders, roll history, & presets
 │       ├── dialogs/                # Modals for presets, custom dice, mass damage, statblocks, & rules
+│       ├── dm_reference/           # Rule comparison cards, filter chips, & diff badges
 │       ├── fx/                     # Critical hit visual effects & overlays
 │       ├── interactive/            # Interactive tactile cards & buttons
 │       ├── meters/                 # Animated resource meters & HP bars
@@ -132,7 +133,7 @@ dangerously_nerdy_5e_toolkit/
 │       └── squad_builder.dart      # Quick squad configuration builder
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with cache-busting timestamp
-├── test/                           # Unit & widget test suites (126 tests)
+├── test/                           # Unit & widget test suites (161 tests)
 │   ├── models/                     # Model tests & upcasting audit suite
 │   ├── screens/                    # Screen navigation & tool tests
 │   ├── services/                   # Service & preset tests
@@ -189,7 +190,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit and widget test suite (126 tests with 100% pass rate):
+To execute the automated unit and widget test suite (161 tests with 100% pass rate):
 ```bash
 flutter test
 ```
