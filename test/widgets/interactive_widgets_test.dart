@@ -75,6 +75,31 @@ void main() {
     expect(semantics.label, contains('Warning: Low resource critical alert'));
   });
 
+  testWidgets('AnimatedResourceMeter renders temporary HP bonus label and semantics', (tester) async {
+    final settingsProvider = SettingsProvider();
+
+    await tester.pumpWidget(
+      SettingsScope(
+        notifier: settingsProvider,
+        child: const MaterialApp(
+          home: Scaffold(
+            body: AnimatedResourceMeter(
+              currentValue: 100,
+              maxValue: 100,
+              tempValue: 15,
+              label: 'Hit Points',
+              fillColor: Colors.blue,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('100 / 100 (+15 TEMP)'), findsOneWidget);
+    final semantics = tester.getSemantics(find.byType(AnimatedResourceMeter));
+    expect(semantics.label, contains('plus 15 temporary hit points'));
+  });
+
   testWidgets('CriticalEffectOverlay triggers without error', (tester) async {
     final controller = CriticalEffectController();
     final settingsProvider = SettingsProvider();

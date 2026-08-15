@@ -7,9 +7,11 @@ import '../../theme/app_theme.dart';
 class AnimatedResourceMeter extends StatefulWidget {
   final int currentValue;
   final int maxValue;
+  final int tempValue;
   final String label;
   final Color fillColor;
   final Color? lowResourceColor;
+  final Color? tempResourceColor;
   final double lowResourceThreshold;
   final bool enableLowResourceAlert;
   final double height;
@@ -19,9 +21,11 @@ class AnimatedResourceMeter extends StatefulWidget {
     super.key,
     required this.currentValue,
     required this.maxValue,
+    this.tempValue = 0,
     required this.label,
     required this.fillColor,
     this.lowResourceColor,
+    this.tempResourceColor,
     this.lowResourceThreshold = 0.25,
     this.enableLowResourceAlert = true,
     this.height = 18,
@@ -60,6 +64,7 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentValue != widget.currentValue ||
         oldWidget.maxValue != widget.maxValue ||
+        oldWidget.tempValue != widget.tempValue ||
         oldWidget.enableLowResourceAlert != widget.enableLowResourceAlert ||
         oldWidget.lowResourceThreshold != widget.lowResourceThreshold) {
       _syncAnimation();
@@ -69,7 +74,8 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
   void _syncAnimation() {
     final systemDisableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final performanceMode = SettingsScope.settingsOf(context, listen: false).performanceMode;
-    final ratio = widget.currentValue.ratioOf(widget.maxValue);
+    final effectiveCurrent = widget.currentValue > widget.maxValue ? widget.maxValue : widget.currentValue;
+    final ratio = effectiveCurrent.ratioOf(widget.maxValue);
     final isCritical = widget.enableLowResourceAlert &&
         ratio <= widget.lowResourceThreshold &&
         widget.currentValue > 0;
@@ -97,7 +103,14 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
     final performanceMode = SettingsScope.settingsOf(context).performanceMode;
     final tabletop = Theme.of(context).extension<TabletopColors>();
-    final ratio = widget.currentValue.ratioOf(widget.maxValue);
+    final excessTemp = (widget.currentValue > widget.maxValue ? widget.currentValue - widget.maxValue : 0) +
+        (widget.tempValue > 0 ? widget.tempValue : 0);
+    final effectiveCurrent = widget.currentValue > widget.maxValue ? widget.maxValue : widget.currentValue;
+    final ratio = effectiveCurrent.ratioOf(widget.maxValue);
+    final totalTempRatio =
+        ((effectiveCurrent + excessTemp) / (widget.maxValue <= 0 ? 1 : widget.maxValue)).clamp(0.0, 1.0);
+    final effectiveTempColor = widget.tempResourceColor ?? tabletop?.tempHpCyan ?? const Color(0xFF18FFFF);
+
     final isCritical = widget.enableLowResourceAlert &&
         ratio <= widget.lowResourceThreshold &&
         widget.currentValue > 0;
@@ -106,11 +119,11 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
         : widget.fillColor;
 
     final semanticDescription =
-        '${widget.label}: ${widget.currentValue} of ${widget.maxValue}${isCritical ? ", Warning: Low resource critical alert" : ""}. ${(ratio * 100).toInt()} percent remaining.';
+        '${widget.label}: $effectiveCurrent of ${widget.maxValue}${excessTemp > 0 ? ", plus $excessTemp temporary hit points" : ""}${isCritical ? ", Warning: Low resource critical alert" : ""}. ${(ratio * 100).toInt()} percent remaining.';
 
     return Semantics(
       label: semanticDescription,
-      value: '${widget.currentValue}',
+      value: '$effectiveCurrent',
       maxValue: '${widget.maxValue}',
       excludeSemantics: true,
       child: Column(
@@ -126,7 +139,9 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
               ),
               widget.trailing ??
                   Text(
-                    '${widget.currentValue} / ${widget.maxValue}',
+                    excessTemp > 0
+                        ? '$effectiveCurrent / ${widget.maxValue} (+$excessTemp TEMP)'
+                        : '${widget.currentValue} / ${widget.maxValue}',
                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
             ],
@@ -146,6 +161,18 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
               borderRadius: BorderRadius.circular(widget.height / 2),
               child: Stack(
                 children: [
+                  if (excessTemp > 0)
+                    AnimatedFractionallySizedBox(
+                      duration: systemDisableAnimations ? Duration.zero : const Duration(milliseconds: 350),
+                      curve: Curves.easeOutCubic,
+                      widthFactor: totalTempRatio,
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: effectiveTempColor.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ),
                   AnimatedFractionallySizedBox(
                     duration: systemDisableAnimations ? Duration.zero : const Duration(milliseconds: 350),
                     curve: Curves.easeOutCubic,

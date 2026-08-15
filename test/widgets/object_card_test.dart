@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/dialogs/set_object_hp_dialog.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/minions/object_card.dart';
 
 void main() {
@@ -90,5 +91,45 @@ void main() {
     await tester.pumpWidget(buildTestCard(object: tempObj));
 
     expect(find.text('+5 TEMP'), findsOneWidget);
+  });
+
+  testWidgets('SetObjectHpDialog allocates bonus health in excess of cap to temp HP', (WidgetTester tester) async {
+    SetObjectHpResult? dialogResult;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                dialogResult = await SetObjectHpDialog.show(
+                  context,
+                  objectName: 'Silver Coin #1',
+                  currentHp: 20,
+                  maxHp: 20,
+                );
+              },
+              child: const Text('Open Dialog'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open Dialog'));
+    await tester.pumpAndSettle();
+
+    // Enter 25 HP for a creature with 20 Max HP
+    final hpField = find.widgetWithText(TextField, 'Current HP (Max 20)');
+    await tester.enterText(hpField, '25');
+
+    // Tap Save HP
+    await tester.tap(find.text('Save HP'));
+    await tester.pumpAndSettle();
+
+    expect(dialogResult, isNotNull);
+    expect(dialogResult!.currentHp, 20);
+    expect(dialogResult!.tempHp, 5); // 25 - 20 = 5 bonus HP allocated as temp HP!
   });
 }

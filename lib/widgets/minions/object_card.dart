@@ -236,16 +236,34 @@ class ObjectCard extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: LinearProgressIndicator(
-                              value: object.hpPercent,
-                              minHeight: 10,
-                              backgroundColor: Colors.white12,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                object.hpPercent > 0.5
-                                    ? customColors.hitGreen
-                                    : (object.hpPercent > 0.25 ? Colors.amber : customColors.fumbleRed),
+                          Container(
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.white12,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Stack(
+                                children: [
+                                  if (object.tempHp > 0 && !isDead)
+                                    FractionallySizedBox(
+                                      alignment: Alignment.centerLeft,
+                                      widthFactor: ((object.currentHp + object.tempHp) / object.maxHp).clamp(0.0, 1.0),
+                                      child: Container(
+                                        color: customColors.tempHpCyan,
+                                      ),
+                                    ),
+                                  FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: object.hpPercent,
+                                    child: Container(
+                                      color: object.hpPercent > 0.5
+                                          ? customColors.hitGreen
+                                          : (object.hpPercent > 0.25 ? Colors.amber : customColors.fumbleRed),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

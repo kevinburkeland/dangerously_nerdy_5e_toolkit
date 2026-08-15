@@ -62,13 +62,17 @@ class _SetObjectHpDialogState extends State<SetObjectHpDialog> {
   }
 
   void _submit() {
-    final newHp = int.tryParse(_hpController.text) ?? widget.currentHp;
-    final newTemp = int.tryParse(_tempHpController.text) ?? widget.tempHp;
+    final rawHp = int.tryParse(_hpController.text) ?? widget.currentHp;
+    final enteredTemp = int.tryParse(_tempHpController.text) ?? widget.tempHp;
+    final excessHp = rawHp > widget.maxHp ? (rawHp - widget.maxHp) : 0;
+    final finalCurrentHp = rawHp.clamp(0, widget.maxHp);
+    final finalTempHp = (enteredTemp < 0 ? 0 : enteredTemp) + excessHp;
+
     Navigator.pop(
       context,
       SetObjectHpResult(
-        currentHp: newHp.clamp(0, widget.maxHp),
-        tempHp: newTemp < 0 ? 0 : newTemp,
+        currentHp: finalCurrentHp,
+        tempHp: finalTempHp,
       ),
     );
   }
