@@ -257,10 +257,10 @@ class _Simulated3DDie {
         mesh = PolyhedronMesh.createD8(radius: dieRadius);
         break;
       case DieType.d10:
-        mesh = PolyhedronMesh.createD10(radius: dieRadius, isD100: false);
+        mesh = PolyhedronMesh.createD10(radius: dieRadius);
         break;
       case DieType.d100:
-        mesh = PolyhedronMesh.createD10(radius: dieRadius, isD100: true);
+        mesh = PolyhedronMesh.createD100(radius: isSingle ? 80.0 : (totalCount <= 3 ? 62.0 : 48.0));
         break;
       case DieType.d12:
         mesh = PolyhedronMesh.createD12(radius: dieRadius);
@@ -476,23 +476,14 @@ class _Polyhedral3DDicePainter extends CustomPainter {
         if (shouldDrawNumber) {
           String faceDisplayText;
           if (isWinningFace) {
-            if (die.dieType == DieType.d100) {
-              final val = die.finalValue == 100 ? 0 : die.finalValue;
-              faceDisplayText = val.toString().padLeft(2, '0');
-            } else {
-              faceDisplayText = '${die.finalValue}';
-            }
+            faceDisplayText = '${die.finalValue}';
           } else {
             int num = faceData.face.faceNumber ?? (faceData.faceIndex + 1);
             if (num == die.finalValue) {
               num = (num % totalFaces) + 1;
               if (num == die.finalValue) num = (num % totalFaces) + 1;
             }
-            if (die.dieType == DieType.d100) {
-              faceDisplayText = (num * 10 % 100).toString().padLeft(2, '0');
-            } else {
-              faceDisplayText = '$num';
-            }
+            faceDisplayText = '$num';
           }
 
           final textSpan = TextSpan(

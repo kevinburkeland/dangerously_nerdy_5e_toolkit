@@ -30,10 +30,23 @@ void main() {
       }
     });
 
-    test('createD10 produces a valid pentagonal trapezohedron mesh', () {
-      final mesh = PolyhedronMesh.createD10(radius: 60.0, isD100: false);
-      expect(mesh.vertices.length, equals(11));
+    test('createD10 produces a mathematically exact pentagonal trapezohedron mesh', () {
+      final mesh = PolyhedronMesh.createD10(radius: 70.0);
+      expect(mesh.vertices.length, equals(12));
       expect(mesh.faces.length, equals(10));
+      for (final face in mesh.faces) {
+        expect(face.vertexIndices.length, equals(4));
+      }
+    });
+
+    test('createD100 produces an authentic 100-sided spherical deltohedron mesh', () {
+      final mesh = PolyhedronMesh.createD100(radius: 78.0);
+      expect(mesh.vertices.length, equals(102));
+      expect(mesh.faces.length, equals(100));
+      for (final face in mesh.faces) {
+        expect(face.vertexIndices.length, equals(4));
+      }
+      expect(mesh.faces[0].faceNumber, equals(100));
     });
 
     test('createD12 produces a mathematically exact regular dodecahedron mesh', () {

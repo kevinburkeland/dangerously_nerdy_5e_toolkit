@@ -79,50 +79,121 @@ class PolyhedronMesh {
     return PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
   }
 
-  /// 3D Iconic Pentagonal Trapezohedron (d10 & d100) Geometry
-  static PolyhedronMesh createD10({double radius = 70.0, bool isD100 = false}) {
-    const zFront = 0.40;
-    const zBack = -0.45;
-    const zApex = -0.60;
+  /// 3D Mathematically Exact Pentagonal Trapezohedron (d10) Geometry
+  /// Authentic 10-deltoid (kite) solid with canonical face-centered resting orientation.
+  static PolyhedronMesh createD10({double radius = 70.0}) {
+    const zBelt = 0.1055728;
+    const rBelt = 0.7038406;
+    const hNorm = 1.0;
 
-    final vertices = [
-      // Primary Face 0: Front-facing flat kite (Vertices 0, 1, 2, 3)
-      const Vec3(0.0, 0.90, zFront),   // 0: Top corner of front kite
-      const Vec3(0.68, 0.12, zFront),  // 1: Right corner of front kite
-      const Vec3(0.0, -0.68, zFront),  // 2: Bottom corner of front kite
-      const Vec3(-0.68, 0.12, zFront), // 3: Left corner of front kite
-
-      // Outer belt vertices (sloping away to back)
-      const Vec3(0.78, 0.65, zBack),   // 4: Upper-right outer
-      const Vec3(0.82, -0.42, zBack),  // 5: Lower-right outer
-      const Vec3(-0.82, -0.42, zBack), // 6: Lower-left outer
-      const Vec3(-0.78, 0.65, zBack),  // 7: Upper-left outer
-
-      // Top and Bottom Back Apexes
-      const Vec3(0.0, 1.05, zApex),    // 8: Top polar apex
-      const Vec3(0.0, -0.98, zApex),   // 9: Bottom polar apex
-      const Vec3(0.0, 0.0, -0.85),     // 10: Rear center
+    final rawVerts = <Vec3>[
+      const Vec3(0, 0, hNorm),  // 0: Top Apex
+      const Vec3(0, 0, -hNorm), // 1: Bottom Apex
+      for (int k = 0; k < 5; k++) Vec3(rBelt * cos(k * 2 * pi / 5), rBelt * sin(k * 2 * pi / 5), zBelt),
+      for (int k = 0; k < 5; k++) Vec3(rBelt * cos(pi / 5 + k * 2 * pi / 5), rBelt * sin(pi / 5 + k * 2 * pi / 5), -zBelt),
     ];
 
-    final faces = [
-      // 1. PRIMARY TOP-DOWN FACE: Centered kite facing viewer (Face 0)
-      Polygon3D(const [0, 1, 2, 3], faceNumber: isD100 ? 0 : 10),
+    const faces = [
+      // 5 Upper Kites
+      Polygon3D([0, 2, 7, 6], faceNumber: 10),  // 0: Top face (facing camera)
+      Polygon3D([0, 3, 8, 2], faceNumber: 2),
+      Polygon3D([0, 4, 9, 3], faceNumber: 8),
+      Polygon3D([0, 5, 10, 4], faceNumber: 4),
+      Polygon3D([0, 6, 11, 5], faceNumber: 6),
 
-      // 2. Front-visible sloping side facets
-      Polygon3D(const [0, 8, 4, 1], faceNumber: isD100 ? 20 : 2),
-      Polygon3D(const [1, 4, 5, 2], faceNumber: isD100 ? 40 : 4),
-      Polygon3D(const [2, 5, 9, 6], faceNumber: isD100 ? 60 : 6),
-      Polygon3D(const [3, 2, 6, 7], faceNumber: isD100 ? 80 : 8),
-      Polygon3D(const [0, 3, 7, 8], faceNumber: isD100 ? 10 : 1),
-
-      // 3. Rear facets
-      Polygon3D(const [8, 7, 10, 4], faceNumber: isD100 ? 30 : 3),
-      Polygon3D(const [4, 10, 5], faceNumber: isD100 ? 50 : 5),
-      Polygon3D(const [9, 5, 10, 6], faceNumber: isD100 ? 70 : 7),
-      Polygon3D(const [7, 6, 10], faceNumber: isD100 ? 90 : 9),
+      // 5 Lower Kites (Opposites sum to 11)
+      Polygon3D([1, 9, 4, 8], faceNumber: 3),   // Opposite 8
+      Polygon3D([1, 10, 5, 9], faceNumber: 7),  // Opposite 4
+      Polygon3D([1, 11, 6, 10], faceNumber: 5), // Opposite 6
+      Polygon3D([1, 7, 2, 11], faceNumber: 1),  // Opposite 10 (directly back)
+      Polygon3D([1, 8, 3, 7], faceNumber: 9),   // Opposite 2
     ];
 
-    return PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
+    // Rotate so Face 0 is flat facing +Z directly towards the camera
+    final topFace = faces[0];
+    final v0 = rawVerts[topFace.vertexIndices[0]];
+    final v1 = rawVerts[topFace.vertexIndices[1]];
+    final v2 = rawVerts[topFace.vertexIndices[2]];
+    final c0 = topFace.vertexIndices.map((i) => rawVerts[i]).reduce((a, b) => a + b) * 0.25;
+    var n0 = (v1 - v0).cross(v2 - v0).normalized();
+    if (n0.dot(c0) < 0) n0 = -n0;
+
+    final rotAxis = n0.cross(const Vec3(0, 0, 1)).normalized();
+    final rotAngle = acos(n0.z.clamp(-1.0, 1.0));
+
+    var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
+
+    // Center Face 0 on origin (x=0, y=0) in screen plane
+    final cRot = topFace.vertexIndices.map((i) => rotated[i]).reduce((a, b) => a + b) * 0.25;
+    rotated = rotated.map((v) => Vec3(v.x - cRot.x, v.y - cRot.y, v.z)).toList();
+
+    // Align apex straight up along +Y
+    final pApex = rotated[0];
+    final apexAngle = atan2(pApex.x, pApex.y);
+    rotated = rotated.map((v) => Vec3(v.x * cos(apexAngle) - v.y * sin(apexAngle), v.x * sin(apexAngle) + v.y * cos(apexAngle), v.z)).toList();
+
+    return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
+  }
+
+  /// 3D Mathematically Exact 100-Sided Die (d100 / Zocchihedron / 50-gonal Deltohedron) Geometry
+  /// Authentic 100-faceted solid with dense spherical geodesic curvature and canonical face-centered resting orientation.
+  static PolyhedronMesh createD100({double radius = 78.0}) {
+    const n = 50;
+    const zLat = 0.08;
+    final rLat = sqrt(1.0 - zLat * zLat);
+
+    final rawVerts = <Vec3>[
+      const Vec3(0, 0, 1.0),  // 0: Top Apex
+      const Vec3(0, 0, -1.0), // 1: Bottom Apex
+      // 50 Upper Belt Vertices (2..51)
+      for (int k = 0; k < n; k++)
+        Vec3(rLat * cos(k * 2 * pi / n), rLat * sin(k * 2 * pi / n), zLat),
+      // 50 Lower Belt Vertices (52..101)
+      for (int k = 0; k < n; k++)
+        Vec3(rLat * cos(pi / n + k * 2 * pi / n), rLat * sin(pi / n + k * 2 * pi / n), -zLat),
+    ];
+
+    final faces = <Polygon3D>[];
+    // 50 Upper Kites
+    for (int k = 0; k < n; k++) {
+      final uPrev = 2 + ((k - 1 + n) % n);
+      final uCurr = 2 + k;
+      final lPrev = 2 + n + ((k - 1 + n) % n);
+      faces.add(Polygon3D([0, uPrev, lPrev, uCurr], faceNumber: (k == 0 ? 100 : (k * 2))));
+    }
+
+    // 50 Lower Kites (Opposite pairs summing to 101)
+    for (int k = 0; k < n; k++) {
+      final lPrev = 2 + n + ((k - 1 + n) % n);
+      final lCurr = 2 + n + k;
+      final uCurr = 2 + k;
+      faces.add(Polygon3D([1, lCurr, uCurr, lPrev], faceNumber: (101 - faces[k].faceNumber!)));
+    }
+
+    // Align Face 0 (faceNumber: 100) to face +Z directly
+    final topFace = faces[0];
+    final v0 = rawVerts[topFace.vertexIndices[0]];
+    final v1 = rawVerts[topFace.vertexIndices[1]];
+    final v2 = rawVerts[topFace.vertexIndices[2]];
+    final c0 = topFace.vertexIndices.map((i) => rawVerts[i]).reduce((a, b) => a + b) * 0.25;
+    var n0 = (v1 - v0).cross(v2 - v0).normalized();
+    if (n0.dot(c0) < 0) n0 = -n0;
+
+    final rotAxis = n0.cross(const Vec3(0, 0, 1)).normalized();
+    final rotAngle = acos(n0.z.clamp(-1.0, 1.0));
+
+    var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
+
+    // Center Face 0 on origin (x=0, y=0) in screen plane
+    final cRot = topFace.vertexIndices.map((i) => rotated[i]).reduce((a, b) => a + b) * 0.25;
+    rotated = rotated.map((v) => Vec3(v.x - cRot.x, v.y - cRot.y, v.z)).toList();
+
+    // Align apex vertical
+    final pApex = rotated[0];
+    final apexAngle = atan2(pApex.x, pApex.y);
+    rotated = rotated.map((v) => Vec3(v.x * cos(apexAngle) - v.y * sin(apexAngle), v.x * sin(apexAngle) + v.y * cos(apexAngle), v.z)).toList();
+
+    return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
   }
 
   /// 3D Mathematically Exact Regular Dodecahedron (d12) Geometry
