@@ -697,26 +697,22 @@ class D20TechPainter extends CustomPainter {
         break;
 
       case 'S':
-        path.moveTo(w, h * 0.2);
-        path.lineTo(w * 0.8, 0);
-        path.lineTo(w * 0.2, 0);
-        path.lineTo(0, h * 0.2);
-        path.lineTo(0, h * 0.45);
-        path.lineTo(w * 0.2, h * 0.55);
-        path.lineTo(w * 0.8, h * 0.65);
-        path.lineTo(w, h * 0.75);
-        path.lineTo(w, h * 0.8);
-        path.lineTo(w * 0.8, h);
-        path.lineTo(w * 0.2, h);
-        path.lineTo(0, h * 0.8);
-        path.lineTo(w * 0.24, h * 0.8);
-        path.lineTo(w * 0.28, h * 0.8);
-        path.lineTo(w * 0.75, h * 0.8);
-        path.lineTo(w * 0.75, h * 0.7);
-        path.lineTo(w * 0.2, h * 0.58);
-        path.lineTo(0, h * 0.45);
-        path.lineTo(0, h * 0.2);
-        path.lineTo(w * 0.2, 0);
+        path.moveTo(w * 0.85, 0);
+        path.lineTo(w * 0.15, 0);
+        path.lineTo(0, h * 0.15);
+        path.lineTo(0, h * 0.55);
+        path.lineTo(w * 0.74, h * 0.55);
+        path.lineTo(w * 0.74, h * 0.78);
+        path.lineTo(0, h * 0.78);
+        path.lineTo(0, h * 0.85);
+        path.lineTo(w * 0.15, h);
+        path.lineTo(w * 0.85, h);
+        path.lineTo(w, h * 0.85);
+        path.lineTo(w, h * 0.45);
+        path.lineTo(w * 0.26, h * 0.45);
+        path.lineTo(w * 0.26, h * 0.22);
+        path.lineTo(w, h * 0.22);
+        path.lineTo(w, h * 0.15);
         path.close();
         break;
 
