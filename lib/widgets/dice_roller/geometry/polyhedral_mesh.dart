@@ -15,22 +15,24 @@ class PolyhedronMesh {
 
   static double deg60(int count) => count * pi / 3.0;
 
-  /// 3D Tetrahedron (d4) Geometry (Canonical 3-facet apex top-down view)
+  /// 3D Tetrahedron (d4) Geometry (Face-centered flat triangular resting view)
   static PolyhedronMesh createD4({double radius = 64.0}) {
-    const h = 0.8165; // sqrt(2/3)
-    const r = 0.8660; // sqrt(3)/2
+    const zFront = 1.0 / 3.0; // Inscribed center-of-mass depth
+    const zApex = -1.0;
+    final r = sqrt(8.0 / 9.0); // Exact radius for regular tetrahedron edges
+
     final vertices = [
-      const Vec3(0, 0, 1.0), // 0: Top Apex
-      const Vec3(0, r, -h / 2),    // 1: Top-Center
-      Vec3(-r * sqrt(3) / 2, -r / 2, -h / 2), // 2: Bottom-Left
-      Vec3(r * sqrt(3) / 2, -r / 2, -h / 2),  // 3: Bottom-Right
+      Vec3(0, r, zFront),                              // 0: Top corner (front triangle)
+      Vec3(-r * sqrt(3.0) / 2.0, -r / 2.0, zFront),   // 1: Bottom-Left (front triangle)
+      Vec3(r * sqrt(3.0) / 2.0, -r / 2.0, zFront),    // 2: Bottom-Right (front triangle)
+      const Vec3(0, 0, zApex),                         // 3: Rear Apex
     ];
 
     const faces = [
-      Polygon3D([0, 1, 3], faceNumber: 4),
-      Polygon3D([0, 2, 1], faceNumber: 2),
-      Polygon3D([0, 3, 2], faceNumber: 3),
-      Polygon3D([1, 2, 3], faceNumber: 1), // Base
+      Polygon3D([0, 1, 2], faceNumber: 4), // Front face facing camera (+Z)
+      Polygon3D([0, 3, 1], faceNumber: 2), // Left rear slope
+      Polygon3D([0, 2, 3], faceNumber: 3), // Right rear slope
+      Polygon3D([1, 3, 2], faceNumber: 1), // Bottom rear slope
     ];
 
     return PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
