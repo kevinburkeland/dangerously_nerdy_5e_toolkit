@@ -30,7 +30,7 @@ void main() {
     ];
 
     test('SRD summons library contains no WotC Product Identity terms in names or descriptions', () {
-      final allPresets = SrdSummonsLibrary.allPresets;
+      const allPresets = SrdSummonsLibrary.allPresets;
       expect(allPresets, isNotEmpty);
 
       for (final preset in allPresets) {
@@ -64,7 +64,7 @@ void main() {
     });
 
     test('DM Reference Screen items contain no WotC Product Identity terms', () {
-      final items = DmScreenLibrary.allItems;
+      const items = DmScreenLibrary.allItems;
       expect(items, isNotEmpty);
 
       for (final item in items) {

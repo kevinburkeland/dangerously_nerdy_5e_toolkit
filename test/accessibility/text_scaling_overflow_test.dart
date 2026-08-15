@@ -13,13 +13,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: MediaQuery(
-            data: const MediaQueryData(
+            data: MediaQueryData(
               size: Size(540, 1200),
               textScaler: TextScaler.linear(1.5),
             ),
-            child: const LandingScreen(),
+            child: LandingScreen(),
           ),
         ),
       );
@@ -33,13 +33,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: MediaQuery(
-            data: const MediaQueryData(
+            data: MediaQueryData(
               size: Size(540, 1200),
               textScaler: TextScaler.linear(1.5),
             ),
-            child: const DmReferenceScreen(),
+            child: DmReferenceScreen(),
           ),
         ),
       );
@@ -56,13 +56,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: MediaQuery(
-            data: const MediaQueryData(
+            data: MediaQueryData(
               size: Size(540, 1200),
               textScaler: TextScaler.linear(1.5),
             ),
-            child: const DiceRollerScreen(),
+            child: DiceRollerScreen(),
           ),
         ),
       );

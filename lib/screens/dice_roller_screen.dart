@@ -387,7 +387,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary, size: 20),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           const Text('Status Effects & Conditions'),
                         ],
                       ),

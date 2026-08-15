@@ -102,13 +102,13 @@ class _LandingScreenState extends State<LandingScreen> {
               if (val == 'install') PwaHelper.promptInstall();
             },
             itemBuilder: (ctx) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'economy',
                 child: Row(
                   children: [
-                    Icon(Icons.flash_on, color: Colors.amber, size: 20),
-                    SizedBox(width: 10),
-                    Text('Action Economy Guide'),
+                    Icon(Icons.flash_on_outlined, color: theme.colorScheme.primary, size: 20),
+                    const SizedBox(width: 10),
+                    const Text('Action Economy Guide'),
                   ],
                 ),
               ),
@@ -117,7 +117,7 @@ class _LandingScreenState extends State<LandingScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary, size: 20),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     const Text('Status Effects & Conditions'),
                   ],
                 ),

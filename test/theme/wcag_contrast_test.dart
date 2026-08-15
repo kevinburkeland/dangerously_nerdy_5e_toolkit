@@ -4,14 +4,13 @@ import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 
 /// Standard WCAG 2.1 relative luminance calculation
 double calculateRelativeLuminance(Color color) {
-  double getChannel(int channelValue) {
-    final sRGB = channelValue / 255.0;
-    return sRGB <= 0.03928 ? sRGB / 12.92 : ( (sRGB + 0.055) / 1.055 ) * ( (sRGB + 0.055) / 1.055 );
+  double getChannel(double sRGB) {
+    return sRGB <= 0.03928 ? sRGB / 12.92 : ((sRGB + 0.055) / 1.055) * ((sRGB + 0.055) / 1.055);
   }
 
-  final r = getChannel(color.red);
-  final g = getChannel(color.green);
-  final b = getChannel(color.blue);
+  final r = getChannel(color.r);
+  final g = getChannel(color.g);
+  final b = getChannel(color.b);
 
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
