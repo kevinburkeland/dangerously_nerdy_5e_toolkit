@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../models/dice_roll.dart';
-import '../models/room_roll.dart';
-import '../models/spell_session.dart';
-import '../services/a11y_service.dart';
-import '../services/dice_room_service.dart';
-import '../services/haptic_service.dart';
-import '../theme/app_theme.dart';
-import '../utils/secure_random.dart';
-import 'batch_attack/batch_attack_results_card.dart';
+import '../../models/dice_roll.dart';
+import '../../models/room_roll.dart';
+import '../../models/spell_session.dart';
+import '../../services/a11y_service.dart';
+import '../../services/dice_room_service.dart';
+import '../../services/haptic_service.dart';
+import '../../theme/app_theme.dart';
+import '../../utils/secure_random.dart';
+import '../batch_attack/batch_attack_results_card.dart';
 
 class BatchAttackDialog extends StatefulWidget {
   final SpellSession session;

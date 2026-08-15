@@ -6,16 +6,16 @@ import '../services/haptic_service.dart';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../utils/secure_random.dart';
 import '../widgets/minions/active_session_header.dart';
-import '../widgets/batch_attack_dialog.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
+import '../widgets/dialogs/batch_attack_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/dialogs/squad_initiative_dialog.dart';
 import '../widgets/dialogs/value_input_dialog.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
-import '../widgets/object_card.dart';
+import '../widgets/minions/object_card.dart';
+import '../widgets/minions/squad_builder.dart';
 import '../widgets/room_banner_widget.dart';
 import '../widgets/spell_reference.dart';
-import '../widgets/squad_builder.dart';
 
 class MinionToolScreen extends StatefulWidget {
   final SummonPreset preset;

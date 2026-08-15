@@ -5,7 +5,7 @@ import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/interactive/pressable_card.dart';
-import '../widgets/legal_dialogs.dart';
+import '../widgets/dialogs/legal_dialogs.dart';
 import 'dm_reference_screen.dart';
 import 'settings_screen.dart';
 

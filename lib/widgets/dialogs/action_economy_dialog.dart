@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../providers/settings_provider.dart';
-import '../../services/haptic_service.dart';
+import '../dm_reference/rules_edition_toggle.dart';
 
 class ActionEconomyDialog extends StatefulWidget {
   final DmRulesEdition? initialEdition;
@@ -43,7 +43,6 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
   Widget build(BuildContext context) {
     final settingsProvider = SettingsScope.maybeOf(context);
     final edition = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
-    final is2024 = edition == DmRulesEdition.v2024;
 
     final standardActions = DmScreenLibrary.standardActions(edition);
     final bonusActions = DmScreenLibrary.bonusActions(edition);
@@ -74,36 +73,15 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                       ),
                     ),
                   ),
-                  // Edition Toggle Button
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF252236),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildEditionChip(
-                          label: '2014',
-                          isActive: !is2024,
-                          onTap: () {
-                            HapticService.selectionTick(context);
-                            setState(() => _localEditionOverride = DmRulesEdition.v2014);
-                            settingsProvider?.setRulesEdition(DmRulesEdition.v2014);
-                          },
-                        ),
-                        _buildEditionChip(
-                          label: '2024',
-                          isActive: is2024,
-                          onTap: () {
-                            HapticService.selectionTick(context);
-                            setState(() => _localEditionOverride = DmRulesEdition.v2024);
-                            settingsProvider?.setRulesEdition(DmRulesEdition.v2024);
-                          },
-                        ),
-                      ],
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: RulesEditionToggle(
+                      currentEdition: edition,
+                      isDense: true,
+                      onEditionChanged: (newEdition) {
+                        setState(() => _localEditionOverride = newEdition);
+                        settingsProvider?.setRulesEdition(newEdition);
+                      },
                     ),
                   ),
                   IconButton(
@@ -166,33 +144,6 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditionChip({required String label, required bool isActive, required VoidCallback onTap}) {
-    return Semantics(
-      button: true,
-      selected: isActive,
-      label: '$label Edition Rules',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: isActive ? Colors.amber : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isActive ? Colors.black : Colors.white70,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ),
       ),
     );

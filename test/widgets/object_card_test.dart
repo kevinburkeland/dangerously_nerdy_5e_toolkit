@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
-import 'package:dangerously_nerdy_5e_toolkit/widgets/object_card.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/minions/object_card.dart';
 
 void main() {
   Widget buildTestCard({

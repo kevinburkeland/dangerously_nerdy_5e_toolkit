@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../providers/settings_provider.dart';
-import '../../services/a11y_service.dart';
-import '../../services/haptic_service.dart';
+import '../dm_reference/rules_edition_toggle.dart';
 
 class ConditionReferenceDialog extends StatefulWidget {
   final DmRulesEdition? initialEdition;
@@ -37,7 +36,6 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
   Widget build(BuildContext context) {
     final settingsProvider = SettingsScope.maybeOf(context);
     final edition = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
-    final is2024 = edition == DmRulesEdition.v2024;
 
     final filtered = DmScreenLibrary.conditions.where((c) {
       if (_selectedCategory != 'All' && c.subCategory != _selectedCategory) {
@@ -71,38 +69,15 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                       ),
                     ),
                   ),
-                  // Edition Toggle Button
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF252236),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildEditionChip(
-                          label: '2014',
-                          isActive: !is2024,
-                          onTap: () {
-                            HapticService.selectionTick(context);
-                            A11yService.announce('Switched to 2014 rules edition');
-                            setState(() => _localEditionOverride = DmRulesEdition.v2014);
-                            settingsProvider?.setRulesEdition(DmRulesEdition.v2014);
-                          },
-                        ),
-                        _buildEditionChip(
-                          label: '2024',
-                          isActive: is2024,
-                          onTap: () {
-                            HapticService.selectionTick(context);
-                            A11yService.announce('Switched to 2024 revised rules edition');
-                            setState(() => _localEditionOverride = DmRulesEdition.v2024);
-                            settingsProvider?.setRulesEdition(DmRulesEdition.v2024);
-                          },
-                        ),
-                      ],
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: RulesEditionToggle(
+                      currentEdition: edition,
+                      isDense: true,
+                      onEditionChanged: (newEdition) {
+                        setState(() => _localEditionOverride = newEdition);
+                        settingsProvider?.setRulesEdition(newEdition);
+                      },
                     ),
                   ),
                   IconButton(
@@ -251,38 +226,6 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                     ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEditionChip({required String label, required bool isActive, required VoidCallback onTap}) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-      child: Semantics(
-        button: true,
-        selected: isActive,
-        label: '$label Edition Rules',
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(6),
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isActive ? Colors.cyanAccent : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isActive ? Colors.black : Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );

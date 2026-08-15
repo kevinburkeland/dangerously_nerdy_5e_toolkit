@@ -4,7 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
-import 'package:dangerously_nerdy_5e_toolkit/widgets/batch_attack_dialog.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/dialogs/batch_attack_dialog.dart';
 
 void main() {
   Widget createTestableWidget(Widget child) {

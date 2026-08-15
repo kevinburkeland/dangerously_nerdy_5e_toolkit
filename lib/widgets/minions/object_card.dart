@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/animated_object.dart';
-import '../services/a11y_service.dart';
-import '../services/haptic_service.dart';
-import '../theme/app_theme.dart';
-import 'dialogs/creature_stat_block_dialog.dart';
-import 'dialogs/set_object_hp_dialog.dart';
-import 'dialogs/value_input_dialog.dart';
+import '../../models/animated_object.dart';
+import '../../services/a11y_service.dart';
+import '../../services/haptic_service.dart';
+import '../../theme/app_theme.dart';
+import '../dialogs/creature_stat_block_dialog.dart';
+import '../dialogs/set_object_hp_dialog.dart';
+import '../dialogs/value_input_dialog.dart';
 
 class ObjectCard extends StatelessWidget {
   final AnimatedObjectInstance object;

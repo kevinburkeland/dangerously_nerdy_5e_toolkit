@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/animated_object.dart';
-import '../models/spell_session.dart';
-import '../models/srd_summons/srd_summons_library.dart';
-import '../services/a11y_service.dart';
-import '../theme/app_theme.dart';
+import '../../models/animated_object.dart';
+import '../../models/spell_session.dart';
+import '../../models/srd_summons/srd_summons_library.dart';
+import '../../services/a11y_service.dart';
+import '../../theme/app_theme.dart';
 
 class SquadBuilderBottomSheet extends StatefulWidget {
   final SpellSession session;

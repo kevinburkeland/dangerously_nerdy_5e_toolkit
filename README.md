@@ -4,7 +4,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-162%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-164%20Passing-brightgreen.svg)](test)
 [![SRD 5.1](https://img.shields.io/badge/Rules-SRD%205.1%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **13 dedicated player & DM tools**, including a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, rich theme customization, and a cryptographically secure random number generator.
@@ -121,19 +121,17 @@ dangerously_nerdy_5e_toolkit/
 │   └── widgets/                    # Modular UI components
 │       ├── batch_attack/           # Batch attack results summary
 │       ├── dice_roller/            # 3D dice visualizer, pool builders, roll history, & presets
-│       ├── dialogs/                # Modals for presets, custom dice, mass damage, statblocks, & rules
-│       ├── dm_reference/           # Rule comparison cards, filter chips, & diff badges
+│       ├── dialogs/                # Modals for presets, batch attacks, legal notices, statblocks, & rules
+│       ├── dm_reference/           # Dual-rulebook comparison cards, edition toggles, & diff badges
 │       ├── fx/                     # Critical hit visual effects & overlays
 │       ├── interactive/            # Interactive tactile cards & buttons
 │       ├── meters/                 # Animated resource meters & HP bars
-│       ├── minions/                # Active session header & squad controls
-│       ├── object_card.dart        # Individual minion HP card with statblock inspector
+│       ├── minions/                # Active session header, object cards, & squad builder
 │       ├── room_banner_widget.dart # Live room connection status banner
-│       ├── spell_reference.dart    # Interactive 5e spell rulebook table
-│       └── squad_builder.dart      # Quick squad configuration builder
+│       └── spell_reference.dart    # Interactive 5e spell rulebook table
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with cache-busting timestamp
-├── test/                           # Unit & widget test suites (162 tests)
+├── test/                           # Unit & widget test suites (164 tests)
 │   ├── models/                     # Model tests & upcasting audit suite
 │   ├── screens/                    # Screen navigation & tool tests
 │   ├── services/                   # Service & preset tests
@@ -190,7 +188,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit and widget test suite (162 tests with 100% pass rate):
+To execute the automated unit and widget test suite (164 tests with 100% pass rate):
 ```bash
 flutter test
 ```

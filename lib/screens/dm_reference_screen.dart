@@ -6,6 +6,7 @@ import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
 import '../widgets/dm_reference/dm_rule_card.dart';
 import '../widgets/dm_reference/dm_rule_comparison_dialog.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
 
 class DmReferenceScreen extends StatefulWidget {
   final DmRulesEdition? initialEdition;
@@ -132,27 +133,11 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           ],
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildEditionButton(
-                  label: '2014',
-                  edition: DmRulesEdition.v2014,
-                  isActive: edition == DmRulesEdition.v2014,
-                ),
-                _buildEditionButton(
-                  label: '2024',
-                  edition: DmRulesEdition.v2024,
-                  isActive: edition == DmRulesEdition.v2024,
-                ),
-              ],
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            child: RulesEditionToggle(
+              currentEdition: edition,
+              onEditionChanged: (newEdition) => _onEditionChanged(context, newEdition),
             ),
           ),
         ],
@@ -307,39 +292,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildEditionButton({
-    required String label,
-    required DmRulesEdition edition,
-    required bool isActive,
-  }) {
-    final theme = Theme.of(context);
-    return Semantics(
-      button: true,
-      selected: isActive,
-      label: '$label Edition Rules',
-      child: InkWell(
-        onTap: () => _onEditionChanged(context, edition),
-        borderRadius: BorderRadius.circular(8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isActive ? theme.colorScheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isActive ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
       ),
     );
   }

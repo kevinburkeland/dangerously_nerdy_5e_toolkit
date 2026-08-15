@@ -11,7 +11,7 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/dice_roller/latest_roll_car
 import 'package:dangerously_nerdy_5e_toolkit/widgets/fx/critical_effect_overlay.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/interactive/pressable_card.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/meters/animated_resource_meter.dart';
-import 'package:dangerously_nerdy_5e_toolkit/widgets/object_card.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/minions/object_card.dart';
 
 void main() {
   group('Comprehensive Accessibility (a11y) Verification Tests', () {
