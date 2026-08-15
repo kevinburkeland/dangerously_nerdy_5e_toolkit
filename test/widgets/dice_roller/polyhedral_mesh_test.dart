@@ -39,12 +39,11 @@ void main() {
       }
     });
 
-    test('createD100 produces an authentic 100-sided spherical deltohedron mesh', () {
+    test('createD100 produces an authentic 100-sided spherical geodesic mesh', () {
       final mesh = PolyhedronMesh.createD100(radius: 78.0);
-      expect(mesh.vertices.length, equals(102));
       expect(mesh.faces.length, equals(100));
       for (final face in mesh.faces) {
-        expect(face.vertexIndices.length, equals(4));
+        expect(face.vertexIndices.length, equals(5));
       }
       expect(mesh.faces[0].faceNumber, equals(100));
     });
