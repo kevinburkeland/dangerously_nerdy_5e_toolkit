@@ -105,5 +105,32 @@ void main() {
       expect(tapped, isTrue);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('inherits primary and secondary colors dynamically from Theme', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.amber,
+              secondary: Colors.deepOrange,
+            ),
+          ),
+          home: const Scaffold(
+            body: AppLogo(),
+          ),
+        ),
+      );
+
+      final customPaint = tester.widget<CustomPaint>(
+        find.descendant(
+          of: find.byType(AppLogo),
+          matching: find.byType(CustomPaint),
+        ),
+      );
+
+      final painter = customPaint.painter as D20TechPainter;
+      expect(painter.primaryColor, equals(Colors.amber));
+      expect(painter.secondaryColor, equals(Colors.deepOrange));
+    });
   });
 }

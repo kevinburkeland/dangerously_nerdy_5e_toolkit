@@ -108,8 +108,9 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final primary = widget.primaryColor ?? AppLogo.defaultPrimary;
-    final secondary = widget.secondaryColor ?? AppLogo.defaultSecondary;
+    final theme = Theme.of(context);
+    final primary = widget.primaryColor ?? theme.colorScheme.primary;
+    final secondary = widget.secondaryColor ?? theme.colorScheme.secondary;
 
     Widget logoContent = AnimatedBuilder(
       animation: _controller,
