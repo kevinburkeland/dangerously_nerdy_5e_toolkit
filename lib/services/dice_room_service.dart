@@ -21,6 +21,9 @@ class DiceRoomService {
   factory DiceRoomService() => _instance;
   DiceRoomService._internal();
 
+  @visibleForTesting
+  DiceRoomService.newInstance();
+
   // Centralized active room session notifier
   final ValueNotifier<RoomSession?> activeSessionNotifier = ValueNotifier<RoomSession?>(null);
 

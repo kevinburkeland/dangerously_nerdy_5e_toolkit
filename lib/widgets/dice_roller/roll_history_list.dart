@@ -155,6 +155,7 @@ class LiveRoomRollFeed extends StatefulWidget {
 
 class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
   late Stream<List<RoomRoll>> _rollStream;
+  final Set<String> _expandedRollIds = {};
 
   @override
   void initState() {
@@ -260,6 +261,8 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
               itemBuilder: (context, index) {
                 final item = roomRolls[index];
                 final bool isSelf = item.playerName == (widget.roomService.playerName ?? widget.playerName);
+                final bool hasDetails = item.details != null && item.details!.isNotEmpty;
+                final bool isExpanded = _expandedRollIds.contains(item.id);
 
                 return Container(
                   key: ValueKey('room_roll_${item.id}_$index'),
@@ -277,91 +280,192 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                           : Colors.white.withValues(alpha: 0.05),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          CircleAvatar(
-                            radius: 14,
-                            backgroundColor: isSelf
-                                ? Colors.cyanAccent
-                                : Colors.purpleAccent,
-                            child: Text(
-                              item.playerName.isNotEmpty
-                                  ? item.playerName[0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: isSelf
+                                      ? Colors.cyanAccent
+                                      : Colors.purpleAccent,
+                                  child: Text(
+                                    item.playerName.isNotEmpty
+                                        ? item.playerName[0].toUpperCase()
+                                        : '?',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            item.playerName,
+                                            style: TextStyle(
+                                              color: isSelf
+                                                  ? Colors.cyanAccent
+                                                  : Colors.amber,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              item.formulaString,
+                                              style: const TextStyle(
+                                                  color: Colors.white70, fontSize: 13),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              'Rolls: ${item.individualRolls.join(', ')}${item.droppedRolls != null ? ' (dropped ${item.droppedRolls!.join(', ')})' : ''}',
+                                              style: const TextStyle(
+                                                  color: Colors.white54, fontSize: 12),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (hasDetails)
+                                            InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  if (isExpanded) {
+                                                    _expandedRollIds.remove(item.id);
+                                                  } else {
+                                                    _expandedRollIds.add(item.id);
+                                                  }
+                                                });
+                                              },
+                                              borderRadius: BorderRadius.circular(4),
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                                                      size: 14,
+                                                      color: Colors.cyanAccent,
+                                                    ),
+                                                    const SizedBox(width: 2),
+                                                    Text(
+                                                      isExpanded ? 'Hide' : 'Papertrail (${item.details!.length})',
+                                                      style: const TextStyle(
+                                                        color: Colors.cyanAccent,
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    item.playerName,
-                                    style: TextStyle(
-                                      color: isSelf
-                                          ? Colors.cyanAccent
-                                          : Colors.amber,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    item.formulaString,
-                                    style: const TextStyle(
-                                        color: Colors.white70, fontSize: 13),
-                                  ),
-                                ],
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: item.isCrit
+                                  ? Colors.amber.withValues(alpha: 0.2)
+                                  : item.isFumble
+                                      ? Colors.redAccent.withValues(alpha: 0.2)
+                                      : Colors.black26,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: item.isCrit
+                                    ? Colors.amber
+                                    : item.isFumble
+                                        ? Colors.redAccent
+                                        : Colors.white12,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Rolls: ${item.individualRolls.join(', ')}${item.droppedRolls != null ? ' (dropped ${item.droppedRolls!.join(', ')})' : ''}',
-                                style: const TextStyle(
-                                    color: Colors.white54, fontSize: 12),
+                            ),
+                            child: Text(
+                              '${item.total}',
+                              style: TextStyle(
+                                color: item.isCrit
+                                  ? Colors.amber
+                                  : item.isFumble
+                                      ? Colors.redAccent
+                                      : Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
                               ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: item.isCrit
-                              ? Colors.amber.withValues(alpha: 0.2)
-                              : item.isFumble
-                                  ? Colors.redAccent.withValues(alpha: 0.2)
-                                  : Colors.black26,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: item.isCrit
-                                ? Colors.amber
-                                : item.isFumble
-                                    ? Colors.redAccent
-                                    : Colors.white12,
+                      if (isExpanded && hasDetails) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF141224),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.white12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.history_edu, size: 14, color: Colors.cyanAccent),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'To-Hit & Damage Papertrail:',
+                                    style: TextStyle(
+                                      color: Colors.cyanAccent,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              ...item.details!.map(
+                                (line) => Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 2),
+                                  child: Text(
+                                    '• $line',
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 11,
+                                      fontFamily: 'monospace',
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Text(
-                          '${item.total}',
-                          style: TextStyle(
-                            color: item.isCrit
-                              ? Colors.amber
-                              : item.isFumble
-                                  ? Colors.redAccent
-                                  : Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
+                      ],
                     ],
                   ),
                 );

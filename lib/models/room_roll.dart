@@ -10,6 +10,7 @@ class RoomRoll {
   final int total;
   final List<int> individualRolls;
   final List<int>? droppedRolls;
+  final List<String>? details;
   final bool isCrit;
   final bool isFumble;
 
@@ -22,6 +23,7 @@ class RoomRoll {
     required this.total,
     required this.individualRolls,
     this.droppedRolls,
+    this.details,
     required this.isCrit,
     required this.isFumble,
   });
@@ -31,6 +33,7 @@ class RoomRoll {
     required String roomCode,
     required String playerName,
     required DiceRollResult result,
+    List<String>? details,
   }) {
     return RoomRoll(
       id: id,
@@ -41,6 +44,7 @@ class RoomRoll {
       total: result.total,
       individualRolls: result.individualRolls,
       droppedRolls: result.droppedRolls,
+      details: details,
       isCrit: result.isCrit,
       isFumble: result.isFumble,
     );
@@ -58,6 +62,7 @@ class RoomRoll {
       'total': total,
       'individualRolls': individualRolls,
       'droppedRolls': droppedRolls,
+      'details': details,
       'isCrit': isCrit,
       'isFumble': isFumble,
     };
@@ -84,6 +89,9 @@ class RoomRoll {
     final rawDropped = map['droppedRolls'] as List?;
     final droppedRolls = rawDropped?.map((e) => (e as num).toInt()).toList();
 
+    final rawDetails = map['details'] as List?;
+    final details = rawDetails?.map((e) => e.toString()).toList();
+
     return RoomRoll(
       id: map['id'] as String? ?? '',
       roomCode: map['roomCode'] as String? ?? '',
@@ -93,6 +101,7 @@ class RoomRoll {
       total: (map['total'] as num? ?? 0).toInt(),
       individualRolls: indivRolls,
       droppedRolls: droppedRolls,
+      details: details,
       isCrit: map['isCrit'] as bool? ?? false,
       isFumble: map['isFumble'] as bool? ?? false,
     );

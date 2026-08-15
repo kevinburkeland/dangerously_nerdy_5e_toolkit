@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 
@@ -126,6 +127,59 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Live Feed:'), findsNothing);
+  });
+
+  testWidgets('LiveRoomRollFeed renders batch roll and toggles to-hit papertrail', (WidgetTester tester) async {
+    final roomService = DiceRoomService();
+    roomService.leaveRoom();
+    roomService.joinRoom('ROOM-BETA', 'Gimli');
+
+    await tester.pumpWidget(createTestableWidget(
+      DiceRollerScreen(roomService: roomService),
+    ));
+
+    // Broadcast a batch attack roll with details
+    final batchRoll = RoomRoll(
+      id: 'batch_test_1',
+      roomCode: 'ROOM-BETA',
+      playerName: 'Gimli',
+      timestamp: DateTime.now(),
+      formulaString: 'Batch Attack (2/2 Hits vs AC 14)',
+      total: 18,
+      individualRolls: [9, 9],
+      details: [
+        'Axe #1 (Small): d20 [16] + 5 = 21 vs AC 14 [HIT] -> 9 dmg',
+        'Axe #2 (Small): d20 [19] + 5 = 24 vs AC 14 [HIT] -> 9 dmg',
+      ],
+      isCrit: false,
+      isFumble: false,
+    );
+
+    await roomService.broadcastRoll(batchRoll);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Batch Attack (2/2 Hits vs AC 14)'), findsOneWidget);
+    expect(find.text('Papertrail (2)'), findsOneWidget);
+    expect(find.text('To-Hit & Damage Papertrail:'), findsNothing);
+
+    // Scroll to and tap Papertrail toggle
+    await tester.ensureVisible(find.text('Papertrail (2)'));
+    await tester.tap(find.text('Papertrail (2)'));
+    await tester.pumpAndSettle();
+
+    // Papertrail is now expanded
+    expect(find.text('To-Hit & Damage Papertrail:'), findsOneWidget);
+    expect(find.textContaining('Axe #1 (Small): d20 [16] + 5 = 21 vs AC 14 [HIT] -> 9 dmg'), findsOneWidget);
+    expect(find.textContaining('Axe #2 (Small): d20 [19] + 5 = 24 vs AC 14 [HIT] -> 9 dmg'), findsOneWidget);
+
+    // Scroll to and tap Hide
+    await tester.ensureVisible(find.text('Hide'));
+    await tester.tap(find.text('Hide'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('To-Hit & Damage Papertrail:'), findsNothing);
+
+    roomService.leaveRoom();
   });
 }
 

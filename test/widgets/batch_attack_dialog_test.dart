@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spell_session.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/batch_attack_dialog.dart';
@@ -66,6 +67,35 @@ void main() {
     expect(find.text('HITS'), findsOneWidget);
   });
 
+  testWidgets('Batch attack broadcasts RoomRoll with full to-hit papertrail details', (WidgetTester tester) async {
+    final session = SpellSession(spellLevel: 5);
+    session.addObject(ObjectSize.tiny, customName: 'Silver Coin #1');
+    final roomService = _MockDiceRoomService();
+    roomService.joinRoom('AUDIT-ROOM', 'Paladin');
+
+    await tester.pumpWidget(
+      createTestableWidget(
+        BatchAttackDialog(
+          session: session,
+          roomService: roomService,
+        ),
+      ),
+    );
+
+    final rollButton = find.widgetWithText(ElevatedButton, 'ROLL ALL 1 ATTACKS');
+    await tester.tap(rollButton);
+    await tester.pumpAndSettle();
+
+    final capturedRoll = roomService.lastBroadcastedRoll;
+    expect(capturedRoll, isNotNull);
+    expect(capturedRoll!.details, isNotNull);
+    expect(capturedRoll.details!.length, 1);
+    expect(capturedRoll.details!.first, contains('Silver Coin #1 (Tiny): d20 ['));
+    expect(capturedRoll.details!.first, contains('vs AC 15'));
+
+    roomService.leaveRoom();
+  });
+
   testWidgets('BatchAttackDialog renders cleanly on mobile screen without overflow', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(360, 640);
     tester.view.devicePixelRatio = 1.0;
@@ -100,4 +130,15 @@ void main() {
     expect(find.text('TOTAL DAMAGE'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+class _MockDiceRoomService extends DiceRoomService {
+  _MockDiceRoomService() : super.newInstance();
+  RoomRoll? lastBroadcastedRoll;
+
+  @override
+  Future<void> broadcastRoll(RoomRoll roll) async {
+    lastBroadcastedRoll = roll;
+    return super.broadcastRoll(roll);
+  }
 }

@@ -101,6 +101,19 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     if (activeCode != null && activePlayer != null) {
       final timestamp = DateTime.now();
       final summaryId = '${timestamp.microsecondsSinceEpoch}_batch_${secureRandom.nextInt(1000000)}';
+
+      final attackDetails = summary.results.map((res) {
+        final d20Str = res.d20Roll2 != null
+            ? 'd20 [${res.d20Roll1}, ${res.d20Roll2} -> ${res.finalD20}]'
+            : 'd20 [${res.finalD20}]';
+        final toHitStr = '$d20Str + ${res.object.attackBonus} = ${res.totalToHit} vs AC $_targetAc';
+        final hitStatus = res.isCrit
+            ? (res.isMaximizedCrit ? 'MAX CRIT!' : 'CRIT!')
+            : (res.isHit ? 'HIT' : 'MISS');
+        final dmgStr = res.isHit ? ' -> ${res.totalDamage} dmg' : '';
+        return '${res.object.name} (${res.object.size.displayName}): $toHitStr [$hitStatus]$dmgStr';
+      }).toList();
+
       final summaryRoll = RoomRoll(
         id: summaryId,
         roomCode: activeCode,
@@ -109,6 +122,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
         formulaString: 'Batch Attack (${summary.totalHits}/${summary.totalAttacks} Hits vs AC $_targetAc)',
         total: summary.totalDamage,
         individualRolls: summary.results.map((r) => r.totalDamage).toList(),
+        details: attackDetails,
         isCrit: summary.totalCrits > 0,
         isFumble: false,
       );

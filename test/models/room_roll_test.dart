@@ -50,5 +50,33 @@ void main() {
       expect(restored.individualRolls, [4, 4]);
       expect(restored.formulaString, '2d6 + 4');
     });
+
+    test('RoomRoll with to-hit attack details preserves papertrail in JSON serialization', () {
+      final batchRoll = RoomRoll(
+        id: 'batch_99',
+        roomCode: 'ARENA-1',
+        playerName: 'Aragorn',
+        timestamp: DateTime.now(),
+        formulaString: 'Batch Attack (8/10 Hits vs AC 15)',
+        total: 42,
+        individualRolls: [6, 4, 8, 5, 0, 7, 6, 0, 6],
+        details: [
+          'Silver Coin #1: d20 [18] + 8 = 26 vs AC 15 [HIT] -> 6 dmg',
+          'Silver Coin #2: d20 [20] -> MAX CRIT! -> 8 dmg',
+          'Silver Coin #3: d20 [4] + 8 = 12 vs AC 15 [MISS]',
+        ],
+        isCrit: true,
+        isFumble: false,
+      );
+
+      final map = batchRoll.toMap();
+      final restored = RoomRoll.fromMap(map);
+
+      expect(restored.id, 'batch_99');
+      expect(restored.details, isNotNull);
+      expect(restored.details!.length, 3);
+      expect(restored.details!.first, contains('Silver Coin #1: d20 [18]'));
+      expect(restored.details![1], contains('MAX CRIT!'));
+    });
   });
 }
