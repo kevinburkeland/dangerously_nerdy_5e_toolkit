@@ -59,14 +59,11 @@ class _LandingScreenState extends State<LandingScreen> {
       appBar: AppBar(
         elevation: 2,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Semantics(
-              label: 'DangerouslyNerdy Logo',
-              image: true,
-              child: Image.asset('assets/images/logo.png', width: 36, height: 36),
-            ),
+            Image.asset('assets/images/logo.png', width: 32, height: 32),
             const SizedBox(width: 10),
-            Expanded(
+            Flexible(
               child: Semantics(
                 header: true,
                 child: const Text(
@@ -90,26 +87,52 @@ class _LandingScreenState extends State<LandingScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.flash_on, color: Colors.amber),
-            tooltip: 'Combat Action Economy Guide',
-            onPressed: () => ActionEconomyDialog.show(context),
-          ),
-          IconButton(
-            icon: Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary),
-            tooltip: 'Status Effects & Conditions Guide',
-            onPressed: () => ConditionReferenceDialog.show(context),
-          ),
-          IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: 'Preferences & Theme Settings',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.download_for_offline, color: theme.colorScheme.primary),
-            tooltip: 'Install App',
-            onPressed: PwaHelper.promptInstall,
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'Quick References & More',
+            onSelected: (val) {
+              if (val == 'economy') ActionEconomyDialog.show(context);
+              if (val == 'conditions') ConditionReferenceDialog.show(context);
+              if (val == 'install') PwaHelper.promptInstall();
+            },
+            itemBuilder: (ctx) => [
+              const PopupMenuItem(
+                value: 'economy',
+                child: Row(
+                  children: [
+                    Icon(Icons.flash_on, color: Colors.amber, size: 20),
+                    SizedBox(width: 10),
+                    Text('Action Economy Guide'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'conditions',
+                child: Row(
+                  children: [
+                    Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary, size: 20),
+                    SizedBox(width: 10),
+                    const Text('Status Effects & Conditions'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'install',
+                child: Row(
+                  children: [
+                    Icon(Icons.download_for_offline, color: theme.colorScheme.primary, size: 20),
+                    const SizedBox(width: 10),
+                    const Text('Install PWA App'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

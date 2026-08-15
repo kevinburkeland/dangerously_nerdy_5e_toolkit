@@ -333,12 +333,16 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                     )
                   : null,
               title: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset('assets/images/logo.png', width: 32, height: 32),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Dice Roller',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  const Flexible(
+                    child: Text(
+                      'Dice Roller',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
                   ),
                 ],
               ),
@@ -354,22 +358,42 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                     settingsProvider.set3dDiceOverlays(!settings.enable3dDiceOverlays);
                   },
                 ),
-                IconButton(
-                  icon: const Icon(Icons.flash_on, color: Colors.amber),
-                  tooltip: 'Combat Action Economy Guide',
-                  onPressed: () => ActionEconomyDialog.show(context),
-                ),
-                IconButton(
-                  icon: Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary),
-                  tooltip: 'Status Effects & Conditions Guide',
-                  onPressed: () => ConditionReferenceDialog.show(context),
-                ),
                 if (_history.isNotEmpty)
                   IconButton(
                     icon: Icon(Icons.delete_outline, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                     tooltip: 'Clear History',
                     onPressed: _clearHistory,
                   ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Combat Guides & References',
+                  onSelected: (val) {
+                    if (val == 'economy') ActionEconomyDialog.show(context);
+                    if (val == 'conditions') ConditionReferenceDialog.show(context);
+                  },
+                  itemBuilder: (ctx) => [
+                    const PopupMenuItem(
+                      value: 'economy',
+                      child: Row(
+                        children: [
+                          Icon(Icons.flash_on, color: Colors.amber, size: 20),
+                          SizedBox(width: 10),
+                          Text('Action Economy Guide'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'conditions',
+                      child: Row(
+                        children: [
+                          Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary, size: 20),
+                          SizedBox(width: 10),
+                          const Text('Status Effects & Conditions'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             body: Align(

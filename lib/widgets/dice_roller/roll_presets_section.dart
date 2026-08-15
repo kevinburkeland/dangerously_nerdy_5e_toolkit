@@ -26,8 +26,11 @@ class RollPresetsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 1. PRESETS HEADER & ACTIONS
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 4,
           children: [
             const Text(
               'Presets',
@@ -37,6 +40,7 @@ class RollPresetsSection extends StatelessWidget {
                   fontSize: 14),
             ),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: const Icon(Icons.download,

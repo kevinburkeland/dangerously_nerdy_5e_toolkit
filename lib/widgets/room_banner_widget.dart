@@ -50,43 +50,47 @@ class RoomBannerWidget extends StatelessWidget {
               color: isConnected ? Colors.cyanAccent.withValues(alpha: 0.5) : Colors.white12,
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Icon(
-                      isConnected ? Icons.sensors : Icons.sensors_off,
-                      color: isConnected ? Colors.cyanAccent : Colors.white38,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isConnected ? roomCode : 'Solo Mode',
-                            style: TextStyle(
-                              color: isConnected ? Colors.cyanAccent : Colors.white70,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isConnected ? Icons.sensors : Icons.sensors_off,
+                    color: isConnected ? Colors.cyanAccent : Colors.white38,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isConnected ? roomCode : 'Solo Mode',
+                          style: TextStyle(
+                            color: isConnected ? Colors.cyanAccent : Colors.white70,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
-                          Text(
-                            isConnected ? 'Player: ${effectiveName ?? "Anonymous"}' : 'Not connected to a live room',
-                            style: const TextStyle(color: Colors.white54, fontSize: 12),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          isConnected ? 'Player: ${effectiveName ?? "Anonymous"}' : 'Not connected to a live room',
+                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isConnected) ...[
                     IconButton(

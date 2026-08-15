@@ -160,8 +160,11 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                   const SizedBox(height: 16),
                   _buildCategoryChips(theme),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
                       Text(
                         'SHOWING ${filteredItems.length} OF ${allItems.length} RULES',
@@ -179,6 +182,11 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                               ? Colors.cyanAccent.withValues(alpha: 0.15)
                               : Colors.amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: edition == DmRulesEdition.v2024
+                                ? Colors.cyanAccent.withValues(alpha: 0.4)
+                                : Colors.amber.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Text(
                           edition == DmRulesEdition.v2024 ? 'Active: 2024 Revised' : 'Active: 2014 5e RAW',
@@ -328,7 +336,10 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
                     Semantics(
                       header: true,
@@ -341,7 +352,6 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(

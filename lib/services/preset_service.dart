@@ -90,7 +90,7 @@ class PresetService {
     _cachedPresets!.removeWhere((p) => p.id == preset.id);
     _cachedPresets!.insert(0, preset);
 
-    _persistToDisk();
+    await _persistToDisk();
     return List<CustomPreset>.from(_cachedPresets!);
   }
 
@@ -101,7 +101,7 @@ class PresetService {
     }
     _cachedPresets!.removeWhere((p) => p.id == id);
 
-    _persistToDisk();
+    await _persistToDisk();
     return List<CustomPreset>.from(_cachedPresets!);
   }
 

@@ -78,9 +78,12 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
           children: [
             Icon(Icons.casino_outlined, size: 28, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
             const SizedBox(width: 10),
-            Text(
-              'Tap ROLL to roll the dice!',
-              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+            Flexible(
+              child: Text(
+                'Tap ROLL to roll the dice!',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+              ),
             ),
           ],
         ),

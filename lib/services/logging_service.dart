@@ -47,12 +47,16 @@ class LoggingService {
       }
     }
     if (!kIsWeb) {
-      FirebaseCrashlytics.instance.recordError(
-        exception,
-        stackTrace,
-        reason: sanitizedReason,
-        fatal: false,
-      );
+      try {
+        FirebaseCrashlytics.instance.recordError(
+          exception,
+          stackTrace,
+          reason: sanitizedReason,
+          fatal: false,
+        );
+      } catch (_) {
+        // Crashlytics not initialized (e.g. headless unit tests or offline run)
+      }
     }
   }
 
@@ -65,12 +69,16 @@ class LoggingService {
       debugPrint(stackTrace.toString());
     }
     if (!kIsWeb) {
-      FirebaseCrashlytics.instance.recordError(
-        exception,
-        stackTrace,
-        reason: sanitizedReason,
-        fatal: true,
-      );
+      try {
+        FirebaseCrashlytics.instance.recordError(
+          exception,
+          stackTrace,
+          reason: sanitizedReason,
+          fatal: true,
+        );
+      } catch (_) {
+        // Crashlytics not initialized
+      }
     }
   }
 }

@@ -143,10 +143,14 @@ class DicePoolBuilder extends StatelessWidget {
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -155,8 +159,8 @@ class DicePoolBuilder extends StatelessWidget {
                               color: Colors.cyanAccent.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color: Colors.cyanAccent
-                                      .withValues(alpha: 0.4)),
+                                  color:
+                                      Colors.cyanAccent.withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               diceEntry.dieLabel.toUpperCase(),
@@ -177,6 +181,7 @@ class DicePoolBuilder extends StatelessWidget {
                         ],
                       ),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline,
@@ -244,8 +249,11 @@ class DicePoolBuilder extends StatelessWidget {
               const Divider(color: Colors.white10, height: 24),
 
               // Modifier Selector
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   const Text('Total Modifier',
                       style: TextStyle(
@@ -253,6 +261,7 @@ class DicePoolBuilder extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600)),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline,
@@ -301,8 +310,11 @@ class DicePoolBuilder extends StatelessWidget {
               // Advantage / Disadvantage for d20 roll pools
               if (hasD20) ...[
                 const Divider(color: Colors.white10, height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     const Text('d20 Advantage',
                         style: TextStyle(
