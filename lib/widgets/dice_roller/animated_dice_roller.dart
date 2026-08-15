@@ -297,6 +297,7 @@ class _Simulated3DDie {
     }
 
     // Launch trajectory entering with natural spin from top of screen
+    final isMedallion = dieType == DieType.d100 || dieType == DieType.custom;
     final startX = targetX + (rng.nextDouble() - 0.5) * 0.35;
     final startY = -0.15 - (index * 0.05);
 
@@ -308,10 +309,10 @@ class _Simulated3DDie {
       startY: startY,
       targetX: targetX,
       targetY: targetY,
-      rotSpeedX: 5.0 + rng.nextDouble() * 5.0,
-      rotSpeedY: 6.0 + rng.nextDouble() * 6.0,
-      rotSpeedZ: 3.0 + rng.nextDouble() * 4.0,
-      bounceHeight: 240.0 + rng.nextDouble() * 60.0,
+      rotSpeedX: isMedallion ? (8.0 + rng.nextDouble() * 4.0) : (5.0 + rng.nextDouble() * 5.0),
+      rotSpeedY: isMedallion ? (1.5 + rng.nextDouble() * 2.0) : (6.0 + rng.nextDouble() * 6.0),
+      rotSpeedZ: isMedallion ? (0.5 + rng.nextDouble() * 1.0) : (3.0 + rng.nextDouble() * 4.0),
+      bounceHeight: isMedallion ? (280.0 + rng.nextDouble() * 40.0) : (240.0 + rng.nextDouble() * 60.0),
     );
   }
 }

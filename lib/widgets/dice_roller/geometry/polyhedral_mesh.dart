@@ -163,78 +163,50 @@ class PolyhedronMesh {
     return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
   }
 
-  /// 3D Smooth Sphere / Orb Mesh (for d100 & Non-Standard / Custom Dice)
-  /// Elegant 60-face spherical solid with radial latitude & longitude rings.
-  static PolyhedronMesh createSphere({double radius = 70.0}) {
-    const latRings = 6;
-    const lonSegs = 10;
+  /// 3D Coin Medallion Mesh (for d100 & Non-Standard / Custom Dice)
+  /// Elegant circular medallion with beveled cylindrical rim and prominent face-centered resting view.
+  static PolyhedronMesh createMedallion({double radius = 70.0}) {
+    const n = 24; // 24-sided smooth circular perimeter
+    const thickness = 0.20;
+    const zHalf = thickness / 2.0;
 
-    final rawVerts = <Vec3>[
-      const Vec3(0, 0, 1.0), // 0: Top pole
+    final verts = <Vec3>[
+      // 0..23: Front circle vertices (+Z)
+      for (int k = 0; k < n; k++)
+        Vec3(cos(k * 2 * pi / n), sin(k * 2 * pi / n), zHalf),
+      // 24..47: Back circle vertices (-Z)
+      for (int k = 0; k < n; k++)
+        Vec3(cos(k * 2 * pi / n), sin(k * 2 * pi / n), -zHalf),
     ];
 
-    for (int b = 1; b < latRings; b++) {
-      final lat = (pi / 2.0) - (b * pi / latRings);
-      final z = sin(lat);
-      final r = cos(lat);
-      for (int i = 0; i < lonSegs; i++) {
-        final lon = i * 2.0 * pi / lonSegs;
-        rawVerts.add(Vec3(r * cos(lon), r * sin(lon), z));
-      }
-    }
-    rawVerts.add(const Vec3(0, 0, -1.0)); // Bottom pole
-    final botApex = rawVerts.length - 1;
+    final faces = <Polygon3D>[
+      // 1. Primary Front Face (Face 0: facing +Z directly at camera)
+      Polygon3D([for (int k = 0; k < n; k++) k], faceNumber: 100),
 
-    final faces = <Polygon3D>[];
-    int faceNum = 1;
+      // 2. Back Face (Face 1: facing -Z directly away from camera)
+      Polygon3D([for (int k = n - 1; k >= 0; k--) n + k], faceNumber: 1),
 
-    // 1. Top cap (10 triangles)
-    for (int i = 0; i < lonSegs; i++) {
-      final v1 = 1 + i;
-      final v2 = 1 + ((i + 1) % lonSegs);
-      faces.add(Polygon3D([0, v2, v1], faceNumber: (faceNum == 1 ? 100 : faceNum)));
-      faceNum++;
-    }
+      // 3. Rim Quads (24 beveled side facets with outward normals)
+      for (int k = 0; k < n; k++)
+        Polygon3D([
+          k,
+          n + k,
+          n + ((k + 1) % n),
+          (k + 1) % n,
+        ]),
+    ];
 
-    // 2. Middle rings (4 rings x 10 quads = 40 quads)
-    for (int b = 0; b < latRings - 2; b++) {
-      final r1 = 1 + b * lonSegs;
-      final r2 = 1 + (b + 1) * lonSegs;
-      for (int i = 0; i < lonSegs; i++) {
-        final r1v0 = r1 + i;
-        final r1v1 = r1 + ((i + 1) % lonSegs);
-        final r2v1 = r2 + ((i + 1) % lonSegs);
-        final r2v0 = r2 + i;
-        faces.add(Polygon3D([r1v0, r1v1, r2v1, r2v0], faceNumber: faceNum++));
-      }
-    }
-
-    // 3. Bottom cap (10 triangles)
-    const lastR = 1 + (latRings - 2) * lonSegs;
-    for (int i = 0; i < lonSegs; i++) {
-      final v0 = lastR + i;
-      final v1 = lastR + ((i + 1) % lonSegs);
-      faces.add(Polygon3D([botApex, v0, v1], faceNumber: faceNum++));
-    }
-
-    // Align Face 0 normal to +Z (camera)
-    final topFace = faces[0];
-    final v0 = rawVerts[topFace.vertexIndices[0]];
-    final v1 = rawVerts[topFace.vertexIndices[1]];
-    final v2 = rawVerts[topFace.vertexIndices[2]];
-    final n0 = (v1 - v0).cross(v2 - v0).normalized();
-
-    final rotAxis = n0.cross(const Vec3(0, 0, 1)).normalized();
-    final rotAngle = acos(n0.z.clamp(-1.0, 1.0));
-
-    var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
-
-    return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
+    return PolyhedronMesh(vertices: verts, faces: faces, radius: radius);
   }
 
-  /// 3D 100-Sided Die (d100) Geometry: Spherical Orb with emblazoned result face
+  /// 3D 100-Sided Die (d100) Geometry: Coin Medallion
   static PolyhedronMesh createD100({double radius = 70.0}) {
-    return createSphere(radius: radius);
+    return createMedallion(radius: radius);
+  }
+
+  /// 3D Mesh for Non-Standard & Custom Dice
+  static PolyhedronMesh createSphere({double radius = 70.0}) {
+    return createMedallion(radius: radius);
   }
 
   /// 3D Mathematically Exact Regular Dodecahedron (d12) Geometry
