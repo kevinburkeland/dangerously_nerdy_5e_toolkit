@@ -56,27 +56,55 @@ class PolyhedronMesh {
     return PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
   }
 
-  /// 3D Regular Octahedron (d8) Geometry (Canonical top-down face)
+  /// 3D Regular Octahedron (d8) Geometry
+  /// Full 8-face solid with canonical face-centered resting orientation.
   static PolyhedronMesh createD8({double radius = 62.0}) {
-    final r1 = sqrt(2.0 / 3.0);
-    final z1 = 1.0 / sqrt(3.0);
-    final vertices = [
-      Vec3(0, r1, z1),
-      Vec3(-r1 * sqrt(3) / 2, -r1 / 2, z1),
-      Vec3(r1 * sqrt(3) / 2, -r1 / 2, z1),
-      Vec3(0, -r1, -z1),
-      Vec3(r1 * sqrt(3) / 2, r1 / 2, -z1),
-      Vec3(-r1 * sqrt(3) / 2, r1 / 2, -z1),
+    // 6 vertices of regular octahedron along coordinate axes
+    final rawVerts = [
+      const Vec3(1, 0, 0),  // 0: +X
+      const Vec3(-1, 0, 0), // 1: -X
+      const Vec3(0, 1, 0),  // 2: +Y
+      const Vec3(0, -1, 0), // 3: -Y
+      const Vec3(0, 0, 1),  // 4: +Z
+      const Vec3(0, 0, -1), // 5: -Z
     ];
 
     const faces = [
-      Polygon3D([0, 1, 2], faceNumber: 8), // Top center face
-      Polygon3D([0, 2, 4], faceNumber: 6), // Right slope
-      Polygon3D([0, 5, 1], faceNumber: 4), // Left slope
-      Polygon3D([1, 3, 2], faceNumber: 2), // Bottom slope
+      // 4 Upper Octants (+Z) (Winding CCW outward from center)
+      Polygon3D([0, 2, 4], faceNumber: 8), // (+X, +Y, +Z) -> Face 0
+      Polygon3D([2, 1, 4], faceNumber: 6), // (-X, +Y, +Z)
+      Polygon3D([1, 3, 4], faceNumber: 4), // (-X, -Y, +Z)
+      Polygon3D([3, 0, 4], faceNumber: 2), // (+X, -Y, +Z)
+
+      // 4 Lower Octants (-Z) (Opposites sum to 9)
+      Polygon3D([1, 5, 3], faceNumber: 1), // (-X, -Y, -Z) -> Opposite 8
+      Polygon3D([3, 5, 0], faceNumber: 3), // (+X, -Y, -Z) -> Opposite 6
+      Polygon3D([0, 5, 2], faceNumber: 5), // (+X, +Y, -Z) -> Opposite 4
+      Polygon3D([2, 5, 1], faceNumber: 7), // (-X, +Y, -Z) -> Opposite 2
     ];
 
-    return PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
+    // Rotate so Face 0 normal aligns with +Z (camera)
+    final topFace = faces[0];
+    final v0 = rawVerts[topFace.vertexIndices[0]];
+    final v1 = rawVerts[topFace.vertexIndices[1]];
+    final v2 = rawVerts[topFace.vertexIndices[2]];
+    final n0 = (v1 - v0).cross(v2 - v0).normalized();
+
+    final rotAxis = n0.cross(const Vec3(0, 0, 1)).normalized();
+    final rotAngle = acos(n0.z.clamp(-1.0, 1.0));
+
+    var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
+
+    // Align apex of Face 0 pointing straight up (+Y)
+    final r0 = rotated[topFace.vertexIndices[0]];
+    final r1 = rotated[topFace.vertexIndices[1]];
+    final r2 = rotated[topFace.vertexIndices[2]];
+    final centerFace = (r0 + r1 + r2) * (1.0 / 3.0);
+    final topVert = [r0, r1, r2].reduce((a, b) => a.y > b.y ? a : b);
+    final alignAngle = atan2(topVert.x - centerFace.x, topVert.y - centerFace.y);
+    rotated = rotated.map((v) => v.rotateZ(alignAngle)).toList();
+
+    return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
   }
 
   /// 3D Mathematically Exact Pentagonal Trapezohedron (d10) Geometry

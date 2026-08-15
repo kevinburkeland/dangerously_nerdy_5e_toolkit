@@ -24,7 +24,7 @@ void main() {
     test('createD8 produces a valid octahedron mesh', () {
       final mesh = PolyhedronMesh.createD8(radius: 62.0);
       expect(mesh.vertices.length, equals(6));
-      expect(mesh.faces.isNotEmpty, isTrue);
+      expect(mesh.faces.length, equals(8));
       for (final face in mesh.faces) {
         expect(face.vertexIndices.length, equals(3));
       }
