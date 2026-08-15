@@ -133,60 +133,58 @@ class PolyhedronMesh {
     return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
   }
 
-  /// 3D Mathematically Exact 100-Sided Die (d100 / Zocchihedron / 100-faceted sphere) Geometry
-  /// Authentic closed, water-tight 100-faceted spherical mesh (10 longitudinal sectors x 10 latitudinal bands).
-  static PolyhedronMesh createD100({double radius = 78.0}) {
-    const lonCount = 10;
-    const latBands = 10; // 1 top cap + 8 quad rings + 1 bottom cap = 100 faces!
+  /// 3D Smooth Sphere / Orb Mesh (for d100 & Non-Standard / Custom Dice)
+  /// Elegant 60-face spherical solid with radial latitude & longitude rings.
+  static PolyhedronMesh createSphere({double radius = 70.0}) {
+    const latRings = 6;
+    const lonSegs = 10;
 
     final rawVerts = <Vec3>[
-      const Vec3(0, 0, 1.0), // 0: North Pole Apex
+      const Vec3(0, 0, 1.0), // 0: Top pole
     ];
 
-    // 9 latitudinal rings of 10 vertices each
-    for (int b = 1; b < latBands; b++) {
-      final lat = (pi / 2.0) - (b * pi / latBands);
+    for (int b = 1; b < latRings; b++) {
+      final lat = (pi / 2.0) - (b * pi / latRings);
       final z = sin(lat);
       final r = cos(lat);
-      for (int i = 0; i < lonCount; i++) {
-        final lon = i * 2.0 * pi / lonCount;
+      for (int i = 0; i < lonSegs; i++) {
+        final lon = i * 2.0 * pi / lonSegs;
         rawVerts.add(Vec3(r * cos(lon), r * sin(lon), z));
       }
     }
-    rawVerts.add(const Vec3(0, 0, -1.0)); // Last: South Pole Apex
-    final botApexIdx = rawVerts.length - 1;
+    rawVerts.add(const Vec3(0, 0, -1.0)); // Bottom pole
+    final botApex = rawVerts.length - 1;
 
     final faces = <Polygon3D>[];
     int faceNum = 1;
 
-    // 1. Top Polar Cap (10 triangles)
-    for (int i = 0; i < lonCount; i++) {
+    // 1. Top cap (10 triangles)
+    for (int i = 0; i < lonSegs; i++) {
       final v1 = 1 + i;
-      final v2 = 1 + ((i + 1) % lonCount);
-      final num = (faceNum == 1 ? 100 : faceNum);
-      faces.add(Polygon3D([0, v2, v1], faceNumber: num));
+      final v2 = 1 + ((i + 1) % lonSegs);
+      faces.add(Polygon3D([0, v2, v1], faceNumber: (faceNum == 1 ? 100 : faceNum)));
       faceNum++;
     }
 
-    // 2. Middle 8 Quad Rings (8 x 10 = 80 connected quads)
-    for (int b = 0; b < latBands - 2; b++) {
-      final ring1Start = 1 + b * lonCount;
-      final ring2Start = 1 + (b + 1) * lonCount;
-      for (int i = 0; i < lonCount; i++) {
-        final r1v0 = ring1Start + i;
-        final r1v1 = ring1Start + ((i + 1) % lonCount);
-        final r2v1 = ring2Start + ((i + 1) % lonCount);
-        final r2v0 = ring2Start + i;
+    // 2. Middle rings (4 rings x 10 quads = 40 quads)
+    for (int b = 0; b < latRings - 2; b++) {
+      final r1 = 1 + b * lonSegs;
+      final r2 = 1 + (b + 1) * lonSegs;
+      for (int i = 0; i < lonSegs; i++) {
+        final r1v0 = r1 + i;
+        final r1v1 = r1 + ((i + 1) % lonSegs);
+        final r2v1 = r2 + ((i + 1) % lonSegs);
+        final r2v0 = r2 + i;
         faces.add(Polygon3D([r1v0, r1v1, r2v1, r2v0], faceNumber: faceNum++));
       }
     }
 
-    // 3. Bottom Polar Cap (10 triangles)
-    const lastRingStart = 1 + (latBands - 2) * lonCount;
-    for (int i = 0; i < lonCount; i++) {
-      final v0 = lastRingStart + i;
-      final v1 = lastRingStart + ((i + 1) % lonCount);
-      faces.add(Polygon3D([botApexIdx, v0, v1], faceNumber: faceNum++));
+    // 3. Bottom cap (10 triangles)
+    const lastR = 1 + (latRings - 2) * lonSegs;
+    for (int i = 0; i < lonSegs; i++) {
+      final v0 = lastR + i;
+      final v1 = lastR + ((i + 1) % lonSegs);
+      faces.add(Polygon3D([botApex, v0, v1], faceNumber: faceNum++));
     }
 
     // Align Face 0 normal to +Z (camera)
@@ -202,6 +200,11 @@ class PolyhedronMesh {
     var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
 
     return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
+  }
+
+  /// 3D 100-Sided Die (d100) Geometry: Spherical Orb with emblazoned result face
+  static PolyhedronMesh createD100({double radius = 70.0}) {
+    return createSphere(radius: radius);
   }
 
   /// 3D Mathematically Exact Regular Dodecahedron (d12) Geometry

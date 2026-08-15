@@ -45,11 +45,15 @@ void main() {
       expect(vLeft.y, closeTo(vRight.y, 1e-4));
     });
 
-    test('createD100 produces an authentic closed 100-sided spherical mesh', () {
-      final mesh = PolyhedronMesh.createD100(radius: 78.0);
-      expect(mesh.vertices.length, equals(92));
-      expect(mesh.faces.length, equals(100));
+    test('createD100 and createSphere produce a 3D spherical mesh for d100 and custom dice', () {
+      final mesh = PolyhedronMesh.createD100(radius: 70.0);
+      expect(mesh.vertices.length, equals(52));
+      expect(mesh.faces.length, equals(60));
       expect(mesh.faces[0].faceNumber, equals(100));
+
+      final sphereMesh = PolyhedronMesh.createSphere(radius: 65.0);
+      expect(sphereMesh.vertices.length, equals(52));
+      expect(sphereMesh.faces.length, equals(60));
     });
 
     test('createD12 produces a mathematically exact regular dodecahedron mesh', () {

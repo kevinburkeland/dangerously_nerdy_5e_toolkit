@@ -266,8 +266,10 @@ class _Simulated3DDie {
         mesh = PolyhedronMesh.createD12(radius: dieRadius);
         break;
       case DieType.d20:
-      case DieType.custom:
         mesh = PolyhedronMesh.createD20(radius: dieRadius);
+        break;
+      case DieType.custom:
+        mesh = PolyhedronMesh.createSphere(radius: dieRadius);
         break;
     }
 
@@ -448,6 +450,7 @@ class _Polyhedral3DDicePainter extends CustomPainter {
           ? (tabletop?.critGold ?? Colors.amber)
           : (isFumble ? (tabletop?.fumbleRed ?? Colors.red) : theme.colorScheme.primary);
 
+      final isSphere = die.dieType == DieType.d100 || die.dieType == DieType.custom;
       final totalFaces = die.mesh.faces.length;
 
       // 7. Render sorted 3D facets
@@ -460,17 +463,17 @@ class _Polyhedral3DDicePainter extends CustomPainter {
         canvas.drawPath(faceData.path, _facetPaint);
 
         // Draw beveled facet boundary edge (winning face receives elevated highlight)
-        _edgePaint.color = isWinningFace && isSettled
+        _edgePaint.color = isWinningFace && isSettled && !isSphere
             ? (isCrit ? Colors.amberAccent : Colors.white.withValues(alpha: 0.85))
-            : Colors.white.withValues(alpha: 0.35 + (faceData.diffuse * 0.45));
-        _edgePaint.strokeWidth = (isWinningFace && isSettled) ? 2.4 : 1.6;
+            : Colors.white.withValues(alpha: isSphere ? 0.20 : (0.35 + (faceData.diffuse * 0.45)));
+        _edgePaint.strokeWidth = (isWinningFace && isSettled && !isSphere) ? 2.4 : (isSphere ? 1.0 : 1.6);
         canvas.drawPath(faceData.path, _edgePaint);
 
         // Draw facet numbers:
-        // When settled: EXCLUSIVELY the winning face displays the result number.
+        // When settled: EXCLUSIVELY the winning face displays the result number (sphere dice draw centered medallion below).
         // When rolling: Front-facing facets display numbers to convey rolling motion.
         final shouldDrawNumber = isSettled
-            ? isWinningFace
+            ? (isWinningFace && !isSphere)
             : (isWinningFace || faceData.normal.z > 0.50);
 
         if (shouldDrawNumber) {
@@ -515,6 +518,60 @@ class _Polyhedral3DDicePainter extends CustomPainter {
             faceData.centerPt - Offset(textPainter.width / 2, textPainter.height / 2),
           );
         }
+      }
+
+      // 8. For Sphere Dice (d100 & custom) when settled, draw the centered target face medallion with the result number
+      if (isSphere && isSettled) {
+        final center = Offset(currentX, currentY);
+        final discRadius = die.mesh.radius * 0.54;
+
+        // Medallion background
+        final discPaint = Paint()
+          ..color = Color.lerp(Colors.black, baseColor, 0.45)!.withValues(alpha: 0.95)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(center, discRadius, discPaint);
+
+        // Medallion outer glowing ring
+        final rimPaint = Paint()
+          ..color = isCrit ? Colors.amberAccent : Colors.white.withValues(alpha: 0.90)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.4;
+        canvas.drawCircle(center, discRadius, rimPaint);
+
+        // Inner accent ring
+        final innerRimPaint = Paint()
+          ..color = Colors.white.withValues(alpha: 0.35)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0;
+        canvas.drawCircle(center, discRadius * 0.85, innerRimPaint);
+
+        // Result Number
+        final textStr = '${die.finalValue}';
+        final fontSize = textStr.length >= 3
+            ? (die.mesh.radius * 0.40)
+            : (textStr.length == 2 ? (die.mesh.radius * 0.50) : (die.mesh.radius * 0.60));
+
+        final textSpan = TextSpan(
+          text: textStr,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: fontSize,
+            fontWeight: FontWeight.w900,
+            shadows: const [
+              Shadow(color: Colors.black87, blurRadius: 4),
+            ],
+          ),
+        );
+        final textPainter = TextPainter(
+          text: textSpan,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        )..layout();
+
+        textPainter.paint(
+          canvas,
+          center - Offset(textPainter.width / 2, textPainter.height / 2),
+        );
       }
     }
   }
