@@ -17,6 +17,10 @@ class AppLogo extends StatefulWidget {
   final VoidCallback? onTap;
   final String semanticsLabel;
 
+  /// Default cyber cyan colors for static and branding renders
+  static const Color defaultPrimary = Color(0xFF00E5FF); // Electric Cyber Cyan
+  static const Color defaultSecondary = Color(0xFF18FFFF); // Luminous Neon Aqua
+
   const AppLogo({
     super.key,
     this.size = 32,
@@ -104,9 +108,8 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = widget.primaryColor ?? theme.colorScheme.primary;
-    final secondary = widget.secondaryColor ?? theme.colorScheme.secondary;
+    final primary = widget.primaryColor ?? AppLogo.defaultPrimary;
+    final secondary = widget.secondaryColor ?? AppLogo.defaultSecondary;
 
     Widget logoContent = AnimatedBuilder(
       animation: _controller,
@@ -163,10 +166,10 @@ class D20TechPainter extends CustomPainter {
   final double rotation;
 
   D20TechPainter({
-    required this.primaryColor,
-    required this.secondaryColor,
-    required this.showGlow,
-    required this.showRings,
+    this.primaryColor = AppLogo.defaultPrimary,
+    this.secondaryColor = AppLogo.defaultSecondary,
+    this.showGlow = true,
+    this.showRings = true,
     this.rotation = 0.0,
   });
 
@@ -176,10 +179,10 @@ class D20TechPainter extends CustomPainter {
     final minDimension = math.min(size.width, size.height);
     final scale = minDimension / 100.0;
 
-    // Radius constants (scaled to a 100x100 canonical space)
-    final d20Radius = 36.0 * scale;
-    final ringRadius = 45.0 * scale;
-    final outerRingRadius = 48.5 * scale;
+    // Radius constants designed to comfortably fit inside 100x100 space with margin
+    final d20Radius = 30.0 * scale;
+    final ringRadius = 38.0 * scale;
+    final outerRingRadius = 42.0 * scale;
 
     // 1. Ambient Background Glow
     if (showGlow) {
@@ -191,13 +194,13 @@ class D20TechPainter extends CustomPainter {
             Colors.transparent,
           ],
           stops: const [0.0, 0.65, 1.0],
-        ).createShader(Rect.fromCircle(center: center, radius: d20Radius * 1.35));
+        ).createShader(Rect.fromCircle(center: center, radius: d20Radius * 1.45));
 
-      canvas.drawCircle(center, d20Radius * 1.35, glowPaint);
+      canvas.drawCircle(center, d20Radius * 1.45, glowPaint);
     }
 
-    // 2. Arcane-Cyber Tech Reticle Rings
-    if (showRings && scale >= 0.28) {
+    // 2. Arcane-Cyber Tech Reticle Rings & Curved Branding
+    if (showRings && scale >= 0.25) {
       _paintTechRings(canvas, center, ringRadius, outerRingRadius, scale);
     }
 
@@ -206,7 +209,6 @@ class D20TechPainter extends CustomPainter {
     final rIn = d20Radius * 0.55;
 
     // Outer 6 vertices of the hexagon silhouette (V0 to V5)
-    // V0 is at top (-pi/2)
     final vOut = List.generate(6, (i) {
       final angle = -math.pi / 2 + (i * math.pi / 3);
       return Offset(
@@ -216,7 +218,6 @@ class D20TechPainter extends CustomPainter {
     });
 
     // Inner 3 vertices of the center upward-pointing triangle (A, B, C)
-    // A: top (angle: -pi/2), B: bottom-right (angle: pi/6), C: bottom-left (angle: 5*pi/6)
     final vIn = [
       Offset(center.dx, center.dy - rIn),
       Offset(center.dx + rIn * math.cos(math.pi / 6), center.dy + rIn * math.sin(math.pi / 6)),
@@ -249,7 +250,7 @@ class D20TechPainter extends CustomPainter {
       _Facet([pC, p3, p4], 0.35, false), // Left Lower
       _Facet([pC, p4, p5], 0.65, false), // Left Upper
 
-      // Center Core Facet (Face 20)
+      // Center Core Facet (Face with DN Crest)
       _Facet([pA, pB, pC], 1.0, true),
     ];
 
@@ -267,7 +268,7 @@ class D20TechPainter extends CustomPainter {
 
     final innerEdgePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1.0, 1.8 * scale)
+      ..strokeWidth = math.max(1.2, 1.8 * scale)
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..color = secondaryColor.withValues(alpha: 0.95);
@@ -282,7 +283,6 @@ class D20TechPainter extends CustomPainter {
 
     // Inner connecting edges
     final lines = [
-      // Connections to outer ring
       [pA, p0], [pA, p1], [pA, p5],
       [pB, p1], [pB, p2], [pB, p3],
       [pC, p3], [pC, p4], [pC, p5],
@@ -301,7 +301,7 @@ class D20TechPainter extends CustomPainter {
     canvas.drawPath(centerTriPath, innerEdgePaint);
 
     // 6. Glowing Circuit Nodes at Vertices
-    if (scale >= 0.32) {
+    if (scale >= 0.30) {
       final nodePaint = Paint()
         ..style = PaintingStyle.fill
         ..color = secondaryColor;
@@ -311,7 +311,7 @@ class D20TechPainter extends CustomPainter {
         ..color = primaryColor.withValues(alpha: 0.6);
 
       final allVertices = [...vOut, ...vIn];
-      final nodeRadius = 1.6 * scale;
+      final nodeRadius = 1.5 * scale;
 
       for (final v in allVertices) {
         canvas.drawCircle(v, nodeRadius * 1.8, nodeGlow);
@@ -319,8 +319,8 @@ class D20TechPainter extends CustomPainter {
       }
     }
 
-    // 7. Center "20" Engraving / Tabletop Emblem
-    _paintCenterText(canvas, center, scale);
+    // 7. Center "DN" Monogram Crest
+    _paintCenterMonogram(canvas, center, scale);
   }
 
   void _paintTechRings(
@@ -364,11 +364,11 @@ class D20TechPainter extends CustomPainter {
     }
 
     // Reticle Cardinal Ticks
-    if (scale >= 0.5) {
+    if (scale >= 0.45) {
       final tickPaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2 * scale
-        ..color = secondaryColor.withValues(alpha: 0.8);
+        ..color = secondaryColor.withValues(alpha: 0.85);
 
       for (int i = 0; i < 4; i++) {
         final angle = rotation + (i * math.pi / 2);
@@ -377,16 +377,16 @@ class D20TechPainter extends CustomPainter {
           center.dy + (outerRingRadius - 2 * scale) * math.sin(angle),
         );
         final pEnd = Offset(
-          center.dx + (outerRingRadius + 4 * scale) * math.cos(angle),
-          center.dy + (outerRingRadius + 4 * scale) * math.sin(angle),
+          center.dx + (outerRingRadius + 3.5 * scale) * math.cos(angle),
+          center.dy + (outerRingRadius + 3.5 * scale) * math.sin(angle),
         );
         canvas.drawLine(pStart, pEnd, tickPaint);
       }
     }
 
-    // High-tech curved brand lettering along outer arc for larger displays
-    if (scale >= 0.6) {
-      _paintCurvedBrandText(canvas, center, outerRingRadius + 3.5 * scale, scale);
+    // High-tech curved brand lettering along outer arc for displays
+    if (scale >= 0.5) {
+      _paintCurvedBrandText(canvas, center, outerRingRadius + 4.0 * scale, scale);
     }
   }
 
@@ -397,8 +397,8 @@ class D20TechPainter extends CustomPainter {
     double scale,
   ) {
     const brandText = 'DANGEROUSLY NERDY';
-    final fontSize = 4.2 * scale;
-    const charSpacing = 0.088; // radians per character
+    final fontSize = 4.0 * scale;
+    const charSpacing = 0.082; // radians per character
     const totalAngle = (brandText.length - 1) * charSpacing;
     const startAngle = (math.pi / 2) - (totalAngle / 2);
 
@@ -410,10 +410,17 @@ class D20TechPainter extends CustomPainter {
       final textSpan = TextSpan(
         text: char,
         style: TextStyle(
-          color: secondaryColor.withValues(alpha: 0.85),
+          color: secondaryColor,
           fontSize: fontSize,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
           letterSpacing: 0.5,
+          shadows: [
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.8),
+              offset: const Offset(0.5, 0.5),
+              blurRadius: 1.5,
+            ),
+          ],
         ),
       );
 
@@ -425,7 +432,7 @@ class D20TechPainter extends CustomPainter {
       canvas.save();
       canvas.translate(center.dx, center.dy);
       canvas.rotate(angle - math.pi / 2);
-      canvas.translate(-tp.width / 2, radius);
+      canvas.translate(-tp.width / 2, radius - (tp.height / 2));
       tp.paint(canvas, Offset.zero);
       canvas.restore();
     }
@@ -450,22 +457,23 @@ class D20TechPainter extends CustomPainter {
     final Paint fillPaint = Paint()..style = PaintingStyle.fill;
 
     if (facet.isCenter) {
+      // Deep obsidian void base with luminous cyber cyan gradient
       fillPaint.shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          Color.lerp(primaryColor, Colors.white, 0.45)!.withValues(alpha: 0.95),
-          primaryColor.withValues(alpha: 0.85),
-          Color.lerp(primaryColor, Colors.black, 0.4)!.withValues(alpha: 0.95),
+          Color.lerp(primaryColor, Colors.white, 0.35)!.withValues(alpha: 0.95),
+          Color.lerp(primaryColor, const Color(0xFF0F172A), 0.5)!.withValues(alpha: 0.95),
+          const Color(0xFF070B14).withValues(alpha: 0.98),
         ],
-        stops: const [0.0, 0.4, 1.0],
+        stops: const [0.0, 0.45, 1.0],
       ).createShader(path.getBounds());
     } else {
       final light = facet.lighting;
       final Color baseShade = Color.lerp(
-        Colors.black,
+        const Color(0xFF070B14),
         primaryColor,
-        0.2 + 0.6 * light,
+        0.15 + 0.55 * light,
       )!;
       final Color highlightShade = Color.lerp(
         baseShade,
@@ -486,27 +494,33 @@ class D20TechPainter extends CustomPainter {
     canvas.drawPath(path, fillPaint);
   }
 
-  void _paintCenterText(Canvas canvas, Offset center, double scale) {
-    if (scale < 0.22) return;
+  void _paintCenterMonogram(Canvas canvas, Offset center, double scale) {
+    if (scale < 0.18) return;
 
-    final fontSize = 13.0 * scale;
+    // Crisp high-contrast DN typography
+    final fontSize = 12.5 * scale;
     final textSpan = TextSpan(
       text: 'DN',
       style: TextStyle(
         color: const Color(0xFFFFFFFF),
         fontSize: fontSize,
         fontWeight: FontWeight.w900,
-        letterSpacing: -0.4 * scale,
+        letterSpacing: -0.3 * scale,
         shadows: [
           Shadow(
-            color: Colors.black.withValues(alpha: 0.85),
+            color: Colors.black.withValues(alpha: 0.95),
             offset: Offset(0.8 * scale, 0.8 * scale),
             blurRadius: 2.0 * scale,
           ),
           Shadow(
-            color: secondaryColor.withValues(alpha: 0.95),
+            color: secondaryColor,
             offset: Offset.zero,
-            blurRadius: 4.0 * scale,
+            blurRadius: 5.0 * scale,
+          ),
+          Shadow(
+            color: primaryColor,
+            offset: Offset.zero,
+            blurRadius: 8.0 * scale,
           ),
         ],
       ),
@@ -521,7 +535,7 @@ class D20TechPainter extends CustomPainter {
     textPainter.layout();
     final textCenter = Offset(
       center.dx - (textPainter.width / 2),
-      center.dy - (textPainter.height / 2) + (1.0 * scale),
+      center.dy - (textPainter.height / 2) + (0.5 * scale),
     );
     textPainter.paint(canvas, textCenter);
   }
