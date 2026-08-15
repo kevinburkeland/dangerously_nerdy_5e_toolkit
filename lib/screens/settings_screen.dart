@@ -279,26 +279,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     fillColor: theme.colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            _testCritController.trigger(CritEffectType.critSuccess);
-                          },
-                          icon: const Icon(Icons.auto_awesome, color: Color(0xFFFFD54F), size: 18),
-                          label: const Text('Test Nat 20'),
-                        ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          _testCritController.trigger(CritEffectType.critSuccess);
+                        },
+                        icon: const Icon(Icons.auto_awesome, color: Color(0xFFFFD54F), size: 18),
+                        label: const Text('Test Nat 20'),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            _testCritController.trigger(CritEffectType.critFumble);
-                          },
-                          icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF5252), size: 18),
-                          label: const Text('Test Nat 1'),
-                        ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          _testCritController.trigger(CritEffectType.critFumble);
+                        },
+                        icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF5252), size: 18),
+                        label: const Text('Test Nat 1'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          _testCritController.trigger(CritEffectType.spellBurst);
+                        },
+                        icon: const Icon(Icons.grain, color: Color(0xFF00E5FF), size: 18),
+                        label: const Text('Test Spell FX'),
                       ),
                     ],
                   ),

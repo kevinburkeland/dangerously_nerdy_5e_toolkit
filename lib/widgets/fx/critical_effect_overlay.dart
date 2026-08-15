@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 
-enum CritEffectType { critSuccess, critFumble }
+enum CritEffectType { critSuccess, critFumble, spellBurst }
 
-/// Controller to trigger critical hit or fumble canvas effects
+/// Controller to trigger critical hit, fumble, or spell mana particle canvas effects
 class CriticalEffectController {
   _CriticalEffectOverlayState? _state;
   void _attach(_CriticalEffectOverlayState state) => _state = state;
@@ -14,7 +14,8 @@ class CriticalEffectController {
   void trigger(CritEffectType type) => _state?.trigger(type);
 }
 
-/// Canvas overlay that renders radiant golden embers (Nat 20) or chaotic rumble + blood embers (Nat 1)
+/// Canvas overlay that renders radiant golden embers (Nat 20), chaotic rumble + blood embers (Nat 1),
+/// or arcane mana spell bursts (Spell Particle FX)
 class CriticalEffectOverlay extends StatefulWidget {
   final Widget child;
   final CriticalEffectController controller;
@@ -36,12 +37,13 @@ class _Particle {
   double vy = 0;
   double size = 0;
   double alpha = 1.0;
+  Color color = const Color(0xFFFFD54F);
 }
 
 class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with SingleTickerProviderStateMixin {
   late final AnimationController _animController;
   CritEffectType _activeType = CritEffectType.critSuccess;
-  final List<_Particle> _particlePool = List.generate(40, (_) => _Particle());
+  final List<_Particle> _particlePool = List.generate(45, (_) => _Particle());
   final Random _rng = Random();
 
   @override
@@ -62,8 +64,12 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
   }
 
   void trigger(CritEffectType type) {
-    final areCritAllowed = SettingsScope.settingsOf(context, listen: false).areCritFxAllowed;
-    if (!areCritAllowed) return;
+    final settings = SettingsScope.settingsOf(context, listen: false);
+    if (type == CritEffectType.spellBurst) {
+      if (!settings.areParticlesAllowed) return;
+    } else {
+      if (!settings.areCritFxAllowed) return;
+    }
 
     _activeType = type;
     _spawnParticles();
@@ -71,8 +77,10 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
 
     if (type == CritEffectType.critSuccess) {
       HapticService.critRumble(context);
-    } else {
+    } else if (type == CritEffectType.critFumble) {
       HapticService.heavyImpact(context);
+    } else {
+      HapticService.selectionTick(context);
     }
   }
 
@@ -83,7 +91,19 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
       final angle = _rng.nextDouble() * 2 * pi;
       final speed = 0.25 + _rng.nextDouble() * 0.65;
       p.vx = cos(angle) * speed;
-      p.vy = sin(angle) * speed - (_activeType == CritEffectType.critSuccess ? 0.35 : 0.0);
+
+      if (_activeType == CritEffectType.critSuccess) {
+        p.vy = sin(angle) * speed - 0.35;
+        p.color = const Color(0xFFFFD54F);
+      } else if (_activeType == CritEffectType.critFumble) {
+        p.vy = sin(angle) * speed;
+        p.color = const Color(0xFFFF5252);
+      } else {
+        // Spell mana burst particles: arcane cyan and shimmering violet
+        p.vy = sin(angle) * speed - 0.2;
+        p.color = _rng.nextBool() ? const Color(0xFF00E5FF) : const Color(0xFFE040FB);
+      }
+
       p.size = 3.0 + _rng.nextDouble() * 5.0;
       p.alpha = 1.0;
     }
@@ -92,13 +112,16 @@ class _CriticalEffectOverlayState extends State<CriticalEffectOverlay> with Sing
   @override
   Widget build(BuildContext context) {
     final systemDisableAnimations = MediaQuery.disableAnimationsOf(context);
-    final areCritAllowed = !systemDisableAnimations &&
-        SettingsScope.settingsOf(context).areCritFxAllowed;
+    final settings = SettingsScope.settingsOf(context);
+    final isAllowed = !systemDisableAnimations &&
+        (_activeType == CritEffectType.spellBurst
+            ? settings.areParticlesAllowed
+            : settings.areCritFxAllowed);
 
     return AnimatedBuilder(
       animation: _animController,
       builder: (context, child) {
-        final isAnimating = _animController.isAnimating && areCritAllowed;
+        final isAnimating = _animController.isAnimating && isAllowed;
         final progress = _animController.value;
         final isFumble = _activeType == CritEffectType.critFumble;
 
@@ -149,8 +172,11 @@ class _CritParticlePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final isCrit = type == CritEffectType.critSuccess;
-    final baseColor = isCrit ? const Color(0xFFFFD54F) : const Color(0xFFFF5252);
+    final baseColor = switch (type) {
+      CritEffectType.critSuccess => const Color(0xFFFFD54F),
+      CritEffectType.critFumble => const Color(0xFFFF5252),
+      CritEffectType.spellBurst => const Color(0xFF00E5FF),
+    };
 
     // Radiant screen boundary flash
     final flashAlpha = ((1.0 - progress) * 0.3).clamp(0.0, 1.0);
@@ -168,7 +194,7 @@ class _CritParticlePainter extends CustomPainter {
       final currentY = (p.y + p.vy * progress * 0.35) * size.height;
       final alpha = ((1.0 - progress) * p.alpha).clamp(0.0, 1.0);
 
-      _paint.color = baseColor.withValues(alpha: alpha);
+      _paint.color = p.color.withValues(alpha: alpha);
       canvas.drawCircle(Offset(currentX, currentY), p.size * (1.0 - progress * 0.4), _paint);
     }
   }

@@ -37,15 +37,23 @@ class SettingsProvider extends ChangeNotifier {
     final pinnedList = prefs.getStringList(_kPinnedRuleIds);
 
     _settings = AppSettings(
-      themeMode: ThemeMode.values.elementAtOrNull(themeIndex ?? -1) ?? _settings.themeMode,
-      fantasyAccent: FantasyAccent.values.elementAtOrNull(accentIndex ?? -1) ?? _settings.fantasyAccent,
+      themeMode: (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length)
+          ? ThemeMode.values[themeIndex]
+          : _settings.themeMode,
+      fantasyAccent: (accentIndex != null && accentIndex >= 0 && accentIndex < FantasyAccent.values.length)
+          ? FantasyAccent.values[accentIndex]
+          : _settings.fantasyAccent,
       oledPitchBlack: oled ?? _settings.oledPitchBlack,
-      hapticLevel: HapticFeedbackLevel.values.elementAtOrNull(hapticIndex ?? -1) ?? _settings.hapticLevel,
+      hapticLevel: (hapticIndex != null && hapticIndex >= 0 && hapticIndex < HapticFeedbackLevel.values.length)
+          ? HapticFeedbackLevel.values[hapticIndex]
+          : _settings.hapticLevel,
       enableCritFumbleFx: critFx ?? _settings.enableCritFumbleFx,
       enableSpellParticles: particles ?? _settings.enableSpellParticles,
       enable3dDiceOverlays: dice ?? _settings.enable3dDiceOverlays,
       performanceMode: perf ?? _settings.performanceMode,
-      rulesEdition: DmRulesEdition.values.elementAtOrNull(editionIndex ?? -1) ?? _settings.rulesEdition,
+      rulesEdition: (editionIndex != null && editionIndex >= 0 && editionIndex < DmRulesEdition.values.length)
+          ? DmRulesEdition.values[editionIndex]
+          : _settings.rulesEdition,
       pinnedRuleIds: pinnedList?.toSet() ?? _settings.pinnedRuleIds,
     );
     notifyListeners();

@@ -95,7 +95,10 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       backgroundColor: Colors.transparent,
       builder: (ctx) => SquadBuilderBottomSheet(
         session: _session,
-        onSquadUpdated: () => setState(() {}),
+        onSquadUpdated: () {
+          _critController.trigger(CritEffectType.spellBurst);
+          setState(() {});
+        },
       ),
     );
   }
