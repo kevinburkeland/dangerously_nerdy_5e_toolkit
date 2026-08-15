@@ -68,6 +68,7 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **OLED Pitch Black**: Pure `#000000` background for AMOLED battery savings.
 * **Fantasy Accent Palettes**: Choose between 9 rich RPG themes: `Paladin Gold`, `Eldritch Purple`, `Ranger Emerald`, `Necrotic Slate`, `Dragonfire Crimson`, `Arcane Sapphire`, `Bardic Rose`, `Abyssal Teal`, and `Celestial Amber`.
 * **Micro-Interactions & Performance**: Fine-grained toggles for Critical Hit & Fumble Effects (screen shake, rumble, and ember bursts), Spell Particle Canvas FX, 3D Dice Overlays, and a Performance/Battery Saver mode.
+* **Pure Flutter Vector Branding**: 100% vector-rendered tech+fantasy d20 logo (`AppLogo`) with `DN` center crest, curved `DANGEROUSLY NERDY` telemetry ring, and interactive hover/tap momentum spin physics.
 * **Preferences Persistence**: Automatically saves user settings locally via `SharedPreferences`.
 
 ### 🔒 9. Cryptographically Secure RNG & Production Security
@@ -121,6 +122,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── pwa_helper.dart         # PWA installation prompt helper (cross-platform stub/web)
 │   │   └── secure_random.dart      # Cryptographically secure RNG generator
 │   └── widgets/                    # Modular UI components
+│       ├── app_logo.dart           # Pure Flutter vector tech+fantasy d20 logo & interactive spin
 │       ├── batch_attack/           # Batch attack results summary
 │       ├── dice_roller/            # 3D dice visualizer, pool builders, roll history, & presets
 │       ├── dialogs/                # Modals for presets, batch attacks, legal notices, statblocks, & rules
