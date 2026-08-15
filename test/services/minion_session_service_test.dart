@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/minion_session_service.dart';
 
@@ -17,7 +16,7 @@ void main() {
 
   group('MinionSessionService Unit Tests', () {
     test('getOrCreateSession creates and initializes default minions for Animate Objects', () {
-      final preset = AnimateObjectsSummon.preset;
+      const preset = AnimateObjectsSummon.preset;
       expect(service.hasSession(preset.id), isFalse);
 
       final session = service.getOrCreateSession(preset, defaultSpellLevel: 5);
@@ -29,7 +28,7 @@ void main() {
     });
 
     test('getOrCreateSession returns existing session without overwriting modifications', () {
-      final preset = BeastSummons.conjureAnimalsPreset;
+      const preset = BeastSummons.conjureAnimalsPreset;
       final session1 = service.getOrCreateSession(preset, defaultSpellLevel: 3);
 
       expect(session1.spellLevel, 3);
@@ -50,8 +49,8 @@ void main() {
     });
 
     test('Multiple presets maintain distinct and independent session states', () {
-      final animalsPreset = BeastSummons.conjureAnimalsPreset;
-      final undeadPreset = UndeadSummons.animateDeadPreset;
+      const animalsPreset = BeastSummons.conjureAnimalsPreset;
+      const undeadPreset = UndeadSummons.animateDeadPreset;
 
       final animalsSession = service.getOrCreateSession(animalsPreset, defaultSpellLevel: 3);
       final undeadSession = service.getOrCreateSession(undeadPreset, defaultSpellLevel: 3);
@@ -64,7 +63,7 @@ void main() {
     });
 
     test('resetSession restores default spell level and default minions', () {
-      final preset = BeastSummons.conjureAnimalsPreset;
+      const preset = BeastSummons.conjureAnimalsPreset;
       final session = service.getOrCreateSession(preset, defaultSpellLevel: 3);
 
       session.spellLevel = 9;
