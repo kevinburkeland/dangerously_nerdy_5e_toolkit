@@ -12,6 +12,7 @@ class Vec3 {
   Vec3 operator *(double s) => Vec3(x * s, y * s, z * s);
 
   double dot(Vec3 o) => x * o.x + y * o.y + z * o.z;
+  double get length => sqrt(x * x + y * y + z * z);
 
   Vec3 cross(Vec3 o) => Vec3(
         y * o.z - z * o.y,

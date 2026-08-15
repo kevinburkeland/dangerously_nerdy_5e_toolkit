@@ -153,18 +153,25 @@ class PolyhedronMesh {
     ];
 
     const rawFaces = [
-      Polygon3D([11, 10, 4, 18, 6], faceNumber: 12),
-      Polygon3D([10, 11, 7, 19, 5], faceNumber: 9),
-      Polygon3D([11, 6, 14, 2, 9], faceNumber: 3),
-      Polygon3D([10, 5, 13, 0, 8], faceNumber: 7),
-      Polygon3D([4, 10, 8, 12, 18], faceNumber: 2),
-      Polygon3D([7, 11, 9, 15, 19], faceNumber: 6),
-      Polygon3D([6, 18, 16, 14, 2], faceNumber: 4),
-      Polygon3D([5, 19, 17, 13, 0], faceNumber: 10),
-      Polygon3D([2, 14, 15, 3, 9], faceNumber: 5),
-      Polygon3D([0, 13, 12, 1, 8], faceNumber: 11),
-      Polygon3D([18, 12, 1, 16, 4], faceNumber: 8),
-      Polygon3D([19, 15, 3, 17, 7], faceNumber: 1),
+      // Top & Bottom Faces (Opposites sum to 13)
+      Polygon3D([10, 5, 19, 7, 11], faceNumber: 12), // 0: Top Face (Facing camera)
+      Polygon3D([8, 0, 16, 2, 9], faceNumber: 1),    // 1: Bottom Face (Opposite 12)
+
+      // Surrounding Upper/Lower Face Pairs
+      Polygon3D([17, 3, 15, 7, 19], faceNumber: 9),  // 2: Upper Right
+      Polygon3D([16, 18, 6, 14, 2], faceNumber: 4),  // 3: Opposite 9
+
+      Polygon3D([14, 6, 11, 7, 15], faceNumber: 5),  // 4: Upper
+      Polygon3D([12, 0, 8, 1, 13], faceNumber: 8),   // 5: Opposite 5
+
+      Polygon3D([10, 11, 6, 18, 4], faceNumber: 11), // 6: Upper Left
+      Polygon3D([8, 9, 3, 17, 1], faceNumber: 2),    // 7: Opposite 11
+
+      Polygon3D([12, 13, 5, 10, 4], faceNumber: 3),  // 8: Lower Left
+      Polygon3D([14, 15, 3, 9, 2], faceNumber: 10),  // 9: Opposite 3
+
+      Polygon3D([17, 19, 5, 13, 1], faceNumber: 7),  // 10: Lower Right
+      Polygon3D([16, 0, 12, 4, 18], faceNumber: 6),  // 11: Opposite 7
     ];
 
     // Compute normal of Face 0 and rotate entire dodecahedron so Face 0 is flat facing +Z
@@ -182,8 +189,8 @@ class PolyhedronMesh {
     var rotated = rawVertices.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
 
     // Align top edge horizontally
-    final p0 = rotated[rawFaces[0].vertexIndices[0]];
-    final p1 = rotated[rawFaces[0].vertexIndices[1]];
+    final p0 = rotated[rawFaces[0].vertexIndices[3]]; // Vertex 7
+    final p1 = rotated[rawFaces[0].vertexIndices[4]]; // Vertex 11
     final edgeAngle = atan2(p1.y - p0.y, p1.x - p0.x);
     rotated = rotated.map((v) => v.rotateZ(-edgeAngle)).toList();
 
