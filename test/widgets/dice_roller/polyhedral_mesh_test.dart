@@ -37,14 +37,18 @@ void main() {
       for (final face in mesh.faces) {
         expect(face.vertexIndices.length, equals(4));
       }
+      // Check Face 0 vertical symmetry
+      final topFace = mesh.faces[0];
+      final vLeft = mesh.vertices[topFace.vertexIndices[1]];
+      final vRight = mesh.vertices[topFace.vertexIndices[3]];
+      expect(vLeft.x, closeTo(-vRight.x, 1e-4));
+      expect(vLeft.y, closeTo(vRight.y, 1e-4));
     });
 
-    test('createD100 produces an authentic 100-sided spherical geodesic mesh', () {
+    test('createD100 produces an authentic closed 100-sided spherical mesh', () {
       final mesh = PolyhedronMesh.createD100(radius: 78.0);
+      expect(mesh.vertices.length, equals(92));
       expect(mesh.faces.length, equals(100));
-      for (final face in mesh.faces) {
-        expect(face.vertexIndices.length, equals(5));
-      }
       expect(mesh.faces[0].faceNumber, equals(100));
     });
 

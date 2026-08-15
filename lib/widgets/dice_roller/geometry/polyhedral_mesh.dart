@@ -82,9 +82,9 @@ class PolyhedronMesh {
   /// 3D Mathematically Exact Pentagonal Trapezohedron (d10) Geometry
   /// Authentic 10-deltoid (kite) solid with canonical face-centered resting orientation.
   static PolyhedronMesh createD10({double radius = 70.0}) {
-    const h = 1.35;
-    const z1 = 0.25;
-    const r = 1.0;
+    const z1 = 0.1055728;
+    const r = 0.7038406;
+    const h = 1.0; // exact planar ratio: 1.0 / 0.1055728 = 5 + 2*sqrt(5)
     const deg72 = 2.0 * pi / 5.0;
     const deg36 = pi / 5.0;
 
@@ -123,70 +123,85 @@ class PolyhedronMesh {
 
     var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
 
-    // Align apex vertical (+Y)
-    final pApex = rotated[0];
-    final apexAngle = atan2(pApex.x, pApex.y);
-    rotated = rotated.map((v) => Vec3(
-      v.x * cos(apexAngle) - v.y * sin(apexAngle),
-      v.x * sin(apexAngle) + v.y * cos(apexAngle),
-      v.z,
-    )).toList();
+    // Align kite centerline vertically with +Y
+    final rApex = rotated[0];
+    final rBottom = rotated[11];
+    final centerLine = (rApex - rBottom);
+    final alignAngle = atan2(centerLine.x, centerLine.y);
+    rotated = rotated.map((v) => v.rotateZ(alignAngle)).toList();
 
     return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
   }
 
   /// 3D Mathematically Exact 100-Sided Die (d100 / Zocchihedron / 100-faceted sphere) Geometry
-  /// Authentic 100-faceted spherical solid with uniform Fibonacci golden spiral distribution.
+  /// Authentic closed, water-tight 100-faceted spherical mesh (10 longitudinal sectors x 10 latitudinal bands).
   static PolyhedronMesh createD100({double radius = 78.0}) {
-    const totalFaces = 100;
-    final goldenRatio = (1.0 + sqrt(5.0)) / 2.0;
-    final goldenAngle = 2.0 * pi * (1.0 - 1.0 / goldenRatio); // ~2.39996323 rad
+    const lonCount = 10;
+    const latBands = 10; // 1 top cap + 8 quad rings + 1 bottom cap = 100 faces!
 
-    // 1. Generate 100 uniform face centroids on the unit sphere
-    final faceCenters = <Vec3>[];
-    for (int i = 0; i < totalFaces; i++) {
-      final y = 1.0 - (i / (totalFaces - 1.0)) * 2.0; // from +1 to -1
-      final r = sqrt((1.0 - y * y).clamp(0.0, 1.0));
-      final theta = i * goldenAngle;
-      final x = r * cos(theta);
-      final z = r * sin(theta);
-      faceCenters.add(Vec3(x, y, z).normalized());
-    }
+    final rawVerts = <Vec3>[
+      const Vec3(0, 0, 1.0), // 0: North Pole Apex
+    ];
 
-    // Align face 0 (at +Y) to face +Z directly (camera)
-    final rotatedCenters = faceCenters.map((c) => Vec3(c.x, -c.z, c.y)).toList();
-
-    // 2. Generate 100 regular pentagonal facets tangent to the sphere
-    final allVerts = <Vec3>[];
-    final allFaces = <Polygon3D>[];
-    const facetRadius = 0.165;
-    const sides = 5;
-
-    for (int i = 0; i < totalFaces; i++) {
-      final center = rotatedCenters[i];
-
-      var up = const Vec3(0, 1, 0);
-      if (center.dot(up).abs() > 0.9) up = const Vec3(1, 0, 0);
-      final tangentX = up.cross(center).normalized();
-      final tangentY = center.cross(tangentX).normalized();
-
-      final startIdx = allVerts.length;
-      final vIndices = <int>[];
-
-      for (int s = 0; s < sides; s++) {
-        final angle = s * 2.0 * pi / sides;
-        final offset = tangentX * (cos(angle) * facetRadius) + tangentY * (sin(angle) * facetRadius);
-        final vert = (center + offset).normalized();
-        allVerts.add(vert);
-        vIndices.add(startIdx + s);
+    // 9 latitudinal rings of 10 vertices each
+    for (int b = 1; b < latBands; b++) {
+      final lat = (pi / 2.0) - (b * pi / latBands);
+      final z = sin(lat);
+      final r = cos(lat);
+      for (int i = 0; i < lonCount; i++) {
+        final lon = i * 2.0 * pi / lonCount;
+        rawVerts.add(Vec3(r * cos(lon), r * sin(lon), z));
       }
+    }
+    rawVerts.add(const Vec3(0, 0, -1.0)); // Last: South Pole Apex
+    final botApexIdx = rawVerts.length - 1;
 
-      // Assign face number: Face 0 is 100, others 1..99 with opposite pairing
-      final num = i == 0 ? 100 : (i % 2 == 0 ? i : (100 - i));
-      allFaces.add(Polygon3D(vIndices, faceNumber: num));
+    final faces = <Polygon3D>[];
+    int faceNum = 1;
+
+    // 1. Top Polar Cap (10 triangles)
+    for (int i = 0; i < lonCount; i++) {
+      final v1 = 1 + i;
+      final v2 = 1 + ((i + 1) % lonCount);
+      final num = (faceNum == 1 ? 100 : faceNum);
+      faces.add(Polygon3D([0, v2, v1], faceNumber: num));
+      faceNum++;
     }
 
-    return PolyhedronMesh(vertices: allVerts, faces: allFaces, radius: radius);
+    // 2. Middle 8 Quad Rings (8 x 10 = 80 connected quads)
+    for (int b = 0; b < latBands - 2; b++) {
+      final ring1Start = 1 + b * lonCount;
+      final ring2Start = 1 + (b + 1) * lonCount;
+      for (int i = 0; i < lonCount; i++) {
+        final r1v0 = ring1Start + i;
+        final r1v1 = ring1Start + ((i + 1) % lonCount);
+        final r2v1 = ring2Start + ((i + 1) % lonCount);
+        final r2v0 = ring2Start + i;
+        faces.add(Polygon3D([r1v0, r1v1, r2v1, r2v0], faceNumber: faceNum++));
+      }
+    }
+
+    // 3. Bottom Polar Cap (10 triangles)
+    const lastRingStart = 1 + (latBands - 2) * lonCount;
+    for (int i = 0; i < lonCount; i++) {
+      final v0 = lastRingStart + i;
+      final v1 = lastRingStart + ((i + 1) % lonCount);
+      faces.add(Polygon3D([botApexIdx, v0, v1], faceNumber: faceNum++));
+    }
+
+    // Align Face 0 normal to +Z (camera)
+    final topFace = faces[0];
+    final v0 = rawVerts[topFace.vertexIndices[0]];
+    final v1 = rawVerts[topFace.vertexIndices[1]];
+    final v2 = rawVerts[topFace.vertexIndices[2]];
+    final n0 = (v1 - v0).cross(v2 - v0).normalized();
+
+    final rotAxis = n0.cross(const Vec3(0, 0, 1)).normalized();
+    final rotAngle = acos(n0.z.clamp(-1.0, 1.0));
+
+    var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
+
+    return PolyhedronMesh(vertices: rotated, faces: faces, radius: radius);
   }
 
   /// 3D Mathematically Exact Regular Dodecahedron (d12) Geometry
