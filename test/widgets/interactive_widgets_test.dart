@@ -34,10 +34,10 @@ void main() {
         child: const MaterialApp(
           home: Scaffold(
             body: AnimatedResourceMeter(
-              currentValue: 15,
+              currentValue: 50,
               maxValue: 100,
               label: 'Hit Points',
-              fillColor: Colors.red,
+              fillColor: Colors.blue,
             ),
           ),
         ),
@@ -45,7 +45,34 @@ void main() {
     );
 
     expect(find.text('Hit Points'), findsOneWidget);
-    expect(find.text('15 / 100'), findsOneWidget);
+    expect(find.text('50 / 100'), findsOneWidget);
+  });
+
+  testWidgets('AnimatedResourceMeter triggers low-resource critical alert and pulse when <= 25%', (tester) async {
+    final settingsProvider = SettingsProvider();
+
+    await tester.pumpWidget(
+      SettingsScope(
+        notifier: settingsProvider,
+        child: const MaterialApp(
+          home: Scaffold(
+            body: AnimatedResourceMeter(
+              currentValue: 18,
+              maxValue: 100,
+              label: 'Hit Points',
+              fillColor: Colors.blue,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // When <= 25%, semantics description includes Warning: Low resource critical alert
+    final semantics = tester.getSemantics(find.byType(AnimatedResourceMeter));
+    expect(semantics.label, contains('Warning: Low resource critical alert'));
   });
 
   testWidgets('CriticalEffectOverlay triggers without error', (tester) async {

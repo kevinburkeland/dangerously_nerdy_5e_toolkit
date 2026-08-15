@@ -245,7 +245,7 @@ class ObjectCard extends StatelessWidget {
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 object.hpPercent > 0.5
                                     ? customColors.hitGreen
-                                    : (object.hpPercent > 0.2 ? Colors.amber : customColors.fumbleRed),
+                                    : (object.hpPercent > 0.25 ? Colors.amber : customColors.fumbleRed),
                               ),
                             ),
                           ),

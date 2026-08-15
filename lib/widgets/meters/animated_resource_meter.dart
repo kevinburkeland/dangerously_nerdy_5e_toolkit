@@ -10,6 +10,8 @@ class AnimatedResourceMeter extends StatefulWidget {
   final String label;
   final Color fillColor;
   final Color? lowResourceColor;
+  final double lowResourceThreshold;
+  final bool enableLowResourceAlert;
   final double height;
   final Widget? trailing;
 
@@ -20,6 +22,8 @@ class AnimatedResourceMeter extends StatefulWidget {
     required this.label,
     required this.fillColor,
     this.lowResourceColor,
+    this.lowResourceThreshold = 0.25,
+    this.enableLowResourceAlert = true,
     this.height = 18,
     this.trailing,
   });
@@ -54,7 +58,10 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
   @override
   void didUpdateWidget(covariant AnimatedResourceMeter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentValue != widget.currentValue || oldWidget.maxValue != widget.maxValue) {
+    if (oldWidget.currentValue != widget.currentValue ||
+        oldWidget.maxValue != widget.maxValue ||
+        oldWidget.enableLowResourceAlert != widget.enableLowResourceAlert ||
+        oldWidget.lowResourceThreshold != widget.lowResourceThreshold) {
       _syncAnimation();
     }
   }
@@ -63,7 +70,9 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     final systemDisableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final performanceMode = SettingsScope.settingsOf(context, listen: false).performanceMode;
     final ratio = widget.currentValue.ratioOf(widget.maxValue);
-    final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;
+    final isCritical = widget.enableLowResourceAlert &&
+        ratio <= widget.lowResourceThreshold &&
+        widget.currentValue > 0;
 
     if (systemDisableAnimations || performanceMode || !isCritical) {
       if (_pulseController.isAnimating) {
@@ -89,8 +98,12 @@ class _AnimatedResourceMeterState extends State<AnimatedResourceMeter> with Sing
     final performanceMode = SettingsScope.settingsOf(context).performanceMode;
     final tabletop = Theme.of(context).extension<TabletopColors>();
     final ratio = widget.currentValue.ratioOf(widget.maxValue);
-    final isCritical = widget.lowResourceColor != null && ratio <= 0.25 && widget.currentValue > 0;
-    final activeColor = isCritical ? (widget.lowResourceColor ?? tabletop?.fumbleRed ?? Colors.red) : widget.fillColor;
+    final isCritical = widget.enableLowResourceAlert &&
+        ratio <= widget.lowResourceThreshold &&
+        widget.currentValue > 0;
+    final activeColor = isCritical
+        ? (widget.lowResourceColor ?? tabletop?.fumbleRed ?? const Color(0xFFFF5252))
+        : widget.fillColor;
 
     final semanticDescription =
         '${widget.label}: ${widget.currentValue} of ${widget.maxValue}${isCritical ? ", Warning: Low resource critical alert" : ""}. ${(ratio * 100).toInt()} percent remaining.';

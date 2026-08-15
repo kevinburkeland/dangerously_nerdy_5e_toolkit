@@ -52,6 +52,7 @@ class ActiveSessionHeader extends StatelessWidget {
             fillColor: isOverBudget
                 ? (tabletop?.fumbleRed ?? Colors.redAccent)
                 : theme.colorScheme.primary,
+            enableLowResourceAlert: false,
             height: 8,
             trailing: Text(
               '${session.activeObjects.length} Objects',
