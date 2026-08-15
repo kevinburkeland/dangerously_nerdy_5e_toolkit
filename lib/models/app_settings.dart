@@ -7,7 +7,12 @@ enum FantasyAccent {
   paladinGold('Paladin Gold', Color(0xFFFFC107), Color(0xFFFFD54F)),
   eldritchPurple('Eldritch Purple', Color(0xFF9C27B0), Color(0xFFBA68C8)),
   rangerEmerald('Ranger Emerald', Color(0xFF00E676), Color(0xFF69F0AE)),
-  necroticSlate('Necrotic Slate', Color(0xFF78909C), Color(0xFF90A4AE));
+  necroticSlate('Necrotic Slate', Color(0xFF78909C), Color(0xFF90A4AE)),
+  dragonfireCrimson('Dragonfire Crimson', Color(0xFFFF3D00), Color(0xFFFF6E40)),
+  arcaneSapphire('Arcane Sapphire', Color(0xFF2979FF), Color(0xFF82B1FF)),
+  bardicRose('Bardic Rose', Color(0xFFE91E63), Color(0xFFFF4081)),
+  abyssalTeal('Abyssal Teal', Color(0xFF00BFA5), Color(0xFF64FFDA)),
+  celestialAmber('Celestial Amber', Color(0xFFFF9100), Color(0xFFFFD180));
 
   final String label;
   final Color primary;

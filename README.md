@@ -62,7 +62,7 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 ### 🎨 8. Theme Engine & User Preferences
 * **Theme Modes**: System, Dark Mode (default), and Light Mode.
 * **OLED Pitch Black**: Pure `#000000` background for AMOLED battery savings.
-* **Fantasy Accent Palettes**: Choose between `Paladin Gold`, `Eldritch Purple`, `Ranger Emerald`, and `Necrotic Slate`.
+* **Fantasy Accent Palettes**: Choose between 9 rich RPG themes: `Paladin Gold`, `Eldritch Purple`, `Ranger Emerald`, `Necrotic Slate`, `Dragonfire Crimson`, `Arcane Sapphire`, `Bardic Rose`, `Abyssal Teal`, and `Celestial Amber`.
 * **Micro-Interactions & Performance**: Fine-grained toggles for Critical Hit & Fumble Effects (screen shake, rumble, and ember bursts), Spell Particle Canvas FX, 3D Dice Overlays, and a Performance/Battery Saver mode.
 * **Preferences Persistence**: Automatically saves user settings locally via `SharedPreferences`.
 

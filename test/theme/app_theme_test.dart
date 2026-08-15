@@ -45,6 +45,27 @@ void main() {
       }
     });
 
+    test('buildTheme generates valid dark and OLED themes for all accents', () {
+      for (final accent in FantasyAccent.values) {
+        final darkTheme = AppTheme.buildTheme(
+          brightness: Brightness.dark,
+          accent: accent,
+          oledPitchBlack: false,
+        );
+        expect(darkTheme.brightness, Brightness.dark);
+        expect(darkTheme.colorScheme.primary, accent.primary);
+        expect(darkTheme.extension<TabletopColors>()?.glowAccent, accent.accent);
+
+        final oledTheme = AppTheme.buildTheme(
+          brightness: Brightness.dark,
+          accent: accent,
+          oledPitchBlack: true,
+        );
+        expect(oledTheme.scaffoldBackgroundColor, const Color(0xFF000000));
+        expect(oledTheme.colorScheme.primary, accent.primary);
+      }
+    });
+
     test('TabletopColors lerp operates cleanly', () {
       final dark = TabletopColors.createDark(FantasyAccent.paladinGold);
       final light = TabletopColors.createLight(FantasyAccent.paladinGold);
