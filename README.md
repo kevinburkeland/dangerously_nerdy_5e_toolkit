@@ -119,7 +119,6 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── pwa_helper.dart         # PWA installation prompt helper (cross-platform stub/web)
 │   │   └── secure_random.dart      # Cryptographically secure RNG generator
 │   └── widgets/                    # Modular UI components
-│       ├── animate_objects/        # Active session & squad cards
 │       ├── batch_attack/           # Batch attack results summary
 │       ├── dice_roller/            # 3D dice visualizer, pool builders, roll history, & presets
 │       ├── dialogs/                # Modals for presets, custom dice, mass damage, statblocks, & rules
@@ -127,6 +126,7 @@ dangerously_nerdy_5e_toolkit/
 │       ├── fx/                     # Critical hit visual effects & overlays
 │       ├── interactive/            # Interactive tactile cards & buttons
 │       ├── meters/                 # Animated resource meters & HP bars
+│       ├── minions/                # Active session header & squad controls
 │       ├── object_card.dart        # Individual minion HP card with statblock inspector
 │       ├── room_banner_widget.dart # Live room connection status banner
 │       ├── spell_reference.dart    # Interactive 5e spell rulebook table

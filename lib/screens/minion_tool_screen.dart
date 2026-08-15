@@ -5,7 +5,7 @@ import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../utils/secure_random.dart';
-import '../widgets/animate_objects/active_session_card.dart';
+import '../widgets/minions/active_session_header.dart';
 import '../widgets/batch_attack_dialog.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
