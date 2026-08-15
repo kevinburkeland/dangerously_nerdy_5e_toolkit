@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../services/haptic_service.dart';
 
 /// A pure Flutter, vector-rendered tech + fantasy d20 logo.
-/// Combines crisp polyhedral geometry with arcane-cybernetic reticle rings,
-/// illuminated facet gradients, and circuit node accents.
+/// 100% Vector geometry (no external font dependencies), ensuring pixel-perfect
+/// rendering across all platforms, web, and exported icons.
 class AppLogo extends StatefulWidget {
   final double size;
   final Color? primaryColor;
@@ -181,8 +181,8 @@ class D20TechPainter extends CustomPainter {
 
     // Radius constants designed to comfortably fit inside 100x100 space with margin
     final d20Radius = 30.0 * scale;
-    final ringRadius = 38.0 * scale;
-    final outerRingRadius = 42.0 * scale;
+    final ringRadius = 37.5 * scale;
+    final outerRingRadius = 41.5 * scale;
 
     // 1. Ambient Background Glow
     if (showGlow) {
@@ -319,8 +319,8 @@ class D20TechPainter extends CustomPainter {
       }
     }
 
-    // 7. Center "DN" Monogram Crest
-    _paintCenterMonogram(canvas, center, scale);
+    // 7. Pure Vector "DN" Monogram Crest (100% vector, zero font dependencies)
+    _paintVectorDNMonogram(canvas, center, scale);
   }
 
   void _paintTechRings(
@@ -371,6 +371,9 @@ class D20TechPainter extends CustomPainter {
         ..color = secondaryColor.withValues(alpha: 0.85);
 
       for (int i = 0; i < 4; i++) {
+        // Skip bottom cardinal tick if curved branding is rendered along the bottom
+        if (scale >= 0.5 && i == 1) continue;
+
         final angle = rotation + (i * math.pi / 2);
         final pStart = Offset(
           center.dx + (outerRingRadius - 2 * scale) * math.cos(angle),
@@ -384,56 +387,40 @@ class D20TechPainter extends CustomPainter {
       }
     }
 
-    // High-tech curved brand lettering along outer arc for displays
+    // High-tech curved vector brand lettering along outer arc (pure vector)
     if (scale >= 0.5) {
-      _paintCurvedBrandText(canvas, center, outerRingRadius + 4.0 * scale, scale);
+      _paintVectorCurvedBrandText(canvas, center, outerRingRadius + 4.2 * scale, scale);
     }
   }
 
-  void _paintCurvedBrandText(
+  void _paintVectorCurvedBrandText(
     Canvas canvas,
     Offset center,
     double radius,
     double scale,
   ) {
     const brandText = 'DANGEROUSLY NERDY';
-    final fontSize = 4.0 * scale;
-    const charSpacing = 0.082; // radians per character
+    final charH = 3.4 * scale;
+    final charW = 2.3 * scale;
+    const charSpacing = 0.076; // radians per character
     const totalAngle = (brandText.length - 1) * charSpacing;
-    const startAngle = (math.pi / 2) - (totalAngle / 2);
+    const startAngle = (math.pi / 2) + (totalAngle / 2);
+
+    final textPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = secondaryColor;
 
     for (int i = 0; i < brandText.length; i++) {
       final char = brandText[i];
       if (char == ' ') continue;
 
-      final angle = startAngle + (i * charSpacing);
-      final textSpan = TextSpan(
-        text: char,
-        style: TextStyle(
-          color: secondaryColor,
-          fontSize: fontSize,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.5,
-          shadows: [
-            Shadow(
-              color: Colors.black.withValues(alpha: 0.8),
-              offset: const Offset(0.5, 0.5),
-              blurRadius: 1.5,
-            ),
-          ],
-        ),
-      );
-
-      final tp = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-      )..layout();
-
+      final angle = startAngle - (i * charSpacing);
       canvas.save();
       canvas.translate(center.dx, center.dy);
       canvas.rotate(angle - math.pi / 2);
-      canvas.translate(-tp.width / 2, radius - (tp.height / 2));
-      tp.paint(canvas, Offset.zero);
+      canvas.translate(-charW / 2, radius);
+
+      _drawVectorGlyph(canvas, char, charW, charH, textPaint);
       canvas.restore();
     }
   }
@@ -494,50 +481,270 @@ class D20TechPainter extends CustomPainter {
     canvas.drawPath(path, fillPaint);
   }
 
-  void _paintCenterMonogram(Canvas canvas, Offset center, double scale) {
-    if (scale < 0.18) return;
+  /// Pure Vector DN Monogram - draws stylized D and N vector paths
+  void _paintVectorDNMonogram(Canvas canvas, Offset center, double scale) {
+    if (scale < 0.16) return;
 
-    // Crisp high-contrast DN typography
-    final fontSize = 12.5 * scale;
-    final textSpan = TextSpan(
-      text: 'DN',
-      style: TextStyle(
-        color: const Color(0xFFFFFFFF),
-        fontSize: fontSize,
-        fontWeight: FontWeight.w900,
-        letterSpacing: -0.3 * scale,
-        shadows: [
-          Shadow(
-            color: Colors.black.withValues(alpha: 0.95),
-            offset: Offset(0.8 * scale, 0.8 * scale),
-            blurRadius: 2.0 * scale,
-          ),
-          Shadow(
-            color: secondaryColor,
-            offset: Offset.zero,
-            blurRadius: 5.0 * scale,
-          ),
-          Shadow(
-            color: primaryColor,
-            offset: Offset.zero,
-            blurRadius: 8.0 * scale,
-          ),
-        ],
-      ),
-    );
+    final s = scale;
+    final cx = center.dx;
+    final cy = center.dy + 0.5 * s;
 
-    final textPainter = TextPainter(
-      text: textSpan,
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-    );
+    // Glowing cyan backdrop shadow
+    final glowPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = secondaryColor.withValues(alpha: 0.8);
 
-    textPainter.layout();
-    final textCenter = Offset(
-      center.dx - (textPainter.width / 2),
-      center.dy - (textPainter.height / 2) + (0.5 * scale),
-    );
-    textPainter.paint(canvas, textCenter);
+    // Crisp white foreground vector fill
+    final whitePaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFFFFFFFF);
+
+    final dPath = Path()
+      ..moveTo(cx - 7.5 * s, cy - 5.5 * s)
+      ..lineTo(cx - 2.5 * s, cy - 5.5 * s)
+      ..lineTo(cx - 0.5 * s, cy - 3.5 * s)
+      ..lineTo(cx - 0.5 * s, cy + 3.5 * s)
+      ..lineTo(cx - 2.5 * s, cy + 5.5 * s)
+      ..lineTo(cx - 7.5 * s, cy + 5.5 * s)
+      ..close()
+      // Cutout for the D
+      ..moveTo(cx - 5.3 * s, cy - 3.3 * s)
+      ..lineTo(cx - 3.2 * s, cy - 3.3 * s)
+      ..lineTo(cx - 2.4 * s, cy - 2.0 * s)
+      ..lineTo(cx - 2.4 * s, cy + 2.0 * s)
+      ..lineTo(cx - 3.2 * s, cy + 3.3 * s)
+      ..lineTo(cx - 5.3 * s, cy + 3.3 * s)
+      ..close();
+    dPath.fillType = PathFillType.evenOdd;
+
+    final nPath = Path()
+      ..moveTo(cx + 0.8 * s, cy - 5.5 * s)
+      ..lineTo(cx + 2.8 * s, cy - 5.5 * s)
+      ..lineTo(cx + 5.8 * s, cy + 1.2 * s)
+      ..lineTo(cx + 5.8 * s, cy - 5.5 * s)
+      ..lineTo(cx + 7.8 * s, cy - 5.5 * s)
+      ..lineTo(cx + 7.8 * s, cy + 5.5 * s)
+      ..lineTo(cx + 5.8 * s, cy + 5.5 * s)
+      ..lineTo(cx + 2.8 * s, cy - 1.2 * s)
+      ..lineTo(cx + 2.8 * s, cy + 5.5 * s)
+      ..lineTo(cx + 0.8 * s, cy + 5.5 * s)
+      ..close();
+
+    // Draw shadow/glow slightly offset
+    canvas.save();
+    canvas.translate(0.5 * s, 0.5 * s);
+    canvas.drawPath(dPath, glowPaint);
+    canvas.drawPath(nPath, glowPaint);
+    canvas.restore();
+
+    // Draw white foreground paths
+    canvas.drawPath(dPath, whitePaint);
+    canvas.drawPath(nPath, whitePaint);
+  }
+
+  /// Pure vector glyph generator for the 11 characters in "DANGEROUSLY NERDY"
+  void _drawVectorGlyph(Canvas canvas, String char, double w, double h, Paint paint) {
+    final path = Path();
+
+    switch (char) {
+      case 'D':
+        path.moveTo(0, 0);
+        path.lineTo(w * 0.65, 0);
+        path.lineTo(w, h * 0.35);
+        path.lineTo(w, h * 0.65);
+        path.lineTo(w * 0.65, h);
+        path.lineTo(0, h);
+        path.close();
+        path.moveTo(w * 0.28, h * 0.25);
+        path.lineTo(w * 0.55, h * 0.25);
+        path.lineTo(w * 0.72, h * 0.4);
+        path.lineTo(w * 0.72, h * 0.6);
+        path.lineTo(w * 0.55, h * 0.75);
+        path.lineTo(w * 0.28, h * 0.75);
+        path.close();
+        path.fillType = PathFillType.evenOdd;
+        break;
+
+      case 'A':
+        path.moveTo(w * 0.5, 0);
+        path.lineTo(w, h);
+        path.lineTo(w * 0.72, h);
+        path.lineTo(w * 0.58, h * 0.65);
+        path.lineTo(w * 0.42, h * 0.65);
+        path.lineTo(w * 0.28, h);
+        path.lineTo(0, h);
+        path.close();
+        path.moveTo(w * 0.5, h * 0.22);
+        path.lineTo(w * 0.62, h * 0.48);
+        path.lineTo(w * 0.38, h * 0.48);
+        path.close();
+        path.fillType = PathFillType.evenOdd;
+        break;
+
+      case 'N':
+        path.moveTo(0, 0);
+        path.lineTo(w * 0.28, 0);
+        path.lineTo(w * 0.72, h * 0.7);
+        path.lineTo(w * 0.72, 0);
+        path.lineTo(w, 0);
+        path.lineTo(w, h);
+        path.lineTo(w * 0.72, h);
+        path.lineTo(w * 0.28, h * 0.3);
+        path.lineTo(w * 0.28, h);
+        path.lineTo(0, h);
+        path.close();
+        break;
+
+      case 'G':
+        path.moveTo(w, h * 0.25);
+        path.lineTo(w * 0.75, 0);
+        path.lineTo(w * 0.25, 0);
+        path.lineTo(0, h * 0.25);
+        path.lineTo(0, h * 0.75);
+        path.lineTo(w * 0.25, h);
+        path.lineTo(w * 0.8, h);
+        path.lineTo(w, h * 0.8);
+        path.lineTo(w, h * 0.45);
+        path.lineTo(w * 0.45, h * 0.45);
+        path.lineTo(w * 0.45, h * 0.68);
+        path.lineTo(w * 0.75, h * 0.68);
+        path.lineTo(w * 0.75, h * 0.78);
+        path.lineTo(w * 0.28, h * 0.78);
+        path.lineTo(w * 0.24, h * 0.72);
+        path.lineTo(w * 0.24, h * 0.28);
+        path.lineTo(w * 0.28, h * 0.22);
+        path.lineTo(w * 0.72, h * 0.22);
+        path.lineTo(w * 0.78, h * 0.28);
+        path.lineTo(w, h * 0.25);
+        path.close();
+        break;
+
+      case 'E':
+        path.moveTo(0, 0);
+        path.lineTo(w, 0);
+        path.lineTo(w, h * 0.22);
+        path.lineTo(w * 0.26, h * 0.22);
+        path.lineTo(w * 0.26, h * 0.4);
+        path.lineTo(w * 0.85, h * 0.4);
+        path.lineTo(w * 0.85, h * 0.6);
+        path.lineTo(w * 0.26, h * 0.6);
+        path.lineTo(w * 0.26, h * 0.78);
+        path.lineTo(w, h * 0.78);
+        path.lineTo(w, h);
+        path.lineTo(0, h);
+        path.close();
+        break;
+
+      case 'R':
+        path.moveTo(0, 0);
+        path.lineTo(w * 0.75, 0);
+        path.lineTo(w, h * 0.25);
+        path.lineTo(w, h * 0.45);
+        path.lineTo(w * 0.75, h * 0.6);
+        path.lineTo(w, h);
+        path.lineTo(w * 0.7, h);
+        path.lineTo(w * 0.5, h * 0.62);
+        path.lineTo(w * 0.26, h * 0.62);
+        path.lineTo(w * 0.26, h);
+        path.lineTo(0, h);
+        path.close();
+        path.moveTo(w * 0.26, h * 0.2);
+        path.lineTo(w * 0.62, h * 0.2);
+        path.lineTo(w * 0.74, h * 0.3);
+        path.lineTo(w * 0.74, h * 0.4);
+        path.lineTo(w * 0.62, h * 0.45);
+        path.lineTo(w * 0.26, h * 0.45);
+        path.close();
+        path.fillType = PathFillType.evenOdd;
+        break;
+
+      case 'O':
+        path.moveTo(w * 0.25, 0);
+        path.lineTo(w * 0.75, 0);
+        path.lineTo(w, h * 0.25);
+        path.lineTo(w, h * 0.75);
+        path.lineTo(w * 0.75, h);
+        path.lineTo(w * 0.25, h);
+        path.lineTo(0, h * 0.75);
+        path.lineTo(0, h * 0.25);
+        path.close();
+        path.moveTo(w * 0.28, h * 0.22);
+        path.lineTo(w * 0.72, h * 0.22);
+        path.lineTo(w * 0.74, h * 0.3);
+        path.lineTo(w * 0.74, h * 0.7);
+        path.lineTo(w * 0.72, h * 0.78);
+        path.lineTo(w * 0.28, h * 0.78);
+        path.lineTo(w * 0.26, h * 0.7);
+        path.lineTo(w * 0.26, h * 0.3);
+        path.close();
+        path.fillType = PathFillType.evenOdd;
+        break;
+
+      case 'U':
+        path.moveTo(0, 0);
+        path.lineTo(w * 0.26, 0);
+        path.lineTo(w * 0.26, h * 0.72);
+        path.lineTo(w * 0.35, h * 0.78);
+        path.lineTo(w * 0.65, h * 0.78);
+        path.lineTo(w * 0.74, h * 0.72);
+        path.lineTo(w * 0.74, 0);
+        path.lineTo(w, 0);
+        path.lineTo(w, h * 0.75);
+        path.lineTo(w * 0.75, h);
+        path.lineTo(w * 0.25, h);
+        path.lineTo(0, h * 0.75);
+        path.close();
+        break;
+
+      case 'S':
+        path.moveTo(w, h * 0.2);
+        path.lineTo(w * 0.8, 0);
+        path.lineTo(w * 0.2, 0);
+        path.lineTo(0, h * 0.2);
+        path.lineTo(0, h * 0.45);
+        path.lineTo(w * 0.2, h * 0.55);
+        path.lineTo(w * 0.8, h * 0.65);
+        path.lineTo(w, h * 0.75);
+        path.lineTo(w, h * 0.8);
+        path.lineTo(w * 0.8, h);
+        path.lineTo(w * 0.2, h);
+        path.lineTo(0, h * 0.8);
+        path.lineTo(w * 0.24, h * 0.8);
+        path.lineTo(w * 0.28, h * 0.8);
+        path.lineTo(w * 0.75, h * 0.8);
+        path.lineTo(w * 0.75, h * 0.7);
+        path.lineTo(w * 0.2, h * 0.58);
+        path.lineTo(0, h * 0.45);
+        path.lineTo(0, h * 0.2);
+        path.lineTo(w * 0.2, 0);
+        path.close();
+        break;
+
+      case 'L':
+        path.moveTo(0, 0);
+        path.lineTo(w * 0.26, 0);
+        path.lineTo(w * 0.26, h * 0.78);
+        path.lineTo(w, h * 0.78);
+        path.lineTo(w, h);
+        path.lineTo(0, h);
+        path.close();
+        break;
+
+      case 'Y':
+        path.moveTo(0, 0);
+        path.lineTo(w * 0.28, 0);
+        path.lineTo(w * 0.5, h * 0.42);
+        path.lineTo(w * 0.72, 0);
+        path.lineTo(w, 0);
+        path.lineTo(w * 0.64, h * 0.55);
+        path.lineTo(w * 0.64, h);
+        path.lineTo(w * 0.36, h);
+        path.lineTo(w * 0.36, h * 0.55);
+        path.close();
+        break;
+    }
+
+    canvas.drawPath(path, paint);
   }
 
   @override
