@@ -8,6 +8,7 @@ import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/secure_random.dart';
+import '../app_logo.dart';
 import '../batch_attack/batch_attack_results_card.dart';
 
 class BatchAttackDialog extends StatefulWidget {
@@ -160,7 +161,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                 Expanded(
                   child: Row(
                     children: [
-                      Image.asset('assets/images/logo.png', width: 32, height: 32),
+                      const AppLogo(size: 32),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(

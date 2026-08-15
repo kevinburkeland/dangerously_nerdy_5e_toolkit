@@ -6,6 +6,7 @@ import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/dialogs/legal_dialogs.dart';
+import '../widgets/app_logo.dart';
 import 'dm_reference_screen.dart';
 import 'settings_screen.dart';
 
@@ -61,7 +62,7 @@ class _LandingScreenState extends State<LandingScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/images/logo.png', width: 32, height: 32),
+            const AppLogo(size: 32),
             const SizedBox(width: 10),
             Flexible(
               child: Semantics(
@@ -167,22 +168,10 @@ class _LandingScreenState extends State<LandingScreen> {
                       children: [
                         Row(
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                                    blurRadius: 12,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Semantics(
-                                label: 'DangerouslyNerdy Dragon Logo',
-                                image: true,
-                                child: Image.asset('assets/images/logo.png', width: 68, height: 68),
-                              ),
+                            const AppLogo(
+                              size: 68,
+                              showGlow: true,
+                              showRings: true,
                             ),
                             const SizedBox(width: 16),
                             Expanded(

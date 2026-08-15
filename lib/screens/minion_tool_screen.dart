@@ -14,6 +14,7 @@ import '../widgets/dialogs/value_input_dialog.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
 import '../widgets/minions/object_card.dart';
 import '../widgets/minions/squad_builder.dart';
+import '../widgets/app_logo.dart';
 import '../widgets/room_banner_widget.dart';
 import '../widgets/spell_reference.dart';
 
@@ -188,7 +189,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
               : null,
           title: Row(
             children: [
-              Image.asset('assets/images/logo.png', width: 32, height: 32),
+              const AppLogo(size: 32),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

@@ -21,6 +21,7 @@ import '../widgets/dice_roller/latest_roll_card.dart';
 import '../widgets/dice_roller/roll_history_list.dart';
 import '../widgets/dice_roller/roll_presets_section.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
+import '../widgets/app_logo.dart';
 import '../widgets/room_banner_widget.dart';
 
 class DiceRollerScreen extends StatefulWidget {
@@ -332,12 +333,12 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                       onPressed: () => Navigator.pop(context),
                     )
                   : null,
-              title: Row(
+              title: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset('assets/images/logo.png', width: 32, height: 32),
-                  const SizedBox(width: 10),
-                  const Flexible(
+                  AppLogo(size: 32),
+                  SizedBox(width: 10),
+                  Flexible(
                     child: Text(
                       'Dice Roller',
                       overflow: TextOverflow.ellipsis,
