@@ -471,11 +471,13 @@ class _Polyhedral3DDicePainter extends CustomPainter {
         canvas.drawPath(faceData.path, _edgePaint);
 
         // Draw facet numbers:
-        // When settled: EXCLUSIVELY the winning face displays the result number (sphere dice draw centered medallion below).
-        // When rolling: Front-facing facets display numbers to convey rolling motion.
-        final shouldDrawNumber = isSettled
-            ? (isWinningFace && !isSphere)
-            : (isWinningFace || faceData.normal.z > 0.50);
+        // For standard polyhedra: When rolling, front facets show numbers; when settled, exclusively winning face shows number.
+        // For coin medallion dice (d100 / custom): Pure metallic coin flip while rolling, centered medallion when settled.
+        final shouldDrawNumber = isSphere
+            ? false
+            : (isSettled
+                ? isWinningFace
+                : (isWinningFace || faceData.normal.z > 0.50));
 
         if (shouldDrawNumber) {
           String faceDisplayText;

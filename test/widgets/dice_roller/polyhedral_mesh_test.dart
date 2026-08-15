@@ -92,12 +92,18 @@ void main() {
       expect(hasDirectTopFace, isTrue);
     });
 
-    test('createD20 produces a valid icosahedron mesh', () {
+    test('createD20 produces a valid icosahedron mesh with all outward normals', () {
       final mesh = PolyhedronMesh.createD20(radius: 72.0);
       expect(mesh.vertices.length, equals(12));
       expect(mesh.faces.length, equals(20));
       for (final face in mesh.faces) {
         expect(face.vertexIndices.length, equals(3));
+        final v0 = mesh.vertices[face.vertexIndices[0]];
+        final v1 = mesh.vertices[face.vertexIndices[1]];
+        final v2 = mesh.vertices[face.vertexIndices[2]];
+        final c = (v0 + v1 + v2) * (1.0 / 3.0);
+        final n = (v1 - v0).cross(v2 - v0).normalized();
+        expect(n.dot(c), greaterThan(0.5));
       }
     });
   });

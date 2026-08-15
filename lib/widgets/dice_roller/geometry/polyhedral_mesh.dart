@@ -282,78 +282,77 @@ class PolyhedronMesh {
   }
 
   /// 3D Canonical Top-Down Regular Icosahedron (d20) Geometry
-  /// Full 20-facet 3D solid with canonical C3 face-centered orientation.
+  /// Exact 20-facet regular icosahedron with canonical face-centered resting orientation.
   static PolyhedronMesh createD20({double radius = 72.0}) {
-    final r1 = sqrt(2.0 * (5.0 - sqrt(5.0)) / 15.0); // ~0.607062 (top face vertex radius)
-    final z1 = sqrt((5.0 + 2.0 * sqrt(5.0)) / 15.0); // ~0.794654 (top face depth)
-    final r2 = sqrt(2.0 * (5.0 + sqrt(5.0)) / 15.0); // ~0.982247 (mid-belt vertex radius)
-    final z2 = sqrt((5.0 - 2.0 * sqrt(5.0)) / 15.0); // ~0.187592 (mid-belt depth)
+    final phi = (1.0 + sqrt(5.0)) / 2.0; // Golden ratio ~1.6180339887
+    final scale = 1.0 / sqrt(1.0 + phi * phi);
 
-    const deg90 = pi / 2.0;
-    const deg210 = 7.0 * pi / 6.0;
-    const deg330 = 11.0 * pi / 6.0;
-    const deg30 = pi / 6.0;
-    const deg150 = 5.0 * pi / 6.0;
-    const deg270 = 3.0 * pi / 2.0;
-
-    final vertices = [
-      // Tier 1: Top Face Equilateral Triangle (Vertices 0, 1, 2)
-      Vec3(r1 * cos(deg90), r1 * sin(deg90), z1),   // 0: Top-Center
-      Vec3(r1 * cos(deg210), r1 * sin(deg210), z1), // 1: Bottom-Left
-      Vec3(r1 * cos(deg330), r1 * sin(deg330), z1), // 2: Bottom-Right
-
-      // Tier 2: Upper-Middle Ring (Vertices 3, 4, 5)
-      Vec3(r2 * cos(deg330 + deg60(1)), r2 * sin(deg330 + deg60(1)), z2), // 3: Right
-      Vec3(r2 * cos(deg90 + deg60(1)), r2 * sin(deg90 + deg60(1)), z2),   // 4: Top-Left
-      Vec3(r2 * cos(deg210 + deg60(1)), r2 * sin(deg210 + deg60(1)), z2), // 5: Bottom
-
-      // Tier 3: Lower-Middle Ring (Vertices 6, 7, 8)
-      Vec3(r2 * cos(deg90), r2 * sin(deg90), -z2),   // 6: Top
-      Vec3(r2 * cos(deg210), r2 * sin(deg210), -z2), // 7: Bottom-Left
-      Vec3(r2 * cos(deg330), r2 * sin(deg330), -z2), // 8: Bottom-Right
-
-      // Tier 4: Bottom Face Equilateral Triangle (Vertices 9, 10, 11)
-      Vec3(r1 * cos(deg270), r1 * sin(deg270), -z1), // 9: Bottom
-      Vec3(r1 * cos(deg30), r1 * sin(deg30), -z1),   // 10: Top-Right
-      Vec3(r1 * cos(deg150), r1 * sin(deg150), -z1), // 11: Top-Left
+    final rawVerts = [
+      Vec3(-scale, 0, phi * scale),  // 0
+      Vec3(scale, 0, phi * scale),   // 1
+      Vec3(-scale, 0, -phi * scale), // 2
+      Vec3(scale, 0, -phi * scale),  // 3
+      Vec3(0, phi * scale, scale),   // 4
+      Vec3(0, phi * scale, -scale),  // 5
+      Vec3(0, -phi * scale, scale),  // 6
+      Vec3(0, -phi * scale, -scale), // 7
+      Vec3(phi * scale, scale, 0),   // 8
+      Vec3(-phi * scale, scale, 0),  // 9
+      Vec3(phi * scale, -scale, 0),  // 10
+      Vec3(-phi * scale, -scale, 0), // 11
     ];
 
-    const faces = [
-      // 1. PRIMARY TOP-DOWN FACE: Centered equilateral triangle facing viewer (Face 20)
-      Polygon3D([0, 1, 2], faceNumber: 20),
+    const rawFaces = [
+      // 5 around vertex 0 (+Z tier)
+      Polygon3D([0, 1, 4], faceNumber: 20), // Top Face
+      Polygon3D([0, 4, 9], faceNumber: 14),
+      Polygon3D([0, 9, 11], faceNumber: 2),
+      Polygon3D([0, 11, 6], faceNumber: 8),
+      Polygon3D([0, 6, 1], faceNumber: 18),
 
-      // 2. Three closest adjacent faces directly connected to the top face
-      Polygon3D([0, 2, 3], faceNumber: 14), // Right slope
-      Polygon3D([0, 4, 1], faceNumber: 2),  // Left slope
-      Polygon3D([1, 5, 2], faceNumber: 8),  // Bottom slope
+      // 5 adjacent to above
+      Polygon3D([1, 8, 4], faceNumber: 6),
+      Polygon3D([4, 5, 9], faceNumber: 12),
+      Polygon3D([9, 2, 11], faceNumber: 10),
+      Polygon3D([11, 7, 6], faceNumber: 16),
+      Polygon3D([6, 10, 1], faceNumber: 4),
 
-      // 3. Outer upper corner faces (rendered as shaded 3D facets without text crowding)
-      Polygon3D([0, 3, 4], faceNumber: 18),
-      Polygon3D([2, 5, 3], faceNumber: 6),
-      Polygon3D([1, 4, 5], faceNumber: 12),
+      // 5 around vertex 3 (-Z tier) (Opposites sum to 21)
+      Polygon3D([3, 2, 5], faceNumber: 1),   // Opposite 20
+      Polygon3D([3, 5, 8], faceNumber: 7),   // Opposite 14
+      Polygon3D([3, 8, 10], faceNumber: 19), // Opposite 2
+      Polygon3D([3, 10, 7], faceNumber: 13), // Opposite 8
+      Polygon3D([3, 7, 2], faceNumber: 3),   // Opposite 18
 
-      // 4. Middle belt triangles
-      Polygon3D([4, 6, 0], faceNumber: 10),
-      Polygon3D([3, 8, 2], faceNumber: 16),
-      Polygon3D([5, 7, 1], faceNumber: 4),
-
-      Polygon3D([4, 3, 6], faceNumber: 15),
-      Polygon3D([3, 5, 8], faceNumber: 7),
-      Polygon3D([5, 4, 7], faceNumber: 11),
-
-      Polygon3D([6, 8, 3], faceNumber: 19),
-      Polygon3D([8, 7, 5], faceNumber: 3),
-      Polygon3D([7, 6, 4], faceNumber: 17),
-
-      // 5. Lower adjacent faces
-      Polygon3D([6, 10, 8], faceNumber: 9),
-      Polygon3D([8, 9, 7], faceNumber: 13),
-      Polygon3D([7, 11, 6], faceNumber: 5),
-
-      // 6. Bottom Face
-      Polygon3D([9, 10, 11], faceNumber: 1),
+      // 5 adjacent to bottom
+      Polygon3D([2, 9, 5], faceNumber: 15),
+      Polygon3D([5, 4, 8], faceNumber: 9),
+      Polygon3D([8, 1, 10], faceNumber: 11),
+      Polygon3D([10, 6, 7], faceNumber: 5),
+      Polygon3D([7, 11, 2], faceNumber: 17),
     ];
 
-    return PolyhedronMesh(vertices: vertices, faces: faces, radius: radius);
+    // Rotate so Face 0 normal aligns with +Z (camera)
+    final topFace = rawFaces[0];
+    final v0 = rawVerts[topFace.vertexIndices[0]];
+    final v1 = rawVerts[topFace.vertexIndices[1]];
+    final v2 = rawVerts[topFace.vertexIndices[2]];
+    final n0 = (v1 - v0).cross(v2 - v0).normalized();
+
+    final rotAxis = n0.cross(const Vec3(0, 0, 1)).normalized();
+    final rotAngle = acos(n0.z.clamp(-1.0, 1.0));
+
+    var rotated = rawVerts.map((v) => v.rotateAxis(rotAxis, rotAngle)).toList();
+
+    // Align top vertex of Face 0 pointing straight up (+Y)
+    final r0 = rotated[topFace.vertexIndices[0]];
+    final r1 = rotated[topFace.vertexIndices[1]];
+    final r2 = rotated[topFace.vertexIndices[2]];
+    final centerFace = (r0 + r1 + r2) * (1.0 / 3.0);
+    final topVert = [r0, r1, r2].reduce((a, b) => a.y > b.y ? a : b);
+    final alignAngle = atan2(topVert.x - centerFace.x, topVert.y - centerFace.y);
+    rotated = rotated.map((v) => v.rotateZ(alignAngle)).toList();
+
+    return PolyhedronMesh(vertices: rotated, faces: rawFaces, radius: radius);
   }
 }
