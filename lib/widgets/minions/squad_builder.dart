@@ -4,6 +4,7 @@ import '../../models/spell_session.dart';
 import '../../models/srd_summons/srd_summons_library.dart';
 import '../../services/a11y_service.dart';
 import '../../theme/app_theme.dart';
+import '../dialogs/creature_stat_block_dialog.dart';
 
 class SquadBuilderBottomSheet extends StatefulWidget {
   final SpellSession session;
@@ -280,53 +281,78 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: sb.accentColor.withValues(alpha: 0.4)),
                   ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: sb.accentColor.withValues(alpha: 0.2),
-                      child: Text(
-                        sb.crDisplay,
-                        style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.bold, fontSize: 10),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    clipBehavior: Clip.antiAlias,
+                    child: ListTile(
+                      onTap: () => CreatureStatBlockDialog.show(
+                        context,
+                        statBlock: sb,
+                        onAddToSquad: () => _addMinions(sb, 1),
                       ),
-                    ),
-                    title: Row(
-                      children: [
-                        Text(sb.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        if (sb.hasPackTactics) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text('Pack Tactics', style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ],
-                    ),
-                    subtitle: Text(
-                      'HP ${sb.maxHp} | AC ${sb.ac} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
-                      style: const TextStyle(color: Colors.white60, fontSize: 11),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.add_circle, color: Colors.amber),
-                          tooltip: 'Add 1 ${sb.name} to squad',
-                          onPressed: () => _addMinions(sb, 1),
+                      leading: CircleAvatar(
+                        backgroundColor: sb.accentColor.withValues(alpha: 0.2),
+                        child: Text(
+                          sb.crDisplay,
+                          style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.bold, fontSize: 10),
                         ),
-                        if (_selectedPreset.id != 'animate_objects')
-                          Semantics(
-                            label: 'Add 4 ${sb.name} to squad',
-                            button: true,
-                            excludeSemantics: true,
-                            child: TextButton(
-                              onPressed: () => _addMinions(sb, 4),
-                              child: const Text('+4', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                      ),
+                      title: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              sb.name,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                      ],
+                          if (sb.hasPackTactics) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text('Pack Tactics', style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ],
+                      ),
+                      subtitle: Text(
+                        'HP ${sb.maxHp} | AC ${sb.ac} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
+                        style: const TextStyle(color: Colors.white60, fontSize: 11),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.info_outline, color: sb.accentColor, size: 20),
+                            tooltip: '${sb.name} Full Stat Block',
+                            onPressed: () => CreatureStatBlockDialog.show(
+                              context,
+                              statBlock: sb,
+                              onAddToSquad: () => _addMinions(sb, 1),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle, color: Colors.amber),
+                            tooltip: 'Add 1 ${sb.name} to squad',
+                            onPressed: () => _addMinions(sb, 1),
+                          ),
+                          if (_selectedPreset.id != 'animate_objects')
+                            Semantics(
+                              label: 'Add 4 ${sb.name} to squad',
+                              button: true,
+                              excludeSemantics: true,
+                              child: TextButton(
+                                onPressed: () => _addMinions(sb, 4),
+                                child: const Text('+4', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );

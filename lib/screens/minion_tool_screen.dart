@@ -3,6 +3,7 @@ import '../models/animated_object.dart';
 import '../models/spell_session.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
+import '../services/minion_session_service.dart';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../utils/secure_random.dart';
 import '../widgets/minions/active_session_header.dart';
@@ -21,12 +22,16 @@ class MinionToolScreen extends StatefulWidget {
   final SummonPreset preset;
   final String? customTitle;
   final int defaultSpellLevel;
+  final MinionSessionService? sessionService;
+  final SpellSession? session;
 
   const MinionToolScreen({
     super.key,
     required this.preset,
     this.customTitle,
     this.defaultSpellLevel = 5,
+    this.sessionService,
+    this.session,
   });
 
   @override
@@ -34,41 +39,20 @@ class MinionToolScreen extends StatefulWidget {
 }
 
 class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerProviderStateMixin {
-  late SpellSession _session;
-  late TabController _tabController;
+  late final SpellSession _session;
+  late final TabController _tabController;
   final CriticalEffectController _critController = CriticalEffectController();
 
   @override
   void initState() {
     super.initState();
-    _session = SpellSession(
-      activePreset: widget.preset,
-      spellLevel: widget.defaultSpellLevel,
-    );
+    final service = widget.sessionService ?? MinionSessionService();
+    _session = widget.session ??
+        service.getOrCreateSession(
+          widget.preset,
+          defaultSpellLevel: widget.defaultSpellLevel,
+        );
     _tabController = TabController(length: 2, vsync: this);
-
-    _populateDefaultMinions();
-  }
-
-  void _populateDefaultMinions() {
-    _session.clearAll();
-    final id = widget.preset.id;
-
-    if (id == 'animate_objects') {
-      for (int i = 1; i <= widget.preset.defaultMinionCount; i++) {
-        _session.addObject(ObjectSize.tiny, customName: 'Silver Coin #$i');
-      }
-    } else if (id == 'bag_of_tricks') {
-      _session.rollBagOfTricks();
-    } else if (id == 'horn_of_valhalla') {
-      _session.rollHornOfValhalla('silver');
-    } else if (widget.preset.statBlocks.isNotEmpty) {
-      final defaultStat = widget.preset.statBlocks.first;
-      final count = widget.preset.defaultMinionCount;
-      for (int i = 0; i < count; i++) {
-        _session.addMinionFromStatBlock(defaultStat);
-      }
-    }
   }
 
   @override
