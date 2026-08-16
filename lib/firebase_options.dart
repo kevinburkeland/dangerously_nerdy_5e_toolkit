@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: String.fromEnvironment(
       'FIREBASE_WEB_API_KEY',
-      defaultValue: 'YOUR_FIREBASE_WEB_API_KEY',
+      defaultValue: 'AIzaSyDaC7IpuamGm1SrqoFijESvZm0dp5BrhT0',
     ),
     appId: '1:100633459477:web:e2403d51cf27ae5935c71c',
     messagingSenderId: '100633459477',
@@ -65,7 +65,7 @@ class DefaultFirebaseOptions {
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: String.fromEnvironment(
       'FIREBASE_ANDROID_API_KEY',
-      defaultValue: 'YOUR_FIREBASE_ANDROID_API_KEY',
+      defaultValue: 'AIzaSyBXozZ7BAoxMlC3my7ZZFOe5I1w7q-BkVM',
     ),
     appId: '1:100633459477:android:108b1e37965a2c9b35c71c',
     messagingSenderId: '100633459477',

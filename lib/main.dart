@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/settings_provider.dart';
@@ -42,6 +43,25 @@ void main() {
         e,
         stackTrace,
         reason: 'Firebase initialization failed; falling back to in-memory dice room mode',
+      );
+    }
+
+    try {
+      if (kIsWeb) {
+        await FirebaseAppCheck.instance.activate(
+          webProvider: ReCaptchaEnterpriseProvider('6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF'),
+        );
+      } else {
+        await FirebaseAppCheck.instance.activate(
+          androidProvider: AndroidProvider.playIntegrity,
+        );
+      }
+      logger.logInfo('Firebase App Check initialized successfully.');
+    } catch (e, stackTrace) {
+      logger.logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Firebase App Check initialization failed; falling back to standard Firestore access',
       );
     }
 
