@@ -132,5 +132,33 @@ void main() {
         expect(school.getLegibleColor(false), isNotNull);
       }
     });
+
+    test('Cleric spell list includes spells across all spell levels 0 through 9', () {
+      final clericSpells2014 = SpellbookLibrary.getSpellsByClass(SpellClass.cleric, edition: DmRulesEdition.v2014);
+      final clericSpells2024 = SpellbookLibrary.getSpellsByClass(SpellClass.cleric, edition: DmRulesEdition.v2024);
+
+      expect(clericSpells2014.isNotEmpty, isTrue);
+      expect(clericSpells2024.isNotEmpty, isTrue);
+
+      for (int lvl = 0; lvl <= 9; lvl++) {
+        expect(clericSpells2014.any((s) => s.level == lvl), isTrue, reason: 'Missing 2014 Cleric spell at level $lvl');
+        expect(clericSpells2024.any((s) => s.level == lvl), isTrue, reason: 'Missing 2024 Cleric spell at level $lvl');
+      }
+
+      // Check iconic high-level cleric spells
+      expect(SpellbookLibrary.getSpellById('spell_harm'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_heroes_feast'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_divine_word'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_fire_storm'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_regenerate'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_resurrection'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_holy_aura'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_earthquake'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_mass_heal'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_true_resurrection'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_gate'), isNotNull);
+      expect(SpellbookLibrary.getSpellById('spell_astral_projection'), isNotNull);
+    });
   });
 }
+
