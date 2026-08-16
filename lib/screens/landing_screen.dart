@@ -497,24 +497,13 @@ class _LandingScreenState extends State<LandingScreen> {
           size: 40,
           isDarkMode: isDark,
         );
-      case 'conjure_elemental':
+      case 'conjure_elementals' || 'conjure_elemental' || 'conjure_minor_elementals':
         glyphWidget = DndGlyph.spell(
           school: SpellSchool.conjuration,
           level: 5,
           actionRings: const [
             ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.fire),
             ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'conjure_minor_elementals':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.conjuration,
-          level: 4,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.cold),
-            ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold),
           ],
           size: 40,
           isDarkMode: isDark,
@@ -530,17 +519,7 @@ class _LandingScreenState extends State<LandingScreen> {
           size: 40,
           isDarkMode: isDark,
         );
-      case 'glyph_studio':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.divination,
-          level: 9,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.legendary, damageType: DamageAccent.radiant),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'bag_of_tricks':
+      case 'gray_bag' || 'rust_bag' || 'tan_bag' || 'bag_of_tricks':
         glyphWidget = DndGlyph.monster(
           creatureType: CreatureType.beast,
           crTier: 1,
@@ -556,11 +535,21 @@ class _LandingScreenState extends State<LandingScreen> {
           size: 40,
           isDarkMode: isDark,
         );
-      case 'figurines':
+      case 'figurines_of_wondrous_power' || 'figurines':
         glyphWidget = DndGlyph.monster(
           creatureType: CreatureType.construct,
           crTier: 2,
           actionRings: const [ActionTraitRing(ringType: ActionRingType.melee)],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'glyph_studio':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.divination,
+          level: 9,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.legendary, damageType: DamageAccent.radiant),
+          ],
           size: 40,
           isDarkMode: isDark,
         );

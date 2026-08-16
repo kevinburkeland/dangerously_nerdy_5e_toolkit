@@ -1,7 +1,10 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../models/glyph_gallery_data.dart';
+import '../utils/glyph_image_exporter.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
 
@@ -40,6 +43,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
     const ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.fire, label: 'Primary Attack'),
     const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Breath Weapon'),
   ];
+  final GlobalKey _glyphBoundaryKey = GlobalKey();
 
   @override
   void initState() {
@@ -652,22 +656,28 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               ),
               child: Column(
                 children: [
-                  if (_builderIsSpell)
-                    DndGlyph.spell(
-                      school: _builderSchool,
-                      level: _builderLevelOrTier,
-                      actionRings: _builderRings,
-                      size: _builderSize,
-                      isDarkMode: isDark,
-                    )
-                  else
-                    DndGlyph.monster(
-                      creatureType: _builderCreature,
-                      crTier: _builderLevelOrTier,
-                      actionRings: _builderRings,
-                      size: _builderSize,
-                      isDarkMode: isDark,
+                  RepaintBoundary(
+                    key: _glyphBoundaryKey,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      color: Colors.transparent,
+                      child: _builderIsSpell
+                          ? DndGlyph.spell(
+                              school: _builderSchool,
+                              level: _builderLevelOrTier,
+                              actionRings: _builderRings,
+                              size: _builderSize,
+                              isDarkMode: isDark,
+                            )
+                          : DndGlyph.monster(
+                              creatureType: _builderCreature,
+                              crTier: _builderLevelOrTier,
+                              actionRings: _builderRings,
+                              size: _builderSize,
+                              isDarkMode: isDark,
+                            ),
                     ),
+                  ),
                   const SizedBox(height: 14),
                   Text(
                     _builderIsSpell
@@ -890,23 +900,80 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
           const SizedBox(height: 20),
 
-          // Code Export
-          ElevatedButton.icon(
-            onPressed: () {
-              final code = _builderIsSpell
-                  ? 'DndGlyph.spell(school: SpellSchool.${_builderSchool.name}, level: $_builderLevelOrTier, actionRings: [...])'
-                  : 'DndGlyph.monster(creatureType: CreatureType.${_builderCreature.name}, crTier: $_builderLevelOrTier, actionRings: [...])';
-              Clipboard.setData(ClipboardData(text: code));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Copied DndGlyph Dart snippet to clipboard!')),
-              );
-            },
-            icon: const Icon(Icons.copy),
-            label: const Text('Copy DndGlyph Dart Code'),
+          // Export & Download Buttons
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.cyanAccent,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: _downloadGlyphImage,
+                icon: const Icon(Icons.download, size: 20),
+                label: const Text('Download Glyph Image (PNG)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () {
+                  final code = _builderIsSpell
+                      ? 'DndGlyph.spell(school: SpellSchool.${_builderSchool.name}, level: $_builderLevelOrTier, actionRings: [...])'
+                      : 'DndGlyph.monster(creatureType: CreatureType.${_builderCreature.name}, crTier: $_builderLevelOrTier, actionRings: [...])';
+                  Clipboard.setData(ClipboardData(text: code));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Copied DndGlyph Dart snippet to clipboard!')),
+                  );
+                },
+                icon: const Icon(Icons.copy, size: 18),
+                label: const Text('Copy Dart Snippet', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _downloadGlyphImage() async {
+    try {
+      final boundary = _glyphBoundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final ui.Image image = await boundary.toImage(pixelRatio: 4.0);
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData != null) {
+        final bytes = byteData.buffer.asUint8List();
+        final name = _builderIsSpell
+            ? 'glyph_spell_${_builderSchool.name}_lv$_builderLevelOrTier.png'
+            : 'glyph_creature_${_builderCreature.name}_cr$_builderLevelOrTier.png';
+        await GlyphImageExporter.downloadPngBytes(bytes, name);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.greenAccent, size: 18),
+                  const SizedBox(width: 8),
+                  Text('Downloaded custom glyph image ($name)!'),
+                ],
+              ),
+              backgroundColor: const Color(0xFF0F172A),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error downloading glyph image: $e')),
+        );
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------

@@ -137,6 +137,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Interactive Custom Glyph Studio'), findsOneWidget);
       expect(find.text('Select Arcane Spell School:'), findsOneWidget);
+      expect(find.text('Download Glyph Image (PNG)'), findsOneWidget);
 
       // Switch to Full Style Guide Codex tab
       await tester.tap(find.text('Full Style Guide Codex'));
