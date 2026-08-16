@@ -99,5 +99,25 @@ void main() {
       await tester.tap(find.text('Reset All'));
       await tester.pumpAndSettle();
     });
+
+    testWidgets('displays newly added high-level spells and costly component badges', (tester) async {
+      await tester.pumpWidget(buildTestScreen());
+      await tester.pumpAndSettle();
+
+      // Search for Wish
+      final searchField = find.byType(TextField);
+      await tester.enterText(searchField, 'Wish');
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(SpellCard, 'Wish'), findsOneWidget);
+      expect(find.textContaining('9th Level'), findsOneWidget);
+
+      // Search for Revivify with costly diamond component
+      await tester.enterText(searchField, 'Revivify');
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(SpellCard, 'Revivify'), findsOneWidget);
+      expect(find.textContaining('300 gp'), findsOneWidget);
+    });
   });
 }
