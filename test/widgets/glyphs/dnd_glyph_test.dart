@@ -144,6 +144,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('D&D App Glyph System: Techno-Wireframe HUD & Arcane Codex'), findsOneWidget);
       expect(find.text('1. The 8 Arcane Schools of Magic'), findsOneWidget);
+      expect(find.text('3. The 4 Progression Tiers & Threat Architecture'), findsOneWidget);
+      expect(find.text('Tier 1 • Initiate / CR 0–4'), findsOneWidget);
     });
   });
 }

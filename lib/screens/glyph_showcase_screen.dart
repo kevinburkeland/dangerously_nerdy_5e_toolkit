@@ -1062,10 +1062,57 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
           const SizedBox(height: 32),
 
+          // Section 3: 4 Progression Tiers & Threat Architecture
+          const Text('3. The 4 Progression Tiers & Threat Architecture', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text(
+            'Glyphs dynamically evolve their wireframe density, structural framing, and holographic glow based on spell level or monster Challenge Rating (CR).',
+            style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _buildTierInfoCard(
+                tier: 1,
+                title: 'Tier 1 • Initiate / CR 0–4',
+                subtitle: 'Cantrips & Spell Levels 1–2 • Minor Summons',
+                description: 'Single-line minimalist wireframe silhouette (1.0dp) with subtle cardinal coordinate ticks and clean vector geometry.',
+                spellLevel: 1,
+                isDark: isDark,
+              ),
+              _buildTierInfoCard(
+                tier: 2,
+                title: 'Tier 2 • Adept / CR 5–10',
+                subtitle: 'Spell Levels 3–5 • Core Combat Summons',
+                description: 'Secondary circuit wireframe trace lines, faceted corner notches, terminal solder nodes, and gimbal targeting rings.',
+                spellLevel: 5,
+                isDark: isDark,
+              ),
+              _buildTierInfoCard(
+                tier: 3,
+                title: 'Tier 3 • Master / CR 11–16',
+                subtitle: 'Spell Levels 6–8 • Elite Planar Summons',
+                description: 'Nested concentric double-frame geometry, horizontal raster scanlines, corner registration brackets [ ], and amplified neon energy glow.',
+                spellLevel: 7,
+                isDark: isDark,
+              ),
+              _buildTierInfoCard(
+                tier: 4,
+                title: 'Tier 4 • Archmage & Mythic Apex / CR 17+',
+                subtitle: '9th-Level Pinnacle Magic • Legendary Behemoths',
+                description: 'Golden apex crowning starburst, 8-point radiating energy rays, dual outer harmonic aura loops, and maximum multi-layer neon bloom.',
+                spellLevel: 9,
+                isDark: isDark,
+              ),
+            ],
+          ),
+
           const SizedBox(height: 32),
 
-          // Section 3: Action Trait Ring Geometries (Shown on their own, decoupled from color)
-          const Text('3. Action & Attack Trait Ring Geometries (Standalone)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          // Section 4: Action Trait Ring Geometries (Shown on their own, decoupled from color)
+          const Text('4. Action & Attack Trait Ring Geometries (Standalone)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             'Each action trait possesses its own unique wireframe geometric profile. Rings are rendered in neutral titanium wireframe by default.',
@@ -1082,8 +1129,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
           const SizedBox(height: 32),
 
-          // Section 4: Damage Illumination Spectrum (Independent Energy Color Layer)
-          const Text('4. Damage Type Illumination Spectrum (11 Energy Types)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          // Section 5: Damage Illumination Spectrum (Independent Energy Color Layer)
+          const Text('5. Damage Type Illumination Spectrum (11 Energy Types)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             'Any action trait ring can dynamically illuminate in any of these 11 damage energy hues when an attack deals that specific damage type.',
@@ -1131,6 +1178,96 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
             }).toList(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTierInfoCard({
+    required int tier,
+    required String title,
+    required String subtitle,
+    required String description,
+    required int spellLevel,
+    required bool isDark,
+  }) {
+    final tierColor = switch (tier) {
+      1 => const Color(0xFF38BDF8), // Cyan
+      2 => const Color(0xFFFBBF24), // Amber
+      3 => const Color(0xFFA855F7), // Purple
+      4 => const Color(0xFFF43F5E), // Rose / Apex Red
+      _ => const Color(0xFF38BDF8),
+    };
+
+    return Card(
+      color: isDark ? const Color(0xFF090D16) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: tierColor.withValues(alpha: 0.5), width: 1.5),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 440),
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                DndGlyph.spell(
+                  school: SpellSchool.evocation,
+                  level: spellLevel,
+                  size: 54,
+                  isDarkMode: isDark,
+                ),
+                const SizedBox(height: 6),
+                DndGlyph.monster(
+                  creatureType: CreatureType.dragon,
+                  crTier: tier,
+                  size: 54,
+                  isDarkMode: isDark,
+                ),
+              ],
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: tierColor.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: tierColor.withValues(alpha: 0.6)),
+                    ),
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: tierColor,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white70 : Colors.black87,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
