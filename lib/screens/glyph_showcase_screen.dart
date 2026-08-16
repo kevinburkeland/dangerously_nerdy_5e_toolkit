@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import '../models/glyph_gallery_data.dart';
+import '../models/srd_summons/srd_summons_library.dart';
 import '../utils/glyph_image_exporter.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
@@ -39,7 +40,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
   int _builderLevelOrTier = 3;
   GlyphFrameShape? _builderShapeOverride;
   double _builderSize = 88.0;
-  final List<ActionTraitRing> _builderRings = [
+  List<ActionTraitRing> _builderRings = [
     const ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.fire, label: 'Primary Attack'),
     const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Breath Weapon'),
   ];
@@ -703,6 +704,116 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 24),
           const Divider(),
           const SizedBox(height: 12),
+
+          // Preset Importer Card
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: themeData.getPrimary(isDark).withValues(alpha: 0.35),
+                width: 1.2,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome_mosaic, size: 18, color: themeData.getPrimary(isDark)),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Auto-Populate / Read from Toolkit Presets:',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  children: [
+                    // Spell Preset Loader
+                    DropdownButtonHideUnderline(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                        ),
+                        child: DropdownButton<SummonPreset>(
+                          hint: const Text('🔮 Read Spell Card...', style: TextStyle(fontSize: 13)),
+                          icon: const Icon(Icons.arrow_drop_down, size: 18),
+                          isDense: true,
+                          items: SrdSummonsLibrary.allPresets.map((sp) {
+                            return DropdownMenuItem<SummonPreset>(
+                              value: sp,
+                              child: Text('${sp.name} (${sp.levelDisplay})', style: const TextStyle(fontSize: 13)),
+                            );
+                          }).toList(),
+                          onChanged: (sp) {
+                            if (sp != null) {
+                              setState(() {
+                                _builderIsSpell = true;
+                                _builderSchool = sp.glyphSchool;
+                                _builderLevelOrTier = sp.glyphSpellLevel;
+                                _builderShapeOverride = null;
+                                _builderRings = List.from(sp.glyphActionRings);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    // Creature Stat Block Loader
+                    DropdownButtonHideUnderline(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                        ),
+                        child: DropdownButton<MinionStatBlock>(
+                          hint: const Text('🐉 Read Minion Stat Block...', style: TextStyle(fontSize: 13)),
+                          icon: const Icon(Icons.arrow_drop_down, size: 18),
+                          isDense: true,
+                          items: () {
+                            final uniqueStatBlocks = <String, MinionStatBlock>{};
+                            for (final p in SrdSummonsLibrary.allPresets) {
+                              for (final sb in p.statBlocks) {
+                                uniqueStatBlocks[sb.id] = sb;
+                              }
+                            }
+                            return uniqueStatBlocks.values.map((sb) {
+                              return DropdownMenuItem<MinionStatBlock>(
+                                value: sb,
+                                child: Text('${sb.name} (${sb.typeDisplay} CR ${sb.crDisplay})', style: const TextStyle(fontSize: 13)),
+                              );
+                            }).toList();
+                          }(),
+                          onChanged: (sb) {
+                            if (sb != null) {
+                              setState(() {
+                                _builderIsSpell = false;
+                                _builderCreature = sb.glyphCreatureType;
+                                _builderLevelOrTier = sb.glyphCrTier;
+                                _builderShapeOverride = null;
+                                _builderRings = List.from(sb.glyphActionRings);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
 
           // Controls Section
           Row(

@@ -4,6 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_tokens.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_geometry.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/glyph_showcase_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 
 void main() {
   group('D&D Glyph System Tests', () {
@@ -183,6 +184,7 @@ void main() {
       // Verify shape override chip selection works
       final octChip = find.widgetWithText(ChoiceChip, 'Psionic Octagon');
       expect(octChip, findsOneWidget);
+      await tester.ensureVisible(octChip);
       await tester.tap(octChip);
       await tester.pumpAndSettle();
 
@@ -207,6 +209,56 @@ void main() {
         frameShapeOverride: GlyphFrameShape.tombstone,
       );
       expect(monsterGlyph.themeData.frameShape, equals(GlyphFrameShape.tombstone));
+    });
+
+    test('SummonPresetGlyphExt correctly dynamically reads all spell cards', () {
+      for (final preset in SrdSummonsLibrary.allPresets) {
+        expect(preset.glyphSchool, isNotNull);
+        expect(preset.glyphSpellLevel, inInclusiveRange(0, 9));
+        expect(preset.glyphActionRings, isNotNull);
+      }
+
+      // Concentration spell check
+      expect(
+        BeastSummons.conjureAnimalsPreset.glyphActionRings.any(
+          (r) => r.ringType == ActionRingType.concentration,
+        ),
+        isTrue,
+      );
+      expect(
+        ElementalSummons.conjureElementalPreset.glyphActionRings.any(
+          (r) => r.ringType == ActionRingType.concentration,
+        ),
+        isTrue,
+      );
+    });
+
+    test('MinionStatBlockGlyphExt correctly dynamically reads creature stat blocks with damage types', () {
+      // Beast
+      expect(SrdSummonsLibrary.wolf.glyphCreatureType, equals(CreatureType.beast));
+      expect(SrdSummonsLibrary.wolf.glyphCrTier, equals(1));
+      expect(SrdSummonsLibrary.wolf.glyphActionRings.first.ringType, equals(ActionRingType.melee));
+
+      // Construct
+      expect(SrdSummonsLibrary.tinyObject.glyphCreatureType, equals(CreatureType.construct));
+      expect(SrdSummonsLibrary.tinyObject.glyphCrTier, equals(1));
+
+      // Undead
+      expect(SrdSummonsLibrary.skeleton.glyphCreatureType, equals(CreatureType.undead));
+      expect(
+        SrdSummonsLibrary.skeleton.glyphActionRings.any((r) => r.ringType == ActionRingType.ranged),
+        isTrue,
+      );
+
+      // Elemental
+      expect(ElementalSummons.fireElemental.glyphCreatureType, equals(CreatureType.elemental));
+      expect(ElementalSummons.fireElemental.glyphCrTier, equals(2)); // CR 5 -> Tier 2
+      expect(
+        ElementalSummons.fireElemental.glyphActionRings.any(
+          (r) => r.damageType == DamageAccent.fire,
+        ),
+        isTrue,
+      );
     });
   });
 }

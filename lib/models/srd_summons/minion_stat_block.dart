@@ -166,10 +166,11 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
   }
 
   int get glyphCrTier {
-    if (crDisplay.contains('/') || crDisplay == '0' || crDisplay == '1' || crDisplay == '2' || crDisplay == '3' || crDisplay == '4') {
+    final clean = crDisplay.replaceAll(RegExp(r'[^0-9/]'), '');
+    if (clean.contains('/') || clean == '0' || clean == '1' || clean == '2' || clean == '3' || clean == '4') {
       return 1;
     }
-    final num = int.tryParse(crDisplay) ?? 1;
+    final num = int.tryParse(clean) ?? 1;
     if (num <= 4) return 1;
     if (num <= 10) return 2;
     if (num <= 16) return 3;

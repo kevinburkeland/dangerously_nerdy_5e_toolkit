@@ -99,17 +99,38 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  p.name,
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    DndGlyph.spell(
+                      school: p.glyphSchool,
+                      level: p.glyphSpellLevel,
+                      actionRings: p.glyphActionRings,
+                      size: 48,
+                      isDarkMode: true,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            p.name,
+                            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${p.levelDisplay} | ${p.castingTime}',
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Text(
-                  '${p.levelDisplay} | Casting Time: ${p.castingTime} | Range: ${p.range}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                ),
-                Text(
-                  'Components: ${p.components} | Duration: ${p.duration}',
+                  'Range: ${p.range} | Components: ${p.components} | Duration: ${p.duration}',
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],

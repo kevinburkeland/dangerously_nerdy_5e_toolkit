@@ -3,11 +3,11 @@ import '../../models/animated_object.dart';
 import '../../services/a11y_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import '../../models/srd_summons/minion_stat_block.dart';
 import '../dialogs/creature_stat_block_dialog.dart';
 import '../dialogs/set_object_hp_dialog.dart';
 import '../dialogs/value_input_dialog.dart';
 import '../glyphs/dnd_glyph.dart';
-import '../glyphs/glyph_tokens.dart';
 
 class ObjectCard extends StatelessWidget {
   final AnimatedObjectInstance object;
@@ -81,11 +81,9 @@ class ObjectCard extends StatelessWidget {
             Row(
               children: [
                 DndGlyph.monster(
-                  creatureType: CreatureType.construct,
-                  crTier: 1,
-                  actionRings: const [
-                    ActionTraitRing(ringType: ActionRingType.melee),
-                  ],
+                  creatureType: object.statBlock.glyphCreatureType,
+                  crTier: object.statBlock.glyphCrTier,
+                  actionRings: object.statBlock.glyphActionRings,
                   size: 28,
                   isDarkMode: theme.brightness == Brightness.dark,
                 ),
