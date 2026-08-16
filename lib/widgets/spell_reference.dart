@@ -184,8 +184,8 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
           ),
           const SizedBox(height: 10),
           _buildTipCard(
-            'SRD 5.1 Legal Notice',
-            'All text, formulas, and creature stats above are strictly taken from the SRD 5.1 under Creative Commons CC-BY-4.0 attribution.',
+            'SRD 5.1 & SRD 5.2 Legal Notice',
+            'All text, formulas, and creature stats above are strictly taken from the SRD 5.1 and SRD 5.2 under Creative Commons CC-BY-4.0 attribution.',
           ),
           _buildTipCard(
             'Action Economy & Squad Management',

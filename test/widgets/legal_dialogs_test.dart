@@ -74,7 +74,7 @@ void main() {
 
     expect(find.text('Legal & SRD 5.1 Attribution'), findsOneWidget);
     expect(find.text('Compatibility & Legal Disclaimer'), findsOneWidget);
-    expect(find.text('System Reference Document 5.1 (SRD 5.1) License'), findsOneWidget);
+    expect(find.text('System Reference Document 5.1 & 5.2 (SRD 5.1 & SRD 5.2) License'), findsOneWidget);
 
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
