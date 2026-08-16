@@ -159,6 +159,65 @@ void main() {
       expect(SpellbookLibrary.getSpellById('spell_gate'), isNotNull);
       expect(SpellbookLibrary.getSpellById('spell_astral_projection'), isNotNull);
     });
+
+    test('Every spellcasting class has rich spell coverage in both 2014 and 2024 editions', () {
+      for (final cls in SpellClass.values) {
+        final spells2014 = SpellbookLibrary.getSpellsByClass(cls, edition: DmRulesEdition.v2014);
+        final spells2024 = SpellbookLibrary.getSpellsByClass(cls, edition: DmRulesEdition.v2024);
+
+        expect(spells2014.isNotEmpty, isTrue, reason: 'Class ${cls.label} has no 2014 spells');
+        expect(spells2024.isNotEmpty, isTrue, reason: 'Class ${cls.label} has no 2024 spells');
+
+        // Full casters have spells across levels 0 to 9
+        if (cls == SpellClass.cleric || cls == SpellClass.wizard || cls == SpellClass.sorcerer || cls == SpellClass.druid || cls == SpellClass.bard || cls == SpellClass.warlock) {
+          final maxLevel = spells2024.map((s) => s.level).reduce((a, b) => a > b ? a : b);
+          expect(maxLevel, 9, reason: 'Full caster ${cls.label} should reach 9th level spells');
+        }
+      }
+    });
+
+    test('All changed spells have diffSummary and unchanged spells have uniform rules properties', () {
+      for (final spell in SpellbookLibrary.allSpells) {
+        final r2014 = spell.rules2014;
+        final r2024 = spell.rules2024;
+
+        if (spell.isChangedIn2024) {
+          expect(
+            spell.diffSummary != null && spell.diffSummary!.isNotEmpty,
+            isTrue,
+            reason: '${spell.name} is marked changed but has no diffSummary',
+          );
+        } else {
+          // Unchanged spells should have identical core mechanical fields
+          expect(
+            r2014.castingTime,
+            r2024.castingTime,
+            reason: '${spell.name} castingTime mismatch for unchanged spell',
+          );
+          expect(
+            r2014.range,
+            r2024.range,
+            reason: '${spell.name} range mismatch for unchanged spell',
+          );
+          expect(
+            r2014.duration,
+            r2024.duration,
+            reason: '${spell.name} duration mismatch for unchanged spell',
+          );
+          expect(
+            r2014.concentration,
+            r2024.concentration,
+            reason: '${spell.name} concentration mismatch for unchanged spell',
+          );
+          expect(
+            r2014.ritual,
+            r2024.ritual,
+            reason: '${spell.name} ritual mismatch for unchanged spell',
+          );
+        }
+      }
+    });
   });
 }
+
 

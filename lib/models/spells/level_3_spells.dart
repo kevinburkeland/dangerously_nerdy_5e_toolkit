@@ -695,7 +695,7 @@ const List<SpellItem> srdLevel3Spells = [
         costInGp: 200,
         isConsumed: true,
       ),
-      duration: 'Until triggered',
+      duration: 'Until dispelled or triggered',
       classes: [SpellClass.artificer, SpellClass.bard, SpellClass.cleric, SpellClass.wizard],
       rollFormula: '5d8',
       scalingFormula: SpellScalingFormula(baseDiceCount: 5, diceSides: 8, dicePerSlotLevel: 1),

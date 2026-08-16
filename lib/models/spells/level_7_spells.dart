@@ -279,7 +279,7 @@ const List<SpellItem> srdLevel7Spells = [
         costInGp: 1000,
         isConsumed: true,
       ),
-      duration: 'Until triggered',
+      duration: 'Until dispelled or triggered',
       classes: [SpellClass.bard, SpellClass.cleric, SpellClass.wizard],
       description: [
         'Creates an arcane ward triggering catastrophic area effects (Death, Pain, Stun, Insanity, Discord, Sleep, Fear, or Hopelessness) in a 60-ft radius.',

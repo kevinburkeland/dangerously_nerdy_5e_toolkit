@@ -234,8 +234,8 @@ const List<SpellItem> srdCantrips = [
       rollFormula: '1d10',
       damageOrHealType: 'Force',
       description: [
-        'A beam of crackling energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Force damage.',
-        'Cantrip Upgrade: You launch an additional beam at 5th level (2 beams), 11th level (3 beams), and 17th level (4 beams). You can direct the beams at the same target or at different ones.',
+        'A beam of crackling energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 force damage.',
+        'The spell creates more than one beam when you reach higher levels: two beams at 5th level, three beams at 11th level, and four beams at 17th level.',
       ],
     ),
   ),
@@ -271,7 +271,7 @@ const List<SpellItem> srdCantrips = [
       rollFormula: '1d10',
       damageOrHealType: 'Fire',
       description: [
-        'You hurl a mote of fire at a creature or object within range. Make a ranged spell attack. On a hit, the target takes 1d10 Fire damage.',
+        'You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 fire damage.',
         'A flammable object hit by this spell ignites if it isn’t being worn or carried.',
         'Cantrip Upgrade: Damage increases by 1d10 at 5th level (2d10), 11th level (3d10), and 17th level (4d10).',
       ],
@@ -310,7 +310,7 @@ const List<SpellItem> srdCantrips = [
       damageOrHealType: 'Cold',
       description: [
         'A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target.',
-        'On a hit, it takes 1d8 Cold damage, and its speed is reduced by 10 feet until the start of your next turn.',
+        'On a hit, it takes 1d8 cold damage, and its speed is reduced by 10 feet until the start of your next turn.',
         'Cantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
       ],
     ),
@@ -349,8 +349,8 @@ const List<SpellItem> srdCantrips = [
       damageOrHealType: 'Radiant',
       savingThrow: 'Dexterity',
       description: [
-        'Flame-like radiance descends on a creature you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 Radiant damage.',
-        'The target gains no benefit from cover for this save.',
+        'Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 radiant damage.',
+        'The target gains no benefit from cover for this saving throw.',
         'Cantrip Upgrade: Damage increases by 1d8 at 5th level (2d8), 11th level (3d8), and 17th level (4d8).',
       ],
     ),
@@ -425,7 +425,8 @@ const List<SpellItem> srdCantrips = [
       duration: '1 minute',
       classes: [SpellClass.artificer, SpellClass.bard, SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
       description: [
-        'A spectral, floating hand appears at a point within range. As a Magic action on subsequent turns, you can move the hand up to 30 feet and manipulate objects weighing up to 10 pounds.',
+        'A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration or until you dismiss it as an action.',
+        'You can use your action to control the hand (manipulate an object, open an unlocked door/container, stow or retrieve an item). The hand can’t attack, activate magic items, or carry more than 10 pounds.',
       ],
     ),
   ),
@@ -459,7 +460,9 @@ const List<SpellItem> srdCantrips = [
       duration: '1 minute',
       classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
       description: [
-        'You create a sound or an image of an object within range up to a 5-foot cube. Physical contact or an Investigation check reveals the illusion.',
+        'You create a sound or an image of an object within range that lasts for the duration.',
+        'If you create a sound, its volume can range from a whisper to a scream. If you create an image of an object, it must no larger than a 5-foot cube and cannot create light, sound, smell, or any other sensory effect.',
+        'Physical interaction with the image reveals it to be an illusion. An Investigation check against your Spell Save DC also reveals it.',
       ],
     ),
   ),
@@ -490,7 +493,8 @@ const List<SpellItem> srdCantrips = [
       duration: 'Up to 1 hour',
       classes: [SpellClass.artificer, SpellClass.bard, SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
       description: [
-        'You perform minor magical effects: sensory sparks/sounds, lighting/snuffing small flames, cleaning/soiling objects, warming/flavoring food, or crafting small handheld trinkets.',
+        'This spell is a minor magical trick that novice spellcasters use for practice.',
+        'You create an instantaneous harmless sensory effect, instantaneously light or snuff a candle/torch/campfire, clean or soil an object no larger than 1 cubic foot, chill/warm/flavor up to 1 cubic foot of nonliving material for 1 hour, or create a nonmagical trinket or illusory image that can fit in your hand until the end of your next turn.',
       ],
     ),
   ),

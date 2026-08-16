@@ -191,15 +191,15 @@ const List<SpellItem> srdLevel1Spells = [
     diffSummary: 'Remains the staple +5 AC reaction spell that completely nullifies Magic Missile.',
     tags: ['defense', 'ac', 'reaction', 'abjuration', 'level 1'],
     rules2014: SpellEditionDetails(
-      castingTime: '1 Reaction, which you take when you are hit by an attack or targeted by the magic missile spell',
-      reactionTrigger: 'You are hit by an attack or targeted by Magic Missile',
+      castingTime: '1 Reaction, which you take when you are hit by an attack roll or targeted by the Magic Missile spell',
+      reactionTrigger: 'You are hit by an attack roll or targeted by Magic Missile',
       range: 'Self',
       components: 'V, S',
       duration: '1 round',
       classes: [SpellClass.sorcerer, SpellClass.wizard],
       description: [
         'An invisible barrier of magical force appears and protects you.',
-        'Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from magic missile.',
+        'Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from Magic Missile.',
       ],
     ),
     rules2024: SpellEditionDetails(
@@ -249,9 +249,10 @@ const List<SpellItem> srdLevel1Spells = [
       scalingFormula: SpellScalingFormula(baseDiceCount: 1, diceSides: 4, staticBonus: 1),
       damageOrHealType: 'Force',
       description: [
-        'You create three glowing darts of magical force. Each dart hits a creature of your choice within range for 1d4 + 1 Force damage. Darts strike simultaneously.',
+        'You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range.',
+        'A dart deals 1d4 + 1 force damage to its target. The darts all strike simultaneously, and you can direct them to hit one creature or several.',
       ],
-      higherLevels: 'The spell creates one additional dart for each slot level above 1st.',
+      higherLevels: 'When you cast this spell using a spell slot of 2nd level or higher, the spell creates one more dart for each slot level above 1st.',
     ),
   ),
 
@@ -288,9 +289,10 @@ const List<SpellItem> srdLevel1Spells = [
       scalingFormula: SpellScalingFormula(baseDiceCount: 4, diceSides: 8, dicePerSlotLevel: 1),
       damageOrHealType: 'Radiant',
       description: [
-        'A flash of light streaks toward a creature within range. Make a ranged spell attack. On a hit, the target takes 4d8 Radiant damage, and the next attack roll against it before the end of your next turn has Advantage.',
+        'A flash of light streaks toward a creature of your choice within range. Make a ranged spell attack against the target.',
+        'On a hit, the target takes 4d8 radiant damage, and the next attack roll made against this target before the end of your next turn has advantage, thanks to the mystical dim light glittering on the target until then.',
       ],
-      higherLevels: 'Damage increases by 1d8 for each slot level above 1st.',
+      higherLevels: 'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st.',
     ),
   ),
 
@@ -325,9 +327,10 @@ const List<SpellItem> srdLevel1Spells = [
       concentration: true,
       classes: [SpellClass.cleric, SpellClass.paladin],
       description: [
-        'You bless up to three creatures of your choice within range. Whenever a target makes an attack roll or a saving throw, it adds 1d4 to the roll.',
+        'You bless up to three creatures of your choice within range.',
+        'Whenever a target makes an attack roll or a saving throw before the spell ends, the target can roll a d4 and add the number rolled to the attack roll or saving throw.',
       ],
-      higherLevels: 'You can target one additional creature for each slot level above 1st.',
+      higherLevels: 'When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.',
     ),
   ),
 
@@ -359,7 +362,8 @@ const List<SpellItem> srdLevel1Spells = [
       duration: '8 hours',
       classes: [SpellClass.sorcerer, SpellClass.wizard],
       description: [
-        'You touch a willing creature who isn’t wearing armor. The target’s base AC becomes 13 + its Dexterity modifier for the duration.',
+        'You touch a willing creature who isn’t wearing armor, and a protective magical force surrounds it until the spell ends.',
+        'The target’s base AC becomes 13 + its Dexterity modifier. The spell ends if the target dons armor or if you dismiss the spell as an action.',
       ],
     ),
   ),
@@ -400,9 +404,11 @@ const List<SpellItem> srdLevel1Spells = [
       damageOrHealType: 'Thunder',
       savingThrow: 'Constitution',
       description: [
-        'A wave of thunderous force sweeps out in a 15-foot cube originating from you. Each creature takes 2d8 Thunder damage and is pushed 10 feet away on a failed Constitution save, or half damage and no push on a success.',
+        'A wave of thunderous force sweeps out from you. Each creature in a 15-foot cube originating from you must make a Constitution saving throw.',
+        'On a failed save, a creature takes 2d8 thunder damage and is pushed 10 feet away from you. On a successful save, the creature takes half as much damage and isn’t pushed.',
+        'Unsecured objects in the area are automatically pushed 10 feet away, and the spell emits a thunderous boom audible out to 300 feet.',
       ],
-      higherLevels: 'Damage increases by 1d8 for each slot level above 1st.',
+      higherLevels: 'When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d8 for each slot level above 1st.',
     ),
   ),
 

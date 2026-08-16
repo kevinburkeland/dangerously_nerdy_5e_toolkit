@@ -191,7 +191,7 @@ const List<SpellItem> srdLevel6Spells = [
         costInGp: 1000,
         isConsumed: false,
       ),
-      duration: '1 day (or permanent if cast 30 consecutive days)',
+      duration: '1 day (or permanent if cast every day for 30 days)',
       ritual: true,
       classes: [SpellClass.cleric],
       rollFormula: '5d10',

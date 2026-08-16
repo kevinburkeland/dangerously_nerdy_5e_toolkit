@@ -350,7 +350,7 @@ const List<SpellItem> srdLevel8Spells = [
       castingTime: '1 Action',
       range: '60 feet',
       components: 'V',
-      duration: 'Instantaneous (stunned until save)',
+      duration: 'Instantaneous',
       classes: [SpellClass.bard, SpellClass.sorcerer, SpellClass.warlock, SpellClass.wizard],
       savingThrow: 'Constitution',
       description: [
@@ -395,7 +395,7 @@ const List<SpellItem> srdLevel8Spells = [
       ],
     ),
     rules2024: SpellEditionDetails(
-      castingTime: '1 Action',
+      castingTime: '1 hour',
       range: 'Touch',
       components: 'V, S, M (diamond worth 1,000 gp, flesh sample, vessel worth 2,000 gp)',
       materialDetails: SpellMaterialComponent(
