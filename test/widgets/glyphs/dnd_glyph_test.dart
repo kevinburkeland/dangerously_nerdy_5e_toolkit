@@ -188,6 +188,15 @@ void main() {
       await tester.tap(octChip);
       await tester.pumpAndSettle();
 
+      // Verify Dart Code Preview and Copy Button
+      final copyBtn = find.widgetWithText(ElevatedButton, 'Copy Dart Code');
+      expect(copyBtn, findsOneWidget);
+      await tester.ensureVisible(copyBtn);
+      await tester.tap(copyBtn);
+      await tester.pumpAndSettle();
+      expect(find.text('Generated Dart Widget Code:'), findsOneWidget);
+      expect(find.text('Copied complete DndGlyph Dart code to clipboard!'), findsOneWidget);
+
       // Switch to Full Style Guide Codex tab
       await tester.tap(find.text('Full Style Guide Codex'));
       await tester.pumpAndSettle();

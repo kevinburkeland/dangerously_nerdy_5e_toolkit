@@ -1033,44 +1033,142 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
           const SizedBox(height: 20),
 
-          // Export & Download Buttons
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.cyanAccent,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: _downloadGlyphImage,
-                icon: const Icon(Icons.download, size: 20),
-                label: const Text('Download Glyph Image (PNG)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 24),
+
+          // Code Preview & Export Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF030712) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+                width: 1.5,
               ),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.code, size: 18, color: themeData.getPrimary(isDark)),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Generated Dart Widget Code:',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeData.getPrimary(isDark),
+                        foregroundColor: isDark ? Colors.black : Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      onPressed: () {
+                        final code = _generateDartSnippet();
+                        Clipboard.setData(ClipboardData(text: code));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.greenAccent, size: 18),
+                                SizedBox(width: 8),
+                                Text('Copied complete DndGlyph Dart code to clipboard!'),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Copy Dart Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    ),
+                  ],
                 ),
-                onPressed: () {
-                  final code = _builderIsSpell
-                      ? 'DndGlyph.spell(school: SpellSchool.${_builderSchool.name}, level: $_builderLevelOrTier, actionRings: [...])'
-                      : 'DndGlyph.monster(creatureType: CreatureType.${_builderCreature.name}, crTier: $_builderLevelOrTier, actionRings: [...])';
-                  Clipboard.setData(ClipboardData(text: code));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied DndGlyph Dart snippet to clipboard!')),
-                  );
-                },
-                icon: const Icon(Icons.copy, size: 18),
-                label: const Text('Copy Dart Snippet', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF090D16) : Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                    ),
+                  ),
+                  child: SelectableText(
+                    _generateDartSnippet(),
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12.5,
+                      height: 1.45,
+                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Download PNG Button
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.cyanAccent,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: _downloadGlyphImage,
+            icon: const Icon(Icons.download, size: 20),
+            label: const Text('Download Glyph Image (PNG)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           ),
         ],
       ),
     );
+  }
+
+  String _generateDartSnippet() {
+    final buffer = StringBuffer();
+    final ringsList = _builderRings.map((r) {
+      final ringType = 'ActionRingType.${r.ringType.name}';
+      final damageType = r.damageType != null ? ', damageType: DamageAccent.${r.damageType!.name}' : '';
+      final label = r.label != null && r.label!.isNotEmpty ? ", label: '${r.label}'" : '';
+      return '    ActionTraitRing(ringType: $ringType$damageType$label),';
+    }).toList();
+
+    final ringsFormatted = ringsList.isEmpty
+        ? 'const []'
+        : 'const [\n${ringsList.join('\n')}\n  ]';
+
+    if (_builderIsSpell) {
+      buffer.writeln('DndGlyph.spell(');
+      buffer.writeln('  school: SpellSchool.${_builderSchool.name},');
+      buffer.writeln('  level: $_builderLevelOrTier,');
+      buffer.writeln('  size: ${_builderSize.toStringAsFixed(1)},');
+      if (_builderShapeOverride != null) {
+        buffer.writeln('  frameShapeOverride: GlyphFrameShape.${_builderShapeOverride!.name},');
+      }
+      buffer.writeln('  actionRings: $ringsFormatted,');
+      buffer.write(')');
+    } else {
+      buffer.writeln('DndGlyph.monster(');
+      buffer.writeln('  creatureType: CreatureType.${_builderCreature.name},');
+      buffer.writeln('  crTier: $_builderLevelOrTier,');
+      buffer.writeln('  size: ${_builderSize.toStringAsFixed(1)},');
+      if (_builderShapeOverride != null) {
+        buffer.writeln('  frameShapeOverride: GlyphFrameShape.${_builderShapeOverride!.name},');
+      }
+      buffer.writeln('  actionRings: $ringsFormatted,');
+      buffer.write(')');
+    }
+
+    return buffer.toString();
   }
 
   Future<void> _downloadGlyphImage() async {
