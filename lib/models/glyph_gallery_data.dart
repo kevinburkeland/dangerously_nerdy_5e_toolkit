@@ -121,7 +121,7 @@ class GlyphGalleryData {
       school: SpellSchool.conjuration,
       level: 5,
       actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.fire, label: 'Planar Tether'),
+        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Planar Tether'),
         ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Elemental Vortex Surge'),
       ],
       damageAccent: DamageAccent.fire,
@@ -135,7 +135,7 @@ class GlyphGalleryData {
       school: SpellSchool.conjuration,
       level: 4,
       actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.cold, label: 'Mephit Swarm Tether'),
+        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Mephit Swarm Tether'),
         ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold, label: 'Frost/Magma Breath'),
       ],
       damageAccent: DamageAccent.cold,
@@ -149,7 +149,7 @@ class GlyphGalleryData {
       school: SpellSchool.transmutation,
       level: 4,
       actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.poison, label: 'Chitin Mutation Grid'),
+        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Chitin Mutation Grid'),
         ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Venomous Stinger'),
       ],
       damageAccent: DamageAccent.poison,

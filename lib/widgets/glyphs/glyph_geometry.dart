@@ -437,17 +437,23 @@ class GlyphGeometry {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
 
-    // Determine concentric radii based on ring count with wide separation
+    // Determine concentric radii dynamically based on ring count (supports arbitrary number of rings)
+    final count = rings.length;
     final radii = <double>[];
-    if (rings.length == 1) {
+    if (count == 1) {
       radii.add(8.5 * scale);
-    } else if (rings.length == 2) {
+    } else if (count == 2) {
       radii.addAll([9.4 * scale, 7.0 * scale]);
     } else {
-      radii.addAll([9.6 * scale, 7.8 * scale, 6.0 * scale]);
+      final maxR = 9.6 * scale;
+      final minR = max(4.4 * scale, 9.6 * scale - (count - 1) * (1.5 * scale));
+      final step = (maxR - minR) / (count - 1);
+      for (int i = 0; i < count; i++) {
+        radii.add(maxR - (i * step));
+      }
     }
 
-    for (int idx = 0; idx < rings.length && idx < radii.length; idx++) {
+    for (int idx = 0; idx < rings.length; idx++) {
       final ring = rings[idx];
       final r = radii[idx];
       final ringColor = ring.getEffectiveColor(defaultColor, isDarkMode: isDarkMode);

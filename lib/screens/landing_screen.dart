@@ -502,7 +502,7 @@ class _LandingScreenState extends State<LandingScreen> {
           school: SpellSchool.conjuration,
           level: 5,
           actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.fire),
+            ActionTraitRing(ringType: ActionRingType.concentration),
             ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
           ],
           size: 40,
@@ -513,7 +513,7 @@ class _LandingScreenState extends State<LandingScreen> {
           school: SpellSchool.transmutation,
           level: 4,
           actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.poison),
+            ActionTraitRing(ringType: ActionRingType.concentration),
             ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison),
           ],
           size: 40,

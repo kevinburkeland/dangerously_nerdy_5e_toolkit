@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'glyph_tokens.dart';
 import 'glyph_geometry.dart';
@@ -41,6 +42,8 @@ class DndGlyph extends StatelessWidget {
   factory DndGlyph.spell({
     Key? key,
     required SpellSchool school,
+    GlyphFrameShape? frameShapeOverride,
+    GlyphThemeData? themeData,
     int level = 0,
     List<ActionTraitRing>? actionRings,
     DamageAccent? damageAccent,
@@ -51,13 +54,16 @@ class DndGlyph extends StatelessWidget {
     String? tooltip,
   }) {
     final rings = actionRings ?? (damageAccent != null
-        ? [ActionTraitRing(ringType: ActionRingType.concentration, damageType: damageAccent)]
+        ? [ActionTraitRing(ringType: ActionRingType.recharge, damageType: damageAccent)]
         : const <ActionTraitRing>[]);
+
+    final effectiveTheme = themeData ??
+        GlyphThemeData.fromSchool(school, shapeOverride: frameShapeOverride);
 
     return DndGlyph._(
       key: key,
       school: school,
-      themeData: GlyphThemeData.fromSchool(school),
+      themeData: effectiveTheme,
       tierLevel: level.clamp(0, 9),
       actionRings: rings,
       damageAccent: damageAccent,
@@ -73,6 +79,8 @@ class DndGlyph extends StatelessWidget {
   factory DndGlyph.monster({
     Key? key,
     required CreatureType creatureType,
+    GlyphFrameShape? frameShapeOverride,
+    GlyphThemeData? themeData,
     int crTier = 1,
     List<ActionTraitRing>? actionRings,
     ActionBadge? actionBadge,
@@ -86,10 +94,13 @@ class DndGlyph extends StatelessWidget {
         ? [_mapLegacyBadge(actionBadge)]
         : const <ActionTraitRing>[]);
 
+    final effectiveTheme = themeData ??
+        GlyphThemeData.fromCreature(creatureType, shapeOverride: frameShapeOverride);
+
     return DndGlyph._(
       key: key,
       creatureType: creatureType,
-      themeData: GlyphThemeData.fromCreature(creatureType),
+      themeData: effectiveTheme,
       tierLevel: crTier.clamp(1, 4),
       actionRings: rings,
       actionBadge: actionBadge,
@@ -120,18 +131,20 @@ class DndGlyph extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = isDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
 
-    Widget glyph = CustomPaint(
-      size: Size(size, size),
-      painter: _DndHolographicWireframePainter(
-        school: school,
-        creatureType: creatureType,
-        themeData: themeData,
-        tierLevel: tierLevel,
-        actionRings: actionRings,
-        damageAccent: damageAccent,
-        actionBadge: actionBadge,
-        isDarkMode: isDark,
-        isActive: isActive,
+    Widget glyph = RepaintBoundary(
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _DndHolographicWireframePainter(
+          school: school,
+          creatureType: creatureType,
+          themeData: themeData,
+          tierLevel: tierLevel,
+          actionRings: actionRings,
+          damageAccent: damageAccent,
+          actionBadge: actionBadge,
+          isDarkMode: isDark,
+          isActive: isActive,
+        ),
       ),
     );
 
@@ -374,7 +387,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
         old.creatureType != creatureType ||
         old.themeData != themeData ||
         old.tierLevel != tierLevel ||
-        old.actionRings != actionRings ||
+        !listEquals(old.actionRings, actionRings) ||
         old.damageAccent != damageAccent ||
         old.actionBadge != actionBadge ||
         old.isDarkMode != isDarkMode ||

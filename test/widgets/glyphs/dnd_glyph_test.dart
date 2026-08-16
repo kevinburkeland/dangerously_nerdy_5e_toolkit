@@ -73,7 +73,35 @@ void main() {
       expect(find.byType(DndGlyph), findsNWidgets(4));
     });
 
-    testWidgets('DndGlyph renders multi-ring action traits with damage coloring', (WidgetTester tester) async {
+    test('Concentration ActionTraitRing is strictly non-elemental and has orbital cyan color', () {
+      const concRingWithoutDamage = ActionTraitRing(ringType: ActionRingType.concentration);
+      const concRingWithAccidentalDamage = ActionTraitRing(
+        ringType: ActionRingType.concentration,
+        damageType: DamageAccent.fire,
+      );
+
+      // In dark mode
+      expect(
+        concRingWithoutDamage.getEffectiveColor(Colors.grey, isDarkMode: true),
+        equals(const Color(0xFF38BDF8)),
+      );
+      expect(
+        concRingWithAccidentalDamage.getEffectiveColor(Colors.grey, isDarkMode: true),
+        equals(const Color(0xFF38BDF8)),
+      );
+
+      // In light mode
+      expect(
+        concRingWithoutDamage.getEffectiveColor(Colors.grey, isDarkMode: false),
+        equals(const Color(0xFF0284C7)),
+      );
+      expect(
+        concRingWithAccidentalDamage.getEffectiveColor(Colors.grey, isDarkMode: false),
+        equals(const Color(0xFF0284C7)),
+      );
+    });
+
+    testWidgets('DndGlyph renders multi-ring action traits with damage coloring and arbitrary ring counts', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -92,10 +120,23 @@ void main() {
                   school: SpellSchool.transmutation,
                   level: 5,
                   actionRings: const [
-                    ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.force),
+                    ActionTraitRing(ringType: ActionRingType.concentration),
                     ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.force),
                   ],
                   size: 64,
+                ),
+                // 5 Concentric rings (arbitrary ring count support)
+                DndGlyph.monster(
+                  creatureType: CreatureType.dragon,
+                  crTier: 4,
+                  actionRings: const [
+                    ActionTraitRing(ringType: ActionRingType.legendary, damageType: DamageAccent.fire),
+                    ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
+                    ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.physical),
+                    ActionTraitRing(ringType: ActionRingType.reaction),
+                    ActionTraitRing(ringType: ActionRingType.concentration),
+                  ],
+                  size: 88,
                 ),
               ],
             ),
@@ -104,7 +145,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(DndGlyph), findsNWidgets(2));
+      expect(find.byType(DndGlyph), findsNWidgets(3));
     });
 
     testWidgets('GlyphShowcaseScreen renders known spells, minions, custom builder, and full style guide', (WidgetTester tester) async {
@@ -139,6 +180,12 @@ void main() {
       expect(find.text('Select Arcane Spell School:'), findsOneWidget);
       expect(find.text('Download Glyph Image (PNG)'), findsOneWidget);
 
+      // Verify shape override chip selection works
+      final octChip = find.widgetWithText(ChoiceChip, 'Psionic Octagon');
+      expect(octChip, findsOneWidget);
+      await tester.tap(octChip);
+      await tester.pumpAndSettle();
+
       // Switch to Full Style Guide Codex tab
       await tester.tap(find.text('Full Style Guide Codex'));
       await tester.pumpAndSettle();
@@ -146,6 +193,20 @@ void main() {
       expect(find.text('1. The 8 Arcane Schools of Magic'), findsOneWidget);
       expect(find.text('3. The 4 Progression Tiers & Threat Architecture'), findsOneWidget);
       expect(find.text('Tier 1 • Initiate / CR 0–4'), findsOneWidget);
+    });
+
+    testWidgets('DndGlyph applies frameShapeOverride properly', (WidgetTester tester) async {
+      final spellGlyph = DndGlyph.spell(
+        school: SpellSchool.evocation,
+        frameShapeOverride: GlyphFrameShape.octagon,
+      );
+      expect(spellGlyph.themeData.frameShape, equals(GlyphFrameShape.octagon));
+
+      final monsterGlyph = DndGlyph.monster(
+        creatureType: CreatureType.dragon,
+        frameShapeOverride: GlyphFrameShape.tombstone,
+      );
+      expect(monsterGlyph.themeData.frameShape, equals(GlyphFrameShape.tombstone));
     });
   });
 }

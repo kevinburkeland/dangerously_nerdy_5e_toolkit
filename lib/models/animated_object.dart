@@ -111,10 +111,12 @@ enum ObjectSize {
         bonus: damageBonus,
       );
 
+  static final RegExp _whitespacePattern = RegExp(r'\s+');
+
   /// Safe parser mapping raw string inputs (e.g., 'Large Beast', 'Tiny') to [ObjectSize] with fallback.
   static ObjectSize fromString(String rawSize) {
     final normalized = rawSize.trim().toLowerCase();
-    final tokens = normalized.split(RegExp(r'\s+'));
+    final tokens = normalized.split(_whitespacePattern);
     for (final size in ObjectSize.values) {
       if (tokens.contains(size.name) ||
           tokens.contains(size.displayName.toLowerCase())) {

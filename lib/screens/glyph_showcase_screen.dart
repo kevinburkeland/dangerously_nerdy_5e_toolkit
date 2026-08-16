@@ -664,6 +664,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       child: _builderIsSpell
                           ? DndGlyph.spell(
                               school: _builderSchool,
+                              themeData: themeData,
                               level: _builderLevelOrTier,
                               actionRings: _builderRings,
                               size: _builderSize,
@@ -671,6 +672,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             )
                           : DndGlyph.monster(
                               creatureType: _builderCreature,
+                              themeData: themeData,
                               crTier: _builderLevelOrTier,
                               actionRings: _builderRings,
                               size: _builderSize,
@@ -824,7 +826,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
             children: [
               const Text('Dynamic Action & Attack Trait Rings:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ElevatedButton.icon(
-                onPressed: _builderRings.length >= 3
+                onPressed: _builderRings.length >= 6
                     ? null
                     : () {
                         setState(() {
@@ -832,13 +834,14 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                         });
                       },
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add Ring'),
+                label: Text(_builderRings.length >= 6 ? 'Max Rings (6)' : 'Add Ring'),
               ),
             ],
           ),
           const SizedBox(height: 8),
           ...List.generate(_builderRings.length, (idx) {
             final ring = _builderRings[idx];
+            final isConcentration = ring.ringType == ActionRingType.concentration;
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               color: isDark ? const Color(0xFF090D16) : const Color(0xFFF1F5F9),
@@ -861,6 +864,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         DropdownButton<ActionRingType>(
                           value: ring.ringType,
@@ -868,28 +872,46 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                           onChanged: (newType) {
                             if (newType != null) {
                               setState(() {
-                                _builderRings[idx] = ActionTraitRing(ringType: newType, damageType: ring.damageType, label: ring.label);
+                                _builderRings[idx] = ActionTraitRing(
+                                  ringType: newType,
+                                  damageType: newType == ActionRingType.concentration ? null : ring.damageType,
+                                  label: ring.label,
+                                );
                               });
                             }
                           },
                         ),
-                        DropdownButton<DamageAccent?>(
-                          value: ring.damageType,
-                          hint: const Text('Physical (No Element)'),
-                          items: [
-                            const DropdownMenuItem(value: null, child: Text('Physical / Neutral')),
-                            ...DamageAccent.values.map((da) => DropdownMenuItem(value: da, child: Row(children: [
-                              Container(width: 8, height: 8, decoration: BoxDecoration(color: da.color, shape: BoxShape.circle)),
-                              const SizedBox(width: 6),
-                              Text(da.displayName),
-                            ]))),
-                          ],
-                          onChanged: (newDamage) {
-                            setState(() {
-                              _builderRings[idx] = ActionTraitRing(ringType: ring.ringType, damageType: newDamage, label: ring.label);
-                            });
-                          },
-                        ),
+                        if (!isConcentration)
+                          DropdownButton<DamageAccent?>(
+                            value: ring.damageType,
+                            hint: const Text('Physical (No Element)'),
+                            items: [
+                              const DropdownMenuItem(value: null, child: Text('Physical / Neutral')),
+                              ...DamageAccent.values.map((da) => DropdownMenuItem(value: da, child: Row(children: [
+                                Container(width: 8, height: 8, decoration: BoxDecoration(color: da.color, shape: BoxShape.circle)),
+                                const SizedBox(width: 6),
+                                Text(da.displayName),
+                              ]))),
+                            ],
+                            onChanged: (newDamage) {
+                              setState(() {
+                                _builderRings[idx] = ActionTraitRing(ringType: ring.ringType, damageType: newDamage, label: ring.label);
+                              });
+                            },
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                            ),
+                            child: const Text(
+                              'Pure Arcane Orbit (Non-Elemental)',
+                              style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ),
                       ],
                     ),
                   ],

@@ -156,6 +156,10 @@ class ActionTraitRing {
   });
 
   Color getEffectiveColor(Color fallbackColor, {bool isDarkMode = false}) {
+    // Concentration is pure harmonic orbital arcane wireframe and never has an elemental damage type
+    if (ringType == ActionRingType.concentration) {
+      return isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFF0284C7); // Ethereal orbital cyan
+    }
     if (damageType != null) {
       if (damageType == DamageAccent.physical) {
         return isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
@@ -228,23 +232,39 @@ class GlyphThemeData {
     required this.frameShape,
   });
 
-  factory GlyphThemeData.fromSchool(SpellSchool school) {
+  factory GlyphThemeData.fromSchool(SpellSchool school, {GlyphFrameShape? shapeOverride}) {
     return GlyphThemeData(
       primary: school.primaryColor,
       lightFill: school.lightFillTint,
       darkFill: school.darkFillTint,
       border: school.primaryColor,
-      frameShape: school.frameShape,
+      frameShape: shapeOverride ?? school.frameShape,
     );
   }
 
-  factory GlyphThemeData.fromCreature(CreatureType type) {
+  factory GlyphThemeData.fromCreature(CreatureType type, {GlyphFrameShape? shapeOverride}) {
     return GlyphThemeData(
       primary: type.primaryColor,
       lightFill: type.lightFillTint,
       darkFill: type.darkFillTint,
       border: type.primaryColor,
-      frameShape: type.frameShape,
+      frameShape: shapeOverride ?? type.frameShape,
+    );
+  }
+
+  GlyphThemeData copyWith({
+    Color? primary,
+    Color? lightFill,
+    Color? darkFill,
+    Color? border,
+    GlyphFrameShape? frameShape,
+  }) {
+    return GlyphThemeData(
+      primary: primary ?? this.primary,
+      lightFill: lightFill ?? this.lightFill,
+      darkFill: darkFill ?? this.darkFill,
+      border: border ?? this.border,
+      frameShape: frameShape ?? this.frameShape,
     );
   }
 
@@ -257,4 +277,18 @@ class GlyphThemeData {
     }
     return primary;
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GlyphThemeData &&
+          runtimeType == other.runtimeType &&
+          primary == other.primary &&
+          lightFill == other.lightFill &&
+          darkFill == other.darkFill &&
+          border == other.border &&
+          frameShape == other.frameShape;
+
+  @override
+  int get hashCode => Object.hash(primary, lightFill, darkFill, border, frameShape);
 }

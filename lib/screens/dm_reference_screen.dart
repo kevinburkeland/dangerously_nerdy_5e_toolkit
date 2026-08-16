@@ -640,12 +640,14 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           children: items
               .map((item) => SizedBox(
                     width: itemWidth,
-                    child: DmRuleCard(
-                      item: item,
-                      edition: edition,
-                      isPinned: pinnedIds.contains(item.id),
-                      onTogglePin: () => _togglePinRule(context, item.id),
-                      onTap: () => _showCompareDialog(context, item),
+                    child: RepaintBoundary(
+                      child: DmRuleCard(
+                        item: item,
+                        edition: edition,
+                        isPinned: pinnedIds.contains(item.id),
+                        onTogglePin: () => _togglePinRule(context, item.id),
+                        onTap: () => _showCompareDialog(context, item),
+                      ),
                     ),
                   ))
               .toList(),
