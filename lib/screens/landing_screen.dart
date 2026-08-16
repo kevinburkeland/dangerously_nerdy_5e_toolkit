@@ -519,30 +519,6 @@ class _LandingScreenState extends State<LandingScreen> {
           size: 40,
           isDarkMode: isDark,
         );
-      case 'gray_bag' || 'rust_bag' || 'tan_bag' || 'bag_of_tricks':
-        glyphWidget = DndGlyph.monster(
-          creatureType: CreatureType.beast,
-          crTier: 1,
-          actionRings: const [ActionTraitRing(ringType: ActionRingType.melee)],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'horn_of_valhalla':
-        glyphWidget = DndGlyph.monster(
-          creatureType: CreatureType.humanoid,
-          crTier: 2,
-          actionRings: const [ActionTraitRing(ringType: ActionRingType.melee)],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'figurines_of_wondrous_power' || 'figurines':
-        glyphWidget = DndGlyph.monster(
-          creatureType: CreatureType.construct,
-          crTier: 2,
-          actionRings: const [ActionTraitRing(ringType: ActionRingType.melee)],
-          size: 40,
-          isDarkMode: isDark,
-        );
       case 'glyph_studio':
         glyphWidget = DndGlyph.spell(
           school: SpellSchool.divination,
