@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../widgets/glyphs/glyph_tokens.dart' show SpellSchool;
+import '../widgets/glyphs/glyph_tokens.dart';
 import 'dm_screen_data.dart';
 
-export '../widgets/glyphs/glyph_tokens.dart' show SpellSchool;
+export '../widgets/glyphs/glyph_tokens.dart';
 
 enum SpellClass {
   bard('Bard', Icons.music_note),
@@ -157,6 +157,41 @@ class SpellItem {
     }
 
     return false;
+  }
+
+  /// Dynamic action rings for DndGlyph HUD rendering conforming to the Glyph Style Guide.
+  List<ActionTraitRing> getGlyphActionRings(DmRulesEdition edition) {
+    final rings = <ActionTraitRing>[];
+    final rules = getRules(edition);
+
+    if (rules.concentration) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.concentration));
+    }
+
+    final dmg = rules.damageOrHealType?.toLowerCase() ?? '';
+    if (dmg.contains('fire')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire));
+    } else if (dmg.contains('radiant')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.radiant));
+    } else if (dmg.contains('necrotic')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.necrotic));
+    } else if (dmg.contains('lightning')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.lightning));
+    } else if (dmg.contains('cold')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold));
+    } else if (dmg.contains('poison')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.poison));
+    } else if (dmg.contains('acid')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.acid));
+    } else if (dmg.contains('psychic')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.psychic));
+    } else if (dmg.contains('force')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.force));
+    } else if (dmg.contains('thunder')) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.thunder));
+    }
+
+    return rings;
   }
 }
 

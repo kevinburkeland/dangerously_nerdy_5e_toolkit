@@ -215,7 +215,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
               child: Semantics(
                 header: true,
                 child: const Text(
-                  'SRD Spellbook',
+                  'Spellbook Companion',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
@@ -333,6 +333,40 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
               ),
             ),
 
+            // Class Spell List Quick Filters
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  FilterChip(
+                    selected: _selectedClass == null,
+                    label: const Text('All Classes'),
+                    onSelected: (_) {
+                      setState(() => _selectedClass = null);
+                    },
+                  ),
+                  const SizedBox(width: 6),
+                  ...SpellClass.values.map((cls) {
+                    final isSelected = _selectedClass == cls;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: FilterChip(
+                        selected: isSelected,
+                        avatar: Icon(cls.icon, size: 14),
+                        label: Text(cls.label),
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedClass = selected ? cls : null;
+                          });
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+
             // Roll Result Banner
             if (_lastQuickRollLabel != null)
               Container(
@@ -416,13 +450,15 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                               ),
                             ),
 
-                          _buildSpellCardsWrap(
+                          // Level-by-Level Separated Spell Display
+                          ..._buildLevelSeparatedCards(
                             context,
                             (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty)
                                 ? otherSpellsInResults
                                 : filteredSpells,
                             edition,
                             pinnedIds,
+                            theme,
                           ),
                         ],
                       ),
@@ -432,6 +468,86 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildLevelSeparatedCards(
+    BuildContext context,
+    List<SpellItem> spells,
+    DmRulesEdition edition,
+    Set<String> pinnedIds,
+    ThemeData theme,
+  ) {
+    // Group spells by level
+    final Map<int, List<SpellItem>> levelGroups = {};
+    for (final s in spells) {
+      levelGroups.putIfAbsent(s.level, () => []).add(s);
+    }
+    final sortedLevels = levelGroups.keys.toList()..sort();
+
+    final widgets = <Widget>[];
+
+    for (int i = 0; i < sortedLevels.length; i++) {
+      final level = sortedLevels[i];
+      final levelSpells = levelGroups[level]!;
+
+      final levelTitle = level == 0
+          ? 'Cantrips (0-Level)'
+          : (level == 1
+              ? '1st-Level Spells'
+              : (level == 2
+                  ? '2nd-Level Spells'
+                  : (level == 3
+                      ? '3rd-Level Spells'
+                      : '$level-th Level Spells')));
+
+      widgets.add(
+        Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 4 : 20, bottom: 10),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  level == 0 ? 'CANTRIP' : 'LEVEL $level',
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                levelTitle,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${levelSpells.length} ${levelSpells.length == 1 ? 'Spell' : 'Spells'}',
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      widgets.add(_buildSpellCardsWrap(context, levelSpells, edition, pinnedIds));
+    }
+
+    return widgets;
   }
 
   Widget _buildEmptyState(ThemeData theme, bool isSpellbookEmpty) {
@@ -458,7 +574,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
             const SizedBox(height: 6),
             Text(
               isSpellbookEmpty
-                  ? 'Browse the SRD Spellbook and tap the bookmark icon on any spell to pin it to your personal spellbook.'
+                  ? 'Browse the Spellbook Companion and tap the bookmark icon on any spell to pin it to your personal spellbook.'
                   : 'Try adjusting your search terms or clearing active filters.',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white38, fontSize: 13),

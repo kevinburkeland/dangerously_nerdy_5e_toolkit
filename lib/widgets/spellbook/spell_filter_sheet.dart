@@ -307,15 +307,20 @@ class SpellFilterSheet extends StatelessWidget {
               },
             ),
             ...SpellSchool.values.map(
-              (school) => ChoiceChip(
-                avatar: Icon(school.icon, size: 14, color: school.color),
-                label: Text(school.label),
-                selected: selectedSchool == school,
-                onSelected: (selected) {
-                  HapticService.selectionTick(context);
-                  onSchoolChanged(selected ? school : null);
-                },
-              ),
+              (school) {
+                final isDark = theme.brightness == Brightness.dark;
+                final schoolColor = school.getLegibleColor(isDark);
+                return ChoiceChip(
+                  avatar: Icon(school.icon, size: 14, color: schoolColor),
+                  label: Text(school.label),
+                  selected: selectedSchool == school,
+                  selectedColor: schoolColor.withValues(alpha: 0.25),
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    onSchoolChanged(selected ? school : null);
+                  },
+                );
+              },
             ),
           ],
         ),

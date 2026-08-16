@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import '../glyphs/dnd_glyph.dart';
 
 /// Interactive modal comparing 2014 RAW spell mechanics vs 2024 Revised rules side-by-side.
 class SpellComparisonDialog extends StatefulWidget {
@@ -56,8 +58,9 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final spell = widget.spell;
-    final schoolColor = spell.school.color;
+    final schoolColor = spell.school.getLegibleColor(isDark);
 
     return Dialog(
       backgroundColor: theme.colorScheme.surface,
@@ -72,15 +75,14 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
             // Header Row
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: schoolColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(spell.school.icon, color: schoolColor, size: 24),
+                DndGlyph.spell(
+                  school: spell.school,
+                  level: spell.level,
+                  actionRings: spell.getGlyphActionRings(DmRulesEdition.v2024),
+                  size: 46,
+                  isDarkMode: isDark,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

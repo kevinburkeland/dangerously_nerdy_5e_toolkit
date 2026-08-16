@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/spellbook_data.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/creature_stat_block_dialog.dart';
@@ -15,6 +16,8 @@ class SpellReferenceWidget extends StatefulWidget {
 
 class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
   late SummonPreset _selectedPreset;
+  SpellClass? _selectedClassFilter;
+  bool _showOnlyMagicItems = false;
 
   @override
   void initState() {
@@ -32,51 +35,131 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
     }
   }
 
+  List<SummonPreset> get _filteredPresets {
+    if (_showOnlyMagicItems) {
+      return SrdSummonsLibrary.magicItemPresets;
+    }
+    if (_selectedClassFilter == null) {
+      return SrdSummonsLibrary.allPresets;
+    }
+    return SrdSummonsLibrary.spellPresets.where((preset) {
+      final spell = preset.sourceSpell;
+      if (spell == null) return false;
+      return spell.rules2014.classes.contains(_selectedClassFilter) ||
+          spell.rules2024.classes.contains(_selectedClassFilter);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = _selectedPreset;
     final theme = Theme.of(context);
     final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
+    final availablePresets = _filteredPresets;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filter Selector
+          // Class Spell List Filter Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                FilterChip(
+                  selected: _selectedClassFilter == null && !_showOnlyMagicItems,
+                  label: const Text('All Presets'),
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedClassFilter = null;
+                      _showOnlyMagicItems = false;
+                    });
+                  },
+                ),
+                const SizedBox(width: 6),
+                ...[
+                  SpellClass.druid,
+                  SpellClass.wizard,
+                  SpellClass.cleric,
+                  SpellClass.warlock,
+                  SpellClass.artificer,
+                  SpellClass.bard,
+                  SpellClass.ranger,
+                  SpellClass.sorcerer,
+                ].map((cls) {
+                  final isSelected = _selectedClassFilter == cls && !_showOnlyMagicItems;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      selected: isSelected,
+                      avatar: Icon(cls.icon, size: 14),
+                      label: Text('${cls.label} Spells'),
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedClassFilter = selected ? cls : null;
+                          _showOnlyMagicItems = false;
+                          if (availablePresets.isNotEmpty && !availablePresets.contains(_selectedPreset)) {
+                            _selectedPreset = availablePresets.first;
+                          }
+                        });
+                      },
+                    ),
+                  );
+                }),
+                FilterChip(
+                  selected: _showOnlyMagicItems,
+                  avatar: const Icon(Icons.card_giftcard, size: 14),
+                  label: const Text('Magic Items'),
+                  onSelected: (selected) {
+                    setState(() {
+                      _showOnlyMagicItems = selected;
+                      _selectedClassFilter = null;
+                      if (availablePresets.isNotEmpty && !availablePresets.contains(_selectedPreset)) {
+                        _selectedPreset = availablePresets.first;
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Grouped Dropdown Selector by Spell Level
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
-            color: tabletop.cardBackground,
+              color: tabletop.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<SummonPreset>(
-                value: _selectedPreset,
+                value: availablePresets.contains(_selectedPreset)
+                    ? _selectedPreset
+                    : (availablePresets.isNotEmpty ? availablePresets.first : _selectedPreset),
                 dropdownColor: tabletop.cardBackground,
                 isExpanded: true,
                 icon: const Icon(Icons.menu_book, color: Colors.amber),
-                items: [
-                  ...SrdSummonsLibrary.spellPresets.map((preset) {
-                    return DropdownMenuItem<SummonPreset>(
-                      value: preset,
-                      child: Text(
-                        '🔮 ${preset.name} (${preset.levelDisplay})',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                items: availablePresets.map((preset) {
+                  final isMagicItem = preset.category == SummonCategory.magicItem;
+                  final levelPrefix = isMagicItem
+                      ? '📯 [Magic Item]'
+                      : '🔮 [Level ${preset.glyphSpellLevel}]';
+
+                  return DropdownMenuItem<SummonPreset>(
+                    value: preset,
+                    child: Text(
+                      '$levelPrefix ${preset.name} (${preset.levelDisplay})',
+                      style: TextStyle(
+                        color: isMagicItem ? Colors.purpleAccent : Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
-                    );
-                  }),
-                  ...SrdSummonsLibrary.magicItemPresets.map((preset) {
-                    return DropdownMenuItem<SummonPreset>(
-                      value: preset,
-                      child: Text(
-                        '📯 ${preset.name} (${preset.levelDisplay})',
-                        style: const TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                    );
-                  }),
-                ],
+                    ),
+                  );
+                }).toList(),
                 onChanged: (val) {
                   if (val != null) {
                     setState(() => _selectedPreset = val);

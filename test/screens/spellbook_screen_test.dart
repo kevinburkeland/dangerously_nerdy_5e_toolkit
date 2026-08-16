@@ -27,7 +27,7 @@ void main() {
       await tester.pumpWidget(buildTestScreen());
       await tester.pumpAndSettle();
 
-      expect(find.text('SRD Spellbook'), findsOneWidget);
+      expect(find.text('Spellbook Companion'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.textContaining('All Spells'), findsOneWidget);
       expect(find.textContaining('My Spellbook'), findsOneWidget);

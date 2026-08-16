@@ -137,7 +137,7 @@ class LandingToolRegistry {
         ),
         LandingToolItem(
           id: 'srd_spellbook',
-          title: 'SRD Spellbook & 2024 Diff',
+          title: 'Spellbook Companion',
           category: 'Core Utilities',
           badgeText: '2014 vs 2024',
           badgeColor: Colors.purpleAccent,

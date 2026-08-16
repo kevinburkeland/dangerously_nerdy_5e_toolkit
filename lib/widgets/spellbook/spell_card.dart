@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
+import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
 
 /// Modular, interactive card presenting an individual SRD spell.
@@ -25,15 +26,19 @@ class SpellCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final rules = spell.getRules(edition);
-    final schoolColor = spell.school.color;
+    final schoolColor = spell.school.getLegibleColor(isDark);
+    final cardBorderColor = isPinned
+        ? Colors.purpleAccent.withValues(alpha: 0.85)
+        : schoolColor.withValues(alpha: 0.35);
 
     return PressableCard(
       onTap: onTap,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
-          color: isPinned ? Colors.purpleAccent.withValues(alpha: 0.8) : schoolColor.withValues(alpha: 0.35),
+          color: cardBorderColor,
           width: isPinned ? 1.6 : 1.2,
         ),
       ),
@@ -41,19 +46,18 @@ class SpellCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row: Icon + Title & School + Diff Badge + Pin Button
+          // Header Row: DndGlyph HUD + Title & School + Diff Badge + Pin Button
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: schoolColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(spell.school.icon, color: schoolColor, size: 20),
+              DndGlyph.spell(
+                school: spell.school,
+                level: spell.level,
+                actionRings: spell.getGlyphActionRings(edition),
+                size: 38,
+                isDarkMode: isDark,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

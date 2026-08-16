@@ -85,7 +85,7 @@ class _LandingScreenState extends State<LandingScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.menu_book, color: Colors.purpleAccent),
-            tooltip: 'SRD Spellbook & 2024 Diff',
+            tooltip: 'Spellbook Companion',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SpellbookScreen()),
             ),
