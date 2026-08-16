@@ -284,6 +284,7 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
           const Divider(height: 16, color: Colors.white12),
 
           // Metadata Grid
+          _buildMetaRow('School', (rules.schoolOverride ?? widget.spell.school).label, accentColor),
           _buildMetaRow('Casting Time', rules.castingTime, accentColor),
           _buildMetaRow('Range', rules.range, accentColor),
           _buildMetaRow('Components', rules.components, accentColor),

@@ -1,3 +1,5 @@
+export 'spellcasting_rules_engine.dart';
+
 /// Pure 5e math engine and score extensions for ability modifier and proficiency bonus calculations.
 extension Dnd5eScoreMath on int {
   /// Standard 5e Ability Score to Modifier conversion: floor((score - 10) / 2)
@@ -15,6 +17,16 @@ extension Dnd5eScoreMath on int {
     final clampedLevel = clamp(1, 20);
     return ((clampedLevel - 1) ~/ 4) + 2;
   }
+
+  /// Calculates Spell Save DC: 8 + proficiencyBonus + abilityModifier
+  int dndSpellSaveDc({required int abilityScore}) {
+    return 8 + dndProficiencyBonus + abilityScore.dndModifier;
+  }
+
+  /// Calculates Spell Attack Modifier: proficiencyBonus + abilityModifier
+  int dndSpellAttackBonus({required int abilityScore}) {
+    return dndProficiencyBonus + abilityScore.dndModifier;
+  }
 }
 
 /// Zero-guarded numeric ratio calculation for combat and resource meters.
@@ -22,4 +34,5 @@ extension DndMathUtils on num {
   /// Computes safe progress fraction [0.0 - 1.0] strictly protected against divide-by-zero
   double ratioOf(num max) => max <= 0 ? 0.0 : (this / max).clamp(0.0, 1.0).toDouble();
 }
+
 

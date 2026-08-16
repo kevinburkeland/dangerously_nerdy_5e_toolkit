@@ -12,6 +12,7 @@ class SpellCard extends StatelessWidget {
   final VoidCallback onTogglePin;
   final VoidCallback onTap;
   final void Function(String formula, String label)? onQuickRoll;
+  final VoidCallback? onOpenQuickRoll;
 
   const SpellCard({
     super.key,
@@ -21,6 +22,7 @@ class SpellCard extends StatelessWidget {
     required this.onTogglePin,
     required this.onTap,
     this.onQuickRoll,
+    this.onOpenQuickRoll,
   });
 
   @override
@@ -28,10 +30,18 @@ class SpellCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final rules = spell.getRules(edition);
-    final schoolColor = spell.school.getLegibleColor(isDark);
+    final effectiveSchool = spell.getSchool(edition);
+    final schoolColor = effectiveSchool.getLegibleColor(isDark);
     final cardBorderColor = isPinned
         ? Colors.purpleAccent.withValues(alpha: 0.85)
         : schoolColor.withValues(alpha: 0.35);
+
+    // Format casting time cleanly for reactions
+    final castingTimeDisplay = rules.castingTime.startsWith('1 Reaction')
+        ? '1 Reaction'
+        : (rules.castingTime.startsWith('1 Bonus Action')
+            ? '1 Bonus Action'
+            : (rules.castingTime.startsWith('1 Action') ? '1 Action' : rules.castingTime));
 
     return PressableCard(
       onTap: onTap,
@@ -51,7 +61,7 @@ class SpellCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DndGlyph.spell(
-                school: spell.school,
+                school: effectiveSchool,
                 level: spell.level,
                 actionRings: spell.getGlyphActionRings(edition),
                 size: 38,
@@ -72,7 +82,7 @@ class SpellCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      spell.fullTypeLabel,
+                      spell.getFullTypeLabel(edition),
                       style: TextStyle(
                         color: schoolColor,
                         fontWeight: FontWeight.w600,
@@ -124,13 +134,15 @@ class SpellCard extends StatelessWidget {
             spacing: 4,
             runSpacing: 4,
             children: [
-              _buildBadge(Icons.timer_outlined, rules.castingTime, schoolColor),
+              _buildBadge(Icons.timer_outlined, castingTimeDisplay, schoolColor),
               _buildBadge(Icons.my_location_outlined, rules.range, schoolColor),
               _buildBadge(Icons.hourglass_empty_outlined, rules.duration, schoolColor),
               if (rules.concentration)
                 _buildTag('Conc', Colors.amberAccent),
               if (rules.ritual)
                 _buildTag('Ritual', Colors.cyanAccent),
+              if (rules.materialDetails?.hasCost == true)
+                _buildTag('💰 ${rules.materialDetails!.costInGp} gp', Colors.amber),
               if (rules.savingThrow != null)
                 _buildTag('${rules.savingThrow} Save', Colors.orangeAccent),
               if (rules.damageOrHealType != null)
@@ -138,6 +150,37 @@ class SpellCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+
+          // Reaction trigger note if applicable
+          if (rules.reactionTrigger != null) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.flash_on, size: 12, color: Colors.blueAccent),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'Trigger: ${rules.reactionTrigger!}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF90CAF9),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           // Spell preview text
           Text(
@@ -166,12 +209,18 @@ class SpellCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (rules.rollFormula != null && onQuickRoll != null) ...[
+              if (rules.rollFormula != null && (onOpenQuickRoll != null || onQuickRoll != null)) ...[
                 const SizedBox(width: 8),
                 Flexible(
                   flex: 0,
                   child: InkWell(
-                    onTap: () => onQuickRoll!(rules.rollFormula!, spell.name),
+                    onTap: () {
+                      if (onOpenQuickRoll != null) {
+                        onOpenQuickRoll!();
+                      } else if (onQuickRoll != null) {
+                        onQuickRoll!(rules.rollFormula!, spell.name);
+                      }
+                    },
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

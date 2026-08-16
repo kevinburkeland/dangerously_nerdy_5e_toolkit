@@ -4,11 +4,11 @@ import '../models/spellbook_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
-import '../utils/secure_random.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/spellbook/spell_card.dart';
 import '../widgets/spellbook/spell_comparison_dialog.dart';
 import '../widgets/spellbook/spell_filter_sheet.dart';
+import '../widgets/spellbook/spell_quick_roll_dialog.dart';
 
 enum SpellbookViewMode {
   allSpells('All Spells', Icons.menu_book),
@@ -141,30 +141,32 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     );
   }
 
+  void _openQuickRollDialog(BuildContext context, SpellItem spell, DmRulesEdition edition) {
+    SpellQuickRollDialog.show(
+      context,
+      spell: spell,
+      edition: edition,
+      onRollCompleted: (result, spellName, castLevel) {
+        final levelLabel = spell.level == 0 ? 'Cantrip' : 'Level $castLevel';
+        final modStr = result.modifier != 0 ? (result.modifier > 0 ? ' + ${result.modifier}' : ' - ${result.modifier.abs()}') : '';
+        final resultText = '$spellName ($levelLabel): ${result.total} [${result.individualDice.join(", ")}$modStr]';
+        setState(() {
+          _lastQuickRollLabel = resultText;
+        });
+      },
+    );
+  }
+
   void _performSpellRoll(String formula, String spellName) {
     HapticService.lightImpact(context);
+    final result = SpellRollEngine.roll(formula: formula);
+    final modStr = result.modifier != 0 ? (result.modifier > 0 ? ' + ${result.modifier}' : ' - ${result.modifier.abs()}') : '';
+    final resultText = '$spellName (${result.formulaDescription}): ${result.total} [${result.individualDice.join(", ")}$modStr]';
+    A11yService.announce(resultText);
 
-    // Basic formula parser (e.g. "8d6", "2d8", "1d10", "1d4")
-    final match = RegExp(r'(\d+)d(\d+)').firstMatch(formula);
-    if (match != null) {
-      final count = int.tryParse(match.group(1) ?? '1') ?? 1;
-      final sides = int.tryParse(match.group(2) ?? '6') ?? 6;
-      final rolls = List.generate(count, (_) => secureRandom.nextInt(sides) + 1);
-      final total = rolls.fold<int>(0, (sum, val) => sum + val);
-
-      final resultText = '$spellName ($formula): $total [${rolls.join(', ')}]';
-      A11yService.announce(resultText);
-
-      setState(() {
-        _lastQuickRollLabel = resultText;
-      });
-    } else {
-      final resultText = '$spellName roll: $formula';
-      A11yService.announce(resultText);
-      setState(() {
-        _lastQuickRollLabel = resultText;
-      });
-    }
+    setState(() {
+      _lastQuickRollLabel = resultText;
+    });
   }
 
   @override
@@ -630,6 +632,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                         isPinned: pinnedIds.contains(spell.id),
                         onTogglePin: () => _togglePinSpell(context, spell.id),
                         onTap: () => _showCompareDialog(context, spell),
+                        onOpenQuickRoll: () => _openQuickRollDialog(context, spell, edition),
                         onQuickRoll: _performSpellRoll,
                       ),
                     ),
