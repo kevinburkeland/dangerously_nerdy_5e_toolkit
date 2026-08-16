@@ -296,12 +296,12 @@ class GlyphGeometry {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
 
-    // Levels 1-3 / CR Tier 2: Outer bottom notch indicators & circuit node terminations
-    if (tierLevel >= 1 && tierLevel <= 3) {
+    // Tier 2 (Adept / Levels 3-5 / CR 5-10): Bottom notch telemetry & perimeter circuit nodes
+    if (tierLevel == 2) {
       final notchPaint = Paint()
         ..color = primaryColor
         ..style = PaintingStyle.fill;
-      final notchCount = tierLevel;
+      const notchCount = 2;
       final spacing = 3.2 * scale;
       final startX = center.dx - ((notchCount - 1) * spacing / 2.0);
       final notchY = center.dy + 10.5 * scale;
@@ -321,45 +321,43 @@ class GlyphGeometry {
       canvas.drawCircle(center + Offset(5.5 * scale, 0), 0.85 * scale, notchPaint);
     }
 
-    // Levels 4-6 / CR Tier 3: Double border, corner studs, circuit nodes, and scanlines
-    if (tierLevel >= 4) {
+    // Tier 3 & Tier 4 (Master & Apex): Concentric double border, corner studs, and holographic scanlines
+    if (tierLevel >= 3) {
       // 0.5dp Holographic Scanlines
       final containerPath = getContainerPath(shape, size);
       canvas.save();
       canvas.clipPath(containerPath);
       final scanlinePaint = Paint()
-        ..color = (isDarkMode ? Colors.white : primaryColor).withValues(alpha: tierLevel >= 7 ? 0.09 : 0.06)
+        ..color = (isDarkMode ? Colors.white : primaryColor).withValues(alpha: tierLevel == 4 ? 0.09 : 0.06)
         ..strokeWidth = 0.5 * scale;
       for (double y = 0; y <= h; y += 2.5 * scale) {
         canvas.drawLine(Offset(0, y), Offset(w, y), scanlinePaint);
       }
       canvas.restore();
 
-      if (tierLevel <= 6) {
-        final innerBorderPaint = Paint()
-          ..color = primaryColor.withValues(alpha: 0.70)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.85 * scale;
+      final innerBorderPaint = Paint()
+        ..color = primaryColor.withValues(alpha: 0.70)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.85 * scale;
 
-        final innerPath = Path();
-        innerPath.addOval(Rect.fromCircle(center: center, radius: 8.2 * scale));
-        canvas.drawPath(innerPath, innerBorderPaint);
+      final innerPath = Path();
+      innerPath.addOval(Rect.fromCircle(center: center, radius: 8.2 * scale));
+      canvas.drawPath(innerPath, innerBorderPaint);
 
-        // Corner stud & circuit terminal node accents
-        final studPaint = Paint()
-          ..color = isDarkMode ? Colors.white70 : primaryColor
-          ..style = PaintingStyle.fill;
-        final studDist = 9.8 * scale;
-        for (int i = 0; i < 4; i++) {
-          final angle = (i * 90.0 + 45.0) * pi / 180.0;
-          final pt = Offset(center.dx + studDist * cos(angle), center.dy + studDist * sin(angle));
-          canvas.drawCircle(pt, 0.75 * scale, studPaint);
-        }
+      // Corner stud & circuit terminal node accents
+      final studPaint = Paint()
+        ..color = isDarkMode ? Colors.white70 : primaryColor
+        ..style = PaintingStyle.fill;
+      final studDist = 9.8 * scale;
+      for (int i = 0; i < 4; i++) {
+        final angle = (i * 90.0 + 45.0) * pi / 180.0;
+        final pt = Offset(center.dx + studDist * cos(angle), center.dy + studDist * sin(angle));
+        canvas.drawCircle(pt, 0.75 * scale, studPaint);
       }
     }
 
-    // Levels 7-9 / CR Tier 4: Golden filigree crowning arch, circuit horns, & radiant glow
-    if (tierLevel >= 7) {
+    // Tier 4 ONLY (Archmage / Apex / Level 9 / CR 17+): Golden filigree crowning arch, apex diamond, & circuit horns
+    if (tierLevel == 4) {
       const goldColor = Color(0xFFCA8A04);
       final crownPaint = Paint()
         ..color = goldColor
@@ -439,14 +437,14 @@ class GlyphGeometry {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
 
-    // Determine concentric radii based on ring count
+    // Determine concentric radii based on ring count with wide separation
     final radii = <double>[];
     if (rings.length == 1) {
-      radii.add(8.4 * scale);
+      radii.add(8.5 * scale);
     } else if (rings.length == 2) {
-      radii.addAll([9.0 * scale, 7.2 * scale]);
+      radii.addAll([9.4 * scale, 7.0 * scale]);
     } else {
-      radii.addAll([9.4 * scale, 8.0 * scale, 6.6 * scale]);
+      radii.addAll([9.6 * scale, 7.8 * scale, 6.0 * scale]);
     }
 
     for (int idx = 0; idx < rings.length && idx < radii.length; idx++) {
@@ -454,33 +452,48 @@ class GlyphGeometry {
       final r = radii[idx];
       final ringColor = ring.getEffectiveColor(defaultColor, isDarkMode: isDarkMode);
 
-      final strokePaint = Paint()
-        ..color = ringColor
+      // 1. Dark contrast underlay outline to prevent visual clutter and separate adjacent rings
+      final underlayPaint = Paint()
+        ..color = isDarkMode
+            ? const Color(0xFF030712).withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.90)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.35 * scale
+        ..strokeWidth = 2.2 * scale
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round;
 
-      final finePaint = Paint()
-        ..color = ringColor.withValues(alpha: isDarkMode ? 0.70 : 0.50)
+      // 2. Razor-sharp precision wireframe stroke
+      final strokePaint = Paint()
+        ..color = ringColor
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.75 * scale;
+        ..strokeWidth = 0.95 * scale
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
 
+      // 3. Ultra-fine secondary trace lines
+      final finePaint = Paint()
+        ..color = ringColor.withValues(alpha: isDarkMode ? 0.75 : 0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.55 * scale;
+
+      // 4. Compact terminal nodes
       final nodeFill = Paint()
         ..color = ringColor
         ..style = PaintingStyle.fill;
 
-      // Draw neon glow halo along this ring (intense for elemental, sleek metallic aura for physical/neutral)
+      // 5. Tight, controlled holographic laser glow (prevents diffuse blurring)
       final glowAlpha = (ring.damageType != null && ring.damageType != DamageAccent.physical)
-          ? (isDarkMode ? 0.60 : 0.35)
-          : (isDarkMode ? 0.30 : 0.18);
+          ? (isDarkMode ? 0.35 : 0.22)
+          : (isDarkMode ? 0.18 : 0.10);
 
       final glowPaint = Paint()
         ..color = ringColor.withValues(alpha: glowAlpha)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.2 * scale
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2.0 * scale);
+        ..strokeWidth = 1.5 * scale
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 1.0 * scale);
 
+      // Render: Underlay Outline -> Glow Halo -> Sharp Wireframe & Nodes
+      _drawRingPath(canvas, center, r, ring.ringType, scale, underlayPaint, finePaint, nodeFill, isGlow: true);
       _drawRingPath(canvas, center, r, ring.ringType, scale, glowPaint, finePaint, nodeFill, isGlow: true);
       _drawRingPath(canvas, center, r, ring.ringType, scale, strokePaint, finePaint, nodeFill, isGlow: false);
     }

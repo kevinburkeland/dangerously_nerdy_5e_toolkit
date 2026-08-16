@@ -190,6 +190,9 @@ class _DndHolographicWireframePainter extends CustomPainter {
     final scale = min(size.width, size.height) / GlyphGeometry.baseGrid;
     final center = Offset(size.width / 2.0, size.height / 2.0);
     final primary = themeData.primary;
+    final int effectiveTier = school != null
+        ? (tierLevel <= 2 ? 1 : (tierLevel <= 5 ? 2 : (tierLevel <= 8 ? 3 : 4)))
+        : tierLevel.clamp(1, 4);
 
     // -------------------------------------------------------------------------
     // 1. HOLOGRAM NEON PROJECTION GLOW (Multi-Layered Bloom Halo)
@@ -200,7 +203,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
     final auraBloom = Paint()
       ..color = primary.withValues(alpha: isDarkMode ? 0.35 : 0.22)
       ..style = PaintingStyle.fill
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, (tierLevel >= 4 ? 6.0 : 3.5) * scale);
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, (effectiveTier == 4 ? 6.0 : 3.5) * scale);
     canvas.drawPath(containerPath, auraBloom);
 
     // Inner sharp neon glow line
@@ -302,7 +305,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
     GlyphGeometry.drawTierDecorations(
       canvas: canvas,
       size: size,
-      tierLevel: tierLevel,
+      tierLevel: effectiveTier,
       shape: themeData.frameShape,
       primaryColor: primary,
       isDarkMode: isDarkMode,
