@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
+import '../screens/glyph_showcase_screen.dart';
 import '../screens/minion_tool_screen.dart';
 import '../services/haptic_service.dart';
 
@@ -133,6 +134,8 @@ class LandingToolRegistry {
             );
           },
         ),
+        // Core Utilities
+        // (Glyph Studio moved to bottom Art Tools category)
 
         // Spell Minion Companions
         LandingToolItem(
@@ -406,6 +409,41 @@ class LandingToolRegistry {
             preset: FigurinesSummons.figurinesPreset,
             title: 'Figurines of Wondrous Power',
           ),
+        ),
+
+        // Art & Design Tools (Moved to bottom section)
+        LandingToolItem(
+          id: 'glyph_studio',
+          title: 'D&D Techno-Rune Glyph Studio & Codex',
+          category: 'Art & Design Tools',
+          badgeText: 'Art Studio',
+          badgeColor: const Color(0xFFA855F7),
+          icon: Icons.auto_awesome,
+          accentColor: const Color(0xFFC084FC),
+          description:
+              'Interactive Custom Glyph Builder, Full Style Guide Codex, Spellbook Schematics, & Minion Matrix with dynamic damage trait rings.',
+          keywords: [
+            'glyph',
+            'icons',
+            'spells',
+            'schools',
+            'monsters',
+            'creatures',
+            'runes',
+            'builder',
+            'style guide',
+            'vector',
+            'art',
+            'custom',
+            'wireframe',
+            'hud'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GlyphShowcaseScreen()),
+            );
+          },
         ),
       ];
 }

@@ -332,6 +332,19 @@ class _LandingScreenState extends State<LandingScreen> {
                           .map((tool) => _buildToolCardFromItem(context, tool))
                           .toList(),
                     ),
+
+                    const SizedBox(height: 28),
+
+                    // CATEGORY 4: ART & DESIGN TOOLS (SUBSECTION AT BOTTOM)
+                    _buildSectionHeader('🎨 ART & DESIGN TOOLS', const Color(0xFFC084FC)),
+                    const SizedBox(height: 12),
+                    _buildToolGrid(
+                      context,
+                      children: _tools
+                          .where((t) => t.category == 'Art & Design Tools')
+                          .map((tool) => _buildToolCardFromItem(context, tool))
+                          .toList(),
+                    ),
                   ],
 
                   const SizedBox(height: 40),
