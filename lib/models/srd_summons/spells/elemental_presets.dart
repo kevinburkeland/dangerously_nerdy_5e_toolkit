@@ -734,6 +734,7 @@ class ElementalSummons {
 
   static const conjureElementalPreset = SummonPreset(
     id: 'conjure_elemental',
+    spellId: 'spell_conjure_elemental',
     name: 'Conjure Elemental',
     category: SummonCategory.spell,
     levelDisplay: '5th-level Conjuration',
@@ -750,6 +751,7 @@ class ElementalSummons {
 
   static const conjureMinorElementalsPreset = SummonPreset(
     id: 'conjure_minor_elementals',
+    spellId: 'spell_conjure_minor_elementals',
     name: 'Conjure Minor Elementals',
     category: SummonCategory.spell,
     levelDisplay: '4th-level Conjuration',

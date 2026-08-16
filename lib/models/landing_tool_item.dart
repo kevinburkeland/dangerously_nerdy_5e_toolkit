@@ -4,6 +4,7 @@ import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/glyph_showcase_screen.dart';
 import '../screens/minion_tool_screen.dart';
+import '../screens/spellbook_screen.dart';
 import '../services/haptic_service.dart';
 
 /// Data class representing a launcher tool or companion card on the Landing Screen.
@@ -131,6 +132,47 @@ class LandingToolRegistry {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const DmReferenceScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'srd_spellbook',
+          title: 'SRD Spellbook & 2024 Diff',
+          category: 'Core Utilities',
+          badgeText: '2014 vs 2024',
+          badgeColor: Colors.purpleAccent,
+          icon: Icons.menu_book_rounded,
+          accentColor: Colors.purpleAccent,
+          description:
+              'Search SRD cantrips & spells, compare 2014 RAW vs 2024 revisions side-by-side, filter by class/school, and manage your Personal Spellbook.',
+          keywords: [
+            'spell',
+            'spellbook',
+            'cantrip',
+            'magic',
+            'slots',
+            '2024',
+            '2014',
+            'diff',
+            'personal',
+            'pinned',
+            'prepared',
+            'wizard',
+            'cleric',
+            'sorcerer',
+            'druid',
+            'paladin',
+            'ranger',
+            'warlock',
+            'bard',
+            'fireball',
+            'cure wounds',
+            'healing'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SpellbookScreen()),
             );
           },
         ),

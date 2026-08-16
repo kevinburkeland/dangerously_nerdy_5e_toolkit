@@ -149,6 +149,7 @@ class InsectSummons {
 
   static const giantInsectPreset = SummonPreset(
     id: 'giant_insect',
+    spellId: 'spell_giant_insect',
     name: 'Giant Insect',
     category: SummonCategory.spell,
     levelDisplay: '4th-level Transmutation',

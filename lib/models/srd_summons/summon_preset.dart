@@ -1,10 +1,12 @@
 import '../../widgets/glyphs/glyph_tokens.dart';
+import '../spellbook_data.dart';
 import 'minion_stat_block.dart';
 
 typedef BudgetCalculator = int Function(int spellLevel);
 
 class SummonPreset {
   final String id;
+  final String? spellId;
   final String name;
   final SummonCategory category;
   final String levelDisplay; // e.g. "5th-level Transmutation", "Wondrous Item (Rare)"
@@ -21,6 +23,7 @@ class SummonPreset {
 
   const SummonPreset({
     required this.id,
+    this.spellId,
     required this.name,
     required this.category,
     required this.levelDisplay,
@@ -36,6 +39,9 @@ class SummonPreset {
     this.defaultMinionCount = 1,
   });
 
+  /// Canonical source spell from the SRD Spellbook, if applicable.
+  SpellItem? get sourceSpell => spellId != null ? SpellbookLibrary.getSpellById(spellId!) : null;
+
   int calculateMaxPoints(int spellLevel) {
     if (budgetCalculator != null) {
       return budgetCalculator!(spellLevel);
@@ -47,6 +53,9 @@ class SummonPreset {
 /// Helper extension mapping SummonPreset to dynamic DndGlyph parameters.
 extension SummonPresetGlyphExt on SummonPreset {
   SpellSchool get glyphSchool {
+    final spell = sourceSpell;
+    if (spell != null) return spell.school;
+
     final lower = levelDisplay.toLowerCase() + name.toLowerCase();
     if (lower.contains('abjuration')) return SpellSchool.abjuration;
     if (lower.contains('conjuration')) return SpellSchool.conjuration;

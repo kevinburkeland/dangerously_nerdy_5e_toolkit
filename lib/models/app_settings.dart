@@ -43,6 +43,7 @@ class AppSettings {
   final bool performanceMode;
   final DmRulesEdition rulesEdition;
   final Set<String> pinnedRuleIds;
+  final Set<String> pinnedSpellIds;
 
   const AppSettings({
     this.themeMode = ThemeMode.dark,
@@ -55,6 +56,7 @@ class AppSettings {
     this.performanceMode = false,
     this.rulesEdition = DmRulesEdition.v2024,
     this.pinnedRuleIds = const <String>{},
+    this.pinnedSpellIds = const <String>{},
   });
 
   /// Whether particle and continuous visual FX are permitted to render
@@ -74,6 +76,7 @@ class AppSettings {
     bool? performanceMode,
     DmRulesEdition? rulesEdition,
     Set<String>? pinnedRuleIds,
+    Set<String>? pinnedSpellIds,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -86,6 +89,7 @@ class AppSettings {
       performanceMode: performanceMode ?? this.performanceMode,
       rulesEdition: rulesEdition ?? this.rulesEdition,
       pinnedRuleIds: pinnedRuleIds ?? this.pinnedRuleIds,
+      pinnedSpellIds: pinnedSpellIds ?? this.pinnedSpellIds,
     );
   }
 
@@ -103,7 +107,8 @@ class AppSettings {
           enable3dDiceOverlays == other.enable3dDiceOverlays &&
           performanceMode == other.performanceMode &&
           rulesEdition == other.rulesEdition &&
-          setEquals(pinnedRuleIds, other.pinnedRuleIds);
+          setEquals(pinnedRuleIds, other.pinnedRuleIds) &&
+          setEquals(pinnedSpellIds, other.pinnedSpellIds);
 
   @override
   int get hashCode => Object.hash(
@@ -117,5 +122,6 @@ class AppSettings {
         performanceMode,
         rulesEdition,
         Object.hashAll(pinnedRuleIds),
+        Object.hashAll(pinnedSpellIds),
       );
 }

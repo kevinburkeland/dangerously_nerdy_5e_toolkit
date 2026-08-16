@@ -11,6 +11,7 @@ import '../widgets/glyphs/dnd_glyph.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
 import 'dm_reference_screen.dart';
 import 'settings_screen.dart';
+import 'spellbook_screen.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -82,6 +83,13 @@ class _LandingScreenState extends State<LandingScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.menu_book, color: Colors.purpleAccent),
+            tooltip: 'SRD Spellbook & 2024 Diff',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SpellbookScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.shield_outlined, color: Colors.amberAccent),
             tooltip: "DM's Screen & Rulebook (2014 / 2024)",

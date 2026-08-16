@@ -39,6 +39,19 @@ enum SpellSchool {
       SpellSchool.transmutation => const Color(0xFFFBBF24),
     };
   }
+
+  String get label => displayName;
+  Color get color => primaryColor;
+  IconData get icon => switch (this) {
+        SpellSchool.abjuration => Icons.shield_outlined,
+        SpellSchool.conjuration => Icons.auto_fix_high,
+        SpellSchool.divination => Icons.visibility_outlined,
+        SpellSchool.enchantment => Icons.favorite_border,
+        SpellSchool.evocation => Icons.local_fire_department_outlined,
+        SpellSchool.illusion => Icons.wb_twilight,
+        SpellSchool.necromancy => Icons.coronavirus_outlined,
+        SpellSchool.transmutation => Icons.change_circle_outlined,
+      };
 }
 
 /// 14 Creature Classifications conforming to the Style Guide & SRD with dark-mode contrast tuning.

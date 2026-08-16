@@ -338,6 +338,7 @@ class UndeadSummons {
 
   static const animateDeadPreset = SummonPreset(
     id: 'animate_dead',
+    spellId: 'spell_animate_dead',
     name: 'Animate Dead',
     category: SummonCategory.spell,
     levelDisplay: '3rd-level Necromancy',
@@ -354,6 +355,7 @@ class UndeadSummons {
 
   static const createUndeadPreset = SummonPreset(
     id: 'create_undead',
+    spellId: 'spell_create_undead',
     name: 'Create Undead',
     category: SummonCategory.spell,
     levelDisplay: '6th-level Necromancy',

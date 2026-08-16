@@ -14,6 +14,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _kPerformanceMode = 'setting_performance_mode';
   static const _kRulesEdition = 'setting_rules_edition';
   static const _kPinnedRuleIds = 'setting_pinned_rule_ids';
+  static const _kPinnedSpellIds = 'setting_pinned_spell_ids';
 
   AppSettings _settings;
   AppSettings get settings => _settings;
@@ -35,6 +36,7 @@ class SettingsProvider extends ChangeNotifier {
     final perf = prefs.getBool(_kPerformanceMode);
     final editionIndex = prefs.getInt(_kRulesEdition);
     final pinnedList = prefs.getStringList(_kPinnedRuleIds);
+    final pinnedSpellList = prefs.getStringList(_kPinnedSpellIds);
 
     _settings = AppSettings(
       themeMode: (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length)
@@ -55,6 +57,7 @@ class SettingsProvider extends ChangeNotifier {
           ? DmRulesEdition.values[editionIndex]
           : _settings.rulesEdition,
       pinnedRuleIds: pinnedList?.toSet() ?? _settings.pinnedRuleIds,
+      pinnedSpellIds: pinnedSpellList?.toSet() ?? _settings.pinnedSpellIds,
     );
     notifyListeners();
   }
@@ -75,6 +78,7 @@ class SettingsProvider extends ChangeNotifier {
       prefs.setBool(_kPerformanceMode, newSettings.performanceMode),
       prefs.setInt(_kRulesEdition, newSettings.rulesEdition.index),
       prefs.setStringList(_kPinnedRuleIds, newSettings.pinnedRuleIds.toList()),
+      prefs.setStringList(_kPinnedSpellIds, newSettings.pinnedSpellIds.toList()),
     ]);
   }
 
@@ -115,6 +119,35 @@ class SettingsProvider extends ChangeNotifier {
   void clearPinnedRules() {
     if (_settings.pinnedRuleIds.isEmpty) return;
     updateSettings(_settings.copyWith(pinnedRuleIds: const <String>{}));
+  }
+
+  bool isSpellPinned(String spellId) => _settings.pinnedSpellIds.contains(spellId);
+
+  void togglePinSpell(String spellId) {
+    final updated = Set<String>.from(_settings.pinnedSpellIds);
+    if (updated.contains(spellId)) {
+      updated.remove(spellId);
+    } else {
+      updated.add(spellId);
+    }
+    updateSettings(_settings.copyWith(pinnedSpellIds: updated));
+  }
+
+  void pinSpell(String spellId) {
+    if (_settings.pinnedSpellIds.contains(spellId)) return;
+    final updated = Set<String>.from(_settings.pinnedSpellIds)..add(spellId);
+    updateSettings(_settings.copyWith(pinnedSpellIds: updated));
+  }
+
+  void unpinSpell(String spellId) {
+    if (!_settings.pinnedSpellIds.contains(spellId)) return;
+    final updated = Set<String>.from(_settings.pinnedSpellIds)..remove(spellId);
+    updateSettings(_settings.copyWith(pinnedSpellIds: updated));
+  }
+
+  void clearPinnedSpells() {
+    if (_settings.pinnedSpellIds.isEmpty) return;
+    updateSettings(_settings.copyWith(pinnedSpellIds: const <String>{}));
   }
 }
 

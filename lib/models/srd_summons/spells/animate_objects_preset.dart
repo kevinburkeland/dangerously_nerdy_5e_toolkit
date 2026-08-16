@@ -255,6 +255,7 @@ class AnimateObjectsSummon {
 
   static const preset = SummonPreset(
     id: 'animate_objects',
+    spellId: 'spell_animate_objects',
     name: 'Animate Objects',
     category: SummonCategory.spell,
     levelDisplay: '5th-level Transmutation',

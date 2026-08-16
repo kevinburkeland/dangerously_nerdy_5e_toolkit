@@ -1153,6 +1153,7 @@ class BeastSummons {
 
   static const conjureAnimalsPreset = SummonPreset(
     id: 'conjure_animals',
+    spellId: 'spell_conjure_animals',
     name: 'Conjure Animals',
     category: SummonCategory.spell,
     levelDisplay: '3rd-level Conjuration',
