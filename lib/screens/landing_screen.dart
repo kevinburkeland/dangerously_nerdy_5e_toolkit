@@ -7,6 +7,8 @@ import '../widgets/dialogs/condition_reference_dialog.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/dialogs/legal_dialogs.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/glyphs/dnd_glyph.dart';
+import '../widgets/glyphs/glyph_tokens.dart';
 import 'dm_reference_screen.dart';
 import 'settings_screen.dart';
 
@@ -447,6 +449,123 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 
   Widget _buildToolCardFromItem(BuildContext context, LandingToolItem item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Widget? glyphWidget;
+
+    switch (item.id) {
+      case 'animate_objects':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.transmutation,
+          level: 5,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.concentration),
+            ActionTraitRing(ringType: ActionRingType.melee),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'conjure_animals':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.conjuration,
+          level: 3,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.concentration),
+            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'animate_dead':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.necromancy,
+          level: 3,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic),
+            ActionTraitRing(ringType: ActionRingType.ranged),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'create_undead':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.necromancy,
+          level: 6,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.necrotic),
+            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'conjure_elemental':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.conjuration,
+          level: 5,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.fire),
+            ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'conjure_minor_elementals':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.conjuration,
+          level: 4,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.cold),
+            ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'giant_insect':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.transmutation,
+          level: 4,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.concentration, damageType: DamageAccent.poison),
+            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'glyph_studio':
+        glyphWidget = DndGlyph.spell(
+          school: SpellSchool.divination,
+          level: 9,
+          actionRings: const [
+            ActionTraitRing(ringType: ActionRingType.legendary, damageType: DamageAccent.radiant),
+          ],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'bag_of_tricks':
+        glyphWidget = DndGlyph.monster(
+          creatureType: CreatureType.beast,
+          crTier: 1,
+          actionRings: const [ActionTraitRing(ringType: ActionRingType.melee)],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'horn_of_valhalla':
+        glyphWidget = DndGlyph.monster(
+          creatureType: CreatureType.humanoid,
+          crTier: 2,
+          actionRings: const [ActionTraitRing(ringType: ActionRingType.melee)],
+          size: 40,
+          isDarkMode: isDark,
+        );
+      case 'figurines':
+        glyphWidget = DndGlyph.monster(
+          creatureType: CreatureType.construct,
+          crTier: 2,
+          actionRings: const [ActionTraitRing(ringType: ActionRingType.melee)],
+          size: 40,
+          isDarkMode: isDark,
+        );
+    }
+
     return _buildToolCard(
       context,
       title: item.title,
@@ -455,6 +574,7 @@ class _LandingScreenState extends State<LandingScreen> {
       icon: item.icon,
       accentColor: item.accentColor,
       description: item.description,
+      glyphWidget: glyphWidget,
       onTap: () {
         HapticService.selectionTick(context);
         item.onLaunch(context);
@@ -470,6 +590,7 @@ class _LandingScreenState extends State<LandingScreen> {
     required IconData icon,
     required Color accentColor,
     required String description,
+    Widget? glyphWidget,
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
@@ -490,14 +611,17 @@ class _LandingScreenState extends State<LandingScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+              if (glyphWidget != null)
+                glyphWidget
+              else
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: accentColor, size: 26),
                 ),
-                child: Icon(icon, color: accentColor, size: 26),
-              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(

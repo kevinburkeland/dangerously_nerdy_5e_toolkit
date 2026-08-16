@@ -6,6 +6,8 @@ import '../../theme/app_theme.dart';
 import '../dialogs/creature_stat_block_dialog.dart';
 import '../dialogs/set_object_hp_dialog.dart';
 import '../dialogs/value_input_dialog.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 class ObjectCard extends StatelessWidget {
   final AnimatedObjectInstance object;
@@ -78,6 +80,16 @@ class ObjectCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                DndGlyph.monster(
+                  creatureType: CreatureType.construct,
+                  crTier: 1,
+                  actionRings: const [
+                    ActionTraitRing(ringType: ActionRingType.melee),
+                  ],
+                  size: 28,
+                  isDarkMode: theme.brightness == Brightness.dark,
+                ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(

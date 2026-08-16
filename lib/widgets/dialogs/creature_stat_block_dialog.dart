@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/dice_formatters.dart';
+import '../glyphs/dnd_glyph.dart';
 
 class CreatureStatBlockDialog extends StatelessWidget {
   final MinionStatBlock statBlock;
@@ -101,25 +102,45 @@ class CreatureStatBlockDialog extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1. Creature Name & Type / Alignment
-                      Text(
-                        sb.name,
-                        style: const TextStyle(
-                          color: Color(0xFFFFD54F), // 5e Monster Manual Gold
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                          fontFamily: 'serif',
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${sb.sizeDisplay} ${sb.typeDisplay.toLowerCase()}, ${sb.alignment}',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                        ),
+                      // 1. Creature Glyph, Name & Type / Alignment
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          DndGlyph.monster(
+                            creatureType: sb.glyphCreatureType,
+                            crTier: sb.glyphCrTier,
+                            actionRings: sb.glyphActionRings,
+                            size: 64,
+                            isDarkMode: true,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  sb.name,
+                                  style: const TextStyle(
+                                    color: Color(0xFFFFD54F), // 5e Monster Manual Gold
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                    fontFamily: 'serif',
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${sb.sizeDisplay} ${sb.typeDisplay.toLowerCase()}, ${sb.alignment}',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 10),

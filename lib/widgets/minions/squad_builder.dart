@@ -5,6 +5,7 @@ import '../../models/srd_summons/srd_summons_library.dart';
 import '../../services/a11y_service.dart';
 import '../../theme/app_theme.dart';
 import '../dialogs/creature_stat_block_dialog.dart';
+import '../glyphs/dnd_glyph.dart';
 
 class SquadBuilderBottomSheet extends StatefulWidget {
   final SpellSession session;
@@ -291,12 +292,12 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                         statBlock: sb,
                         onAddToSquad: () => _addMinions(sb, 1),
                       ),
-                      leading: CircleAvatar(
-                        backgroundColor: sb.accentColor.withValues(alpha: 0.2),
-                        child: Text(
-                          sb.crDisplay,
-                          style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.bold, fontSize: 10),
-                        ),
+                      leading: DndGlyph.monster(
+                        creatureType: sb.glyphCreatureType,
+                        crTier: sb.glyphCrTier,
+                        actionRings: sb.glyphActionRings,
+                        size: 38,
+                        isDarkMode: true,
                       ),
                       title: Row(
                         children: [

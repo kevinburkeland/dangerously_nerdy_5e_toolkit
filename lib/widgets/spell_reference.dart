@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/creature_stat_block_dialog.dart';
+import 'glyphs/dnd_glyph.dart';
 
 class SpellReferenceWidget extends StatefulWidget {
   final SummonPreset? initialPreset;
@@ -198,10 +199,24 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
-                child: Text(
-                  sb.name,
-                  style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.w900, fontSize: 15),
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    DndGlyph.monster(
+                      creatureType: sb.glyphCreatureType,
+                      crTier: sb.glyphCrTier,
+                      actionRings: sb.glyphActionRings,
+                      size: 32,
+                      isDarkMode: true,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        sb.name,
+                        style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.w900, fontSize: 15),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Row(
