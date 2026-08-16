@@ -217,6 +217,11 @@ void main() {
         }
       }
     });
+
+    test('Spellbook contains large comprehensive catalog', () {
+      final total = SpellbookLibrary.allSpells.length;
+      expect(total, greaterThanOrEqualTo(200), reason: 'Total spells in library: $total');
+    });
   });
 }
 
