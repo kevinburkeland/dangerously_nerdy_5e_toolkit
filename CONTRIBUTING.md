@@ -59,8 +59,9 @@ To maintain code hygiene, performance, and accessibility:
 
 2. **D&D 5e Rules & Math:**
    * All 5e score-to-modifier conversions, proficiency calculations, and ratio scaling live in `lib/services/rules/dnd_5e_rules_engine.dart`.
+   * Spell slot matrices, cantrip tier scaling, upcasting formulas, pact magic, and preparation caps live in `lib/services/rules/spellcasting_rules_engine.dart`.
    * Dice formula generation and expression formatting live in `lib/utils/dice_formatters.dart`.
-   * Data stat blocks must adhere to the System Reference Document 5.1 (SRD 5.1) or official Open Gaming / Creative Commons guidelines.
+   * Data stat blocks and spell catalogs must adhere strictly to the System Reference Document 5.1 & 5.2 (SRD 5.1 & SRD 5.2) Creative Commons (CC-BY-4.0) guidelines.
 
 3. **Accessibility & Semantics:**
    * Ensure interactive custom elements provide descriptive `Semantics` tags, header announcements, and screen-reader support via `A11yService`.

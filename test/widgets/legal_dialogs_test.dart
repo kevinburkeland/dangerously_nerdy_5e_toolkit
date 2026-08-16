@@ -59,7 +59,7 @@ void main() {
         '4. DMCA & Contact: Contact kevin@burke.land for intellectual property notices.'), findsNothing);
   });
 
-  testWidgets('Legal & SRD 5.1 Attribution dialog renders and closes cleanly', (WidgetTester tester) async {
+  testWidgets('Legal & SRD 5.1 / 5.2 Attribution dialog renders and closes cleanly', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(
       Builder(
         builder: (context) => ElevatedButton(
@@ -72,7 +72,7 @@ void main() {
     await tester.tap(find.text('Open Legal'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Legal & SRD 5.1 Attribution'), findsOneWidget);
+    expect(find.text('Legal & SRD 5.1 / 5.2 Attribution'), findsOneWidget);
     expect(find.text('Compatibility & Legal Disclaimer'), findsOneWidget);
     expect(find.text('System Reference Document 5.1 & 5.2 (SRD 5.1 & SRD 5.2) License'), findsOneWidget);
 

@@ -56,7 +56,7 @@ class LegalDialogs {
         context,
         icon: Icons.menu_book,
         iconColor: Colors.purpleAccent,
-        title: 'Legal & SRD 5.1 Attribution',
+        title: 'Legal & SRD 5.1 / 5.2 Attribution',
         content: const _AttributionContent(),
       );
 }
