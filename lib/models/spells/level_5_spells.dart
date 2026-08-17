@@ -1441,4 +1441,38 @@ const List<SpellItem> srdLevel5Spells = [
       ],
     ),
   ),
+
+  SpellItem(
+    id: 'spell_commune_with_nature',
+    name: 'Commune with Nature',
+    level: 5,
+    school: SpellSchool.divination,
+    isChangedIn2024: false,
+    diffSummary: 'Instantly gain knowledge of up to three nature facts within 3 miles (outdoors) or 300 feet (underground): terrain, water, minerals, plants/animals, celestials/fiends/undead, or influence from other planes. Ritual spell.',
+    tags: ['nature-sense', 'survey', 'exploration', 'ritual', 'druid', 'ranger', 'divination', 'level 5'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      ritual: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      description: [
+        'You commune with nature, instantly gaining knowledge of the surrounding territory. In the outdoors, the spell gives you knowledge of the area within 3 miles of you. In caves and other natural underground settings, the radius is limited to 300 feet.',
+        'You instantly gain knowledge of up to three facts of your choice about any of the following subjects: terrain and bodies of water, prevalent plants, minerals, animals, or beasts, powerful celestials, fey, fiends, elementals, or undead, or influence from other planes.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 minute',
+      range: 'Self',
+      components: 'V, S',
+      duration: 'Instantaneous',
+      ritual: true,
+      classes: [SpellClass.druid, SpellClass.ranger],
+      description: [
+        'You commune with nature, instantly gaining knowledge of the surrounding territory. In the outdoors, the spell gives you knowledge of the area within 3 miles of you. In caves and other natural underground settings, the radius is limited to 300 feet.',
+        'You instantly gain knowledge of up to three facts of your choice about any of the following subjects: terrain and bodies of water, prevalent plants, minerals, animals, or beasts, powerful celestials, fey, fiends, elementals, or undead, or influence from other planes.',
+      ],
+    ),
+  ),
 ];

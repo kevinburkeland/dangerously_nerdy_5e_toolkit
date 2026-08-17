@@ -512,7 +512,7 @@ const List<SpellItem> srdLevel8Spells = [
       components: 'V, S',
       duration: 'Concentration, up to 24 hours',
       concentration: true,
-      classes: [SpellClass.druid],
+      classes: [SpellClass.bard, SpellClass.druid],
       description: [
         'A magic mist radiates from you, transforming up to any number of willing creatures you can see within range into beasts. You choose the form of each creature: Large or smaller beast of challenge rating 4 or lower.',
         'On subsequent turns, you can use your action to transform affected creatures into new forms. The target’s game statistics are replaced by the statistics of the chosen beast.',
@@ -548,7 +548,7 @@ const List<SpellItem> srdLevel8Spells = [
       components: 'V, S, M (either a lump of alum soaked in vinegar for antipathy, or a drop of honey for sympathy)',
       materialDetails: SpellMaterialComponent(description: 'alum soaked in vinegar or drop of honey'),
       duration: '10 days',
-      classes: [SpellClass.druid, SpellClass.wizard],
+      classes: [SpellClass.bard, SpellClass.druid, SpellClass.wizard],
       savingThrow: 'Wisdom',
       description: [
         'This spell attracts or repels creatures of your choice. You target something within range, either a Huge or smaller object or creature or an area within 200 feet.',

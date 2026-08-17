@@ -755,7 +755,7 @@ const List<SpellItem> srdLevel7Spells = [
         isConsumed: true,
       ),
       duration: 'Until dispelled',
-      classes: [SpellClass.wizard],
+      classes: [SpellClass.bard, SpellClass.wizard],
       description: [
         'By means of this spell, a willing creature or an object is hidden away, safe from all detection for the duration. Upon casting the spell and touching the target, it becomes invisible and can’t be targeted by divination magic or perceived through scrying sensors.',
         'If the target is a creature, it falls into a state of suspended animation. Time ceases to flow for it, and it doesn’t grow older. You can set a condition for the spell to end (such as a time period or a specific event).',

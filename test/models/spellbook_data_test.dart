@@ -176,6 +176,295 @@ void main() {
       }
     });
 
+    test('All classes match canonical SRD 5.1 class spell assignments', () {
+      // Canonical SRD 5.1 Paladin Spells
+      const paladinSrd = {
+        'Bless', 'Command', 'Cure Wounds', 'Detect Evil and Good', 'Detect Magic',
+        'Detect Poison and Disease', 'Divine Favor', 'Heroism', 'Protection from Evil and Good',
+        'Purify Food and Drink', 'Shield of Faith', 'Aid', 'Find Steed', 'Lesser Restoration',
+        'Locate Object', 'Magic Weapon', 'Protection from Poison', 'Zone of Truth',
+        'Create Food and Water', 'Daylight', 'Dispel Magic', 'Magic Circle', 'Remove Curse',
+        'Revivify', 'Banishment', 'Death Ward', 'Locate Creature', 'Dispel Evil and Good',
+        'Geas', 'Raise Dead'
+      };
+
+      // Canonical SRD 5.1 Ranger Spells
+      const rangerSrd = {
+        'Alarm', 'Animal Friendship', 'Cure Wounds', 'Detect Magic', 'Detect Poison and Disease',
+        'Fog Cloud', 'Goodberry', "Hunter's Mark", 'Jump', 'Longstrider', 'Speak with Animals',
+        'Animal Messenger', 'Barkskin', 'Darkvision', 'Find Traps', 'Lesser Restoration',
+        'Locate Animals or Plants', 'Locate Object', 'Pass without Trace', 'Protection from Poison',
+        'Silence', 'Spike Growth', 'Conjure Animals', 'Daylight', 'Nondetection', 'Plant Growth',
+        'Protection from Energy', 'Speak with Plants', 'Water Breathing', 'Water Walk', 'Wind Wall',
+        'Conjure Woodland Beings', 'Freedom of Movement', 'Locate Creature', 'Stoneskin',
+        'Commune with Nature', 'Tree Stride'
+      };
+
+      // Canonical SRD 5.1 Warlock Spells
+      const warlockSrd = {
+        'Chill Touch', 'Eldritch Blast', 'Friends', 'Mage Hand', 'Minor Illusion',
+        'Poison Spray', 'Prestidigitation', 'True Strike', 'Charm Person', 'Comprehend Languages',
+        'Expeditious Retreat', 'Hellish Rebuke', 'Illusory Script', 'Protection from Evil and Good',
+        'Unseen Servant', 'Darkness', 'Enthrall', 'Hold Person', 'Invisibility', 'Mirror Image',
+        'Misty Step', 'Ray of Enfeeblement', 'Shatter', 'Spider Climb', 'Suggestion',
+        'Counterspell', 'Dispel Magic', 'Fear', 'Fly', 'Gaseous Form', 'Hypnotic Pattern',
+        'Magic Circle', 'Major Image', 'Remove Curse', 'Tongues', 'Vampiric Touch',
+        'Banishment', 'Blight', 'Dimension Door', 'Hallucinatory Terrain', 'Contact Other Plane',
+        'Dream', 'Hold Monster', 'Scrying', 'Circle of Death', 'Conjure Fey', 'Create Undead',
+        'Eyebite', 'Flesh to Stone', 'Mass Suggestion', 'True Seeing',
+        'Etherealness', 'Finger of Death', 'Forcecage', 'Plane Shift', 'Demiplane',
+        'Dominate Monster', 'Feeblemind', 'Power Word Stun', 'Astral Projection', 'Foresight',
+        'Imprisonment', 'Power Word Kill', 'True Polymorph'
+      };
+
+      // Canonical SRD 5.1 Cleric Spells
+      const clericSrd = {
+        'Guidance', 'Light', 'Mending', 'Resistance', 'Sacred Flame', 'Spare the Dying',
+        'Thaumaturgy', 'Bane', 'Bless', 'Command', 'Create or Destroy Water', 'Cure Wounds',
+        'Detect Evil and Good', 'Detect Magic', 'Detect Poison and Disease', 'Guiding Bolt',
+        'Healing Word', 'Inflict Wounds', 'Protection from Evil and Good', 'Purify Food and Drink',
+        'Sanctuary', 'Shield of Faith', 'Aid', 'Augury', 'Blindness/Deafness', 'Calm Emotions',
+        'Continual Flame', 'Enhance Ability', 'Find Traps', 'Gentle Repose', 'Hold Person',
+        'Lesser Restoration', 'Locate Object', 'Prayer of Healing', 'Protection from Poison',
+        'Silence', 'Spiritual Weapon', 'Warding Bond', 'Zone of Truth', 'Animate Dead',
+        'Beacon of Hope', 'Bestow Curse', 'Clairvoyance', 'Create Food and Water', 'Daylight',
+        'Dispel Magic', 'Feign Death', 'Glyph of Warding', 'Magic Circle', 'Mass Healing Word',
+        'Meld into Stone', 'Protection from Energy', 'Remove Curse', 'Revivify', 'Sending',
+        'Speak with Dead', 'Spirit Guardians', 'Tongues', 'Water Walk', 'Banishment',
+        'Control Water', 'Death Ward', 'Divination', 'Freedom of Movement', 'Guardian of Faith',
+        'Locate Creature', 'Stone Shape', 'Commune', 'Contagion', 'Dispel Evil and Good',
+        'Flame Strike', 'Geas', 'Greater Restoration', 'Hallow', 'Insect Plague', 'Legend Lore',
+        'Mass Cure Wounds', 'Planar Binding', 'Raise Dead', 'Scrying', 'Blade Barrier',
+        'Create Undead', 'Find the Path', 'Forbiddance', 'Harm', 'Heal', 'Heroes\' Feast',
+        'Planar Ally', 'True Seeing', 'Word of Recall', 'Conjure Celestial', 'Divine Word',
+        'Etherealness', 'Fire Storm', 'Plane Shift', 'Regenerate', 'Resurrection', 'Symbol',
+        'Antimagic Field', 'Control Weather', 'Earthquake', 'Holy Aura', 'Sunburst',
+        'Astral Projection', 'Gate', 'Mass Heal', 'True Resurrection'
+      };
+
+      // Canonical SRD 5.1 Druid Spells
+      const druidSrd = {
+        'Druidcraft', 'Guidance', 'Mending', 'Poison Spray', 'Produce Flame', 'Resistance',
+        'Shillelagh', 'Animal Friendship', 'Charm Person', 'Create or Destroy Water',
+        'Cure Wounds', 'Detect Magic', 'Detect Poison and Disease', 'Entangle', 'Faerie Fire',
+        'Fog Cloud', 'Goodberry', 'Healing Word', 'Jump', 'Longstrider', 'Purify Food and Drink',
+        'Speak with Animals', 'Thunderwave', 'Animal Messenger', 'Barkskin', 'Darkvision',
+        'Enhance Ability', 'Find Traps', 'Flame Blade', 'Flaming Sphere', 'Gust of Wind',
+        'Heat Metal', 'Hold Person', 'Lesser Restoration', 'Locate Animals or Plants',
+        'Locate Object', 'Moonbeam', 'Pass without Trace', 'Protection from Poison', 'Spike Growth',
+        'Call Lightning', 'Conjure Animals', 'Daylight', 'Dispel Magic', 'Feign Death',
+        'Meld into Stone', 'Plant Growth', 'Protection from Energy', 'Sleet Storm',
+        'Speak with Plants', 'Water Breathing', 'Water Walk', 'Wind Wall', 'Blight', 'Confusion',
+        'Conjure Minor Elementals', 'Conjure Woodland Beings', 'Control Water', 'Dominate Beast',
+        'Freedom of Movement', 'Giant Insect', 'Hallucinatory Terrain', 'Ice Storm',
+        'Locate Creature', 'Polymorph', 'Stone Shape', 'Stoneskin', 'Wall of Fire',
+        'Antilife Shell', 'Awaken', 'Commune with Nature', 'Conjure Elemental', 'Contagion',
+        'Geas', 'Greater Restoration', 'Insect Plague', 'Mass Cure Wounds',
+        'Planar Binding', 'Reincarnate', 'Scrying', 'Tree Stride', 'Wall of Stone', 'Conjure Fey',
+        'Find the Path', 'Heal', 'Heroes\' Feast', 'Move Earth', 'Sunbeam', 'Transport via Plants',
+        'Wall of Thorns', 'Wind Walk', 'Fire Storm', 'Mirage Arcane', 'Plane Shift',
+        'Regenerate', 'Reverse Gravity', 'Animal Shapes', 'Antipathy/Sympathy', 'Control Weather',
+        'Earthquake', 'Feeblemind', 'Sunburst', 'Tsunami', 'Foresight', 'Shapechange',
+        'Storm of Vengeance', 'True Resurrection'
+      };
+
+      for (final name in paladinSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Paladin spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.paladin),
+          isTrue,
+          reason: 'Spell $name should be on Paladin 2014 spell list',
+        );
+      }
+
+      for (final name in rangerSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Ranger spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.ranger),
+          isTrue,
+          reason: 'Spell $name should be on Ranger 2014 spell list',
+        );
+      }
+
+      for (final name in warlockSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Warlock spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.warlock),
+          isTrue,
+          reason: 'Spell $name should be on Warlock 2014 spell list',
+        );
+      }
+
+      for (final name in clericSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Cleric spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.cleric),
+          isTrue,
+          reason: 'Spell $name should be on Cleric 2014 spell list',
+        );
+      }
+
+      for (final name in druidSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Druid spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.druid),
+          isTrue,
+          reason: 'Spell $name should be on Druid 2014 spell list',
+        );
+      }
+
+      // Canonical SRD 5.1 Bard Spells
+      const bardSrd = {
+        'Blade Ward', 'Dancing Lights', 'Friends', 'Light', 'Mage Hand', 'Mending',
+        'Message', 'Minor Illusion', 'Prestidigitation', 'True Strike', 'Vicious Mockery',
+        'Animal Friendship', 'Bane', 'Charm Person', 'Comprehend Languages', 'Cure Wounds',
+        'Detect Magic', 'Disguise Self', 'Faerie Fire', 'Feather Fall', 'Healing Word',
+        'Heroism', 'Hideous Laughter', 'Identify', 'Illusory Script', 'Longstrider',
+        'Silent Image', 'Sleep', 'Speak with Animals', 'Thunderwave', 'Unseen Servant',
+        'Animal Messenger', 'Blindness/Deafness', 'Calm Emotions', 'Detect Thoughts',
+        'Enhance Ability', 'Enthrall', 'Heat Metal', 'Hold Person', 'Invisibility',
+        'Knock', 'Lesser Restoration', 'Locate Animals or Plants', 'Locate Object',
+        'Magic Mouth', 'See Invisibility', 'Shatter', 'Silence', 'Suggestion', 'Zone of Truth',
+        'Bestow Curse', 'Clairvoyance', 'Dispel Magic', 'Fear', 'Feign Death',
+        'Hypnotic Pattern', 'Major Image', 'Nondetection', 'Plant Growth', 'Sending',
+        'Speak with Dead', 'Speak with Plants', 'Stinking Cloud', 'Tiny Hut', 'Tongues',
+        'Compulsion', 'Confusion', 'Dimension Door', 'Freedom of Movement', 'Greater Invisibility',
+        'Hallucinatory Terrain', 'Locate Creature', 'Polymorph', 'Animate Objects', 'Awaken',
+        'Dominate Person', 'Dream', 'Geas', 'Greater Restoration', 'Hold Monster',
+        'Legend Lore', 'Mass Cure Wounds', 'Mislead', 'Modify Memory', 'Planar Binding',
+        'Raise Dead', 'Scrying', 'Seeming', 'Telepathic Bond', 'Teleportation Circle',
+        'Eyebite', 'Find the Path', 'Guards and Wards',
+        'Irresistible Dance', 'Mass Suggestion', 'Programmed Illusion', 'True Seeing',
+        'Arcane Sword', 'Etherealness', 'Forcecage', 'Magnificent Mansion', 'Mirage Arcane',
+        'Project Image', 'Regenerate', 'Resurrection',
+        'Symbol', 'Teleport', 'Dominate Monster',
+        'Feeblemind', 'Mind Blank', 'Power Word Stun', 'Foresight',
+        'Power Word Kill', 'True Polymorph'
+      };
+
+      // Canonical SRD 5.1 Sorcerer Spells
+      const sorcererSrd = {
+        'Acid Splash', 'Blade Ward', 'Chill Touch', 'Dancing Lights', 'Fire Bolt',
+        'Friends', 'Light', 'Mage Hand', 'Mending', 'Message', 'Minor Illusion',
+        'Poison Spray', 'Prestidigitation', 'Ray of Frost', 'Shocking Grasp',
+        'True Strike', 'Burning Hands', 'Charm Person', 'Color Spray', 'Comprehend Languages',
+        'Detect Magic', 'Disguise Self', 'Expeditious Retreat', 'False Life', 'Feather Fall',
+        'Fog Cloud', 'Jump', 'Mage Armor', 'Magic Missile', 'Shield', 'Silent Image',
+        'Sleep', 'Thunderwave', 'Alter Self', 'Blindness/Deafness', 'Blur', 'Darkness',
+        'Darkvision', 'Detect Thoughts', 'Enhance Ability', 'Enlarge/Reduce', 'Gust of Wind',
+        'Hold Person', 'Invisibility', 'Knock', 'Levitate', 'Mirror Image', 'Misty Step',
+        'Scorching Ray', 'See Invisibility', 'Shatter', 'Spider Climb', 'Web', 'Blink',
+        'Clairvoyance', 'Counterspell', 'Daylight', 'Dispel Magic', 'Fear', 'Fireball',
+        'Fly', 'Gaseous Form', 'Haste', 'Hypnotic Pattern', 'Lightning Bolt', 'Major Image',
+        'Protection from Energy', 'Sleet Storm', 'Slow', 'Stinking Cloud', 'Tongues',
+        'Water Breathing', 'Water Walk', 'Banishment', 'Blight', 'Confusion', 'Dimension Door',
+        'Dominate Beast', 'Greater Invisibility', 'Ice Storm', 'Polymorph', 'Stoneskin',
+        'Wall of Fire', 'Animate Objects', 'Cloudkill', 'Cone of Cold', 'Creation',
+        'Dominate Person', 'Hold Monster', 'Insect Plague', 'Seeming', 'Telekinesis',
+        'Teleportation Circle', 'Wall of Stone', 'Arcane Gate', 'Chain Lightning',
+        'Circle of Death', 'Disintegrate', 'Eyebite', 'Globe of Invulnerability', 'Move Earth',
+        'Sunbeam', 'True Seeing', 'Delayed Blast Fireball', 'Etherealness', 'Finger of Death',
+        'Fire Storm', 'Plane Shift', 'Prismatic Spray', 'Reverse Gravity', 'Teleport',
+        'Dominate Monster', 'Earthquake', 'Incendiary Cloud', 'Power Word Stun', 'Sunburst',
+        'Gate', 'Meteor Swarm', 'Power Word Kill', 'Time Stop', 'Wish'
+      };
+
+      // Canonical SRD 5.1 Wizard Spells
+      const wizardSrd = {
+        'Acid Splash', 'Blade Ward', 'Chill Touch', 'Dancing Lights', 'Fire Bolt',
+        'Friends', 'Light', 'Mage Hand', 'Mending', 'Message', 'Minor Illusion',
+        'Poison Spray', 'Prestidigitation', 'Ray of Frost', 'Shocking Grasp', 'True Strike',
+        'Alarm', 'Burning Hands', 'Charm Person', 'Color Spray', 'Comprehend Languages',
+        'Detect Magic', 'Disguise Self', 'Expeditious Retreat', 'False Life', 'Feather Fall',
+        'Find Familiar', 'Floating Disk', 'Fog Cloud', 'Grease', 'Hideous Laughter',
+        'Identify', 'Illusory Script', 'Jump', 'Longstrider', 'Mage Armor', 'Magic Missile',
+        'Protection from Evil and Good', 'Shield', 'Silent Image', 'Sleep', 'Thunderwave',
+        'Unseen Servant', 'Acid Arrow', 'Alter Self', 'Arcane Lock', 'Blindness/Deafness',
+        'Blur', 'Continual Flame', 'Darkness', 'Darkvision', 'Detect Thoughts', 'Enlarge/Reduce',
+        'Flaming Sphere', 'Gentle Repose', 'Gust of Wind', 'Hold Person', 'Invisibility',
+        'Knock', 'Levitate', 'Locate Object', 'Magic Mouth', 'Magic Weapon', 'Mirror Image',
+        'Misty Step', 'Ray of Enfeeblement', 'Rope Trick', 'Scorching Ray', 'See Invisibility',
+        'Shatter', 'Spider Climb', 'Suggestion', 'Web', 'Animate Dead', 'Bestow Curse',
+        'Blink', 'Clairvoyance', 'Counterspell', 'Dispel Magic', 'Fear', 'Feign Death',
+        'Fireball', 'Fly', 'Gaseous Form', 'Glyph of Warding', 'Haste', 'Hypnotic Pattern',
+        'Lightning Bolt', 'Magic Circle', 'Major Image', 'Nondetection', 'Phantom Steed',
+        'Protection from Energy', 'Remove Curse', 'Sending', 'Sleet Storm', 'Slow',
+        'Stinking Cloud', 'Tiny Hut', 'Tongues', 'Vampiric Touch', 'Water Breathing',
+        'Arcane Eye', 'Banishment', 'Black Tentacles', 'Blight', 'Confusion',
+        'Conjure Minor Elementals', 'Control Water', 'Dimension Door', 'Fabricate',
+        'Faithful Hound', 'Fire Shield', 'Greater Invisibility', 'Hallucinatory Terrain',
+        'Ice Storm', 'Locate Creature', 'Phantasmal Killer', 'Polymorph', 'Private Sanctum',
+        'Resilient Sphere', 'Secret Chest', 'Stone Shape', 'Stoneskin', 'Wall of Fire',
+        'Animate Objects', 'Cloudkill', 'Cone of Cold', 'Conjure Elemental', 'Contact Other Plane',
+        'Creation', 'Dream', 'Geas', 'Hold Monster', 'Legend Lore', 'Mislead', 'Modify Memory',
+        'Passwall', 'Planar Binding', 'Scrying', 'Seeming', 'Telekinesis', 'Telepathic Bond',
+        'Teleportation Circle', 'Wall of Force', 'Wall of Stone', 'Arcane Gate', 'Chain Lightning',
+        'Circle of Death', 'Contingency', 'Create Undead', 'Disintegrate', 'Eyebite',
+        'Flesh to Stone', 'Freezing Sphere', 'Globe of Invulnerability', 'Guards and Wards',
+        'Instant Summons', 'Irresistible Dance', 'Magic Jar', 'Mass Suggestion', 'Move Earth',
+        'Programmed Illusion', 'Sunbeam', 'True Seeing', 'Wall of Ice', 'Arcane Sword',
+        'Delayed Blast Fireball', 'Etherealness', 'Finger of Death', 'Forcecage',
+        'Magnificent Mansion', 'Mirage Arcane', 'Plane Shift', 'Prismatic Spray',
+        'Project Image', 'Reverse Gravity', 'Sequester', 'Simulacrum', 'Symbol', 'Teleport',
+        'Antimagic Field', 'Antipathy/Sympathy', 'Clone', 'Control Weather', 'Demiplane',
+        'Dominate Monster', 'Feeblemind', 'Incendiary Cloud', 'Maze', 'Mind Blank',
+        'Power Word Stun', 'Sunburst', 'Astral Projection', 'Foresight', 'Gate', 'Imprisonment',
+        'Meteor Swarm', 'Power Word Kill', 'Prismatic Wall', 'Shapechange', 'Time Stop',
+        'True Polymorph', 'Weird', 'Wish'
+      };
+
+      for (final name in bardSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Bard spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.bard),
+          isTrue,
+          reason: 'Spell $name should be on Bard 2014 spell list',
+        );
+      }
+
+      for (final name in sorcererSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Sorcerer spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.sorcerer),
+          isTrue,
+          reason: 'Spell $name should be on Sorcerer 2014 spell list',
+        );
+      }
+
+      for (final name in wizardSrd) {
+        final spell = SpellbookLibrary.allSpells.firstWhere(
+          (s) => s.name.toLowerCase() == name.toLowerCase(),
+          orElse: () => throw Exception('Wizard spell $name not found in library'),
+        );
+        expect(
+          spell.rules2014.classes.contains(SpellClass.wizard),
+          isTrue,
+          reason: 'Spell $name should be on Wizard 2014 spell list',
+        );
+      }
+    });
+
     test('All changed spells have diffSummary and unchanged spells have uniform rules properties', () {
       for (final spell in SpellbookLibrary.allSpells) {
         final r2014 = spell.rules2014;
@@ -326,7 +615,7 @@ void main() {
       final missing = <String>[];
       for (final s in srd51SpellNames) {
         final clean = s.toLowerCase().replaceAll('’', "'");
-        final match = currentNames.any((cn) => cn == clean || cn.contains(clean) || clean.contains(cn));
+        final match = currentNames.contains(clean);
         if (!match) {
           missing.add(s);
         }
