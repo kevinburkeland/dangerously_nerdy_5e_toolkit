@@ -5,10 +5,15 @@ import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dm_reference_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 void main() {
-  Widget createTestableWidget(Widget child) {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  Widget createTestableWidget(Widget child, {SettingsProvider? provider}) {
+    final settingsProvider = provider ?? SettingsProvider();
     return SettingsScope(
-      notifier: SettingsProvider(),
+      notifier: settingsProvider,
       child: MaterialApp(
         home: child,
       ),
@@ -16,6 +21,9 @@ void main() {
   }
 
   group('DmReferenceScreen Widget Tests', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
     testWidgets('renders DM Screen with title, quick roller, and cards', (WidgetTester tester) async {
       await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
@@ -27,7 +35,7 @@ void main() {
 
       // Verify some cards are rendered
       expect(find.text('Attack Action & Extra Attack'), findsOneWidget);
-      expect(find.text('Exhaustion (Fatigue)'), findsOneWidget);
+      expect(find.textContaining('Cast a Spell'), findsOneWidget);
     });
 
     testWidgets('toggling between 2014 and 2024 updates rule display', (WidgetTester tester) async {
@@ -127,15 +135,14 @@ void main() {
       });
 
       await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
+      await tester.pumpAndSettle();
 
       // Pin first two cards
       final pinButtons = find.byTooltip('Pin rule to top');
-      await tester.ensureVisible(pinButtons.at(0));
       await tester.tap(pinButtons.at(0));
       await tester.pumpAndSettle();
 
       final remainingPinButtons = find.byTooltip('Pin rule to top');
-      await tester.ensureVisible(remainingPinButtons.at(0));
       await tester.tap(remainingPinButtons.at(0));
       await tester.pumpAndSettle();
 
@@ -143,7 +150,6 @@ void main() {
 
       // Tap Unpin All
       final unpinAll = find.text('Unpin All');
-      await tester.ensureVisible(unpinAll);
       await tester.tap(unpinAll);
       await tester.pumpAndSettle();
 
@@ -151,10 +157,17 @@ void main() {
     });
 
     testWidgets('Pinned Only filter chip filters to only pinned rules', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
+      await tester.pumpAndSettle();
 
       final pinButton = find.byTooltip('Pin rule to top').first;
-      await tester.ensureVisible(pinButton);
       await tester.tap(pinButton);
       await tester.pumpAndSettle();
 
@@ -163,7 +176,6 @@ void main() {
       // Tap Pinned Only filter chip
       final pinnedOnlyChip = find.text('Pinned Only (1)');
       expect(pinnedOnlyChip, findsOneWidget);
-      await tester.ensureVisible(pinnedOnlyChip);
       await tester.tap(pinnedOnlyChip);
       await tester.pumpAndSettle();
 

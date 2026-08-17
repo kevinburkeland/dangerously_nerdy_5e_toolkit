@@ -388,13 +388,21 @@ class _Polyhedral3DDicePainter extends CustomPainter {
 
       for (int i = 0; i < die.mesh.faces.length; i++) {
         final face = die.mesh.faces[i];
-        final v0 = transformedVertices[face.vertexIndices[0]];
-        final v1 = transformedVertices[face.vertexIndices[1]];
-        final v2 = transformedVertices[face.vertexIndices[2]];
+        final vIndices = face.vertexIndices;
+        final vCount = vIndices.length;
+        final v0 = transformedVertices[vIndices[0]];
+        final v1 = transformedVertices[vIndices[1]];
+        final v2 = transformedVertices[vIndices[2]];
 
-        final centroid = face.vertexIndices
-            .map((idx) => transformedVertices[idx])
-            .reduce((a, b) => a + b) * (1.0 / face.vertexIndices.length);
+        double cx = 0, cy = 0, cz = 0;
+        for (int vi = 0; vi < vCount; vi++) {
+          final tv = transformedVertices[vIndices[vi]];
+          cx += tv.x;
+          cy += tv.y;
+          cz += tv.z;
+        }
+        final invCount = 1.0 / vCount;
+        final centroid = Vec3(cx * invCount, cy * invCount, cz * invCount);
         var normal = (v1 - v0).cross(v2 - v0).normalized();
 
         // Ensure normal vector points strictly OUTWARD from die center (0,0,0)
@@ -411,23 +419,23 @@ class _Polyhedral3DDicePainter extends CustomPainter {
 
           final diffuse = (normal.dot(_lightDir)).clamp(0.20, 1.0);
           final path = Path();
-          final screenPoints = <Offset>[];
+          double scx = 0, scy = 0;
 
-          for (int vi = 0; vi < face.vertexIndices.length; vi++) {
-            final tv = transformedVertices[face.vertexIndices[vi]];
+          for (int vi = 0; vi < vCount; vi++) {
+            final tv = transformedVertices[vIndices[vi]];
             final px = currentX + tv.x * die.mesh.radius;
             final py = currentY + tv.y * die.mesh.radius;
-            final pt = Offset(px, py);
-            screenPoints.add(pt);
+            scx += px;
+            scy += py;
             if (vi == 0) {
-              path.moveTo(pt.dx, pt.dy);
+              path.moveTo(px, py);
             } else {
-              path.lineTo(pt.dx, pt.dy);
+              path.lineTo(px, py);
             }
           }
           path.close();
 
-          final centerPt = screenPoints.reduce((a, b) => a + b) / screenPoints.length.toDouble();
+          final centerPt = Offset(scx * invCount, scy * invCount);
 
           visibleFaces.add(FaceRenderData(
             faceIndex: i,
@@ -492,29 +500,26 @@ class _Polyhedral3DDicePainter extends CustomPainter {
             faceDisplayText = '$num';
           }
 
-          final textSpan = TextSpan(
+          final fontSize = isWinningFace ? (die.mesh.radius * 0.44) : (die.mesh.radius * 0.28);
+          final textColor = isWinningFace
+              ? (faceData.diffuse > 0.5 ? Colors.black : Colors.white)
+              : Colors.white60;
+          final shadowColor = isWinningFace
+              ? (isCrit ? Colors.amberAccent : Colors.white.withValues(alpha: 0.8))
+              : Colors.black45;
+          final blurRadius = isWinningFace ? 4.0 : 1.0;
+
+          final textPainter = _getOrCreateTextPainter(
             text: faceDisplayText,
-            style: TextStyle(
-              color: isWinningFace
-                  ? (faceData.diffuse > 0.5 ? Colors.black : Colors.white)
-                  : Colors.white60,
-              fontSize: isWinningFace ? (die.mesh.radius * 0.44) : (die.mesh.radius * 0.28),
-              fontWeight: FontWeight.w900,
-              shadows: [
-                Shadow(
-                  color: isWinningFace
-                      ? (isCrit ? Colors.amberAccent : Colors.white.withValues(alpha: 0.8))
-                      : Colors.black45,
-                  blurRadius: isWinningFace ? 4 : 1,
-                ),
-              ],
-            ),
+            fontSize: fontSize,
+            color: textColor,
+            shadows: [
+              Shadow(
+                color: shadowColor,
+                blurRadius: blurRadius,
+              ),
+            ],
           );
-          final textPainter = TextPainter(
-            text: textSpan,
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.ltr,
-          )..layout();
 
           textPainter.paint(
             canvas,
@@ -554,22 +559,14 @@ class _Polyhedral3DDicePainter extends CustomPainter {
             ? (die.mesh.radius * 0.40)
             : (textStr.length == 2 ? (die.mesh.radius * 0.50) : (die.mesh.radius * 0.60));
 
-        final textSpan = TextSpan(
+        final textPainter = _getOrCreateTextPainter(
           text: textStr,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: fontSize,
-            fontWeight: FontWeight.w900,
-            shadows: const [
-              Shadow(color: Colors.black87, blurRadius: 4),
-            ],
-          ),
+          fontSize: fontSize,
+          color: Colors.white,
+          shadows: const [
+            Shadow(color: Colors.black87, blurRadius: 4),
+          ],
         );
-        final textPainter = TextPainter(
-          text: textSpan,
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.ltr,
-        )..layout();
 
         textPainter.paint(
           canvas,
@@ -577,6 +574,36 @@ class _Polyhedral3DDicePainter extends CustomPainter {
         );
       }
     }
+  }
+
+  static final Map<String, TextPainter> _textPainterCache = {};
+
+  static TextPainter _getOrCreateTextPainter({
+    required String text,
+    required double fontSize,
+    required Color color,
+    required List<Shadow> shadows,
+  }) {
+    final key = '$text-${fontSize.toStringAsFixed(1)}-${color.toARGB32()}';
+    final existing = _textPainterCache[key];
+    if (existing != null) return existing;
+
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w900,
+          shadows: shadows,
+        ),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    _textPainterCache[key] = tp;
+    return tp;
   }
 
   @override

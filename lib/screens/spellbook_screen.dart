@@ -409,14 +409,12 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
             Expanded(
               child: filteredSpells.isEmpty
                   ? _buildEmptyState(theme, pinnedIds.isEmpty && _viewMode == SpellbookViewMode.mySpellbook)
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty) ...[
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
+                  : CustomScrollView(
+                      slivers: [
+                        if (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty) ...[
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                            sliver: SliverToBoxAdapter(
                               child: Row(
                                 children: [
                                   const Icon(Icons.bookmark, color: Colors.purpleAccent, size: 18),
@@ -432,16 +430,20 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                                 ],
                               ),
                             ),
-                            _buildSpellCardsWrap(context, pinnedSpellsInResults, edition, pinnedIds),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          _buildSliverSpellCards(context, pinnedSpellsInResults, edition, pinnedIds),
+                          const SliverPadding(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            sliver: SliverToBoxAdapter(
                               child: Divider(color: Colors.white12),
                             ),
-                          ],
+                          ),
+                        ],
 
-                          if (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
+                        if (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty)
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                            sliver: SliverToBoxAdapter(
                               child: Text(
                                 'Other SRD Spells (${otherSpellsInResults.length})',
                                 style: TextStyle(
@@ -451,19 +453,21 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                                 ),
                               ),
                             ),
-
-                          // Level-by-Level Separated Spell Display
-                          ..._buildLevelSeparatedCards(
-                            context,
-                            (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty)
-                                ? otherSpellsInResults
-                                : filteredSpells,
-                            edition,
-                            pinnedIds,
-                            theme,
                           ),
-                        ],
-                      ),
+
+                        // Level-by-Level Separated Spell Display
+                        ..._buildSliverLevelSeparatedCards(
+                          context,
+                          (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty)
+                              ? otherSpellsInResults
+                              : filteredSpells,
+                          edition,
+                          pinnedIds,
+                          theme,
+                        ),
+
+                        const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+                      ],
                     ),
             ),
           ],
@@ -472,7 +476,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     );
   }
 
-  List<Widget> _buildLevelSeparatedCards(
+  List<Widget> _buildSliverLevelSeparatedCards(
     BuildContext context,
     List<SpellItem> spells,
     DmRulesEdition edition,
@@ -486,7 +490,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     }
     final sortedLevels = levelGroups.keys.toList()..sort();
 
-    final widgets = <Widget>[];
+    final slivers = <Widget>[];
 
     for (int i = 0; i < sortedLevels.length; i++) {
       final level = sortedLevels[i];
@@ -502,54 +506,56 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                       ? '3rd-Level Spells'
                       : '$level-th Level Spells')));
 
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.only(top: i == 0 ? 4 : 20, bottom: 10),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  level == 0 ? 'CANTRIP' : 'LEVEL $level',
-                  style: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
-                    letterSpacing: 0.5,
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, i == 0 ? 8 : 20, 16, 10),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    level == 0 ? 'CANTRIP' : 'LEVEL $level',
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                levelTitle,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
+                const SizedBox(width: 8),
+                Text(
+                  levelTitle,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                '${levelSpells.length} ${levelSpells.length == 1 ? 'Spell' : 'Spells'}',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
-                  fontSize: 12,
+                const Spacer(),
+                Text(
+                  '${levelSpells.length} ${levelSpells.length == 1 ? 'Spell' : 'Spells'}',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                    fontSize: 12,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
 
-      widgets.add(_buildSpellCardsWrap(context, levelSpells, edition, pinnedIds));
+      slivers.add(_buildSliverSpellCards(context, levelSpells, edition, pinnedIds));
     }
 
-    return widgets;
+    return slivers;
   }
 
   Widget _buildEmptyState(ThemeData theme, bool isSpellbookEmpty) {
@@ -607,7 +613,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     );
   }
 
-  Widget _buildSpellCardsWrap(
+  Widget _buildSliverSpellCards(
     BuildContext context,
     List<SpellItem> spells,
     DmRulesEdition edition,
@@ -615,31 +621,44 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   ) {
     final width = MediaQuery.of(context).size.width;
     final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
+    final rowCount = (spells.length / crossAxisCount).ceil();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 14)) / crossAxisCount;
-        return Wrap(
-          spacing: 14,
-          runSpacing: 14,
-          children: spells
-              .map((spell) => SizedBox(
-                    width: itemWidth,
-                    child: RepaintBoundary(
-                      child: SpellCard(
-                        spell: spell,
-                        edition: edition,
-                        isPinned: pinnedIds.contains(spell.id),
-                        onTogglePin: () => _togglePinSpell(context, spell.id),
-                        onTap: () => _showCompareDialog(context, spell),
-                        onOpenQuickRoll: () => _openQuickRollDialog(context, spell, edition),
-                        onQuickRoll: _performSpellRoll,
-                      ),
-                    ),
-                  ))
-              .toList(),
-        );
-      },
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList.builder(
+        itemCount: rowCount,
+        itemBuilder: (context, rowIndex) {
+          final startIndex = rowIndex * crossAxisCount;
+          final rowSpells = spells.skip(startIndex).take(crossAxisCount).toList();
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int c = 0; c < crossAxisCount; c++) ...[
+                  if (c > 0) const SizedBox(width: 14),
+                  Expanded(
+                    child: c < rowSpells.length
+                        ? RepaintBoundary(
+                            child: SpellCard(
+                              spell: rowSpells[c],
+                              edition: edition,
+                              isPinned: pinnedIds.contains(rowSpells[c].id),
+                              onTogglePin: () => _togglePinSpell(context, rowSpells[c].id),
+                              onTap: () => _showCompareDialog(context, rowSpells[c]),
+                              onOpenQuickRoll: () => _openQuickRollDialog(context, rowSpells[c], edition),
+                              onQuickRoll: _performSpellRoll,
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

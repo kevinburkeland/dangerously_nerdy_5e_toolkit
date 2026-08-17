@@ -131,6 +131,43 @@ class SpellItem {
 
   String getFullTypeLabel(DmRulesEdition edition) => '$levelLabel ${getSchool(edition).label}';
 
+  static final Map<String, String> _corpusCache = {};
+
+  String _getCorpus(DmRulesEdition edition) {
+    final key = '${id}_${edition.name}';
+    final cached = _corpusCache[key];
+    if (cached != null) return cached;
+    final currentRules = getRules(edition);
+    final effectiveSchool = currentRules.schoolOverride ?? school;
+    final buffer = StringBuffer()
+      ..write('$name ')
+      ..write('${name2014 ?? ""} ')
+      ..write('${name2024 ?? ""} ')
+      ..write('${effectiveSchool.label} ')
+      ..write('$levelLabel ')
+      ..write('${diffSummary ?? ""} ')
+      ..write('${currentRules.damageOrHealType ?? ""} ')
+      ..write('${currentRules.savingThrow ?? ""} ')
+      ..write('${currentRules.components} ')
+      ..write('${currentRules.range} ')
+      ..write('${currentRules.castingTime} ')
+      ..write('${currentRules.duration} ')
+      ..write('${currentRules.rollFormula ?? ""} ')
+      ..write('${currentRules.higherLevels ?? ""} ');
+    for (final tag in tags) {
+      buffer.write('$tag ');
+    }
+    for (final cls in currentRules.classes) {
+      buffer.write('${cls.label} ');
+    }
+    for (final line in currentRules.description) {
+      buffer.write('$line ');
+    }
+    final corpus = buffer.toString().toLowerCase();
+    _corpusCache[key] = corpus;
+    return corpus;
+  }
+
   bool matches(
     String query, {
     SpellSchool? schoolFilter,
@@ -152,36 +189,11 @@ class SpellItem {
     if (ritualOnly == true && !currentRules.ritual) return false;
     if (concentrationOnly == true && !currentRules.concentration) return false;
 
-    if (query.trim().isEmpty) return true;
-    final q = query.trim().toLowerCase();
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return true;
+    final q = trimmed.toLowerCase();
 
-    if (name.toLowerCase().contains(q)) return true;
-    if (name2014 != null && name2014!.toLowerCase().contains(q)) return true;
-    if (name2024 != null && name2024!.toLowerCase().contains(q)) return true;
-    if (effectiveSchool.label.toLowerCase().contains(q)) return true;
-    if (levelLabel.toLowerCase().contains(q)) return true;
-    if (diffSummary != null && diffSummary!.toLowerCase().contains(q)) return true;
-    if (currentRules.damageOrHealType != null && currentRules.damageOrHealType!.toLowerCase().contains(q)) return true;
-    if (currentRules.savingThrow != null && currentRules.savingThrow!.toLowerCase().contains(q)) return true;
-
-    if (currentRules.components.toLowerCase().contains(q)) return true;
-    if (currentRules.range.toLowerCase().contains(q)) return true;
-    if (currentRules.castingTime.toLowerCase().contains(q)) return true;
-    if (currentRules.duration.toLowerCase().contains(q)) return true;
-    if (currentRules.rollFormula != null && currentRules.rollFormula!.toLowerCase().contains(q)) return true;
-    if (currentRules.higherLevels != null && currentRules.higherLevels!.toLowerCase().contains(q)) return true;
-
-    for (final tag in tags) {
-      if (tag.toLowerCase().contains(q)) return true;
-    }
-    for (final cls in currentRules.classes) {
-      if (cls.label.toLowerCase().contains(q)) return true;
-    }
-    for (final line in currentRules.description) {
-      if (line.toLowerCase().contains(q)) return true;
-    }
-
-    return false;
+    return _getCorpus(edition).contains(q);
   }
 
   /// Dynamic action rings for DndGlyph HUD rendering conforming to the Glyph Style Guide.

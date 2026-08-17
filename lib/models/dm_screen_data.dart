@@ -77,27 +77,41 @@ class DmReferenceItem {
     return edition == DmRulesEdition.v2014 ? rules2014 : rules2024;
   }
 
-  bool matches(String query) {
-    if (query.isEmpty) return true;
-    final q = query.toLowerCase();
-    if (title.toLowerCase().contains(q)) return true;
-    if (title2014 != null && title2014!.toLowerCase().contains(q)) return true;
-    if (title2024 != null && title2024!.toLowerCase().contains(q)) return true;
-    if (summary.toLowerCase().contains(q)) return true;
-    if (category.label.toLowerCase().contains(q)) return true;
-    if (subCategory != null && subCategory!.toLowerCase().contains(q)) return true;
-    if (cost != null && cost!.toLowerCase().contains(q)) return true;
-    if (diffSummary != null && diffSummary!.toLowerCase().contains(q)) return true;
+  static final Map<String, String> _corpusCache = {};
+
+  String _getCorpus() {
+    final cached = _corpusCache[id];
+    if (cached != null) return cached;
+    final buffer = StringBuffer()
+      ..write('$title ')
+      ..write('${title2014 ?? ""} ')
+      ..write('${title2024 ?? ""} ')
+      ..write('$summary ')
+      ..write('${category.label} ')
+      ..write('${subCategory ?? ""} ')
+      ..write('${cost ?? ""} ')
+      ..write('${cost2014 ?? ""} ')
+      ..write('${cost2024 ?? ""} ')
+      ..write('${diffSummary ?? ""} ');
     for (final t in tags) {
-      if (t.toLowerCase().contains(q)) return true;
+      buffer.write('$t ');
     }
     for (final r in rules2014) {
-      if (r.toLowerCase().contains(q)) return true;
+      buffer.write('$r ');
     }
     for (final r in rules2024) {
-      if (r.toLowerCase().contains(q)) return true;
+      buffer.write('$r ');
     }
-    return false;
+    final corpus = buffer.toString().toLowerCase();
+    _corpusCache[id] = corpus;
+    return corpus;
+  }
+
+  bool matches(String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return true;
+    final q = trimmed.toLowerCase();
+    return _getCorpus().contains(q);
   }
 }
 

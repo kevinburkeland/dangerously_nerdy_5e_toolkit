@@ -147,86 +147,103 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1200),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeaderBanner(theme, edition),
-                  const SizedBox(height: 14),
-                  _buildQuickRollBar(theme),
-                  const SizedBox(height: 16),
-                  _buildSearchAndFilters(theme, pinnedIds.length),
-                  const SizedBox(height: 16),
-                  _buildCategoryChips(theme),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      Text(
-                        'SHOWING ${filteredItems.length} OF ${allItems.length} RULES',
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.1,
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderBanner(theme, edition),
+                        const SizedBox(height: 14),
+                        _buildQuickRollBar(theme),
+                        const SizedBox(height: 16),
+                        _buildSearchAndFilters(theme, pinnedIds.length),
+                        const SizedBox(height: 16),
+                        _buildCategoryChips(theme),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            Text(
+                              'SHOWING ${filteredItems.length} OF ${allItems.length} RULES',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: edition == DmRulesEdition.v2024
+                                    ? Colors.cyanAccent.withValues(alpha: 0.15)
+                                    : Colors.amber.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: edition == DmRulesEdition.v2024
+                                      ? Colors.cyanAccent.withValues(alpha: 0.4)
+                                      : Colors.amber.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              child: Text(
+                                edition == DmRulesEdition.v2024 ? 'Active: 2024 Revised' : 'Active: 2014 5e RAW',
+                                style: TextStyle(
+                                  color: edition == DmRulesEdition.v2024 ? Colors.cyanAccent : Colors.amber,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: edition == DmRulesEdition.v2024
-                              ? Colors.cyanAccent.withValues(alpha: 0.15)
-                              : Colors.amber.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: edition == DmRulesEdition.v2024
-                                ? Colors.cyanAccent.withValues(alpha: 0.4)
-                                : Colors.amber.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Text(
-                          edition == DmRulesEdition.v2024 ? 'Active: 2024 Revised' : 'Active: 2014 5e RAW',
-                          style: TextStyle(
-                            color: edition == DmRulesEdition.v2024 ? Colors.cyanAccent : Colors.amber,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                ),
 
-                  if (pinnedFilteredItems.isNotEmpty) ...[
-                    _buildPinnedSectionHeader(theme, pinnedFilteredItems.length),
-                    const SizedBox(height: 10),
-                    _buildItemsGrid(context, pinnedFilteredItems, edition, pinnedIds),
-                    const SizedBox(height: 24),
-                  ],
-
-                  if (otherFilteredItems.isNotEmpty) ...[
-                    if (pinnedFilteredItems.isNotEmpty) ...[
-                      _buildSectionHeader(
-                        theme,
-                        _selectedCategory != null
-                            ? _selectedCategory!.label.toUpperCase()
-                            : 'ALL RULES (${otherFilteredItems.length})',
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                    _buildItemsGrid(context, otherFilteredItems, edition, pinnedIds),
-                  ],
-
-                  if (filteredItems.isEmpty)
-                    _buildEmptyState(theme),
-
-                  const SizedBox(height: 32),
+                if (pinnedFilteredItems.isNotEmpty) ...[
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                    sliver: SliverToBoxAdapter(
+                      child: _buildPinnedSectionHeader(theme, pinnedFilteredItems.length),
+                    ),
+                  ),
+                  _buildSliverItemsGrid(context, pinnedFilteredItems, edition, pinnedIds),
                 ],
-              ),
+
+                if (otherFilteredItems.isNotEmpty) ...[
+                  if (pinnedFilteredItems.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                      sliver: SliverToBoxAdapter(
+                        child: _buildSectionHeader(
+                          theme,
+                          _selectedCategory != null
+                              ? _selectedCategory!.label.toUpperCase()
+                              : 'ALL RULES (${otherFilteredItems.length})',
+                        ),
+                      ),
+                    ),
+                  _buildSliverItemsGrid(context, otherFilteredItems, edition, pinnedIds),
+                ],
+
+                if (filteredItems.isEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverToBoxAdapter(
+                      child: _buildEmptyState(theme),
+                    ),
+                  ),
+
+                const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+              ],
             ),
           ),
         ),
@@ -622,7 +639,7 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
     );
   }
 
-  Widget _buildItemsGrid(
+  Widget _buildSliverItemsGrid(
     BuildContext context,
     List<DmReferenceItem> items,
     DmRulesEdition edition,
@@ -630,29 +647,42 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
   ) {
     final width = MediaQuery.of(context).size.width;
     final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
+    final rowCount = (items.length / crossAxisCount).ceil();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 14)) / crossAxisCount;
-        return Wrap(
-          spacing: 14,
-          runSpacing: 14,
-          children: items
-              .map((item) => SizedBox(
-                    width: itemWidth,
-                    child: RepaintBoundary(
-                      child: DmRuleCard(
-                        item: item,
-                        edition: edition,
-                        isPinned: pinnedIds.contains(item.id),
-                        onTogglePin: () => _togglePinRule(context, item.id),
-                        onTap: () => _showCompareDialog(context, item),
-                      ),
-                    ),
-                  ))
-              .toList(),
-        );
-      },
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList.builder(
+        itemCount: rowCount,
+        itemBuilder: (context, rowIndex) {
+          final startIndex = rowIndex * crossAxisCount;
+          final rowItems = items.skip(startIndex).take(crossAxisCount).toList();
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int c = 0; c < crossAxisCount; c++) ...[
+                  if (c > 0) const SizedBox(width: 14),
+                  Expanded(
+                    child: c < rowItems.length
+                        ? RepaintBoundary(
+                            child: DmRuleCard(
+                              item: rowItems[c],
+                              edition: edition,
+                              isPinned: pinnedIds.contains(rowItems[c].id),
+                              onTogglePin: () => _togglePinRule(context, rowItems[c].id),
+                              onTap: () => _showCompareDialog(context, rowItems[c]),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

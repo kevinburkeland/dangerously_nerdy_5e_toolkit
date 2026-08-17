@@ -33,9 +33,9 @@ void main() {
       expect(find.textContaining('My Spellbook'), findsOneWidget);
       expect(find.textContaining('2024 Diffs'), findsOneWidget);
 
-      // Check iconic spells exist
-      expect(find.text('Fireball'), findsOneWidget);
-      expect(find.text('Cure Wounds'), findsOneWidget);
+      // Check iconic top cantrips exist
+      expect(find.text('True Strike'), findsOneWidget);
+      expect(find.text('Blade Ward'), findsOneWidget);
     });
 
     testWidgets('filters spells when entering query into search bar', (tester) async {
@@ -47,7 +47,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.widgetWithText(SpellCard, 'Fireball'), findsOneWidget);
-      expect(find.widgetWithText(SpellCard, 'Cure Wounds'), findsNothing);
+      expect(find.widgetWithText(SpellCard, 'True Strike'), findsNothing);
 
       // Clear search
       final clearButton = find.byIcon(Icons.clear);
@@ -55,7 +55,7 @@ void main() {
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(SpellCard, 'Cure Wounds'), findsOneWidget);
+      expect(find.widgetWithText(SpellCard, 'True Strike'), findsOneWidget);
     });
 
     testWidgets('switches to My Spellbook tab and shows empty state until pinned', (tester) async {
