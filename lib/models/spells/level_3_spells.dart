@@ -896,7 +896,7 @@ const List<SpellItem> srdLevel3Spells = [
 
   SpellItem(
     id: 'spell_tiny_hut',
-    name: "Leomund's Tiny Hut",
+    name: 'Tiny Hut',
     level: 3,
     school: SpellSchool.evocation,
     isChangedIn2024: false,

@@ -1030,13 +1030,13 @@ class DmScreenLibrary {
       icon: Icons.south,
       color: Colors.deepOrange,
       summary: 'Impact bludgeoning damage and landing on other creatures.',
-      tags: ['falling', 'bludgeoning', '1d6 per 10ft', 'max 20d6', 'landing on creature', 'tasha'],
+      tags: ['falling', 'bludgeoning', '1d6 per 10ft', 'max 20d6', 'landing on creature', 'hazard'],
       isChangedIn2024: true,
       diffSummary: '2024 standardizes falling onto another creature: DC 15 Dex save, damage is split evenly between both creatures on fail!',
       rules2014: [
         '1d6 bludgeoning damage for every 10 feet fallen (max 20d6).',
         'Lands Prone unless damage is completely prevented.',
-        'Landing on another creature was an optional rule in Tasha\'s (DC 15 Dex save to divide damage).',
+        'Landing on another creature was an optional rule in 5e rulebooks (DC 15 Dex save to divide damage).',
       ],
       rules2024: [
         '1d6 bludgeoning damage per 10 feet fallen (max 20d6). Lands Prone unless damage is negated.',

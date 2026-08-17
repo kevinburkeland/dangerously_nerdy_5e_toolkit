@@ -599,7 +599,7 @@ const List<SpellItem> srdLevel7Spells = [
 
   SpellItem(
     id: 'spell_magnificent_mansion',
-    name: "Mordenkainen's Magnificent Mansion",
+    name: 'Magnificent Mansion',
     level: 7,
     school: SpellSchool.conjuration,
     isChangedIn2024: false,
@@ -765,8 +765,7 @@ const List<SpellItem> srdLevel7Spells = [
 
   SpellItem(
     id: 'spell_arcane_sword',
-    name: "Mordenkainen's Sword",
-    name2024: 'Arcane Sword',
+    name: 'Arcane Sword',
     level: 7,
     school: SpellSchool.evocation,
     isChangedIn2024: false,

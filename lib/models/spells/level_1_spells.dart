@@ -1246,7 +1246,7 @@ const List<SpellItem> srdLevel1Spells = [
 
   SpellItem(
     id: 'spell_hideous_laughter',
-    name: "Tasha's Hideous Laughter",
+    name: 'Hideous Laughter',
     level: 1,
     school: SpellSchool.enchantment,
     isChangedIn2024: false,
@@ -1704,7 +1704,7 @@ const List<SpellItem> srdLevel1Spells = [
 
   SpellItem(
     id: 'spell_floating_disk',
-    name: "Tenser's Floating Disk",
+    name: 'Floating Disk',
     level: 1,
     school: SpellSchool.conjuration,
     isChangedIn2024: false,

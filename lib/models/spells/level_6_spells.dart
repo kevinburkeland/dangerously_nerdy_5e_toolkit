@@ -929,7 +929,7 @@ const List<SpellItem> srdLevel6Spells = [
 
   SpellItem(
     id: 'spell_freezing_sphere',
-    name: "Otiluke's Freezing Sphere",
+    name: 'Freezing Sphere',
     level: 6,
     school: SpellSchool.evocation,
     isChangedIn2024: false,
@@ -975,7 +975,7 @@ const List<SpellItem> srdLevel6Spells = [
 
   SpellItem(
     id: 'spell_irresistible_dance',
-    name: "Otto's Irresistible Dance",
+    name: 'Irresistible Dance',
     level: 6,
     school: SpellSchool.enchantment,
     isChangedIn2024: false,
@@ -1131,7 +1131,7 @@ const List<SpellItem> srdLevel6Spells = [
 
   SpellItem(
     id: 'spell_instant_summons',
-    name: "Drawmij's Instant Summons",
+    name: 'Instant Summons',
     level: 6,
     school: SpellSchool.conjuration,
     isChangedIn2024: false,

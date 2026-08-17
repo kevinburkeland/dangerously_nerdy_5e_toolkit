@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 
 void main() {
   group('SRD & Open Gaming License / CC-BY-4.0 Legality Audit', () {
@@ -27,6 +28,8 @@ void main() {
       'otto\'s',
       'rary\'s',
       'tenser\'s',
+      'evard\'s',
+      'melf\'s',
     ];
 
     test('SRD summons library contains no WotC Product Identity terms in names or descriptions', () {
@@ -81,6 +84,35 @@ void main() {
             summary.contains(forbidden),
             isFalse,
             reason: 'DM Reference summary for "${item.title}" contains Product Identity term "$forbidden"',
+          );
+        }
+      }
+    });
+
+    test('Spellbook Library contains no WotC Product Identity terms in spell names or IDs', () {
+      final spells = SpellbookLibrary.allSpells;
+      expect(spells, isNotEmpty);
+
+      for (final spell in spells) {
+        final lowerName = spell.name.toLowerCase();
+        final lowerId = spell.id.toLowerCase();
+        final lowerDiff = (spell.diffSummary ?? '').toLowerCase();
+
+        for (final forbidden in forbiddenProductIdentity) {
+          expect(
+            lowerName.contains(forbidden),
+            isFalse,
+            reason: 'Spell "${spell.name}" contains Product Identity term "$forbidden"',
+          );
+          expect(
+            lowerId.contains(forbidden),
+            isFalse,
+            reason: 'Spell ID "${spell.id}" contains Product Identity term "$forbidden"',
+          );
+          expect(
+            lowerDiff.contains(forbidden),
+            isFalse,
+            reason: 'Spell diff summary in "${spell.name}" contains Product Identity term "$forbidden"',
           );
         }
       }

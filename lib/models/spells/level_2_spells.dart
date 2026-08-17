@@ -675,7 +675,7 @@ const List<SpellItem> srdLevel2Spells = [
 
   SpellItem(
     id: 'spell_acid_arrow',
-    name: "Melf's Acid Arrow",
+    name: 'Acid Arrow',
     level: 2,
     school: SpellSchool.evocation,
     isChangedIn2024: false,

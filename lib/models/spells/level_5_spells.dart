@@ -669,8 +669,8 @@ const List<SpellItem> srdLevel5Spells = [
   ),
 
   SpellItem(
-    id: 'spell_bigbys_hand',
-    name: "Bigby's Hand",
+    id: 'spell_arcane_hand',
+    name: 'Arcane Hand',
     level: 5,
     school: SpellSchool.evocation,
     isChangedIn2024: false,
@@ -794,7 +794,7 @@ const List<SpellItem> srdLevel5Spells = [
 
   SpellItem(
     id: 'spell_telepathic_bond',
-    name: "Rary's Telepathic Bond",
+    name: 'Telepathic Bond',
     level: 5,
     school: SpellSchool.divination,
     isChangedIn2024: false,

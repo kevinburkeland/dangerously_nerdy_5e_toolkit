@@ -566,7 +566,7 @@ const List<SpellItem> srdLevel4Spells = [
 
   SpellItem(
     id: 'spell_black_tentacles',
-    name: "Evard's Black Tentacles",
+    name: 'Black Tentacles',
     level: 4,
     school: SpellSchool.conjuration,
     isChangedIn2024: false,
@@ -730,7 +730,7 @@ const List<SpellItem> srdLevel4Spells = [
 
   SpellItem(
     id: 'spell_resilient_sphere',
-    name: "Otiluke's Resilient Sphere",
+    name: 'Resilient Sphere',
     level: 4,
     school: SpellSchool.evocation,
     isChangedIn2024: false,
@@ -1024,7 +1024,7 @@ const List<SpellItem> srdLevel4Spells = [
 
   SpellItem(
     id: 'spell_private_sanctum',
-    name: "Mordenkainen's Private Sanctum",
+    name: 'Private Sanctum',
     level: 4,
     school: SpellSchool.abjuration,
     isChangedIn2024: false,
@@ -1094,7 +1094,7 @@ const List<SpellItem> srdLevel4Spells = [
 
   SpellItem(
     id: 'spell_faithful_hound',
-    name: "Mordenkainen's Faithful Hound",
+    name: 'Faithful Hound',
     level: 4,
     school: SpellSchool.conjuration,
     isChangedIn2024: false,
@@ -1168,7 +1168,7 @@ const List<SpellItem> srdLevel4Spells = [
 
   SpellItem(
     id: 'spell_secret_chest',
-    name: "Leomund's Secret Chest",
+    name: 'Secret Chest',
     level: 4,
     school: SpellSchool.conjuration,
     isChangedIn2024: false,
