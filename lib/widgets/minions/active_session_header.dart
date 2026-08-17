@@ -28,7 +28,8 @@ class ActiveSessionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tabletop = theme.extension<TabletopColors>();
+    final isDark = theme.brightness == Brightness.dark;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
     final used = session.usedPoints;
     final maxPts = session.maxPoints;
     final isOverBudget = used > maxPts;
@@ -50,7 +51,7 @@ class ActiveSessionHeader extends StatelessWidget {
             maxValue: maxPts,
             label: 'Point Budget: $used / $maxPts points used',
             fillColor: isOverBudget
-                ? (tabletop?.fumbleRed ?? Colors.redAccent)
+                ? tabletop.fumbleRed
                 : theme.colorScheme.primary,
             enableLowResourceAlert: false,
             height: 8,
@@ -70,8 +71,8 @@ class ActiveSessionHeader extends StatelessWidget {
                 flex: 2,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black,
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                   onPressed: onBatchAttack,
@@ -86,8 +87,8 @@ class ActiveSessionHeader extends StatelessWidget {
               if (onRollInitiative != null)
                 IconButton.filled(
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.amber.withValues(alpha: 0.2),
-                    foregroundColor: Colors.amber,
+                    backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    foregroundColor: theme.colorScheme.primary,
                   ),
                   icon: const Icon(Icons.casino_outlined, size: 20),
                   tooltip: 'Roll Squad Initiative',
@@ -96,8 +97,8 @@ class ActiveSessionHeader extends StatelessWidget {
               const SizedBox(width: 4),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3F2B96),
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.colorScheme.secondary,
+                  foregroundColor: theme.colorScheme.onSecondary,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
                 onPressed: onOpenSquadBuilder,
@@ -106,8 +107,8 @@ class ActiveSessionHeader extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Colors.white70),
-                color: const Color(0xFF242038),
+                icon: Icon(Icons.more_vert, color: theme.colorScheme.onSurfaceVariant),
+                color: theme.colorScheme.surface,
                 onSelected: (val) {
                   if (val == 'initiative') {
                     onRollInitiative?.call();
@@ -122,53 +123,53 @@ class ActiveSessionHeader extends StatelessWidget {
                   }
                 },
                 itemBuilder: (ctx) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'initiative',
                     child: Row(
                       children: [
-                        Icon(Icons.casino, color: Colors.amber, size: 18),
-                        SizedBox(width: 8),
-                        Text('Roll Squad Initiative', style: TextStyle(color: Colors.white)),
+                        Icon(Icons.casino, color: theme.colorScheme.primary, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Roll Squad Initiative', style: TextStyle(color: theme.colorScheme.onSurface)),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'tempHp',
                     child: Row(
                       children: [
-                        Icon(Icons.health_and_safety_outlined, color: Colors.cyanAccent, size: 18),
-                        SizedBox(width: 8),
-                        Text('Grant Group Temp HP', style: TextStyle(color: Colors.white)),
+                        Icon(Icons.health_and_safety_outlined, color: tabletop.tempHpCyan, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Grant Group Temp HP', style: TextStyle(color: theme.colorScheme.onSurface)),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'heal',
                     child: Row(
                       children: [
-                        Icon(Icons.health_and_safety, color: Colors.greenAccent, size: 18),
-                        SizedBox(width: 8),
-                        Text('Heal All Objects', style: TextStyle(color: Colors.white)),
+                        Icon(Icons.health_and_safety, color: tabletop.hitGreen, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Heal All Objects', style: TextStyle(color: theme.colorScheme.onSurface)),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'damage',
                     child: Row(
                       children: [
-                        Icon(Icons.bolt, color: Colors.redAccent, size: 18),
-                        SizedBox(width: 8),
-                        Text('Apply Group AoE Damage', style: TextStyle(color: Colors.white)),
+                        Icon(Icons.bolt, color: tabletop.fumbleRed, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Apply Group AoE Damage', style: TextStyle(color: theme.colorScheme.onSurface)),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'clear',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_sweep, color: Colors.redAccent, size: 18),
-                        SizedBox(width: 8),
-                        Text('Clear Squad', style: TextStyle(color: Colors.redAccent)),
+                        Icon(Icons.delete_sweep, color: tabletop.fumbleRed, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Clear Squad', style: TextStyle(color: tabletop.fumbleRed)),
                       ],
                     ),
                   ),

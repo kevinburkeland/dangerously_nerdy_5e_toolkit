@@ -202,7 +202,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.flash_on, color: Colors.amber),
+              icon: Icon(Icons.flash_on, color: theme.colorScheme.primary),
               tooltip: 'Combat Action Economy Guide',
               onPressed: () => ActionEconomyDialog.show(context),
             ),
@@ -350,24 +350,28 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   }
 
   Widget _buildEmptySquadState() {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.blur_on, size: 64, color: Colors.white24),
+          Icon(Icons.blur_on, size: 64, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
           const SizedBox(height: 12),
           Text(
             'No active minions in ${_session.activePreset.name}',
-            style: const TextStyle(color: Colors.white54, fontSize: 16),
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
           ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+            ),
             onPressed: _openSquadBuilder,
-            icon: const Icon(Icons.add, color: Colors.black),
+            icon: const Icon(Icons.add),
             label: const Text(
               'Assemble Squad',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],

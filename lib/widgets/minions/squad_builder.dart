@@ -121,7 +121,10 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
+
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -139,7 +142,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -147,31 +150,31 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             const SizedBox(height: 14),
 
             // Header & Preset Picker
-            const Text(
+            Text(
               '🔮 SELECT SPELL OR ITEM',
-              style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
+              style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-              color: tabletop.cardBackground,
+                color: tabletop.cardBackground,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                border: Border.all(color: primary.withValues(alpha: 0.5)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<SummonPreset>(
                   value: _selectedPreset,
                   dropdownColor: tabletop.cardBackground,
                   isExpanded: true,
-                  icon: const Icon(Icons.arrow_drop_down, color: Colors.amber),
+                  icon: Icon(Icons.arrow_drop_down, color: primary),
                   items: [
                     ...SrdSummonsLibrary.spellPresets.map((preset) {
                       return DropdownMenuItem<SummonPreset>(
                         value: preset,
                         child: Text(
                           '🔮 ${preset.name} (${preset.levelDisplay})',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       );
                     }),
@@ -180,7 +183,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                         value: preset,
                         child: Text(
                           '📯 ${preset.name} (${preset.levelDisplay})',
-                          style: const TextStyle(color: Colors.purpleAccent, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: TextStyle(color: isDark ? Colors.purpleAccent : theme.colorScheme.secondary, fontWeight: FontWeight.bold, fontSize: 13),
                         ),
                       );
                     }),
@@ -203,8 +206,8 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             if (_selectedPreset.isRandomTable) ...[
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.colorScheme.secondary,
+                  foregroundColor: theme.colorScheme.onSecondary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -217,9 +220,9 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
 
             // Horn of Valhalla Special Variant Rollers
             if (_selectedPreset.id == 'horn_of_valhalla') ...[
-              const Text(
+              Text(
                 '📯 ROLL HORN OF VALHALLA VARIANTS',
-                style: TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
+                style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -236,9 +239,9 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             ],
 
             // Quick Add Section for Current Preset
-            const Text(
+            Text(
               '⚡ QUICK ADD MINIONS',
-              style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
@@ -269,7 +272,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             // Stat Block Cards List for active preset
             Text(
               '➕ AVAILABLE ${widget.session.activePreset.name.toUpperCase()} CREATURES',
-              style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
@@ -278,7 +281,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.black26,
+                    color: isDark ? Colors.black26 : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: sb.accentColor.withValues(alpha: 0.4)),
                   ),
@@ -297,14 +300,14 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                         crTier: sb.glyphCrTier,
                         actionRings: sb.glyphActionRings,
                         size: 38,
-                        isDarkMode: true,
+                        isDarkMode: isDark,
                       ),
                       title: Row(
                         children: [
                           Flexible(
                             child: Text(
                               sb.name,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -313,17 +316,17 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.2),
+                                color: primary.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text('Pack Tactics', style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold)),
+                              child: Text('Pack Tactics', style: TextStyle(color: primary, fontSize: 9, fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ],
                       ),
                       subtitle: Text(
                         'HP ${sb.maxHp} | AC ${sb.ac} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
-                        style: const TextStyle(color: Colors.white60, fontSize: 11),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -338,7 +341,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.add_circle, color: Colors.amber),
+                            icon: Icon(Icons.add_circle, color: primary),
                             tooltip: 'Add 1 ${sb.name} to squad',
                             onPressed: () => _addMinions(sb, 1),
                           ),
@@ -349,7 +352,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                               excludeSemantics: true,
                               child: TextButton(
                                 onPressed: () => _addMinions(sb, 4),
-                                child: const Text('+4', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                                child: Text('+4', style: TextStyle(color: primary, fontWeight: FontWeight.bold)),
                               ),
                             ),
                         ],
@@ -363,8 +366,8 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white10,
-                foregroundColor: Colors.white,
+                backgroundColor: primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: () => Navigator.pop(context),
@@ -377,11 +380,14 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
   }
 
   Widget _buildChip(String label, VoidCallback onTap) {
-    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
     return ActionChip(
       backgroundColor: tabletop.cardBackground,
-      side: const BorderSide(color: Colors.amber, width: 1),
-      label: Text(label, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12)),
+      side: BorderSide(color: primary.withValues(alpha: 0.6), width: 1),
+      label: Text(label, style: TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 12)),
       onPressed: onTap,
     );
   }

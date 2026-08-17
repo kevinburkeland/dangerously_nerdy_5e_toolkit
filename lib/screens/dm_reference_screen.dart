@@ -251,7 +251,10 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
     );
   }
 
+
   Widget _buildPinnedSectionHeader(ThemeData theme, int count) {
+    final isDark = theme.brightness == Brightness.dark;
+    final pinColor = isDark ? Colors.amber : const Color(0xFFB45309);
     return Semantics(
       header: true,
       child: Row(
@@ -262,17 +265,17 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
               Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.2),
+                  color: pinColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                  border: Border.all(color: pinColor.withValues(alpha: 0.4)),
                 ),
-                child: const Icon(Icons.push_pin, color: Colors.amber, size: 16),
+                child: Icon(Icons.push_pin, color: pinColor, size: 16),
               ),
               const SizedBox(width: 8),
               Text(
                 'PINNED RULES ($count)',
-                style: const TextStyle(
-                  color: Colors.amber,
+                style: TextStyle(
+                  color: pinColor,
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.1,
@@ -284,7 +287,7 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               visualDensity: VisualDensity.compact,
-              foregroundColor: Colors.white60,
+              foregroundColor: theme.colorScheme.onSurfaceVariant,
             ),
             onPressed: () => _clearAllPinnedRules(context),
             icon: const Icon(Icons.clear_all, size: 16),
@@ -323,6 +326,11 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
 
   Widget _buildHeaderBanner(ThemeData theme, DmRulesEdition edition) {
     final is2024 = edition == DmRulesEdition.v2024;
+    final isDark = theme.brightness == Brightness.dark;
+    final bannerAccent = is2024
+        ? (isDark ? Colors.cyanAccent : theme.colorScheme.primary)
+        : (isDark ? Colors.amber : const Color(0xFFB45309));
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -330,7 +338,7 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: is2024 ? Colors.cyanAccent.withValues(alpha: 0.35) : Colors.amber.withValues(alpha: 0.35),
+          color: bannerAccent.withValues(alpha: 0.35),
         ),
       ),
       child: Row(
@@ -339,12 +347,12 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: is2024 ? Colors.cyanAccent.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
+              color: bannerAccent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               is2024 ? Icons.auto_awesome : Icons.menu_book,
-              color: is2024 ? Colors.cyanAccent : Colors.amber,
+              color: bannerAccent,
               size: 26,
             ),
           ),
@@ -372,28 +380,28 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: is2024 ? Colors.cyanAccent.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.2),
+                        color: bannerAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         is2024 ? 'Revised' : 'Legacy',
                         style: TextStyle(
-                          color: is2024 ? Colors.cyanAccent : Colors.amber,
-                          fontSize: 10,
+                          color: bannerAccent,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   is2024
-                      ? 'Displaying updated 2024 rules: standardized Unarmed Strike save DCs, -2 Exhaustion per level, Bonus Action potions, and Disadvantage Initiative for surprise.'
-                      : 'Displaying classic 2014 rules: contested Athletics for grapple/shove, 6-tier Exhaustion, full Action potions, and round 1 surprise turn skips.',
+                      ? 'Displaying 2024 Revised rules (Free SRD 5.2 compatible). Rules that changed are tagged with "2024 Diff".'
+                      : 'Displaying original 2014 rules (SRD 5.1). Tap any rule card to see what changed in 2024.',
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                    fontSize: 12,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                    fontSize: 13,
                     height: 1.35,
                   ),
                 ),
@@ -406,13 +414,15 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
   }
 
   Widget _buildQuickRollBar(ThemeData theme) {
+    final primary = theme.colorScheme.primary;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1B2E),
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: Wrap(
         spacing: 8,
@@ -422,7 +432,7 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.casino_outlined, color: Colors.amber, size: 18),
+              Icon(Icons.casino_outlined, color: primary, size: 18),
               const SizedBox(width: 6),
               Semantics(
                 header: true,
@@ -437,28 +447,28 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
               ),
             ],
           ),
-          _buildDiceButton('d20', () => _performQuickRoll(20, 'd20')),
-          _buildDiceButton('d100', () => _performQuickRoll(100, 'd100')),
-          _buildDiceButton('d6', () => _performQuickRoll(6, 'd6')),
-          _buildDiceButton('d8', () => _performQuickRoll(8, 'd8')),
-          _buildDiceButton('d12', () => _performQuickRoll(12, 'd12')),
+          _buildDiceButton(theme, 'd20', () => _performQuickRoll(20, 'd20')),
+          _buildDiceButton(theme, 'd100', () => _performQuickRoll(100, 'd100')),
+          _buildDiceButton(theme, 'd6', () => _performQuickRoll(6, 'd6')),
+          _buildDiceButton(theme, 'd8', () => _performQuickRoll(8, 'd8')),
+          _buildDiceButton(theme, 'd12', () => _performQuickRoll(12, 'd12')),
           if (_lastQuickRollLabel != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.2),
+                color: primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                border: Border.all(color: primary.withValues(alpha: 0.5)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.bolt, color: Colors.amber, size: 14),
+                  Icon(Icons.bolt, color: primary, size: 14),
                   const SizedBox(width: 4),
                   Text(
                     _lastQuickRollLabel!,
-                    style: const TextStyle(
-                      color: Colors.amber,
+                    style: TextStyle(
+                      color: primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -471,7 +481,8 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
     );
   }
 
-  Widget _buildDiceButton(String label, VoidCallback onTap) {
+  Widget _buildDiceButton(ThemeData theme, String label, VoidCallback onTap) {
+    final isDark = theme.brightness == Brightness.dark;
     return Semantics(
       button: true,
       label: 'Quick roll $label',
@@ -481,13 +492,13 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF2E2A44),
+            color: isDark ? const Color(0xFF2E2A44) : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
           ),
           child: Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -495,6 +506,10 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
   }
 
   Widget _buildSearchAndFilters(ThemeData theme, int pinnedCount) {
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
+
     return Column(
       children: [
         Row(
@@ -505,7 +520,7 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _searchQuery.isNotEmpty ? theme.colorScheme.primary : Colors.white12,
+                    color: _searchQuery.isNotEmpty ? primary : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                   ),
                 ),
                 child: TextField(
@@ -515,26 +530,25 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search actions, conditions, cover, DCs, resting...',
                     hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13),
-                    prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary, size: 20),
+                    prefixIcon: Icon(Icons.search, color: primary, size: 20),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 18),
                             onPressed: () {
-                              HapticService.selectionTick(context);
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
                           )
                         : null,
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -543,20 +557,20 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
               avatar: Icon(
                 Icons.auto_awesome,
                 size: 16,
-                color: _showOnlyChangedIn2024 ? Colors.black : Colors.amber,
+                color: _showOnlyChangedIn2024 ? theme.colorScheme.onPrimary : diffColor,
               ),
               label: Text(
                 'Show Only 2024 Rule Changes',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: _showOnlyChangedIn2024 ? Colors.black : theme.colorScheme.onSurface,
+                  color: _showOnlyChangedIn2024 ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
                 ),
               ),
               selected: _showOnlyChangedIn2024,
-              selectedColor: Colors.amber,
+              selectedColor: diffColor,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              checkmarkColor: Colors.black,
+              checkmarkColor: theme.colorScheme.onPrimary,
               onSelected: (val) {
                 HapticService.selectionTick(context);
                 setState(() => _showOnlyChangedIn2024 = val);
@@ -566,20 +580,20 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
               avatar: Icon(
                 Icons.push_pin,
                 size: 16,
-                color: _showOnlyPinned ? Colors.black : Colors.amber,
+                color: _showOnlyPinned ? theme.colorScheme.onPrimary : diffColor,
               ),
               label: Text(
                 pinnedCount > 0 ? 'Pinned Only ($pinnedCount)' : 'Pinned Only',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: _showOnlyPinned ? Colors.black : theme.colorScheme.onSurface,
+                  color: _showOnlyPinned ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
                 ),
               ),
               selected: _showOnlyPinned,
-              selectedColor: Colors.amber,
+              selectedColor: diffColor,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              checkmarkColor: Colors.black,
+              checkmarkColor: theme.colorScheme.onPrimary,
               onSelected: (val) {
                 HapticService.selectionTick(context);
                 setState(() => _showOnlyPinned = val);
@@ -592,6 +606,7 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
   }
 
   Widget _buildCategoryChips(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -615,16 +630,17 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
           ),
           ...DmCategory.values.map((cat) {
             final isSelected = _selectedCategory == cat;
+            final catColor = cat.getLegibleColor(isDark);
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                avatar: Icon(cat.icon, size: 16, color: isSelected ? Colors.black : cat.color),
+                avatar: Icon(cat.icon, size: 16, color: isSelected ? Colors.white : catColor),
                 label: Text(cat.label, style: const TextStyle(fontSize: 12)),
                 selected: isSelected,
-                selectedColor: cat.color,
+                selectedColor: catColor,
                 backgroundColor: theme.colorScheme.surfaceContainerHighest,
                 labelStyle: TextStyle(
-                  color: isSelected ? Colors.black : theme.colorScheme.onSurface,
+                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                 ),
                 onSelected: (_) {
@@ -693,7 +709,7 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [

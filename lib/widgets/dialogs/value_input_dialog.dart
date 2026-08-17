@@ -162,18 +162,28 @@ class _ValueInputDialogState<T> extends State<ValueInputDialog<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accent = widget.accentColor ?? theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+    Color effectiveAccent = widget.accentColor ?? theme.colorScheme.primary;
+    if (!isDark && widget.accentColor != null) {
+      if (effectiveAccent == Colors.amber || effectiveAccent == Colors.amberAccent) {
+        effectiveAccent = const Color(0xFFB45309);
+      } else if (effectiveAccent == Colors.cyanAccent || effectiveAccent == Colors.cyan) {
+        effectiveAccent = const Color(0xFF0E7490);
+      } else if (effectiveAccent == Colors.greenAccent) {
+        effectiveAccent = const Color(0xFF15803D);
+      }
+    }
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
-          Icon(widget.icon, color: accent, size: 22),
+          Icon(widget.icon, color: effectiveAccent, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               widget.title,
-              style: TextStyle(color: accent, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -187,7 +197,7 @@ class _ValueInputDialogState<T> extends State<ValueInputDialog<T>> {
         decoration: InputDecoration(
           labelText: widget.labelText,
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: accent, width: 2),
+            borderSide: BorderSide(color: effectiveAccent, width: 2),
           ),
         ),
         onSubmitted: (_) => _submit(),
@@ -198,12 +208,12 @@ class _ValueInputDialogState<T> extends State<ValueInputDialog<T>> {
           child: Text('Cancel', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: accent),
+          style: ElevatedButton.styleFrom(backgroundColor: effectiveAccent),
           onPressed: _submit,
           child: Text(
             widget.confirmLabel,
             style: TextStyle(
-              color: ThemeData.estimateBrightnessForColor(accent) == Brightness.dark
+              color: ThemeData.estimateBrightnessForColor(effectiveAccent) == Brightness.dark
                   ? Colors.white
                   : Colors.black,
               fontWeight: FontWeight.bold,

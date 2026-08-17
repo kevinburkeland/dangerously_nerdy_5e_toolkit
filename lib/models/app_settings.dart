@@ -4,20 +4,33 @@ import 'dm_screen_data.dart';
 
 /// Available fantasy accent palettes with distinct primary and secondary luminescence
 enum FantasyAccent {
-  paladinGold('Paladin Gold', Color(0xFFFFC107), Color(0xFFFFD54F)),
-  eldritchPurple('Eldritch Purple', Color(0xFF9C27B0), Color(0xFFBA68C8)),
-  rangerEmerald('Ranger Emerald', Color(0xFF00E676), Color(0xFF69F0AE)),
-  necroticSlate('Necrotic Slate', Color(0xFF78909C), Color(0xFF90A4AE)),
-  dragonfireCrimson('Dragonfire Crimson', Color(0xFFFF3D00), Color(0xFFFF6E40)),
-  arcaneSapphire('Arcane Sapphire', Color(0xFF2979FF), Color(0xFF82B1FF)),
-  bardicRose('Bardic Rose', Color(0xFFE91E63), Color(0xFFFF4081)),
-  abyssalTeal('Abyssal Teal', Color(0xFF00BFA5), Color(0xFF64FFDA)),
-  celestialAmber('Celestial Amber', Color(0xFFFF9100), Color(0xFFFFD180));
+  paladinGold('Paladin Gold', Color(0xFFFFC107), Color(0xFFFFD54F), lightPrimary: Color(0xFF92400E), lightAccent: Color(0xFFB45309)),
+  eldritchPurple('Eldritch Purple', Color(0xFF9C27B0), Color(0xFFBA68C8), lightPrimary: Color(0xFF7E22CE), lightAccent: Color(0xFFA855F7)),
+  rangerEmerald('Ranger Emerald', Color(0xFF00E676), Color(0xFF69F0AE), lightPrimary: Color(0xFF047857), lightAccent: Color(0xFF059669)),
+  necroticSlate('Necrotic Slate', Color(0xFF78909C), Color(0xFF90A4AE), lightPrimary: Color(0xFF475569), lightAccent: Color(0xFF64748B)),
+  dragonfireCrimson('Dragonfire Crimson', Color(0xFFFF3D00), Color(0xFFFF6E40), lightPrimary: Color(0xFFC2410C), lightAccent: Color(0xFFEA580C)),
+  arcaneSapphire('Arcane Sapphire', Color(0xFF2979FF), Color(0xFF82B1FF), lightPrimary: Color(0xFF1D4ED8), lightAccent: Color(0xFF2563EB)),
+  bardicRose('Bardic Rose', Color(0xFFE91E63), Color(0xFFFF4081), lightPrimary: Color(0xFFBE123C), lightAccent: Color(0xFFE11D48)),
+  abyssalTeal('Abyssal Teal', Color(0xFF00BFA5), Color(0xFF64FFDA), lightPrimary: Color(0xFF0F766E), lightAccent: Color(0xFF0D9488)),
+  celestialAmber('Celestial Amber', Color(0xFFFF9100), Color(0xFFFFD180), lightPrimary: Color(0xFF92400E), lightAccent: Color(0xFFB45309));
 
   final String label;
   final Color primary;
   final Color accent;
-  const FantasyAccent(this.label, this.primary, this.accent);
+  final Color lightPrimary;
+  final Color lightAccent;
+
+  const FantasyAccent(
+    this.label,
+    this.primary,
+    this.accent, {
+    Color? lightPrimary,
+    Color? lightAccent,
+  })  : lightPrimary = lightPrimary ?? primary,
+        lightAccent = lightAccent ?? accent;
+
+  Color getPrimary(bool isDarkMode) => isDarkMode ? primary : lightPrimary;
+  Color getAccent(bool isDarkMode) => isDarkMode ? accent : lightAccent;
 }
 
 /// Haptic tactile feedback strength levels

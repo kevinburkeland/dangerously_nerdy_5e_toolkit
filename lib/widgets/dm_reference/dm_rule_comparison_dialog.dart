@@ -56,14 +56,17 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final item = widget.item;
+    final itemColor = item.getLegibleColor(isDark);
+    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
 
     return Dialog(
-      backgroundColor: theme.colorScheme.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 750),
+        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 700),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,10 +77,10 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: item.color.withValues(alpha: 0.15),
+                    color: itemColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(item.icon, color: item.color, size: 24),
+                  child: Icon(item.icon, color: itemColor, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -86,8 +89,8 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                     children: [
                       Text(
                         item.title,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -106,14 +109,14 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                 IconButton(
                   icon: Icon(
                     _pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                    color: _pinned ? Colors.amber : Colors.white54,
+                    color: _pinned ? diffColor : theme.colorScheme.onSurfaceVariant,
                     size: 22,
                   ),
                   tooltip: _pinned ? 'Unpin rule' : 'Pin rule to top',
                   onPressed: _handlePinToggle,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white54),
+                  icon: Icon(Icons.close, color: theme.colorScheme.onSurfaceVariant),
                   tooltip: 'Close comparison dialog',
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -127,23 +130,23 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.12),
+                  color: diffColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                  border: Border.all(color: diffColor.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.auto_awesome, color: Colors.amber, size: 18),
+                    Icon(Icons.auto_awesome, color: diffColor, size: 18),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         item.diffSummary!,
-                        style: const TextStyle(
-                          color: Colors.amber,
+                        style: TextStyle(
+                          color: diffColor,
                           fontSize: 13,
                           height: 1.35,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -159,21 +162,24 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 550;
+                    final v2014Color = isDark ? Colors.blueGrey : const Color(0xFF475569);
+                    final v2024Color = isDark ? Colors.cyanAccent : theme.colorScheme.primary;
+
                     if (isWide) {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: _buildEditionBox(context, '2014 (5e RAW)', item.rules2014, Colors.blueGrey)),
+                          Expanded(child: _buildEditionBox(context, '2014 (5e RAW)', item.rules2014, v2014Color)),
                           const SizedBox(width: 14),
-                          Expanded(child: _buildEditionBox(context, '2024 (Revised 5e)', item.rules2024, Colors.cyanAccent)),
+                          Expanded(child: _buildEditionBox(context, '2024 (Revised 5e)', item.rules2024, v2024Color)),
                         ],
                       );
                     } else {
                       return Column(
                         children: [
-                          _buildEditionBox(context, '2014 (5e RAW)', item.rules2014, Colors.blueGrey),
+                          _buildEditionBox(context, '2014 (5e RAW)', item.rules2014, v2014Color),
                           const SizedBox(height: 12),
-                          _buildEditionBox(context, '2024 (Revised 5e)', item.rules2024, Colors.cyanAccent),
+                          _buildEditionBox(context, '2024 (Revised 5e)', item.rules2024, v2024Color),
                         ],
                       );
                     }
@@ -188,13 +194,14 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
   }
 
   Widget _buildEditionBox(BuildContext context, String title, List<String> rules, Color accentColor) {
-    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
+    final theme = Theme.of(context);
+    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: tabletop.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,7 +220,7 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
               ),
             ],
           ),
-          const Divider(height: 16, color: Colors.white12),
+          Divider(height: 16, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
           ...rules.map((r) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -223,7 +230,7 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                     Expanded(
                       child: Text(
                         r,
-                        style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.35),
+                        style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 13, height: 1.35),
                       ),
                     ),
                   ],

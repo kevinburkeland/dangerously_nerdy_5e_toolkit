@@ -11,11 +11,14 @@ class SquadInitiativeDialog {
     required String minionName,
     required VoidCallback onReroll,
   }) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return showDialog<void>(
       context: context,
       builder: (ctx) => AppDialogFrame(
         icon: Icons.casino,
-        iconColor: Colors.amber,
+        iconColor: primary,
         title: 'Squad Initiative Roll',
         maxWidth: 320,
         content: Column(
@@ -23,8 +26,8 @@ class SquadInitiativeDialog {
           children: [
             Text(
               '$total',
-              style: const TextStyle(
-                color: Colors.amberAccent,
+              style: TextStyle(
+                color: primary,
                 fontSize: 54,
                 fontWeight: FontWeight.bold,
               ),
@@ -32,26 +35,29 @@ class SquadInitiativeDialog {
             const SizedBox(height: 4),
             Text(
               'd20 ($natRoll) ${dexMod >= 0 ? "+$dexMod" : "$dexMod"} DEX modifier',
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 14),
             ),
             const SizedBox(height: 8),
             Text(
               'Rolled for $minionName squad',
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close', style: TextStyle(color: Colors.white70)),
+            child: Text('Close', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-            icon: const Icon(Icons.refresh, color: Colors.black, size: 16),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+            ),
+            icon: const Icon(Icons.refresh, size: 16),
             label: const Text(
               'Re-roll',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () {
               Navigator.pop(ctx);

@@ -18,37 +18,45 @@ class ExportPresetDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF242038),
-      title: const Row(
+      backgroundColor: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
         children: [
-          Icon(Icons.download, color: Colors.cyanAccent, size: 22),
-          SizedBox(width: 8),
-          Text('Export Presets JSON', style: TextStyle(color: Colors.white)),
+          Icon(Icons.download, color: primary, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'Export Presets JSON',
+            style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 18),
+          ),
         ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Copy this JSON backup to transfer or save your presets:',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 12),
           Container(
             constraints: const BoxConstraints(maxHeight: 180),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.black38,
+              color: isDark ? Colors.black38 : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
             ),
             child: SingleChildScrollView(
               child: SelectableText(
                 jsonStr.isNotEmpty ? jsonStr : '[]',
-                style: const TextStyle(
-                    color: Colors.cyanAccent,
+                style: TextStyle(
+                    color: isDark ? Colors.cyanAccent : theme.colorScheme.primary,
                     fontFamily: 'monospace',
                     fontSize: 12),
               ),
@@ -59,12 +67,12 @@ class ExportPresetDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Close', style: TextStyle(color: Colors.white70)),
+          child: Text('Close', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.cyanAccent,
-              foregroundColor: Colors.black),
+              backgroundColor: primary,
+              foregroundColor: theme.colorScheme.onPrimary),
           icon: const Icon(Icons.copy, size: 16),
           label: const Text('Copy to Clipboard',
               style: TextStyle(fontWeight: FontWeight.bold)),
@@ -72,9 +80,9 @@ class ExportPresetDialog extends StatelessWidget {
             Clipboard.setData(ClipboardData(text: jsonStr));
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Presets JSON copied to clipboard!'),
-                backgroundColor: Color(0xFF28243D),
+              SnackBar(
+                content: const Text('Presets JSON copied to clipboard!'),
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
               ),
             );
           },
@@ -122,39 +130,46 @@ class _ImportPresetDialogState extends State<ImportPresetDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return AlertDialog(
-      backgroundColor: const Color(0xFF242038),
-      title: const Row(
+      backgroundColor: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
         children: [
-          Icon(Icons.upload, color: Colors.cyanAccent, size: 22),
-          SizedBox(width: 8),
-          Text('Import Presets JSON', style: TextStyle(color: Colors.white)),
+          Icon(Icons.upload, color: primary, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'Import Presets JSON',
+            style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 18),
+          ),
         ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Paste custom presets JSON text below:',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _importController,
             maxLines: 6,
             maxLength: 50000,
-            style: const TextStyle(
-                color: Colors.white, fontFamily: 'monospace', fontSize: 12),
-            decoration: const InputDecoration(
-              counterStyle: TextStyle(color: Colors.white38, fontSize: 10),
+            style: TextStyle(
+                color: theme.colorScheme.onSurface, fontFamily: 'monospace', fontSize: 12),
+            decoration: InputDecoration(
+              counterStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 10),
               hintText:
                   '[{"name": "Fireball", "dieType": "d6", "count": 8, "modifier": 0}]',
-              hintStyle: TextStyle(color: Colors.white24),
+              hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
               enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24)),
+                  borderSide: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3))),
               focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.cyanAccent)),
+                  borderSide: BorderSide(color: primary, width: 2)),
             ),
           ),
         ],
@@ -162,12 +177,12 @@ class _ImportPresetDialogState extends State<ImportPresetDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          child: Text('Cancel', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
         ),
         TextButton.icon(
-          icon: const Icon(Icons.paste, size: 16, color: Colors.cyanAccent),
-          label: const Text('Paste Clipboard',
-              style: TextStyle(color: Colors.cyanAccent)),
+          icon: Icon(Icons.paste, size: 16, color: primary),
+          label: Text('Paste Clipboard',
+              style: TextStyle(color: primary, fontWeight: FontWeight.bold)),
           onPressed: () async {
             final data = await Clipboard.getData(Clipboard.kTextPlain);
             if (data?.text != null) {
@@ -177,8 +192,8 @@ class _ImportPresetDialogState extends State<ImportPresetDialog> {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.cyanAccent,
-              foregroundColor: Colors.black),
+              backgroundColor: primary,
+              foregroundColor: theme.colorScheme.onPrimary),
           onPressed: _submit,
           child: const Text('Import',
               style: TextStyle(fontWeight: FontWeight.bold)),

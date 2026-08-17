@@ -132,7 +132,7 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
             decoration: BoxDecoration(
               color: tabletop.cardBackground,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+              border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5)),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<SummonPreset>(
@@ -141,7 +141,7 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                     : (availablePresets.isNotEmpty ? availablePresets.first : _selectedPreset),
                 dropdownColor: tabletop.cardBackground,
                 isExpanded: true,
-                icon: const Icon(Icons.menu_book, color: Colors.amber),
+                icon: Icon(Icons.menu_book, color: theme.colorScheme.primary),
                 items: availablePresets.map((preset) {
                   final isMagicItem = preset.category == SummonCategory.magicItem;
                   final levelPrefix = isMagicItem
@@ -153,7 +153,7 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                     child: Text(
                       '$levelPrefix ${preset.name} (${preset.levelDisplay})',
                       style: TextStyle(
-                        color: isMagicItem ? Colors.purpleAccent : Colors.white,
+                        color: isMagicItem ? (theme.brightness == Brightness.dark ? Colors.purpleAccent : theme.colorScheme.secondary) : theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -222,32 +222,32 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
           const SizedBox(height: 20),
 
           // Spell Description
-          const Text(
+          Text(
             'SPELL / ITEM DESCRIPTION',
-            style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(color: theme.colorScheme.primary, fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             p.description,
-            style: const TextStyle(color: Color(0xE6FFFFFF), height: 1.4),
+            style: TextStyle(color: theme.colorScheme.onSurface, height: 1.4),
           ),
           const SizedBox(height: 12),
 
-          const Text(
+          Text(
             'UPCASTING & SCALING RULES',
-            style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(color: theme.colorScheme.primary, fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
             p.upcastRules,
-            style: const TextStyle(color: Color(0xE6FFFFFF), height: 1.4),
+            style: TextStyle(color: theme.colorScheme.onSurface, height: 1.4),
           ),
           const SizedBox(height: 20),
 
           // RAW Stat Blocks / Creature Profiles
           Text(
             '${p.name.toUpperCase()} CREATURE PROFILES',
-            style: const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+            style: TextStyle(color: theme.colorScheme.primary, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.5),
           ),
           const SizedBox(height: 10),
 
@@ -261,9 +261,9 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
           const SizedBox(height: 20),
 
           // Tactical Tips
-          const Text(
+          Text(
             '💡 TACTICAL TIPS & RAW CLARIFICATIONS',
-            style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(color: theme.colorScheme.primary, fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           _buildTipCard(
@@ -280,16 +280,20 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
   }
 
   Widget _buildCreatureProfileCard(MinionStatBlock sb) {
-    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
+    final accentColor = sb.accentColor;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: tabletop.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: sb.accentColor.withValues(alpha: 0.4), width: 1.2),
+        border: Border.all(color: accentColor.withValues(alpha: 0.4), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -310,13 +314,13 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                       crTier: sb.glyphCrTier,
                       actionRings: sb.glyphActionRings,
                       size: 32,
-                      isDarkMode: true,
+                      isDarkMode: isDark,
                     ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
                         sb.name,
-                        style: TextStyle(color: sb.accentColor, fontWeight: FontWeight.w900, fontSize: 15),
+                        style: TextStyle(color: accentColor, fontWeight: FontWeight.w900, fontSize: 15),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -329,12 +333,12 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       '${sb.sizeDisplay} • ${sb.crDisplay}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -350,19 +354,19 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: sb.accentColor.withValues(alpha: 0.18),
+                            color: accentColor.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: sb.accentColor.withValues(alpha: 0.6), width: 1),
+                            border: Border.all(color: accentColor.withValues(alpha: 0.6), width: 1),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.menu_book, size: 14, color: sb.accentColor),
+                              Icon(Icons.menu_book, size: 14, color: accentColor),
                               const SizedBox(width: 4),
                               Text(
                                 'STAT BLOCK',
                                 style: TextStyle(
-                                  color: sb.accentColor,
+                                  color: accentColor,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 10,
                                   letterSpacing: 0.5,
@@ -384,10 +388,10 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _buildCombatBadge('HP', '${sb.maxHp}', Colors.greenAccent, semanticName: 'Hit Points'),
-              _buildCombatBadge('AC', '${sb.ac}', Colors.lightBlueAccent, semanticName: 'Armor Class'),
-              _buildCombatBadge('ATK', '+${sb.attackBonus}', Colors.amberAccent, semanticName: 'Attack Bonus'),
-              _buildCombatBadge('DMG', sb.fullDamageFormula, Colors.orangeAccent, semanticName: 'Damage Formula'),
+              _buildCombatBadge('HP', '${sb.maxHp}', isDark ? Colors.greenAccent : const Color(0xFF047857), semanticName: 'Hit Points'),
+              _buildCombatBadge('AC', '${sb.ac}', isDark ? Colors.lightBlueAccent : const Color(0xFF0369A1), semanticName: 'Armor Class'),
+              _buildCombatBadge('ATK', '+${sb.attackBonus}', isDark ? Colors.amberAccent : const Color(0xFFB45309), semanticName: 'Attack Bonus'),
+              _buildCombatBadge('DMG', sb.fullDamageFormula, isDark ? Colors.orangeAccent : const Color(0xFFC2410C), semanticName: 'Damage Formula'),
             ],
           ),
           if (sb.specialTrait != null || sb.hasPackTactics) ...[
@@ -396,13 +400,13 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.purple.withValues(alpha: 0.15),
+                color: isDark ? Colors.purple.withValues(alpha: 0.15) : theme.colorScheme.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+                border: Border.all(color: isDark ? Colors.purpleAccent.withValues(alpha: 0.3) : theme.colorScheme.secondary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 '⚡ ${sb.specialTrait ?? "Pack Tactics (Advantage when allies within 5ft)"}',
-                style: const TextStyle(color: Color(0xFFE1BEE7), fontSize: 11, fontWeight: FontWeight.w600),
+                style: TextStyle(color: isDark ? const Color(0xFFE1BEE7) : theme.colorScheme.secondary, fontSize: 11, fontWeight: FontWeight.w600),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -443,7 +447,9 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
   }
 
   Widget _buildTipCard(String title, String body) {
-    final tabletop = Theme.of(context).extension<TabletopColors>() ?? TabletopColors.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -455,9 +461,9 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(title, style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: 4),
-          Text(body, style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 12, height: 1.3)),
+          Text(body, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12, height: 1.3)),
         ],
       ),
     );

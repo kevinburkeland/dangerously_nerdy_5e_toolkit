@@ -25,9 +25,20 @@ enum SpellSchool {
     this.frameShape,
   );
 
-  /// Returns a high-contrast version of the primary color guaranteed legible on dark backgrounds.
+  /// Returns a high-contrast version of the primary color guaranteed legible on dark or light backgrounds.
   Color getLegibleColor(bool isDarkMode) {
-    if (!isDarkMode) return primaryColor;
+    if (!isDarkMode) {
+      return switch (this) {
+        SpellSchool.abjuration => const Color(0xFF1D4ED8),
+        SpellSchool.conjuration => const Color(0xFF7E22CE),
+        SpellSchool.divination => const Color(0xFF0369A1),
+        SpellSchool.enchantment => const Color(0xFFBE123C),
+        SpellSchool.evocation => const Color(0xFFC2410C),
+        SpellSchool.illusion => const Color(0xFF4338CA),
+        SpellSchool.necromancy => const Color(0xFF047857),
+        SpellSchool.transmutation => const Color(0xFFB45309),
+      };
+    }
     return switch (this) {
       SpellSchool.abjuration => const Color(0xFF60A5FA),
       SpellSchool.conjuration => const Color(0xFFC084FC),
@@ -85,14 +96,24 @@ enum CreatureType {
     this.frameShape,
   );
 
-  /// Returns a high-contrast version of the primary color guaranteed legible on dark backgrounds.
+  /// Returns a high-contrast version of the primary color guaranteed legible on dark or light backgrounds.
   Color getLegibleColor(bool isDarkMode) {
     if (!isDarkMode) {
       return switch (this) {
+        CreatureType.aberration => const Color(0xFF7E22CE),
+        CreatureType.beast => const Color(0xFF15803D),
+        CreatureType.celestial => const Color(0xFFB45309),
+        CreatureType.construct => const Color(0xFF9A3412),
+        CreatureType.dragon => const Color(0xFFB91C1C),
+        CreatureType.elemental => const Color(0xFF0369A1),
+        CreatureType.fey => const Color(0xFF7E22CE),
+        CreatureType.fiend => const Color(0xFF9F1239),
+        CreatureType.giant => const Color(0xFF334155),
+        CreatureType.humanoid => const Color(0xFF334155),
+        CreatureType.monstrosity => const Color(0xFF9A3412),
+        CreatureType.ooze => const Color(0xFF4D7C0F),
+        CreatureType.plant => const Color(0xFF047857),
         CreatureType.undead => const Color(0xFF334155),
-        CreatureType.humanoid => const Color(0xFF475569),
-        CreatureType.giant => const Color(0xFF475569),
-        _ => primaryColor,
       };
     }
     return switch (this) {

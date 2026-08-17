@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/dice_room_service.dart';
+import '../theme/app_theme.dart';
 import 'dialogs/join_create_room_dialog.dart';
 
 class RoomBannerWidget extends StatelessWidget {
@@ -33,6 +34,11 @@ class RoomBannerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
+
     return ValueListenableBuilder<RoomSession?>(
       valueListenable: roomService.activeSessionNotifier,
       builder: (context, session, _) {
@@ -44,10 +50,10 @@ class RoomBannerWidget extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: isConnected ? Colors.cyanAccent.withValues(alpha: 0.1) : const Color(0xFF1E1B2E),
+            color: isConnected ? primary.withValues(alpha: 0.1) : tabletop.cardBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isConnected ? Colors.cyanAccent.withValues(alpha: 0.5) : Colors.white12,
+              color: isConnected ? primary.withValues(alpha: 0.5) : tabletop.cardBorder,
             ),
           ),
           child: Wrap(
@@ -61,7 +67,7 @@ class RoomBannerWidget extends StatelessWidget {
                 children: [
                   Icon(
                     isConnected ? Icons.sensors : Icons.sensors_off,
-                    color: isConnected ? Colors.cyanAccent : Colors.white38,
+                    color: isConnected ? primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                     size: 22,
                   ),
                   const SizedBox(width: 10),
@@ -73,7 +79,7 @@ class RoomBannerWidget extends StatelessWidget {
                         Text(
                           isConnected ? roomCode : 'Solo Mode',
                           style: TextStyle(
-                            color: isConnected ? Colors.cyanAccent : Colors.white70,
+                            color: isConnected ? primary : theme.colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -81,7 +87,7 @@ class RoomBannerWidget extends StatelessWidget {
                         ),
                         Text(
                           isConnected ? 'Player: ${effectiveName ?? "Anonymous"}' : 'Not connected to a live room',
-                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -94,7 +100,7 @@ class RoomBannerWidget extends StatelessWidget {
                 children: [
                   if (isConnected) ...[
                     IconButton(
-                      icon: const Icon(Icons.copy, color: Colors.cyanAccent, size: 18),
+                      icon: Icon(Icons.copy, color: primary, size: 18),
                       tooltip: 'Copy Room Code',
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: roomCode));
@@ -111,13 +117,13 @@ class RoomBannerWidget extends StatelessWidget {
                         roomService.leaveRoom();
                         onLeaveRoom?.call();
                       },
-                      child: const Text('Leave', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
+                      child: Text('Leave', style: TextStyle(color: tabletop.fumbleRed, fontSize: 13)),
                     ),
                   ] else
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyanAccent.withValues(alpha: 0.2),
-                        foregroundColor: Colors.cyanAccent,
+                        backgroundColor: primary.withValues(alpha: 0.15),
+                        foregroundColor: primary,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),

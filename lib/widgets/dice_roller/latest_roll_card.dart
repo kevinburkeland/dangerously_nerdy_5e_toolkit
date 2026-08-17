@@ -61,7 +61,8 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<TabletopColors>() ?? TabletopColors.dark;
+    final isDark = theme.brightness == Brightness.dark;
+    final customColors = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
 
     if (widget.latestResult == null) {
       return Container(
@@ -142,13 +143,13 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.cyanAccent.withValues(alpha: 0.15),
+                        color: (isDark ? Colors.cyanAccent : theme.colorScheme.primary).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         res.formulaString,
-                        style: const TextStyle(
-                          color: Colors.cyanAccent,
+                        style: TextStyle(
+                          color: isDark ? Colors.cyanAccent : theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -200,8 +201,8 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
                     children: [
                       Text(
                         '${group.entry.dieLabel.toUpperCase()}: ',
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                         ),
@@ -220,14 +221,14 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
                                   ? customColors.critGold.withValues(alpha: 0.3)
                                   : isMin
                                       ? customColors.fumbleRed.withValues(alpha: 0.3)
-                                      : Colors.black38,
+                                      : (isDark ? Colors.black38 : theme.colorScheme.surfaceContainerHighest),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: isMax
                                     ? customColors.critGold
                                     : isMin
                                         ? customColors.fumbleRed
-                                        : Colors.white24,
+                                        : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(
@@ -237,7 +238,7 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
                                     ? customColors.critGold
                                     : isMin
                                         ? customColors.fumbleRed
-                                        : Colors.white,
+                                        : theme.colorScheme.onSurface,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -259,14 +260,14 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.black12,
+                          color: isDark ? Colors.black12 : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.white12),
+                          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
                         ),
                         child: Text(
                           '$val (dropped)',
-                          style: const TextStyle(
-                            color: Colors.white38,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                             fontSize: 11,
                             decoration: TextDecoration.lineThrough,
                           ),
@@ -283,8 +284,8 @@ class _LatestRollCardState extends State<LatestRollCard> with SingleTickerProvid
                     'Modifier: ${res.modifier > 0 ? "+${res.modifier}" : "${res.modifier}"}',
                     style: TextStyle(
                       color: res.modifier > 0 ? customColors.hitGreen : customColors.fumbleRed,
-                      fontWeight: FontWeight.bold,
                       fontSize: 13,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),

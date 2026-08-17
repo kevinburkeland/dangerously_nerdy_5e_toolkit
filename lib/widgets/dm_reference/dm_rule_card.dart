@@ -22,6 +22,9 @@ class DmRuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final itemColor = item.getLegibleColor(isDark);
+    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
     final activeRules = item.getRules(edition);
 
     return PressableCard(
@@ -29,7 +32,7 @@ class DmRuleCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: BorderSide(
-          color: isPinned ? Colors.amber.withValues(alpha: 0.7) : item.color.withValues(alpha: 0.35),
+          color: isPinned ? diffColor.withValues(alpha: 0.7) : itemColor.withValues(alpha: 0.35),
           width: isPinned ? 1.5 : 1.2,
         ),
       ),
@@ -44,10 +47,10 @@ class DmRuleCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: item.color.withValues(alpha: 0.15),
+                  color: itemColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(item.icon, color: item.color, size: 22),
+                child: Icon(item.icon, color: itemColor, size: 22),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -66,7 +69,7 @@ class DmRuleCard extends StatelessWidget {
                     Text(
                       item.category.label,
                       style: TextStyle(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 11,
                       ),
                     ),
@@ -77,18 +80,18 @@ class DmRuleCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.2),
+                    color: diffColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                    border: Border.all(color: diffColor.withValues(alpha: 0.5)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome, color: Colors.amber, size: 11),
-                      SizedBox(width: 3),
+                      Icon(Icons.auto_awesome, color: diffColor, size: 11),
+                      const SizedBox(width: 3),
                       Text(
                         '2024 Diff',
-                        style: TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: diffColor, fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -98,7 +101,7 @@ class DmRuleCard extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                  color: isPinned ? Colors.amber : Colors.white38,
+                  color: isPinned ? diffColor : theme.colorScheme.onSurfaceVariant,
                   size: 20,
                 ),
                 tooltip: isPinned ? 'Unpin rule from top' : 'Pin rule to top',
@@ -115,12 +118,12 @@ class DmRuleCard extends StatelessWidget {
           Text(
             item.summary,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
           ),
-          const Divider(height: 16, color: Colors.white10),
+          Divider(height: 16, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
 
           // Rule Bullet points for current edition
           ...activeRules.map((rule) => Padding(
@@ -128,11 +131,11 @@ class DmRuleCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('• ', style: TextStyle(color: item.color, fontWeight: FontWeight.bold)),
+                    Text('• ', style: TextStyle(color: itemColor, fontWeight: FontWeight.bold)),
                     Expanded(
                       child: Text(
                         rule,
-                        style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.35),
+                        style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 13, height: 1.35),
                       ),
                     ),
                   ],
@@ -148,13 +151,13 @@ class DmRuleCard extends StatelessWidget {
               Text(
                 'Compare 2014 vs 2024',
                 style: TextStyle(
-                  color: item.color,
+                  color: itemColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 11.5,
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.compare_arrows, color: item.color, size: 14),
+              Icon(Icons.compare_arrows, color: itemColor, size: 14),
             ],
           ),
         ],

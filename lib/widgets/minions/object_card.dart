@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/animated_object.dart';
-import '../../services/a11y_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
@@ -55,10 +54,11 @@ class ObjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final customColors = theme.extension<TabletopColors>() ?? TabletopColors.dark;
+    final isDark = theme.brightness == Brightness.dark;
+    final customColors = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
     final size = object.size;
     final isDead = object.isDead;
-    final accentColor = size.accentColor;
+    final accentColor = object.accentColor;
 
     return Card(
       elevation: isDead ? 0 : 3,
@@ -85,7 +85,7 @@ class ObjectCard extends StatelessWidget {
                   crTier: object.statBlock.glyphCrTier,
                   actionRings: object.statBlock.glyphActionRings,
                   size: 28,
-                  isDarkMode: theme.brightness == Brightness.dark,
+                  isDarkMode: isDark,
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -119,7 +119,7 @@ class ObjectCard extends StatelessWidget {
                               object.name,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: isDead ? Colors.white38 : Colors.white,
+                                color: isDead ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5) : theme.colorScheme.onSurface,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                                 decoration: isDead ? TextDecoration.lineThrough : null,
@@ -127,7 +127,7 @@ class ObjectCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Icon(Icons.edit_outlined, size: 14, color: Colors.white.withValues(alpha: 0.4)),
+                          Icon(Icons.edit_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant),
                         ],
                       ),
                     ),
@@ -139,7 +139,7 @@ class ObjectCard extends StatelessWidget {
                   onPressed: () => CreatureStatBlockDialog.show(context, statBlock: object.statBlock),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20, color: Colors.white38),
+                  icon: Icon(Icons.close, size: 20, color: theme.colorScheme.onSurfaceVariant),
                   tooltip: 'Remove Minion',
                   onPressed: () {
                     HapticService.lightImpact(context);
@@ -152,22 +152,22 @@ class ObjectCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.35),
+                color: isDark ? Colors.black.withValues(alpha: 0.35) : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatBlock('AC', '${object.ac}', Colors.lightBlueAccent, semanticName: 'Armor Class', isHero: true),
-                  _buildDivider(),
-                  _buildStatBlock('TO HIT', '+${object.attackBonus}', Colors.amberAccent, semanticName: 'Attack Bonus', isHero: true),
-                  _buildDivider(),
-                  _buildStatBlock('DMG', object.damageFormula, Colors.orangeAccent, semanticName: 'Damage Formula', isHero: true),
-                  _buildDivider(),
-                  _buildStatBlock('STR', '${size.strScore}', Colors.white70, semanticName: 'Strength Score'),
-                  _buildDivider(),
-                  _buildStatBlock('DEX', '${size.dexScore}', Colors.white70, semanticName: 'Dexterity Score'),
+                  _buildStatBlock(context, 'AC', '${object.ac}', isDark ? Colors.lightBlueAccent : const Color(0xFF0369A1), semanticName: 'Armor Class', isHero: true),
+                  _buildDivider(context),
+                  _buildStatBlock(context, 'TO HIT', '+${object.attackBonus}', isDark ? Colors.amberAccent : const Color(0xFFB45309), semanticName: 'Attack Bonus', isHero: true),
+                  _buildDivider(context),
+                  _buildStatBlock(context, 'DMG', object.damageFormula, isDark ? Colors.orangeAccent : const Color(0xFFC2410C), semanticName: 'Damage Formula', isHero: true),
+                  _buildDivider(context),
+                  _buildStatBlock(context, 'STR', '${size.strScore}', theme.colorScheme.onSurface, semanticName: 'Strength Score'),
+                  _buildDivider(context),
+                  _buildStatBlock(context, 'DEX', '${size.dexScore}', theme.colorScheme.onSurface, semanticName: 'Dexterity Score'),
                 ],
               ),
             ),
@@ -175,22 +175,14 @@ class ObjectCard extends StatelessWidget {
             Row(
               children: [
                 _buildHpButton(
+                  context: context,
                   icon: Icons.remove,
                   color: Colors.redAccent,
                   enabled: !isDead,
                   tooltip: '-1 HP',
                   semanticLabel: 'Decrease 1 HP for ${object.name}',
                   onTap: () {
-                    HapticService.lightImpact(context);
-                    final newHp = (object.currentHp - 1).clamp(0, object.maxHp);
-                    A11yService.announceHpChange(
-                      object.name,
-                      currentHp: newHp,
-                      maxHp: object.maxHp,
-                      delta: -1,
-                      tempHp: object.tempHp,
-                      isDead: newHp <= 0,
-                    );
+                    HapticService.selectionTick(context);
                     onHpChanged(-1);
                   },
                 ),
@@ -204,6 +196,7 @@ class ObjectCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       onTap: () => _showCustomHpDialog(context),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -213,7 +206,7 @@ class ObjectCard extends StatelessWidget {
                                   Text(
                                     isDead ? '💀 DESTROYED' : 'HP: ${object.currentHp} / ${object.maxHp}',
                                     style: TextStyle(
-                                      color: isDead ? customColors.fumbleRed : Colors.white,
+                                      color: isDead ? customColors.fumbleRed : theme.colorScheme.onSurface,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                     ),
@@ -231,8 +224,8 @@ class ObjectCard extends StatelessWidget {
                                         '+${object.tempHp} TEMP',
                                         style: TextStyle(
                                           color: customColors.tempHpCyan,
-                                          fontWeight: FontWeight.w800,
                                           fontSize: 10,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
@@ -241,40 +234,43 @@ class ObjectCard extends StatelessWidget {
                               ),
                               Text(
                                 '${(object.hpPercent * 100).toInt()}%',
-                                style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          Container(
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: Colors.white12,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: Stack(
-                                children: [
-                                  if (object.tempHp > 0 && !isDead)
-                                    FractionallySizedBox(
-                                      alignment: Alignment.centerLeft,
-                                      widthFactor: ((object.currentHp + object.tempHp) / object.maxHp).clamp(0.0, 1.0),
-                                      child: Container(
+                          const SizedBox(height: 4),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  height: 8,
+                                  color: theme.colorScheme.surfaceContainerHighest,
+                                ),
+                                if (object.tempHp > 0)
+                                  FractionallySizedBox(
+                                    widthFactor: ((object.currentHp + object.tempHp) / object.maxHp).clamp(0.0, 1.0),
+                                    child: Container(
+                                      height: 8,
+                                      decoration: BoxDecoration(
                                         color: customColors.tempHpCyan,
+                                        borderRadius: BorderRadius.circular(4),
                                       ),
                                     ),
-                                  FractionallySizedBox(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor: object.hpPercent,
-                                    child: Container(
+                                  ),
+                                FractionallySizedBox(
+                                  widthFactor: (object.currentHp / object.maxHp).clamp(0.0, 1.0),
+                                  child: Container(
+                                    height: 8,
+                                    decoration: BoxDecoration(
                                       color: object.hpPercent > 0.5
                                           ? customColors.hitGreen
                                           : (object.hpPercent > 0.25 ? Colors.amber : customColors.fumbleRed),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -284,21 +280,14 @@ class ObjectCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 _buildHpButton(
+                  context: context,
                   icon: Icons.add,
                   color: customColors.hitGreen,
-                  enabled: object.currentHp < object.maxHp,
+                  enabled: !isDead,
                   tooltip: '+1 HP',
                   semanticLabel: 'Increase 1 HP for ${object.name}',
                   onTap: () {
-                    HapticService.lightImpact(context);
-                    final newHp = (object.currentHp + 1).clamp(0, object.maxHp);
-                    A11yService.announceHpChange(
-                      object.name,
-                      currentHp: newHp,
-                      maxHp: object.maxHp,
-                      delta: 1,
-                      tempHp: object.tempHp,
-                    );
+                    HapticService.selectionTick(context);
                     onHpChanged(1);
                   },
                 ),
@@ -310,7 +299,8 @@ class ObjectCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatBlock(String label, String value, Color color, {required String semanticName, bool isHero = false}) {
+  Widget _buildStatBlock(BuildContext context, String label, String value, Color color, {required String semanticName, bool isHero = false}) {
+    final theme = Theme.of(context);
     return Semantics(
       label: '$semanticName: $value',
       excludeSemantics: true,
@@ -320,7 +310,7 @@ class ObjectCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: theme.colorScheme.onSurfaceVariant,
               fontSize: isHero ? 10 : 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
@@ -340,15 +330,17 @@ class ObjectCard extends StatelessWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildDivider(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       height: 24,
       width: 1,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
     );
   }
 
   Widget _buildHpButton({
+    required BuildContext context,
     required IconData icon,
     required Color color,
     required bool enabled,
@@ -356,6 +348,7 @@ class ObjectCard extends StatelessWidget {
     String? semanticLabel,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
     return ConstrainedBox(
       constraints: const BoxConstraints(
         minWidth: 48,
@@ -368,7 +361,7 @@ class ObjectCard extends StatelessWidget {
           label: semanticLabel ?? tooltip,
           enabled: enabled,
           child: Material(
-            color: enabled ? color.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+            color: enabled ? color.withValues(alpha: 0.15) : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
               side: BorderSide(
@@ -379,7 +372,7 @@ class ObjectCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               onTap: enabled ? onTap : null,
               child: Center(
-                child: Icon(icon, color: enabled ? color : Colors.white24, size: 24),
+                child: Icon(icon, color: enabled ? color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4), size: 24),
               ),
             ),
           ),

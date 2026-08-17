@@ -138,7 +138,9 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 500;
     final theme = Theme.of(context);
-    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
@@ -170,7 +172,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                             Text(
                               'Batch Attack Roller',
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: Colors.amber,
+                                    color: primary,
                                     fontWeight: FontWeight.bold,
                                     fontSize: isMobile ? 18 : 20,
                                   ),
@@ -179,12 +181,16 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                             if (currentRoomCode != null)
                               Row(
                                 children: [
-                                  const Icon(Icons.sensors, color: Colors.cyanAccent, size: 12),
+                                  Icon(Icons.sensors, color: isDark ? Colors.cyanAccent : theme.colorScheme.secondary, size: 12),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       'Broadcasting to Room: $currentRoomCode',
-                                      style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        color: isDark ? Colors.cyanAccent : theme.colorScheme.secondary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -197,13 +203,13 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white54),
+                  icon: Icon(Icons.close, color: theme.colorScheme.onSurfaceVariant),
                   tooltip: 'Close dialog',
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
-            const Divider(color: Colors.white24),
+            Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
             const SizedBox(height: 6),
 
             if (livingCount == 0)
@@ -230,27 +236,27 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                           final targetAcWidget = Column(
                             crossAxisAlignment: isCompact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                             children: [
-                              const Text('Target AC', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              Text('Target AC', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
                               const SizedBox(height: 4),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
                                     visualDensity: VisualDensity.compact,
-                                    icon: const Icon(Icons.remove_circle, color: Colors.amber),
+                                    icon: Icon(Icons.remove_circle, color: primary),
                                     onPressed: _targetAc > 1 ? () => setState(() => _targetAc--) : null,
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                      color: Colors.black38,
+                                      color: isDark ? Colors.black38 : theme.colorScheme.surfaceContainerHighest,
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                                      border: Border.all(color: primary.withValues(alpha: 0.5)),
                                     ),
                                     child: Text(
                                       '$_targetAc',
-                                      style: const TextStyle(
-                                        color: Colors.amber,
+                                      style: TextStyle(
+                                        color: primary,
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -258,7 +264,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                   ),
                                   IconButton(
                                     visualDensity: VisualDensity.compact,
-                                    icon: const Icon(Icons.add_circle, color: Colors.amber),
+                                    icon: Icon(Icons.add_circle, color: primary),
                                     onPressed: () => setState(() => _targetAc++),
                                   ),
                                 ],
@@ -269,7 +275,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                           final advantageWidget = Column(
                             crossAxisAlignment: isCompact ? CrossAxisAlignment.center : CrossAxisAlignment.end,
                             children: [
-                              const Text('Roll Mode', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              Text('Roll Mode', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
                               const SizedBox(height: 4),
                               FittedBox(
                                 fit: BoxFit.scaleDown,
@@ -279,12 +285,12 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 6, vertical: 0)),
                                     backgroundColor: WidgetStateProperty.resolveWith((states) {
-                                      if (states.contains(WidgetState.selected)) return Colors.amber;
-                                      return Colors.white10;
+                                      if (states.contains(WidgetState.selected)) return primary;
+                                      return isDark ? Colors.white10 : theme.colorScheme.surfaceContainerHighest;
                                     }),
                                     foregroundColor: WidgetStateProperty.resolveWith((states) {
-                                      if (states.contains(WidgetState.selected)) return Colors.black;
-                                      return Colors.white;
+                                      if (states.contains(WidgetState.selected)) return theme.colorScheme.onPrimary;
+                                      return theme.colorScheme.onSurface;
                                     }),
                                   ),
                                   segments: const [
@@ -328,7 +334,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: (_targetProne || _packTactics || _targetIncapacitated || _attackerImpaired)
-                                ? Colors.cyanAccent.withValues(alpha: 0.6)
+                                ? primary.withValues(alpha: 0.6)
                                 : tabletop.cardBorder,
                           ),
                         ),
@@ -341,12 +347,12 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.flash_on, color: Colors.cyanAccent, size: 18),
+                                    Icon(Icons.flash_on, color: primary, size: 18),
                                     const SizedBox(width: 6),
-                                    const Expanded(
+                                    Expanded(
                                       child: Text(
                                         'Tactical Combat Conditions',
-                                        style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold, fontSize: 12),
+                                        style: TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 12),
                                       ),
                                     ),
                                     if (_targetProne || _packTactics || _targetIncapacitated || _attackerImpaired)
@@ -354,19 +360,19 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                         margin: const EdgeInsets.only(right: 6),
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.cyanAccent.withValues(alpha: 0.2),
+                                          color: primary.withValues(alpha: 0.2),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Text(
                                           _advantageMode == RollMode.advantage
                                               ? 'Advantage Active'
                                               : (_advantageMode == RollMode.disadvantage ? 'Disadvantage Active' : 'Cancelled Out'),
-                                          style: const TextStyle(color: Colors.cyanAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                                          style: TextStyle(color: primary, fontSize: 10, fontWeight: FontWeight.bold),
                                         ),
                                       ),
                                     Icon(
                                       _showTacticalConditions ? Icons.expand_less : Icons.expand_more,
-                                      color: Colors.cyanAccent,
+                                      color: primary,
                                       size: 18,
                                     ),
                                   ],
@@ -374,7 +380,7 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                               ),
                             ),
                             if (_showTacticalConditions) ...[
-                              const Divider(height: 1, color: Colors.white12),
+                              Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
                               Padding(
                                 padding: const EdgeInsets.all(10),
                                 child: Wrap(
@@ -384,8 +390,8 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                     FilterChip(
                                       label: const Text('Target Prone (Melee)', style: TextStyle(fontSize: 11)),
                                       selected: _targetProne,
-                                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
-                                      checkmarkColor: Colors.cyanAccent,
+                                      selectedColor: primary.withValues(alpha: 0.3),
+                                      checkmarkColor: primary,
                                       onSelected: (val) {
                                         _targetProne = val;
                                         _recalculateTacticalAdvantage();
@@ -394,8 +400,8 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                     FilterChip(
                                       label: const Text('Pack Tactics (Ally 5ft)', style: TextStyle(fontSize: 11)),
                                       selected: _packTactics,
-                                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
-                                      checkmarkColor: Colors.cyanAccent,
+                                      selectedColor: primary.withValues(alpha: 0.3),
+                                      checkmarkColor: primary,
                                       onSelected: (val) {
                                         _packTactics = val;
                                         _recalculateTacticalAdvantage();
@@ -404,8 +410,8 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                                     FilterChip(
                                       label: const Text('Target Stunned/Restrained', style: TextStyle(fontSize: 11)),
                                       selected: _targetIncapacitated,
-                                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
-                                      checkmarkColor: Colors.cyanAccent,
+                                      selectedColor: primary.withValues(alpha: 0.3),
+                                      checkmarkColor: primary,
                                       onSelected: (val) {
                                         _targetIncapacitated = val;
                                         _recalculateTacticalAdvantage();
@@ -434,10 +440,10 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.black26,
+                          color: isDark ? Colors.black26 : theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: _useMaximizedCrits ? Colors.amber : Colors.white12,
+                            color: _useMaximizedCrits ? primary : theme.colorScheme.outlineVariant.withValues(alpha: 0.2),
                             width: 1,
                           ),
                         ),
@@ -446,25 +452,25 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                           child: SwitchListTile(
                             contentPadding: EdgeInsets.zero,
                             dense: true,
-                            title: const Row(
+                            title: Row(
                               children: [
-                                Icon(Icons.bolt, color: Colors.amber, size: 18),
-                                SizedBox(width: 6),
+                                Icon(Icons.bolt, color: primary, size: 18),
+                                const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     'Maximized Criticals',
-                                    style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 13),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
                             ),
-                            subtitle: const Text(
+                            subtitle: Text(
                               'Crits deal max dice damage + a normal dice roll',
-                              style: TextStyle(color: Colors.white60, fontSize: 11),
+                              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
                             ),
                             value: _useMaximizedCrits,
-                            activeThumbColor: Colors.amber,
+                            activeThumbColor: primary,
                             onChanged: (val) => setState(() => _useMaximizedCrits = val),
                           ),
                         ),
@@ -477,8 +483,8 @@ class _BatchAttackDialogState extends State<BatchAttackDialog> {
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber,
-                            foregroundColor: Colors.black,
+                            backgroundColor: primary,
+                            foregroundColor: theme.colorScheme.onPrimary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),

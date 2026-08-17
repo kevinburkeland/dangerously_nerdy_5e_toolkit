@@ -99,6 +99,11 @@ class SpellFilterSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
+    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
+    final concColor = isDark ? Colors.amberAccent : const Color(0xFFB45309);
+    final ritualColor = isDark ? Colors.cyanAccent : const Color(0xFF0E7490);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,7 +114,7 @@ class SpellFilterSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -136,7 +141,7 @@ class SpellFilterSheet extends StatelessWidget {
             ),
           ],
         ),
-        const Divider(height: 20, color: Colors.white12),
+        Divider(height: 20, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
 
         // Quick Feature Toggles (2024 Diffs, Pinned, Ritual, Concentration)
         Text(
@@ -153,40 +158,40 @@ class SpellFilterSheet extends StatelessWidget {
           runSpacing: 8,
           children: [
             FilterChip(
-              avatar: const Icon(Icons.bookmark, size: 14, color: Colors.purpleAccent),
+              avatar: Icon(Icons.bookmark, size: 14, color: pinColor),
               label: const Text('My Pinned Spells'),
               selected: showOnlyPinned,
-              selectedColor: Colors.purpleAccent.withValues(alpha: 0.25),
+              selectedColor: pinColor.withValues(alpha: 0.25),
               onSelected: (val) {
                 HapticService.selectionTick(context);
                 onPinnedToggled(val);
               },
             ),
             FilterChip(
-              avatar: const Icon(Icons.auto_awesome, size: 14, color: Colors.amber),
+              avatar: Icon(Icons.auto_awesome, size: 14, color: diffColor),
               label: const Text('2024 Revised Only'),
               selected: showOnlyChangedIn2024,
-              selectedColor: Colors.amber.withValues(alpha: 0.25),
+              selectedColor: diffColor.withValues(alpha: 0.25),
               onSelected: (val) {
                 HapticService.selectionTick(context);
                 onChangedIn2024Toggled(val);
               },
             ),
             FilterChip(
-              avatar: const Icon(Icons.psychology_outlined, size: 14, color: Colors.amberAccent),
+              avatar: Icon(Icons.psychology_outlined, size: 14, color: concColor),
               label: const Text('Concentration'),
               selected: showOnlyConcentration,
-              selectedColor: Colors.amberAccent.withValues(alpha: 0.25),
+              selectedColor: concColor.withValues(alpha: 0.25),
               onSelected: (val) {
                 HapticService.selectionTick(context);
                 onConcentrationToggled(val);
               },
             ),
             FilterChip(
-              avatar: const Icon(Icons.auto_stories, size: 14, color: Colors.cyanAccent),
+              avatar: Icon(Icons.auto_stories, size: 14, color: ritualColor),
               label: const Text('Ritual'),
               selected: showOnlyRitual,
-              selectedColor: Colors.cyanAccent.withValues(alpha: 0.25),
+              selectedColor: ritualColor.withValues(alpha: 0.25),
               onSelected: (val) {
                 HapticService.selectionTick(context);
                 onRitualToggled(val);

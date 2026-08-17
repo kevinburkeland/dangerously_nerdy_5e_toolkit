@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../providers/settings_provider.dart';
+import '../../theme/app_theme.dart';
 import '../dm_reference/rules_edition_toggle.dart';
 
 class ActionEconomyDialog extends StatefulWidget {
@@ -49,9 +50,13 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
     final reactions = DmScreenLibrary.reactions;
     final coverRules = DmScreenLibrary.coverRules;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      backgroundColor: const Color(0xFF1E1B2E),
+      backgroundColor: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 700, maxHeight: 750),
@@ -62,14 +67,14 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.flash_on, color: Colors.amber, size: 24),
+                  Icon(Icons.flash_on, color: primary, size: 24),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Semantics(
                       header: true,
-                      child: const Text(
+                      child: Text(
                         '5e Combat Action Economy',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -85,7 +90,7 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white54),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onSurfaceVariant),
                     tooltip: 'Close dialog',
                     onPressed: () => Navigator.pop(context),
                   ),
@@ -97,13 +102,13 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: TextField(
-                style: const TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'Search actions (e.g., Dodge, Cover, Grapple, Potion)...',
-                  hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
-                  prefixIcon: const Icon(Icons.search, color: Colors.amber, size: 18),
+                  hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6), fontSize: 12),
+                  prefixIcon: Icon(Icons.search, color: primary, size: 18),
                   filled: true,
-                  fillColor: const Color(0xFF252236),
+                  fillColor: isDark ? const Color(0xFF252236) : theme.colorScheme.surfaceContainerHighest,
                   contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -117,9 +122,9 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
             // Tab Bar
             TabBar(
               controller: _tabController,
-              indicatorColor: Colors.amber,
-              labelColor: Colors.amber,
-              unselectedLabelColor: Colors.white54,
+              indicatorColor: primary,
+              labelColor: primary,
+              unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               tabs: const [
@@ -129,7 +134,7 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                 Tab(text: 'Cover Rules'),
               ],
             ),
-            const Divider(height: 1, color: Colors.white12),
+            Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
 
             // Tab Views
             Expanded(
@@ -150,16 +155,20 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
   }
 
   Widget _buildList(List<DmReferenceItem> items, DmRulesEdition edition) {
+    final theme = Theme.of(context);
+    final tabletop = theme.extension<TabletopColors>();
+    final isDark = theme.brightness == Brightness.dark;
+
     final filtered = items.where((i) {
       if (_searchQuery.isEmpty) return true;
       return i.matches(_searchQuery);
     }).toList();
 
     if (filtered.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'No matching combat actions found.',
-          style: TextStyle(color: Colors.white38),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
       );
     }
@@ -169,17 +178,18 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final item = filtered[index];
+        final itemColor = item.getLegibleColor(isDark);
         final title = item.getTitle(edition);
         final cost = item.getCost(edition) ?? item.cost ?? '';
         final rules = item.getRules(edition);
         final desc = rules.isNotEmpty ? rules.join(' ') : item.summary;
 
         return Card(
-          color: const Color(0xFF252236),
+          color: tabletop?.cardBackground ?? (isDark ? const Color(0xFF252236) : theme.colorScheme.surfaceContainerHighest),
           margin: const EdgeInsets.only(bottom: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: item.color.withValues(alpha: 0.3)),
+            side: BorderSide(color: itemColor.withValues(alpha: 0.3)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -189,10 +199,10 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: item.color.withValues(alpha: 0.15),
+                    color: itemColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(item.icon, color: item.color, size: 20),
+                  child: Icon(item.icon, color: itemColor, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -205,19 +215,19 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                           Flexible(
                             child: Text(
                               title,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 14),
                             ),
                           ),
                           if (cost.isNotEmpty)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: item.color.withValues(alpha: 0.2),
+                                color: itemColor.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 cost,
-                                style: TextStyle(color: item.color, fontSize: 10, fontWeight: FontWeight.bold),
+                                style: TextStyle(color: itemColor, fontSize: 10, fontWeight: FontWeight.bold),
                               ),
                             ),
                         ],
@@ -225,7 +235,7 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
                       const SizedBox(height: 4),
                       Text(
                         desc,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
+                        style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 12, height: 1.35),
                       ),
                     ],
                   ),

@@ -42,6 +42,28 @@ class LandingToolItem {
         category.toLowerCase().contains(q) ||
         keywords.any((kw) => kw.toLowerCase().contains(q));
   }
+
+  Color getLegibleAccent(bool isDark) {
+    if (isDark) return accentColor;
+    if (accentColor == Colors.cyanAccent) return const Color(0xFF0369A1);
+    if (accentColor == Colors.amberAccent || accentColor == Colors.amber) return const Color(0xFFB45309);
+    if (accentColor == Colors.purpleAccent || accentColor == Colors.purple || accentColor == const Color(0xFFC084FC)) return const Color(0xFF7E22CE);
+    if (accentColor == Colors.orangeAccent || accentColor == Colors.orange) return const Color(0xFFC2410C);
+    if (accentColor == Colors.greenAccent || accentColor == Colors.green) return const Color(0xFF047857);
+    if (accentColor == Colors.redAccent || accentColor == Colors.red) return const Color(0xFFB91C1C);
+    return accentColor;
+  }
+
+  Color getLegibleBadge(bool isDark) {
+    if (isDark) return badgeColor;
+    if (badgeColor == Colors.cyanAccent) return const Color(0xFF0369A1);
+    if (badgeColor == Colors.amberAccent || badgeColor == Colors.amber) return const Color(0xFFB45309);
+    if (badgeColor == Colors.purpleAccent || badgeColor == Colors.purple || badgeColor == const Color(0xFFC084FC)) return const Color(0xFF7E22CE);
+    if (badgeColor == Colors.orangeAccent || badgeColor == Colors.orange) return const Color(0xFFC2410C);
+    if (badgeColor == Colors.greenAccent || badgeColor == Colors.green) return const Color(0xFF047857);
+    if (badgeColor == Colors.redAccent || badgeColor == Colors.red) return const Color(0xFFB91C1C);
+    return badgeColor;
+  }
 }
 
 /// Centralized registry providing all default tools and summon companions for the toolkit.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/custom_preset.dart';
 import '../../services/preset_service.dart';
+import '../../theme/app_theme.dart';
 
 class RollPresetsSection extends StatelessWidget {
   final List<CustomPreset> userPresets;
@@ -22,20 +23,24 @@ class RollPresetsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. PRESETS HEADER & ACTIONS
+        // 1. HEADER ROW: Presets title + actions
         Wrap(
           alignment: WrapAlignment.spaceBetween,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 8,
           runSpacing: 4,
           children: [
-            const Text(
+            Text(
               'Presets',
               style: TextStyle(
-                  color: Colors.white70,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
                   fontSize: 14),
             ),
@@ -43,14 +48,14 @@ class RollPresetsSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.download,
-                      size: 18, color: Colors.cyanAccent),
+                  icon: Icon(Icons.download,
+                      size: 18, color: primary),
                   tooltip: 'Export Presets (JSON)',
                   onPressed: onExportPresets,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.upload,
-                      size: 18, color: Colors.cyanAccent),
+                  icon: Icon(Icons.upload,
+                      size: 18, color: primary),
                   tooltip: 'Import Presets (JSON)',
                   onPressed: onImportPresets,
                 ),
@@ -59,16 +64,16 @@ class RollPresetsSection extends StatelessWidget {
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
-                    backgroundColor: Colors.amber.withValues(alpha: 0.15),
+                    backgroundColor: primary.withValues(alpha: 0.15),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  icon: const Icon(Icons.bookmark_add,
-                      size: 16, color: Colors.amber),
-                  label: const Text(
+                  icon: Icon(Icons.bookmark_add,
+                      size: 16, color: primary),
+                  label: Text(
                     'Save Current',
                     style: TextStyle(
-                        color: Colors.amber,
+                        color: primary,
                         fontSize: 12,
                         fontWeight: FontWeight.bold),
                   ),
@@ -81,10 +86,10 @@ class RollPresetsSection extends StatelessWidget {
         const SizedBox(height: 8),
 
         // 2. MY SAVED PRESETS SECTION
-        const Text(
+        Text(
           'MY SAVED PRESETS',
           style: TextStyle(
-              color: Colors.amber,
+              color: primary,
               fontSize: 11,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.8),
@@ -95,7 +100,7 @@ class RollPresetsSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: userPresets
-                  .map((preset) => _buildCustomPresetChip(preset))
+                  .map((preset) => _buildCustomPresetChip(context, preset))
                   .toList(),
             ),
           )
@@ -104,18 +109,18 @@ class RollPresetsSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF28243D),
+              color: isDark ? const Color(0xFF28243D) : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              border: Border.all(color: primary.withValues(alpha: 0.3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.bookmark_border, color: Colors.amber, size: 16),
-                SizedBox(width: 8),
+                Icon(Icons.bookmark_border, color: primary, size: 16),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'No custom presets yet. Adjust dice & tap "Save Current" to create one!',
-                    style: TextStyle(color: Colors.amber, fontSize: 11),
+                    style: TextStyle(color: primary, fontSize: 11),
                   ),
                 ),
               ],
@@ -124,10 +129,10 @@ class RollPresetsSection extends StatelessWidget {
         const SizedBox(height: 12),
 
         // 3. BUILT-IN QUICK PRESETS SECTION
-        const Text(
+        Text(
           'QUICK PRESETS',
           style: TextStyle(
-              color: Colors.white54,
+              color: theme.colorScheme.onSurfaceVariant,
               fontSize: 11,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.8),
@@ -137,7 +142,7 @@ class RollPresetsSection extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: PresetService.defaultPresets
-                .map((preset) => _buildBuiltInPresetChip(preset))
+                .map((preset) => _buildBuiltInPresetChip(context, preset))
                 .toList(),
           ),
         ),
@@ -145,13 +150,17 @@ class RollPresetsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomPresetChip(CustomPreset preset) {
+  Widget _buildCustomPresetChip(BuildContext context, CustomPreset preset) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
     return Container(
       margin: const EdgeInsets.only(right: 8.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF2E2744),
+        color: isDark ? const Color(0xFF2E2744) : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
+        border: Border.all(color: primary.withValues(alpha: 0.6)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -161,12 +170,12 @@ class RollPresetsSection extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.star, size: 14, color: Colors.amber),
+              Icon(Icons.star, size: 14, color: primary),
               const SizedBox(width: 6),
               Text(
                 '${preset.name} (${preset.formulaString})',
-                style: const TextStyle(
-                    color: Colors.white,
+                style: TextStyle(
+                    color: theme.colorScheme.onSurface,
                     fontSize: 12,
                     fontWeight: FontWeight.w600),
               ),
@@ -174,9 +183,9 @@ class RollPresetsSection extends StatelessWidget {
               InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => onDeletePreset(preset),
-                child: const Padding(
-                  padding: EdgeInsets.all(3.0),
-                  child: Icon(Icons.close, size: 14, color: Colors.white54),
+                child: Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: Icon(Icons.close, size: 14, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ),
             ],
@@ -186,14 +195,18 @@ class RollPresetsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildBuiltInPresetChip(CustomPreset preset) {
+  Widget _buildBuiltInPresetChip(BuildContext context, CustomPreset preset) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
+
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: ActionChip(
-        backgroundColor: const Color(0xFF28243D),
-        side: const BorderSide(color: Colors.white12),
+        backgroundColor: tabletop.cardBackground,
+        side: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
         label: Text('${preset.name} (${preset.formulaString})',
-            style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12)),
         onPressed: () => onApplyPreset(preset),
       ),
     );

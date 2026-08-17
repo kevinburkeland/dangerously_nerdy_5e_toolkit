@@ -40,7 +40,7 @@ void main() {
         );
 
         expect(theme.brightness, Brightness.light);
-        expect(theme.colorScheme.primary, accent.primary);
+        expect(theme.colorScheme.primary, accent.getPrimary(false));
         expect(theme.extension<TabletopColors>(), isNotNull);
       }
     });

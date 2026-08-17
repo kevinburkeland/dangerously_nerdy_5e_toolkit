@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/dice_roll.dart';
 import '../../models/room_roll.dart';
 import '../../services/dice_room_service.dart';
+import '../../theme/app_theme.dart';
 
 class RollHistoryList extends StatelessWidget {
   final List<DiceRollResult> localHistory;
@@ -32,30 +33,34 @@ class RollHistoryList extends StatelessWidget {
             roomService: roomService,
           );
         } else if (localHistory.isNotEmpty) {
-          return _buildLocalRollHistory();
+          return _buildLocalRollHistory(context);
         }
         return const SizedBox.shrink();
       },
     );
   }
 
-  Widget _buildLocalRollHistory() {
+  Widget _buildLocalRollHistory(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Roll History',
               style: TextStyle(
-                  color: Colors.white70,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
                   fontSize: 14),
             ),
             Text(
               '${localHistory.length} rolls',
-              style: const TextStyle(color: Colors.white38, fontSize: 12),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6), fontSize: 12),
             ),
           ],
         ),
@@ -71,9 +76,9 @@ class RollHistoryList extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1B2E),
+                color: tabletop.cardBackground,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border: Border.all(color: tabletop.cardBorder),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -83,16 +88,16 @@ class RollHistoryList extends StatelessWidget {
                     children: [
                       Text(
                         item.formulaString,
-                        style: const TextStyle(
-                            color: Colors.cyanAccent,
+                        style: TextStyle(
+                            color: isDark ? Colors.cyanAccent : theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 14),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Rolls: ${item.individualRolls.join(', ')}${item.droppedRolls != null ? ' (dropped ${item.droppedRolls!.join(', ')})' : ''}',
-                        style: const TextStyle(
-                            color: Colors.white60, fontSize: 12),
+                        style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                       ),
                     ],
                   ),
@@ -101,27 +106,27 @@ class RollHistoryList extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: item.isCrit
-                          ? Colors.amber.withValues(alpha: 0.2)
+                          ? tabletop.critGold.withValues(alpha: 0.2)
                           : item.isFumble
-                              ? Colors.redAccent.withValues(alpha: 0.2)
-                              : Colors.black26,
+                              ? tabletop.fumbleRed.withValues(alpha: 0.2)
+                              : (isDark ? Colors.black26 : theme.colorScheme.surfaceContainerHighest),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: item.isCrit
-                            ? Colors.amber
+                            ? tabletop.critGold
                             : item.isFumble
-                                ? Colors.redAccent
-                                : Colors.white12,
+                                ? tabletop.fumbleRed
+                                : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
                       '${item.total}',
                       style: TextStyle(
                         color: item.isCrit
-                            ? Colors.amber
+                            ? tabletop.critGold
                             : item.isFumble
-                                ? Colors.redAccent
-                                : Colors.white,
+                                ? tabletop.fumbleRed
+                                : theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
                       ),
@@ -236,6 +241,12 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
               );
             }
 
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+            final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
+            final primary = theme.colorScheme.primary;
+            final secondary = theme.colorScheme.secondary;
+
             final roomRolls = snapshot.data ?? [];
 
             if (roomRolls.isEmpty) {
@@ -243,13 +254,13 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                 padding: const EdgeInsets.all(20),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E1B2E),
+                  color: tabletop.cardBackground,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: tabletop.cardBorder),
                 ),
-                child: const Text(
+                child: Text(
                   'No rolls in this room yet. Tap ROLL to broadcast first roll!',
-                  style: TextStyle(color: Colors.white54, fontSize: 14),
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14),
                 ),
               );
             }
@@ -271,13 +282,13 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                     color: isSelf
-                        ? const Color(0xFF23203E)
-                        : const Color(0xFF1E1B2E),
+                        ? (isDark ? const Color(0xFF23203E) : theme.colorScheme.surfaceContainerHighest)
+                        : tabletop.cardBackground,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelf
-                          ? Colors.cyanAccent.withValues(alpha: 0.3)
-                          : Colors.white.withValues(alpha: 0.05),
+                          ? primary.withValues(alpha: 0.5)
+                          : tabletop.cardBorder,
                     ),
                   ),
                   child: Column(
@@ -292,14 +303,14 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                                 CircleAvatar(
                                   radius: 14,
                                   backgroundColor: isSelf
-                                      ? Colors.cyanAccent
-                                      : Colors.purpleAccent,
+                                      ? primary
+                                      : secondary,
                                   child: Text(
                                     item.playerName.isNotEmpty
                                         ? item.playerName[0].toUpperCase()
                                         : '?',
-                                    style: const TextStyle(
-                                        color: Colors.black,
+                                    style: TextStyle(
+                                        color: isSelf ? theme.colorScheme.onPrimary : theme.colorScheme.onSecondary,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 12),
                                   ),
@@ -315,8 +326,8 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                                             item.playerName,
                                             style: TextStyle(
                                               color: isSelf
-                                                  ? Colors.cyanAccent
-                                                  : Colors.amber,
+                                                  ? primary
+                                                  : (isDark ? Colors.amber : const Color(0xFFB45309)),
                                               fontWeight: FontWeight.bold,
                                               fontSize: 13,
                                             ),
@@ -325,8 +336,8 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                                           Flexible(
                                             child: Text(
                                               item.formulaString,
-                                              style: const TextStyle(
-                                                  color: Colors.white70, fontSize: 13),
+                                              style: TextStyle(
+                                                  color: theme.colorScheme.onSurface, fontSize: 13),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
@@ -338,8 +349,8 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                                           Expanded(
                                             child: Text(
                                               'Rolls: ${item.individualRolls.join(', ')}${item.droppedRolls != null ? ' (dropped ${item.droppedRolls!.join(', ')})' : ''}',
-                                              style: const TextStyle(
-                                                  color: Colors.white54, fontSize: 12),
+                                              style: TextStyle(
+                                                  color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
@@ -363,13 +374,13 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                                                     Icon(
                                                       isExpanded ? Icons.expand_less : Icons.expand_more,
                                                       size: 14,
-                                                      color: Colors.cyanAccent,
+                                                      color: primary,
                                                     ),
                                                     const SizedBox(width: 2),
                                                     Text(
                                                       isExpanded ? 'Hide' : 'Papertrail (${item.details!.length})',
-                                                      style: const TextStyle(
-                                                        color: Colors.cyanAccent,
+                                                      style: TextStyle(
+                                                        color: primary,
                                                         fontSize: 11,
                                                         fontWeight: FontWeight.w600,
                                                       ),
@@ -392,27 +403,27 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: item.isCrit
-                                  ? Colors.amber.withValues(alpha: 0.2)
+                                  ? tabletop.critGold.withValues(alpha: 0.2)
                                   : item.isFumble
-                                      ? Colors.redAccent.withValues(alpha: 0.2)
-                                      : Colors.black26,
+                                      ? tabletop.fumbleRed.withValues(alpha: 0.2)
+                                      : (isDark ? Colors.black26 : theme.colorScheme.surfaceContainerHighest),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color: item.isCrit
-                                    ? Colors.amber
+                                    ? tabletop.critGold
                                     : item.isFumble
-                                        ? Colors.redAccent
-                                        : Colors.white12,
+                                        ? tabletop.fumbleRed
+                                        : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(
                               '${item.total}',
                               style: TextStyle(
                                 color: item.isCrit
-                                  ? Colors.amber
+                                  ? tabletop.critGold
                                   : item.isFumble
-                                      ? Colors.redAccent
-                                      : Colors.white,
+                                      ? tabletop.fumbleRed
+                                      : theme.colorScheme.onSurface,
                                 fontWeight: FontWeight.w900,
                                 fontSize: 16,
                               ),
@@ -426,21 +437,21 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF141224),
+                            color: isDark ? const Color(0xFF141224) : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: Colors.white12),
+                            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(Icons.history_edu, size: 14, color: Colors.cyanAccent),
-                                  SizedBox(width: 6),
+                                  Icon(Icons.history_edu, size: 14, color: primary),
+                                  const SizedBox(width: 6),
                                   Text(
                                     'To-Hit & Damage Papertrail:',
                                     style: TextStyle(
-                                      color: Colors.cyanAccent,
+                                      color: primary,
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -453,8 +464,8 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
                                   padding: const EdgeInsets.symmetric(vertical: 2),
                                   child: Text(
                                     '• $line',
-                                    style: const TextStyle(
-                                      color: Colors.white70,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
                                       fontSize: 11,
                                       fontFamily: 'monospace',
                                       height: 1.3,

@@ -162,14 +162,14 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                  icon: Icon(Icons.close, color: theme.colorScheme.onSurfaceVariant, size: 20),
                   tooltip: 'Close',
                   onPressed: () => Navigator.of(context).pop(_latestResult),
                 ),
               ],
             ),
             const SizedBox(height: 14),
-            const Divider(height: 1, color: Colors.white12),
+            Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
             const SizedBox(height: 14),
 
             // Cantrip Tier Selector OR Leveled Spell Slot Picker
@@ -255,27 +255,25 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: List.generate(9, (i) {
-                    final mod = i - 1; // -1 to +7
-                    final isSelected = _selectedAbilityMod == mod;
-                    final modLabel = mod >= 0 ? '+$mod' : '$mod';
-
+                  children: List.generate(11, (i) {
+                    final modVal = i;
+                    final isSelected = _selectedAbilityMod == modVal;
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: ChoiceChip(
                         selected: isSelected,
                         label: Text(
-                          modLabel,
+                          '+$modVal',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
-                        selectedColor: Colors.amber.withValues(alpha: 0.25),
+                        selectedColor: schoolColor.withValues(alpha: 0.25),
                         onSelected: (selected) {
                           if (selected) {
                             HapticService.selectionTick(context);
-                            setState(() => _selectedAbilityMod = mod);
+                            setState(() => _selectedAbilityMod = modVal);
                           }
                         },
                       ),
@@ -285,16 +283,15 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
               ),
             ],
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // Active Formula Display Box
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: tabletop.cardBackground,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: schoolColor.withValues(alpha: 0.4)),
+                border: Border.all(color: tabletop.cardBorder),
               ),
               child: Row(
                 children: [
@@ -304,10 +301,10 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Active Formula',
                           style: TextStyle(
-                            color: Colors.white54,
+                            color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
@@ -348,13 +345,13 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.greenAccent.withValues(alpha: 0.12),
+                  color: (isDark ? Colors.greenAccent : const Color(0xFF15803D)).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+                  border: Border.all(color: (isDark ? Colors.greenAccent : const Color(0xFF15803D)).withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 22),
+                    Icon(Icons.check_circle_outline, color: isDark ? Colors.greenAccent : const Color(0xFF15803D), size: 22),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -362,15 +359,15 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
                         children: [
                           Text(
                             'Roll Total: ${_latestResult!.total}',
-                            style: const TextStyle(
-                              color: Colors.greenAccent,
+                            style: TextStyle(
+                              color: isDark ? Colors.greenAccent : const Color(0xFF15803D),
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
                             'Dice: [${_latestResult!.individualDice.join(", ")}]${_latestResult!.modifier != 0 ? " | Mod: ${_latestResult!.modifier > 0 ? "+" : ""}${_latestResult!.modifier}" : ""}',
-                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 12),
                           ),
                         ],
                       ),

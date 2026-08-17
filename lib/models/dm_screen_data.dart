@@ -18,6 +18,20 @@ enum DmCategory {
   final Color color;
 
   const DmCategory(this.label, this.icon, this.color);
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      return switch (this) {
+        DmCategory.actions => const Color(0xFFB45309),
+        DmCategory.conditions => const Color(0xFF0E7490),
+        DmCategory.environment => const Color(0xFF15803D),
+        DmCategory.exploration => const Color(0xFFC2410C),
+        DmCategory.magicAndResting => const Color(0xFF7E22CE),
+        DmCategory.tables => const Color(0xFFBE185D),
+      };
+    }
+    return color;
+  }
 }
 
 class DmReferenceItem {
@@ -75,6 +89,19 @@ class DmReferenceItem {
 
   List<String> getRules(DmRulesEdition edition) {
     return edition == DmRulesEdition.v2014 ? rules2014 : rules2024;
+  }
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      if (color == Colors.amber) return const Color(0xFFB45309);
+      if (color == Colors.cyanAccent) return const Color(0xFF0E7490);
+      if (color == Colors.lightGreenAccent) return const Color(0xFF15803D);
+      if (color == Colors.orangeAccent) return const Color(0xFFC2410C);
+      if (color == Colors.purpleAccent) return const Color(0xFF7E22CE);
+      if (color == Colors.pinkAccent) return const Color(0xFFBE185D);
+      return category.getLegibleColor(isDarkMode);
+    }
+    return color;
   }
 
   static final Map<String, String> _corpusCache = {};

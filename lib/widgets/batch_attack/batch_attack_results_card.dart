@@ -13,6 +13,8 @@ class BatchAttackResultsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final textScaler = MediaQuery.textScalerOf(context);
     final isLargeScale = textScaler.scale(14) > 18;
 
@@ -29,34 +31,42 @@ class BatchAttackResultsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Colors.amber.shade900.withValues(alpha: 0.4),
-                  Colors.purple.shade900.withValues(alpha: 0.4),
-                ],
+                colors: isDark
+                    ? [
+                        Colors.amber.shade900.withValues(alpha: 0.4),
+                        Colors.purple.shade900.withValues(alpha: 0.4),
+                      ]
+                    : [
+                        theme.colorScheme.primary.withValues(alpha: 0.15),
+                        theme.colorScheme.secondary.withValues(alpha: 0.12),
+                      ],
               ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber, width: 1.5),
+              border: Border.all(color: theme.colorScheme.primary, width: 1.5),
             ),
             child: isLargeScale
                 ? Column(
                     children: [
                       _buildSummaryStat(
+                        context,
                         'TOTAL DAMAGE',
                         '${summary.totalDamage}',
-                        Colors.orangeAccent,
+                        isDark ? Colors.orangeAccent : const Color(0xFFC2410C),
                         fontSize: 22,
                       ),
-                      const Divider(color: Colors.white24, height: 12),
+                      Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2), height: 12),
                       _buildSummaryStat(
+                        context,
                         'HITS',
                         '${summary.totalHits} / ${summary.totalAttacks}',
-                        Colors.greenAccent,
+                        isDark ? Colors.greenAccent : const Color(0xFF15803D),
                       ),
-                      const Divider(color: Colors.white24, height: 12),
+                      Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2), height: 12),
                       _buildSummaryStat(
+                        context,
                         'CRITS',
                         '${summary.totalCrits}',
-                        Colors.yellowAccent,
+                        isDark ? Colors.yellowAccent : const Color(0xFFB45309),
                       ),
                     ],
                   )
@@ -66,9 +76,10 @@ class BatchAttackResultsCard extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: _buildSummaryStat(
+                            context,
                             'TOTAL DAMAGE',
                             '${summary.totalDamage}',
-                            Colors.orangeAccent,
+                            isDark ? Colors.orangeAccent : const Color(0xFFC2410C),
                             fontSize: 22,
                           ),
                         ),
@@ -77,9 +88,10 @@ class BatchAttackResultsCard extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: _buildSummaryStat(
+                            context,
                             'HITS',
                             '${summary.totalHits} / ${summary.totalAttacks}',
-                            Colors.greenAccent,
+                            isDark ? Colors.greenAccent : const Color(0xFF15803D),
                           ),
                         ),
                       ),
@@ -87,9 +99,10 @@ class BatchAttackResultsCard extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: _buildSummaryStat(
+                            context,
                             'CRITS',
                             '${summary.totalCrits}',
-                            Colors.yellowAccent,
+                            isDark ? Colors.yellowAccent : const Color(0xFFB45309),
                           ),
                         ),
                       ),
@@ -119,15 +132,15 @@ class BatchAttackResultsCard extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: res.isHit
-                      ? const Color(0xFF1B5E20).withValues(alpha: 0.2)
-                      : const Color(0xFFB71C1C).withValues(alpha: 0.15),
+                      ? (isDark ? const Color(0xFF1B5E20).withValues(alpha: 0.2) : const Color(0xFF15803D).withValues(alpha: 0.1))
+                      : (isDark ? const Color(0xFFB71C1C).withValues(alpha: 0.15) : const Color(0xFFDC2626).withValues(alpha: 0.08)),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: res.isCrit
-                        ? const Color(0xFFFFD54F)
+                        ? (isDark ? const Color(0xFFFFD54F) : const Color(0xFFB45309))
                         : (res.isHit
-                            ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
-                            : const Color(0xFFE57373).withValues(alpha: 0.3)),
+                            ? (isDark ? const Color(0xFF4CAF50).withValues(alpha: 0.4) : const Color(0xFF15803D).withValues(alpha: 0.4))
+                            : (isDark ? const Color(0xFFE57373).withValues(alpha: 0.3) : const Color(0xFFDC2626).withValues(alpha: 0.3))),
                   ),
                 ),
                 child: Row(
@@ -151,8 +164,8 @@ class BatchAttackResultsCard extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   obj.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -162,8 +175,9 @@ class BatchAttackResultsCard extends StatelessWidget {
                               Text(
                                 '(${obj.size.displayName})',
                                 style: TextStyle(
-                                  color: obj.size.accentColor,
+                                  color: isDark ? obj.size.accentColor : theme.colorScheme.primary,
                                   fontSize: 11,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -171,8 +185,10 @@ class BatchAttackResultsCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             _formatRollDetail(res),
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 11),
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),
@@ -183,16 +199,18 @@ class BatchAttackResultsCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                       decoration: BoxDecoration(
                         color: res.isCrit
-                            ? const Color(0xFFFFD54F)
-                            : (res.isHit ? const Color(0xFF1B5E20) : const Color(0xFFB71C1C)),
+                            ? (isDark ? const Color(0xFFFFD54F) : const Color(0xFFB45309))
+                            : (res.isHit
+                                ? (isDark ? const Color(0xFF1B5E20) : const Color(0xFF15803D))
+                                : (isDark ? const Color(0xFFB71C1C) : const Color(0xFFB91C1C))),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         res.isCrit
                             ? '${res.isMaximizedCrit ? "MAX CRIT!" : "CRIT!"} (${res.totalDamage} dmg)'
                             : (res.isHit ? '${res.totalDamage} DMG' : 'MISS'),
-                        style: TextStyle(
-                          color: res.isCrit ? const Color(0xFF1A1A1A) : Colors.white,
+                        style: const TextStyle(
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),
@@ -243,14 +261,15 @@ class BatchAttackResultsCard extends StatelessWidget {
     }
   }
 
-  Widget _buildSummaryStat(String label, String value, Color color,
+  Widget _buildSummaryStat(BuildContext context, String label, String value, Color color,
       {double fontSize = 16}) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Text(
           label,
-          style: const TextStyle(
-              color: Colors.white60, fontSize: 10, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant, fontSize: 10, fontWeight: FontWeight.bold),
         ),
         Text(
           value,

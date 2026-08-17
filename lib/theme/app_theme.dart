@@ -76,14 +76,14 @@ class TabletopColors extends ThemeExtension<TabletopColors> {
 
   static TabletopColors createLight(FantasyAccent accent) {
     return TabletopColors(
-      critGold: const Color(0xFFFFA000),
+      critGold: const Color(0xFF92400E),
       fumbleRed: const Color(0xFFD32F2F),
-      hitGreen: const Color(0xFF388E3C),
-      tempHpCyan: const Color(0xFF0097A7),
-      cardBorder: const Color(0x1F000000),
-      surfaceSubtle: const Color(0xFFF1EFF6),
-      statPillBackground: const Color(0x10000000),
-      glowAccent: accent.primary,
+      hitGreen: const Color(0xFF15803D),
+      tempHpCyan: const Color(0xFF0E7490),
+      cardBorder: const Color(0x30000000),
+      surfaceSubtle: const Color(0xFFEDEBF2),
+      statPillBackground: const Color(0x14000000),
+      glowAccent: accent.getPrimary(false),
     );
   }
 
@@ -97,6 +97,17 @@ class TabletopColors extends ThemeExtension<TabletopColors> {
     surfaceSubtle: Color(0xFF231F34),
     statPillBackground: Color(0x40000000),
     glowAccent: Color(0xFFFFD54F),
+  );
+
+  static const light = TabletopColors(
+    critGold: Color(0xFF92400E),
+    fumbleRed: Color(0xFFD32F2F),
+    hitGreen: Color(0xFF15803D),
+    tempHpCyan: Color(0xFF0E7490),
+    cardBorder: Color(0x30000000),
+    surfaceSubtle: Color(0xFFEDEBF2),
+    statPillBackground: Color(0x14000000),
+    glowAccent: Color(0xFF92400E),
   );
 
   /// Convenience alias for container/card background — mirrors [surfaceSubtle].
@@ -124,23 +135,27 @@ class AppTheme {
 
     final colorScheme = isDark
         ? ColorScheme.dark(
-            primary: accent.primary,
+            primary: accent.getPrimary(true),
             onPrimary: Colors.black,
-            secondary: accent.accent,
+            secondary: accent.getAccent(true),
             onSecondary: Colors.black,
             surface: surface,
             onSurface: const Color(0xFFF0EFF4),
+            onSurfaceVariant: const Color(0xFFB0ACC4),
             surfaceContainerHighest: oledPitchBlack ? const Color(0xFF1C1C1C) : const Color(0xFF2B263E),
+            outlineVariant: const Color(0x38FFFFFF),
             error: const Color(0xFFFF5252),
           )
         : ColorScheme.light(
-            primary: accent.primary,
+            primary: accent.getPrimary(false),
             onPrimary: Colors.white,
-            secondary: accent.accent,
+            secondary: accent.getAccent(false),
             onSecondary: Colors.white,
             surface: surface,
-            onSurface: const Color(0xFF1E1B2E),
-            surfaceContainerHighest: const Color(0xFFE6E3EE),
+            onSurface: const Color(0xFF120E21),
+            onSurfaceVariant: const Color(0xFF423C56),
+            surfaceContainerHighest: const Color(0xFFEDE9F5),
+            outlineVariant: const Color(0x38000000),
             error: const Color(0xFFD32F2F),
           );
 
@@ -151,18 +166,18 @@ class AppTheme {
       colorScheme: colorScheme,
       appBarTheme: AppBarTheme(
         backgroundColor: isDark ? (oledPitchBlack ? Colors.black : const Color(0xFF1E1B2E)) : Colors.white,
-        foregroundColor: isDark ? Colors.white : const Color(0xFF1E1B2E),
+        foregroundColor: isDark ? Colors.white : const Color(0xFF120E21),
         elevation: isDark ? 4 : 1,
       ),
       cardTheme: CardThemeData(
         color: cardBg,
-        elevation: oledPitchBlack ? 0 : 3,
+        elevation: oledPitchBlack ? 0 : (isDark ? 3 : 2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
           side: BorderSide(
             color: isDark
                 ? (oledPitchBlack ? const Color(0x38FFFFFF) : const Color(0x2EFFFFFF))
-                : const Color(0x1F000000),
+                : const Color(0x28000000),
             width: 1,
           ),
         ),
@@ -178,33 +193,33 @@ class AppTheme {
           fontSize: 32,
           fontWeight: FontWeight.w900,
           letterSpacing: -0.5,
-          color: isDark ? Colors.white : const Color(0xFF1A1A24),
+          color: isDark ? Colors.white : const Color(0xFF0F0C1B),
         ),
         headlineMedium: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w800,
-          color: isDark ? Colors.white : const Color(0xFF1A1A24),
+          color: isDark ? Colors.white : const Color(0xFF0F0C1B),
         ),
         titleLarge: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
-          color: isDark ? const Color(0xFFF0EFF4) : const Color(0xFF262338),
+          color: isDark ? const Color(0xFFF0EFF4) : const Color(0xFF181427),
         ),
         titleMedium: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: isDark ? const Color(0xFFE2E0EB) : const Color(0xFF3B3750),
+          color: isDark ? const Color(0xFFE2E0EB) : const Color(0xFF241F35),
         ),
         bodyLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          color: isDark ? const Color(0xFFD4D1E0) : const Color(0xFF4A4660),
+          color: isDark ? const Color(0xFFD4D1E0) : const Color(0xFF28233C),
           height: 1.4,
         ),
         bodyMedium: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
-          color: isDark ? const Color(0xFFAAA6BD) : const Color(0xFF6E6A85),
+          color: isDark ? const Color(0xFFAAA6BD) : const Color(0xFF48425C),
           height: 1.3,
         ),
         labelLarge: const TextStyle(

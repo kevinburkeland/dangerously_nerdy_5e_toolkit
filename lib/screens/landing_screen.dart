@@ -58,6 +58,7 @@ class _LandingScreenState extends State<LandingScreen> {
     final isSearching = query.isNotEmpty;
     final searchResults = _tools.where((t) => t.matches(query)).toList();
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -84,14 +85,14 @@ class _LandingScreenState extends State<LandingScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.menu_book, color: Colors.purpleAccent),
+            icon: Icon(Icons.menu_book, color: theme.colorScheme.secondary),
             tooltip: 'Spellbook Companion',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SpellbookScreen()),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.shield_outlined, color: Colors.amberAccent),
+            icon: Icon(Icons.shield_outlined, color: theme.colorScheme.primary),
             tooltip: "DM's Screen & Rulebook (2014 / 2024)",
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const DmReferenceScreen()),
@@ -333,7 +334,7 @@ class _LandingScreenState extends State<LandingScreen> {
                     const SizedBox(height: 28),
 
                     // CATEGORY 3: MAGIC ITEMS & SUMMONING ARTIFACTS
-                    _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS', Colors.amberAccent),
+                    _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS', isDark ? Colors.amberAccent : const Color(0xFFB45309)),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -346,7 +347,7 @@ class _LandingScreenState extends State<LandingScreen> {
                     const SizedBox(height: 28),
 
                     // CATEGORY 4: ART & DESIGN TOOLS (SUBSECTION AT BOTTOM)
-                    _buildSectionHeader('🎨 ART & DESIGN TOOLS', const Color(0xFFC084FC)),
+                    _buildSectionHeader('🎨 ART & DESIGN TOOLS', isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE)),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -543,9 +544,9 @@ class _LandingScreenState extends State<LandingScreen> {
       context,
       title: item.title,
       badgeText: item.badgeText,
-      badgeColor: item.badgeColor,
+      badgeColor: item.getLegibleBadge(isDark),
       icon: item.icon,
-      accentColor: item.accentColor,
+      accentColor: item.getLegibleAccent(isDark),
       description: item.description,
       glyphWidget: glyphWidget,
       onTap: () {

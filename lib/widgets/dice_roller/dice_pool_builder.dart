@@ -32,7 +32,9 @@ class DicePoolBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasD20 = dicePool.any((e) => e.dieType == DieType.d20);
     final theme = Theme.of(context);
-    final tabletop = theme.extension<TabletopColors>() ?? TabletopColors.dark;
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -43,10 +45,10 @@ class DicePoolBuilder extends StatelessWidget {
           children: [
             Semantics(
               header: true,
-              child: const Text(
+              child: Text(
                 'Select Die',
                 style: TextStyle(
-                    color: Colors.white70,
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.bold,
                     fontSize: 14),
               ),
@@ -56,10 +58,10 @@ class DicePoolBuilder extends StatelessWidget {
                 dicePool.first.dieType != DieType.d20)
               TextButton.icon(
                 style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                icon: const Icon(Icons.refresh,
-                    size: 14, color: Colors.cyanAccent),
-                label: const Text('Reset Pool',
-                    style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+                icon: Icon(Icons.refresh,
+                    size: 14, color: primary),
+                label: Text('Reset Pool',
+                    style: TextStyle(color: primary, fontSize: 12)),
                 onPressed: onResetPool,
               ),
           ],
@@ -80,11 +82,11 @@ class DicePoolBuilder extends StatelessWidget {
                     die.label.toUpperCase(),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isInPool ? Colors.black : Colors.white,
+                      color: isInPool ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
                     ),
                   ),
                   selected: isInPool,
-                  selectedColor: Colors.cyanAccent,
+                  selectedColor: primary,
                   backgroundColor: tabletop.cardBackground,
                   onSelected: (selected) {
                     onSelectDie(die);
@@ -96,14 +98,14 @@ class DicePoolBuilder extends StatelessWidget {
               button: true,
               label: 'Configure custom d$customSides die',
               child: ActionChip(
-                avatar: const Icon(Icons.add, size: 16, color: Colors.cyanAccent),
+                avatar: Icon(Icons.add, size: 16, color: primary),
                 label: Text(
                   'CUSTOM (d$customSides)',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: primary),
                 ),
                 backgroundColor: tabletop.cardBackground,
-                side: const BorderSide(color: Colors.cyanAccent),
+                side: BorderSide(color: primary),
                 onPressed: onShowCustomDieDialog,
               ),
             ),
@@ -125,10 +127,10 @@ class DicePoolBuilder extends StatelessWidget {
             children: [
               Semantics(
                 header: true,
-                child: const Text(
+                child: Text(
                   'DICE POOL & MODIFIERS',
                   style: TextStyle(
-                      color: Colors.cyanAccent,
+                      color: primary,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.8),
@@ -156,16 +158,15 @@ class DicePoolBuilder extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.cyanAccent.withValues(alpha: 0.15),
+                              color: primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color:
-                                      Colors.cyanAccent.withValues(alpha: 0.4)),
+                                  color: primary.withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               diceEntry.dieLabel.toUpperCase(),
-                              style: const TextStyle(
-                                  color: Colors.cyanAccent,
+                              style: TextStyle(
+                                  color: primary,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14),
                             ),
@@ -173,8 +174,8 @@ class DicePoolBuilder extends StatelessWidget {
                           const SizedBox(width: 10),
                           Text(
                             'Quantity: ${diceEntry.count}',
-                            style: const TextStyle(
-                                color: Colors.white,
+                            style: TextStyle(
+                                color: theme.colorScheme.onSurface,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600),
                           ),
@@ -184,8 +185,8 @@ class DicePoolBuilder extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                color: Colors.cyanAccent),
+                            icon: Icon(Icons.remove_circle_outline,
+                                color: primary),
                             tooltip: 'Decrease quantity of ${diceEntry.dieLabel}',
                             onPressed: () {
                               final updatedPool = List<DiceEntry>.from(dicePool);
@@ -204,20 +205,20 @@ class DicePoolBuilder extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.black38,
+                              color: isDark ? Colors.black38 : theme.colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               '${diceEntry.count}',
-                              style: const TextStyle(
-                                  color: Colors.white,
+                              style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.add_circle_outline,
-                                color: Colors.cyanAccent),
+                            icon: Icon(Icons.add_circle_outline,
+                                color: primary),
                             tooltip: 'Increase quantity of ${diceEntry.dieLabel}',
                             onPressed: () {
                               final updatedPool = List<DiceEntry>.from(dicePool);
@@ -230,8 +231,8 @@ class DicePoolBuilder extends StatelessWidget {
                           ),
                           if (dicePool.length > 1)
                             IconButton(
-                              icon: const Icon(Icons.close,
-                                  color: Colors.white38, size: 18),
+                              icon: Icon(Icons.close,
+                                  color: theme.colorScheme.onSurfaceVariant, size: 18),
                               tooltip: 'Remove ${diceEntry.dieLabel} from pool',
                               onPressed: () {
                                 final updatedPool = List<DiceEntry>.from(dicePool);
@@ -246,7 +247,7 @@ class DicePoolBuilder extends StatelessWidget {
                 );
               }),
 
-              const Divider(color: Colors.white10, height: 24),
+              Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2), height: 24),
 
               // Modifier Selector
               Wrap(
@@ -255,17 +256,17 @@ class DicePoolBuilder extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  const Text('Total Modifier',
+                  Text('Total Modifier',
                       style: TextStyle(
-                          color: Colors.white,
+                          color: theme.colorScheme.onSurface,
                           fontSize: 15,
                           fontWeight: FontWeight.w600)),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.remove_circle_outline,
-                            color: Colors.orangeAccent),
+                        icon: Icon(Icons.remove_circle_outline,
+                            color: isDark ? Colors.orangeAccent : const Color(0xFFC2410C)),
                         tooltip: 'Decrease modifier by 1',
                         onPressed: () => onUpdateModifier(modifier - 1),
                       ),
@@ -273,32 +274,32 @@ class DicePoolBuilder extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.black38,
+                          color: isDark ? Colors.black38 : theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           modifier >= 0 ? '+$modifier' : '$modifier',
                           style: TextStyle(
                             color: modifier > 0
-                                ? Colors.greenAccent
+                                ? tabletop.hitGreen
                                 : modifier < 0
-                                    ? Colors.redAccent
-                                    : Colors.white,
+                                    ? tabletop.fumbleRed
+                                    : theme.colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.add_circle_outline,
-                            color: Colors.orangeAccent),
+                        icon: Icon(Icons.add_circle_outline,
+                            color: isDark ? Colors.orangeAccent : const Color(0xFFC2410C)),
                         tooltip: 'Increase modifier by 1',
                         onPressed: () => onUpdateModifier(modifier + 1),
                       ),
                       if (modifier != 0)
                         IconButton(
-                          icon: const Icon(Icons.refresh,
-                              color: Colors.white38, size: 18),
+                          icon: Icon(Icons.refresh,
+                              color: theme.colorScheme.onSurfaceVariant, size: 18),
                           onPressed: () => onUpdateModifier(0),
                           tooltip: 'Reset modifier to 0',
                         ),
@@ -309,16 +310,16 @@ class DicePoolBuilder extends StatelessWidget {
 
               // Advantage / Disadvantage for d20 roll pools
               if (hasD20) ...[
-                const Divider(color: Colors.white10, height: 24),
+                Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2), height: 24),
                 Wrap(
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    const Text('d20 Advantage',
+                    Text('d20 Advantage',
                         style: TextStyle(
-                            color: Colors.white,
+                            color: theme.colorScheme.onSurface,
                             fontSize: 15,
                             fontWeight: FontWeight.w600)),
                     SegmentedButton<RollMode>(
@@ -337,9 +338,9 @@ class DicePoolBuilder extends StatelessWidget {
                       },
                       style: SegmentedButton.styleFrom(
                         selectedBackgroundColor:
-                            Colors.cyanAccent.withValues(alpha: 0.3),
-                        selectedForegroundColor: Colors.cyanAccent,
-                        foregroundColor: Colors.white70,
+                            primary.withValues(alpha: 0.2),
+                        selectedForegroundColor: primary,
+                        foregroundColor: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

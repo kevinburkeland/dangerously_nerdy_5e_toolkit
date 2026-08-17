@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
@@ -5,7 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 /// Standard WCAG 2.1 relative luminance calculation
 double calculateRelativeLuminance(Color color) {
   double getChannel(double sRGB) {
-    return sRGB <= 0.03928 ? sRGB / 12.92 : ((sRGB + 0.055) / 1.055) * ((sRGB + 0.055) / 1.055);
+    return sRGB <= 0.03928 ? sRGB / 12.92 : math.pow((sRGB + 0.055) / 1.055, 2.4).toDouble();
   }
 
   final r = getChannel(color.r);
@@ -27,7 +28,6 @@ double calculateContrastRatio(Color foreground, Color background) {
 void main() {
   group('WCAG 2.1 Color Contrast Audit for Fantasy Accents', () {
     const darkBackground = Color(0xFF0F0D1B);
-    const oledBlackBackground = Color(0xFF000000);
 
     test('All fantasy accent colors have distinct luminous primary and secondary values', () {
       for (final accent in FantasyAccent.values) {
@@ -51,15 +51,38 @@ void main() {
       }
     });
 
-    test('All 9 fantasy accent palettes meet WCAG AA graphical UI contrast on OLED Pitch Black theme', () {
+    test('All 9 fantasy accent palettes meet WCAG AA contrast (>= 4.5:1 text, >= 3.0:1 UI) on Light Mode surfaces', () {
+      const lightSurface = Color(0xFFFFFFFF);
+      const lightScaffold = Color(0xFFF8F7FA);
+
       for (final accent in FantasyAccent.values) {
-        final ratioPrimary = calculateContrastRatio(accent.primary, oledBlackBackground);
-        final ratioAccent = calculateContrastRatio(accent.accent, oledBlackBackground);
+        final lightPrimary = accent.getPrimary(false);
+        final lightAccent = accent.getAccent(false);
+
+        final ratioPrimaryWhite = calculateContrastRatio(lightPrimary, lightSurface);
+        final ratioPrimaryScaffold = calculateContrastRatio(lightPrimary, lightScaffold);
+        final ratioAccentWhite = calculateContrastRatio(lightAccent, lightSurface);
+        final ratioAccentScaffold = calculateContrastRatio(lightAccent, lightScaffold);
 
         expect(
-          ratioPrimary >= 3.0 || ratioAccent >= 3.0,
+          ratioPrimaryWhite >= 4.5,
           isTrue,
-          reason: 'Accent ${accent.label} should provide >= 3.0:1 contrast on OLED black (got primary: $ratioPrimary, accent: $ratioAccent)',
+          reason: 'Accent ${accent.label} light primary should provide >= 4.5:1 text contrast on white (got $ratioPrimaryWhite)',
+        );
+        expect(
+          ratioPrimaryScaffold >= 4.5,
+          isTrue,
+          reason: 'Accent ${accent.label} light primary should provide >= 4.5:1 text contrast on scaffold (got $ratioPrimaryScaffold)',
+        );
+        expect(
+          ratioAccentWhite >= 3.0,
+          isTrue,
+          reason: 'Accent ${accent.label} light accent should provide >= 3.0:1 UI contrast on white (got $ratioAccentWhite)',
+        );
+        expect(
+          ratioAccentScaffold >= 3.0,
+          isTrue,
+          reason: 'Accent ${accent.label} light accent should provide >= 3.0:1 UI contrast on scaffold (got $ratioAccentScaffold)',
         );
       }
     });

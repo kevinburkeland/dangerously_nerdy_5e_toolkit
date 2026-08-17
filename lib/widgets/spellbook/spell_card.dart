@@ -32,8 +32,10 @@ class SpellCard extends StatelessWidget {
     final rules = spell.getRules(edition);
     final effectiveSchool = spell.getSchool(edition);
     final schoolColor = effectiveSchool.getLegibleColor(isDark);
+    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
+    final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final cardBorderColor = isPinned
-        ? Colors.purpleAccent.withValues(alpha: 0.85)
+        ? pinColor.withValues(alpha: 0.85)
         : schoolColor.withValues(alpha: 0.35);
 
     // Format casting time cleanly for reactions
@@ -96,18 +98,18 @@ class SpellCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.2),
+                    color: diffColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                    border: Border.all(color: diffColor.withValues(alpha: 0.4)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome, color: Colors.amber, size: 10),
-                      SizedBox(width: 2),
+                      Icon(Icons.auto_awesome, color: diffColor, size: 10),
+                      const SizedBox(width: 2),
                       Text(
                         '2024 Diff',
-                        style: TextStyle(color: Colors.amber, fontSize: 9.5, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: diffColor, fontSize: 9.5, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -117,7 +119,7 @@ class SpellCard extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   isPinned ? Icons.bookmark : Icons.bookmark_border,
-                  color: isPinned ? Colors.purpleAccent : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  color: isPinned ? pinColor : theme.colorScheme.onSurfaceVariant,
                   size: 20,
                 ),
                 tooltip: isPinned ? 'Remove from Personal Spellbook' : 'Pin to Personal Spellbook',
@@ -134,17 +136,17 @@ class SpellCard extends StatelessWidget {
             spacing: 4,
             runSpacing: 4,
             children: [
-              _buildBadge(Icons.timer_outlined, castingTimeDisplay, schoolColor),
-              _buildBadge(Icons.my_location_outlined, rules.range, schoolColor),
-              _buildBadge(Icons.hourglass_empty_outlined, rules.duration, schoolColor),
+              _buildBadge(context, Icons.timer_outlined, castingTimeDisplay, schoolColor),
+              _buildBadge(context, Icons.my_location_outlined, rules.range, schoolColor),
+              _buildBadge(context, Icons.hourglass_empty_outlined, rules.duration, schoolColor),
               if (rules.concentration)
-                _buildTag('Conc', Colors.amberAccent),
+                _buildTag('Conc', isDark ? Colors.amberAccent : const Color(0xFFB45309)),
               if (rules.ritual)
-                _buildTag('Ritual', Colors.cyanAccent),
+                _buildTag('Ritual', isDark ? Colors.cyanAccent : const Color(0xFF0E7490)),
               if (rules.materialDetails?.hasCost == true)
-                _buildTag('💰 ${rules.materialDetails!.costInGp} gp', Colors.amber),
+                _buildTag('💰 ${rules.materialDetails!.costInGp} gp', diffColor),
               if (rules.savingThrow != null)
-                _buildTag('${rules.savingThrow} Save', Colors.orangeAccent),
+                _buildTag('${rules.savingThrow} Save', isDark ? Colors.orangeAccent : const Color(0xFFC2410C)),
               if (rules.damageOrHealType != null)
                 _buildTag(rules.damageOrHealType!, schoolColor),
             ],
@@ -157,21 +159,21 @@ class SpellCard extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.blueAccent.withValues(alpha: 0.12),
+                color: (isDark ? Colors.blueAccent : const Color(0xFF1D4ED8)).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+                border: Border.all(color: (isDark ? Colors.blueAccent : const Color(0xFF1D4ED8)).withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.flash_on, size: 12, color: Colors.blueAccent),
+                  Icon(Icons.flash_on, size: 12, color: isDark ? Colors.blueAccent : const Color(0xFF1D4ED8)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       'Trigger: ${rules.reactionTrigger!}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF90CAF9),
+                      style: TextStyle(
+                        color: isDark ? const Color(0xFF90CAF9) : const Color(0xFF1E40AF),
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
@@ -182,70 +184,84 @@ class SpellCard extends StatelessWidget {
             ),
           ],
 
-          // Spell preview text
+          // Description snippet
           Text(
             rules.description.first,
-            maxLines: 3,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               fontSize: 12,
               height: 1.35,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // Footer Row: Classes & Quick Roll Button
+          // Bottom Bar: Class Tags + Quick Roll button + Compare button
           Row(
             children: [
+              // Classes list
               Expanded(
                 child: Text(
                   rules.classes.map((c) => c.label).join(', '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                    color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              if (rules.rollFormula != null && (onOpenQuickRoll != null || onQuickRoll != null)) ...[
-                const SizedBox(width: 8),
-                Flexible(
-                  flex: 0,
-                  child: InkWell(
-                    onTap: () {
-                      if (onOpenQuickRoll != null) {
-                        onOpenQuickRoll!();
-                      } else if (onQuickRoll != null) {
-                        onQuickRoll!(rules.rollFormula!, spell.name);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: schoolColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: schoolColor.withValues(alpha: 0.4)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.casino_outlined, color: schoolColor, size: 13),
-                          const SizedBox(width: 4),
-                          Text(
-                            rules.rollFormula!,
-                            style: TextStyle(
-                              color: schoolColor,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
+
+              // Quick Roll Action Button (if formula exists)
+              if (rules.rollFormula != null && onOpenQuickRoll != null) ...[
+                InkWell(
+                  onTap: onOpenQuickRoll,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: schoolColor.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: schoolColor.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.casino, size: 12, color: schoolColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          rules.rollFormula ?? 'Roll',
+                          style: TextStyle(
+                            color: schoolColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+              ],
+
+              // 2014 vs 2024 Compare hint
+              if (spell.isChangedIn2024) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Diff',
+                      style: TextStyle(
+                        color: diffColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(Icons.compare_arrows, color: diffColor, size: 13),
+                  ],
                 ),
               ],
             ],
@@ -255,24 +271,25 @@ class SpellCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge(IconData icon, String text, Color accentColor) {
+  Widget _buildBadge(BuildContext context, IconData icon, String text, Color accentColor) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: accentColor.withValues(alpha: 0.8)),
+          Icon(icon, size: 11, color: accentColor.withValues(alpha: 0.9)),
           const SizedBox(width: 3),
           Flexible(
             child: Text(
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white70, fontSize: 10.5),
+              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 10.5),
             ),
           ),
         ],
