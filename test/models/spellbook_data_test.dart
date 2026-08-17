@@ -218,11 +218,123 @@ void main() {
       }
     });
 
-    test('Spellbook contains large comprehensive catalog', () {
-      final total = SpellbookLibrary.allSpells.length;
-      expect(total, greaterThanOrEqualTo(200), reason: 'Total spells in library: $total');
+    test('Identifies missing SRD 5.1 spells', () {
+      const srd51SpellNames = {
+        // Cantrips
+        'Acid Splash', 'Blade Ward', 'Chill Touch', 'Dancing Lights', 'Druidcraft',
+        'Eldritch Blast', 'Fire Bolt', 'Friends', 'Guidance', 'Light',
+        'Mage Hand', 'Mending', 'Message', 'Minor Illusion', 'Poison Spray',
+        'Prestidigitation', 'Produce Flame', 'Ray of Frost', 'Resistance',
+        'Sacred Flame', 'Shillelagh', 'Shocking Grasp', 'Spare the Dying',
+        'Thaumaturgy', 'True Strike', 'Vicious Mockery',
+
+        // 1st Level
+        'Alarm', 'Animal Friendship', 'Bane', 'Bless', 'Burning Hands',
+        'Charm Person', 'Color Spray', 'Command', 'Comprehend Languages',
+        'Cure Wounds', 'Detect Evil and Good', 'Detect Magic', 'Detect Poison and Disease',
+        'Disguise Self', 'Divine Favor', 'Entangle', 'Expeditious Retreat',
+        'Faerie Fire', 'False Life', 'Feather Fall', 'Find Familiar', 'Floating Disk',
+        'Fog Cloud', 'Goodberry', 'Grease', 'Guiding Bolt', 'Healing Word',
+        'Hellish Rebuke', 'Heroism', 'Hideous Laughter', 'Hunter’s Mark', 'Identify',
+        'Illusory Script', 'Inflict Wounds', 'Jump', 'Longstrider', 'Mage Armor',
+        'Magic Missile', 'Protection from Evil and Good', 'Purify Food and Drink',
+        'Sanctuary', 'Shield', 'Shield of Faith', 'Silent Image', 'Sleep',
+        'Speak with Animals', 'Thunderwave', 'Unseen Servant',
+
+        // 2nd Level
+        'Acid Arrow', 'Aid', 'Alter Self', 'Animal Messenger', 'Arcane Lock',
+        'Augury', 'Barkskin', 'Blindness/Deafness', 'Blur', 'Calm Emotions',
+        'Continual Flame', 'Darkness', 'Darkvision', 'Detect Thoughts',
+        'Enhance Ability', 'Enlarge/Reduce', 'Enthrall', 'Find Steed',
+        'Find Traps', 'Flame Blade', 'Flaming Sphere', 'Gentle Repose',
+        'Gust of Wind', 'Heat Metal', 'Hold Person', 'Invisibility', 'Knock',
+        'Lesser Restoration', 'Levitate', 'Locate Animals or Plants', 'Locate Object',
+        'Magic Mouth', 'Magic Weapon', 'Mirror Image', 'Misty Step', 'Moonbeam',
+        'Pass without Trace', 'Prayer of Healing', 'Protection from Poison',
+        'Ray of Enfeeblement', 'Rope Trick', 'Scorching Ray', 'See Invisibility',
+        'Shatter', 'Silence', 'Spider Climb', 'Spike Growth', 'Spiritual Weapon',
+        'Suggestion', 'Warding Bond', 'Web', 'Zone of Truth',
+
+        // 3rd Level
+        'Animate Dead', 'Beacon of Hope', 'Bestow Curse', 'Blink', 'Call Lightning',
+        'Clairvoyance', 'Conjure Animals', 'Counterspell', 'Create Food and Water',
+        'Daylight', 'Dispel Magic', 'Fear', 'Feign Death', 'Fireball',
+        'Fly', 'Gaseous Form', 'Glyph of Warding', 'Haste', 'Hypnotic Pattern',
+        'Lightning Bolt', 'Magic Circle', 'Major Image', 'Mass Healing Word',
+        'Meld into Stone', 'Nondetection', 'Phantom Steed', 'Plant Growth',
+        'Protection from Energy', 'Remove Curse', 'Revivify', 'Sending',
+        'Sleet Storm', 'Slow', 'Speak with Dead', 'Speak with Plants',
+        'Spirit Guardians', 'Stinking Cloud', 'Tiny Hut', 'Tongues',
+        'Vampiric Touch', 'Water Breathing', 'Water Walk', 'Wind Wall',
+
+        // 4th Level
+        'Arcane Eye', 'Banishment', 'Black Tentacles', 'Blight', 'Compulsion',
+        'Confusion', 'Conjure Minor Elementals', 'Conjure Woodland Beings',
+        'Control Water', 'Death Ward', 'Dimension Door', 'Divination',
+        'Dominate Beast', 'Fabricate', 'Faithful Hound', 'Fire Shield',
+        'Freedom of Movement', 'Giant Insect', 'Greater Invisibility',
+        'Guardian of Faith', 'Hallucinatory Terrain', 'Ice Storm', 'Locate Creature',
+        'Phantasmal Killer', 'Polymorph', 'Private Sanctum', 'Resilient Sphere',
+        'Secret Chest', 'Stone Shape', 'Stoneskin', 'Wall of Fire',
+
+        // 5th Level
+        'Animate Objects', 'Antilife Shell', 'Awaken', 'Cloudkill', 'Commune',
+        'Commune with Nature', 'Cone of Cold', 'Conjure Elemental',
+        'Contact Other Plane', 'Contagion', 'Creation', 'Dispel Evil and Good',
+        'Dominate Person', 'Dream', 'Flame Strike', 'Geas', 'Greater Restoration',
+        'Hallow', 'Hold Monster', 'Insect Plague', 'Legend Lore', 'Mass Cure Wounds',
+        'Mislead', 'Modify Memory', 'Passwall', 'Planar Binding', 'Raise Dead',
+        'Reincarnate', 'Scrying', 'Seeming', 'Telekinesis', 'Telepathic Bond',
+        'Teleportation Circle', 'Tree Stride', 'Wall of Force', 'Wall of Stone',
+
+        // 6th Level
+        'Arcane Gate', 'Blade Barrier', 'Chain Lightning', 'Circle of Death',
+        'Conjure Fey', 'Contingency', 'Create Undead', 'Disintegrate',
+        'Eyebite', 'Find the Path', 'Flesh to Stone', 'Forbiddance',
+        'Freezing Sphere', 'Globe of Invulnerability', 'Guards and Wards',
+        'Harm', 'Heal', 'Heroes\' Feast', 'Instant Summons', 'Irresistible Dance',
+        'Magic Jar', 'Mass Suggestion', 'Move Earth', 'Planar Ally',
+        'Programmed Illusion', 'Sunbeam', 'Transport via Plants', 'True Seeing',
+        'Wall of Ice', 'Wall of Thorns', 'Wind Walk', 'Word of Recall',
+
+        // 7th Level
+        'Arcane Sword', 'Conjure Celestial', 'Delayed Blast Fireball', 'Divine Word',
+        'Etherealness', 'Finger of Death', 'Fire Storm', 'Forcecage', 'Magnificent Mansion',
+        'Mirage Arcane', 'Plane Shift', 'Prismatic Spray', 'Project Image',
+        'Regenerate', 'Resurrection', 'Reverse Gravity', 'Sequester', 'Simulacrum',
+        'Symbol', 'Teleport',
+
+        // 8th Level
+        'Animal Shapes', 'Antimagic Field', 'Antipathy/Sympathy', 'Clone',
+        'Control Weather', 'Demiplane', 'Dominate Monster', 'Earthquake',
+        'Feeblemind', 'Holy Aura', 'Incendiary Cloud', 'Maze', 'Mind Blank',
+        'Power Word Stun', 'Sunburst', 'Tsunami',
+
+        // 9th Level
+        'Astral Projection', 'Foresight', 'Gate', 'Imprisonment', 'Mass Heal',
+        'Meteor Swarm', 'Power Word Heal', 'Power Word Kill', 'Prismatic Wall',
+        'Shapechange', 'Storm of Vengeance', 'Time Stop', 'True Polymorph',
+        'True Resurrection', 'Weird', 'Wish',
+      };
+
+      final currentNames = <String>{};
+      for (final s in SpellbookLibrary.allSpells) {
+        currentNames.add(s.name.toLowerCase().replaceAll('’', "'"));
+        if (s.name2014 != null) currentNames.add(s.name2014!.toLowerCase().replaceAll('’', "'"));
+        if (s.name2024 != null) currentNames.add(s.name2024!.toLowerCase().replaceAll('’', "'"));
+      }
+      final missing = <String>[];
+      for (final s in srd51SpellNames) {
+        final clean = s.toLowerCase().replaceAll('’', "'");
+        final match = currentNames.any((cn) => cn == clean || cn.contains(clean) || clean.contains(cn));
+        if (!match) {
+          missing.add(s);
+        }
+      }
+      expect(missing, isEmpty, reason: 'Missing spells from SRD 5.1: $missing');
     });
   });
 }
+
 
 

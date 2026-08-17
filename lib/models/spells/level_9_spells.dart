@@ -525,50 +525,6 @@ const List<SpellItem> srdLevel9Spells = [
   ),
 
   SpellItem(
-    id: 'spell_astral_projection',
-    name: 'Astral Projection',
-    level: 9,
-    school: SpellSchool.necromancy,
-    isChangedIn2024: false,
-    diffSummary: 'Project your astral body and up to 8 willing creatures into the Astral Plane leaving physical bodies in suspended animation. Creates a silvery cord linking astral self to physical body. Costly component.',
-    tags: ['astral-travel', 'planar-voyage', 'suspended-animation', 'costly-component', 'cleric', 'warlock', 'wizard', 'necromancy', 'level 9'],
-    rules2014: SpellEditionDetails(
-      castingTime: '1 hour',
-      range: '10 feet',
-      components: 'V, S, M (for each creature you affect in this spell, you must provide one jacinth worth at least 1,000 gp and one ornately carved bar of silver worth at least 100 gp, all of which the spell consumes)',
-      materialDetails: SpellMaterialComponent(
-        description: 'jacinth worth 1,000 gp and silver bar worth 100 gp per creature',
-        hasCost: true,
-        costInGp: 1100,
-        isConsumed: true,
-      ),
-      duration: 'Special',
-      classes: [SpellClass.cleric, SpellClass.warlock, SpellClass.wizard],
-      description: [
-        'You and up to eight willing creatures within range project your astral bodies into the Astral Plane (the spell fails and the casting is wasted if you are already on that plane). The material body you leave behind is in a state of suspended animation.',
-        'Your astral body resembles your mortal form in almost every way. A silvery cord extends from between your shoulder blades and trails behind you, fading to invisibility after 1 foot. If the cord is cut (by an effect such as an astral dreadnought), your soul and body are separated, killing you instantly.',
-      ],
-    ),
-    rules2024: SpellEditionDetails(
-      castingTime: '1 hour',
-      range: '10 feet',
-      components: 'V, S, M (for each creature you affect in this spell, you must provide one jacinth worth at least 1,000 gp and one ornately carved bar of silver worth at least 100 gp, all of which the spell consumes)',
-      materialDetails: SpellMaterialComponent(
-        description: 'jacinth worth 1,000 gp and silver bar worth 100 gp per creature',
-        hasCost: true,
-        costInGp: 1100,
-        isConsumed: true,
-      ),
-      duration: 'Special',
-      classes: [SpellClass.cleric, SpellClass.warlock, SpellClass.wizard],
-      description: [
-        'You and up to eight willing creatures within range project your astral bodies into the Astral Plane (the spell fails and the casting is wasted if you are already on that plane). The material body you leave behind is in a state of suspended animation.',
-        'Your astral body resembles your mortal form in almost every way. A silvery cord extends from between your shoulder blades and trails behind you, fading to invisibility after 1 foot. If the cord is cut (by an effect such as an astral dreadnought), your soul and body are separated, killing you instantly.',
-      ],
-    ),
-  ),
-
-  SpellItem(
     id: 'spell_imprisonment',
     name: 'Imprisonment',
     level: 9,
@@ -610,6 +566,46 @@ const List<SpellItem> srdLevel9Spells = [
       description: [
         'You create a magical restraint to hold a creature that you can see within range. The target must succeed on a Wisdom saving throw or be bound by the spell; on a success, the creature is immune to this spell if you cast it again.',
         'Modes include: Burial (entombed deep underground in a sphere of magical force), Chaining (firmly bound by chains to the ground), Hedged Prison (transported to a demiplane labyrinth), Minimus Containment (shrunk to 1 inch tall and trapped in a gemstone), or Slumber (falls asleep for the duration and does not age).',
+      ],
+    ),
+  ),
+
+  SpellItem(
+    id: 'spell_weird',
+    name: 'Weird',
+    level: 9,
+    school: SpellSchool.illusion,
+    isChangedIn2024: false,
+    diffSummary: 'Manifest illusory phantasms of deepest fears in a 30-foot-radius sphere: each creature makes a Wisdom save or becomes frightened and takes 4d10 psychic damage at the start of each of its turns.',
+    tags: ['fear', 'psychic-damage', 'aoe-terror', 'concentration', 'wizard', 'illusion', 'level 9'],
+    rules2014: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (30-foot-radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.wizard],
+      rollFormula: '4d10',
+      damageOrHealType: 'Psychic',
+      savingThrow: 'Wisdom',
+      description: [
+        'Drawing on the deepest fears of an entire group of creatures, you create illusory creatures in their minds, visible only to them.',
+        'Each creature in a 30-foot-radius sphere centered on a point of your choice within range must make a Wisdom saving throw. On a failed save, a creature becomes frightened for the duration. At the start of each of the frightened creature’s turns, it must make a Wisdom saving throw or take 4d10 psychic damage. On a successful save, the spell ends for that creature.',
+      ],
+    ),
+    rules2024: SpellEditionDetails(
+      castingTime: '1 Action',
+      range: '120 feet (30-foot-radius sphere)',
+      components: 'V, S',
+      duration: 'Concentration, up to 1 minute',
+      concentration: true,
+      classes: [SpellClass.wizard],
+      rollFormula: '4d10',
+      damageOrHealType: 'Psychic',
+      savingThrow: 'Wisdom',
+      description: [
+        'Drawing on the deepest fears of an entire group of creatures, you create illusory creatures in their minds, visible only to them.',
+        'Each creature in a 30-foot-radius sphere centered on a point of your choice within range must make a Wisdom saving throw. On a failed save, a creature becomes frightened for the duration. At the start of each of the frightened creature’s turns, it must make a Wisdom saving throw or take 4d10 psychic damage. On a successful save, the spell ends for that creature.',
       ],
     ),
   ),
