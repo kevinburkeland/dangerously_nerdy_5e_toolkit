@@ -119,5 +119,18 @@ void main() {
       expect(find.widgetWithText(SpellCard, 'Revivify'), findsOneWidget);
       expect(find.textContaining('300 gp'), findsOneWidget);
     });
+
+    testWidgets('renders spell level section headers without dashes in ordinal suffixes', (tester) async {
+      await tester.pumpWidget(buildTestScreen());
+      await tester.pumpAndSettle();
+
+      // Search for Disintegrate (6th-level)
+      final searchField = find.byType(TextField);
+      await tester.enterText(searchField, 'Disintegrate');
+      await tester.pumpAndSettle();
+
+      expect(find.text('6th-Level Spells'), findsOneWidget);
+      expect(find.text('6-th Level Spells'), findsNothing);
+    });
   });
 }

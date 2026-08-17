@@ -504,7 +504,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                   ? '2nd-Level Spells'
                   : (level == 3
                       ? '3rd-Level Spells'
-                      : '$level-th Level Spells')));
+                      : '${level}th-Level Spells')));
 
       slivers.add(
         SliverPadding(
