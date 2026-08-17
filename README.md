@@ -8,10 +8,10 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-258%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-264%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
-A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **dedicated player & DM tools**, including a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, a comprehensive **5e Spellbook Companion & Rules Engine**, simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, rich theme customization, and a cryptographically secure random number generator.
+A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **dedicated player & DM tools**, including a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, a comprehensive **5e Spellbook Companion & Rules Engine**, simultaneous batch attack rolling for 5e summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, rich theme customization, virtualized viewport architecture, and a cryptographically secure random number generator.
 
 ---
 
@@ -19,6 +19,8 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 
 ### 📜 1. 5e Spellbook Companion & Rules Engine (2014 RAW vs 2024 Revised)
 * **Modular Official SRD Spell Catalog**: Built-in support for official SRD spells across all tiers (Cantrips through 9th Level) with side-by-side 2014 & 2024 revision data.
+* **Virtualized Viewport Architecture**: Full `CustomScrollView` and responsive `SliverList.builder` virtualization for fluid 60/120fps scrolling and instant search filtering across 100+ spells.
+* **Pre-Computed Search Indexing**: Zero-allocation search caching for instant keystroke query matching across spell descriptions, tags, classes, and damage types.
 * **Side-by-Side Edition Comparisons**: High-contrast diff badges (`✨ 2024 Diff`) and side-by-side comparison modal highlighting major rule changes (*Counterspell* Constitution saves, *Cure Wounds* 2d8 base healing, *Divine Smite* Bonus Action casting, *Spiritual Weapon* Concentration, *Barkskin* temporary HP, *Conjure Animals* emanation rework, and more).
 * **Tabletop Quick-Roll & Upcast Sandbox**: One-tap quick-roll modal with dynamic spell slot picker (1st to 9th level) and spellcasting ability modifier selector (-1 to +7), computing dice additions in real time.
 * **RAW Mechanics Engine**:
@@ -33,12 +35,13 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 ### 🛡️ 2. DM's Screen & Dual Rulebook Engine (2014 RAW vs 2024 Revised)
 * **2014 vs 2024 Rules Switch**: Seamlessly toggle between 2014 5e RAW rules and the 2024 Revised rules across all combat mechanics, conditions, environment hazards, DCs, resting, and spell limits.
 * **Side-by-Side Edition Comparison**: Interactive comparison dialogs and "2024 Diff" badges highlighting every major rule revision (e.g., -2 Exhaustion per level, Unarmed Strike Save DCs, Bonus Action potions, and Disadvantage Initiative for surprise).
+* **Virtualized Rule Grids**: Fluid sliver-based layout that lazily renders rule cards on demand for optimal mobile and desktop performance.
 * **Rule Pinning & Search**: Pin frequently referenced rules to the top of your screen, with instant real-time keyword search and category filtering.
 * **Quick DM Roller**: Instant d20, d100, d12, d8, and d6 roller bar directly inside the DM screen.
 
 ### 🎲 3. Core Dice Roller & 3D Polyhedral Physics
 * **Multi-Dice Pools**: Roll any combination of standard polyhedral RPG dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, `d1000`, etc.).
-* **3D Polyhedral Visualizer**: Real-time 3D rendered dice rolling with realistic angular momentum, winning-face illumination, natural 20 critical burst particle effects, and screen shake.
+* **Optimized 3D Polyhedral Visualizer**: Real-time 3D rendered dice rolling with realistic angular momentum, winning-face illumination, natural 20 critical burst particle effects, and screen shake. Powered by allocation-free rasterization loops and cached typography painters for 60/120Hz smoothness.
 * **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
 * **Expandable Roll History**: Visual breakdown showing individual die results, dropped rolls, natural 20 / natural 1 highlights, formulas, and expandable roll detail feeds.
 * **JSON Presets**: Save custom dice formulas (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.
@@ -228,7 +231,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, and resilience test suite (258+ tests with 100% pass rate):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, and resilience test suite (264+ tests with 100% pass rate):
 ```bash
 flutter test
 ```
