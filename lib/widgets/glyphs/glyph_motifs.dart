@@ -26,11 +26,13 @@ class GlyphMotifs {
     final s = min(w, h);
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
-    final pulseWave = animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+    final pulseWave =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
     final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
     final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
     final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
-    final fineAlpha = animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+    final fineAlpha =
+        animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -63,7 +65,7 @@ class GlyphMotifs {
         // WARDING AEGIS CIRCUIT-RUNE
         // Outer nested warding diamond and concentric barrier ring
         canvas.drawCircle(center, 5.8 * scale, fineLine);
-        
+
         final diamond = Path();
         diamond.moveTo(center.dx, center.dy - 6.2 * scale);
         diamond.lineTo(center.dx + 6.2 * scale, center.dy);
@@ -73,12 +75,16 @@ class GlyphMotifs {
         canvas.drawPath(diamond, primaryLine);
 
         // Cardinal barrier lock bars
-        canvas.drawLine(center - Offset(0, 7.0 * scale), center + Offset(0, 7.0 * scale), primaryLine);
-        canvas.drawLine(center - Offset(7.0 * scale, 0), center + Offset(7.0 * scale, 0), primaryLine);
+        canvas.drawLine(center - Offset(0, 7.0 * scale),
+            center + Offset(0, 7.0 * scale), primaryLine);
+        canvas.drawLine(center - Offset(7.0 * scale, 0),
+            center + Offset(7.0 * scale, 0), primaryLine);
 
         // Diagonal circuit traces
-        canvas.drawLine(center - Offset(3.5 * scale, 3.5 * scale), center + Offset(3.5 * scale, 3.5 * scale), fineLine);
-        canvas.drawLine(center - Offset(-3.5 * scale, 3.5 * scale), center + Offset(-3.5 * scale, 3.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(3.5 * scale, 3.5 * scale),
+            center + Offset(3.5 * scale, 3.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(-3.5 * scale, 3.5 * scale),
+            center + Offset(-3.5 * scale, 3.5 * scale), fineLine);
 
         // Terminal solder nodes
         final nodes = [
@@ -104,8 +110,10 @@ class GlyphMotifs {
         for (int i = 0; i < 6; i++) {
           final a1 = (i * 60.0) * pi / 180.0;
           final a2 = (i * 60.0 + 30.0) * pi / 180.0;
-          final p1 = Offset(center.dx + rOuter * cos(a1), center.dy + rOuter * sin(a1));
-          final p2 = Offset(center.dx + (rOuter * 0.65) * cos(a2), center.dy + (rOuter * 0.65) * sin(a2));
+          final p1 = Offset(
+              center.dx + rOuter * cos(a1), center.dy + rOuter * sin(a1));
+          final p2 = Offset(center.dx + (rOuter * 0.65) * cos(a2),
+              center.dy + (rOuter * 0.65) * sin(a2));
           if (i == 0) {
             hex1.moveTo(p1.dx, p1.dy);
             hex2.moveTo(p2.dx, p2.dy);
@@ -136,19 +144,27 @@ class GlyphMotifs {
         // Ocular rhombus vector envelope
         final eyePath = Path();
         eyePath.moveTo(center.dx - 7.5 * scale, center.dy);
-        eyePath.quadraticBezierTo(center.dx, center.dy - 4.5 * scale, center.dx + 7.5 * scale, center.dy);
-        eyePath.quadraticBezierTo(center.dx, center.dy + 4.5 * scale, center.dx - 7.5 * scale, center.dy);
+        eyePath.quadraticBezierTo(center.dx, center.dy - 4.5 * scale,
+            center.dx + 7.5 * scale, center.dy);
+        eyePath.quadraticBezierTo(center.dx, center.dy + 4.5 * scale,
+            center.dx - 7.5 * scale, center.dy);
         canvas.drawPath(eyePath, primaryLine);
 
         // Crosshair reticle ticks
-        canvas.drawLine(center - Offset(8.0 * scale, 0), center - Offset(4.0 * scale, 0), fineLine);
-        canvas.drawLine(center + Offset(4.0 * scale, 0), center + Offset(8.0 * scale, 0), fineLine);
-        canvas.drawLine(center - Offset(0, 7.5 * scale), center - Offset(0, 4.0 * scale), fineLine);
-        canvas.drawLine(center + Offset(0, 4.0 * scale), center + Offset(0, 7.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(8.0 * scale, 0),
+            center - Offset(4.0 * scale, 0), fineLine);
+        canvas.drawLine(center + Offset(4.0 * scale, 0),
+            center + Offset(8.0 * scale, 0), fineLine);
+        canvas.drawLine(center - Offset(0, 7.5 * scale),
+            center - Offset(0, 4.0 * scale), fineLine);
+        canvas.drawLine(center + Offset(0, 4.0 * scale),
+            center + Offset(0, 7.5 * scale), fineLine);
 
         // Cardinal sensor nodes
-        canvas.drawCircle(center - Offset(7.5 * scale, 0), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(7.5 * scale, 0), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(7.5 * scale, 0), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(7.5 * scale, 0), 1.0 * scale, nodeFill);
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
         break;
 
@@ -170,14 +186,20 @@ class GlyphMotifs {
         canvas.drawPath(crownPath, primaryLine);
 
         // Horizontal frequency modulation bars
-        canvas.drawLine(center - Offset(4.5 * scale, -2.0 * scale), center + Offset(4.5 * scale, 2.0 * scale), fineLine);
-        canvas.drawLine(center - Offset(3.5 * scale, -4.0 * scale), center + Offset(3.5 * scale, 4.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(4.5 * scale, -2.0 * scale),
+            center + Offset(4.5 * scale, 2.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(3.5 * scale, -4.0 * scale),
+            center + Offset(3.5 * scale, 4.0 * scale), fineLine);
 
         // Neural emitter nodes
-        canvas.drawCircle(center - Offset(5.5 * scale, 3.5 * scale), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(0, 6.5 * scale), 1.3 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(5.5 * scale, -3.5 * scale), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(0, 1.5 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(5.5 * scale, 3.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(0, 6.5 * scale), 1.3 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(5.5 * scale, -3.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(0, 1.5 * scale), 1.0 * scale, nodeFill);
         break;
 
       case SpellSchool.evocation:
@@ -187,10 +209,13 @@ class GlyphMotifs {
         for (int i = 0; i < pts; i++) {
           final angle = (i * 45.0) * pi / 180.0;
           final outerLen = (i % 2 == 0) ? 7.5 * scale : 4.8 * scale;
-          final start = Offset(center.dx + 2.0 * scale * cos(angle), center.dy + 2.0 * scale * sin(angle));
-          final end = Offset(center.dx + outerLen * cos(angle), center.dy + outerLen * sin(angle));
+          final start = Offset(center.dx + 2.0 * scale * cos(angle),
+              center.dy + 2.0 * scale * sin(angle));
+          final end = Offset(center.dx + outerLen * cos(angle),
+              center.dy + outerLen * sin(angle));
           canvas.drawLine(start, end, primaryLine);
-          canvas.drawCircle(end, (i % 2 == 0) ? 1.1 * scale : 0.8 * scale, nodeFill);
+          canvas.drawCircle(
+              end, (i % 2 == 0) ? 1.1 * scale : 0.8 * scale, nodeFill);
         }
 
         // Concentric energetic capacitor diamond
@@ -215,15 +240,20 @@ class GlyphMotifs {
         canvas.drawCircle(center + Offset(d, 0), rRing, primaryLine);
 
         // Vertical interference coordinate lines
-        canvas.drawLine(center - Offset(0, 4.0 * scale), center + Offset(0, 4.0 * scale), fineLine);
-        canvas.drawLine(center - Offset(1.5 * scale, 3.2 * scale), center - Offset(1.5 * scale, -3.2 * scale), fineLine);
-        canvas.drawLine(center + Offset(1.5 * scale, -3.2 * scale), center + Offset(1.5 * scale, 3.2 * scale), fineLine);
+        canvas.drawLine(center - Offset(0, 4.0 * scale),
+            center + Offset(0, 4.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(1.5 * scale, 3.2 * scale),
+            center - Offset(1.5 * scale, -3.2 * scale), fineLine);
+        canvas.drawLine(center + Offset(1.5 * scale, -3.2 * scale),
+            center + Offset(1.5 * scale, 3.2 * scale), fineLine);
 
         // Optical focal sensor nodes
         canvas.drawCircle(center - Offset(d, 0), 1.1 * scale, nodeFill);
         canvas.drawCircle(center + Offset(d, 0), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(0, 4.0 * scale), 0.9 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(0, 4.0 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(0, 4.0 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(0, 4.0 * scale), 0.9 * scale, nodeFill);
         break;
 
       case SpellSchool.necromancy:
@@ -235,8 +265,10 @@ class GlyphMotifs {
         for (int i = 0; i < 3; i++) {
           final a1 = (i * 120.0 + 90.0) * pi / 180.0;
           final a2 = (i * 120.0 - 90.0) * pi / 180.0;
-          final p1 = Offset(center.dx + rTri * cos(a1), center.dy + rTri * sin(a1));
-          final p2 = Offset(center.dx + (rTri * 0.5) * cos(a2), center.dy + (rTri * 0.5) * sin(a2));
+          final p1 =
+              Offset(center.dx + rTri * cos(a1), center.dy + rTri * sin(a1));
+          final p2 = Offset(center.dx + (rTri * 0.5) * cos(a2),
+              center.dy + (rTri * 0.5) * sin(a2));
           if (i == 0) {
             tri1.moveTo(p1.dx, p1.dy);
             tri2.moveTo(p2.dx, p2.dy);
@@ -254,7 +286,8 @@ class GlyphMotifs {
         // Entropy siphon vertices
         for (int i = 0; i < 3; i++) {
           final a1 = (i * 120.0 + 90.0) * pi / 180.0;
-          final p1 = Offset(center.dx + rTri * cos(a1), center.dy + rTri * sin(a1));
+          final p1 =
+              Offset(center.dx + rTri * cos(a1), center.dy + rTri * sin(a1));
           canvas.drawCircle(p1, 1.2 * scale, nodeFill);
         }
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
@@ -272,8 +305,10 @@ class GlyphMotifs {
         canvas.drawPath(hg, primaryLine);
 
         // Horizontal flux planes
-        canvas.drawLine(center - Offset(4.0 * scale, 3.0 * scale), center + Offset(4.0 * scale, -3.0 * scale), fineLine);
-        canvas.drawLine(center - Offset(4.0 * scale, -3.0 * scale), center + Offset(4.0 * scale, 3.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(4.0 * scale, 3.0 * scale),
+            center + Offset(4.0 * scale, -3.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(4.0 * scale, -3.0 * scale),
+            center + Offset(4.0 * scale, 3.0 * scale), fineLine);
 
         // Central transmutation catalyst node & vector tick rings
         canvas.drawCircle(center, 4.2 * scale, fineLine);
@@ -282,10 +317,14 @@ class GlyphMotifs {
         canvas.drawCircle(center, 0.8 * scale, nodeFill);
 
         // 4 Terminal flux points
-        canvas.drawCircle(center - Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
         break;
     }
 
@@ -310,11 +349,13 @@ class GlyphMotifs {
     final s = min(w, h);
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
-    final pulseWave = animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+    final pulseWave =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
     final pulseScale = animatePulse ? (1.0 + 0.038 * pulseWave) : 1.0;
     final primaryAlpha = animatePulse ? (0.86 + 0.14 * pulseWave) : 1.0;
     final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
-    final fineAlpha = animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+    final fineAlpha =
+        animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -345,10 +386,16 @@ class GlyphMotifs {
         canvas.drawCircle(center, 5.8 * scale, fineLine);
         for (int i = 0; i < 4; i++) {
           final a = (i * 90.0 + 45.0) * pi / 180.0;
-          final start = Offset(center.dx + 3.0 * scale * cos(a), center.dy + 3.0 * scale * sin(a));
-          final mid = Offset(center.dx + 5.5 * scale * cos(a + 0.3), center.dy + 5.5 * scale * sin(a + 0.3));
-          final end = Offset(center.dx + 7.5 * scale * cos(a + 0.1), center.dy + 7.5 * scale * sin(a + 0.1));
-          final p = Path()..moveTo(start.dx, start.dy)..lineTo(mid.dx, mid.dy)..lineTo(end.dx, end.dy);
+          final start = Offset(center.dx + 3.0 * scale * cos(a),
+              center.dy + 3.0 * scale * sin(a));
+          final mid = Offset(center.dx + 5.5 * scale * cos(a + 0.3),
+              center.dy + 5.5 * scale * sin(a + 0.3));
+          final end = Offset(center.dx + 7.5 * scale * cos(a + 0.1),
+              center.dy + 7.5 * scale * sin(a + 0.1));
+          final p = Path()
+            ..moveTo(start.dx, start.dy)
+            ..lineTo(mid.dx, mid.dy)
+            ..lineTo(end.dx, end.dy);
           canvas.drawPath(p, primaryLine);
           canvas.drawCircle(end, 1.0 * scale, nodeFill);
         }
@@ -358,9 +405,12 @@ class GlyphMotifs {
       case CreatureType.beast:
         // KINETIC TRIAD CLAW & BIO-VECTOR CHEVRONS
         // 3 Kinetic diagonal claw vectors
-        canvas.drawLine(center - Offset(4.5 * scale, 5.5 * scale), center - Offset(1.5 * scale, -5.5 * scale), primaryLine);
-        canvas.drawLine(center - Offset(0, 6.0 * scale), center + Offset(0, 6.0 * scale), primaryLine);
-        canvas.drawLine(center + Offset(4.5 * scale, -5.5 * scale), center + Offset(1.5 * scale, 5.5 * scale), primaryLine);
+        canvas.drawLine(center - Offset(4.5 * scale, 5.5 * scale),
+            center - Offset(1.5 * scale, -5.5 * scale), primaryLine);
+        canvas.drawLine(center - Offset(0, 6.0 * scale),
+            center + Offset(0, 6.0 * scale), primaryLine);
+        canvas.drawLine(center + Offset(4.5 * scale, -5.5 * scale),
+            center + Offset(1.5 * scale, 5.5 * scale), primaryLine);
 
         // Lower instinctual apex chevron
         final chev = Path();
@@ -369,15 +419,23 @@ class GlyphMotifs {
         chev.lineTo(center.dx + 5.0 * scale, center.dy + 2.0 * scale);
         canvas.drawPath(chev, fineLine);
 
-        canvas.drawCircle(center - Offset(4.5 * scale, 5.5 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(0, 6.0 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(4.5 * scale, -5.5 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(4.5 * scale, 5.5 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(0, 6.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(4.5 * scale, -5.5 * scale), 1.0 * scale, nodeFill);
         break;
 
       case CreatureType.celestial:
         // RADIANT SERAPH WINGS & TRANSCENDENT HALO VECTOR
         // Top transcendent halo ring
-        canvas.drawOval(Rect.fromCenter(center: center - Offset(0, 5.0 * scale), width: 7.0 * scale, height: 2.2 * scale), primaryLine);
+        canvas.drawOval(
+            Rect.fromCenter(
+                center: center - Offset(0, 5.0 * scale),
+                width: 7.0 * scale,
+                height: 2.2 * scale),
+            primaryLine);
 
         // Wing vector rays
         final wings = Path();
@@ -388,10 +446,14 @@ class GlyphMotifs {
         wings.lineTo(center.dx + 7.0 * scale, center.dy - 2.0 * scale);
         canvas.drawPath(wings, primaryLine);
 
-        canvas.drawLine(center - Offset(0, 2.0 * scale), center + Offset(0, 6.5 * scale), fineLine);
-        canvas.drawCircle(center - Offset(0, 5.0 * scale), 0.9 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(7.0 * scale, 2.0 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(7.0 * scale, -2.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawLine(center - Offset(0, 2.0 * scale),
+            center + Offset(0, 6.5 * scale), fineLine);
+        canvas.drawCircle(
+            center - Offset(0, 5.0 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(7.0 * scale, 2.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(7.0 * scale, -2.0 * scale), 1.0 * scale, nodeFill);
         break;
 
       case CreatureType.construct:
@@ -402,7 +464,8 @@ class GlyphMotifs {
         for (int i = 0; i < teeth * 2; i++) {
           final rad = (i % 2 == 0) ? rGear : (rGear - 1.6 * scale);
           final angle = (i * pi / teeth);
-          final pt = Offset(center.dx + rad * cos(angle), center.dy + rad * sin(angle));
+          final pt = Offset(
+              center.dx + rad * cos(angle), center.dy + rad * sin(angle));
           if (i == 0) {
             gear.moveTo(pt.dx, pt.dy);
           } else {
@@ -413,7 +476,10 @@ class GlyphMotifs {
         canvas.drawPath(gear, primaryLine);
 
         // Internal axle square
-        canvas.drawRect(Rect.fromCenter(center: center, width: 3.2 * scale, height: 3.2 * scale), fineLine);
+        canvas.drawRect(
+            Rect.fromCenter(
+                center: center, width: 3.2 * scale, height: 3.2 * scale),
+            fineLine);
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
         break;
 
@@ -430,10 +496,14 @@ class GlyphMotifs {
         canvas.drawPath(crest, primaryLine);
 
         // Horn vector spikes
-        canvas.drawLine(center - Offset(3.5 * scale, 3.5 * scale), center - Offset(6.8 * scale, 7.5 * scale), primaryLine);
-        canvas.drawLine(center + Offset(3.5 * scale, -3.5 * scale), center + Offset(6.8 * scale, -7.5 * scale), primaryLine);
-        canvas.drawCircle(center - Offset(6.8 * scale, 7.5 * scale), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(6.8 * scale, -7.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawLine(center - Offset(3.5 * scale, 3.5 * scale),
+            center - Offset(6.8 * scale, 7.5 * scale), primaryLine);
+        canvas.drawLine(center + Offset(3.5 * scale, -3.5 * scale),
+            center + Offset(6.8 * scale, -7.5 * scale), primaryLine);
+        canvas.drawCircle(
+            center - Offset(6.8 * scale, 7.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(6.8 * scale, -7.5 * scale), 1.1 * scale, nodeFill);
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
         break;
 
@@ -445,7 +515,8 @@ class GlyphMotifs {
           final t = i / numPts;
           final rad = 1.2 * scale + (5.5 * scale * t);
           final angle = t * 3.5 * pi;
-          final pt = Offset(center.dx + rad * cos(angle), center.dy + rad * sin(angle));
+          final pt = Offset(
+              center.dx + rad * cos(angle), center.dy + rad * sin(angle));
           if (i == 0) {
             vortex.moveTo(pt.dx, pt.dy);
           } else {
@@ -455,8 +526,10 @@ class GlyphMotifs {
         canvas.drawPath(vortex, primaryLine);
 
         // Orbital particle nodes
-        canvas.drawCircle(center + Offset(5.5 * scale, 0), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(4.0 * scale, 3.0 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(5.5 * scale, 0), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(4.0 * scale, 3.0 * scale), 0.9 * scale, nodeFill);
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
         break;
 
@@ -464,8 +537,13 @@ class GlyphMotifs {
         // SYLVAN LUNAR CRESCENT & BUTTERFLY VECTOR
         final moon = Path();
         moon.moveTo(center.dx - 4.5 * scale, center.dy - 5.5 * scale);
-        moon.arcToPoint(Offset(center.dx - 4.5 * scale, center.dy + 5.5 * scale), radius: Radius.circular(5.5 * scale));
-        moon.arcToPoint(Offset(center.dx - 4.5 * scale, center.dy - 5.5 * scale), radius: Radius.circular(3.8 * scale), clockwise: false);
+        moon.arcToPoint(
+            Offset(center.dx - 4.5 * scale, center.dy + 5.5 * scale),
+            radius: Radius.circular(5.5 * scale));
+        moon.arcToPoint(
+            Offset(center.dx - 4.5 * scale, center.dy - 5.5 * scale),
+            radius: Radius.circular(3.8 * scale),
+            clockwise: false);
         canvas.drawPath(moon, primaryLine);
 
         // Resonance wing vectors
@@ -477,26 +555,39 @@ class GlyphMotifs {
         wing.close();
         canvas.drawPath(wing, fineLine);
 
-        canvas.drawCircle(center + Offset(6.0 * scale, -4.5 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(6.0 * scale, 4.5 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(6.0 * scale, -4.5 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(6.0 * scale, 4.5 * scale), 1.0 * scale, nodeFill);
         break;
 
       case CreatureType.fiend:
         // ABYSSAL POINTED HORNS & TRIDENT LATTICE
         final horns = Path();
         horns.moveTo(center.dx - 6.0 * scale, center.dy - 6.0 * scale);
-        horns.quadraticBezierTo(center.dx - 3.0 * scale, center.dy + 3.0 * scale, center.dx, center.dy + 6.0 * scale);
-        horns.quadraticBezierTo(center.dx + 3.0 * scale, center.dy + 3.0 * scale, center.dx + 6.0 * scale, center.dy - 6.0 * scale);
+        horns.quadraticBezierTo(center.dx - 3.0 * scale,
+            center.dy + 3.0 * scale, center.dx, center.dy + 6.0 * scale);
+        horns.quadraticBezierTo(
+            center.dx + 3.0 * scale,
+            center.dy + 3.0 * scale,
+            center.dx + 6.0 * scale,
+            center.dy - 6.0 * scale);
         canvas.drawPath(horns, primaryLine);
 
         // Trident shaft & barbed prongs
-        canvas.drawLine(center - Offset(0, 7.0 * scale), center + Offset(0, 6.0 * scale), primaryLine);
-        canvas.drawLine(center - Offset(2.8 * scale, 4.0 * scale), center - Offset(2.8 * scale, 0), fineLine);
-        canvas.drawLine(center + Offset(2.8 * scale, -4.0 * scale), center + Offset(2.8 * scale, 0), fineLine);
+        canvas.drawLine(center - Offset(0, 7.0 * scale),
+            center + Offset(0, 6.0 * scale), primaryLine);
+        canvas.drawLine(center - Offset(2.8 * scale, 4.0 * scale),
+            center - Offset(2.8 * scale, 0), fineLine);
+        canvas.drawLine(center + Offset(2.8 * scale, -4.0 * scale),
+            center + Offset(2.8 * scale, 0), fineLine);
 
-        canvas.drawCircle(center - Offset(6.0 * scale, 6.0 * scale), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(6.0 * scale, -6.0 * scale), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(0, 7.0 * scale), 1.2 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(6.0 * scale, 6.0 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(6.0 * scale, -6.0 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(0, 7.0 * scale), 1.2 * scale, nodeFill);
         break;
 
       case CreatureType.giant:
@@ -509,32 +600,44 @@ class GlyphMotifs {
         canvas.drawPath(mtn, primaryLine);
 
         // Heavy vertical monolithic pillar vectors
-        canvas.drawLine(center - Offset(2.5 * scale, -1.0 * scale), center - Offset(2.5 * scale, -5.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(2.5 * scale, -1.0 * scale),
+            center - Offset(2.5 * scale, -5.5 * scale), fineLine);
         canvas.drawLine(center, center + Offset(0, 5.5 * scale), primaryLine);
-        canvas.drawLine(center + Offset(2.5 * scale, 1.0 * scale), center + Offset(2.5 * scale, 5.5 * scale), fineLine);
+        canvas.drawLine(center + Offset(2.5 * scale, 1.0 * scale),
+            center + Offset(2.5 * scale, 5.5 * scale), fineLine);
 
-        canvas.drawCircle(center - Offset(0, 5.5 * scale), 1.3 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(0, 5.5 * scale), 1.3 * scale, nodeFill);
         break;
 
       case CreatureType.humanoid:
         // CHIVALRIC VISOR RETICLE & CROSSED SWORD BARS
-        canvas.drawRect(Rect.fromCenter(center: center, width: 8.5 * scale, height: 7.0 * scale), primaryLine);
-        
+        canvas.drawRect(
+            Rect.fromCenter(
+                center: center, width: 8.5 * scale, height: 7.0 * scale),
+            primaryLine);
+
         // Crossed sword coordinate vectors
-        canvas.drawLine(center - Offset(5.5 * scale, 5.5 * scale), center + Offset(5.5 * scale, 5.5 * scale), fineLine);
-        canvas.drawLine(center - Offset(-5.5 * scale, 5.5 * scale), center + Offset(-5.5 * scale, 5.5 * scale), fineLine);
-        
+        canvas.drawLine(center - Offset(5.5 * scale, 5.5 * scale),
+            center + Offset(5.5 * scale, 5.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(-5.5 * scale, 5.5 * scale),
+            center + Offset(-5.5 * scale, 5.5 * scale), fineLine);
+
         // T-slit tactical ocular
-        canvas.drawLine(center - Offset(3.5 * scale, 0), center + Offset(3.5 * scale, 0), primaryLine);
+        canvas.drawLine(center - Offset(3.5 * scale, 0),
+            center + Offset(3.5 * scale, 0), primaryLine);
         canvas.drawLine(center, center + Offset(0, 3.5 * scale), primaryLine);
         canvas.drawCircle(center, 1.0 * scale, nodeFill);
         break;
 
       case CreatureType.monstrosity:
         // SERRATED LACERATION & APEX JAWS
-        canvas.drawLine(center - Offset(5.5 * scale, 6.0 * scale), center - Offset(2.0 * scale, -6.0 * scale), primaryLine);
-        canvas.drawLine(center - Offset(1.8 * scale, 6.0 * scale), center + Offset(1.8 * scale, 6.0 * scale), primaryLine);
-        canvas.drawLine(center + Offset(2.0 * scale, -6.0 * scale), center + Offset(5.5 * scale, 6.0 * scale), primaryLine);
+        canvas.drawLine(center - Offset(5.5 * scale, 6.0 * scale),
+            center - Offset(2.0 * scale, -6.0 * scale), primaryLine);
+        canvas.drawLine(center - Offset(1.8 * scale, 6.0 * scale),
+            center + Offset(1.8 * scale, 6.0 * scale), primaryLine);
+        canvas.drawLine(center + Offset(2.0 * scale, -6.0 * scale),
+            center + Offset(5.5 * scale, 6.0 * scale), primaryLine);
 
         // Apex serrated zig-zag
         final jaw = Path();
@@ -545,20 +648,28 @@ class GlyphMotifs {
         jaw.lineTo(center.dx + 5.0 * scale, center.dy + 2.0 * scale);
         canvas.drawPath(jaw, fineLine);
 
-        canvas.drawCircle(center - Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
         break;
 
       case CreatureType.ooze:
         // CELLULAR AMORPHOUS NODES & TENSION RINGS
-        canvas.drawCircle(center - Offset(1.8 * scale, 1.8 * scale), 3.4 * scale, primaryLine);
-        canvas.drawCircle(center + Offset(2.8 * scale, 2.5 * scale), 2.2 * scale, primaryLine);
-        canvas.drawCircle(center - Offset(2.2 * scale, -3.2 * scale), 1.6 * scale, fineLine);
-        
+        canvas.drawCircle(center - Offset(1.8 * scale, 1.8 * scale),
+            3.4 * scale, primaryLine);
+        canvas.drawCircle(center + Offset(2.8 * scale, 2.5 * scale),
+            2.2 * scale, primaryLine);
+        canvas.drawCircle(
+            center - Offset(2.2 * scale, -3.2 * scale), 1.6 * scale, fineLine);
+
         // Fluid tension bridge lines
-        canvas.drawLine(center - Offset(1.8 * scale, 1.8 * scale), center + Offset(2.8 * scale, 2.5 * scale), fineLine);
-        canvas.drawCircle(center - Offset(1.8 * scale, 1.8 * scale), 1.2 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(2.8 * scale, 2.5 * scale), 0.9 * scale, nodeFill);
+        canvas.drawLine(center - Offset(1.8 * scale, 1.8 * scale),
+            center + Offset(2.8 * scale, 2.5 * scale), fineLine);
+        canvas.drawCircle(
+            center - Offset(1.8 * scale, 1.8 * scale), 1.2 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(2.8 * scale, 2.5 * scale), 0.9 * scale, nodeFill);
         break;
 
       case CreatureType.plant:
@@ -569,29 +680,42 @@ class GlyphMotifs {
         canvas.drawPath(stem, primaryLine);
 
         // Branching diagonal leaf vectors
-        canvas.drawLine(center + Offset(0, 3.0 * scale), center + Offset(4.5 * scale, 0), primaryLine);
-        canvas.drawLine(center + Offset(0, -1.0 * scale), center - Offset(4.5 * scale, 4.0 * scale), primaryLine);
-        canvas.drawLine(center + Offset(0, -3.0 * scale), center + Offset(4.0 * scale, -6.0 * scale), fineLine);
+        canvas.drawLine(center + Offset(0, 3.0 * scale),
+            center + Offset(4.5 * scale, 0), primaryLine);
+        canvas.drawLine(center + Offset(0, -1.0 * scale),
+            center - Offset(4.5 * scale, 4.0 * scale), primaryLine);
+        canvas.drawLine(center + Offset(0, -3.0 * scale),
+            center + Offset(4.0 * scale, -6.0 * scale), fineLine);
 
-        canvas.drawCircle(center + Offset(4.5 * scale, 0), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(4.5 * scale, 4.0 * scale), 1.1 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(0, 6.5 * scale), 1.2 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(4.5 * scale, 0), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(4.5 * scale, 4.0 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(0, 6.5 * scale), 1.2 * scale, nodeFill);
         break;
 
       case CreatureType.undead:
         // SEPULCHRAL CROSS & ENERGY DECAY LINES
         // Tombstone cross arch
-        canvas.drawLine(center - Offset(0, 6.5 * scale), center + Offset(0, 6.5 * scale), primaryLine);
-        canvas.drawLine(center - Offset(5.0 * scale, 2.0 * scale), center + Offset(5.0 * scale, -2.0 * scale), primaryLine);
+        canvas.drawLine(center - Offset(0, 6.5 * scale),
+            center + Offset(0, 6.5 * scale), primaryLine);
+        canvas.drawLine(center - Offset(5.0 * scale, 2.0 * scale),
+            center + Offset(5.0 * scale, -2.0 * scale), primaryLine);
 
         // Diagonal decay energy lines
-        canvas.drawLine(center - Offset(4.0 * scale, -3.5 * scale), center + Offset(4.0 * scale, 4.5 * scale), fineLine);
-        canvas.drawLine(center - Offset(-4.0 * scale, -3.5 * scale), center + Offset(-4.0 * scale, 4.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(4.0 * scale, -3.5 * scale),
+            center + Offset(4.0 * scale, 4.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(-4.0 * scale, -3.5 * scale),
+            center + Offset(-4.0 * scale, 4.5 * scale), fineLine);
 
         // 4 Sepulchral terminal nodes
-        canvas.drawCircle(center - Offset(0, 6.5 * scale), 1.2 * scale, nodeFill);
-        canvas.drawCircle(center - Offset(5.0 * scale, 2.0 * scale), 1.0 * scale, nodeFill);
-        canvas.drawCircle(center + Offset(5.0 * scale, -2.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(0, 6.5 * scale), 1.2 * scale, nodeFill);
+        canvas.drawCircle(
+            center - Offset(5.0 * scale, 2.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(
+            center + Offset(5.0 * scale, -2.0 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
         break;
     }

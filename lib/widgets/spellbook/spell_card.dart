@@ -44,7 +44,9 @@ class SpellCard extends StatelessWidget {
         ? '1 Reaction'
         : (rules.castingTime.startsWith('1 Bonus Action')
             ? '1 Bonus Action'
-            : (rules.castingTime.startsWith('1 Action') ? '1 Action' : rules.castingTime));
+            : (rules.castingTime.startsWith('1 Action')
+                ? '1 Action'
+                : rules.castingTime));
 
     return PressableCard(
       onTap: onTap,
@@ -97,7 +99,8 @@ class SpellCard extends StatelessWidget {
               ),
               if (spell.isChangedIn2024) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
                     color: diffColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(5),
@@ -110,7 +113,10 @@ class SpellCard extends StatelessWidget {
                       const SizedBox(width: 2),
                       Text(
                         '2024 Diff',
-                        style: TextStyle(color: diffColor, fontSize: 9.5, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: diffColor,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -120,10 +126,13 @@ class SpellCard extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   isPinned ? Icons.bookmark : Icons.bookmark_border,
-                  color: isPinned ? pinColor : theme.colorScheme.onSurfaceVariant,
+                  color:
+                      isPinned ? pinColor : theme.colorScheme.onSurfaceVariant,
                   size: 20,
                 ),
-                tooltip: isPinned ? 'Remove from Personal Spellbook' : 'Pin to Personal Spellbook',
+                tooltip: isPinned
+                    ? 'Remove from Personal Spellbook'
+                    : 'Pin to Personal Spellbook',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 onPressed: onTogglePin,
@@ -137,17 +146,24 @@ class SpellCard extends StatelessWidget {
             spacing: 4,
             runSpacing: 4,
             children: [
-              _buildBadge(context, Icons.timer_outlined, castingTimeDisplay, schoolColor),
-              _buildBadge(context, Icons.my_location_outlined, rules.range, schoolColor),
-              _buildBadge(context, Icons.hourglass_empty_outlined, rules.duration, schoolColor),
+              _buildBadge(context, Icons.timer_outlined, castingTimeDisplay,
+                  schoolColor),
+              _buildBadge(context, Icons.my_location_outlined, rules.range,
+                  schoolColor),
+              _buildBadge(context, Icons.hourglass_empty_outlined,
+                  rules.duration, schoolColor),
               if (rules.concentration)
-                _buildTag('Conc', isDark ? Colors.amberAccent : const Color(0xFFB45309)),
+                _buildTag('Conc',
+                    isDark ? Colors.amberAccent : const Color(0xFFB45309)),
               if (rules.ritual)
-                _buildTag('Ritual', isDark ? Colors.cyanAccent : const Color(0xFF0E7490)),
+                _buildTag('Ritual',
+                    isDark ? Colors.cyanAccent : const Color(0xFF0E7490)),
               if (rules.materialDetails?.hasCost == true)
-                _buildTag('💰 ${rules.materialDetails!.costInGp} gp', diffColor),
+                _buildTag(
+                    '💰 ${rules.materialDetails!.costInGp} gp', diffColor),
               if (rules.savingThrow != null)
-                _buildTag('${rules.savingThrow} Save', isDark ? Colors.orangeAccent : const Color(0xFFC2410C)),
+                _buildTag('${rules.savingThrow} Save',
+                    isDark ? Colors.orangeAccent : const Color(0xFFC2410C)),
               if (rules.damageOrHealType != null)
                 _buildTag(rules.damageOrHealType!, schoolColor),
             ],
@@ -162,7 +178,8 @@ class SpellCard extends StatelessWidget {
                 final ringLabel = r.damageLegend.isNotEmpty
                     ? '${r.ringType.displayName} • ${r.damageLegend}'
                     : r.ringType.displayName;
-                final ringColor = r.getEffectiveColor(schoolColor, isDarkMode: isDark);
+                final ringColor =
+                    r.getEffectiveColor(schoolColor, isDarkMode: isDark);
                 return _buildTag(ringLabel, ringColor);
               }).toList(),
             ),
@@ -175,13 +192,20 @@ class SpellCard extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: (isDark ? Colors.blueAccent : const Color(0xFF1D4ED8)).withValues(alpha: 0.12),
+                color: (isDark ? Colors.blueAccent : const Color(0xFF1D4ED8))
+                    .withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: (isDark ? Colors.blueAccent : const Color(0xFF1D4ED8)).withValues(alpha: 0.3)),
+                border: Border.all(
+                    color:
+                        (isDark ? Colors.blueAccent : const Color(0xFF1D4ED8))
+                            .withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.flash_on, size: 12, color: isDark ? Colors.blueAccent : const Color(0xFF1D4ED8)),
+                  Icon(Icons.flash_on,
+                      size: 12,
+                      color:
+                          isDark ? Colors.blueAccent : const Color(0xFF1D4ED8)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -189,7 +213,9 @@ class SpellCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: isDark ? const Color(0xFF90CAF9) : const Color(0xFF1E40AF),
+                        color: isDark
+                            ? const Color(0xFF90CAF9)
+                            : const Color(0xFF1E40AF),
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
@@ -236,11 +262,13 @@ class SpellCard extends StatelessWidget {
                   onTap: onOpenQuickRoll,
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: schoolColor.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: schoolColor.withValues(alpha: 0.5)),
+                      border:
+                          Border.all(color: schoolColor.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -287,7 +315,8 @@ class SpellCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge(BuildContext context, IconData icon, String text, Color accentColor) {
+  Widget _buildBadge(
+      BuildContext context, IconData icon, String text, Color accentColor) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -305,7 +334,9 @@ class SpellCard extends StatelessWidget {
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 10.5),
+              style: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                  fontSize: 10.5),
             ),
           ),
         ],
@@ -323,7 +354,8 @@ class SpellCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        style:
+            TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }

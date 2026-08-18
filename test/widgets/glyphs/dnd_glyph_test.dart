@@ -8,7 +8,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_libr
 
 void main() {
   group('D&D Glyph System Tests', () {
-    test('All 8 SpellSchools define complete color tokens and container shapes', () {
+    test('All 8 SpellSchools define complete color tokens and container shapes',
+        () {
       expect(SpellSchool.values.length, equals(8));
       for (final school in SpellSchool.values) {
         expect(school.displayName.isNotEmpty, isTrue);
@@ -19,7 +20,9 @@ void main() {
       }
     });
 
-    test('All 14 CreatureTypes define complete color tokens and container shapes', () {
+    test(
+        'All 14 CreatureTypes define complete color tokens and container shapes',
+        () {
       expect(CreatureType.values.length, equals(14));
       for (final type in CreatureType.values) {
         expect(type.displayName.isNotEmpty, isTrue);
@@ -44,7 +47,8 @@ void main() {
       }
     });
 
-    test('GlyphGeometry generates valid non-empty paths for all frame shapes', () {
+    test('GlyphGeometry generates valid non-empty paths for all frame shapes',
+        () {
       const size = Size(48.0, 48.0);
       for (final shape in GlyphFrameShape.values) {
         final path = GlyphGeometry.getContainerPath(shape, size);
@@ -54,16 +58,28 @@ void main() {
       }
     });
 
-    testWidgets('DndGlyph.spell renders correctly across tiers and damage accents', (WidgetTester tester) async {
+    testWidgets(
+        'DndGlyph.spell renders correctly across tiers and damage accents',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Row(
               children: [
-                DndGlyph.spell(school: SpellSchool.abjuration, level: 0, size: 32),
-                DndGlyph.spell(school: SpellSchool.evocation, level: 3, damageAccent: DamageAccent.fire, size: 48),
-                DndGlyph.spell(school: SpellSchool.necromancy, level: 5, size: 64),
-                DndGlyph.spell(school: SpellSchool.divination, level: 9, damageAccent: DamageAccent.radiant, size: 96),
+                DndGlyph.spell(
+                    school: SpellSchool.abjuration, level: 0, size: 32),
+                DndGlyph.spell(
+                    school: SpellSchool.evocation,
+                    level: 3,
+                    damageAccent: DamageAccent.fire,
+                    size: 48),
+                DndGlyph.spell(
+                    school: SpellSchool.necromancy, level: 5, size: 64),
+                DndGlyph.spell(
+                    school: SpellSchool.divination,
+                    level: 9,
+                    damageAccent: DamageAccent.radiant,
+                    size: 96),
               ],
             ),
           ),
@@ -74,8 +90,11 @@ void main() {
       expect(find.byType(DndGlyph), findsNWidgets(4));
     });
 
-    test('Concentration ActionTraitRing is strictly non-elemental and has orbital cyan color', () {
-      const concRingWithoutDamage = ActionTraitRing(ringType: ActionRingType.concentration);
+    test(
+        'Concentration ActionTraitRing is strictly non-elemental and has orbital cyan color',
+        () {
+      const concRingWithoutDamage =
+          ActionTraitRing(ringType: ActionRingType.concentration);
       const concRingWithAccidentalDamage = ActionTraitRing(
         ringType: ActionRingType.concentration,
         damageType: DamageAccent.fire,
@@ -87,7 +106,8 @@ void main() {
         equals(const Color(0xFF38BDF8)),
       );
       expect(
-        concRingWithAccidentalDamage.getEffectiveColor(Colors.grey, isDarkMode: true),
+        concRingWithAccidentalDamage.getEffectiveColor(Colors.grey,
+            isDarkMode: true),
         equals(const Color(0xFF38BDF8)),
       );
 
@@ -97,27 +117,33 @@ void main() {
         equals(const Color(0xFF0284C7)),
       );
       expect(
-        concRingWithAccidentalDamage.getEffectiveColor(Colors.grey, isDarkMode: false),
+        concRingWithAccidentalDamage.getEffectiveColor(Colors.grey,
+            isDarkMode: false),
         equals(const Color(0xFF0284C7)),
       );
     });
 
-    test('Multi-damage ActionTraitRing cycles through configured damage colors', () {
+    test('Multi-damage ActionTraitRing cycles through configured damage colors',
+        () {
       const ring = ActionTraitRing(
         ringType: ActionRingType.recharge,
         damageType: DamageAccent.radiant,
         damageTypes: [DamageAccent.necrotic],
       );
 
-      final colorAtStart = ring.getAnimatedColor(Colors.grey, isDarkMode: true, phase: 0.0);
-      final colorHalfCycle = ring.getAnimatedColor(Colors.grey, isDarkMode: true, phase: 0.5);
+      final colorAtStart =
+          ring.getAnimatedColor(Colors.grey, isDarkMode: true, phase: 0.0);
+      final colorHalfCycle =
+          ring.getAnimatedColor(Colors.grey, isDarkMode: true, phase: 0.5);
 
       expect(colorAtStart, equals(DamageAccent.radiant.color));
       expect(colorHalfCycle, equals(DamageAccent.necrotic.color));
       expect(ring.damageLegend, 'Radiant / Necrotic');
     });
 
-    testWidgets('DndGlyph renders multi-ring action traits with damage coloring and arbitrary ring counts', (WidgetTester tester) async {
+    testWidgets(
+        'DndGlyph renders multi-ring action traits with damage coloring and arbitrary ring counts',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -127,8 +153,12 @@ void main() {
                   creatureType: CreatureType.elemental,
                   crTier: 2,
                   actionRings: const [
-                    ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.cold),
-                    ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold),
+                    ActionTraitRing(
+                        ringType: ActionRingType.melee,
+                        damageType: DamageAccent.cold),
+                    ActionTraitRing(
+                        ringType: ActionRingType.recharge,
+                        damageType: DamageAccent.cold),
                   ],
                   size: 64,
                 ),
@@ -137,7 +167,9 @@ void main() {
                   level: 5,
                   actionRings: const [
                     ActionTraitRing(ringType: ActionRingType.concentration),
-                    ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.force),
+                    ActionTraitRing(
+                        ringType: ActionRingType.melee,
+                        damageType: DamageAccent.force),
                   ],
                   size: 64,
                 ),
@@ -146,9 +178,15 @@ void main() {
                   creatureType: CreatureType.dragon,
                   crTier: 4,
                   actionRings: const [
-                    ActionTraitRing(ringType: ActionRingType.legendary, damageType: DamageAccent.fire),
-                    ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
-                    ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.physical),
+                    ActionTraitRing(
+                        ringType: ActionRingType.legendary,
+                        damageType: DamageAccent.fire),
+                    ActionTraitRing(
+                        ringType: ActionRingType.recharge,
+                        damageType: DamageAccent.fire),
+                    ActionTraitRing(
+                        ringType: ActionRingType.melee,
+                        damageType: DamageAccent.physical),
                     ActionTraitRing(ringType: ActionRingType.reaction),
                     ActionTraitRing(ringType: ActionRingType.concentration),
                   ],
@@ -164,7 +202,9 @@ void main() {
       expect(find.byType(DndGlyph), findsNWidgets(3));
     });
 
-    testWidgets('GlyphShowcaseScreen renders known spells, minions, custom builder, and full style guide', (WidgetTester tester) async {
+    testWidgets(
+        'GlyphShowcaseScreen renders known spells, minions, custom builder, and full style guide',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: GlyphShowcaseScreen(),
@@ -210,18 +250,24 @@ void main() {
       await tester.tap(copyBtn);
       await tester.pumpAndSettle();
       expect(find.text('Generated Dart Widget Code:'), findsOneWidget);
-      expect(find.text('Copied complete DndGlyph Dart code to clipboard!'), findsOneWidget);
+      expect(find.text('Copied complete DndGlyph Dart code to clipboard!'),
+          findsOneWidget);
 
       // Switch to Full Style Guide Codex tab
       await tester.tap(find.text('Full Style Guide Codex'));
       await tester.pumpAndSettle();
-      expect(find.text('D&D App Glyph System: Techno-Wireframe HUD & Arcane Codex'), findsOneWidget);
+      expect(
+          find.text(
+              'D&D App Glyph System: Techno-Wireframe HUD & Arcane Codex'),
+          findsOneWidget);
       expect(find.text('1. The 8 Arcane Schools of Magic'), findsOneWidget);
-      expect(find.text('3. The 4 Progression Tiers & Threat Architecture'), findsOneWidget);
+      expect(find.text('3. The 4 Progression Tiers & Threat Architecture'),
+          findsOneWidget);
       expect(find.text('Tier 1 • Initiate / CR 0–4'), findsOneWidget);
     });
 
-    testWidgets('DndGlyph applies frameShapeOverride properly', (WidgetTester tester) async {
+    testWidgets('DndGlyph applies frameShapeOverride properly',
+        (WidgetTester tester) async {
       final spellGlyph = DndGlyph.spell(
         school: SpellSchool.evocation,
         frameShapeOverride: GlyphFrameShape.octagon,
@@ -232,10 +278,12 @@ void main() {
         creatureType: CreatureType.dragon,
         frameShapeOverride: GlyphFrameShape.tombstone,
       );
-      expect(monsterGlyph.themeData.frameShape, equals(GlyphFrameShape.tombstone));
+      expect(
+          monsterGlyph.themeData.frameShape, equals(GlyphFrameShape.tombstone));
     });
 
-    test('SummonPresetGlyphExt correctly dynamically reads all spell cards', () {
+    test('SummonPresetGlyphExt correctly dynamically reads all spell cards',
+        () {
       for (final preset in SrdSummonsLibrary.allPresets) {
         expect(preset.glyphSchool, isNotNull);
         expect(preset.glyphSpellLevel, inInclusiveRange(0, 9));
@@ -257,26 +305,35 @@ void main() {
       );
     });
 
-    test('MinionStatBlockGlyphExt correctly dynamically reads creature stat blocks with damage types', () {
+    test(
+        'MinionStatBlockGlyphExt correctly dynamically reads creature stat blocks with damage types',
+        () {
       // Beast
-      expect(SrdSummonsLibrary.wolf.glyphCreatureType, equals(CreatureType.beast));
+      expect(
+          SrdSummonsLibrary.wolf.glyphCreatureType, equals(CreatureType.beast));
       expect(SrdSummonsLibrary.wolf.glyphCrTier, equals(1));
-      expect(SrdSummonsLibrary.wolf.glyphActionRings.first.ringType, equals(ActionRingType.melee));
+      expect(SrdSummonsLibrary.wolf.glyphActionRings.first.ringType,
+          equals(ActionRingType.melee));
 
       // Construct
-      expect(SrdSummonsLibrary.tinyObject.glyphCreatureType, equals(CreatureType.construct));
+      expect(SrdSummonsLibrary.tinyObject.glyphCreatureType,
+          equals(CreatureType.construct));
       expect(SrdSummonsLibrary.tinyObject.glyphCrTier, equals(1));
 
       // Undead
-      expect(SrdSummonsLibrary.skeleton.glyphCreatureType, equals(CreatureType.undead));
+      expect(SrdSummonsLibrary.skeleton.glyphCreatureType,
+          equals(CreatureType.undead));
       expect(
-        SrdSummonsLibrary.skeleton.glyphActionRings.any((r) => r.ringType == ActionRingType.ranged),
+        SrdSummonsLibrary.skeleton.glyphActionRings
+            .any((r) => r.ringType == ActionRingType.ranged),
         isTrue,
       );
 
       // Elemental
-      expect(ElementalSummons.fireElemental.glyphCreatureType, equals(CreatureType.elemental));
-      expect(ElementalSummons.fireElemental.glyphCrTier, equals(2)); // CR 5 -> Tier 2
+      expect(ElementalSummons.fireElemental.glyphCreatureType,
+          equals(CreatureType.elemental));
+      expect(ElementalSummons.fireElemental.glyphCrTier,
+          equals(2)); // CR 5 -> Tier 2
       expect(
         ElementalSummons.fireElemental.glyphActionRings.any(
           (r) => r.damageType == DamageAccent.fire,

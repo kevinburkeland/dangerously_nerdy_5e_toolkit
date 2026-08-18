@@ -15,7 +15,7 @@ class DndGlyph extends StatefulWidget {
   final int tierLevel; // Spell Level (0-9) or Monster CR Tier (1-4)
   final List<ActionTraitRing> actionRings;
   final DamageAccent? damageAccent; // Legacy support
-  final ActionBadge? actionBadge;   // Legacy support
+  final ActionBadge? actionBadge; // Legacy support
   final double size;
   final bool? isDarkMode;
   final bool isActive;
@@ -53,9 +53,13 @@ class DndGlyph extends StatefulWidget {
     VoidCallback? onTap,
     String? tooltip,
   }) {
-    final rings = actionRings ?? (damageAccent != null
-        ? [ActionTraitRing(ringType: ActionRingType.recharge, damageType: damageAccent)]
-        : const <ActionTraitRing>[]);
+    final rings = actionRings ??
+        (damageAccent != null
+            ? [
+                ActionTraitRing(
+                    ringType: ActionRingType.recharge, damageType: damageAccent)
+              ]
+            : const <ActionTraitRing>[]);
 
     final effectiveTheme = themeData ??
         GlyphThemeData.fromSchool(school, shapeOverride: frameShapeOverride);
@@ -90,12 +94,14 @@ class DndGlyph extends StatefulWidget {
     VoidCallback? onTap,
     String? tooltip,
   }) {
-    final rings = actionRings ?? (actionBadge != null
-        ? [_mapLegacyBadge(actionBadge)]
-        : const <ActionTraitRing>[]);
+    final rings = actionRings ??
+        (actionBadge != null
+            ? [_mapLegacyBadge(actionBadge)]
+            : const <ActionTraitRing>[]);
 
     final effectiveTheme = themeData ??
-        GlyphThemeData.fromCreature(creatureType, shapeOverride: frameShapeOverride);
+        GlyphThemeData.fromCreature(creatureType,
+            shapeOverride: frameShapeOverride);
 
     return DndGlyph._(
       key: key,
@@ -199,11 +205,13 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
     final currentValue = _ringRotationController.value;
     final settleTarget = currentValue > 0.8 ? 1.0 : 0.0;
     _ringRotationController.stop(canceled: false);
-    _ringRotationController.animateTo(
+    _ringRotationController
+        .animateTo(
       settleTarget,
       duration: const Duration(milliseconds: 700),
       curve: Curves.easeOutCubic,
-    ).then((_) {
+    )
+        .then((_) {
       if (!mounted || _isRingAnimating) return;
       _ringRotationController.value = settleTarget;
     });
@@ -211,13 +219,16 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
+    final isDark =
+        widget.isDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final canAnimateHover = _supportsHover(Theme.of(context).platform) && !reduceMotion;
+    final canAnimateHover =
+        _supportsHover(Theme.of(context).platform) && !reduceMotion;
     final effectiveActive = widget.isActive || (canAnimateHover && _isHovered);
-    final shouldAnimateGlyphEffects = !reduceMotion &&
-      (widget.isActive || (canAnimateHover && _isHovered));
-    final shouldAnimateRings = shouldAnimateGlyphEffects && widget.actionRings.isNotEmpty;
+    final shouldAnimateGlyphEffects =
+        !reduceMotion && (widget.isActive || (canAnimateHover && _isHovered));
+    final shouldAnimateRings =
+        shouldAnimateGlyphEffects && widget.actionRings.isNotEmpty;
     _syncRingAnimation(shouldAnimateGlyphEffects);
 
     Widget glyph = RepaintBoundary(
@@ -268,7 +279,8 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
         : glyph;
 
     glyph = MouseRegion(
-      cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      cursor:
+          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
       onEnter: (_) => _handleHover(true, canAnimateHover),
       onExit: (_) => _handleHover(false, canAnimateHover),
       child: interactiveGlyph,
@@ -313,7 +325,9 @@ class _DndHolographicWireframePainter extends CustomPainter {
     required this.entryBurstProgress,
     required this.animateRingRotation,
     required this.animateMotifPulse,
-  }) : super(repaint: Listenable.merge([ringRotationProgress, entryBurstProgress]));
+  }) : super(
+            repaint:
+                Listenable.merge([ringRotationProgress, entryBurstProgress]));
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -321,8 +335,8 @@ class _DndHolographicWireframePainter extends CustomPainter {
     final center = Offset(size.width / 2.0, size.height / 2.0);
     final primary = themeData.primary;
     final energyWave = animateMotifPulse
-      ? (0.5 + 0.5 * sin(ringRotationProgress.value * 2.0 * pi * 3.0))
-      : 0.0;
+        ? (0.5 + 0.5 * sin(ringRotationProgress.value * 2.0 * pi * 3.0))
+        : 0.0;
     final int effectiveTier = school != null
         ? (tierLevel <= 2 ? 1 : (tierLevel <= 5 ? 2 : (tierLevel <= 8 ? 3 : 4)))
         : tierLevel.clamp(1, 4);
@@ -336,28 +350,31 @@ class _DndHolographicWireframePainter extends CustomPainter {
     // -------------------------------------------------------------------------
     // 1. HOLOGRAM NEON PROJECTION GLOW (Multi-Layered Bloom Halo)
     // -------------------------------------------------------------------------
-    final containerPath = GlyphGeometry.getContainerPath(themeData.frameShape, size);
-    
+    final containerPath =
+        GlyphGeometry.getContainerPath(themeData.frameShape, size);
+
     // Outer ambient neon aura
-    final auraAlpha = isActive
-        ? (isDarkMode ? 0.48 : 0.32)
-        : (isDarkMode ? 0.35 : 0.22);
-    final auraBlur = ((effectiveTier == 4 ? 6.0 : 3.5) * scale * (isActive ? 1.18 : 1.0)) * (1.0 + tierIntensity * 0.9);
+    final auraAlpha =
+        isActive ? (isDarkMode ? 0.48 : 0.32) : (isDarkMode ? 0.35 : 0.22);
+    final auraBlur =
+        ((effectiveTier == 4 ? 6.0 : 3.5) * scale * (isActive ? 1.18 : 1.0)) *
+            (1.0 + tierIntensity * 0.9);
     final auraBloom = Paint()
-      ..color = primary.withValues(alpha: (auraAlpha + tierIntensity * 0.18).clamp(0.0, 1.0))
+      ..color = primary.withValues(
+          alpha: (auraAlpha + tierIntensity * 0.18).clamp(0.0, 1.0))
       ..style = PaintingStyle.fill
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, auraBlur);
     canvas.drawPath(containerPath, auraBloom);
 
     // Inner sharp neon glow line
-    final rimAlpha = isActive
-        ? (isDarkMode ? 0.90 : 0.60)
-        : (isDarkMode ? 0.75 : 0.45);
+    final rimAlpha =
+        isActive ? (isDarkMode ? 0.90 : 0.60) : (isDarkMode ? 0.75 : 0.45);
     final rimGlow = Paint()
       ..color = primary.withValues(alpha: rimAlpha)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.4 * scale * (isActive ? 1.12 : 1.0)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2.0 * scale * (isActive ? 1.12 : 1.0));
+      ..maskFilter = MaskFilter.blur(
+          BlurStyle.normal, 2.0 * scale * (isActive ? 1.12 : 1.0));
     canvas.drawPath(containerPath, rimGlow);
 
     // -------------------------------------------------------------------------
@@ -378,7 +395,8 @@ class _DndHolographicWireframePainter extends CustomPainter {
 
     // 3a. Fine coordinate grid lines
     final gridPaint = Paint()
-      ..color = (isDarkMode ? primary : const Color(0xFF0F172A)).withValues(alpha: 0.14)
+      ..color = (isDarkMode ? primary : const Color(0xFF0F172A))
+          .withValues(alpha: 0.14)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5 * scale;
     const gridSpacing = 4.0;
@@ -401,8 +419,10 @@ class _DndHolographicWireframePainter extends CustomPainter {
     // 12 Gimbal telemetry degree ticks around outer ring
     for (int i = 0; i < 12; i++) {
       final a = (i * 30.0) * pi / 180.0;
-      final p1 = Offset(center.dx + 8.5 * scale * cos(a), center.dy + 8.5 * scale * sin(a));
-      final p2 = Offset(center.dx + 9.5 * scale * cos(a), center.dy + 9.5 * scale * sin(a));
+      final p1 = Offset(
+          center.dx + 8.5 * scale * cos(a), center.dy + 8.5 * scale * sin(a));
+      final p2 = Offset(
+          center.dx + 9.5 * scale * cos(a), center.dy + 9.5 * scale * sin(a));
       canvas.drawLine(p1, p2, reticlePaint);
     }
 
@@ -415,17 +435,25 @@ class _DndHolographicWireframePainter extends CustomPainter {
     final bOffset = 7.8 * scale;
     final bLen = 2.0 * scale;
     // Top-Left [
-    canvas.drawLine(center - Offset(bOffset, bOffset), center - Offset(bOffset - bLen, bOffset), bracketPaint);
-    canvas.drawLine(center - Offset(bOffset, bOffset), center - Offset(bOffset, bOffset - bLen), bracketPaint);
+    canvas.drawLine(center - Offset(bOffset, bOffset),
+        center - Offset(bOffset - bLen, bOffset), bracketPaint);
+    canvas.drawLine(center - Offset(bOffset, bOffset),
+        center - Offset(bOffset, bOffset - bLen), bracketPaint);
     // Top-Right ]
-    canvas.drawLine(center + Offset(bOffset, -bOffset), center + Offset(bOffset - bLen, -bOffset), bracketPaint);
-    canvas.drawLine(center + Offset(bOffset, -bOffset), center + Offset(bOffset, -bOffset + bLen), bracketPaint);
+    canvas.drawLine(center + Offset(bOffset, -bOffset),
+        center + Offset(bOffset - bLen, -bOffset), bracketPaint);
+    canvas.drawLine(center + Offset(bOffset, -bOffset),
+        center + Offset(bOffset, -bOffset + bLen), bracketPaint);
     // Bottom-Left [
-    canvas.drawLine(center + Offset(-bOffset, bOffset), center + Offset(-bOffset + bLen, bOffset), bracketPaint);
-    canvas.drawLine(center + Offset(-bOffset, bOffset), center + Offset(-bOffset, bOffset - bLen), bracketPaint);
+    canvas.drawLine(center + Offset(-bOffset, bOffset),
+        center + Offset(-bOffset + bLen, bOffset), bracketPaint);
+    canvas.drawLine(center + Offset(-bOffset, bOffset),
+        center + Offset(-bOffset, bOffset - bLen), bracketPaint);
     // Bottom-Right ]
-    canvas.drawLine(center + Offset(bOffset, bOffset), center + Offset(bOffset - bLen, bOffset), bracketPaint);
-    canvas.drawLine(center + Offset(bOffset, bOffset), center + Offset(bOffset, bOffset - bLen), bracketPaint);
+    canvas.drawLine(center + Offset(bOffset, bOffset),
+        center + Offset(bOffset - bLen, bOffset), bracketPaint);
+    canvas.drawLine(center + Offset(bOffset, bOffset),
+        center + Offset(bOffset, bOffset - bLen), bracketPaint);
 
     // 3d. Holographic Horizontal Raster Scanlines
     final scanlinePaint = Paint()
@@ -483,29 +511,40 @@ class _DndHolographicWireframePainter extends CustomPainter {
     // -------------------------------------------------------------------------
     if (animateMotifPulse) {
       final t = ringRotationProgress.value;
-      final burstT = Curves.easeOutCubic.transform(entryBurstProgress.value.clamp(0.0, 1.0));
+      final burstT = Curves.easeOutCubic
+          .transform(entryBurstProgress.value.clamp(0.0, 1.0));
       final burstIntensity = (1.0 - burstT).clamp(0.0, 1.0);
-      final scanWave = 0.5 + 0.5 * sin(t * 2.0 * pi * (2.2 + tierIntensity * 1.4));
+      final scanWave =
+          0.5 + 0.5 * sin(t * 2.0 * pi * (2.2 + tierIntensity * 1.4));
 
       // Aggressive lock-in burst on hover enter/activate.
       final burstRing = Paint()
-        ..color = primary.withValues(alpha: isDarkMode ? (burstIntensity * 0.68 + tierIntensity * 0.22) : (burstIntensity * 0.52 + tierIntensity * 0.20))
+        ..color = primary.withValues(
+            alpha: isDarkMode
+                ? (burstIntensity * 0.68 + tierIntensity * 0.22)
+                : (burstIntensity * 0.52 + tierIntensity * 0.20))
         ..style = PaintingStyle.stroke
-        ..strokeWidth = scale * (0.9 + burstIntensity * 0.9 + tierIntensity * 0.8)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, scale * (0.8 + burstIntensity * 1.2 + tierIntensity * 1.0));
-      final burstRadius = scale * (2.2 + burstIntensity * 6.2 + tierIntensity * 3.4);
+        ..strokeWidth =
+            scale * (0.9 + burstIntensity * 0.9 + tierIntensity * 0.8)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal,
+            scale * (0.8 + burstIntensity * 1.2 + tierIntensity * 1.0));
+      final burstRadius =
+          scale * (2.2 + burstIntensity * 6.2 + tierIntensity * 3.4);
       canvas.drawCircle(center, burstRadius, burstRing);
 
       final coreFlash = Paint()
         ..color = Colors.white.withValues(alpha: burstIntensity * 0.28)
         ..style = PaintingStyle.fill
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, scale * (0.9 + burstIntensity * 1.0));
-      canvas.drawCircle(center, scale * (1.6 + burstIntensity * 1.6), coreFlash);
+        ..maskFilter = MaskFilter.blur(
+            BlurStyle.normal, scale * (0.9 + burstIntensity * 1.0));
+      canvas.drawCircle(
+          center, scale * (1.6 + burstIntensity * 1.6), coreFlash);
 
       // Tactical scanner bar in steady hover state.
       final scanAngle = t * 2.0 * pi * 1.05;
       final scanLength = scale * 20.0;
-      final scanThickness = scale * (1.2 + scanWave * 0.45 + burstIntensity * 0.55);
+      final scanThickness =
+          scale * (1.2 + scanWave * 0.45 + burstIntensity * 0.55);
       final scanRect = Rect.fromCenter(
         center: center,
         width: scanLength,
@@ -550,15 +589,11 @@ class _DndHolographicWireframePainter extends CustomPainter {
 
     final motifLoop = ringRotationProgress.value;
     final motifPhase = motifLoop * 2.0 * pi;
-    final motifDrift = animateMotifPulse
-      ? sin(motifPhase) * 0.11
-      : 0.0;
-    final motifPrecessionX = animateMotifPulse
-      ? cos(motifPhase) * scale * 0.42
-      : 0.0;
-    final motifPrecessionY = animateMotifPulse
-      ? sin(motifPhase * 2.0) * scale * 0.20
-      : 0.0;
+    final motifDrift = animateMotifPulse ? sin(motifPhase) * 0.11 : 0.0;
+    final motifPrecessionX =
+        animateMotifPulse ? cos(motifPhase) * scale * 0.42 : 0.0;
+    final motifPrecessionY =
+        animateMotifPulse ? sin(motifPhase * 2.0) * scale * 0.20 : 0.0;
     final motifColor = isDarkMode ? const Color(0xFFF8FAFC) : primary;
     canvas.save();
     canvas.translate(center.dx, center.dy);

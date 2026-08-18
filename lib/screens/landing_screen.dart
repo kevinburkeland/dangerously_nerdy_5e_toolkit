@@ -119,7 +119,8 @@ class _LandingScreenState extends State<LandingScreen> {
                 value: 'economy',
                 child: Row(
                   children: [
-                    Icon(Icons.flash_on_outlined, color: theme.colorScheme.primary, size: 20),
+                    Icon(Icons.flash_on_outlined,
+                        color: theme.colorScheme.primary, size: 20),
                     const SizedBox(width: 10),
                     const Text('Action Economy Guide'),
                   ],
@@ -129,7 +130,8 @@ class _LandingScreenState extends State<LandingScreen> {
                 value: 'conditions',
                 child: Row(
                   children: [
-                    Icon(Icons.medical_information_outlined, color: theme.colorScheme.secondary, size: 20),
+                    Icon(Icons.medical_information_outlined,
+                        color: theme.colorScheme.secondary, size: 20),
                     const SizedBox(width: 10),
                     const Text('Status Effects & Conditions'),
                   ],
@@ -139,7 +141,8 @@ class _LandingScreenState extends State<LandingScreen> {
                 value: 'install',
                 child: Row(
                   children: [
-                    Icon(Icons.download_for_offline, color: theme.colorScheme.primary, size: 20),
+                    Icon(Icons.download_for_offline,
+                        color: theme.colorScheme.primary, size: 20),
                     const SizedBox(width: 10),
                     const Text('Install PWA App'),
                   ],
@@ -166,7 +169,9 @@ class _LandingScreenState extends State<LandingScreen> {
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.3)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.2),
@@ -205,7 +210,8 @@ class _LandingScreenState extends State<LandingScreen> {
                         Text(
                           'Choose from the DangerouslyNerdy suite of dedicated 5th Edition (5e) compatible player tools designed for minion combat management, magic item rollers, dice math, and live party rooms.',
                           style: TextStyle(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.75),
                             fontSize: 14,
                             height: 1.4,
                           ),
@@ -222,12 +228,17 @@ class _LandingScreenState extends State<LandingScreen> {
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isSearching ? theme.colorScheme.primary : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                        color: isSearching
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant
+                                .withValues(alpha: 0.4),
                         width: 1.2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: isSearching ? theme.colorScheme.primary.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+                          color: isSearching
+                              ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -236,21 +247,31 @@ class _LandingScreenState extends State<LandingScreen> {
                     child: TextField(
                       controller: _searchController,
                       onChanged: _onSearchChanged,
-                      style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15),
+                      style: TextStyle(
+                          color: theme.colorScheme.onSurface, fontSize: 15),
                       cursorColor: theme.colorScheme.primary,
                       decoration: InputDecoration(
-                        hintText: 'Search tools, spells, summons (e.g. wolves, dice, undead, bag)...',
-                        hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 14),
-                        prefixIcon: Icon(Icons.search, color: theme.colorScheme.primary, size: 22),
+                        hintText:
+                            'Search tools, spells, summons (e.g. wolves, dice, undead, bag)...',
+                        hintStyle: TextStyle(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.4),
+                            fontSize: 14),
+                        prefixIcon: Icon(Icons.search,
+                            color: theme.colorScheme.primary, size: 22),
                         suffixIcon: isSearching
                             ? IconButton(
-                                icon: Icon(Icons.clear_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), size: 20),
+                                icon: Icon(Icons.clear_rounded,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                    size: 20),
                                 tooltip: 'Clear Search',
                                 onPressed: _clearSearch,
                               )
                             : null,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                       ),
                     ),
                   ),
@@ -267,7 +288,10 @@ class _LandingScreenState extends State<LandingScreen> {
                     if (searchResults.isNotEmpty)
                       _buildToolGrid(
                         context,
-                        children: searchResults.map((tool) => _buildToolCardFromItem(context, tool)).toList(),
+                        children: searchResults
+                            .map(
+                                (tool) => _buildToolCardFromItem(context, tool))
+                            .toList(),
                       )
                     else
                       Container(
@@ -276,21 +300,32 @@ class _LandingScreenState extends State<LandingScreen> {
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          border: Border.all(
+                              color: theme.colorScheme.outlineVariant
+                                  .withValues(alpha: 0.4)),
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.search_off, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
+                            Icon(Icons.search_off,
+                                size: 48,
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.4)),
                             const SizedBox(height: 12),
                             Text(
                               'No tools found matching "$query"',
-                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 6),
                             Text(
                               'Try searching for spells, monsters, or dice keywords.',
-                              style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 13),
+                              style: TextStyle(
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
+                                  fontSize: 13),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 16),
@@ -298,18 +333,22 @@ class _LandingScreenState extends State<LandingScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: theme.colorScheme.primary,
                                 foregroundColor: theme.colorScheme.onPrimary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
                               ),
                               onPressed: _clearSearch,
                               icon: const Icon(Icons.clear, size: 18),
-                              label: const Text('Clear Search', style: TextStyle(fontWeight: FontWeight.bold)),
+                              label: const Text('Clear Search',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                       ),
                   ] else ...[
                     // CATEGORY 1: GENERAL UTILITIES (CORE APP AT TOP)
-                    _buildSectionHeader('🎲 CORE UTILITIES', theme.colorScheme.primary),
+                    _buildSectionHeader(
+                        '🎲 CORE UTILITIES', theme.colorScheme.primary),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -322,7 +361,8 @@ class _LandingScreenState extends State<LandingScreen> {
                     const SizedBox(height: 28),
 
                     // CATEGORY 2: SPELL MINION COMPANIONS (ANIMATE OBJECTS & CONJURE SPELLS)
-                    _buildSectionHeader('🔮 SPELL MINION COMPANIONS', theme.colorScheme.secondary),
+                    _buildSectionHeader('🔮 SPELL MINION COMPANIONS',
+                        theme.colorScheme.secondary),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -335,12 +375,14 @@ class _LandingScreenState extends State<LandingScreen> {
                     const SizedBox(height: 28),
 
                     // CATEGORY 3: MAGIC ITEMS & SUMMONING ARTIFACTS
-                    _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS', isDark ? Colors.amberAccent : const Color(0xFFB45309)),
+                    _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS',
+                        isDark ? Colors.amberAccent : const Color(0xFFB45309)),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
                       children: _tools
-                          .where((t) => t.category == 'Magic Item Rollers & Minions')
+                          .where((t) =>
+                              t.category == 'Magic Item Rollers & Minions')
                           .map((tool) => _buildToolCardFromItem(context, tool))
                           .toList(),
                     ),
@@ -348,7 +390,11 @@ class _LandingScreenState extends State<LandingScreen> {
                     const SizedBox(height: 28),
 
                     // CATEGORY 4: ART & DESIGN TOOLS (SUBSECTION AT BOTTOM)
-                    _buildSectionHeader('🎨 ART & DESIGN TOOLS', isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE)),
+                    _buildSectionHeader(
+                        '🎨 ART & DESIGN TOOLS',
+                        isDark
+                            ? const Color(0xFFC084FC)
+                            : const Color(0xFF7E22CE)),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -368,7 +414,8 @@ class _LandingScreenState extends State<LandingScreen> {
                         Text(
                           'DangerouslyNerdy 5e Toolkit • D&D 5e / SRD 5.1 Compatible Combat System',
                           style: TextStyle(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
                             fontSize: 12,
                           ),
                           textAlign: TextAlign.center,
@@ -378,33 +425,39 @@ class _LandingScreenState extends State<LandingScreen> {
                           spacing: 12,
                           children: [
                             TextButton(
-                              onPressed: () => LegalDialogs.showPrivacyPolicy(context),
+                              onPressed: () =>
+                                  LegalDialogs.showPrivacyPolicy(context),
                               child: Text(
                                 'Privacy Policy',
                                 style: TextStyle(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  color: theme.colorScheme.primary
+                                      .withValues(alpha: 0.8),
                                   fontSize: 12,
                                   decoration: TextDecoration.underline,
                                 ),
                               ),
                             ),
                             TextButton(
-                              onPressed: () => LegalDialogs.showTermsOfService(context),
+                              onPressed: () =>
+                                  LegalDialogs.showTermsOfService(context),
                               child: Text(
                                 'Terms of Service',
                                 style: TextStyle(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  color: theme.colorScheme.primary
+                                      .withValues(alpha: 0.8),
                                   fontSize: 12,
                                   decoration: TextDecoration.underline,
                                 ),
                               ),
                             ),
                             TextButton(
-                              onPressed: () => LegalDialogs.showAttribution(context),
+                              onPressed: () =>
+                                  LegalDialogs.showAttribution(context),
                               child: Text(
                                 'Legal & SRD 5.1 Attribution',
                                 style: TextStyle(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                                  color: theme.colorScheme.primary
+                                      .withValues(alpha: 0.8),
                                   fontSize: 12,
                                   decoration: TextDecoration.underline,
                                 ),
@@ -442,17 +495,22 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
-  Widget _buildToolGrid(BuildContext context, {required List<Widget> children}) {
+  Widget _buildToolGrid(BuildContext context,
+      {required List<Widget> children}) {
     final width = MediaQuery.of(context).size.width;
     final int crossAxisCount = width > 900 ? 3 : (width > 600 ? 2 : 1);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 16)) / crossAxisCount;
+        final double itemWidth =
+            (constraints.maxWidth - ((crossAxisCount - 1) * 16)) /
+                crossAxisCount;
         return Wrap(
           spacing: 16,
           runSpacing: 16,
-          children: children.map((c) => SizedBox(width: itemWidth, child: c)).toList(),
+          children: children
+              .map((c) => SizedBox(width: itemWidth, child: c))
+              .toList(),
         );
       },
     );
@@ -543,7 +601,8 @@ class _LandingScreenState extends State<LandingScreen> {
       excludeChildSemantics: true,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: accentColor.withValues(alpha: 0.35), width: 1.5),
+        side:
+            BorderSide(color: accentColor.withValues(alpha: 0.35), width: 1.5),
       ),
       padding: const EdgeInsets.all(18.0),
       child: Column(
@@ -565,7 +624,8 @@ class _LandingScreenState extends State<LandingScreen> {
                   child: Icon(icon, color: accentColor, size: 26),
                 ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: badgeColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),

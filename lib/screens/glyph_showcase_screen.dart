@@ -17,7 +17,8 @@ class GlyphShowcaseScreen extends StatefulWidget {
   State<GlyphShowcaseScreen> createState() => _GlyphShowcaseScreenState();
 }
 
-class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTickerProviderStateMixin {
+class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -41,8 +42,14 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
   GlyphFrameShape? _builderShapeOverride;
   double _builderSize = 88.0;
   List<ActionTraitRing> _builderRings = [
-    const ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.fire, label: 'Primary Attack'),
-    const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Breath Weapon'),
+    const ActionTraitRing(
+        ringType: ActionRingType.melee,
+        damageType: DamageAccent.fire,
+        label: 'Primary Attack'),
+    const ActionTraitRing(
+        ringType: ActionRingType.recharge,
+        damageType: DamageAccent.fire,
+        label: 'Breath Weapon'),
   ];
   final GlobalKey _glyphBoundaryKey = GlobalKey();
 
@@ -61,10 +68,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    final isDark = _overrideDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
+    final isDark =
+        _overrideDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
 
     return Theme(
-      data: isDark ? ThemeData.dark(useMaterial3: true) : ThemeData.light(useMaterial3: true),
+      data: isDark
+          ? ThemeData.dark(useMaterial3: true)
+          : ThemeData.light(useMaterial3: true),
       child: Scaffold(
         appBar: AppBar(
           title: const Row(
@@ -76,7 +86,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           ),
           actions: [
             IconButton(
-              tooltip: isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme',
+              tooltip:
+                  isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme',
               icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
               onPressed: () {
                 setState(() {
@@ -93,7 +104,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               Tab(icon: Icon(Icons.memory), text: 'Spellbook Schematics'),
               Tab(icon: Icon(Icons.hub), text: 'Minion & Summon Matrix'),
               Tab(icon: Icon(Icons.build_circle), text: 'Custom Glyph Studio'),
-              Tab(icon: Icon(Icons.architecture), text: 'Full Style Guide Codex'),
+              Tab(
+                  icon: Icon(Icons.architecture),
+                  text: 'Full Style Guide Codex'),
             ],
           ),
         ),
@@ -132,7 +145,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search toolkit spells, minions, attack traits, damage types...',
+                    hintText:
+                        'Search toolkit spells, minions, attack traits, damage types...',
                     prefixIcon: const Icon(Icons.search, size: 20),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
@@ -143,16 +157,19 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             },
                           )
                         : null,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     isDense: true,
                     filled: true,
                     fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.black12),
+                      borderSide: BorderSide(
+                          color: isDark ? Colors.white24 : Colors.black12),
                     ),
                   ),
-                  onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+                  onChanged: (val) =>
+                      setState(() => _searchQuery = val.trim().toLowerCase()),
                 ),
               ),
               const SizedBox(width: 10),
@@ -162,7 +179,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   ButtonSegment(value: 68.0, label: Text('HUD View')),
                 ],
                 selected: {_glyphDisplaySize},
-                onSelectionChanged: (set) => setState(() => _glyphDisplaySize = set.first),
+                onSelectionChanged: (set) =>
+                    setState(() => _glyphDisplaySize = set.first),
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
               ),
             ],
@@ -180,17 +198,24 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       FilterChip(
                         label: const Text('All Schools'),
                         selected: _selectedSchool == null,
-                        onSelected: (_) => setState(() => _selectedSchool = null),
+                        onSelected: (_) =>
+                            setState(() => _selectedSchool = null),
                       ),
                       const SizedBox(width: 6),
                       ...SpellSchool.values.map(
                         (s) => Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: FilterChip(
-                            avatar: Container(width: 10, height: 10, decoration: BoxDecoration(color: s.getLegibleColor(isDark), shape: BoxShape.circle)),
+                            avatar: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                    color: s.getLegibleColor(isDark),
+                                    shape: BoxShape.circle)),
                             label: Text(s.displayName),
                             selected: _selectedSchool == s,
-                            onSelected: (sel) => setState(() => _selectedSchool = sel ? s : null),
+                            onSelected: (sel) => setState(
+                                () => _selectedSchool = sel ? s : null),
                           ),
                         ),
                       ),
@@ -205,17 +230,24 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       FilterChip(
                         label: const Text('All Summon Types'),
                         selected: _selectedCreatureType == null,
-                        onSelected: (_) => setState(() => _selectedCreatureType = null),
+                        onSelected: (_) =>
+                            setState(() => _selectedCreatureType = null),
                       ),
                       const SizedBox(width: 6),
                       ...CreatureType.values.map(
                         (t) => Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: FilterChip(
-                            avatar: Container(width: 10, height: 10, decoration: BoxDecoration(color: t.getLegibleColor(isDark), shape: BoxShape.circle)),
+                            avatar: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                    color: t.getLegibleColor(isDark),
+                                    shape: BoxShape.circle)),
                             label: Text(t.displayName),
                             selected: _selectedCreatureType == t,
-                            onSelected: (sel) => setState(() => _selectedCreatureType = sel ? t : null),
+                            onSelected: (sel) => setState(
+                                () => _selectedCreatureType = sel ? t : null),
                           ),
                         ),
                       ),
@@ -240,12 +272,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       if (_selectedSchool != null && s.school != _selectedSchool) return false;
       if (_searchQuery.isNotEmpty) {
         final match = s.name.toLowerCase().contains(_searchQuery) ||
-                    s.school.displayName.toLowerCase().contains(_searchQuery) || 
-                    s.summary.toLowerCase().contains(_searchQuery) || 
-                    s.actionRings.any((r) => 
-                        r.ringType.displayName.toLowerCase().contains(_searchQuery) || 
-                        r.damageLegend.toLowerCase().contains(_searchQuery) || 
-                        (r.label?.toLowerCase().contains(_searchQuery) ?? false));
+            s.school.displayName.toLowerCase().contains(_searchQuery) ||
+            s.summary.toLowerCase().contains(_searchQuery) ||
+            s.actionRings.any((r) =>
+                r.ringType.displayName.toLowerCase().contains(_searchQuery) ||
+                r.damageLegend.toLowerCase().contains(_searchQuery) ||
+                (r.label?.toLowerCase().contains(_searchQuery) ?? false));
         if (!match) return false;
       }
       return true;
@@ -258,9 +290,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off, size: 48, color: isDark ? Colors.white38 : Colors.black38),
+              Icon(Icons.search_off,
+                  size: 48, color: isDark ? Colors.white38 : Colors.black38),
               const SizedBox(height: 12),
-              const Text('No spells matching current filters.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text('No spells matching current filters.',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -291,7 +325,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       color: isDark ? const Color(0xFF090D16) : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: schoolColor.withValues(alpha: 0.55), width: 1.5),
+        side:
+            BorderSide(color: schoolColor.withValues(alpha: 0.55), width: 1.5),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -324,16 +359,19 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             Flexible(
                               child: Text(
                                 spell.name,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 3),
                               decoration: BoxDecoration(
                                 color: schoolColor.withValues(alpha: 0.22),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: schoolColor.withValues(alpha: 0.6)),
+                                border: Border.all(
+                                    color: schoolColor.withValues(alpha: 0.6)),
                               ),
                               child: Text(
                                 '[LV-${spell.level.toString().padLeft(2, '0')}]',
@@ -361,7 +399,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             ),
                             Text(
                               '// ${spell.school.frameShape.name.toUpperCase()}',
-                              style: TextStyle(fontSize: 10, fontFamily: 'monospace', color: isDark ? Colors.white70 : Colors.black54),
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontFamily: 'monospace',
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54),
                             ),
                           ],
                         ),
@@ -371,7 +413,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       spell.summary,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white70 : Colors.black87),
                     ),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -380,11 +424,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                           final ringColor = r.getEffectiveColor(schoolColor);
                           return Container(
                             margin: const EdgeInsets.only(right: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: ringColor.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: ringColor.withValues(alpha: 0.5)),
+                              border: Border.all(
+                                  color: ringColor.withValues(alpha: 0.5)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -392,14 +438,19 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                                 Container(
                                   width: 6,
                                   height: 6,
-                                  decoration: BoxDecoration(color: ringColor, shape: BoxShape.circle),
+                                  decoration: BoxDecoration(
+                                      color: ringColor, shape: BoxShape.circle),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   r.damageLegend.isNotEmpty
                                       ? '${r.ringType.displayName} (${r.damageLegend})'
                                       : r.ringType.displayName,
-                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: ringColor, fontFamily: 'monospace'),
+                                  style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: ringColor,
+                                      fontFamily: 'monospace'),
                                 ),
                               ],
                             ),
@@ -423,15 +474,16 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
   Widget _buildCreaturesGallery(bool isDark) {
     var creatures = GlyphGalleryData.allCreatures.where((c) {
-      if (_selectedCreatureType != null && c.type != _selectedCreatureType) return false;
+      if (_selectedCreatureType != null && c.type != _selectedCreatureType)
+        return false;
       if (_searchQuery.isNotEmpty) {
         final match = c.name.toLowerCase().contains(_searchQuery) ||
-                    c.type.displayName.toLowerCase().contains(_searchQuery) || 
-                    c.primaryAttack.toLowerCase().contains(_searchQuery) || 
-                    c.actionRings.any((r) => 
-                        r.ringType.displayName.toLowerCase().contains(_searchQuery) || 
-                        r.damageLegend.toLowerCase().contains(_searchQuery) || 
-                        (r.label?.toLowerCase().contains(_searchQuery) ?? false));
+            c.type.displayName.toLowerCase().contains(_searchQuery) ||
+            c.primaryAttack.toLowerCase().contains(_searchQuery) ||
+            c.actionRings.any((r) =>
+                r.ringType.displayName.toLowerCase().contains(_searchQuery) ||
+                r.damageLegend.toLowerCase().contains(_searchQuery) ||
+                (r.label?.toLowerCase().contains(_searchQuery) ?? false));
         if (!match) return false;
       }
       return true;
@@ -444,9 +496,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off, size: 48, color: isDark ? Colors.white38 : Colors.black38),
+              Icon(Icons.search_off,
+                  size: 48, color: isDark ? Colors.white38 : Colors.black38),
               const SizedBox(height: 12),
-              const Text('No minion summons matching current filters.', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text('No minion summons matching current filters.',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -510,16 +564,19 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             Flexible(
                               child: Text(
                                 creature.name,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 3),
                               decoration: BoxDecoration(
                                 color: typeColor.withValues(alpha: 0.22),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: typeColor.withValues(alpha: 0.6)),
+                                border: Border.all(
+                                    color: typeColor.withValues(alpha: 0.6)),
                               ),
                               child: Text(
                                 '[CR ${creature.cr}]',
@@ -547,7 +604,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             ),
                             Text(
                               '// ${creature.type.frameShape.name.toUpperCase()}',
-                              style: TextStyle(fontSize: 10, fontFamily: 'monospace', color: isDark ? Colors.white70 : Colors.black54),
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontFamily: 'monospace',
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54),
                             ),
                           ],
                         ),
@@ -557,7 +618,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       creature.primaryAttack,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black87),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white70 : Colors.black87),
                     ),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -566,11 +629,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                           final ringColor = r.getEffectiveColor(typeColor);
                           return Container(
                             margin: const EdgeInsets.only(right: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: ringColor.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: ringColor.withValues(alpha: 0.5)),
+                              border: Border.all(
+                                  color: ringColor.withValues(alpha: 0.5)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -578,14 +643,19 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                                 Container(
                                   width: 6,
                                   height: 6,
-                                  decoration: BoxDecoration(color: ringColor, shape: BoxShape.circle),
+                                  decoration: BoxDecoration(
+                                      color: ringColor, shape: BoxShape.circle),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   r.damageLegend.isNotEmpty
                                       ? '${r.ringType.displayName} (${r.damageLegend})'
                                       : r.ringType.displayName,
-                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: ringColor, fontFamily: 'monospace'),
+                                  style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: ringColor,
+                                      fontFamily: 'monospace'),
                                 ),
                               ],
                             ),
@@ -609,7 +679,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
   Widget _buildCustomBuilder(bool isDark) {
     final effectiveShape = _builderShapeOverride ??
-        (_builderIsSpell ? _builderSchool.frameShape : _builderCreature.frameShape);
+        (_builderIsSpell
+            ? _builderSchool.frameShape
+            : _builderCreature.frameShape);
 
     final baseTheme = _builderIsSpell
         ? GlyphThemeData.fromSchool(_builderSchool)
@@ -639,7 +711,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 4),
           Text(
             'Compose custom holographic wireframe techno-runes with live container overrides, tier progression, and damage-colored action rings.',
-            style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
+            style: TextStyle(
+                fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
           ),
           const SizedBox(height: 20),
 
@@ -648,9 +721,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF030712) : const Color(0xFFF8FAFC),
+                color:
+                    isDark ? const Color(0xFF030712) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: themeData.getPrimary(isDark).withValues(alpha: 0.6), width: 2),
+                border: Border.all(
+                    color: themeData.getPrimary(isDark).withValues(alpha: 0.6),
+                    width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: themeData.getPrimary(isDark).withValues(alpha: 0.2),
@@ -698,7 +774,10 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   ),
                   Text(
                     'Container: ${effectiveShape.displayName}',
-                    style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: isDark ? Colors.white70 : Colors.black54),
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        color: isDark ? Colors.white70 : Colors.black54),
                   ),
                 ],
               ),
@@ -725,11 +804,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               children: [
                 Row(
                   children: [
-                    Icon(Icons.auto_awesome_mosaic, size: 18, color: themeData.getPrimary(isDark)),
+                    Icon(Icons.auto_awesome_mosaic,
+                        size: 18, color: themeData.getPrimary(isDark)),
                     const SizedBox(width: 8),
                     const Text(
                       'Auto-Populate / Read from Toolkit Presets:',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ],
                 ),
@@ -741,20 +822,25 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                     // Spell Preset Loader
                     DropdownButtonHideUnderline(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          color:
+                              isDark ? const Color(0xFF1E293B) : Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                          border: Border.all(
+                              color: isDark ? Colors.white24 : Colors.black12),
                         ),
                         child: DropdownButton<SummonPreset>(
-                          hint: const Text('🔮 Read Spell Card...', style: TextStyle(fontSize: 13)),
+                          hint: const Text('🔮 Read Spell Card...',
+                              style: TextStyle(fontSize: 13)),
                           icon: const Icon(Icons.arrow_drop_down, size: 18),
                           isDense: true,
                           items: SrdSummonsLibrary.allPresets.map((sp) {
                             return DropdownMenuItem<SummonPreset>(
                               value: sp,
-                              child: Text('${sp.name} (${sp.levelDisplay})', style: const TextStyle(fontSize: 13)),
+                              child: Text('${sp.name} (${sp.levelDisplay})',
+                                  style: const TextStyle(fontSize: 13)),
                             );
                           }).toList(),
                           onChanged: (sp) {
@@ -774,18 +860,23 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                     // Creature Stat Block Loader
                     DropdownButtonHideUnderline(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          color:
+                              isDark ? const Color(0xFF1E293B) : Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                          border: Border.all(
+                              color: isDark ? Colors.white24 : Colors.black12),
                         ),
                         child: DropdownButton<MinionStatBlock>(
-                          hint: const Text('🐉 Read Minion Stat Block...', style: TextStyle(fontSize: 13)),
+                          hint: const Text('🐉 Read Minion Stat Block...',
+                              style: TextStyle(fontSize: 13)),
                           icon: const Icon(Icons.arrow_drop_down, size: 18),
                           isDense: true,
                           items: () {
-                            final uniqueStatBlocks = <String, MinionStatBlock>{};
+                            final uniqueStatBlocks =
+                                <String, MinionStatBlock>{};
                             for (final p in SrdSummonsLibrary.allPresets) {
                               for (final sb in p.statBlocks) {
                                 uniqueStatBlocks[sb.id] = sb;
@@ -794,7 +885,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             return uniqueStatBlocks.values.map((sb) {
                               return DropdownMenuItem<MinionStatBlock>(
                                 value: sb,
-                                child: Text('${sb.name} (${sb.typeDisplay} CR ${sb.crDisplay})', style: const TextStyle(fontSize: 13)),
+                                child: Text(
+                                    '${sb.name} (${sb.typeDisplay} CR ${sb.crDisplay})',
+                                    style: const TextStyle(fontSize: 13)),
                               );
                             }).toList();
                           }(),
@@ -825,11 +918,18 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               Expanded(
                 child: SegmentedButton<bool>(
                   segments: const [
-                    ButtonSegment(value: true, icon: Icon(Icons.auto_awesome), label: Text('Spell School')),
-                    ButtonSegment(value: false, icon: Icon(Icons.pets), label: Text('Creature Type')),
+                    ButtonSegment(
+                        value: true,
+                        icon: Icon(Icons.auto_awesome),
+                        label: Text('Spell School')),
+                    ButtonSegment(
+                        value: false,
+                        icon: Icon(Icons.pets),
+                        label: Text('Creature Type')),
                   ],
                   selected: {_builderIsSpell},
-                  onSelectionChanged: (set) => setState(() => _builderIsSpell = set.first),
+                  onSelectionChanged: (set) =>
+                      setState(() => _builderIsSpell = set.first),
                 ),
               ),
             ],
@@ -838,7 +938,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
           // School / Creature Picker
           if (_builderIsSpell) ...[
-            const Text('Select Arcane Spell School:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const Text('Select Arcane Spell School:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -854,7 +955,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               }).toList(),
             ),
           ] else ...[
-            const Text('Select Creature Classification:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const Text('Select Creature Classification:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -877,8 +979,20 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(_builderIsSpell ? 'Spell Level: $_builderLevelOrTier' : 'Threat Tier: Tier $_builderLevelOrTier', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              Text(_builderIsSpell ? (_builderLevelOrTier == 0 ? 'Cantrip' : 'Tier ${(_builderLevelOrTier / 3).ceil()}') : 'CR ${(1 << (_builderLevelOrTier - 1)) * 4}', style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+              Text(
+                  _builderIsSpell
+                      ? 'Spell Level: $_builderLevelOrTier'
+                      : 'Threat Tier: Tier $_builderLevelOrTier',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(
+                  _builderIsSpell
+                      ? (_builderLevelOrTier == 0
+                          ? 'Cantrip'
+                          : 'Tier ${(_builderLevelOrTier / 3).ceil()}')
+                      : 'CR ${(1 << (_builderLevelOrTier - 1)) * 4}',
+                  style:
+                      const TextStyle(fontSize: 12, fontFamily: 'monospace')),
             ],
           ),
           Slider(
@@ -887,7 +1001,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
             max: _builderIsSpell ? 9 : 4,
             divisions: _builderIsSpell ? 9 : 4,
             label: '$_builderLevelOrTier',
-            onChanged: (val) => setState(() => _builderLevelOrTier = val.toInt()),
+            onChanged: (val) =>
+                setState(() => _builderLevelOrTier = val.toInt()),
           ),
 
           const SizedBox(height: 12),
@@ -896,8 +1011,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Glyph Preview Size: ${_builderSize.toInt()}dp', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              Text('${_builderSize.toInt()} x ${_builderSize.toInt()} px', style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+              Text('Glyph Preview Size: ${_builderSize.toInt()}dp',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
+              Text('${_builderSize.toInt()} x ${_builderSize.toInt()} px',
+                  style:
+                      const TextStyle(fontSize: 12, fontFamily: 'monospace')),
             ],
           ),
           Slider(
@@ -912,7 +1031,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 12),
 
           // Frame Shape Override
-          const Text('Container Shape Override (22 Geometry Silhouettes):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          const Text('Container Shape Override (22 Geometry Silhouettes):',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -921,13 +1041,15 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               ChoiceChip(
                 label: const Text('Default Shape'),
                 selected: _builderShapeOverride == null,
-                onSelected: (sel) => setState(() => _builderShapeOverride = null),
+                onSelected: (sel) =>
+                    setState(() => _builderShapeOverride = null),
               ),
               ...GlyphFrameShape.values.map((shape) {
                 return ChoiceChip(
                   label: Text(shape.displayName),
                   selected: _builderShapeOverride == shape,
-                  onSelected: (sel) => setState(() => _builderShapeOverride = sel ? shape : null),
+                  onSelected: (sel) => setState(
+                      () => _builderShapeOverride = sel ? shape : null),
                 );
               }),
             ],
@@ -939,26 +1061,30 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Dynamic Action & Attack Trait Rings:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const Text('Dynamic Action & Attack Trait Rings:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ElevatedButton.icon(
                 onPressed: _builderRings.length >= 6
                     ? null
                     : () {
                         setState(() {
-                          _builderRings.add(const ActionTraitRing(ringType: ActionRingType.melee));
+                          _builderRings.add(const ActionTraitRing(
+                              ringType: ActionRingType.melee));
                         });
                       },
                 icon: const Icon(Icons.add, size: 16),
-                label: Text(_builderRings.length >= 6 ? 'Max Rings (6)' : 'Add Ring'),
+                label: Text(
+                    _builderRings.length >= 6 ? 'Max Rings (6)' : 'Add Ring'),
               ),
             ],
           ),
           const SizedBox(height: 8),
           ...List.generate(_builderRings.length, (idx) {
             final ring = _builderRings[idx];
-            final isFixedSemanticColor = ring.ringType == ActionRingType.concentration ||
-              ring.ringType == ActionRingType.control ||
-              ring.ringType == ActionRingType.sustain;
+            final isFixedSemanticColor =
+                ring.ringType == ActionRingType.concentration ||
+                    ring.ringType == ActionRingType.control ||
+                    ring.ringType == ActionRingType.sustain;
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               color: isDark ? const Color(0xFF090D16) : const Color(0xFFF1F5F9),
@@ -970,10 +1096,14 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Ring ${idx + 1}: ${ring.ringType.displayName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text('Ring ${idx + 1}: ${ring.ringType.displayName}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 13)),
                         IconButton(
-                          icon: const Icon(Icons.delete, size: 18, color: Colors.redAccent),
-                          onPressed: () => setState(() => _builderRings.removeAt(idx)),
+                          icon: const Icon(Icons.delete,
+                              size: 18, color: Colors.redAccent),
+                          onPressed: () =>
+                              setState(() => _builderRings.removeAt(idx)),
                         ),
                       ],
                     ),
@@ -985,13 +1115,17 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       children: [
                         DropdownButton<ActionRingType>(
                           value: ring.ringType,
-                          items: ActionRingType.values.map((art) => DropdownMenuItem(value: art, child: Text(art.displayName))).toList(),
+                          items: ActionRingType.values
+                              .map((art) => DropdownMenuItem(
+                                  value: art, child: Text(art.displayName)))
+                              .toList(),
                           onChanged: (newType) {
                             if (newType != null) {
                               setState(() {
                                 _builderRings[idx] = ActionTraitRing(
                                   ringType: newType,
-                                  damageType: newType == ActionRingType.concentration ||
+                                  damageType: newType ==
+                                              ActionRingType.concentration ||
                                           newType == ActionRingType.control ||
                                           newType == ActionRingType.sustain
                                       ? null
@@ -1007,36 +1141,64 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                             value: ring.damageType,
                             hint: const Text('Physical (No Element)'),
                             items: [
-                              const DropdownMenuItem(value: null, child: Text('Physical / Neutral')),
-                              ...DamageAccent.values.map((da) => DropdownMenuItem(value: da, child: Row(children: [
-                                Container(width: 8, height: 8, decoration: BoxDecoration(color: da.color, shape: BoxShape.circle)),
-                                const SizedBox(width: 6),
-                                Text(da.displayName),
-                              ]))),
+                              const DropdownMenuItem(
+                                  value: null,
+                                  child: Text('Physical / Neutral')),
+                              ...DamageAccent.values
+                                  .map((da) => DropdownMenuItem(
+                                      value: da,
+                                      child: Row(children: [
+                                        Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                                color: da.color,
+                                                shape: BoxShape.circle)),
+                                        const SizedBox(width: 6),
+                                        Text(da.displayName),
+                                      ]))),
                             ],
                             onChanged: (newDamage) {
                               setState(() {
-                                _builderRings[idx] = ActionTraitRing(ringType: ring.ringType, damageType: newDamage, label: ring.label);
+                                _builderRings[idx] = ActionTraitRing(
+                                    ringType: ring.ringType,
+                                    damageType: newDamage,
+                                    label: ring.label);
                               });
                             },
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: ring.getEffectiveColor(themeData.getPrimary(isDark), isDarkMode: isDark).withValues(alpha: 0.15),
+                              color: ring
+                                  .getEffectiveColor(
+                                      themeData.getPrimary(isDark),
+                                      isDarkMode: isDark)
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: ring.getEffectiveColor(themeData.getPrimary(isDark), isDarkMode: isDark).withValues(alpha: 0.4)),
+                              border: Border.all(
+                                  color: ring
+                                      .getEffectiveColor(
+                                          themeData.getPrimary(isDark),
+                                          isDarkMode: isDark)
+                                      .withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               switch (ring.ringType) {
-                                ActionRingType.concentration => 'Pure Arcane Orbit (Non-Elemental)',
-                                ActionRingType.control => 'Control Channel (Condition Semantics)',
-                                ActionRingType.sustain => 'Sustain Channel (Healing/Barrier Semantics)',
+                                ActionRingType.concentration =>
+                                  'Pure Arcane Orbit (Non-Elemental)',
+                                ActionRingType.control =>
+                                  'Control Channel (Condition Semantics)',
+                                ActionRingType.sustain =>
+                                  'Sustain Channel (Healing/Barrier Semantics)',
                                 _ => 'Semantic Channel',
                               },
                               style: TextStyle(
-                                color: ring.getEffectiveColor(themeData.getPrimary(isDark), isDarkMode: isDark),
+                                color: ring.getEffectiveColor(
+                                    themeData.getPrimary(isDark),
+                                    isDarkMode: isDark),
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1061,7 +1223,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               color: isDark ? const Color(0xFF030712) : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+                color:
+                    isDark ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
                 width: 1.5,
               ),
             ),
@@ -1073,11 +1236,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.code, size: 18, color: themeData.getPrimary(isDark)),
+                        Icon(Icons.code,
+                            size: 18, color: themeData.getPrimary(isDark)),
                         const SizedBox(width: 8),
                         const Text(
                           'Generated Dart Widget Code:',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ],
                     ),
@@ -1085,8 +1250,10 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       style: ElevatedButton.styleFrom(
                         backgroundColor: themeData.getPrimary(isDark),
                         foregroundColor: isDark ? Colors.black : Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
                       onPressed: () {
                         final code = _generateDartSnippet();
@@ -1095,16 +1262,20 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                           const SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.check_circle, color: Colors.greenAccent, size: 18),
+                                Icon(Icons.check_circle,
+                                    color: Colors.greenAccent, size: 18),
                                 SizedBox(width: 8),
-                                Text('Copied complete DndGlyph Dart code to clipboard!'),
+                                Text(
+                                    'Copied complete DndGlyph Dart code to clipboard!'),
                               ],
                             ),
                           ),
                         );
                       },
                       icon: const Icon(Icons.copy, size: 16),
-                      label: const Text('Copy Dart Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      label: const Text('Copy Dart Code',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12)),
                     ),
                   ],
                 ),
@@ -1116,7 +1287,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                     color: isDark ? const Color(0xFF090D16) : Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                      color: isDark
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   child: SelectableText(
@@ -1125,7 +1298,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       fontFamily: 'monospace',
                       fontSize: 12.5,
                       height: 1.45,
-                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),
+                      color: isDark
+                          ? const Color(0xFF38BDF8)
+                          : const Color(0xFF0369A1),
                     ),
                   ),
                 ),
@@ -1141,11 +1316,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               backgroundColor: Colors.cyanAccent,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: _downloadGlyphImage,
             icon: const Icon(Icons.download, size: 20),
-            label: const Text('Download Glyph Image (PNG)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            label: const Text('Download Glyph Image (PNG)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           ),
         ],
       ),
@@ -1156,11 +1333,14 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
     final buffer = StringBuffer();
     final ringsList = _builderRings.map((r) {
       final ringType = 'ActionRingType.${r.ringType.name}';
-      final damageType = r.damageType != null ? ', damageType: DamageAccent.${r.damageType!.name}' : '';
+      final damageType = r.damageType != null
+          ? ', damageType: DamageAccent.${r.damageType!.name}'
+          : '';
       final damageTypes = r.damageTypes.isNotEmpty
           ? ', damageTypes: [${r.damageTypes.map((d) => 'DamageAccent.${d.name}').join(', ')}]'
           : '';
-      final label = r.label != null && r.label!.isNotEmpty ? ", label: '${r.label}'" : '';
+      final label =
+          r.label != null && r.label!.isNotEmpty ? ", label: '${r.label}'" : '';
       return '    ActionTraitRing(ringType: $ringType$damageType$damageTypes$label),';
     }).toList();
 
@@ -1174,7 +1354,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       buffer.writeln('  level: $_builderLevelOrTier,');
       buffer.writeln('  size: ${_builderSize.toStringAsFixed(1)},');
       if (_builderShapeOverride != null) {
-        buffer.writeln('  frameShapeOverride: GlyphFrameShape.${_builderShapeOverride!.name},');
+        buffer.writeln(
+            '  frameShapeOverride: GlyphFrameShape.${_builderShapeOverride!.name},');
       }
       buffer.writeln('  actionRings: $ringsFormatted,');
       buffer.write(')');
@@ -1184,7 +1365,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       buffer.writeln('  crTier: $_builderLevelOrTier,');
       buffer.writeln('  size: ${_builderSize.toStringAsFixed(1)},');
       if (_builderShapeOverride != null) {
-        buffer.writeln('  frameShapeOverride: GlyphFrameShape.${_builderShapeOverride!.name},');
+        buffer.writeln(
+            '  frameShapeOverride: GlyphFrameShape.${_builderShapeOverride!.name},');
       }
       buffer.writeln('  actionRings: $ringsFormatted,');
       buffer.write(')');
@@ -1195,10 +1377,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
 
   Future<void> _downloadGlyphImage() async {
     try {
-      final boundary = _glyphBoundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary = _glyphBoundaryKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
       if (boundary == null) return;
       final ui.Image image = await boundary.toImage(pixelRatio: 4.0);
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData != null) {
         final bytes = byteData.buffer.asUint8List();
         final name = _builderIsSpell
@@ -1210,7 +1394,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.greenAccent, size: 18),
+                  const Icon(Icons.check_circle,
+                      color: Colors.greenAccent, size: 18),
                   const SizedBox(width: 8),
                   Text('Downloaded custom glyph image ($name)!'),
                 ],
@@ -1239,16 +1424,20 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('D&D App Glyph System: Techno-Wireframe HUD & Arcane Codex', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text(
+              'D&D App Glyph System: Techno-Wireframe HUD & Arcane Codex',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             'Official reference architecture for procedural vector glyphs, holographic wireframes, and dynamic action traits.',
-            style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
+            style: TextStyle(
+                fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
           ),
           const SizedBox(height: 24),
 
           // Section 1: 8 Schools of Magic
-          const Text('1. The 8 Arcane Schools of Magic', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('1. The 8 Arcane Schools of Magic',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
@@ -1262,14 +1451,27 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      DndGlyph.spell(school: s, level: 3, size: 52, isDarkMode: isDark),
+                      DndGlyph.spell(
+                          school: s, level: 3, size: 52, isDarkMode: isDark),
                       const SizedBox(width: 14),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(s.displayName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: col)),
-                          Text('Frame: ${s.frameShape.displayName}', style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
-                          Text('#${s.primaryColor.toARGB32().toRadixString(16).substring(2).toUpperCase()}', style: TextStyle(fontSize: 11, color: col, fontWeight: FontWeight.w600, fontFamily: 'monospace')),
+                          Text(s.displayName,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: col)),
+                          Text('Frame: ${s.frameShape.displayName}',
+                              style: const TextStyle(
+                                  fontSize: 11, fontFamily: 'monospace')),
+                          Text(
+                              '#${s.primaryColor.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: col,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'monospace')),
                         ],
                       ),
                     ],
@@ -1282,7 +1484,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 32),
 
           // Section 2: 14 Creature Classifications
-          const Text('2. The 14 Creature Classifications', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('2. The 14 Creature Classifications',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
@@ -1296,14 +1499,30 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      DndGlyph.monster(creatureType: t, crTier: 2, size: 52, isDarkMode: isDark),
+                      DndGlyph.monster(
+                          creatureType: t,
+                          crTier: 2,
+                          size: 52,
+                          isDarkMode: isDark),
                       const SizedBox(width: 14),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(t.displayName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: col)),
-                          Text('Shield: ${t.frameShape.displayName}', style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
-                          Text('#${t.primaryColor.toARGB32().toRadixString(16).substring(2).toUpperCase()}', style: TextStyle(fontSize: 11, color: col, fontWeight: FontWeight.w600, fontFamily: 'monospace')),
+                          Text(t.displayName,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: col)),
+                          Text('Shield: ${t.frameShape.displayName}',
+                              style: const TextStyle(
+                                  fontSize: 11, fontFamily: 'monospace')),
+                          Text(
+                              '#${t.primaryColor.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: col,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'monospace')),
                         ],
                       ),
                     ],
@@ -1316,11 +1535,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 32),
 
           // Section 3: 4 Progression Tiers & Threat Architecture
-          const Text('3. The 4 Progression Tiers & Threat Architecture', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('3. The 4 Progression Tiers & Threat Architecture',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             'Glyphs dynamically evolve their wireframe density, structural framing, and holographic glow based on spell level or monster Challenge Rating (CR).',
-            style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
+            style: TextStyle(
+                fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -1331,7 +1552,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 tier: 1,
                 title: 'Tier 1 • Initiate / CR 0–4',
                 subtitle: 'Cantrips & Spell Levels 1–2 • Minor Summons',
-                description: 'Single-line minimalist wireframe silhouette (1.0dp) with subtle cardinal coordinate ticks and clean vector geometry.',
+                description:
+                    'Single-line minimalist wireframe silhouette (1.0dp) with subtle cardinal coordinate ticks and clean vector geometry.',
                 spellLevel: 1,
                 isDark: isDark,
               ),
@@ -1339,7 +1561,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 tier: 2,
                 title: 'Tier 2 • Adept / CR 5–10',
                 subtitle: 'Spell Levels 3–5 • Core Combat Summons',
-                description: 'Secondary circuit wireframe trace lines, faceted corner notches, terminal solder nodes, and gimbal targeting rings.',
+                description:
+                    'Secondary circuit wireframe trace lines, faceted corner notches, terminal solder nodes, and gimbal targeting rings.',
                 spellLevel: 5,
                 isDark: isDark,
               ),
@@ -1347,7 +1570,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 tier: 3,
                 title: 'Tier 3 • Master / CR 11–16',
                 subtitle: 'Spell Levels 6–8 • Elite Planar Summons',
-                description: 'Nested concentric double-frame geometry, horizontal raster scanlines, corner registration brackets [ ], and amplified neon energy glow.',
+                description:
+                    'Nested concentric double-frame geometry, horizontal raster scanlines, corner registration brackets [ ], and amplified neon energy glow.',
                 spellLevel: 7,
                 isDark: isDark,
               ),
@@ -1355,7 +1579,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 tier: 4,
                 title: 'Tier 4 • Archmage & Mythic Apex / CR 17+',
                 subtitle: '9th-Level Pinnacle Magic • Legendary Behemoths',
-                description: 'Golden apex crowning starburst, 8-point radiating energy rays, dual outer harmonic aura loops, and maximum multi-layer neon bloom.',
+                description:
+                    'Golden apex crowning starburst, 8-point radiating energy rays, dual outer harmonic aura loops, and maximum multi-layer neon bloom.',
                 spellLevel: 9,
                 isDark: isDark,
               ),
@@ -1365,11 +1590,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 32),
 
           // Section 4: Action Trait Ring Geometries (Shown on their own, decoupled from color)
-          const Text('4. Action & Attack Trait Ring Geometries (Standalone)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('4. Action & Attack Trait Ring Geometries (Standalone)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             'Each action trait possesses its own unique wireframe geometric profile. Rings are rendered in neutral titanium wireframe by default.',
-            style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
+            style: TextStyle(
+                fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -1383,11 +1610,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 32),
 
           // Section 5: Damage Illumination Spectrum (Independent Energy Color Layer)
-          const Text('5. Damage Type Illumination Spectrum (11 Energy Types)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('5. Damage Type Illumination Spectrum (11 Energy Types)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             'Damage-capable rings can dynamically illuminate in these 11 energy hues. Concentration, Control, and Sustain use fixed semantic channels for faster recognition.',
-            style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
+            style: TextStyle(
+                fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -1397,7 +1626,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               return Card(
                 color: isDark ? const Color(0xFF090D16) : Colors.white,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1420,8 +1650,19 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(da.displayName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: da.color)),
-                          Text('#${da.color.toARGB32().toRadixString(16).substring(2).toUpperCase()}', style: TextStyle(fontSize: 10, fontFamily: 'monospace', color: isDark ? Colors.white60 : Colors.black54)),
+                          Text(da.displayName,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: da.color)),
+                          Text(
+                              '#${da.color.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontFamily: 'monospace',
+                                  color: isDark
+                                      ? Colors.white60
+                                      : Colors.black54)),
                         ],
                       ),
                     ],
@@ -1486,11 +1727,13 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: tierColor.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: tierColor.withValues(alpha: 0.6)),
+                      border:
+                          Border.all(color: tierColor.withValues(alpha: 0.6)),
                     ),
                     child: Text(
                       title,
@@ -1505,7 +1748,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   const SizedBox(height: 6),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -1526,15 +1770,18 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
   }
 
   Widget _buildStandaloneRingCard(ActionRingType ringType, bool isDark) {
-    final ringColor = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+    final ringColor =
+        isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
 
     final description = switch (ringType) {
       ActionRingType.melee => 'Faceted Octagonal Ring with 4 Blade Ticks',
       ActionRingType.ranged => 'Circular Reticle Ring with 4-Axis Crosshairs',
       ActionRingType.recharge => 'Segmented Hexagonal Ring with 6 Pulse Gaps',
       ActionRingType.reaction => 'Shielded Square Ring with Corner Brackets',
-      ActionRingType.control => 'Tri-node Restraint Lattice for Disable/Control Effects',
-      ActionRingType.sustain => 'Harmonic Cradle Loop for Healing and Regeneration',
+      ActionRingType.control =>
+        'Tri-node Restraint Lattice for Disable/Control Effects',
+      ActionRingType.sustain =>
+        'Harmonic Cradle Loop for Healing and Regeneration',
       ActionRingType.concentration => 'Dual-Harmonic Orbital Wireframe Loop',
       ActionRingType.legendary => 'Radial Starburst Crown with 8 Apex Rays',
     };
@@ -1563,9 +1810,16 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(ringType.displayName, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ringColor)),
+                  Text(ringType.displayName,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: ringColor)),
                   const SizedBox(height: 2),
-                  Text(description, style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.black54)),
+                  Text(description,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white70 : Colors.black54)),
                 ],
               ),
             ),
@@ -1601,10 +1855,15 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(spell.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  Text(spell.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 20)),
                   Text(
                     '${spell.school.displayName} (${spell.levelDescription})',
-                    style: TextStyle(fontSize: 13, color: schoolColor, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: schoolColor,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -1619,9 +1878,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
             _buildDetailRow('Range', spell.range),
             _buildDetailRow('Duration', spell.duration),
             const SizedBox(height: 12),
-            const Text('Effect Summary:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Effect Summary:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 4),
-            Text(spell.summary, style: const TextStyle(fontSize: 13, height: 1.4)),
+            Text(spell.summary,
+                style: const TextStyle(fontSize: 13, height: 1.4)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1635,21 +1896,24 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 children: [
                   Text(
                     'Action Trait Rings Telemetry:',
-                    style: TextStyle(fontSize: 12, color: schoolColor, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: schoolColor,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   ...spell.actionRings.map((r) => Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
-                    child: Text(
-                      '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageLegend.isNotEmpty ? "(${r.damageLegend} Glow)" : ""}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: r.getEffectiveColor(schoolColor),
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  )),
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Text(
+                          '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageLegend.isNotEmpty ? "(${r.damageLegend} Glow)" : ""}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: r.getEffectiveColor(schoolColor),
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      )),
                 ],
               ),
             ),
@@ -1687,10 +1951,15 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(creature.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  Text(creature.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 20)),
                   Text(
                     '${creature.type.displayName} (CR ${creature.cr})',
-                    style: TextStyle(fontSize: 13, color: typeColor, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: typeColor,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -1718,21 +1987,24 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                 children: [
                   Text(
                     'Action Trait Rings Telemetry:',
-                    style: TextStyle(fontSize: 12, color: typeColor, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: typeColor,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
                   ...creature.actionRings.map((r) => Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
-                    child: Text(
-                      '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageLegend.isNotEmpty ? "(${r.damageLegend} Glow)" : ""}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: r.getEffectiveColor(typeColor),
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  )),
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Text(
+                          '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageLegend.isNotEmpty ? "(${r.damageLegend} Glow)" : ""}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: r.getEffectiveColor(typeColor),
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      )),
                 ],
               ),
             ),
@@ -1756,7 +2028,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
         children: [
           SizedBox(
             width: 110,
-            child: Text('$label:', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            child: Text('$label:',
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
           Expanded(
             child: Text(
@@ -1764,7 +2038,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
               style: TextStyle(
                 fontSize: 12,
                 color: accentColor,
-                fontWeight: accentColor != null ? FontWeight.bold : FontWeight.normal,
+                fontWeight:
+                    accentColor != null ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -1797,8 +2072,10 @@ class _StandaloneRingPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
 
-    canvas.drawLine(Offset(0, center.dy), Offset(size.width, center.dy), gridPaint);
-    canvas.drawLine(Offset(center.dx, 0), Offset(center.dx, size.height), gridPaint);
+    canvas.drawLine(
+        Offset(0, center.dy), Offset(size.width, center.dy), gridPaint);
+    canvas.drawLine(
+        Offset(center.dx, 0), Offset(center.dx, size.height), gridPaint);
 
     // Draw standalone ring
     final scale = s / 24.0;
@@ -1827,8 +2104,12 @@ class _StandaloneRingPainter extends CustomPainter {
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2.0 * scale);
 
     // Render using shared geometry
-    _drawRingGeometry(canvas, center, r, ringType, scale, glowPaint, finePaint, nodeFill, isGlow: true);
-    _drawRingGeometry(canvas, center, r, ringType, scale, strokePaint, finePaint, nodeFill, isGlow: false);
+    _drawRingGeometry(
+        canvas, center, r, ringType, scale, glowPaint, finePaint, nodeFill,
+        isGlow: true);
+    _drawRingGeometry(
+        canvas, center, r, ringType, scale, strokePaint, finePaint, nodeFill,
+        isGlow: false);
   }
 
   void _drawRingGeometry(
@@ -1856,30 +2137,44 @@ class _StandaloneRingPainter extends CustomPainter {
           ..close();
         canvas.drawPath(path, strokePaint);
         if (!isGlow) {
-          canvas.drawLine(Offset(center.dx, center.dy - r - 1.5 * scale), Offset(center.dx, center.dy - r + 1.5 * scale), finePaint);
-          canvas.drawLine(Offset(center.dx, center.dy + r - 1.5 * scale), Offset(center.dx, center.dy + r + 1.5 * scale), finePaint);
-          canvas.drawLine(Offset(center.dx - r - 1.5 * scale, center.dy), Offset(center.dx - r + 1.5 * scale, center.dy), finePaint);
-          canvas.drawLine(Offset(center.dx + r - 1.5 * scale, center.dy), Offset(center.dx + r + 1.5 * scale, center.dy), finePaint);
-          canvas.drawCircle(Offset(center.dx, center.dy - r), 1.0 * scale, nodeFill);
-          canvas.drawCircle(Offset(center.dx, center.dy + r), 1.0 * scale, nodeFill);
-          canvas.drawCircle(Offset(center.dx - r, center.dy), 1.0 * scale, nodeFill);
-          canvas.drawCircle(Offset(center.dx + r, center.dy), 1.0 * scale, nodeFill);
+          canvas.drawLine(Offset(center.dx, center.dy - r - 1.5 * scale),
+              Offset(center.dx, center.dy - r + 1.5 * scale), finePaint);
+          canvas.drawLine(Offset(center.dx, center.dy + r - 1.5 * scale),
+              Offset(center.dx, center.dy + r + 1.5 * scale), finePaint);
+          canvas.drawLine(Offset(center.dx - r - 1.5 * scale, center.dy),
+              Offset(center.dx - r + 1.5 * scale, center.dy), finePaint);
+          canvas.drawLine(Offset(center.dx + r - 1.5 * scale, center.dy),
+              Offset(center.dx + r + 1.5 * scale, center.dy), finePaint);
+          canvas.drawCircle(
+              Offset(center.dx, center.dy - r), 1.0 * scale, nodeFill);
+          canvas.drawCircle(
+              Offset(center.dx, center.dy + r), 1.0 * scale, nodeFill);
+          canvas.drawCircle(
+              Offset(center.dx - r, center.dy), 1.0 * scale, nodeFill);
+          canvas.drawCircle(
+              Offset(center.dx + r, center.dy), 1.0 * scale, nodeFill);
         }
       case ActionRingType.ranged:
         canvas.drawCircle(center, r, strokePaint);
         if (!isGlow) {
-          canvas.drawLine(Offset(center.dx, center.dy - r - 2.5 * scale), Offset(center.dx, center.dy - r + 2.5 * scale), finePaint);
-          canvas.drawLine(Offset(center.dx, center.dy + r - 2.5 * scale), Offset(center.dx, center.dy + r + 2.5 * scale), finePaint);
-          canvas.drawLine(Offset(center.dx - r - 2.5 * scale, center.dy), Offset(center.dx - r + 2.5 * scale, center.dy), finePaint);
-          canvas.drawLine(Offset(center.dx + r - 2.5 * scale, center.dy), Offset(center.dx + r + 2.5 * scale, center.dy), finePaint);
+          canvas.drawLine(Offset(center.dx, center.dy - r - 2.5 * scale),
+              Offset(center.dx, center.dy - r + 2.5 * scale), finePaint);
+          canvas.drawLine(Offset(center.dx, center.dy + r - 2.5 * scale),
+              Offset(center.dx, center.dy + r + 2.5 * scale), finePaint);
+          canvas.drawLine(Offset(center.dx - r - 2.5 * scale, center.dy),
+              Offset(center.dx - r + 2.5 * scale, center.dy), finePaint);
+          canvas.drawLine(Offset(center.dx + r - 2.5 * scale, center.dy),
+              Offset(center.dx + r + 2.5 * scale, center.dy), finePaint);
         }
       case ActionRingType.recharge:
         final path = Path();
         for (int i = 0; i < 6; i++) {
           final a1 = (i * 60.0 + 8.0) * 3.14159265 / 180.0;
           final a2 = ((i + 1) * 60.0 - 8.0) * 3.14159265 / 180.0;
-          final p1 = Offset(center.dx + r * 0.95 * cos(a1), center.dy + r * 0.95 * sin(a1));
-          final p2 = Offset(center.dx + r * 0.95 * cos(a2), center.dy + r * 0.95 * sin(a2));
+          final p1 = Offset(
+              center.dx + r * 0.95 * cos(a1), center.dy + r * 0.95 * sin(a1));
+          final p2 = Offset(
+              center.dx + r * 0.95 * cos(a2), center.dy + r * 0.95 * sin(a2));
           if (i == 0) {
             path.moveTo(p1.dx, p1.dy);
           } else {
@@ -1890,7 +2185,8 @@ class _StandaloneRingPainter extends CustomPainter {
         canvas.drawPath(path, strokePaint);
       case ActionRingType.reaction:
         final half = r * 0.85;
-        final rect = Rect.fromCenter(center: center, width: half * 2, height: half * 2);
+        final rect =
+            Rect.fromCenter(center: center, width: half * 2, height: half * 2);
         canvas.drawRect(rect, strokePaint);
         if (!isGlow) {
           canvas.drawCircle(rect.topLeft, 1.2 * scale, nodeFill);
@@ -1915,9 +2211,13 @@ class _StandaloneRingPainter extends CustomPainter {
           canvas.drawCircle(pRight, 1.1 * scale, nodeFill);
         }
       case ActionRingType.sustain:
-        canvas.drawOval(Rect.fromCenter(center: center, width: r * 2.0, height: r * 1.45), strokePaint);
+        canvas.drawOval(
+            Rect.fromCenter(center: center, width: r * 2.0, height: r * 1.45),
+            strokePaint);
         if (!isGlow) {
-          canvas.drawOval(Rect.fromCenter(center: center, width: r * 1.45, height: r * 2.0), finePaint);
+          canvas.drawOval(
+              Rect.fromCenter(center: center, width: r * 1.45, height: r * 2.0),
+              finePaint);
           final apex = Offset(center.dx, center.dy - r * 0.58);
           final left = Offset(center.dx - r * 0.55, center.dy + r * 0.35);
           final right = Offset(center.dx + r * 0.55, center.dy + r * 0.35);
@@ -1928,16 +2228,21 @@ class _StandaloneRingPainter extends CustomPainter {
           canvas.drawCircle(right, 1.0 * scale, nodeFill);
         }
       case ActionRingType.concentration:
-        canvas.drawOval(Rect.fromCenter(center: center, width: r * 2.1, height: r * 1.5), strokePaint);
+        canvas.drawOval(
+            Rect.fromCenter(center: center, width: r * 2.1, height: r * 1.5),
+            strokePaint);
         if (!isGlow) {
-          canvas.drawOval(Rect.fromCenter(center: center, width: r * 1.5, height: r * 2.1), finePaint);
+          canvas.drawOval(
+              Rect.fromCenter(center: center, width: r * 1.5, height: r * 2.1),
+              finePaint);
         }
       case ActionRingType.legendary:
         final path = Path();
         for (int i = 0; i < 8; i++) {
           final a = (i * 45.0 - 90.0) * 3.14159265 / 180.0;
           final outerR = (i % 2 == 0) ? r * 1.15 : r * 0.85;
-          final pt = Offset(center.dx + outerR * cos(a), center.dy + outerR * sin(a));
+          final pt =
+              Offset(center.dx + outerR * cos(a), center.dy + outerR * sin(a));
           if (i == 0) {
             path.moveTo(pt.dx, pt.dy);
           } else {
@@ -1955,4 +2260,3 @@ class _StandaloneRingPainter extends CustomPainter {
       oldDelegate.color != color ||
       oldDelegate.isDarkMode != isDarkMode;
 }
-

@@ -23,8 +23,10 @@ class GlyphSpellEntry {
   String get name => spell.getName(DmRulesEdition.v2024);
   SpellSchool get school => spell.getSchool(DmRulesEdition.v2024);
   int get level => spell.level;
-  List<ActionTraitRing> get actionRings => spell.getGlyphActionRings(DmRulesEdition.v2024);
-  DamageAccent? get damageAccent => spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024);
+  List<ActionTraitRing> get actionRings =>
+      spell.getGlyphActionRings(DmRulesEdition.v2024);
+  DamageAccent? get damageAccent =>
+      spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024);
   String get castingTime => spell.getRules(DmRulesEdition.v2024).castingTime;
   String get range => spell.getRules(DmRulesEdition.v2024).range;
   String get duration => spell.getRules(DmRulesEdition.v2024).duration;
@@ -67,31 +69,38 @@ class GlyphGalleryData {
   static const List<GlyphSpellEntry> allSpells = [
     GlyphSpellEntry(
       spellId: 'spell_animate_objects',
-      summary: 'Animate up to 10 nonmagical objects as high-speed tactical construct minions.',
+      summary:
+          'Animate up to 10 nonmagical objects as high-speed tactical construct minions.',
     ),
     GlyphSpellEntry(
       spellId: 'spell_conjure_animals',
-      summary: 'Summon fey beast spirits (wolves, dire wolves, bears, spiders, and eagles).',
+      summary:
+          'Summon fey beast spirits (wolves, dire wolves, bears, spiders, and eagles).',
     ),
     GlyphSpellEntry(
       spellId: 'spell_animate_dead',
-      summary: 'Imbue bones or corpse with dark animus to raise Skeletons or Zombies.',
+      summary:
+          'Imbue bones or corpse with dark animus to raise Skeletons or Zombies.',
     ),
     GlyphSpellEntry(
       spellId: 'spell_create_undead',
-      summary: 'Craft elite undead strike forces: Ghouls, Ghasts, Wights, or Mummies.',
+      summary:
+          'Craft elite undead strike forces: Ghouls, Ghasts, Wights, or Mummies.',
     ),
     GlyphSpellEntry(
       spellId: 'spell_conjure_elemental',
-      summary: 'Summon a powerful CR 5 Elemental spirit (Fire, Water, Earth, or Air Elemental).',
+      summary:
+          'Summon a powerful CR 5 Elemental spirit (Fire, Water, Earth, or Air Elemental).',
     ),
     GlyphSpellEntry(
       spellId: 'spell_conjure_minor_elementals',
-      summary: 'Summon swarms of lesser elementals (Dust, Ice, Magma, Steam Mephits, Gargoyles).',
+      summary:
+          'Summon swarms of lesser elementals (Dust, Ice, Magma, Steam Mephits, Gargoyles).',
     ),
     GlyphSpellEntry(
       spellId: 'spell_giant_insect',
-      summary: 'Transform ordinary centipedes, wasps, and scorpions into giant bio-weapon beasts.',
+      summary:
+          'Transform ordinary centipedes, wasps, and scorpions into giant bio-weapon beasts.',
     ),
   ];
 
@@ -106,7 +115,9 @@ class GlyphGalleryData {
       cr: '1/4',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Micro Kinetic Slam (+8 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Micro Kinetic Slam (+8 to hit)'),
       ],
       ac: SrdSummonsLibrary.tinyObject.ac,
       hp: SrdSummonsLibrary.tinyObject.maxHp,
@@ -119,7 +130,8 @@ class GlyphGalleryData {
       cr: '1/2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Kinetic Slam (+6 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Kinetic Slam (+6 to hit)'),
       ],
       ac: SrdSummonsLibrary.smallObject.ac,
       hp: SrdSummonsLibrary.smallObject.maxHp,
@@ -132,7 +144,8 @@ class GlyphGalleryData {
       cr: '1',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Heavy Slam (+5 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Heavy Slam (+5 to hit)'),
       ],
       ac: SrdSummonsLibrary.mediumObject.ac,
       hp: SrdSummonsLibrary.mediumObject.maxHp,
@@ -145,7 +158,8 @@ class GlyphGalleryData {
       cr: '2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Crushing Slam (+6 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Crushing Slam (+6 to hit)'),
       ],
       ac: SrdSummonsLibrary.largeObject.ac,
       hp: SrdSummonsLibrary.largeObject.maxHp,
@@ -158,7 +172,8 @@ class GlyphGalleryData {
       cr: '3',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Titanic Slam (+8 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Titanic Slam (+8 to hit)'),
       ],
       ac: SrdSummonsLibrary.hugeObject.ac,
       hp: SrdSummonsLibrary.hugeObject.maxHp,
@@ -173,7 +188,9 @@ class GlyphGalleryData {
       cr: '1/4',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.ranged, label: 'Shortbow Reticle (+4 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.ranged,
+            label: 'Shortbow Reticle (+4 to hit)'),
       ],
       ac: SrdSummonsLibrary.skeleton.ac,
       hp: SrdSummonsLibrary.skeleton.maxHp,
@@ -186,8 +203,11 @@ class GlyphGalleryData {
       cr: '1/4',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Undead Fortitude (DC Con)'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Slam Attack (+3 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            label: 'Undead Fortitude (DC Con)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Slam Attack (+3 to hit)'),
       ],
       ac: SrdSummonsLibrary.zombie.ac,
       hp: SrdSummonsLibrary.zombie.maxHp,
@@ -200,7 +220,10 @@ class GlyphGalleryData {
       cr: '1',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic, label: 'Paralyzing Claws (DC 10)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.necrotic,
+            label: 'Paralyzing Claws (DC 10)'),
       ],
       ac: SrdSummonsLibrary.ghoul.ac,
       hp: SrdSummonsLibrary.ghoul.maxHp,
@@ -213,8 +236,14 @@ class GlyphGalleryData {
       cr: '2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.poison, label: 'Stench Aura (DC 10 Con)'),
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic, label: 'Paralyzing Claws'),
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            damageType: DamageAccent.poison,
+            label: 'Stench Aura (DC 10 Con)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.necrotic,
+            label: 'Paralyzing Claws'),
       ],
       ac: SrdSummonsLibrary.ghast.ac,
       hp: SrdSummonsLibrary.ghast.maxHp,
@@ -227,8 +256,13 @@ class GlyphGalleryData {
       cr: '3',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic, label: 'Life Drain (Max HP Drain)'),
-        ActionTraitRing(ringType: ActionRingType.ranged, label: 'Longbow Reticle (+4 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.necrotic,
+            label: 'Life Drain (Max HP Drain)'),
+        ActionTraitRing(
+            ringType: ActionRingType.ranged,
+            label: 'Longbow Reticle (+4 to hit)'),
       ],
       ac: SrdSummonsLibrary.wight.ac,
       hp: SrdSummonsLibrary.wight.maxHp,
@@ -241,7 +275,10 @@ class GlyphGalleryData {
       cr: '3',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic, label: 'Mummy Rot Fist (3d6 necrotic)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.necrotic,
+            label: 'Mummy Rot Fist (3d6 necrotic)'),
       ],
       ac: SrdSummonsLibrary.mummy.ac,
       hp: SrdSummonsLibrary.mummy.maxHp,
@@ -256,8 +293,14 @@ class GlyphGalleryData {
       cr: '5',
       crTier: 2,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.fire, label: 'Fire Form (1d10 ignite)'),
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.fire, label: 'Flaming Touch (+6 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            damageType: DamageAccent.fire,
+            label: 'Fire Form (1d10 ignite)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.fire,
+            label: 'Flaming Touch (+6 to hit)'),
       ],
       ac: SrdSummonsLibrary.fireElemental.ac,
       hp: SrdSummonsLibrary.fireElemental.maxHp,
@@ -270,8 +313,12 @@ class GlyphGalleryData {
       cr: '5',
       crTier: 2,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold, label: 'Whelm Surge (Recharge 4-6)'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Slam Attack (+7 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: DamageAccent.cold,
+            label: 'Whelm Surge (Recharge 4-6)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Slam Attack (+7 to hit)'),
       ],
       ac: SrdSummonsLibrary.waterElemental.ac,
       hp: SrdSummonsLibrary.waterElemental.maxHp,
@@ -284,8 +331,10 @@ class GlyphGalleryData {
       cr: '5',
       crTier: 2,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Earth Glide Phasing'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Siege Slam (+8 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.reaction, label: 'Earth Glide Phasing'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Siege Slam (+8 to hit)'),
       ],
       ac: SrdSummonsLibrary.earthElemental.ac,
       hp: SrdSummonsLibrary.earthElemental.maxHp,
@@ -298,8 +347,12 @@ class GlyphGalleryData {
       cr: '5',
       crTier: 2,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.thunder, label: 'Whirlwind Pulse (Recharge 4-6)'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Air Slam (+8 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: DamageAccent.thunder,
+            label: 'Whirlwind Pulse (Recharge 4-6)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Air Slam (+8 to hit)'),
       ],
       ac: SrdSummonsLibrary.airElemental.ac,
       hp: SrdSummonsLibrary.airElemental.maxHp,
@@ -312,8 +365,11 @@ class GlyphGalleryData {
       cr: '1/2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Blinding Breath (Recharge 6)'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Dust Claws (+4 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            label: 'Blinding Breath (Recharge 6)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Dust Claws (+4 to hit)'),
       ],
       ac: SrdSummonsLibrary.dustMephit.ac,
       hp: SrdSummonsLibrary.dustMephit.maxHp,
@@ -326,8 +382,14 @@ class GlyphGalleryData {
       cr: '1/2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold, label: 'Frost Breath (2d4 cold, Recharge 6)'),
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.cold, label: 'Ice Claws (+4 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: DamageAccent.cold,
+            label: 'Frost Breath (2d4 cold, Recharge 6)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.cold,
+            label: 'Ice Claws (+4 to hit)'),
       ],
       ac: SrdSummonsLibrary.iceMephit.ac,
       hp: SrdSummonsLibrary.iceMephit.maxHp,
@@ -340,8 +402,14 @@ class GlyphGalleryData {
       cr: '1/2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Fire Breath (2d6 fire, Recharge 6)'),
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.fire, label: 'Magma Claws (+3 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: DamageAccent.fire,
+            label: 'Fire Breath (2d6 fire, Recharge 6)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.fire,
+            label: 'Magma Claws (+3 to hit)'),
       ],
       ac: SrdSummonsLibrary.magmaMephit.ac,
       hp: SrdSummonsLibrary.magmaMephit.maxHp,
@@ -354,8 +422,12 @@ class GlyphGalleryData {
       cr: '1/4',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Steam Breath (1d4 fire, Recharge 6)'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Claws (+2 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: DamageAccent.fire,
+            label: 'Steam Breath (1d4 fire, Recharge 6)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Claws (+2 to hit)'),
       ],
       ac: SrdSummonsLibrary.steamMephit.ac,
       hp: SrdSummonsLibrary.steamMephit.maxHp,
@@ -368,8 +440,10 @@ class GlyphGalleryData {
       cr: '2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Stone False Appearance'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Bite & Claws (+4 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.reaction, label: 'Stone False Appearance'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Bite & Claws (+4 to hit)'),
       ],
       ac: SrdSummonsLibrary.gargoyle.ac,
       hp: SrdSummonsLibrary.gargoyle.maxHp,
@@ -384,7 +458,9 @@ class GlyphGalleryData {
       cr: '1/4',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Pack Tactics & Bite (+4 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Pack Tactics & Bite (+4 to hit)'),
       ],
       ac: SrdSummonsLibrary.wolf.ac,
       hp: SrdSummonsLibrary.wolf.maxHp,
@@ -397,7 +473,9 @@ class GlyphGalleryData {
       cr: '1',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Apex Bite (+5 to hit & DC 13 Prone)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Apex Bite (+5 to hit & DC 13 Prone)'),
       ],
       ac: SrdSummonsLibrary.direWolf.ac,
       hp: SrdSummonsLibrary.direWolf.maxHp,
@@ -410,8 +488,13 @@ class GlyphGalleryData {
       cr: '1',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Venom Bite (2d8 poison)'),
-        ActionTraitRing(ringType: ActionRingType.ranged, label: 'Web Projectile (+5 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.poison,
+            label: 'Venom Bite (2d8 poison)'),
+        ActionTraitRing(
+            ringType: ActionRingType.ranged,
+            label: 'Web Projectile (+5 to hit)'),
       ],
       ac: SrdSummonsLibrary.giantSpider.ac,
       hp: SrdSummonsLibrary.giantSpider.maxHp,
@@ -424,7 +507,8 @@ class GlyphGalleryData {
       cr: '1',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Aerial Talons (+5 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee, label: 'Aerial Talons (+5 to hit)'),
       ],
       ac: SrdSummonsLibrary.giantEagle.ac,
       hp: SrdSummonsLibrary.giantEagle.maxHp,
@@ -437,7 +521,10 @@ class GlyphGalleryData {
       cr: '1/4',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Venom Bite (3d6 poison, DC 11)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.poison,
+            label: 'Venom Bite (3d6 poison, DC 11)'),
       ],
       ac: SrdSummonsLibrary.giantCentipede.ac,
       hp: SrdSummonsLibrary.giantCentipede.maxHp,
@@ -450,7 +537,10 @@ class GlyphGalleryData {
       cr: '1/2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Paralyzing Sting (3d6 poison)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.poison,
+            label: 'Paralyzing Sting (3d6 poison)'),
       ],
       ac: SrdSummonsLibrary.giantWasp.ac,
       hp: SrdSummonsLibrary.giantWasp.maxHp,
@@ -463,8 +553,13 @@ class GlyphGalleryData {
       cr: '3',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Deadly Stinger (4d10 poison)'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Grappling Claws (+4 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.poison,
+            label: 'Deadly Stinger (4d10 poison)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Grappling Claws (+4 to hit)'),
       ],
       ac: SrdSummonsLibrary.giantScorpion.ac,
       hp: SrdSummonsLibrary.giantScorpion.maxHp,
@@ -479,8 +574,11 @@ class GlyphGalleryData {
       cr: '2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Reckless Attack Vector'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Greataxe Strike (+5 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.reaction, label: 'Reckless Attack Vector'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Greataxe Strike (+5 to hit)'),
       ],
       ac: SrdSummonsLibrary.berserker.ac,
       hp: SrdSummonsLibrary.berserker.maxHp,
@@ -493,7 +591,9 @@ class GlyphGalleryData {
       cr: '2',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Multiattack: Beak & Claws (+6 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Multiattack: Beak & Claws (+6 to hit)'),
       ],
       ac: SrdSummonsLibrary.bronzeGriffon.ac,
       hp: SrdSummonsLibrary.bronzeGriffon.maxHp,
@@ -506,7 +606,9 @@ class GlyphGalleryData {
       cr: '4',
       crTier: 1,
       actionRings: const [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Trampling Charge & Gore (+8 to hit)'),
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Trampling Charge & Gore (+8 to hit)'),
       ],
       ac: SrdSummonsLibrary.marbleElephant.ac,
       hp: SrdSummonsLibrary.marbleElephant.maxHp,

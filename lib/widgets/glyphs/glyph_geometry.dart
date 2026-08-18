@@ -27,7 +27,8 @@ class GlyphGeometry {
         final r = 10.0 * scale;
         for (int i = 0; i < 6; i++) {
           final angle = (i * 60.0 - 30.0) * pi / 180.0;
-          final pt = Offset(center.dx + r * cos(angle), center.dy + r * sin(angle));
+          final pt =
+              Offset(center.dx + r * cos(angle), center.dy + r * sin(angle));
           if (i == 0) {
             path.moveTo(pt.dx, pt.dy);
           } else {
@@ -42,8 +43,20 @@ class GlyphGeometry {
         final rx = 10.5 * scale;
         final ry = 7.5 * scale;
         path.moveTo(center.dx - rx, center.dy);
-        path.cubicTo(center.dx - rx * 0.5, center.dy - ry * 1.25, center.dx + rx * 0.5, center.dy - ry * 1.25, center.dx + rx, center.dy);
-        path.cubicTo(center.dx + rx * 0.5, center.dy + ry * 1.25, center.dx - rx * 0.5, center.dy + ry * 1.25, center.dx - rx, center.dy);
+        path.cubicTo(
+            center.dx - rx * 0.5,
+            center.dy - ry * 1.25,
+            center.dx + rx * 0.5,
+            center.dy - ry * 1.25,
+            center.dx + rx,
+            center.dy);
+        path.cubicTo(
+            center.dx + rx * 0.5,
+            center.dy + ry * 1.25,
+            center.dx - rx * 0.5,
+            center.dy + ry * 1.25,
+            center.dx - rx,
+            center.dy);
         path.close();
         break;
 
@@ -53,13 +66,17 @@ class GlyphGeometry {
         final cr = 2.2 * scale;
         path.moveTo(center.dx, center.dy - r);
         path.lineTo(center.dx + r - cr, center.dy - cr);
-        path.quadraticBezierTo(center.dx + r, center.dy, center.dx + r - cr, center.dy + cr);
+        path.quadraticBezierTo(
+            center.dx + r, center.dy, center.dx + r - cr, center.dy + cr);
         path.lineTo(center.dx + cr, center.dy + r - cr);
-        path.quadraticBezierTo(center.dx, center.dy + r, center.dx - cr, center.dy + r - cr);
+        path.quadraticBezierTo(
+            center.dx, center.dy + r, center.dx - cr, center.dy + r - cr);
         path.lineTo(center.dx - r + cr, center.dy + cr);
-        path.quadraticBezierTo(center.dx - r, center.dy, center.dx - r + cr, center.dy - cr);
+        path.quadraticBezierTo(
+            center.dx - r, center.dy, center.dx - r + cr, center.dy - cr);
         path.lineTo(center.dx - cr, center.dy - r + cr);
-        path.quadraticBezierTo(center.dx, center.dy - r, center.dx, center.dy - r);
+        path.quadraticBezierTo(
+            center.dx, center.dy - r, center.dx, center.dy - r);
         path.close();
         break;
 
@@ -77,9 +94,12 @@ class GlyphGeometry {
         // Illusion: Overlapping Mirage Circles (Vesica Piscis Outer Silhouette)
         final r = 7.5 * scale;
         final d = 3.5 * scale;
-        final leftPath = Path()..addOval(Rect.fromCircle(center: center - Offset(d, 0), radius: r));
-        final rightPath = Path()..addOval(Rect.fromCircle(center: center + Offset(d, 0), radius: r));
-        path.addPath(Path.combine(PathOperation.union, leftPath, rightPath), Offset.zero);
+        final leftPath = Path()
+          ..addOval(Rect.fromCircle(center: center - Offset(d, 0), radius: r));
+        final rightPath = Path()
+          ..addOval(Rect.fromCircle(center: center + Offset(d, 0), radius: r));
+        path.addPath(Path.combine(PathOperation.union, leftPath, rightPath),
+            Offset.zero);
         break;
 
       case GlyphFrameShape.invertedTriangle:
@@ -105,7 +125,8 @@ class GlyphGeometry {
         final r = 10.0 * scale;
         for (int i = 0; i < 8; i++) {
           final angle = (i * 45.0 - 22.5) * pi / 180.0;
-          final pt = Offset(center.dx + r * cos(angle), center.dy + r * sin(angle));
+          final pt =
+              Offset(center.dx + r * cos(angle), center.dy + r * sin(angle));
           if (i == 0) {
             path.moveTo(pt.dx, pt.dy);
           } else {
@@ -122,14 +143,20 @@ class GlyphGeometry {
         path.lineTo(center.dx + r * 0.85, center.dy - r * 0.85);
         path.lineTo(center.dx + r * 0.85, center.dy + r * 0.1);
         path.cubicTo(
-          center.dx + r * 0.85, center.dy + r * 0.6,
-          center.dx + r * 0.4, center.dy + r * 0.9,
-          center.dx, center.dy + r,
+          center.dx + r * 0.85,
+          center.dy + r * 0.6,
+          center.dx + r * 0.4,
+          center.dy + r * 0.9,
+          center.dx,
+          center.dy + r,
         );
         path.cubicTo(
-          center.dx - r * 0.4, center.dy + r * 0.9,
-          center.dx - r * 0.85, center.dy + r * 0.6,
-          center.dx - r * 0.85, center.dy + r * 0.1,
+          center.dx - r * 0.4,
+          center.dy + r * 0.9,
+          center.dx - r * 0.85,
+          center.dy + r * 0.6,
+          center.dx - r * 0.85,
+          center.dy + r * 0.1,
         );
         path.close();
         break;
@@ -151,7 +178,8 @@ class GlyphGeometry {
         final r = 10.0 * scale;
         for (int i = 0; i < 6; i++) {
           final angle = (i * 60.0) * pi / 180.0;
-          final pt = Offset(center.dx + r * cos(angle), center.dy + r * sin(angle));
+          final pt =
+              Offset(center.dx + r * cos(angle), center.dy + r * sin(angle));
           if (i == 0) {
             path.moveTo(pt.dx, pt.dy);
           } else {
@@ -183,7 +211,8 @@ class GlyphGeometry {
 
       case GlyphFrameShape.filigreeOval:
         // Fey: Sylvan Filigree Oval
-        path.addOval(Rect.fromCenter(center: center, width: 16.5 * scale, height: 20.5 * scale));
+        path.addOval(Rect.fromCenter(
+            center: center, width: 16.5 * scale, height: 20.5 * scale));
         break;
 
       case GlyphFrameShape.pointedShield:
@@ -200,7 +229,9 @@ class GlyphGeometry {
       case GlyphFrameShape.heavySquare:
         // Giant: Heavy Square with Beveled Corners
         final r = 9.0 * scale;
-        path.addRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: center, width: r * 2.0, height: r * 2.0), Radius.circular(2.2 * scale)));
+        path.addRRect(RRect.fromRectAndRadius(
+            Rect.fromCenter(center: center, width: r * 2.0, height: r * 2.0),
+            Radius.circular(2.2 * scale)));
         break;
 
       case GlyphFrameShape.heaterShield:
@@ -210,14 +241,20 @@ class GlyphGeometry {
         path.lineTo(center.dx + r * 0.85, center.dy - r * 0.95);
         path.lineTo(center.dx + r * 0.85, center.dy);
         path.cubicTo(
-          center.dx + r * 0.85, center.dy + r * 0.65,
-          center.dx + r * 0.4, center.dy + r * 0.95,
-          center.dx, center.dy + r * 1.05,
+          center.dx + r * 0.85,
+          center.dy + r * 0.65,
+          center.dx + r * 0.4,
+          center.dy + r * 0.95,
+          center.dx,
+          center.dy + r * 1.05,
         );
         path.cubicTo(
-          center.dx - r * 0.4, center.dy + r * 0.95,
-          center.dx - r * 0.85, center.dy + r * 0.65,
-          center.dx - r * 0.85, center.dy,
+          center.dx - r * 0.4,
+          center.dy + r * 0.95,
+          center.dx - r * 0.85,
+          center.dy + r * 0.65,
+          center.dx - r * 0.85,
+          center.dy,
         );
         path.close();
         break;
@@ -240,10 +277,29 @@ class GlyphGeometry {
         // Ooze: Amorphous Liquid Blob
         final r = 10.0 * scale;
         path.moveTo(center.dx, center.dy - r * 0.9);
-        path.cubicTo(center.dx + r * 0.8, center.dy - r * 0.85, center.dx + r, center.dy - r * 0.2, center.dx + r * 0.9, center.dy + r * 0.3);
-        path.cubicTo(center.dx + r * 0.8, center.dy + r * 0.8, center.dx + r * 0.3, center.dy + r, center.dx - r * 0.1, center.dy + r * 0.95);
-        path.cubicTo(center.dx - r * 0.6, center.dy + r * 0.9, center.dx - r * 0.95, center.dy + r * 0.5, center.dx - r * 0.9, center.dy);
-        path.cubicTo(center.dx - r * 0.85, center.dy - r * 0.5, center.dx - r * 0.5, center.dy - r * 0.95, center.dx, center.dy - r * 0.9);
+        path.cubicTo(center.dx + r * 0.8, center.dy - r * 0.85, center.dx + r,
+            center.dy - r * 0.2, center.dx + r * 0.9, center.dy + r * 0.3);
+        path.cubicTo(
+            center.dx + r * 0.8,
+            center.dy + r * 0.8,
+            center.dx + r * 0.3,
+            center.dy + r,
+            center.dx - r * 0.1,
+            center.dy + r * 0.95);
+        path.cubicTo(
+            center.dx - r * 0.6,
+            center.dy + r * 0.9,
+            center.dx - r * 0.95,
+            center.dy + r * 0.5,
+            center.dx - r * 0.9,
+            center.dy);
+        path.cubicTo(
+            center.dx - r * 0.85,
+            center.dy - r * 0.5,
+            center.dx - r * 0.5,
+            center.dy - r * 0.95,
+            center.dx,
+            center.dy - r * 0.9);
         path.close();
         break;
 
@@ -252,14 +308,20 @@ class GlyphGeometry {
         final r = 10.0 * scale;
         path.moveTo(center.dx, center.dy - r);
         path.cubicTo(
-          center.dx + r * 0.95, center.dy - r * 0.1,
-          center.dx + r * 0.85, center.dy + r * 0.85,
-          center.dx, center.dy + r * 0.95,
+          center.dx + r * 0.95,
+          center.dy - r * 0.1,
+          center.dx + r * 0.85,
+          center.dy + r * 0.85,
+          center.dx,
+          center.dy + r * 0.95,
         );
         path.cubicTo(
-          center.dx - r * 0.85, center.dy + r * 0.85,
-          center.dx - r * 0.95, center.dy - r * 0.1,
-          center.dx, center.dy - r,
+          center.dx - r * 0.85,
+          center.dy + r * 0.85,
+          center.dx - r * 0.95,
+          center.dy - r * 0.1,
+          center.dx,
+          center.dy - r,
         );
         path.close();
         break;
@@ -297,7 +359,8 @@ class GlyphGeometry {
     final s = min(w, h);
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
-    final pulse = animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+    final pulse =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
 
     // Tier 2 (Adept / Levels 3-5 / CR 5-10): instrument-panel brace, not a cluster. The visual reads as a refined, advanced glyph.
     if (tierLevel == 2) {
@@ -311,13 +374,18 @@ class GlyphGeometry {
         ..color = primaryColor.withValues(alpha: 0.82 + pulse * 0.18)
         ..style = PaintingStyle.fill;
 
-      final barY = center.dy + 9.0 * scale + sin(pulseTurns * 2.0 * pi * 2.0) * 0.6 * scale;
+      final barY = center.dy +
+          9.0 * scale +
+          sin(pulseTurns * 2.0 * pi * 2.0) * 0.6 * scale;
       final barLeft = center.dx - 6.0 * scale;
       final barRight = center.dx + 6.0 * scale;
 
-      canvas.drawLine(Offset(barLeft, barY), Offset(barRight, barY), bracePaint);
-      canvas.drawLine(Offset(center.dx - 2.3 * scale, center.dy + 6.4 * scale), Offset(center.dx - 2.3 * scale, barY), bracePaint);
-      canvas.drawLine(Offset(center.dx + 2.3 * scale, center.dy + 6.4 * scale), Offset(center.dx + 2.3 * scale, barY), bracePaint);
+      canvas.drawLine(
+          Offset(barLeft, barY), Offset(barRight, barY), bracePaint);
+      canvas.drawLine(Offset(center.dx - 2.3 * scale, center.dy + 6.4 * scale),
+          Offset(center.dx - 2.3 * scale, barY), bracePaint);
+      canvas.drawLine(Offset(center.dx + 2.3 * scale, center.dy + 6.4 * scale),
+          Offset(center.dx + 2.3 * scale, barY), bracePaint);
 
       final nodeOffset = 4.4 * scale;
       final nodeYs = [
@@ -325,8 +393,10 @@ class GlyphGeometry {
         barY,
       ];
       for (final ny in nodeYs) {
-        canvas.drawCircle(Offset(center.dx - nodeOffset, ny), (0.62 + pulse * 0.18) * scale, nodePaint);
-        canvas.drawCircle(Offset(center.dx + nodeOffset, ny), (0.62 + pulse * 0.18) * scale, nodePaint);
+        canvas.drawCircle(Offset(center.dx - nodeOffset, ny),
+            (0.62 + pulse * 0.18) * scale, nodePaint);
+        canvas.drawCircle(Offset(center.dx + nodeOffset, ny),
+            (0.62 + pulse * 0.18) * scale, nodePaint);
       }
 
       final trimPaint = Paint()
@@ -334,8 +404,10 @@ class GlyphGeometry {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.7 * scale
         ..strokeCap = StrokeCap.round;
-      canvas.drawLine(center - Offset(6.5 * scale, 0), center - Offset(4.1 * scale, 2.5 * scale), trimPaint);
-      canvas.drawLine(center + Offset(6.5 * scale, 0), center + Offset(4.1 * scale, 2.5 * scale), trimPaint);
+      canvas.drawLine(center - Offset(6.5 * scale, 0),
+          center - Offset(4.1 * scale, 2.5 * scale), trimPaint);
+      canvas.drawLine(center + Offset(6.5 * scale, 0),
+          center + Offset(4.1 * scale, 2.5 * scale), trimPaint);
     }
 
     // Tier 3 & Tier 4: progression ladder. Each rung adds a higher level of structural reinforcement.
@@ -362,8 +434,10 @@ class GlyphGeometry {
           Offset(verticalX + rungSpread, y),
           activePaint,
         );
-        canvas.drawCircle(Offset(verticalX - rungSpread, y), (0.55 + pulse * 0.22) * scale, nodePaint);
-        canvas.drawCircle(Offset(verticalX + rungSpread, y), (0.55 + pulse * 0.22) * scale, nodePaint);
+        canvas.drawCircle(Offset(verticalX - rungSpread, y),
+            (0.55 + pulse * 0.22) * scale, nodePaint);
+        canvas.drawCircle(Offset(verticalX + rungSpread, y),
+            (0.55 + pulse * 0.22) * scale, nodePaint);
       }
 
       canvas.drawLine(
@@ -385,10 +459,13 @@ class GlyphGeometry {
       final crownY = center.dy - 11.2 * scale;
       final archPath = Path();
       archPath.moveTo(center.dx - 6.0 * scale, crownY);
-      archPath.quadraticBezierTo(center.dx, center.dy - 13.6 * scale, center.dx + 6.0 * scale, crownY);
+      archPath.quadraticBezierTo(
+          center.dx, center.dy - 13.6 * scale, center.dx + 6.0 * scale, crownY);
       canvas.drawPath(archPath, crownPaint);
 
-      final diamondFill = Paint()..color = goldColor.withValues(alpha: 0.8 + pulse * 0.2)..style = PaintingStyle.fill;
+      final diamondFill = Paint()
+        ..color = goldColor.withValues(alpha: 0.8 + pulse * 0.2)
+        ..style = PaintingStyle.fill;
       final crownDiamond = Path();
       crownDiamond.moveTo(center.dx, center.dy - 14.0 * scale);
       crownDiamond.lineTo(center.dx + 1.6 * scale, center.dy - 12.2 * scale);
@@ -509,13 +586,16 @@ class GlyphGeometry {
       };
       final breathPhase = idx * 1.37 + tierPulse * 2.2;
       final breathSin = animateRotation
-          ? (
-              (sin((normalizedTurns * 2.0 * pi * breathFrequency) + breathPhase) * (0.72 + tierPulse * 0.55)) +
-              (sin((normalizedTurns * 2.0 * pi * (breathFrequency + 1)) + (breathPhase * 0.63)) * (0.28 + tierPulse * 0.30))
-            )
+          ? ((sin((normalizedTurns * 2.0 * pi * breathFrequency) +
+                      breathPhase) *
+                  (0.72 + tierPulse * 0.55)) +
+              (sin((normalizedTurns * 2.0 * pi * (breathFrequency + 1)) +
+                      (breathPhase * 0.63)) *
+                  (0.28 + tierPulse * 0.30)))
           : 0.0;
       final breathWave = 0.5 + 0.5 * breathSin;
-      final breathAmplitude = scale * (0.95 + ((idx % 3) * 0.22) + (tierPulse * 1.7));
+      final breathAmplitude =
+          scale * (0.95 + ((idx % 3) * 0.22) + (tierPulse * 1.7));
       final breathingRadius = r + (breathSin * breathAmplitude);
       final rotationAngle = animateRotation
           ? (rotationTurns * 2.0 * pi * direction * speedFactor)
@@ -551,10 +631,11 @@ class GlyphGeometry {
         ..style = PaintingStyle.fill;
 
       // 5. Tight, controlled holographic laser glow (prevents diffuse blurring)
-        final glowAlphaBase = ring.hasElementalDamageAccent
+      final glowAlphaBase = ring.hasElementalDamageAccent
           ? (isDarkMode ? 0.35 : 0.22)
           : (isDarkMode ? 0.18 : 0.10);
-      final glowAlpha = glowAlphaBase * (0.85 + breathWave * 0.40 + tierPulse * 0.70);
+      final glowAlpha =
+          glowAlphaBase * (0.85 + breathWave * 0.40 + tierPulse * 0.70);
 
       final glowPaint = Paint()
         ..color = ringColor.withValues(alpha: glowAlpha)
@@ -568,9 +649,15 @@ class GlyphGeometry {
       canvas.translate(-center.dx, -center.dy);
 
       // Render: Underlay Outline -> Glow Halo -> Sharp Wireframe & Nodes
-      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale, underlayPaint, finePaint, nodeFill, isGlow: true);
-      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale, glowPaint, finePaint, nodeFill, isGlow: true);
-      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale, strokePaint, finePaint, nodeFill, isGlow: false);
+      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale,
+          underlayPaint, finePaint, nodeFill,
+          isGlow: true);
+      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale,
+          glowPaint, finePaint, nodeFill,
+          isGlow: true);
+      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale,
+          strokePaint, finePaint, nodeFill,
+          isGlow: false);
 
       canvas.restore();
     }
@@ -608,8 +695,10 @@ class GlyphGeometry {
           // 4 Cardinal blade notch ticks
           for (int i = 0; i < 4; i++) {
             final a = (i * 90.0) * pi / 180.0;
-            final p1 = Offset(center.dx + (r - 1.2 * scale) * cos(a), center.dy + (r - 1.2 * scale) * sin(a));
-            final p2 = Offset(center.dx + (r + 1.2 * scale) * cos(a), center.dy + (r + 1.2 * scale) * sin(a));
+            final p1 = Offset(center.dx + (r - 1.2 * scale) * cos(a),
+                center.dy + (r - 1.2 * scale) * sin(a));
+            final p2 = Offset(center.dx + (r + 1.2 * scale) * cos(a),
+                center.dy + (r + 1.2 * scale) * sin(a));
             canvas.drawLine(p1, p2, mainPaint);
             canvas.drawCircle(p2, 0.9 * scale, nodeFill);
           }
@@ -624,8 +713,10 @@ class GlyphGeometry {
           // 4 Precision crosshair ticks extending outward
           for (int i = 0; i < 4; i++) {
             final a = (i * 90.0 + 45.0) * pi / 180.0;
-            final p1 = Offset(center.dx + (r - 1.0 * scale) * cos(a), center.dy + (r - 1.0 * scale) * sin(a));
-            final p2 = Offset(center.dx + (r + 2.0 * scale) * cos(a), center.dy + (r + 2.0 * scale) * sin(a));
+            final p1 = Offset(center.dx + (r - 1.0 * scale) * cos(a),
+                center.dy + (r - 1.0 * scale) * sin(a));
+            final p2 = Offset(center.dx + (r + 2.0 * scale) * cos(a),
+                center.dy + (r + 2.0 * scale) * sin(a));
             canvas.drawLine(p1, p2, finePaint);
             canvas.drawCircle(p2, 0.8 * scale, nodeFill);
           }
@@ -646,7 +737,8 @@ class GlyphGeometry {
           if (!isGlow) {
             // Energy discharge node at middle of segment
             final aMid = (i * 60.0 + 30.0) * pi / 180.0;
-            final pMid = Offset(center.dx + r * cos(aMid), center.dy + r * sin(aMid));
+            final pMid =
+                Offset(center.dx + r * cos(aMid), center.dy + r * sin(aMid));
             canvas.drawCircle(pMid, 0.9 * scale, nodeFill);
           }
         }
@@ -689,7 +781,8 @@ class GlyphGeometry {
           final triangle = Path();
           for (int i = 0; i < 3; i++) {
             final a = (i * 120.0 - 90.0) * pi / 180.0;
-            final p = Offset(center.dx + (r - 1.0 * scale) * cos(a), center.dy + (r - 1.0 * scale) * sin(a));
+            final p = Offset(center.dx + (r - 1.0 * scale) * cos(a),
+                center.dy + (r - 1.0 * scale) * sin(a));
             if (i == 0) {
               triangle.moveTo(p.dx, p.dy);
             } else {
@@ -703,8 +796,10 @@ class GlyphGeometry {
 
       case ActionRingType.sustain:
         // Harmonic cradle ring for healing, barriers, and regeneration.
-        final outer = Rect.fromCenter(center: center, width: r * 2.0, height: r * 1.45);
-        final inner = Rect.fromCenter(center: center, width: r * 1.4, height: r * 2.0);
+        final outer =
+            Rect.fromCenter(center: center, width: r * 2.0, height: r * 1.45);
+        final inner =
+            Rect.fromCenter(center: center, width: r * 1.4, height: r * 2.0);
         canvas.drawOval(outer, mainPaint);
         canvas.drawOval(inner, finePaint);
         if (!isGlow) {
@@ -744,8 +839,10 @@ class GlyphGeometry {
         if (!isGlow) {
           for (int i = 0; i < 6; i++) {
             final a = (i * 60.0) * pi / 180.0;
-            final p1 = Offset(center.dx + (r - 1.2 * scale) * cos(a), center.dy + (r - 1.2 * scale) * sin(a));
-            final p2 = Offset(center.dx + r * cos(a + 0.2), center.dy + r * sin(a + 0.2));
+            final p1 = Offset(center.dx + (r - 1.2 * scale) * cos(a),
+                center.dy + (r - 1.2 * scale) * sin(a));
+            final p2 = Offset(
+                center.dx + r * cos(a + 0.2), center.dy + r * sin(a + 0.2));
             canvas.drawLine(p1, p2, finePaint);
             canvas.drawCircle(p2, 0.7 * scale, nodeFill);
           }
@@ -767,23 +864,37 @@ class GlyphGeometry {
     final badgeCenter = Offset(w - 4.0 * scale, h - 4.0 * scale);
     final badgeRadius = 3.6 * scale;
 
-    final bgPaint = Paint()..color = badge.color..style = PaintingStyle.fill;
+    final bgPaint = Paint()
+      ..color = badge.color
+      ..style = PaintingStyle.fill;
     canvas.drawCircle(badgeCenter, badgeRadius, bgPaint);
 
-    final rimPaint = Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 0.75 * scale;
+    final rimPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.75 * scale;
     canvas.drawCircle(badgeCenter, badgeRadius, rimPaint);
 
-    final iconPaint = Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 0.85 * scale..strokeCap = StrokeCap.round;
+    final iconPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.85 * scale
+      ..strokeCap = StrokeCap.round;
 
     switch (badge) {
       case ActionBadge.melee:
-        canvas.drawLine(badgeCenter - Offset(1.6 * scale, 1.6 * scale), badgeCenter + Offset(1.6 * scale, 1.6 * scale), iconPaint);
-        canvas.drawLine(badgeCenter - Offset(-1.6 * scale, 1.6 * scale), badgeCenter + Offset(-1.6 * scale, 1.6 * scale), iconPaint);
+        canvas.drawLine(badgeCenter - Offset(1.6 * scale, 1.6 * scale),
+            badgeCenter + Offset(1.6 * scale, 1.6 * scale), iconPaint);
+        canvas.drawLine(badgeCenter - Offset(-1.6 * scale, 1.6 * scale),
+            badgeCenter + Offset(-1.6 * scale, 1.6 * scale), iconPaint);
         break;
       case ActionBadge.ranged:
-        final bow = Path()..arcTo(Rect.fromCircle(center: badgeCenter, radius: 1.8 * scale), -pi / 2, pi, false);
+        final bow = Path()
+          ..arcTo(Rect.fromCircle(center: badgeCenter, radius: 1.8 * scale),
+              -pi / 2, pi, false);
         canvas.drawPath(bow, iconPaint);
-        canvas.drawLine(badgeCenter - Offset(1.8 * scale, 0), badgeCenter + Offset(1.8 * scale, 0), iconPaint);
+        canvas.drawLine(badgeCenter - Offset(1.8 * scale, 0),
+            badgeCenter + Offset(1.8 * scale, 0), iconPaint);
         break;
       case ActionBadge.recharge:
         final bolt = Path()
@@ -794,7 +905,11 @@ class GlyphGeometry {
           ..lineTo(badgeCenter.dx + 1.2 * scale, badgeCenter.dy - 0.2 * scale)
           ..lineTo(badgeCenter.dx - 0.2 * scale, badgeCenter.dy - 0.2 * scale)
           ..close();
-        canvas.drawPath(bolt, Paint()..color = Colors.white..style = PaintingStyle.fill);
+        canvas.drawPath(
+            bolt,
+            Paint()
+              ..color = Colors.white
+              ..style = PaintingStyle.fill);
         break;
       case ActionBadge.legendary:
         final crown = Path()
@@ -806,11 +921,23 @@ class GlyphGeometry {
           ..lineTo(badgeCenter.dx + 1.8 * scale, badgeCenter.dy - 1.0 * scale)
           ..lineTo(badgeCenter.dx + 1.8 * scale, badgeCenter.dy + 1.2 * scale)
           ..close();
-        canvas.drawPath(crown, Paint()..color = Colors.white..style = PaintingStyle.fill);
+        canvas.drawPath(
+            crown,
+            Paint()
+              ..color = Colors.white
+              ..style = PaintingStyle.fill);
         break;
       case ActionBadge.lair:
-        canvas.drawRect(Rect.fromCenter(center: badgeCenter, width: 2.4 * scale, height: 2.4 * scale), iconPaint);
-        canvas.drawCircle(badgeCenter, 0.5 * scale, Paint()..color = Colors.white..style = PaintingStyle.fill);
+        canvas.drawRect(
+            Rect.fromCenter(
+                center: badgeCenter, width: 2.4 * scale, height: 2.4 * scale),
+            iconPaint);
+        canvas.drawCircle(
+            badgeCenter,
+            0.5 * scale,
+            Paint()
+              ..color = Colors.white
+              ..style = PaintingStyle.fill);
         break;
     }
   }

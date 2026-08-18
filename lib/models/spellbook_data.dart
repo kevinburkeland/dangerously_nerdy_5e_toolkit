@@ -35,7 +35,8 @@ class SpellEditionDetails {
   final SpellSchool? schoolOverride;
   final String castingTime;
   final String range;
-  final String components; // e.g. "V, S, M (a tiny ball of bat guano and pitch)"
+  final String
+      components; // e.g. "V, S, M (a tiny ball of bat guano and pitch)"
   final SpellMaterialComponent? materialDetails;
   final String duration;
   final bool concentration;
@@ -129,7 +130,8 @@ class SpellItem {
 
   String get fullTypeLabel => '$levelLabel ${school.label}';
 
-  String getFullTypeLabel(DmRulesEdition edition) => '$levelLabel ${getSchool(edition).label}';
+  String getFullTypeLabel(DmRulesEdition edition) =>
+      '$levelLabel ${getSchool(edition).label}';
 
   static final Map<String, String> _corpusCache = {};
 
@@ -185,7 +187,8 @@ class SpellItem {
     if (levelFilter != null && level != levelFilter) return false;
     if (changedOnly == true && !isChangedIn2024) return false;
 
-    if (classFilter != null && !currentRules.classes.contains(classFilter)) return false;
+    if (classFilter != null && !currentRules.classes.contains(classFilter))
+      return false;
     if (ritualOnly == true && !currentRules.ritual) return false;
     if (concentrationOnly == true && !currentRules.concentration) return false;
 
@@ -208,7 +211,17 @@ class SpellItem {
         ...tags,
       ].map((value) => value.toLowerCase()).join(' ');
 
-      final areaShapeTerms = ['cone', 'line', 'radius', 'sphere', 'cube', 'cylinder', 'emanation', 'burst', 'wall'];
+      final areaShapeTerms = [
+        'cone',
+        'line',
+        'radius',
+        'sphere',
+        'cube',
+        'cylinder',
+        'emanation',
+        'burst',
+        'wall'
+      ];
       final aoePhrases = [
         'each creature in a',
         'each creature in the',
@@ -292,7 +305,8 @@ class SpellItem {
       return true;
     }
 
-    void addRing(ActionRingType type, {DamageAccent? damageType, List<DamageAccent> damageTypes = const []}) {
+    void addRing(ActionRingType type,
+        {DamageAccent? damageType, List<DamageAccent> damageTypes = const []}) {
       final exists = rings.any((r) =>
           r.ringType == type &&
           r.damageType == damageType &&
@@ -319,7 +333,8 @@ class SpellItem {
 
     if (hasExplicitAreaOfEffect() || hasExplicitRechargeMechanic()) {
       final damageAccents = getGlyphDamageAccents(edition);
-      final primaryDamage = damageAccents.isNotEmpty ? damageAccents.first : null;
+      final primaryDamage =
+          damageAccents.isNotEmpty ? damageAccents.first : null;
       final extraDamageTypes = damageAccents.length > 1
           ? damageAccents.sublist(1)
           : const <DamageAccent>[];
@@ -368,7 +383,9 @@ class SpellItem {
     addIfPresent('force', DamageAccent.force);
     addIfPresent('thunder', DamageAccent.thunder);
 
-    if ((dmg.contains('bludgeoning') || dmg.contains('slashing') || dmg.contains('piercing')) &&
+    if ((dmg.contains('bludgeoning') ||
+            dmg.contains('slashing') ||
+            dmg.contains('piercing')) &&
         !accents.contains(DamageAccent.physical)) {
       accents.add(DamageAccent.physical);
     }
@@ -407,7 +424,10 @@ class SpellbookLibrary {
     return allSpells.where((s) => s.level == level).toList();
   }
 
-  static List<SpellItem> getSpellsByClass(SpellClass cls, {DmRulesEdition edition = DmRulesEdition.v2024}) {
-    return allSpells.where((s) => s.getRules(edition).classes.contains(cls)).toList();
+  static List<SpellItem> getSpellsByClass(SpellClass cls,
+      {DmRulesEdition edition = DmRulesEdition.v2024}) {
+    return allSpells
+        .where((s) => s.getRules(edition).classes.contains(cls))
+        .toList();
   }
 }
