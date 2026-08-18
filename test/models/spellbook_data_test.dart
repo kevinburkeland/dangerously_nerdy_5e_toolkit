@@ -1394,10 +1394,12 @@ void main() {
       final currentNames = <String>{};
       for (final s in SpellbookLibrary.allSpells) {
         currentNames.add(s.name.toLowerCase().replaceAll('’', "'"));
-        if (s.name2014 != null)
+        if (s.name2014 != null) {
           currentNames.add(s.name2014!.toLowerCase().replaceAll('’', "'"));
-        if (s.name2024 != null)
+        }
+        if (s.name2024 != null) {
           currentNames.add(s.name2024!.toLowerCase().replaceAll('’', "'"));
+        }
       }
       final missing = <String>[];
       for (final s in srd51SpellNames) {

@@ -474,8 +474,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
 
   Widget _buildCreaturesGallery(bool isDark) {
     var creatures = GlyphGalleryData.allCreatures.where((c) {
-      if (_selectedCreatureType != null && c.type != _selectedCreatureType)
+      if (_selectedCreatureType != null && c.type != _selectedCreatureType) {
         return false;
+      }
       if (_searchQuery.isNotEmpty) {
         final match = c.name.toLowerCase().contains(_searchQuery) ||
             c.type.displayName.toLowerCase().contains(_searchQuery) ||
@@ -484,7 +485,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                 r.ringType.displayName.toLowerCase().contains(_searchQuery) ||
                 r.damageLegend.toLowerCase().contains(_searchQuery) ||
                 (r.label?.toLowerCase().contains(_searchQuery) ?? false));
-        if (!match) return false;
+        if (!match) {
+          return false;
+        }
       }
       return true;
     }).toList();

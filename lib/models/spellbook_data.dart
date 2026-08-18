@@ -183,14 +183,25 @@ class SpellItem {
     final currentRules = getRules(edition);
     final effectiveSchool = currentRules.schoolOverride ?? school;
 
-    if (schoolFilter != null && effectiveSchool != schoolFilter) return false;
-    if (levelFilter != null && level != levelFilter) return false;
-    if (changedOnly == true && !isChangedIn2024) return false;
-
-    if (classFilter != null && !currentRules.classes.contains(classFilter))
+    if (schoolFilter != null && effectiveSchool != schoolFilter) {
       return false;
-    if (ritualOnly == true && !currentRules.ritual) return false;
-    if (concentrationOnly == true && !currentRules.concentration) return false;
+    }
+    if (levelFilter != null && level != levelFilter) {
+      return false;
+    }
+    if (changedOnly == true && !isChangedIn2024) {
+      return false;
+    }
+
+    if (classFilter != null && !currentRules.classes.contains(classFilter)) {
+      return false;
+    }
+    if (ritualOnly == true && !currentRules.ritual) {
+      return false;
+    }
+    if (concentrationOnly == true && !currentRules.concentration) {
+      return false;
+    }
 
     final trimmed = query.trim();
     if (trimmed.isEmpty) return true;
