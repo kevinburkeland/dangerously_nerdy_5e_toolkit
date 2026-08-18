@@ -573,10 +573,10 @@ class GlyphGeometry {
       final direction = idx.isEven ? 1.0 : -1.0;
       // Use whole-number cycles per controller loop so orientation matches at wrap.
       final speedFactor = switch (tierLevel) {
-        1 => (idx + 1).toDouble(),
-        2 => (idx + 2).toDouble(),
-        3 => (idx + 1) * 2.0,
-        _ => (idx + 2) * 2.0,
+        1 => 1.0,
+        2 => (idx + 1).toDouble(),
+        3 => (idx + 2).toDouble(),
+        _ => (idx + 2).toDouble(),
       };
       final breathFrequency = switch (tierLevel) {
         1 => (idx % 3) + 1,

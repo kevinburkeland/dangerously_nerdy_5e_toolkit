@@ -80,7 +80,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
 
   void _onEditionChanged(BuildContext context, DmRulesEdition newEdition) {
     final settingsProvider = SettingsScope.of(context);
-    final current = _localEditionOverride ?? settingsProvider.settings.rulesEdition;
+    final current =
+        _localEditionOverride ?? settingsProvider.settings.rulesEdition;
     if (current == newEdition) return;
     HapticService.selectionTick(context);
     setState(() {
@@ -102,10 +103,12 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
       onLevelChanged: (lvl) => setState(() => _selectedLevel = lvl),
       onSchoolChanged: (sch) => setState(() => _selectedSchool = sch),
       onClassChanged: (cls) => setState(() => _selectedClass = cls),
-      onChangedIn2024Toggled: (val) => setState(() => _showOnlyChangedIn2024 = val),
+      onChangedIn2024Toggled: (val) =>
+          setState(() => _showOnlyChangedIn2024 = val),
       onPinnedToggled: (val) => setState(() => _showOnlyPinned = val),
       onRitualToggled: (val) => setState(() => _showOnlyRitual = val),
-      onConcentrationToggled: (val) => setState(() => _showOnlyConcentration = val),
+      onConcentrationToggled: (val) =>
+          setState(() => _showOnlyConcentration = val),
       onResetAll: () {
         setState(() {
           _selectedLevel = null;
@@ -132,24 +135,32 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     return count;
   }
 
-  void _showCompareDialog(BuildContext context, SpellItem spell) {
+  void _showCompareDialog(
+      BuildContext context, SpellItem spell, DmRulesEdition edition) {
     SpellComparisonDialog.show(
       context,
       spell: spell,
+      edition: edition,
       isPinned: _getPinnedIds(context).contains(spell.id),
       onTogglePin: () => _togglePinSpell(context, spell.id),
     );
   }
 
-  void _openQuickRollDialog(BuildContext context, SpellItem spell, DmRulesEdition edition) {
+  void _openQuickRollDialog(
+      BuildContext context, SpellItem spell, DmRulesEdition edition) {
     SpellQuickRollDialog.show(
       context,
       spell: spell,
       edition: edition,
       onRollCompleted: (result, spellName, castLevel) {
         final levelLabel = spell.level == 0 ? 'Cantrip' : 'Level $castLevel';
-        final modStr = result.modifier != 0 ? (result.modifier > 0 ? ' + ${result.modifier}' : ' - ${result.modifier.abs()}') : '';
-        final resultText = '$spellName ($levelLabel): ${result.total} [${result.individualDice.join(", ")}$modStr]';
+        final modStr = result.modifier != 0
+            ? (result.modifier > 0
+                ? ' + ${result.modifier}'
+                : ' - ${result.modifier.abs()}')
+            : '';
+        final resultText =
+            '$spellName ($levelLabel): ${result.total} [${result.individualDice.join(", ")}$modStr]';
         setState(() {
           _lastQuickRollLabel = resultText;
         });
@@ -160,8 +171,13 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   void _performSpellRoll(String formula, String spellName) {
     HapticService.lightImpact(context);
     final result = SpellRollEngine.roll(formula: formula);
-    final modStr = result.modifier != 0 ? (result.modifier > 0 ? ' + ${result.modifier}' : ' - ${result.modifier.abs()}') : '';
-    final resultText = '$spellName (${result.formulaDescription}): ${result.total} [${result.individualDice.join(", ")}$modStr]';
+    final modStr = result.modifier != 0
+        ? (result.modifier > 0
+            ? ' + ${result.modifier}'
+            : ' - ${result.modifier.abs()}')
+        : '';
+    final resultText =
+        '$spellName (${result.formulaDescription}): ${result.total} [${result.individualDice.join(", ")}$modStr]';
     A11yService.announce(resultText);
 
     setState(() {
@@ -173,16 +189,20 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settingsProvider = SettingsScope.maybeOf(context);
-    final edition = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final edition = _localEditionOverride ??
+        settingsProvider?.settings.rulesEdition ??
+        DmRulesEdition.v2024;
     final pinnedIds = _getPinnedIds(context);
     const allSpells = SpellbookLibrary.allSpells;
 
     // Filter spells based on search, view mode, and sheet filters
     final filteredSpells = allSpells.where((spell) {
-      if (_viewMode == SpellbookViewMode.mySpellbook && !pinnedIds.contains(spell.id)) {
+      if (_viewMode == SpellbookViewMode.mySpellbook &&
+          !pinnedIds.contains(spell.id)) {
         return false;
       }
-      if (_viewMode == SpellbookViewMode.revisions2024 && !spell.isChangedIn2024) {
+      if (_viewMode == SpellbookViewMode.revisions2024 &&
+          !spell.isChangedIn2024) {
         return false;
       }
       if (_showOnlyPinned && !pinnedIds.contains(spell.id)) {
@@ -201,8 +221,10 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     }).toList();
 
     // Grouping for "All Spells" view mode
-    final pinnedSpellsInResults = filteredSpells.where((s) => pinnedIds.contains(s.id)).toList();
-    final otherSpellsInResults = filteredSpells.where((s) => !pinnedIds.contains(s.id)).toList();
+    final pinnedSpellsInResults =
+        filteredSpells.where((s) => pinnedIds.contains(s.id)).toList();
+    final otherSpellsInResults =
+        filteredSpells.where((s) => !pinnedIds.contains(s.id)).toList();
 
     final activeFilterCount = _getActiveFilterCount();
     final isDark = theme.brightness == Brightness.dark;
@@ -230,10 +252,12 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
         actions: [
           RulesEditionToggle(
             currentEdition: edition,
-            onEditionChanged: (newEdition) => _onEditionChanged(context, newEdition),
+            onEditionChanged: (newEdition) =>
+                _onEditionChanged(context, newEdition),
           ),
           const SizedBox(width: 8),
-          if (pinnedIds.isNotEmpty && _viewMode == SpellbookViewMode.mySpellbook)
+          if (pinnedIds.isNotEmpty &&
+              _viewMode == SpellbookViewMode.mySpellbook)
             IconButton(
               icon: const Icon(Icons.bookmark_remove_outlined),
               tooltip: 'Clear Personal Spellbook',
@@ -255,7 +279,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                       controller: _searchController,
                       onChanged: (val) => setState(() => _searchQuery = val),
                       decoration: InputDecoration(
-                        hintText: 'Search spells, damage, components, classes...',
+                        hintText:
+                            'Search spells, damage, components, classes...',
                         prefixIcon: const Icon(Icons.search, size: 20),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -266,8 +291,10 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                                 },
                               )
                             : null,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ),
@@ -291,7 +318,10 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                             ),
                             child: Text(
                               '$activeFilterCount',
-                              style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: theme.colorScheme.onPrimary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -311,17 +341,21 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                     segments: [
                       ButtonSegment(
                         value: SpellbookViewMode.allSpells,
-                        label: Text('All Spells (${allSpells.length})', style: const TextStyle(fontSize: 12)),
+                        label: Text('All Spells (${allSpells.length})',
+                            style: const TextStyle(fontSize: 12)),
                         icon: const Icon(Icons.grid_view, size: 16),
                       ),
                       ButtonSegment(
                         value: SpellbookViewMode.mySpellbook,
-                        label: Text('My Spellbook (${pinnedIds.length})', style: const TextStyle(fontSize: 12)),
+                        label: Text('My Spellbook (${pinnedIds.length})',
+                            style: const TextStyle(fontSize: 12)),
                         icon: const Icon(Icons.bookmark, size: 16),
                       ),
                       ButtonSegment(
                         value: SpellbookViewMode.revisions2024,
-                        label: Text('2024 Diffs (${allSpells.where((s) => s.isChangedIn2024).length})', style: const TextStyle(fontSize: 12)),
+                        label: Text(
+                            '2024 Diffs (${allSpells.where((s) => s.isChangedIn2024).length})',
+                            style: const TextStyle(fontSize: 12)),
                         icon: const Icon(Icons.auto_awesome, size: 16),
                       ),
                     ],
@@ -344,7 +378,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: ChoiceChip(
-                      label: const Text('All Schools', style: TextStyle(fontSize: 11)),
+                      label: const Text('All Schools',
+                          style: TextStyle(fontSize: 11)),
                       selected: _selectedSchool == null,
                       onSelected: (selected) {
                         if (selected) {
@@ -360,7 +395,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                       padding: const EdgeInsets.only(right: 6),
                       child: ChoiceChip(
                         avatar: Icon(school.icon, size: 13, color: schoolColor),
-                        label: Text(school.label, style: const TextStyle(fontSize: 11)),
+                        label: Text(school.label,
+                            style: const TextStyle(fontSize: 11)),
                         selected: _selectedSchool == school,
                         selectedColor: schoolColor.withValues(alpha: 0.25),
                         onSelected: (selected) {
@@ -385,7 +421,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: ChoiceChip(
-                      label: const Text('All Classes', style: TextStyle(fontSize: 11)),
+                      label: const Text('All Classes',
+                          style: TextStyle(fontSize: 11)),
                       selected: _selectedClass == null,
                       onSelected: (selected) {
                         if (selected) {
@@ -400,7 +437,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                       padding: const EdgeInsets.only(right: 6),
                       child: ChoiceChip(
                         avatar: Icon(cls.icon, size: 13),
-                        label: Text(cls.label, style: const TextStyle(fontSize: 11)),
+                        label: Text(cls.label,
+                            style: const TextStyle(fontSize: 11)),
                         selected: _selectedClass == cls,
                         onSelected: (selected) {
                           HapticService.selectionTick(context);
@@ -419,7 +457,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
             if (_lastQuickRollLabel != null)
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: pinColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -441,7 +480,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                     ),
                     IconButton(
                       icon: Icon(Icons.close, size: 16, color: pinColor),
-                      onPressed: () => setState(() => _lastQuickRollLabel = null),
+                      onPressed: () =>
+                          setState(() => _lastQuickRollLabel = null),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -454,16 +494,21 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
             // Content List
             Expanded(
               child: filteredSpells.isEmpty
-                  ? _buildEmptyState(theme, pinnedIds.isEmpty && _viewMode == SpellbookViewMode.mySpellbook)
+                  ? _buildEmptyState(
+                      theme,
+                      pinnedIds.isEmpty &&
+                          _viewMode == SpellbookViewMode.mySpellbook)
                   : CustomScrollView(
                       slivers: [
-                        if (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty) ...[
+                        if (_viewMode == SpellbookViewMode.allSpells &&
+                            pinnedSpellsInResults.isNotEmpty) ...[
                           SliverPadding(
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
                             sliver: SliverToBoxAdapter(
                               child: Row(
                                 children: [
-                                  Icon(Icons.bookmark, color: pinColor, size: 18),
+                                  Icon(Icons.bookmark,
+                                      color: pinColor, size: 18),
                                   const SizedBox(width: 6),
                                   Text(
                                     'Personal Spellbook (${pinnedSpellsInResults.length})',
@@ -477,36 +522,43 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                               ),
                             ),
                           ),
-                          _buildSliverSpellCards(context, pinnedSpellsInResults, edition, pinnedIds),
+                          _buildSliverSpellCards(context, pinnedSpellsInResults,
+                              edition, pinnedIds),
                           SliverPadding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
                             sliver: SliverToBoxAdapter(
-                              child: Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
+                              child: Divider(
+                                  color: theme.colorScheme.outlineVariant
+                                      .withValues(alpha: 0.2)),
                             ),
                           ),
                         ],
-
-                        if (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty)
+                        if (_viewMode == SpellbookViewMode.allSpells &&
+                            pinnedSpellsInResults.isNotEmpty)
                           SliverPadding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                             sliver: SliverToBoxAdapter(
                               child: Text(
                                 'Other SRD Spells (${otherSpellsInResults.length})',
                                 style: TextStyle(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.7),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
                               ),
                             ),
                           ),
-
-                        if (_viewMode == SpellbookViewMode.allSpells && pinnedSpellsInResults.isNotEmpty)
-                          ..._buildGroupedLevelSlivers(context, otherSpellsInResults, edition, pinnedIds)
+                        if (_viewMode == SpellbookViewMode.allSpells &&
+                            pinnedSpellsInResults.isNotEmpty)
+                          ..._buildGroupedLevelSlivers(
+                              context, otherSpellsInResults, edition, pinnedIds)
                         else
-                          ..._buildGroupedLevelSlivers(context, filteredSpells, edition, pinnedIds),
-
-                        const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+                          ..._buildGroupedLevelSlivers(
+                              context, filteredSpells, edition, pinnedIds),
+                        const SliverPadding(
+                            padding: EdgeInsets.only(bottom: 24)),
                       ],
                     ),
             ),
@@ -540,7 +592,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: diffColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
@@ -587,7 +640,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
         ),
       );
 
-      slivers.add(_buildSliverSpellCards(context, levelSpells, edition, pinnedIds));
+      slivers.add(
+          _buildSliverSpellCards(context, levelSpells, edition, pinnedIds));
     }
 
     return slivers;
@@ -607,7 +661,9 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
             ),
             const SizedBox(height: 14),
             Text(
-              isSpellbookEmpty ? 'Your Personal Spellbook is Empty' : 'No Spells Found',
+              isSpellbookEmpty
+                  ? 'Your Personal Spellbook is Empty'
+                  : 'No Spells Found',
               style: TextStyle(
                 color: theme.colorScheme.onSurface,
                 fontSize: 17,
@@ -620,7 +676,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                   ? 'Browse the Spellbook Companion and tap the bookmark icon on any spell to pin it to your personal spellbook.'
                   : 'Try adjusting your search terms or clearing active filters.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
             ),
             if (!isSpellbookEmpty) ...[
               const SizedBox(height: 14),
@@ -664,7 +721,8 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
         itemCount: rowCount,
         itemBuilder: (context, rowIndex) {
           final startIndex = rowIndex * crossAxisCount;
-          final rowSpells = spells.skip(startIndex).take(crossAxisCount).toList();
+          final rowSpells =
+              spells.skip(startIndex).take(crossAxisCount).toList();
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 14),
@@ -680,9 +738,12 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
                               spell: rowSpells[c],
                               edition: edition,
                               isPinned: pinnedIds.contains(rowSpells[c].id),
-                              onTogglePin: () => _togglePinSpell(context, rowSpells[c].id),
-                              onTap: () => _showCompareDialog(context, rowSpells[c]),
-                              onOpenQuickRoll: () => _openQuickRollDialog(context, rowSpells[c], edition),
+                              onTogglePin: () =>
+                                  _togglePinSpell(context, rowSpells[c].id),
+                              onTap: () => _showCompareDialog(
+                                  context, rowSpells[c], edition),
+                              onOpenQuickRoll: () => _openQuickRollDialog(
+                                  context, rowSpells[c], edition),
                               onQuickRoll: _performSpellRoll,
                             ),
                           )

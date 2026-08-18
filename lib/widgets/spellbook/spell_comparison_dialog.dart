@@ -8,12 +8,14 @@ import '../glyphs/dnd_glyph.dart';
 /// Interactive modal comparing 2014 RAW spell mechanics vs 2024 Revised rules side-by-side.
 class SpellComparisonDialog extends StatefulWidget {
   final SpellItem spell;
+  final DmRulesEdition initialEdition;
   final bool isPinned;
   final VoidCallback onTogglePin;
 
   const SpellComparisonDialog({
     super.key,
     required this.spell,
+    required this.initialEdition,
     required this.isPinned,
     required this.onTogglePin,
   });
@@ -21,6 +23,7 @@ class SpellComparisonDialog extends StatefulWidget {
   static Future<void> show(
     BuildContext context, {
     required SpellItem spell,
+    DmRulesEdition? edition,
     required bool isPinned,
     required VoidCallback onTogglePin,
   }) {
@@ -29,6 +32,7 @@ class SpellComparisonDialog extends StatefulWidget {
       context: context,
       builder: (ctx) => SpellComparisonDialog(
         spell: spell,
+        initialEdition: edition ?? DmRulesEdition.v2024,
         isPinned: isPinned,
         onTogglePin: onTogglePin,
       ),
@@ -41,11 +45,14 @@ class SpellComparisonDialog extends StatefulWidget {
 
 class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
   late bool _pinned;
+  late DmRulesEdition _activeEdition;
+  bool _showDiff = false;
 
   @override
   void initState() {
     super.initState();
     _pinned = widget.isPinned;
+    _activeEdition = widget.initialEdition;
   }
 
   void _handlePinToggle() {
@@ -61,6 +68,9 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
     final isDark = theme.brightness == Brightness.dark;
     final spell = widget.spell;
     final schoolColor = spell.school.getLegibleColor(isDark);
+    final currentRules = spell.getRules(_activeEdition);
+    final currentSchool = spell.getSchool(_activeEdition);
+    final showDualView = _showDiff && spell.isChangedIn2024;
 
     return Dialog(
       backgroundColor: theme.colorScheme.surface,
@@ -76,11 +86,12 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
             Row(
               children: [
                 DndGlyph.spell(
-                  school: spell.school,
+                  school: currentSchool,
                   level: spell.level,
-                  actionRings: spell.getGlyphActionRings(DmRulesEdition.v2024),
+                  actionRings: spell.getGlyphActionRings(_activeEdition),
                   size: 46,
                   isDarkMode: isDark,
+                  isActive: true,
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -103,21 +114,37 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                           const SizedBox(width: 8),
                           if (spell.isChangedIn2024)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: (isDark ? Colors.amber : const Color(0xFFB45309)).withValues(alpha: 0.15),
+                                color: (isDark
+                                        ? Colors.amber
+                                        : const Color(0xFFB45309))
+                                    .withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: (isDark ? Colors.amber : const Color(0xFFB45309)).withValues(alpha: 0.5)),
+                                border: Border.all(
+                                    color: (isDark
+                                            ? Colors.amber
+                                            : const Color(0xFFB45309))
+                                        .withValues(alpha: 0.5)),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.auto_awesome, color: isDark ? Colors.amber : const Color(0xFFB45309), size: 11),
+                                  Icon(Icons.auto_awesome,
+                                      color: isDark
+                                          ? Colors.amber
+                                          : const Color(0xFFB45309),
+                                      size: 11),
                                   const SizedBox(width: 3),
                                   Text(
-                                    '2024 Revised',
+                                    _activeEdition == DmRulesEdition.v2014
+                                        ? '2014 RAW'
+                                        : '2024 Revised',
                                     style: TextStyle(
-                                      color: isDark ? Colors.amber : const Color(0xFFB45309),
+                                      color: isDark
+                                          ? Colors.amber
+                                          : const Color(0xFFB45309),
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -129,7 +156,7 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${spell.levelLabel} ${spell.school.label} • 2014 vs 2024 Comparison',
+                        '${spell.levelLabel} ${currentSchool.label} • ${_showDiff && spell.isChangedIn2024 ? 'Side-by-side 2014 vs 2024' : (_activeEdition == DmRulesEdition.v2014 ? '2014 RAW View' : '2024 Revised View')}',
                         style: TextStyle(
                           color: schoolColor,
                           fontSize: 12,
@@ -142,14 +169,31 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                 IconButton(
                   icon: Icon(
                     _pinned ? Icons.bookmark : Icons.bookmark_border,
-                    color: _pinned ? (isDark ? Colors.purpleAccent : theme.colorScheme.secondary) : theme.colorScheme.onSurfaceVariant,
+                    color: _pinned
+                        ? (isDark
+                            ? Colors.purpleAccent
+                            : theme.colorScheme.secondary)
+                        : theme.colorScheme.onSurfaceVariant,
                     size: 24,
                   ),
-                  tooltip: _pinned ? 'Remove from Personal Spellbook' : 'Pin to Personal Spellbook',
+                  tooltip: _pinned
+                      ? 'Remove from Personal Spellbook'
+                      : 'Pin to Personal Spellbook',
                   onPressed: _handlePinToggle,
                 ),
+                if (spell.isChangedIn2024)
+                  TextButton.icon(
+                    onPressed: () => setState(() => _showDiff = !_showDiff),
+                    icon: Icon(
+                        _showDiff
+                            ? Icons.visibility_outlined
+                            : Icons.compare_arrows,
+                        size: 16),
+                    label: Text(_showDiff ? 'Keep Current View' : 'View Diff'),
+                  ),
                 IconButton(
-                  icon: Icon(Icons.close, color: theme.colorScheme.onSurfaceVariant),
+                  icon: Icon(Icons.close,
+                      color: theme.colorScheme.onSurfaceVariant),
                   tooltip: 'Close comparison dialog',
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -158,14 +202,19 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
             const SizedBox(height: 12),
 
             // Diff Summary & Highlights Banner
-            if (spell.isChangedIn2024 && (spell.diffSummary != null || spell.diffHighlights.isNotEmpty)) ...[
+            if (spell.isChangedIn2024 &&
+                (spell.diffSummary != null ||
+                    spell.diffHighlights.isNotEmpty)) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.amber : const Color(0xFFB45309)).withValues(alpha: 0.12),
+                  color: (isDark ? Colors.amber : const Color(0xFFB45309))
+                      .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: (isDark ? Colors.amber : const Color(0xFFB45309)).withValues(alpha: 0.4)),
+                  border: Border.all(
+                      color: (isDark ? Colors.amber : const Color(0xFFB45309))
+                          .withValues(alpha: 0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,13 +223,19 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.auto_awesome, color: isDark ? Colors.amber : const Color(0xFFB45309), size: 18),
+                          Icon(Icons.auto_awesome,
+                              color: isDark
+                                  ? Colors.amber
+                                  : const Color(0xFFB45309),
+                              size: 18),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               spell.diffSummary!,
                               style: TextStyle(
-                                color: isDark ? Colors.amber : const Color(0xFFB45309),
+                                color: isDark
+                                    ? Colors.amber
+                                    : const Color(0xFFB45309),
                                 fontSize: 13,
                                 height: 1.35,
                                 fontWeight: FontWeight.w600,
@@ -197,12 +252,20 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('▸ ', style: TextStyle(color: isDark ? Colors.amber : const Color(0xFFB45309), fontSize: 12)),
+                              Text('▸ ',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.amber
+                                          : const Color(0xFFB45309),
+                                      fontSize: 12)),
                               Expanded(
                                 child: Text(
                                   h,
                                   style: TextStyle(
-                                    color: isDark ? Colors.amber.shade100 : theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                                    color: isDark
+                                        ? Colors.amber.shade100
+                                        : theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.9),
                                     fontSize: 12,
                                     height: 1.3,
                                   ),
@@ -225,27 +288,63 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 580;
-                    final v2014Color = isDark ? Colors.blueGrey : const Color(0xFF475569);
-                    final v2024Color = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
+                    final v2014Color =
+                        isDark ? Colors.blueGrey : const Color(0xFF475569);
+                    final v2024Color = isDark
+                        ? Colors.purpleAccent
+                        : theme.colorScheme.secondary;
 
-                    if (isWide) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: _buildEditionBox(context, '2014 (5e RAW)', spell.rules2014, v2014Color)),
-                          const SizedBox(width: 14),
-                          Expanded(child: _buildEditionBox(context, '2024 (Revised 5e)', spell.rules2024, v2024Color)),
-                        ],
-                      );
-                    } else {
+                    if (showDualView) {
+                      if (isWide) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                                child: _buildEditionBox(
+                                    context,
+                                    '2014 (5e RAW)',
+                                    spell.rules2014,
+                                    v2014Color)),
+                            const SizedBox(width: 14),
+                            Expanded(
+                                child: _buildEditionBox(
+                                    context,
+                                    '2024 (Revised 5e)',
+                                    spell.rules2024,
+                                    v2024Color)),
+                          ],
+                        );
+                      }
+
                       return Column(
                         children: [
-                          _buildEditionBox(context, '2014 (5e RAW)', spell.rules2014, v2014Color),
+                          _buildEditionBox(context, '2014 (5e RAW)',
+                              spell.rules2014, v2014Color),
                           const SizedBox(height: 12),
-                          _buildEditionBox(context, '2024 (Revised 5e)', spell.rules2024, v2024Color),
+                          _buildEditionBox(context, '2024 (Revised 5e)',
+                              spell.rules2024, v2024Color),
                         ],
                       );
                     }
+
+                    final visibleRules = currentRules;
+                    final visibleTitle = _activeEdition == DmRulesEdition.v2014
+                        ? '2014 (5e RAW)'
+                        : '2024 (Revised 5e)';
+                    final visibleAccent = _activeEdition == DmRulesEdition.v2014
+                        ? v2014Color
+                        : v2024Color;
+                    final displayCard = _buildEditionBox(
+                        context, visibleTitle, visibleRules, visibleAccent);
+
+                    if (isWide) {
+                      return Center(
+                          child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 650),
+                              child: displayCard));
+                    }
+
+                    return displayCard;
                   },
                 ),
               ),
@@ -289,29 +388,45 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
               ),
             ],
           ),
-          Divider(height: 16, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
+          Divider(
+              height: 16,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
 
           // Metadata Grid
-          _buildMetaRow(context, 'School', (rules.schoolOverride ?? widget.spell.school).label, accentColor),
-          _buildMetaRow(context, 'Casting Time', rules.castingTime, accentColor),
+          _buildMetaRow(context, 'School',
+              (rules.schoolOverride ?? widget.spell.school).label, accentColor),
+          _buildMetaRow(
+              context, 'Casting Time', rules.castingTime, accentColor),
           _buildMetaRow(context, 'Range', rules.range, accentColor),
           _buildMetaRow(context, 'Components', rules.components, accentColor),
           _buildMetaRow(context, 'Duration', rules.duration, accentColor),
           if (rules.savingThrow != null)
-            _buildMetaRow(context, 'Saving Throw', '${rules.savingThrow} Save', accentColor),
+            _buildMetaRow(context, 'Saving Throw', '${rules.savingThrow} Save',
+                accentColor),
           if (rules.damageOrHealType != null)
-            _buildMetaRow(context, 'Type / Formula', '${rules.rollFormula ?? ''} (${rules.damageOrHealType})', accentColor),
-          _buildMetaRow(context, 'Classes', rules.classes.map((c) => c.label).join(', '), accentColor),
+            _buildMetaRow(
+                context,
+                'Type / Formula',
+                '${rules.rollFormula ?? ''} (${rules.damageOrHealType})',
+                accentColor),
+          _buildMetaRow(context, 'Classes',
+              rules.classes.map((c) => c.label).join(', '), accentColor),
 
           const SizedBox(height: 10),
-          Divider(height: 16, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
+          Divider(
+              height: 16,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
 
           // Description Paragraphs
           ...rules.description.map((p) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   p,
-                  style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 13, height: 1.38),
+                  style: TextStyle(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                      fontSize: 13,
+                      height: 1.38),
                 ),
               )),
 
@@ -319,12 +434,19 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
             const SizedBox(height: 6),
             Text(
               'At Higher Levels:',
-              style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 12),
+              style: TextStyle(
+                  color: accentColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12),
             ),
             const SizedBox(height: 3),
             Text(
               rules.higherLevels!,
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12, fontStyle: FontStyle.italic, height: 1.3),
+              style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  height: 1.3),
             ),
           ],
         ],
@@ -332,7 +454,8 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
     );
   }
 
-  Widget _buildMetaRow(BuildContext context, String label, String value, Color accentColor) {
+  Widget _buildMetaRow(
+      BuildContext context, String label, String value, Color accentColor) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
