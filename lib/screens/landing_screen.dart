@@ -520,28 +520,18 @@ class _LandingScreenState extends State<LandingScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     Widget? glyphWidget;
 
-    String? spellIdForTool(String id) {
-      switch (id) {
-        case 'animate_objects':
-          return 'spell_animate_objects';
-        case 'conjure_animals':
-          return 'spell_conjure_animals';
-        case 'animate_dead':
-          return 'spell_animate_dead';
-        case 'create_undead':
-          return 'spell_create_undead';
-        case 'conjure_elementals':
-        case 'conjure_elemental':
-          return 'spell_conjure_elemental';
-        case 'conjure_minor_elementals':
-          return 'spell_conjure_minor_elementals';
-        case 'giant_insect':
-          return 'spell_giant_insect';
-      }
-      return null;
-    }
+    const spellGlyphIdsByToolId = <String, String>{
+      'animate_objects': 'spell_animate_objects',
+      'conjure_animals': 'spell_conjure_animals',
+      'animate_dead': 'spell_animate_dead',
+      'create_undead': 'spell_create_undead',
+      'conjure_elementals': 'spell_conjure_elemental',
+      'conjure_elemental': 'spell_conjure_elemental',
+      'conjure_minor_elementals': 'spell_conjure_minor_elementals',
+      'giant_insect': 'spell_giant_insect',
+    };
 
-    final spellId = spellIdForTool(item.id);
+    final spellId = spellGlyphIdsByToolId[item.id];
     if (spellId != null) {
       final spell = SpellbookLibrary.getSpellById(spellId);
       if (spell != null) {
