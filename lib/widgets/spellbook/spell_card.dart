@@ -33,6 +33,10 @@ class SpellCard extends StatelessWidget {
     final effectiveSchool = spell.getSchool(edition);
     final schoolColor = effectiveSchool.getLegibleColor(isDark);
     final glyphRings = spell.getGlyphActionRings(edition);
+    final visibleGlyphRings = glyphRings
+        .where((ring) => !(rules.concentration &&
+            ring.ringType == ActionRingType.concentration))
+        .toList(growable: false);
     final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final cardBorderColor = isPinned
@@ -153,7 +157,7 @@ class SpellCard extends StatelessWidget {
               _buildBadge(context, Icons.hourglass_empty_outlined,
                   rules.duration, schoolColor),
               if (rules.concentration)
-                _buildTag('Conc',
+                _buildTag('Concentration',
                     isDark ? Colors.amberAccent : const Color(0xFFB45309)),
               if (rules.ritual)
                 _buildTag('Ritual',
@@ -170,11 +174,11 @@ class SpellCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          if (glyphRings.isNotEmpty) ...[
+          if (visibleGlyphRings.isNotEmpty) ...[
             Wrap(
               spacing: 4,
               runSpacing: 4,
-              children: glyphRings.map((r) {
+              children: visibleGlyphRings.map((r) {
                 final ringLabel = r.damageLegend.isNotEmpty
                     ? '${r.ringType.displayName} • ${r.damageLegend}'
                     : r.ringType.displayName;
