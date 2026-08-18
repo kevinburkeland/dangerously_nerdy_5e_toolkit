@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/dm_screen_data.dart';
 import '../models/landing_tool_item.dart';
+import '../models/spellbook_data.dart';
 import '../services/haptic_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
@@ -8,7 +10,6 @@ import '../widgets/interactive/pressable_card.dart';
 import '../widgets/dialogs/legal_dialogs.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
-import '../widgets/glyphs/glyph_tokens.dart';
 import 'dm_reference_screen.dart';
 import 'settings_screen.dart';
 import 'spellbook_screen.dart';
@@ -461,80 +462,47 @@ class _LandingScreenState extends State<LandingScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     Widget? glyphWidget;
 
+    String? spellIdForTool(String id) {
+      switch (id) {
+        case 'animate_objects':
+          return 'spell_animate_objects';
+        case 'conjure_animals':
+          return 'spell_conjure_animals';
+        case 'animate_dead':
+          return 'spell_animate_dead';
+        case 'create_undead':
+          return 'spell_create_undead';
+        case 'conjure_elementals':
+        case 'conjure_elemental':
+          return 'spell_conjure_elemental';
+        case 'conjure_minor_elementals':
+          return 'spell_conjure_minor_elementals';
+        case 'giant_insect':
+          return 'spell_giant_insect';
+      }
+      return null;
+    }
+
+    final spellId = spellIdForTool(item.id);
+    if (spellId != null) {
+      final spell = SpellbookLibrary.getSpellById(spellId);
+      if (spell != null) {
+        glyphWidget = DndGlyph.spell(
+          school: spell.getSchool(DmRulesEdition.v2024),
+          level: spell.level,
+          actionRings: spell.getGlyphActionRings(DmRulesEdition.v2024),
+          damageAccent: spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024),
+          size: 40,
+          isDarkMode: isDark,
+        );
+      }
+    }
+
     switch (item.id) {
-      case 'animate_objects':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.transmutation,
-          level: 5,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.concentration),
-            ActionTraitRing(ringType: ActionRingType.melee),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'conjure_animals':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.conjuration,
-          level: 3,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.concentration),
-            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'animate_dead':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.necromancy,
-          level: 3,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic),
-            ActionTraitRing(ringType: ActionRingType.ranged),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'create_undead':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.necromancy,
-          level: 6,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.necrotic),
-            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'conjure_elementals' || 'conjure_elemental' || 'conjure_minor_elementals':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.conjuration,
-          level: 5,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.concentration),
-            ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
-      case 'giant_insect':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.transmutation,
-          level: 4,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.concentration),
-            ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison),
-          ],
-          size: 40,
-          isDarkMode: isDark,
-        );
       case 'glyph_studio':
         glyphWidget = DndGlyph.spell(
           school: SpellSchool.divination,
           level: 9,
-          actionRings: const [
-            ActionTraitRing(ringType: ActionRingType.legendary, damageType: DamageAccent.radiant),
-          ],
           size: 40,
           isDarkMode: isDark,
         );

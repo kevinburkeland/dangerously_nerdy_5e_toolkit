@@ -201,34 +201,179 @@ class SpellItem {
     final rings = <ActionTraitRing>[];
     final rules = getRules(edition);
 
+    bool hasExplicitAreaOfEffect() {
+      final text = [
+        rules.range,
+        ...rules.description,
+        ...tags,
+      ].map((value) => value.toLowerCase()).join(' ');
+
+      final areaShapeTerms = ['cone', 'line', 'radius', 'sphere', 'cube', 'cylinder', 'emanation', 'burst', 'wall'];
+      final aoePhrases = [
+        'each creature in a',
+        'each creature in the',
+        'creatures in a',
+        'creatures in the',
+        'in a 20-foot-radius',
+        'in a 15-foot-radius',
+        'in a 10-foot-radius',
+        'within the area',
+        'in the area',
+        'area of effect',
+        'explosion of flame',
+      ];
+
+      return areaShapeTerms.any(text.contains) || aoePhrases.any(text.contains);
+    }
+
+    bool hasExplicitRechargeMechanic() {
+      final text = [
+        ...rules.description,
+        ...tags,
+      ].map((value) => value.toLowerCase()).join(' ');
+      return text.contains('recharge') || text.contains('recharges');
+    }
+
+    bool hasControlSemantics() {
+      const controlTerms = [
+        'restrain',
+        'restrained',
+        'paralyze',
+        'paralyzed',
+        'charm',
+        'charmed',
+        'frighten',
+        'frightened',
+        'incapacitated',
+        'stun',
+        'stunned',
+        'banish',
+        'banished',
+        'grapple',
+        'grappled',
+        'prone',
+        'sleep',
+        'confusion',
+      ];
+      final text = [
+        ...rules.description,
+        ...tags,
+        rules.savingThrow ?? '',
+      ].map((value) => value.toLowerCase()).join(' ');
+      return controlTerms.any(text.contains);
+    }
+
+    bool hasSustainSemantics() {
+      const sustainTerms = [
+        'healing',
+        'regain hit points',
+        'regains hit points',
+        'regain hp',
+        'regains hp',
+        'temporary hit points',
+        'temp hp',
+        'regeneration',
+        'regenerate',
+      ];
+      final text = [
+        rules.damageOrHealType ?? '',
+        ...rules.description,
+        ...tags,
+      ].map((value) => value.toLowerCase()).join(' ');
+      return sustainTerms.any(text.contains);
+    }
+
+    bool sameDamageTypes(List<DamageAccent> a, List<DamageAccent> b) {
+      if (identical(a, b)) return true;
+      if (a.length != b.length) return false;
+      for (int i = 0; i < a.length; i++) {
+        if (a[i] != b[i]) return false;
+      }
+      return true;
+    }
+
+    void addRing(ActionRingType type, {DamageAccent? damageType, List<DamageAccent> damageTypes = const []}) {
+      final exists = rings.any((r) =>
+          r.ringType == type &&
+          r.damageType == damageType &&
+          sameDamageTypes(r.damageTypes, damageTypes));
+      if (exists) return;
+      rings.add(ActionTraitRing(
+        ringType: type,
+        damageType: damageType,
+        damageTypes: damageTypes,
+      ));
+    }
+
     if (rules.concentration) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.concentration));
+      addRing(ActionRingType.concentration);
     }
 
-    final dmg = rules.damageOrHealType?.toLowerCase() ?? '';
-    if (dmg.contains('fire')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire));
-    } else if (dmg.contains('radiant')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.radiant));
-    } else if (dmg.contains('necrotic')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.necrotic));
-    } else if (dmg.contains('lightning')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.lightning));
-    } else if (dmg.contains('cold')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold));
-    } else if (dmg.contains('poison')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.poison));
-    } else if (dmg.contains('acid')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.acid));
-    } else if (dmg.contains('psychic')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.psychic));
-    } else if (dmg.contains('force')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.force));
-    } else if (dmg.contains('thunder')) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.thunder));
+    if (hasControlSemantics()) {
+      addRing(ActionRingType.control);
     }
 
-    return rings;
+    if (hasSustainSemantics()) {
+      addRing(ActionRingType.sustain);
+    }
+
+    if (hasExplicitAreaOfEffect() || hasExplicitRechargeMechanic()) {
+      final damageAccents = getGlyphDamageAccents(edition);
+      final primaryDamage = damageAccents.isNotEmpty ? damageAccents.first : null;
+      final extraDamageTypes = damageAccents.length > 1
+          ? damageAccents.sublist(1)
+          : const <DamageAccent>[];
+      addRing(
+        ActionRingType.recharge,
+        damageType: primaryDamage,
+        damageTypes: extraDamageTypes,
+      );
+    }
+
+    final casting = rules.castingTime.toLowerCase();
+    if (casting.contains('reaction')) {
+      addRing(ActionRingType.reaction);
+    }
+
+    return rings.take(3).toList(growable: false);
+  }
+
+  /// Primary damage accent used by glyphs for this spell in the selected rules edition.
+  DamageAccent? getGlyphPrimaryDamageAccent(DmRulesEdition edition) {
+    final accents = getGlyphDamageAccents(edition);
+    if (accents.isEmpty) return null;
+    return accents.first;
+  }
+
+  /// Ordered damage accents used by glyphs for this spell in the selected rules edition.
+  List<DamageAccent> getGlyphDamageAccents(DmRulesEdition edition) {
+    final dmg = (getRules(edition).damageOrHealType ?? '').toLowerCase();
+    if (dmg.isEmpty) return const [];
+
+    final accents = <DamageAccent>[];
+    void addIfPresent(String token, DamageAccent accent) {
+      if (dmg.contains(token) && !accents.contains(accent)) {
+        accents.add(accent);
+      }
+    }
+
+    addIfPresent('fire', DamageAccent.fire);
+    addIfPresent('radiant', DamageAccent.radiant);
+    addIfPresent('necrotic', DamageAccent.necrotic);
+    addIfPresent('lightning', DamageAccent.lightning);
+    addIfPresent('cold', DamageAccent.cold);
+    addIfPresent('poison', DamageAccent.poison);
+    addIfPresent('acid', DamageAccent.acid);
+    addIfPresent('psychic', DamageAccent.psychic);
+    addIfPresent('force', DamageAccent.force);
+    addIfPresent('thunder', DamageAccent.thunder);
+
+    if ((dmg.contains('bludgeoning') || dmg.contains('slashing') || dmg.contains('piercing')) &&
+        !accents.contains(DamageAccent.physical)) {
+      accents.add(DamageAccent.physical);
+    }
+
+    return accents;
   }
 }
 

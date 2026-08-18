@@ -289,101 +289,113 @@ class GlyphGeometry {
     required GlyphFrameShape shape,
     required Color primaryColor,
     required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
   }) {
     final w = size.width;
     final h = size.height;
     final s = min(w, h);
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
+    final pulse = animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
 
-    // Tier 2 (Adept / Levels 3-5 / CR 5-10): Bottom notch telemetry & perimeter circuit nodes
+    // Tier 2 (Adept / Levels 3-5 / CR 5-10): instrument-panel brace, not a cluster. The visual reads as a refined, advanced glyph.
     if (tierLevel == 2) {
-      final notchPaint = Paint()
-        ..color = primaryColor
-        ..style = PaintingStyle.fill;
-      const notchCount = 2;
-      final spacing = 3.2 * scale;
-      final startX = center.dx - ((notchCount - 1) * spacing / 2.0);
-      final notchY = center.dy + 10.5 * scale;
-      for (int i = 0; i < notchCount; i++) {
-        canvas.drawCircle(Offset(startX + i * spacing, notchY), 0.85 * scale, notchPaint);
-      }
-
-      // Secondary circuit node lines connecting to perimeter
-      final circuitPaint = Paint()
-        ..color = primaryColor.withValues(alpha: 0.60)
+      final bracePaint = Paint()
+        ..color = primaryColor.withValues(alpha: 0.72 + pulse * 0.28)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.85 * scale
+        ..strokeWidth = 1.1 * scale
         ..strokeCap = StrokeCap.round;
-      canvas.drawLine(center - Offset(8.0 * scale, 0), center - Offset(5.5 * scale, 0), circuitPaint);
-      canvas.drawLine(center + Offset(5.5 * scale, 0), center + Offset(8.0 * scale, 0), circuitPaint);
-      canvas.drawCircle(center - Offset(5.5 * scale, 0), 0.85 * scale, notchPaint);
-      canvas.drawCircle(center + Offset(5.5 * scale, 0), 0.85 * scale, notchPaint);
-    }
 
-    // Tier 3 & Tier 4 (Master & Apex): Concentric double border, corner studs, and holographic scanlines
-    if (tierLevel >= 3) {
-      // 0.5dp Holographic Scanlines
-      final containerPath = getContainerPath(shape, size);
-      canvas.save();
-      canvas.clipPath(containerPath);
-      final scanlinePaint = Paint()
-        ..color = (isDarkMode ? Colors.white : primaryColor).withValues(alpha: tierLevel == 4 ? 0.09 : 0.06)
-        ..strokeWidth = 0.5 * scale;
-      for (double y = 0; y <= h; y += 2.5 * scale) {
-        canvas.drawLine(Offset(0, y), Offset(w, y), scanlinePaint);
-      }
-      canvas.restore();
-
-      final innerBorderPaint = Paint()
-        ..color = primaryColor.withValues(alpha: 0.70)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.85 * scale;
-
-      final innerPath = Path();
-      innerPath.addOval(Rect.fromCircle(center: center, radius: 8.2 * scale));
-      canvas.drawPath(innerPath, innerBorderPaint);
-
-      // Corner stud & circuit terminal node accents
-      final studPaint = Paint()
-        ..color = isDarkMode ? Colors.white70 : primaryColor
+      final nodePaint = Paint()
+        ..color = primaryColor.withValues(alpha: 0.82 + pulse * 0.18)
         ..style = PaintingStyle.fill;
-      final studDist = 9.8 * scale;
-      for (int i = 0; i < 4; i++) {
-        final angle = (i * 90.0 + 45.0) * pi / 180.0;
-        final pt = Offset(center.dx + studDist * cos(angle), center.dy + studDist * sin(angle));
-        canvas.drawCircle(pt, 0.75 * scale, studPaint);
+
+      final barY = center.dy + 9.0 * scale + sin(pulseTurns * 2.0 * pi * 2.0) * 0.6 * scale;
+      final barLeft = center.dx - 6.0 * scale;
+      final barRight = center.dx + 6.0 * scale;
+
+      canvas.drawLine(Offset(barLeft, barY), Offset(barRight, barY), bracePaint);
+      canvas.drawLine(Offset(center.dx - 2.3 * scale, center.dy + 6.4 * scale), Offset(center.dx - 2.3 * scale, barY), bracePaint);
+      canvas.drawLine(Offset(center.dx + 2.3 * scale, center.dy + 6.4 * scale), Offset(center.dx + 2.3 * scale, barY), bracePaint);
+
+      final nodeOffset = 4.4 * scale;
+      final nodeYs = [
+        center.dy + 5.5 * scale,
+        barY,
+      ];
+      for (final ny in nodeYs) {
+        canvas.drawCircle(Offset(center.dx - nodeOffset, ny), (0.62 + pulse * 0.18) * scale, nodePaint);
+        canvas.drawCircle(Offset(center.dx + nodeOffset, ny), (0.62 + pulse * 0.18) * scale, nodePaint);
       }
+
+      final trimPaint = Paint()
+        ..color = primaryColor.withValues(alpha: 0.34 + pulse * 0.24)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.7 * scale
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(center - Offset(6.5 * scale, 0), center - Offset(4.1 * scale, 2.5 * scale), trimPaint);
+      canvas.drawLine(center + Offset(6.5 * scale, 0), center + Offset(4.1 * scale, 2.5 * scale), trimPaint);
     }
 
-    // Tier 4 ONLY (Archmage / Apex / Level 9 / CR 17+): Golden filigree crowning arch, apex diamond, & circuit horns
+    // Tier 3 & Tier 4: progression ladder. Each rung adds a higher level of structural reinforcement.
+    if (tierLevel >= 3) {
+      final activePaint = Paint()
+        ..color = primaryColor.withValues(alpha: 0.72 + pulse * 0.28)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.9 * scale
+        ..strokeCap = StrokeCap.round;
+
+      final nodePaint = Paint()
+        ..color = primaryColor.withValues(alpha: 0.82 + pulse * 0.18)
+        ..style = PaintingStyle.fill;
+
+      final verticalX = center.dx;
+      final rungY = center.dy + (tierLevel == 4 ? 7.8 : 8.5) * scale;
+      final rungSpread = (tierLevel == 4 ? 6.5 : 5.6) * scale;
+      final rungCount = tierLevel == 4 ? 3 : 2;
+
+      for (int i = 0; i < rungCount; i++) {
+        final y = rungY - i * (2.6 * scale);
+        canvas.drawLine(
+          Offset(verticalX - rungSpread, y),
+          Offset(verticalX + rungSpread, y),
+          activePaint,
+        );
+        canvas.drawCircle(Offset(verticalX - rungSpread, y), (0.55 + pulse * 0.22) * scale, nodePaint);
+        canvas.drawCircle(Offset(verticalX + rungSpread, y), (0.55 + pulse * 0.22) * scale, nodePaint);
+      }
+
+      canvas.drawLine(
+        Offset(verticalX, center.dy - 8.8 * scale),
+        Offset(verticalX, center.dy + 9.4 * scale),
+        activePaint,
+      );
+    }
+
+    // Tier 4 ONLY: extend the ladder with a crown-like cap, still reading as the same progression system.
     if (tierLevel == 4) {
       const goldColor = Color(0xFFCA8A04);
       final crownPaint = Paint()
-        ..color = goldColor
+        ..color = goldColor.withValues(alpha: 0.72 + pulse * 0.28)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2 * scale
         ..strokeCap = StrokeCap.round;
 
-      // Top crowning arch
+      final crownY = center.dy - 11.2 * scale;
       final archPath = Path();
-      archPath.moveTo(center.dx - 6.5 * scale, center.dy - 10.5 * scale);
-      archPath.quadraticBezierTo(center.dx, center.dy - 13.5 * scale, center.dx + 6.5 * scale, center.dy - 10.5 * scale);
+      archPath.moveTo(center.dx - 6.0 * scale, crownY);
+      archPath.quadraticBezierTo(center.dx, center.dy - 13.6 * scale, center.dx + 6.0 * scale, crownY);
       canvas.drawPath(archPath, crownPaint);
 
-      // Crown apex diamond & circuit terminal nodes
+      final diamondFill = Paint()..color = goldColor.withValues(alpha: 0.8 + pulse * 0.2)..style = PaintingStyle.fill;
       final crownDiamond = Path();
-      crownDiamond.moveTo(center.dx, center.dy - 14.2 * scale);
-      crownDiamond.lineTo(center.dx + 1.4 * scale, center.dy - 12.8 * scale);
-      crownDiamond.lineTo(center.dx, center.dy - 11.4 * scale);
-      crownDiamond.lineTo(center.dx - 1.4 * scale, center.dy - 12.8 * scale);
+      crownDiamond.moveTo(center.dx, center.dy - 14.0 * scale);
+      crownDiamond.lineTo(center.dx + 1.6 * scale, center.dy - 12.2 * scale);
+      crownDiamond.lineTo(center.dx, center.dy - 10.4 * scale);
+      crownDiamond.lineTo(center.dx - 1.6 * scale, center.dy - 12.2 * scale);
       crownDiamond.close();
-      final diamondFill = Paint()..color = goldColor..style = PaintingStyle.fill;
       canvas.drawPath(crownDiamond, diamondFill);
-
-      // Terminal circuit nodes on arch ends
-      canvas.drawCircle(Offset(center.dx - 6.5 * scale, center.dy - 10.5 * scale), 0.95 * scale, diamondFill);
-      canvas.drawCircle(Offset(center.dx + 6.5 * scale, center.dy - 10.5 * scale), 0.95 * scale, diamondFill);
     }
   }
 
@@ -428,6 +440,9 @@ class GlyphGeometry {
     required List<ActionTraitRing> rings,
     required Color defaultColor,
     required bool isDarkMode,
+    double rotationTurns = 0.0,
+    bool animateRotation = false,
+    int tierLevel = 1,
   }) {
     if (rings.isEmpty) return;
 
@@ -453,10 +468,58 @@ class GlyphGeometry {
       }
     }
 
+    final tierPulse = switch (tierLevel) {
+      1 => 0.18,
+      2 => 0.38,
+      3 => 0.66,
+      _ => 1.0,
+    };
+
     for (int idx = 0; idx < rings.length; idx++) {
       final ring = rings[idx];
       final r = radii[idx];
-      final ringColor = ring.getEffectiveColor(defaultColor, isDarkMode: isDarkMode);
+      final normalizedTurns = rotationTurns % 1.0;
+      final colorCyclesPerLoop = switch (idx % 4) {
+        0 => 1,
+        1 => 2,
+        2 => 3,
+        _ => 2,
+      };
+      final colorPhase = animateRotation
+          ? (normalizedTurns * colorCyclesPerLoop + idx * 0.17)
+          : 0.0;
+      final ringColor = ring.getAnimatedColor(
+        defaultColor,
+        isDarkMode: isDarkMode,
+        phase: colorPhase,
+      );
+      final direction = idx.isEven ? 1.0 : -1.0;
+      // Use whole-number cycles per controller loop so orientation matches at wrap.
+      final speedFactor = switch (tierLevel) {
+        1 => (idx + 1).toDouble(),
+        2 => (idx + 2).toDouble(),
+        3 => (idx + 1) * 2.0,
+        _ => (idx + 2) * 2.0,
+      };
+      final breathFrequency = switch (tierLevel) {
+        1 => (idx % 3) + 1,
+        2 => (idx % 3) + 2,
+        3 => (idx % 3) + 3,
+        _ => (idx % 3) + 4,
+      };
+      final breathPhase = idx * 1.37 + tierPulse * 2.2;
+      final breathSin = animateRotation
+          ? (
+              (sin((normalizedTurns * 2.0 * pi * breathFrequency) + breathPhase) * (0.72 + tierPulse * 0.55)) +
+              (sin((normalizedTurns * 2.0 * pi * (breathFrequency + 1)) + (breathPhase * 0.63)) * (0.28 + tierPulse * 0.30))
+            )
+          : 0.0;
+      final breathWave = 0.5 + 0.5 * breathSin;
+      final breathAmplitude = scale * (0.95 + ((idx % 3) * 0.22) + (tierPulse * 1.7));
+      final breathingRadius = r + (breathSin * breathAmplitude);
+      final rotationAngle = animateRotation
+          ? (rotationTurns * 2.0 * pi * direction * speedFactor)
+          : 0.0;
 
       // 1. Dark contrast underlay outline to prevent visual clutter and separate adjacent rings
       final underlayPaint = Paint()
@@ -488,9 +551,10 @@ class GlyphGeometry {
         ..style = PaintingStyle.fill;
 
       // 5. Tight, controlled holographic laser glow (prevents diffuse blurring)
-      final glowAlpha = (ring.damageType != null && ring.damageType != DamageAccent.physical)
+        final glowAlphaBase = ring.hasElementalDamageAccent
           ? (isDarkMode ? 0.35 : 0.22)
           : (isDarkMode ? 0.18 : 0.10);
+      final glowAlpha = glowAlphaBase * (0.85 + breathWave * 0.40 + tierPulse * 0.70);
 
       final glowPaint = Paint()
         ..color = ringColor.withValues(alpha: glowAlpha)
@@ -498,10 +562,17 @@ class GlyphGeometry {
         ..strokeWidth = 1.5 * scale
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, 1.0 * scale);
 
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(rotationAngle);
+      canvas.translate(-center.dx, -center.dy);
+
       // Render: Underlay Outline -> Glow Halo -> Sharp Wireframe & Nodes
-      _drawRingPath(canvas, center, r, ring.ringType, scale, underlayPaint, finePaint, nodeFill, isGlow: true);
-      _drawRingPath(canvas, center, r, ring.ringType, scale, glowPaint, finePaint, nodeFill, isGlow: true);
-      _drawRingPath(canvas, center, r, ring.ringType, scale, strokePaint, finePaint, nodeFill, isGlow: false);
+      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale, underlayPaint, finePaint, nodeFill, isGlow: true);
+      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale, glowPaint, finePaint, nodeFill, isGlow: true);
+      _drawRingPath(canvas, center, breathingRadius, ring.ringType, scale, strokePaint, finePaint, nodeFill, isGlow: false);
+
+      canvas.restore();
     }
   }
 
@@ -602,6 +673,49 @@ class GlyphGeometry {
             final pt = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
             canvas.drawCircle(pt, 1.0 * scale, nodeFill);
           }
+        }
+        break;
+
+      case ActionRingType.control:
+        // Tri-node restraint lattice ring for control and disable effects.
+        canvas.drawCircle(center, r, mainPaint);
+        if (!isGlow) {
+          for (int i = 0; i < 3; i++) {
+            final a = (i * 120.0 - 90.0) * pi / 180.0;
+            final p = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
+            canvas.drawCircle(p, 1.0 * scale, nodeFill);
+          }
+
+          final triangle = Path();
+          for (int i = 0; i < 3; i++) {
+            final a = (i * 120.0 - 90.0) * pi / 180.0;
+            final p = Offset(center.dx + (r - 1.0 * scale) * cos(a), center.dy + (r - 1.0 * scale) * sin(a));
+            if (i == 0) {
+              triangle.moveTo(p.dx, p.dy);
+            } else {
+              triangle.lineTo(p.dx, p.dy);
+            }
+          }
+          triangle.close();
+          canvas.drawPath(triangle, finePaint);
+        }
+        break;
+
+      case ActionRingType.sustain:
+        // Harmonic cradle ring for healing, barriers, and regeneration.
+        final outer = Rect.fromCenter(center: center, width: r * 2.0, height: r * 1.45);
+        final inner = Rect.fromCenter(center: center, width: r * 1.4, height: r * 2.0);
+        canvas.drawOval(outer, mainPaint);
+        canvas.drawOval(inner, finePaint);
+        if (!isGlow) {
+          final nodeA = Offset(center.dx - r * 0.55, center.dy + r * 0.35);
+          final nodeB = Offset(center.dx + r * 0.55, center.dy + r * 0.35);
+          final apex = Offset(center.dx, center.dy - r * 0.55);
+          canvas.drawLine(nodeA, apex, finePaint);
+          canvas.drawLine(apex, nodeB, finePaint);
+          canvas.drawCircle(nodeA, 0.9 * scale, nodeFill);
+          canvas.drawCircle(nodeB, 0.9 * scale, nodeFill);
+          canvas.drawCircle(apex, 0.9 * scale, nodeFill);
         }
         break;
 

@@ -122,6 +122,51 @@ void main() {
       expect(animateDeadSpell!.school, SpellSchool.necromancy);
     });
 
+    test('Glyph rings only appear for explicit AoE or recharge mechanics', () {
+      final fireball = SpellbookLibrary.getSpellById('spell_fireball')!;
+      final healingWord = SpellbookLibrary.getSpellById('spell_healing_word')!;
+      final magicMissile = SpellbookLibrary.getSpellById('spell_magic_missile')!;
+
+      final fireballRings = fireball.getGlyphActionRings(DmRulesEdition.v2024);
+      final healingWordRings = healingWord.getGlyphActionRings(DmRulesEdition.v2024);
+      final magicMissileRings = magicMissile.getGlyphActionRings(DmRulesEdition.v2024);
+
+      expect(fireballRings.any((ring) => ring.ringType == ActionRingType.recharge), isTrue,
+          reason: 'Fireball is an explicit AoE spell and should keep an AoE/recharge marker');
+      expect(healingWordRings.any((ring) => ring.ringType == ActionRingType.recharge), isFalse,
+          reason: 'Healing Word is a targeted heal and should not show a recharge/AoE glyph ring');
+      expect(magicMissileRings.any((ring) => ring.ringType == ActionRingType.recharge), isFalse,
+          reason: 'Magic Missile is not an AoE or recharge spell and should not show a recharge glyph ring');
+    });
+
+      test('Glyph rings derive control and sustain semantics from spell mechanics', () {
+        final holdPerson = SpellbookLibrary.getSpellById('spell_hold_person')!;
+        final massHealingWord = SpellbookLibrary.getSpellById('spell_mass_healing_word')!;
+
+        final holdPersonRings = holdPerson.getGlyphActionRings(DmRulesEdition.v2024);
+        final massHealingWordRings = massHealingWord.getGlyphActionRings(DmRulesEdition.v2024);
+
+        expect(holdPersonRings.any((ring) => ring.ringType == ActionRingType.control), isTrue,
+          reason: 'Hold Person applies the paralyzed condition and should show a control ring');
+        expect(massHealingWordRings.any((ring) => ring.ringType == ActionRingType.sustain), isTrue,
+          reason: 'Mass Healing Word is group healing and should show a sustain ring');
+        expect(massHealingWordRings.any((ring) => ring.ringType == ActionRingType.control), isFalse,
+          reason: 'Mass Healing Word should not receive a control ring');
+      });
+
+      test('Glyph rings preserve multi-damage palettes for color cycling', () {
+        final spiritGuardians = SpellbookLibrary.getSpellById('spell_spirit_guardians')!;
+        final rings = spiritGuardians.getGlyphActionRings(DmRulesEdition.v2024);
+        final aoeRing = rings.firstWhere((ring) => ring.ringType == ActionRingType.recharge);
+
+        expect(aoeRing.damageType, DamageAccent.radiant,
+            reason: 'Primary color should begin with the first parsed damage accent');
+        expect(aoeRing.damageTypes, contains(DamageAccent.necrotic),
+            reason: 'Secondary damage accents should be retained for animated palette cycling');
+        expect(aoeRing.damageLegend, contains('Radiant'));
+        expect(aoeRing.damageLegend, contains('Necrotic'));
+      });
+
     test('Unified SpellSchool provides canonical styling tokens and icons', () {
       for (final school in SpellSchool.values) {
         expect(school.displayName.isNotEmpty, isTrue);

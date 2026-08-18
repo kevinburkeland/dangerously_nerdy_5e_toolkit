@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 /// Semantic spell schools conforming to the Style Guide & 5e SRD.
@@ -170,6 +172,8 @@ enum ActionRingType {
   ranged('Ranged Attack'),     // Circular Crosshair Reticle Ring with 4-axis target tick marks
   recharge('Recharge / AoE'),  // Segmented Hexagonal Pulse Ring with energy burst gaps
   reaction('Reaction/Defense'),// Shielded Square Ring with corner deflection brackets
+  control('Control Effect'),   // Tri-node restraint lattice ring for disables and battlefield control
+  sustain('Sustain/Healing'),  // Harmonic cradle ring for healing, regeneration, and shielding
   legendary('Legendary Trait'),// Spiked Starburst Crown Ring
   concentration('Concentration');// Dual-Harmonic Orbital Wireframe Loop Ring
 
@@ -181,26 +185,82 @@ enum ActionRingType {
 class ActionTraitRing {
   final ActionRingType ringType;
   final DamageAccent? damageType; // If set, illuminates this specific ring with that damage type's neon color
+  final List<DamageAccent> damageTypes; // Optional multi-damage palette used for animated color cycling
   final String? label;
 
   const ActionTraitRing({
     required this.ringType,
     this.damageType,
+    this.damageTypes = const [],
     this.label,
   });
 
+  List<DamageAccent> get allDamageTypes {
+    final merged = <DamageAccent>[];
+    if (damageType != null) {
+      merged.add(damageType!);
+    }
+    for (final accent in damageTypes) {
+      if (!merged.contains(accent)) {
+        merged.add(accent);
+      }
+    }
+    return merged;
+  }
+
+  bool get hasElementalDamageAccent => allDamageTypes.any((accent) => accent != DamageAccent.physical);
+
+  String get damageLegend => allDamageTypes.map((accent) => accent.displayName).join(' / ');
+
   Color getEffectiveColor(Color fallbackColor, {bool isDarkMode = false}) {
+    return getAnimatedColor(
+      fallbackColor,
+      isDarkMode: isDarkMode,
+      phase: 0.0,
+    );
+  }
+
+  Color getAnimatedColor(
+    Color fallbackColor, {
+    bool isDarkMode = false,
+    double phase = 0.0,
+  }) {
     // Concentration is pure harmonic orbital arcane wireframe and never has an elemental damage type
     if (ringType == ActionRingType.concentration) {
       return isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFF0284C7); // Ethereal orbital cyan
     }
-    if (damageType != null) {
-      if (damageType == DamageAccent.physical) {
-        return isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
-      }
-      return damageType!.color;
+    if (ringType == ActionRingType.control) {
+      return isDarkMode ? const Color(0xFFF9A8D4) : const Color(0xFFBE185D);
     }
-    return isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    if (ringType == ActionRingType.sustain) {
+      return isDarkMode ? const Color(0xFF86EFAC) : const Color(0xFF15803D);
+    }
+
+    final accents = allDamageTypes;
+    if (accents.isEmpty) {
+      return isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    }
+
+    if (accents.length == 1) {
+      return _accentToColor(accents.first, isDarkMode: isDarkMode);
+    }
+
+    final normalizedPhase = ((phase % 1.0) + 1.0) % 1.0;
+    final scaled = normalizedPhase * accents.length;
+    final index = scaled.floor();
+    final nextIndex = (index + 1) % accents.length;
+    final t = scaled - index;
+    final smoothT = 0.5 - 0.5 * cos(pi * t);
+    final currentColor = _accentToColor(accents[index], isDarkMode: isDarkMode);
+    final nextColor = _accentToColor(accents[nextIndex], isDarkMode: isDarkMode);
+    return Color.lerp(currentColor, nextColor, smoothT) ?? currentColor;
+  }
+
+  Color _accentToColor(DamageAccent accent, {required bool isDarkMode}) {
+    if (accent == DamageAccent.physical) {
+      return isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+    }
+    return accent.color;
   }
 
   @override
@@ -210,10 +270,20 @@ class ActionTraitRing {
           runtimeType == other.runtimeType &&
           ringType == other.ringType &&
           damageType == other.damageType &&
+          _sameDamageTypes(damageTypes, other.damageTypes) &&
           label == other.label;
 
+  static bool _sameDamageTypes(List<DamageAccent> a, List<DamageAccent> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   @override
-  int get hashCode => Object.hash(ringType, damageType, label);
+  int get hashCode => Object.hash(ringType, damageType, Object.hashAll(damageTypes), label);
 }
 
 /// 11 Damage Accents (10 Elemental + Physical/Neutral Titanium Steel).

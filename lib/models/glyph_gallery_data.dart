@@ -1,29 +1,33 @@
-import '../widgets/glyphs/glyph_tokens.dart';
+import 'dm_screen_data.dart';
+import 'spellbook_data.dart';
 import 'srd_summons/srd_summons_library.dart';
 
 /// Data model representing a spell entry in the Glyph Gallery.
 class GlyphSpellEntry {
-  final String name;
-  final SpellSchool school;
-  final int level; // 0 for Cantrip, 1-9
-  final List<ActionTraitRing> actionRings;
-  final DamageAccent? damageAccent;
-  final String castingTime;
-  final String range;
-  final String duration;
+  final String spellId;
   final String summary;
 
   const GlyphSpellEntry({
-    required this.name,
-    required this.school,
-    required this.level,
-    this.actionRings = const [],
-    this.damageAccent,
-    required this.castingTime,
-    required this.range,
-    required this.duration,
+    required this.spellId,
     required this.summary,
   });
+
+  SpellItem get spell {
+    final found = SpellbookLibrary.getSpellById(spellId);
+    if (found == null) {
+      throw StateError('Unknown spell id for glyph gallery: $spellId');
+    }
+    return found;
+  }
+
+  String get name => spell.getName(DmRulesEdition.v2024);
+  SpellSchool get school => spell.getSchool(DmRulesEdition.v2024);
+  int get level => spell.level;
+  List<ActionTraitRing> get actionRings => spell.getGlyphActionRings(DmRulesEdition.v2024);
+  DamageAccent? get damageAccent => spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024);
+  String get castingTime => spell.getRules(DmRulesEdition.v2024).castingTime;
+  String get range => spell.getRules(DmRulesEdition.v2024).range;
+  String get duration => spell.getRules(DmRulesEdition.v2024).duration;
 
   String get levelDescription => level == 0 ? 'Cantrip' : 'Level $level';
 }
@@ -62,100 +66,31 @@ class GlyphGalleryData {
   // ---------------------------------------------------------------------------
   static const List<GlyphSpellEntry> allSpells = [
     GlyphSpellEntry(
-      name: 'Animate Objects',
-      school: SpellSchool.transmutation,
-      level: 5,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Kinetic Matrix Link'),
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Slam Swarm Attack (Bludgeoning)'),
-      ],
-      castingTime: '1 action',
-      range: '120 feet',
-      duration: 'Conc. 1 minute',
+      spellId: 'spell_animate_objects',
       summary: 'Animate up to 10 nonmagical objects as high-speed tactical construct minions.',
     ),
     GlyphSpellEntry(
-      name: 'Conjure Animals',
-      school: SpellSchool.conjuration,
-      level: 3,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Sylvan Spirit Link'),
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Beast Strike & Poison'),
-      ],
-      damageAccent: DamageAccent.poison,
-      castingTime: '1 action',
-      range: '60 feet',
-      duration: 'Conc. 1 hour',
+      spellId: 'spell_conjure_animals',
       summary: 'Summon fey beast spirits (wolves, dire wolves, bears, spiders, and eagles).',
     ),
     GlyphSpellEntry(
-      name: 'Animate Dead',
-      school: SpellSchool.necromancy,
-      level: 3,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic, label: 'Dark Animus'),
-        ActionTraitRing(ringType: ActionRingType.ranged, label: 'Bone Archer Volley'),
-      ],
-      damageAccent: DamageAccent.necrotic,
-      castingTime: '1 minute',
-      range: '10 feet',
-      duration: 'Instantaneous (24 hrs)',
+      spellId: 'spell_animate_dead',
       summary: 'Imbue bones or corpse with dark animus to raise Skeletons or Zombies.',
     ),
     GlyphSpellEntry(
-      name: 'Create Undead',
-      school: SpellSchool.necromancy,
-      level: 6,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.necrotic, label: 'Crypt Stench Aura'),
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.necrotic, label: 'Life Drain & Paralyze'),
-      ],
-      damageAccent: DamageAccent.necrotic,
-      castingTime: '1 minute',
-      range: '10 feet',
-      duration: 'Instantaneous (24 hrs)',
+      spellId: 'spell_create_undead',
       summary: 'Craft elite undead strike forces: Ghouls, Ghasts, Wights, or Mummies.',
     ),
     GlyphSpellEntry(
-      name: 'Conjure Elemental',
-      school: SpellSchool.conjuration,
-      level: 5,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Planar Tether'),
-        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Elemental Vortex Surge'),
-      ],
-      damageAccent: DamageAccent.fire,
-      castingTime: '1 minute',
-      range: '90 feet',
-      duration: 'Conc. 1 hour',
+      spellId: 'spell_conjure_elemental',
       summary: 'Summon a powerful CR 5 Elemental spirit (Fire, Water, Earth, or Air Elemental).',
     ),
     GlyphSpellEntry(
-      name: 'Conjure Minor Elementals',
-      school: SpellSchool.conjuration,
-      level: 4,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Mephit Swarm Tether'),
-        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.cold, label: 'Frost/Magma Breath'),
-      ],
-      damageAccent: DamageAccent.cold,
-      castingTime: '1 minute',
-      range: '90 feet',
-      duration: 'Conc. 1 hour',
+      spellId: 'spell_conjure_minor_elementals',
       summary: 'Summon swarms of lesser elementals (Dust, Ice, Magma, Steam Mephits, Gargoyles).',
     ),
     GlyphSpellEntry(
-      name: 'Giant Insect',
-      school: SpellSchool.transmutation,
-      level: 4,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.concentration, label: 'Chitin Mutation Grid'),
-        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Venomous Stinger'),
-      ],
-      damageAccent: DamageAccent.poison,
-      castingTime: '1 action',
-      range: '30 feet',
-      duration: 'Conc. 10 minutes',
+      spellId: 'spell_giant_insect',
       summary: 'Transform ordinary centipedes, wasps, and scorpions into giant bio-weapon beasts.',
     ),
   ];

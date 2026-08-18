@@ -18,28 +18,40 @@ class GlyphMotifs {
     required SpellSchool school,
     required Color color,
     required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
   }) {
     final w = size.width;
     final h = size.height;
     final s = min(w, h);
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
+    final pulseWave = animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+    final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
+    final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
+    final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
+    final fineAlpha = animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(pulseScale, pulseScale);
+    canvas.translate(-center.dx, -center.dy);
 
     final primaryLine = Paint()
-      ..color = color
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.35 * scale
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
     final fineLine = Paint()
-      ..color = color.withValues(alpha: isDarkMode ? 0.70 : 0.55)
+      ..color = color.withValues(alpha: fineAlpha.clamp(0.0, 1.0))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.85 * scale
       ..strokeCap = StrokeCap.round;
 
     final nodeFill = Paint()
-      ..color = color
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
       ..style = PaintingStyle.fill;
 
     final nodeHollow = Paint()
@@ -276,6 +288,8 @@ class GlyphMotifs {
         canvas.drawCircle(center + Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
         break;
     }
+
+    canvas.restore();
   }
 
   // ---------------------------------------------------------------------------
@@ -288,28 +302,40 @@ class GlyphMotifs {
     required CreatureType type,
     required Color color,
     required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
   }) {
     final w = size.width;
     final h = size.height;
     final s = min(w, h);
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
+    final pulseWave = animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+    final pulseScale = animatePulse ? (1.0 + 0.038 * pulseWave) : 1.0;
+    final primaryAlpha = animatePulse ? (0.86 + 0.14 * pulseWave) : 1.0;
+    final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
+    final fineAlpha = animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(pulseScale, pulseScale);
+    canvas.translate(-center.dx, -center.dy);
 
     final primaryLine = Paint()
-      ..color = color
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.35 * scale
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
     final fineLine = Paint()
-      ..color = color.withValues(alpha: isDarkMode ? 0.70 : 0.55)
+      ..color = color.withValues(alpha: fineAlpha.clamp(0.0, 1.0))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.85 * scale
       ..strokeCap = StrokeCap.round;
 
     final nodeFill = Paint()
-      ..color = color
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
       ..style = PaintingStyle.fill;
 
     switch (type) {
@@ -569,5 +595,7 @@ class GlyphMotifs {
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
         break;
     }
+
+    canvas.restore();
   }
 }

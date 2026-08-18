@@ -32,6 +32,7 @@ class SpellCard extends StatelessWidget {
     final rules = spell.getRules(edition);
     final effectiveSchool = spell.getSchool(edition);
     final schoolColor = effectiveSchool.getLegibleColor(isDark);
+    final glyphRings = spell.getGlyphActionRings(edition);
     final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final cardBorderColor = isPinned
@@ -65,7 +66,7 @@ class SpellCard extends StatelessWidget {
               DndGlyph.spell(
                 school: effectiveSchool,
                 level: spell.level,
-                actionRings: spell.getGlyphActionRings(edition),
+                actionRings: glyphRings,
                 size: 38,
                 isDarkMode: isDark,
               ),
@@ -152,6 +153,21 @@ class SpellCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+
+          if (glyphRings.isNotEmpty) ...[
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: glyphRings.map((r) {
+                final ringLabel = r.damageLegend.isNotEmpty
+                    ? '${r.ringType.displayName} • ${r.damageLegend}'
+                    : r.ringType.displayName;
+                final ringColor = r.getEffectiveColor(schoolColor, isDarkMode: isDark);
+                return _buildTag(ringLabel, ringColor);
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Reaction trigger note if applicable
           if (rules.reactionTrigger != null) ...[

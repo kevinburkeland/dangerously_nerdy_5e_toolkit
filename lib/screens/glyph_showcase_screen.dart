@@ -240,12 +240,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       if (_selectedSchool != null && s.school != _selectedSchool) return false;
       if (_searchQuery.isNotEmpty) {
         final match = s.name.toLowerCase().contains(_searchQuery) ||
-            s.school.displayName.toLowerCase().contains(_searchQuery) ||
-            s.summary.toLowerCase().contains(_searchQuery) ||
-            s.actionRings.any((r) =>
-                r.ringType.displayName.toLowerCase().contains(_searchQuery) ||
-                (r.damageType != null && r.damageType!.displayName.toLowerCase().contains(_searchQuery)) ||
-                (r.label != null && r.label!.toLowerCase().contains(_searchQuery)));
+                    s.school.displayName.toLowerCase().contains(_searchQuery) || 
+                    s.summary.toLowerCase().contains(_searchQuery) || 
+                    s.actionRings.any((r) => 
+                        r.ringType.displayName.toLowerCase().contains(_searchQuery) || 
+                        r.damageLegend.toLowerCase().contains(_searchQuery) || 
+                        (r.label?.toLowerCase().contains(_searchQuery) ?? false));
         if (!match) return false;
       }
       return true;
@@ -396,7 +396,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  r.damageType != null ? '${r.ringType.displayName} (${r.damageType!.displayName})' : r.ringType.displayName,
+                                  r.damageLegend.isNotEmpty
+                                      ? '${r.ringType.displayName} (${r.damageLegend})'
+                                      : r.ringType.displayName,
                                   style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: ringColor, fontFamily: 'monospace'),
                                 ),
                               ],
@@ -424,12 +426,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       if (_selectedCreatureType != null && c.type != _selectedCreatureType) return false;
       if (_searchQuery.isNotEmpty) {
         final match = c.name.toLowerCase().contains(_searchQuery) ||
-            c.type.displayName.toLowerCase().contains(_searchQuery) ||
-            c.primaryAttack.toLowerCase().contains(_searchQuery) ||
-            c.actionRings.any((r) =>
-                r.ringType.displayName.toLowerCase().contains(_searchQuery) ||
-                (r.damageType != null && r.damageType!.displayName.toLowerCase().contains(_searchQuery)) ||
-                (r.label != null && r.label!.toLowerCase().contains(_searchQuery)));
+                    c.type.displayName.toLowerCase().contains(_searchQuery) || 
+                    c.primaryAttack.toLowerCase().contains(_searchQuery) || 
+                    c.actionRings.any((r) => 
+                        r.ringType.displayName.toLowerCase().contains(_searchQuery) || 
+                        r.damageLegend.toLowerCase().contains(_searchQuery) || 
+                        (r.label?.toLowerCase().contains(_searchQuery) ?? false));
         if (!match) return false;
       }
       return true;
@@ -580,7 +582,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  r.damageType != null ? '${r.ringType.displayName} (${r.damageType!.displayName})' : r.ringType.displayName,
+                                  r.damageLegend.isNotEmpty
+                                      ? '${r.ringType.displayName} (${r.damageLegend})'
+                                      : r.ringType.displayName,
                                   style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: ringColor, fontFamily: 'monospace'),
                                 ),
                               ],
@@ -952,7 +956,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const SizedBox(height: 8),
           ...List.generate(_builderRings.length, (idx) {
             final ring = _builderRings[idx];
-            final isConcentration = ring.ringType == ActionRingType.concentration;
+            final isFixedSemanticColor = ring.ringType == ActionRingType.concentration ||
+              ring.ringType == ActionRingType.control ||
+              ring.ringType == ActionRingType.sustain;
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               color: isDark ? const Color(0xFF090D16) : const Color(0xFFF1F5F9),
@@ -985,14 +991,18 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                               setState(() {
                                 _builderRings[idx] = ActionTraitRing(
                                   ringType: newType,
-                                  damageType: newType == ActionRingType.concentration ? null : ring.damageType,
+                                  damageType: newType == ActionRingType.concentration ||
+                                          newType == ActionRingType.control ||
+                                          newType == ActionRingType.sustain
+                                      ? null
+                                      : ring.damageType,
                                   label: ring.label,
                                 );
                               });
                             }
                           },
                         ),
-                        if (!isConcentration)
+                        if (!isFixedSemanticColor)
                           DropdownButton<DamageAccent?>(
                             value: ring.damageType,
                             hint: const Text('Physical (No Element)'),
@@ -1014,13 +1024,22 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                              color: ring.getEffectiveColor(themeData.getPrimary(isDark), isDarkMode: isDark).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                              border: Border.all(color: ring.getEffectiveColor(themeData.getPrimary(isDark), isDarkMode: isDark).withValues(alpha: 0.4)),
                             ),
-                            child: const Text(
-                              'Pure Arcane Orbit (Non-Elemental)',
-                              style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.bold),
+                            child: Text(
+                              switch (ring.ringType) {
+                                ActionRingType.concentration => 'Pure Arcane Orbit (Non-Elemental)',
+                                ActionRingType.control => 'Control Channel (Condition Semantics)',
+                                ActionRingType.sustain => 'Sustain Channel (Healing/Barrier Semantics)',
+                                _ => 'Semantic Channel',
+                              },
+                              style: TextStyle(
+                                color: ring.getEffectiveColor(themeData.getPrimary(isDark), isDarkMode: isDark),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                       ],
@@ -1138,8 +1157,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
     final ringsList = _builderRings.map((r) {
       final ringType = 'ActionRingType.${r.ringType.name}';
       final damageType = r.damageType != null ? ', damageType: DamageAccent.${r.damageType!.name}' : '';
+      final damageTypes = r.damageTypes.isNotEmpty
+          ? ', damageTypes: [${r.damageTypes.map((d) => 'DamageAccent.${d.name}').join(', ')}]'
+          : '';
       final label = r.label != null && r.label!.isNotEmpty ? ", label: '${r.label}'" : '';
-      return '    ActionTraitRing(ringType: $ringType$damageType$label),';
+      return '    ActionTraitRing(ringType: $ringType$damageType$damageTypes$label),';
     }).toList();
 
     final ringsFormatted = ringsList.isEmpty
@@ -1364,7 +1386,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
           const Text('5. Damage Type Illumination Spectrum (11 Energy Types)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
-            'Any action trait ring can dynamically illuminate in any of these 11 damage energy hues when an attack deals that specific damage type.',
+            'Damage-capable rings can dynamically illuminate in these 11 energy hues. Concentration, Control, and Sustain use fixed semantic channels for faster recognition.',
             style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
           ),
           const SizedBox(height: 12),
@@ -1511,6 +1533,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
       ActionRingType.ranged => 'Circular Reticle Ring with 4-Axis Crosshairs',
       ActionRingType.recharge => 'Segmented Hexagonal Ring with 6 Pulse Gaps',
       ActionRingType.reaction => 'Shielded Square Ring with Corner Brackets',
+      ActionRingType.control => 'Tri-node Restraint Lattice for Disable/Control Effects',
+      ActionRingType.sustain => 'Harmonic Cradle Loop for Healing and Regeneration',
       ActionRingType.concentration => 'Dual-Harmonic Orbital Wireframe Loop',
       ActionRingType.legendary => 'Radial Starburst Crown with 8 Apex Rays',
     };
@@ -1617,7 +1641,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   ...spell.actionRings.map((r) => Padding(
                     padding: const EdgeInsets.only(bottom: 3),
                     child: Text(
-                      '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageType != null ? "(${r.damageType!.displayName} Glow)" : ""}',
+                      '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageLegend.isNotEmpty ? "(${r.damageLegend} Glow)" : ""}',
                       style: TextStyle(
                         fontSize: 11,
                         color: r.getEffectiveColor(schoolColor),
@@ -1700,7 +1724,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen> with SingleTi
                   ...creature.actionRings.map((r) => Padding(
                     padding: const EdgeInsets.only(bottom: 3),
                     child: Text(
-                      '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageType != null ? "(${r.damageType!.displayName} Glow)" : ""}',
+                      '• ${r.ringType.displayName}: ${r.label ?? ""} ${r.damageLegend.isNotEmpty ? "(${r.damageLegend} Glow)" : ""}',
                       style: TextStyle(
                         fontSize: 11,
                         color: r.getEffectiveColor(typeColor),
@@ -1873,6 +1897,35 @@ class _StandaloneRingPainter extends CustomPainter {
           canvas.drawCircle(rect.topRight, 1.2 * scale, nodeFill);
           canvas.drawCircle(rect.bottomLeft, 1.2 * scale, nodeFill);
           canvas.drawCircle(rect.bottomRight, 1.2 * scale, nodeFill);
+        }
+      case ActionRingType.control:
+        canvas.drawCircle(center, r, strokePaint);
+        if (!isGlow) {
+          final pTop = Offset(center.dx, center.dy - r);
+          final pLeft = Offset(center.dx - r * 0.86, center.dy + r * 0.5);
+          final pRight = Offset(center.dx + r * 0.86, center.dy + r * 0.5);
+          final tri = Path()
+            ..moveTo(pTop.dx, pTop.dy)
+            ..lineTo(pLeft.dx, pLeft.dy)
+            ..lineTo(pRight.dx, pRight.dy)
+            ..close();
+          canvas.drawPath(tri, finePaint);
+          canvas.drawCircle(pTop, 1.1 * scale, nodeFill);
+          canvas.drawCircle(pLeft, 1.1 * scale, nodeFill);
+          canvas.drawCircle(pRight, 1.1 * scale, nodeFill);
+        }
+      case ActionRingType.sustain:
+        canvas.drawOval(Rect.fromCenter(center: center, width: r * 2.0, height: r * 1.45), strokePaint);
+        if (!isGlow) {
+          canvas.drawOval(Rect.fromCenter(center: center, width: r * 1.45, height: r * 2.0), finePaint);
+          final apex = Offset(center.dx, center.dy - r * 0.58);
+          final left = Offset(center.dx - r * 0.55, center.dy + r * 0.35);
+          final right = Offset(center.dx + r * 0.55, center.dy + r * 0.35);
+          canvas.drawLine(left, apex, finePaint);
+          canvas.drawLine(apex, right, finePaint);
+          canvas.drawCircle(apex, 1.0 * scale, nodeFill);
+          canvas.drawCircle(left, 1.0 * scale, nodeFill);
+          canvas.drawCircle(right, 1.0 * scale, nodeFill);
         }
       case ActionRingType.concentration:
         canvas.drawOval(Rect.fromCenter(center: center, width: r * 2.1, height: r * 1.5), strokePaint);

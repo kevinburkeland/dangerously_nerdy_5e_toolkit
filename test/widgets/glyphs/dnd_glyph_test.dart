@@ -102,6 +102,21 @@ void main() {
       );
     });
 
+    test('Multi-damage ActionTraitRing cycles through configured damage colors', () {
+      const ring = ActionTraitRing(
+        ringType: ActionRingType.recharge,
+        damageType: DamageAccent.radiant,
+        damageTypes: [DamageAccent.necrotic],
+      );
+
+      final colorAtStart = ring.getAnimatedColor(Colors.grey, isDarkMode: true, phase: 0.0);
+      final colorHalfCycle = ring.getAnimatedColor(Colors.grey, isDarkMode: true, phase: 0.5);
+
+      expect(colorAtStart, equals(DamageAccent.radiant.color));
+      expect(colorHalfCycle, equals(DamageAccent.necrotic.color));
+      expect(ring.damageLegend, 'Radiant / Necrotic');
+    });
+
     testWidgets('DndGlyph renders multi-ring action traits with damage coloring and arbitrary ring counts', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
