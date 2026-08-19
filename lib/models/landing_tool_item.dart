@@ -4,6 +4,7 @@ import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/glyph_showcase_screen.dart';
 import '../screens/minion_tool_screen.dart';
+import '../screens/monster_codex_screen.dart';
 import '../screens/spellbook_screen.dart';
 import '../services/haptic_service.dart';
 
@@ -195,6 +196,37 @@ class LandingToolRegistry {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SpellbookScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'monster_codex',
+          title: 'Monster Codex',
+          category: 'Core Utilities',
+          badgeText: 'SRD Stat Blocks',
+          badgeColor: Colors.greenAccent,
+          icon: Icons.pets,
+          accentColor: Colors.greenAccent,
+          description:
+              'Browse SRD creature stat blocks from summon and item companions, filter by type/size, and open full monster details.',
+          keywords: [
+            'monster',
+            'codex',
+            'stat block',
+            'creature',
+            'beast',
+            'undead',
+            'elemental',
+            'construct',
+            'srd',
+            'ac',
+            'hp',
+            'cr'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MonsterCodexScreen()),
             );
           },
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/minion_tool_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/monster_codex_screen.dart';
 
 void main() {
   Widget createTestableWidget(Widget child) {
@@ -113,6 +114,23 @@ void main() {
 
     expect(find.byType(DiceRollerScreen), findsOneWidget);
     expect(find.text('Select Die'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Monster Codex launches MonsterCodexScreen', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const LandingScreen()));
+
+    final codexCard = find.text('Monster Codex');
+    expect(codexCard, findsOneWidget);
+
+    await tester.ensureVisible(codexCard);
+    await tester.pumpAndSettle();
+
+    await tester.tap(codexCard);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MonsterCodexScreen), findsOneWidget);
+    expect(find.text('Monster Codex'), findsOneWidget);
+    expect(find.textContaining('entries'), findsOneWidget);
   });
 
   testWidgets('Entering search query filters tools dynamically and shows result count', (WidgetTester tester) async {

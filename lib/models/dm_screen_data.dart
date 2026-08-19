@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 enum DmRulesEdition {
   v2014,
-  v2024,
+  v2024;
+
+  String get label => this == DmRulesEdition.v2014 ? '2014' : '2024';
 }
 
 enum DmCategory {

@@ -1,0 +1,510 @@
+import 'package:flutter/material.dart';
+import '../../monster_codex_data.dart';
+import '../../srd_summons/minion_stat_block.dart';
+
+/// SRD 5.1 & 5.2 Bestiary entries for CR 9 through CR 30 (Boss & Legendary Creatures).
+class BestiaryCrNinePlus {
+  BestiaryCrNinePlus._();
+
+  static final List<MonsterItem> entries = [
+    // =========================================================================
+    // CR 10: AB пирамида / ABOLETH
+    // =========================================================================
+    MonsterItem.simple(
+      id: 'srd_mon_aboleth',
+      name: 'Aboleth',
+      statBlock: const MinionStatBlock(
+        id: 'aboleth',
+        name: 'Aboleth',
+        sizeDisplay: 'Large',
+        typeDisplay: 'Aberration',
+        alignment: 'lawful evil',
+        ac: 17,
+        armorType: 'natural armor',
+        maxHp: 135,
+        hitDice: '18d10 + 36',
+        speed: '10 ft., swim 40 ft.',
+        strScore: 21,
+        dexScore: 9,
+        conScore: 15,
+        intScore: 18,
+        wisScore: 15,
+        chaScore: 18,
+        savingThrows: 'Con +6, Int +8, Wis +6',
+        skills: 'History +12, Perception +10',
+        senses: 'darkvision 120 ft., passive Perception 20',
+        languages: 'Deep Speech, telepathy 120 ft.',
+        crDisplay: 'CR 10',
+        xp: 5900,
+        attackBonus: 9,
+        damageDiceCount: 2,
+        damageDiceSides: 6,
+        damageBonus: 5,
+        damageType: 'bludgeoning',
+        accentColor: Color(0xFFA855F7),
+        traits: [
+          CreatureTrait(
+            name: 'Amphibious',
+            description: 'The aboleth can breathe air and water.',
+          ),
+          CreatureTrait(
+            name: 'Mucous Cloud',
+            description: 'While underwater, the aboleth is surrounded by transformative mucus. A creature that touches the aboleth or hits it with a melee attack while within 5 ft. must succeed on a DC 14 Con save or be diseased for 1d4 hours.',
+          ),
+          CreatureTrait(
+            name: 'Probing Telepathy',
+            description: 'If a creature communicates telepathically with the aboleth, the aboleth learns the creature\'s greatest desires if the aboleth can see the creature.',
+          ),
+        ],
+        actions: [
+          CreatureAction(
+            name: 'Multiattack',
+            description: 'The aboleth makes three tentacle attacks.',
+          ),
+          CreatureAction(
+            name: 'Tentacle',
+            description: 'Melee Weapon Attack: +9 to hit, reach 10 ft., one target. Hit: 12 (2d6 + 5) bludgeoning damage. If the target is a creature, it must succeed on a DC 14 Constitution saving throw or become diseased.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 9,
+            reach: '10 ft.',
+            hitDamage: '2d6 + 5',
+          ),
+          CreatureAction(
+            name: 'Tail',
+            description: 'Melee Weapon Attack: +9 to hit, reach 10 ft., one target. Hit: 15 (3d6 + 5) bludgeoning damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 9,
+            reach: '10 ft.',
+            hitDamage: '3d6 + 5',
+          ),
+          CreatureAction(
+            name: 'Enslave (3/Day)',
+            description: 'The aboleth targets one creature it can see within 30 ft. of it. The target must succeed on a DC 14 Wisdom saving throw or be magically charmed by the aboleth until the aboleth dies or is on a different plane of existence.',
+          ),
+        ],
+      ),
+    ),
+
+    // =========================================================================
+    // CR 13: ADULT BRASS DRAGON & VAMPIRE
+    // =========================================================================
+    MonsterItem.simple(
+      id: 'srd_mon_vampire',
+      name: 'Vampire',
+      statBlock: const MinionStatBlock(
+        id: 'vampire',
+        name: 'Vampire',
+        sizeDisplay: 'Medium',
+        typeDisplay: 'Undead (shapechanger)',
+        alignment: 'lawful evil',
+        ac: 16,
+        armorType: 'natural armor',
+        maxHp: 144,
+        hitDice: '17d8 + 68',
+        speed: '30 ft.',
+        strScore: 18,
+        dexScore: 18,
+        conScore: 18,
+        intScore: 17,
+        wisScore: 15,
+        chaScore: 18,
+        savingThrows: 'Dex +9, Wis +7, Cha +9',
+        skills: 'Perception +7, Stealth +9',
+        damageResistances: 'necrotic; bludgeoning, piercing, and slashing from nonmagical attacks',
+        senses: 'darkvision 120 ft., passive Perception 17',
+        languages: 'the languages it knew in life',
+        crDisplay: 'CR 13',
+        xp: 10000,
+        attackBonus: 9,
+        damageDiceCount: 1,
+        damageDiceSides: 8,
+        damageBonus: 4,
+        damageType: 'bludgeoning',
+        secondaryDamageDiceCount: 3,
+        secondaryDamageDiceSides: 6,
+        secondaryDamageType: 'necrotic',
+        accentColor: Color(0xFFCBD5E1),
+        traits: [
+          CreatureTrait(
+            name: 'Legendary Resistance (3/Day)',
+            description: 'If the vampire fails a saving throw, it can choose to succeed instead.',
+          ),
+          CreatureTrait(
+            name: 'Regeneration',
+            description: 'The vampire regains 20 hit points at the start of its turn if it has at least 1 hit point and isn\'t in sunlight or running water.',
+          ),
+          CreatureTrait(
+            name: 'Spider Climb',
+            description: 'The vampire can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.',
+          ),
+        ],
+        actions: [
+          CreatureAction(
+            name: 'Multiattack (Vampire Form Only)',
+            description: 'The vampire makes two attacks, only one of which can be a bite attack.',
+          ),
+          CreatureAction(
+            name: 'Unarmed Strike (Vampire Form Only)',
+            description: 'Melee Weapon Attack: +9 to hit, reach 5 ft., one creature. Hit: 8 (1d8 + 4) bludgeoning damage. Instead of dealing damage, the vampire can grapple the target (escape DC 18).',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 9,
+            reach: '5 ft.',
+            hitDamage: '1d8 + 4',
+          ),
+          CreatureAction(
+            name: 'Bite (Bat or Vampire Form Only)',
+            description: 'Melee Weapon Attack: +9 to hit, reach 5 ft., one willing creature, or a creature that is grappled by the vampire, incapacitated, or restrained. Hit: 7 (1d6 + 4) piercing damage plus 10 (3d6) necrotic damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 9,
+            reach: '5 ft.',
+            hitDamage: '1d6 + 4 + 3d6 necrotic',
+          ),
+          CreatureAction(
+            name: 'Charm',
+            description: 'The vampire targets one humanoid it can see within 30 ft. of it. If the target can see the vampire, the target must succeed on a DC 17 Wisdom saving throw against this magic or be charmed by the vampire.',
+          ),
+        ],
+      ),
+    ),
+
+    // =========================================================================
+    // CR 17: ADULT RED DRAGON
+    // =========================================================================
+    MonsterItem.simple(
+      id: 'srd_mon_adult_red_dragon',
+      name: 'Adult Red Dragon',
+      statBlock: const MinionStatBlock(
+        id: 'adult_red_dragon',
+        name: 'Adult Red Dragon',
+        sizeDisplay: 'Huge',
+        typeDisplay: 'Dragon',
+        alignment: 'chaotic evil',
+        ac: 19,
+        armorType: 'natural armor',
+        maxHp: 256,
+        hitDice: '19d12 + 133',
+        speed: '40 ft., climb 40 ft., fly 80 ft.',
+        strScore: 27,
+        dexScore: 10,
+        conScore: 25,
+        intScore: 16,
+        wisScore: 13,
+        chaScore: 21,
+        savingThrows: 'Dex +6, Con +13, Wis +7, Cha +11',
+        skills: 'Perception +13, Stealth +6',
+        damageImmunities: 'fire',
+        senses: 'blindsight 60 ft., darkvision 120 ft., passive Perception 23',
+        languages: 'Common, Draconic',
+        crDisplay: 'CR 17',
+        xp: 18000,
+        attackBonus: 14,
+        damageDiceCount: 2,
+        damageDiceSides: 10,
+        damageBonus: 8,
+        damageType: 'piercing',
+        secondaryDamageDiceCount: 2,
+        secondaryDamageDiceSides: 6,
+        secondaryDamageType: 'fire',
+        accentColor: Color(0xFFEF4444),
+        traits: [
+          CreatureTrait(
+            name: 'Legendary Resistance (3/Day)',
+            description: 'If the dragon fails a saving throw, it can choose to succeed instead.',
+          ),
+        ],
+        actions: [
+          CreatureAction(
+            name: 'Multiattack',
+            description: 'The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.',
+          ),
+          CreatureAction(
+            name: 'Bite',
+            description: 'Melee Weapon Attack: +14 to hit, reach 10 ft., one target. Hit: 19 (2d10 + 8) piercing damage plus 7 (2d6) fire damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 14,
+            reach: '10 ft.',
+            hitDamage: '2d10 + 8 + 2d6 fire',
+          ),
+          CreatureAction(
+            name: 'Claw',
+            description: 'Melee Weapon Attack: +14 to hit, reach 5 ft., one target. Hit: 15 (2d6 + 8) slashing damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 14,
+            reach: '5 ft.',
+            hitDamage: '2d6 + 8',
+          ),
+          CreatureAction(
+            name: 'Tail',
+            description: 'Melee Weapon Attack: +14 to hit, reach 15 ft., one target. Hit: 17 (2d8 + 8) bludgeoning damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 14,
+            reach: '15 ft.',
+            hitDamage: '2d8 + 8',
+          ),
+          CreatureAction(
+            name: 'Frightful Presence',
+            description: 'Each creature of the dragon\'s choice that is within 120 ft. of the dragon and aware of it must succeed on a DC 19 Wisdom saving throw or become frightened for 1 minute.',
+          ),
+          CreatureAction(
+            name: 'Fire Breath (Recharge 5-6)',
+            description: 'The dragon exhales fire in a 60-foot cone. Each creature in that area must make a DC 21 Dexterity saving throw, taking 63 (18d6) fire damage on a failed save, or half as much damage on a successful one.',
+          ),
+        ],
+      ),
+    ),
+
+    // =========================================================================
+    // CR 21: LICH
+    // =========================================================================
+    MonsterItem.simple(
+      id: 'srd_mon_lich',
+      name: 'Lich',
+      statBlock: const MinionStatBlock(
+        id: 'lich',
+        name: 'Lich',
+        sizeDisplay: 'Medium',
+        typeDisplay: 'Undead',
+        alignment: 'any evil alignment',
+        ac: 17,
+        armorType: 'natural armor',
+        maxHp: 135,
+        hitDice: '18d8 + 54',
+        speed: '30 ft.',
+        strScore: 11,
+        dexScore: 16,
+        conScore: 16,
+        intScore: 20,
+        wisScore: 14,
+        chaScore: 16,
+        savingThrows: 'Con +10, Int +12, Wis +9',
+        skills: 'Arcana +19, History +12, Insight +9, Perception +9',
+        damageResistances: 'cold, lightning, necrotic',
+        damageImmunities: 'poison; bludgeoning, piercing, and slashing from nonmagical attacks',
+        conditionImmunities: 'charmed, exhaustion, frightened, paralyzed, poisoned',
+        senses: 'truesight 120 ft., passive Perception 19',
+        languages: 'Common plus up to five other languages',
+        crDisplay: 'CR 21',
+        xp: 33000,
+        attackBonus: 12,
+        damageDiceCount: 3,
+        damageDiceSides: 6,
+        damageBonus: 0,
+        damageType: 'cold',
+        accentColor: Color(0xFFCBD5E1),
+        traits: [
+          CreatureTrait(
+            name: 'Legendary Resistance (3/Day)',
+            description: 'If the lich fails a saving throw, it can choose to succeed instead.',
+          ),
+          CreatureTrait(
+            name: 'Rejuvenation',
+            description: 'If it has a phylactery, a destroyed lich gains a new body in 1d10 days, regaining all its hit points and becoming active again.',
+          ),
+          CreatureTrait(
+            name: 'Turn Resistance',
+            description: 'The lich has advantage on saving throws against any effect that turns undead.',
+          ),
+          CreatureTrait(
+            name: 'Spellcasting',
+            description: 'The lich is an 18th-level spellcaster (spell save DC 20, +12 to hit with spell attacks). Known spells include power word kill, finger of death, disintegrate, chain lightning, globe of invulnerability, and counterspell.',
+          ),
+        ],
+        actions: [
+          CreatureAction(
+            name: 'Paralyzing Touch',
+            description: 'Melee Spell Attack: +12 to hit, reach 5 ft., one creature. Hit: 10 (3d6) cold damage. The target must succeed on a DC 18 Constitution saving throw or be paralyzed for 1 minute.',
+            attackType: 'Melee Spell Attack',
+            attackBonus: 12,
+            reach: '5 ft.',
+            hitDamage: '3d6 cold',
+          ),
+        ],
+      ),
+    ),
+
+    // =========================================================================
+    // CR 24: ANCIENT RED DRAGON
+    // =========================================================================
+    MonsterItem.simple(
+      id: 'srd_mon_ancient_red_dragon',
+      name: 'Ancient Red Dragon',
+      statBlock: const MinionStatBlock(
+        id: 'ancient_red_dragon',
+        name: 'Ancient Red Dragon',
+        sizeDisplay: 'Gargantuan',
+        typeDisplay: 'Dragon',
+        alignment: 'chaotic evil',
+        ac: 22,
+        armorType: 'natural armor',
+        maxHp: 546,
+        hitDice: '28d20 + 252',
+        speed: '40 ft., climb 40 ft., fly 80 ft.',
+        strScore: 30,
+        dexScore: 10,
+        conScore: 29,
+        intScore: 18,
+        wisScore: 15,
+        chaScore: 23,
+        savingThrows: 'Dex +7, Con +16, Wis +9, Cha +13',
+        skills: 'Perception +16, Stealth +7',
+        damageImmunities: 'fire',
+        senses: 'blindsight 60 ft., darkvision 120 ft., passive Perception 26',
+        languages: 'Common, Draconic',
+        crDisplay: 'CR 24',
+        xp: 62000,
+        attackBonus: 17,
+        damageDiceCount: 2,
+        damageDiceSides: 10,
+        damageBonus: 10,
+        damageType: 'piercing',
+        secondaryDamageDiceCount: 4,
+        secondaryDamageDiceSides: 6,
+        secondaryDamageType: 'fire',
+        accentColor: Color(0xFFEF4444),
+        traits: [
+          CreatureTrait(
+            name: 'Legendary Resistance (3/Day)',
+            description: 'If the dragon fails a saving throw, it can choose to succeed instead.',
+          ),
+        ],
+        actions: [
+          CreatureAction(
+            name: 'Multiattack',
+            description: 'The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.',
+          ),
+          CreatureAction(
+            name: 'Bite',
+            description: 'Melee Weapon Attack: +17 to hit, reach 15 ft., one target. Hit: 21 (2d10 + 10) piercing damage plus 14 (4d6) fire damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 17,
+            reach: '15 ft.',
+            hitDamage: '2d10 + 10 + 4d6 fire',
+          ),
+          CreatureAction(
+            name: 'Claw',
+            description: 'Melee Weapon Attack: +17 to hit, reach 10 ft., one target. Hit: 17 (2d6 + 10) slashing damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 17,
+            reach: '10 ft.',
+            hitDamage: '2d6 + 10',
+          ),
+          CreatureAction(
+            name: 'Tail',
+            description: 'Melee Weapon Attack: +17 to hit, reach 20 ft., one target. Hit: 19 (2d8 + 10) bludgeoning damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 17,
+            reach: '20 ft.',
+            hitDamage: '2d8 + 10',
+          ),
+          CreatureAction(
+            name: 'Fire Breath (Recharge 5-6)',
+            description: 'The dragon exhales fire in a 90-foot cone. Each creature in that area must make a DC 24 Dexterity saving throw, taking 91 (26d6) fire damage on a failed save, or half as much damage on a successful one.',
+          ),
+        ],
+      ),
+    ),
+
+    // =========================================================================
+    // CR 30: TARRASQUE
+    // =========================================================================
+    MonsterItem.simple(
+      id: 'srd_mon_tarrasque',
+      name: 'Tarrasque',
+      statBlock: const MinionStatBlock(
+        id: 'tarrasque',
+        name: 'Tarrasque',
+        sizeDisplay: 'Gargantuan',
+        typeDisplay: 'Monstrosity (titan)',
+        alignment: 'unaligned',
+        ac: 25,
+        armorType: 'natural armor',
+        maxHp: 676,
+        hitDice: '33d20 + 330',
+        speed: '40 ft.',
+        strScore: 30,
+        dexScore: 11,
+        conScore: 30,
+        intScore: 3,
+        wisScore: 11,
+        chaScore: 11,
+        savingThrows: 'Int +5, Wis +9, Cha +9',
+        damageImmunities: 'fire, poison; bludgeoning, piercing, and slashing from nonmagical attacks',
+        conditionImmunities: 'charmed, frightened, paralyzed, poisoned',
+        senses: 'blindsight 120 ft., passive Perception 10',
+        languages: '—',
+        crDisplay: 'CR 30',
+        xp: 155000,
+        attackBonus: 19,
+        damageDiceCount: 4,
+        damageDiceSides: 12,
+        damageBonus: 10,
+        damageType: 'piercing',
+        accentColor: Color(0xFFD97706),
+        traits: [
+          CreatureTrait(
+            name: 'Legendary Resistance (3/Day)',
+            description: 'If the tarrasque fails a saving throw, it can choose to succeed instead.',
+          ),
+          CreatureTrait(
+            name: 'Magic Resistance',
+            description: 'The tarrasque has advantage on saving throws against spells and other magical effects.',
+          ),
+          CreatureTrait(
+            name: 'Reflective Carapace',
+            description: 'Any time the tarrasque is targeted by a magic missile spell, a line spell, or a spell that requires a ranged attack roll, roll a d6. On a 1 to 5, the tarrasque is unaffected. On a 6, the tarrasque is unaffected, and the effect is reflected back at the caster.',
+          ),
+          CreatureTrait(
+            name: 'Siege Monster',
+            description: 'The tarrasque deals double damage to objects and structures.',
+          ),
+        ],
+        actions: [
+          CreatureAction(
+            name: 'Multiattack',
+            description: 'The tarrasque can use its Frightful Presence. It then makes five attacks: one with its bite, two with its claws, one with its horns, and one with its tail. It can use its Swallow instead of its bite.',
+          ),
+          CreatureAction(
+            name: 'Bite',
+            description: 'Melee Weapon Attack: +19 to hit, reach 10 ft., one target. Hit: 36 (4d12 + 10) piercing damage. If the target is a creature, it is grappled (escape DC 20). Until this grapple ends, the target is restrained, and the tarrasque can\'t bite another target.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 19,
+            reach: '10 ft.',
+            hitDamage: '4d12 + 10',
+          ),
+          CreatureAction(
+            name: 'Claw',
+            description: 'Melee Weapon Attack: +19 to hit, reach 15 ft., one target. Hit: 28 (4d8 + 10) slashing damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 19,
+            reach: '15 ft.',
+            hitDamage: '4d8 + 10',
+          ),
+          CreatureAction(
+            name: 'Horns',
+            description: 'Melee Weapon Attack: +19 to hit, reach 10 ft., one target. Hit: 32 (4d10 + 10) piercing damage.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 19,
+            reach: '10 ft.',
+            hitDamage: '4d10 + 10',
+          ),
+          CreatureAction(
+            name: 'Tail',
+            description: 'Melee Weapon Attack: +19 to hit, reach 20 ft., one target. Hit: 24 (4d6 + 10) bludgeoning damage. If the target is a creature, it must succeed on a DC 20 Strength saving throw or be knocked prone.',
+            attackType: 'Melee Weapon Attack',
+            attackBonus: 19,
+            reach: '20 ft.',
+            hitDamage: '4d6 + 10',
+          ),
+          CreatureAction(
+            name: 'Frightful Presence',
+            description: 'Each creature of the tarrasque\'s choice within 120 ft. of it and aware of it must succeed on a DC 17 Wisdom saving throw or become frightened for 1 minute.',
+          ),
+          CreatureAction(
+            name: 'Swallow',
+            description: 'The tarrasque makes one bite attack against a Large or smaller creature it is grappling. If the attack hits, the target takes the bite\'s damage, the target is swallowed, and the grapple ends.',
+          ),
+        ],
+      ),
+    ),
+  ];
+}

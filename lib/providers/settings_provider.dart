@@ -15,6 +15,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _kRulesEdition = 'setting_rules_edition';
   static const _kPinnedRuleIds = 'setting_pinned_rule_ids';
   static const _kPinnedSpellIds = 'setting_pinned_spell_ids';
+  static const _kPinnedMonsterIds = 'setting_pinned_monster_ids';
 
   AppSettings _settings;
   AppSettings get settings => _settings;
@@ -37,6 +38,7 @@ class SettingsProvider extends ChangeNotifier {
     final editionIndex = prefs.getInt(_kRulesEdition);
     final pinnedList = prefs.getStringList(_kPinnedRuleIds);
     final pinnedSpellList = prefs.getStringList(_kPinnedSpellIds);
+    final pinnedMonsterList = prefs.getStringList(_kPinnedMonsterIds);
 
     _settings = AppSettings(
       themeMode: (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length)
@@ -58,6 +60,7 @@ class SettingsProvider extends ChangeNotifier {
           : _settings.rulesEdition,
       pinnedRuleIds: pinnedList?.toSet() ?? _settings.pinnedRuleIds,
       pinnedSpellIds: pinnedSpellList?.toSet() ?? _settings.pinnedSpellIds,
+      pinnedMonsterIds: pinnedMonsterList?.toSet() ?? _settings.pinnedMonsterIds,
     );
     notifyListeners();
   }
@@ -79,6 +82,7 @@ class SettingsProvider extends ChangeNotifier {
       prefs.setInt(_kRulesEdition, newSettings.rulesEdition.index),
       prefs.setStringList(_kPinnedRuleIds, newSettings.pinnedRuleIds.toList()),
       prefs.setStringList(_kPinnedSpellIds, newSettings.pinnedSpellIds.toList()),
+      prefs.setStringList(_kPinnedMonsterIds, newSettings.pinnedMonsterIds.toList()),
     ]);
   }
 
@@ -148,6 +152,35 @@ class SettingsProvider extends ChangeNotifier {
   void clearPinnedSpells() {
     if (_settings.pinnedSpellIds.isEmpty) return;
     updateSettings(_settings.copyWith(pinnedSpellIds: const <String>{}));
+  }
+
+  bool isMonsterPinned(String monsterId) => _settings.pinnedMonsterIds.contains(monsterId);
+
+  void togglePinMonster(String monsterId) {
+    final updated = Set<String>.from(_settings.pinnedMonsterIds);
+    if (updated.contains(monsterId)) {
+      updated.remove(monsterId);
+    } else {
+      updated.add(monsterId);
+    }
+    updateSettings(_settings.copyWith(pinnedMonsterIds: updated));
+  }
+
+  void pinMonster(String monsterId) {
+    if (_settings.pinnedMonsterIds.contains(monsterId)) return;
+    final updated = Set<String>.from(_settings.pinnedMonsterIds)..add(monsterId);
+    updateSettings(_settings.copyWith(pinnedMonsterIds: updated));
+  }
+
+  void unpinMonster(String monsterId) {
+    if (!_settings.pinnedMonsterIds.contains(monsterId)) return;
+    final updated = Set<String>.from(_settings.pinnedMonsterIds)..remove(monsterId);
+    updateSettings(_settings.copyWith(pinnedMonsterIds: updated));
+  }
+
+  void clearPinnedMonsters() {
+    if (_settings.pinnedMonsterIds.isEmpty) return;
+    updateSettings(_settings.copyWith(pinnedMonsterIds: const <String>{}));
   }
 }
 
