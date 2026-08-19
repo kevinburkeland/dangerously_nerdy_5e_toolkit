@@ -218,6 +218,30 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     });
   }
 
+  Color _getCrTierColor(double cr, bool isDark) {
+    if (cr <= 0.25) return isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
+    if (cr <= 1.0) return isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
+    if (cr <= 4.0) return isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED);
+    if (cr <= 8.0) return isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+    return isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626);
+  }
+
+  String _getCrCategoryTitle(double cr, String crDisplay) {
+    if (cr == 0) return 'Challenge 0 (Critters & NPCs)';
+    if (cr == 0.125) return 'Challenge 1/8 (Minions)';
+    if (cr == 0.25) return 'Challenge 1/4 (Skirmishers)';
+    if (cr == 0.5) return 'Challenge 1/2 (Raiders)';
+    if (cr == 1) return 'Challenge 1 (Warriors & Beasts)';
+    if (cr == 2) return 'Challenge 2 (Tough Foes)';
+    if (cr == 3) return 'Challenge 3 (Dangerous Foes)';
+    if (cr == 4) return 'Challenge 4 (Formidable Foes)';
+    if (cr == 5) return 'Challenge 5 (Deadly Threats)';
+    if (cr >= 6 && cr <= 8) return 'Challenge ${cr.toInt()} (Elite Threats)';
+    if (cr >= 9 && cr <= 16) return 'Challenge ${cr.toInt()} (Epic Bosses)';
+    if (cr >= 17) return 'Challenge ${cr.toInt()} (Legendary & Mythic)';
+    return 'Challenge $crDisplay';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -283,6 +307,11 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
         edition: activeEdition,
       );
     }).toList();
+
+    final pinnedMonstersInResults =
+        filteredMonsters.where((m) => pinnedIds.contains(m.id)).toList();
+    final otherMonstersInResults =
+        filteredMonsters.where((m) => !pinnedIds.contains(m.id)).toList();
 
     final activeFilterCount = _getActiveFilterCount();
 
@@ -557,10 +586,9 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
                   ],
                 ),
               ),
-
             // Results count and attribution header
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
               child: Row(
                 children: [
                   Text(
@@ -583,7 +611,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
               ),
             ),
 
-            // Content List
+            // Content List / Grouped Slivers
             Expanded(
               child: filteredMonsters.isEmpty
                   ? _buildEmptyState(
@@ -591,37 +619,222 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
                       pinnedIds.isEmpty &&
                           _viewMode == MonsterCodexViewMode.myBestiary,
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                      itemCount: filteredMonsters.length,
-                      itemBuilder: (context, index) {
-                        final monster = filteredMonsters[index];
-                        final isPinned = pinnedIds.contains(monster.id);
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: MonsterCard(
-                            monster: monster,
-                            edition: activeEdition,
-                            isPinned: isPinned,
-                            onTogglePin: () =>
-                                _togglePinMonster(context, monster.id),
-                            onTap: () {
-                              CreatureStatBlockDialog.show(
-                                context,
-                                statBlock: monster.getStatBlock(activeEdition),
-                              );
-                            },
-                            onQuickRoll: _performQuickRoll,
-                            onOpenQuickRoll: () =>
-                                _openQuickRollDialog(context, monster),
+                  : CustomScrollView(
+                      slivers: [
+                        // Personal Bestiary Pinned Section in All Monsters view
+                        if (_viewMode == MonsterCodexViewMode.allMonsters &&
+                            pinnedMonstersInResults.isNotEmpty) ...[
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                            sliver: SliverToBoxAdapter(
+                              child: Row(
+                                children: [
+                                  Icon(Icons.bookmark,
+                                      color: pinColor, size: 18),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Personal Bestiary (${pinnedMonstersInResults.length})',
+                                    style: TextStyle(
+                                      color: pinColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        );
-                      },
+                          _buildSliverMonsterCards(
+                            context,
+                            pinnedMonstersInResults,
+                            activeEdition,
+                            pinnedIds,
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
+                            sliver: SliverToBoxAdapter(
+                              child: Divider(
+                                color: theme.colorScheme.outlineVariant
+                                    .withValues(alpha: 0.2),
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (_viewMode == MonsterCodexViewMode.allMonsters &&
+                            pinnedMonstersInResults.isNotEmpty)
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                            sliver: SliverToBoxAdapter(
+                              child: Text(
+                                'Other Bestiary Creatures (${otherMonstersInResults.length})',
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.7),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (_viewMode == MonsterCodexViewMode.allMonsters &&
+                            pinnedMonstersInResults.isNotEmpty)
+                          ..._buildGroupedCrSlivers(
+                            context,
+                            otherMonstersInResults,
+                            activeEdition,
+                            pinnedIds,
+                          )
+                        else
+                          ..._buildGroupedCrSlivers(
+                            context,
+                            filteredMonsters,
+                            activeEdition,
+                            pinnedIds,
+                          ),
+                        const SliverPadding(
+                            padding: EdgeInsets.only(bottom: 24)),
+                      ],
                     ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  List<Widget> _buildGroupedCrSlivers(
+    BuildContext context,
+    List<MonsterItem> monsters,
+    DmRulesEdition edition,
+    Set<String> pinnedIds,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final slivers = <Widget>[];
+
+    // Group monsters by distinct challenge rating
+    final crGroups = <double, List<MonsterItem>>{};
+    for (final monster in monsters) {
+      final cr = monster.challengeRating;
+      crGroups.putIfAbsent(cr, () => []).add(monster);
+    }
+
+    final sortedCrs = crGroups.keys.toList()..sort();
+
+    for (int i = 0; i < sortedCrs.length; i++) {
+      final cr = sortedCrs[i];
+      final crMonsters = crGroups[cr]!;
+      final crDisplay = crMonsters.first.crDisplay;
+      final tierColor = _getCrTierColor(cr, isDark);
+
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, i == 0 ? 8 : 20, 16, 10),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: tierColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: tierColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    crDisplay.toUpperCase(),
+                    style: TextStyle(
+                      color: tierColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _getCrCategoryTitle(cr, crDisplay),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${crMonsters.length} ${crMonsters.length == 1 ? 'Monster' : 'Monsters'}',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      slivers.add(
+          _buildSliverMonsterCards(context, crMonsters, edition, pinnedIds));
+    }
+
+    return slivers;
+  }
+
+  Widget _buildSliverMonsterCards(
+    BuildContext context,
+    List<MonsterItem> monsters,
+    DmRulesEdition edition,
+    Set<String> pinnedIds,
+  ) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
+    final rowCount = (monsters.length / crossAxisCount).ceil();
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList.builder(
+        itemCount: rowCount,
+        itemBuilder: (context, rowIndex) {
+          final startIndex = rowIndex * crossAxisCount;
+          final rowMonsters =
+              monsters.skip(startIndex).take(crossAxisCount).toList();
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int c = 0; c < crossAxisCount; c++) ...[
+                  if (c > 0) const SizedBox(width: 14),
+                  Expanded(
+                    child: c < rowMonsters.length
+                        ? RepaintBoundary(
+                            child: MonsterCard(
+                              monster: rowMonsters[c],
+                              edition: edition,
+                              isPinned: pinnedIds.contains(rowMonsters[c].id),
+                              onTogglePin: () =>
+                                  _togglePinMonster(context, rowMonsters[c].id),
+                              onTap: () {
+                                CreatureStatBlockDialog.show(
+                                  context,
+                                  statBlock: rowMonsters[c].getStatBlock(edition),
+                                );
+                              },
+                              onQuickRoll: _performQuickRoll,
+                              onOpenQuickRoll: () =>
+                                  _openQuickRollDialog(context, rowMonsters[c]),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }
