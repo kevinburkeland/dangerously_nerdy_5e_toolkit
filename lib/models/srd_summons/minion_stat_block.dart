@@ -180,13 +180,22 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
   List<ActionTraitRing> get glyphActionRings {
     final rings = <ActionTraitRing>[];
     final dmgAccent = _mapDamageType(damageType);
+    final allAccents = <DamageAccent>{};
+    if (dmgAccent != DamageAccent.physical) allAccents.add(dmgAccent);
+    if (secondaryDamageType != null) {
+      final sec = _mapDamageType(secondaryDamageType!);
+      if (sec != DamageAccent.physical) allAccents.add(sec);
+    }
 
     bool hasMelee = false;
     bool hasRanged = false;
     bool hasRecharge = false;
+    bool hasLegendary = false;
+    bool hasControl = false;
+    bool hasSustain = false;
 
     for (final act in actions) {
-      final actLower = (act.attackType ?? '').toLowerCase() + (act.description).toLowerCase();
+      final actLower = '${act.name} ${act.attackType ?? ""} ${act.description}'.toLowerCase();
       if (actLower.contains('melee') || actLower.contains('reach')) {
         hasMelee = true;
       }
@@ -196,21 +205,61 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
       if (actLower.contains('recharge') || actLower.contains('breath')) {
         hasRecharge = true;
       }
+      if (actLower.contains('grapple') || actLower.contains('restrain') || actLower.contains('paralyz') || actLower.contains('frighten') || actLower.contains('petrif') || actLower.contains('swallow') || actLower.contains('charm')) {
+        hasControl = true;
+      }
+      if (actLower.contains('heal') || actLower.contains('regain')) {
+        hasSustain = true;
+      }
+      _extractDamageAccents(actLower, allAccents);
+    }
+
+    for (final trait in traits) {
+      final traitLower = '${trait.name} ${trait.description}'.toLowerCase();
+      if (traitLower.contains('legendary')) {
+        hasLegendary = true;
+      }
+      if (traitLower.contains('recharge') || traitLower.contains('breath')) {
+        hasRecharge = true;
+      }
+      if (traitLower.contains('regeneration') || traitLower.contains('regenerate')) {
+        hasSustain = true;
+      }
+      if (traitLower.contains('frightening presence') || traitLower.contains('charm') || traitLower.contains('petrif') || traitLower.contains('paralyz')) {
+        hasControl = true;
+      }
+      _extractDamageAccents(traitLower, allAccents);
     }
 
     if (reactions.isNotEmpty) {
       rings.add(const ActionTraitRing(ringType: ActionRingType.reaction));
     }
 
-    if (hasRecharge) {
-      rings.add(ActionTraitRing(ringType: ActionRingType.recharge, damageType: dmgAccent));
+    if (hasLegendary) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.legendary));
     }
 
-    if (hasMelee) {
+    if (hasRecharge) {
+      rings.add(ActionTraitRing(
+        ringType: ActionRingType.recharge,
+        damageType: dmgAccent,
+        damageTypes: allAccents.toList(),
+      ));
+    }
+
+    if (hasControl && rings.length < 3) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.control));
+    }
+
+    if (hasSustain && rings.length < 3) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.sustain));
+    }
+
+    if (hasMelee && rings.length < 3) {
       rings.add(ActionTraitRing(ringType: ActionRingType.melee, damageType: dmgAccent));
     }
 
-    if (hasRanged) {
+    if (hasRanged && rings.length < 3) {
       rings.add(ActionTraitRing(
         ringType: ActionRingType.ranged,
         damageType: secondaryDamageType != null ? _mapDamageType(secondaryDamageType!) : DamageAccent.physical,
@@ -221,7 +270,20 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
       rings.add(ActionTraitRing(ringType: ActionRingType.melee, damageType: dmgAccent));
     }
 
-    return rings;
+    return rings.take(3).toList(growable: false);
+  }
+
+  void _extractDamageAccents(String text, Set<DamageAccent> target) {
+    if (text.contains('fire')) target.add(DamageAccent.fire);
+    if (text.contains('cold') || text.contains('ice')) target.add(DamageAccent.cold);
+    if (text.contains('lightning')) target.add(DamageAccent.lightning);
+    if (text.contains('acid')) target.add(DamageAccent.acid);
+    if (text.contains('poison')) target.add(DamageAccent.poison);
+    if (text.contains('necrotic')) target.add(DamageAccent.necrotic);
+    if (text.contains('radiant')) target.add(DamageAccent.radiant);
+    if (text.contains('psychic')) target.add(DamageAccent.psychic);
+    if (text.contains('force')) target.add(DamageAccent.force);
+    if (text.contains('thunder')) target.add(DamageAccent.thunder);
   }
 
   DamageAccent _mapDamageType(String dmg) {
