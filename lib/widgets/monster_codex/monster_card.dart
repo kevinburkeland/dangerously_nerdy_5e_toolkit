@@ -167,12 +167,25 @@ class MonsterCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Action & Trait Preview Pills
-          if (statBlock.traits.isNotEmpty || statBlock.actions.isNotEmpty) ...[
+          if (statBlock.traits.isNotEmpty || statBlock.actions.isNotEmpty || statBlock.legendaryActions.isNotEmpty) ...[
             Wrap(
               spacing: 4,
               runSpacing: 4,
               children: [
-                ...statBlock.traits.take(2).map(
+                if (statBlock.hasLegendaryResistance)
+                  _buildTraitPill(
+                    statBlock.traits.firstWhere((t) => t.name.toLowerCase().contains('legendary resistance')).name,
+                    isDark ? const Color(0xFFFDE047) : const Color(0xFFD97706),
+                  ),
+                if (statBlock.legendaryActions.isNotEmpty || statBlock.hasLegendaryActions)
+                  _buildTraitPill(
+                    'Legendary Actions (${statBlock.legendaryActions.isNotEmpty ? statBlock.legendaryActions.length : 3})',
+                    isDark ? const Color(0xFFF472B6) : const Color(0xFFDB2777),
+                  ),
+                ...statBlock.traits
+                    .where((t) => !t.name.toLowerCase().contains('legendary resistance'))
+                    .take(2)
+                    .map(
                       (trait) => _buildTraitPill(
                         trait.name,
                         isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),

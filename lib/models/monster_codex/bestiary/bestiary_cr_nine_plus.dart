@@ -8,7 +8,7 @@ class BestiaryCrNinePlus {
 
   static final List<MonsterItem> entries = [
     // =========================================================================
-    // CR 10: AB пирамида / ABOLETH
+    // CR 10: ABOLETH
     // =========================================================================
     MonsterItem.simple(
       id: 'srd_mon_aboleth',
@@ -82,11 +82,25 @@ class BestiaryCrNinePlus {
             description: 'The aboleth targets one creature it can see within 30 ft. of it. The target must succeed on a DC 14 Wisdom saving throw or be magically charmed by the aboleth until the aboleth dies or is on a different plane of existence.',
           ),
         ],
+        legendaryActions: [
+          CreatureAction(
+            name: 'Detect',
+            description: 'The aboleth makes a Wisdom (Perception) check.',
+          ),
+          CreatureAction(
+            name: 'Tail Swipe',
+            description: 'The aboleth makes one tail attack.',
+          ),
+          CreatureAction(
+            name: 'Psychic Drain (Costs 2 Actions)',
+            description: 'One creature charmed by the aboleth takes 10 (3d6) psychic damage, and the aboleth regains hit points equal to the damage dealt.',
+          ),
+        ],
       ),
     ),
 
     // =========================================================================
-    // CR 13: ADULT BRASS DRAGON & VAMPIRE
+    // CR 13: VAMPIRE
     // =========================================================================
     MonsterItem.simple(
       id: 'srd_mon_vampire',
@@ -162,6 +176,20 @@ class BestiaryCrNinePlus {
           CreatureAction(
             name: 'Charm',
             description: 'The vampire targets one humanoid it can see within 30 ft. of it. If the target can see the vampire, the target must succeed on a DC 17 Wisdom saving throw against this magic or be charmed by the vampire.',
+          ),
+        ],
+        legendaryActions: [
+          CreatureAction(
+            name: 'Move',
+            description: 'The vampire moves up to its speed without provoking opportunity attacks.',
+          ),
+          CreatureAction(
+            name: 'Unarmed Strike',
+            description: 'The vampire makes one unarmed strike.',
+          ),
+          CreatureAction(
+            name: 'Bite (Costs 2 Actions)',
+            description: 'The vampire makes one bite attack.',
           ),
         ],
       ),
@@ -250,6 +278,20 @@ class BestiaryCrNinePlus {
             description: 'The dragon exhales fire in a 60-foot cone. Each creature in that area must make a DC 21 Dexterity saving throw, taking 63 (18d6) fire damage on a failed save, or half as much damage on a successful one.',
           ),
         ],
+        legendaryActions: [
+          CreatureAction(
+            name: 'Detect',
+            description: 'The dragon makes a Wisdom (Perception) check.',
+          ),
+          CreatureAction(
+            name: 'Tail Attack',
+            description: 'The dragon makes a tail attack.',
+          ),
+          CreatureAction(
+            name: 'Wing Attack (Costs 2 Actions)',
+            description: 'The dragon beats its wings. Each creature within 10 ft. of the dragon must succeed on a DC 22 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.',
+          ),
+        ],
       ),
     ),
 
@@ -317,6 +359,24 @@ class BestiaryCrNinePlus {
             attackBonus: 12,
             reach: '5 ft.',
             hitDamage: '3d6 cold',
+          ),
+        ],
+        legendaryActions: [
+          CreatureAction(
+            name: 'Cantrip',
+            description: 'The lich casts a cantrip.',
+          ),
+          CreatureAction(
+            name: 'Paralyzing Touch (Costs 2 Actions)',
+            description: 'The lich uses its Paralyzing Touch.',
+          ),
+          CreatureAction(
+            name: 'Frightening Gaze (Costs 2 Actions)',
+            description: 'The lich fixes its gaze on one creature it can see within 10 ft. of it. The target must succeed on a DC 18 Wisdom saving throw against this magic or become frightened for 1 minute.',
+          ),
+          CreatureAction(
+            name: 'Disrupt Life (Costs 3 Actions)',
+            description: 'Each living creature within 20 ft. of the lich must make a DC 18 Constitution saving throw against this magic, taking 21 (6d6) necrotic damage on a failed save, or half as much damage on a successful one.',
           ),
         ],
       ),
@@ -399,6 +459,20 @@ class BestiaryCrNinePlus {
           CreatureAction(
             name: 'Fire Breath (Recharge 5-6)',
             description: 'The dragon exhales fire in a 90-foot cone. Each creature in that area must make a DC 24 Dexterity saving throw, taking 91 (26d6) fire damage on a failed save, or half as much damage on a successful one.',
+          ),
+        ],
+        legendaryActions: [
+          CreatureAction(
+            name: 'Detect',
+            description: 'The dragon makes a Wisdom (Perception) check.',
+          ),
+          CreatureAction(
+            name: 'Tail Attack',
+            description: 'The dragon makes a tail attack.',
+          ),
+          CreatureAction(
+            name: 'Wing Attack (Costs 2 Actions)',
+            description: 'The dragon beats its wings. Each creature within 15 ft. of the dragon must succeed on a DC 25 Dexterity saving throw or take 17 (2d6 + 10) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.',
           ),
         ],
       ),
@@ -502,6 +576,20 @@ class BestiaryCrNinePlus {
           CreatureAction(
             name: 'Swallow',
             description: 'The tarrasque makes one bite attack against a Large or smaller creature it is grappling. If the attack hits, the target takes the bite\'s damage, the target is swallowed, and the grapple ends.',
+          ),
+        ],
+        legendaryActions: [
+          CreatureAction(
+            name: 'Attack',
+            description: 'The tarrasque makes one claw attack or tail attack.',
+          ),
+          CreatureAction(
+            name: 'Move',
+            description: 'The tarrasque moves up to half its speed.',
+          ),
+          CreatureAction(
+            name: 'Chomp (Costs 2 Actions)',
+            description: 'The tarrasque makes one bite attack or uses its Swallow.',
           ),
         ],
       ),

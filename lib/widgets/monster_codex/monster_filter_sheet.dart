@@ -15,6 +15,7 @@ class MonsterFilterSheet extends StatelessWidget {
   final bool showOnlySpellcasters;
   final bool showOnlyReactions;
   final bool showOnlyResistances;
+  final bool showOnlyLegendary;
 
   final ValueChanged<String?> onTypeChanged;
   final ValueChanged<String?> onSizeChanged;
@@ -26,6 +27,7 @@ class MonsterFilterSheet extends StatelessWidget {
   final ValueChanged<bool> onSpellcastersToggled;
   final ValueChanged<bool> onReactionsToggled;
   final ValueChanged<bool> onResistancesToggled;
+  final ValueChanged<bool> onLegendaryToggled;
   final VoidCallback onResetAll;
 
   const MonsterFilterSheet({
@@ -40,6 +42,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required this.showOnlySpellcasters,
     required this.showOnlyReactions,
     required this.showOnlyResistances,
+    required this.showOnlyLegendary,
     required this.onTypeChanged,
     required this.onSizeChanged,
     required this.onCrBandChanged,
@@ -50,6 +53,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required this.onSpellcastersToggled,
     required this.onReactionsToggled,
     required this.onResistancesToggled,
+    required this.onLegendaryToggled,
     required this.onResetAll,
   });
 
@@ -65,6 +69,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required bool showOnlySpellcasters,
     required bool showOnlyReactions,
     required bool showOnlyResistances,
+    required bool showOnlyLegendary,
     required ValueChanged<String?> onTypeChanged,
     required ValueChanged<String?> onSizeChanged,
     required ValueChanged<MonsterCrBand> onCrBandChanged,
@@ -75,6 +80,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required ValueChanged<bool> onSpellcastersToggled,
     required ValueChanged<bool> onReactionsToggled,
     required ValueChanged<bool> onResistancesToggled,
+    required ValueChanged<bool> onLegendaryToggled,
     required VoidCallback onResetAll,
   }) {
     HapticService.selectionTick(context);
@@ -104,6 +110,7 @@ class MonsterFilterSheet extends StatelessWidget {
             showOnlySpellcasters: showOnlySpellcasters,
             showOnlyReactions: showOnlyReactions,
             showOnlyResistances: showOnlyResistances,
+            showOnlyLegendary: showOnlyLegendary,
             onTypeChanged: onTypeChanged,
             onSizeChanged: onSizeChanged,
             onCrBandChanged: onCrBandChanged,
@@ -114,6 +121,7 @@ class MonsterFilterSheet extends StatelessWidget {
             onSpellcastersToggled: onSpellcastersToggled,
             onReactionsToggled: onReactionsToggled,
             onResistancesToggled: onResistancesToggled,
+            onLegendaryToggled: onLegendaryToggled,
             onResetAll: onResetAll,
           ),
         ),
@@ -226,6 +234,14 @@ class MonsterFilterSheet extends StatelessWidget {
           activeColor: Colors.tealAccent,
           icon: Icons.shield,
           onChanged: onResistancesToggled,
+        ),
+        _buildSwitchTile(
+          title: 'Legendary Creatures',
+          subtitle: 'Bosses with legendary resistances or actions',
+          value: showOnlyLegendary,
+          activeColor: const Color(0xFFFDE047),
+          icon: Icons.stars,
+          onChanged: onLegendaryToggled,
         ),
         const SizedBox(height: 16),
 

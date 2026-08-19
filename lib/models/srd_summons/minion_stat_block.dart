@@ -63,6 +63,7 @@ class MinionStatBlock {
   final List<CreatureTrait> traits;
   final List<CreatureAction> actions;
   final List<CreatureAction> reactions;
+  final List<CreatureAction> legendaryActions;
 
   // Rapid Batch Dice Roller Fields
   final int attackBonus;
@@ -107,6 +108,7 @@ class MinionStatBlock {
     this.traits = const [],
     this.actions = const [],
     this.reactions = const [],
+    this.legendaryActions = const [],
     required this.attackBonus,
     required this.damageDiceCount,
     required this.damageDiceSides,
@@ -119,6 +121,19 @@ class MinionStatBlock {
     this.specialTrait,
     this.accentColor = const Color(0xFF673AB7),
   });
+
+  bool get hasLegendary =>
+      legendaryActions.isNotEmpty ||
+      hasLegendaryResistance ||
+      hasLegendaryActions;
+
+  bool get hasLegendaryResistance =>
+      traits.any((t) => t.name.toLowerCase().contains('legendary resistance'));
+
+  bool get hasLegendaryActions =>
+      legendaryActions.isNotEmpty ||
+      traits.any((t) => t.name.toLowerCase().contains('legendary action')) ||
+      actions.any((a) => a.name.toLowerCase().contains('legendary action'));
 
   int get strMod => strScore.dndModifier;
   int get dexMod => dexScore.dndModifier;
@@ -231,15 +246,33 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
       _extractDamageAccents(traitLower, allAccents);
     }
 
-    if (reactions.isNotEmpty) {
-      rings.add(const ActionTraitRing(ringType: ActionRingType.reaction));
+    for (final act in legendaryActions) {
+      hasLegendary = true;
+      final actLower = '${act.name} ${act.attackType ?? ""} ${act.description}'.toLowerCase();
+      if (actLower.contains('melee') || actLower.contains('reach')) {
+        hasMelee = true;
+      }
+      if (actLower.contains('ranged') || actLower.contains('range') || actLower.contains('bow') || actLower.contains('web')) {
+        hasRanged = true;
+      }
+      if (actLower.contains('recharge') || actLower.contains('breath')) {
+        hasRecharge = true;
+      }
+      if (actLower.contains('grapple') || actLower.contains('restrain') || actLower.contains('paralyz') || actLower.contains('frighten') || actLower.contains('petrif') || actLower.contains('swallow') || actLower.contains('charm')) {
+        hasControl = true;
+      }
+      _extractDamageAccents(actLower, allAccents);
     }
 
-    if (hasLegendary) {
+    if (hasLegendary || hasLegendaryResistance || hasLegendaryActions || legendaryActions.isNotEmpty) {
       rings.add(const ActionTraitRing(ringType: ActionRingType.legendary));
     }
 
-    if (hasRecharge) {
+    if (reactions.isNotEmpty && rings.length < 3) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.reaction));
+    }
+
+    if (hasRecharge && rings.length < 3) {
       rings.add(ActionTraitRing(
         ringType: ActionRingType.recharge,
         damageType: dmgAccent,

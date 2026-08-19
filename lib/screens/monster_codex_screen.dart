@@ -54,6 +54,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
   bool _showOnlySpellcasters = false;
   bool _showOnlyReactions = false;
   bool _showOnlyResistances = false;
+  bool _showOnlyLegendary = false;
 
   String? _lastQuickRollLabel;
 
@@ -105,6 +106,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       _showOnlySpellcasters = false;
       _showOnlyReactions = false;
       _showOnlyResistances = false;
+      _showOnlyLegendary = false;
     });
   }
 
@@ -120,6 +122,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     if (_showOnlySpellcasters) count++;
     if (_showOnlyReactions) count++;
     if (_showOnlyResistances) count++;
+    if (_showOnlyLegendary) count++;
     return count;
   }
 
@@ -136,6 +139,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       showOnlySpellcasters: _showOnlySpellcasters,
       showOnlyReactions: _showOnlyReactions,
       showOnlyResistances: _showOnlyResistances,
+      showOnlyLegendary: _showOnlyLegendary,
       onTypeChanged: (type) => setState(() => _selectedType = type),
       onSizeChanged: (size) => setState(() => _selectedSize = size),
       onCrBandChanged: (band) => setState(() => _selectedCrBand = band),
@@ -146,6 +150,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       onSpellcastersToggled: (val) => setState(() => _showOnlySpellcasters = val),
       onReactionsToggled: (val) => setState(() => _showOnlyReactions = val),
       onResistancesToggled: (val) => setState(() => _showOnlyResistances = val),
+      onLegendaryToggled: (val) => setState(() => _showOnlyLegendary = val),
       onResetAll: _clearAllFilters,
     );
   }
@@ -295,6 +300,9 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       if (_showOnlyResistances &&
           (statBlock.damageResistances == null || statBlock.damageResistances!.isEmpty) &&
           (statBlock.damageImmunities == null || statBlock.damageImmunities!.isEmpty)) {
+        return false;
+      }
+      if (_showOnlyLegendary && !statBlock.hasLegendary) {
         return false;
       }
 

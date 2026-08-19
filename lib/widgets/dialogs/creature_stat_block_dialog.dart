@@ -297,6 +297,118 @@ class CreatureStatBlockDialog extends StatelessWidget {
                           ),
                         ],
                       ],
+
+                      // 7. Reactions Section
+                      if (sb.reactions.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        _buildTaperedDivider(sb.accentColor),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'REACTIONS',
+                          style: TextStyle(
+                            color: Color(0xFFFFD54F),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
+                            fontFamily: 'serif',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        for (final reaction in sb.reactions) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: '${reaction.name}. ',
+                                        style: const TextStyle(
+                                          color: Color(0xFFFFD54F),
+                                          fontWeight: FontWeight.bold,
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: reaction.description,
+                                        style: const TextStyle(
+                                          color: Color(0xE6FFFFFF),
+                                          fontSize: 13,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+
+                      // 8. Legendary Actions Section
+                      if (sb.legendaryActions.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        _buildTaperedDivider(sb.accentColor),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'LEGENDARY ACTIONS',
+                          style: TextStyle(
+                            color: Color(0xFFFFD54F),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
+                            fontFamily: 'serif',
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'The ${sb.name.toLowerCase()} can take 3 legendary actions, choosing from the options below. Only one legendary action option can be used at a time and only at the end of another creature\'s turn. The ${sb.name.toLowerCase()} regains spent legendary actions at the start of its turn.',
+                          style: const TextStyle(
+                            color: Color(0xCCFFFFFF),
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        for (final legAction in sb.legendaryActions) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: '${legAction.name}. ',
+                                        style: const TextStyle(
+                                          color: Color(0xFFFFD54F),
+                                          fontWeight: FontWeight.bold,
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: legAction.description,
+                                        style: const TextStyle(
+                                          color: Color(0xE6FFFFFF),
+                                          fontSize: 13,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
