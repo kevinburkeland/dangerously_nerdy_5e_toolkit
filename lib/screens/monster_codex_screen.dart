@@ -205,7 +205,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
             ? ', Dmg ${result.damageResult!.total} [${result.damageResult!.individualDice.join(", ")}]'
             : '';
         final resultText =
-            '$monsterName - ${result.actionName}: Attack ${result.attackTotal} (d20: ${result.d20Roll1}${result.attackBonus >= 0 ? "+" : ""}${result.attackBonus})$dmgStr';
+            '$monsterName - ${result.actionName}: To Hit ${result.attackTotal} (d20: ${result.d20Roll1}${result.attackBonus >= 0 ? "+" : ""}${result.attackBonus})$dmgStr';
         setState(() {
           _lastQuickRollLabel = resultText;
         });

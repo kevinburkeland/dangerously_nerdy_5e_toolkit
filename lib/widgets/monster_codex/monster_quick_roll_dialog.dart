@@ -297,7 +297,7 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
 
     final announceText = isMulti
         ? '${widget.monster.name} - Multiattack (${attackRolls.length} attacks): Total Combined Damage ${result.totalDamage}'
-        : '${widget.monster.name} - ${_selectedAction.name}: Attack Total ${result.attackTotal}${result.damageResult != null ? ", Damage: ${result.damageResult!.total}" : ""}';
+        : '${widget.monster.name} - ${_selectedAction.name}: To Hit ${result.attackTotal}${result.damageResult != null ? ", Damage: ${result.damageResult!.total}" : ""}';
     A11yService.announce(announceText);
 
     setState(() {
@@ -672,7 +672,7 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
               ),
               const Spacer(),
               Text(
-                'Total: ${single.attackTotal}',
+                'To Hit: ${single.attackTotal}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
@@ -754,7 +754,7 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
           child: Row(
             children: [
               Text(
-                'Hit: ${attack.attackTotal}',
+                'To Hit: ${attack.attackTotal}',
                 style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 12.5,
