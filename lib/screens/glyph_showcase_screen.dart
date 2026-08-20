@@ -29,15 +29,22 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // Creature Filters
   CreatureType? _selectedCreatureType;
 
+  // Item Filters
+  ItemCategory? _selectedItemCategory;
+  ItemRarity? _selectedItemRarity;
+
   bool? _overrideDarkMode;
   double _glyphDisplaySize = 68.0;
 
   // ---------------------------------------------------------------------------
   // CUSTOM BUILDER STATE
   // ---------------------------------------------------------------------------
-  bool _builderIsSpell = true;
+  int _builderMode = 0; // 0: Spell, 1: Creature, 2: Magic Item
   SpellSchool _builderSchool = SpellSchool.evocation;
   CreatureType _builderCreature = CreatureType.dragon;
+  ItemCategory _builderItemCategory = ItemCategory.weapon;
+  ItemRarity _builderItemRarity = ItemRarity.rare;
+  bool _builderItemRequiresAttunement = true;
   int _builderLevelOrTier = 3;
   GlyphFrameShape? _builderShapeOverride;
   double _builderSize = 88.0;
@@ -56,7 +63,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -103,6 +110,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
             tabs: const [
               Tab(icon: Icon(Icons.memory), text: 'Spellbook Schematics'),
               Tab(icon: Icon(Icons.hub), text: 'Minion & Summon Matrix'),
+              Tab(icon: Icon(Icons.shield_outlined), text: 'Magic Item Reliquary'),
               Tab(icon: Icon(Icons.build_circle), text: 'Custom Glyph Studio'),
               Tab(
                   icon: Icon(Icons.architecture),
@@ -112,7 +120,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
         ),
         body: Column(
           children: [
-            if (_tabController.index == 0 || _tabController.index == 1)
+            if (_tabController.index == 0 || _tabController.index == 1 || _tabController.index == 2)
               _buildSearchAndFilters(isDark),
             const Divider(height: 1),
             Expanded(
@@ -121,6 +129,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                 children: [
                   _buildSpellsGallery(isDark),
                   _buildCreaturesGallery(isDark),
+                  _buildItemsGallery(isDark),
                   _buildCustomBuilder(isDark),
                   _buildFullStyleGuide(isDark),
                 ],
@@ -253,6 +262,75 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                       ),
                     ],
                   ),
+                );
+              } else if (activeTab == 2) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          FilterChip(
+                            label: const Text('All Categories'),
+                            selected: _selectedItemCategory == null,
+                            onSelected: (_) =>
+                                setState(() => _selectedItemCategory = null),
+                          ),
+                          const SizedBox(width: 6),
+                          ...ItemCategory.values.map(
+                            (c) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: FilterChip(
+                                avatar: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                        color: c.getLegibleColor(isDark),
+                                        shape: BoxShape.circle)),
+                                label: Text(c.displayName),
+                                selected: _selectedItemCategory == c,
+                                onSelected: (sel) => setState(
+                                    () => _selectedItemCategory = sel ? c : null),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          FilterChip(
+                            label: const Text('All Rarities'),
+                            selected: _selectedItemRarity == null,
+                            onSelected: (_) =>
+                                setState(() => _selectedItemRarity = null),
+                          ),
+                          const SizedBox(width: 6),
+                          ...ItemRarity.values.map(
+                            (r) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: FilterChip(
+                                avatar: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                        color: r.getLegibleColor(isDark),
+                                        shape: BoxShape.circle)),
+                                label: Text(r.displayName),
+                                selected: _selectedItemRarity == r,
+                                onSelected: (sel) => setState(
+                                    () => _selectedItemRarity = sel ? r : null),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 );
               }
               return const SizedBox.shrink();
@@ -677,18 +755,334 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // TAB 3: CUSTOM GLYPH STUDIO & BUILDER
+  // MAGIC ITEMS GALLERY
+  // ---------------------------------------------------------------------------
+
+  Widget _buildItemsGallery(bool isDark) {
+    var items = GlyphGalleryData.allItems.where((item) {
+      if (_selectedItemCategory != null && item.category != _selectedItemCategory) {
+        return false;
+      }
+      if (_selectedItemRarity != null && item.rarity != _selectedItemRarity) {
+        return false;
+      }
+      if (_searchQuery.isNotEmpty) {
+        final match = item.name.toLowerCase().contains(_searchQuery) ||
+            item.category.displayName.toLowerCase().contains(_searchQuery) ||
+            item.rarity.displayName.toLowerCase().contains(_searchQuery) ||
+            item.summary.toLowerCase().contains(_searchQuery) ||
+            item.actionRings.any((r) =>
+                r.ringType.displayName.toLowerCase().contains(_searchQuery) ||
+                r.damageLegend.toLowerCase().contains(_searchQuery) ||
+                (r.label?.toLowerCase().contains(_searchQuery) ?? false));
+        if (!match) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
+    if (items.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.search_off,
+                  size: 48, color: isDark ? Colors.white38 : Colors.black38),
+              const SizedBox(height: 12),
+              const Text('No magic items matching current filters.',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 460,
+        mainAxisExtent: _glyphDisplaySize > 60 ? 225 : 190,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, idx) {
+        final item = items[idx];
+        return _buildItemCard(item, isDark);
+      },
+    );
+  }
+
+  Widget _buildItemCard(GlyphItemEntry item, bool isDark) {
+    final rarityColor = item.rarity.getLegibleColor(isDark);
+    final categoryColor = item.category.getLegibleColor(isDark);
+
+    return Card(
+      elevation: 4,
+      color: isDark ? const Color(0xFF090D16) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: rarityColor.withValues(alpha: 0.55), width: 1.5),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _showItemDetails(item, isDark),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              DndGlyph.item(
+                category: item.category,
+                rarity: item.rarity,
+                requiresAttunement: item.requiresAttunement,
+                damageAccent: item.damageAccent,
+                actionRings: item.actionRings,
+                size: _glyphDisplaySize,
+                isDarkMode: isDark,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: rarityColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: rarityColor.withValues(alpha: 0.5)),
+                          ),
+                          child: Text(
+                            item.rarity.displayName.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: rarityColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Wrap(
+                      spacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          item.category.displayName.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: categoryColor,
+                          ),
+                        ),
+                        if (item.requiresAttunement)
+                          Text(
+                            '• ATTUNEMENT',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                            ),
+                          ),
+                      ],
+                    ),
+                    Text(
+                      item.summary,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white70 : Colors.black87),
+                    ),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: item.actionRings.map((r) {
+                          final ringColor = r.getEffectiveColor(rarityColor);
+                          return Container(
+                            margin: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: ringColor.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                  color: ringColor.withValues(alpha: 0.5)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                      color: ringColor, shape: BoxShape.circle),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  r.damageLegend.isNotEmpty
+                                      ? '${r.ringType.displayName} (${r.damageLegend})'
+                                      : r.ringType.displayName,
+                                  style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: ringColor,
+                                      fontFamily: 'monospace'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showItemDetails(GlyphItemEntry item, bool isDark) {
+    final rarityColor = item.rarity.getLegibleColor(isDark);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF090D16) : Colors.white,
+        title: Row(
+          children: [
+            DndGlyph.item(
+              category: item.category,
+              rarity: item.rarity,
+              requiresAttunement: item.requiresAttunement,
+              damageAccent: item.damageAccent,
+              actionRings: item.actionRings,
+              size: 72,
+              isDarkMode: isDark,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 20)),
+                  Text(
+                    '${item.category.displayName} • ${item.rarity.displayName}${item.requiresAttunement ? " (Requires Attunement)" : ""}',
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: rarityColor,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailRow('Category', item.category.displayName),
+            _buildDetailRow('Rarity', item.rarity.displayName),
+            _buildDetailRow(
+                'Attunement', item.requiresAttunement ? 'Required' : 'No'),
+            if (item.damageAccent != null)
+              _buildDetailRow('Damage / Element', item.damageAccent!.displayName),
+            const SizedBox(height: 12),
+            Text(item.summary,
+                style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: isDark ? Colors.white70 : Colors.black87)),
+            if (item.actionRings.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text('Action & Trait Rings:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 8),
+              ...item.actionRings.map((r) {
+                final ringColor = r.getEffectiveColor(rarityColor);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                            color: ringColor, shape: BoxShape.circle),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('${r.ringType.displayName}: ',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: ringColor)),
+                      Expanded(
+                        child: Text(r.label ?? r.damageLegend,
+                            style: const TextStyle(fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // TAB 4: CUSTOM GLYPH STUDIO & BUILDER
   // ---------------------------------------------------------------------------
 
   Widget _buildCustomBuilder(bool isDark) {
     final effectiveShape = _builderShapeOverride ??
-        (_builderIsSpell
+        (_builderMode == 0
             ? _builderSchool.frameShape
-            : _builderCreature.frameShape);
+            : _builderMode == 1
+                ? _builderCreature.frameShape
+                : _builderItemCategory.frameShape);
 
-    final baseTheme = _builderIsSpell
+    final baseTheme = _builderMode == 0
         ? GlyphThemeData.fromSchool(_builderSchool)
-        : GlyphThemeData.fromCreature(_builderCreature);
+        : _builderMode == 1
+            ? GlyphThemeData.fromCreature(_builderCreature)
+            : GlyphThemeData.fromItem(_builderItemCategory,
+                rarity: _builderItemRarity);
 
     final themeData = GlyphThemeData(
       primary: baseTheme.primary,
@@ -745,7 +1139,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       color: Colors.transparent,
-                      child: _builderIsSpell
+                      child: _builderMode == 0
                           ? DndGlyph.spell(
                               school: _builderSchool,
                               themeData: themeData,
@@ -754,21 +1148,34 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                               size: _builderSize,
                               isDarkMode: isDark,
                             )
-                          : DndGlyph.monster(
-                              creatureType: _builderCreature,
-                              themeData: themeData,
-                              crTier: _builderLevelOrTier,
-                              actionRings: _builderRings,
-                              size: _builderSize,
-                              isDarkMode: isDark,
-                            ),
+                          : _builderMode == 1
+                              ? DndGlyph.monster(
+                                  creatureType: _builderCreature,
+                                  themeData: themeData,
+                                  crTier: _builderLevelOrTier,
+                                  actionRings: _builderRings,
+                                  size: _builderSize,
+                                  isDarkMode: isDark,
+                                )
+                              : DndGlyph.item(
+                                  category: _builderItemCategory,
+                                  rarity: _builderItemRarity,
+                                  requiresAttunement:
+                                      _builderItemRequiresAttunement,
+                                  themeData: themeData,
+                                  actionRings: _builderRings,
+                                  size: _builderSize,
+                                  isDarkMode: isDark,
+                                ),
                     ),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    _builderIsSpell
+                    _builderMode == 0
                         ? '${_builderSchool.displayName} • Level $_builderLevelOrTier'
-                        : '${_builderCreature.displayName} • CR Tier $_builderLevelOrTier',
+                        : _builderMode == 1
+                            ? '${_builderCreature.displayName} • CR Tier $_builderLevelOrTier'
+                            : '${_builderItemCategory.displayName} • ${_builderItemRarity.displayName}${_builderItemRequiresAttunement ? " (Attunement)" : ""}',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -849,7 +1256,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                           onChanged: (sp) {
                             if (sp != null) {
                               setState(() {
-                                _builderIsSpell = true;
+                                _builderMode = 0;
                                 _builderSchool = sp.glyphSchool;
                                 _builderLevelOrTier = sp.glyphSpellLevel;
                                 _builderShapeOverride = null;
@@ -897,11 +1304,52 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                           onChanged: (sb) {
                             if (sb != null) {
                               setState(() {
-                                _builderIsSpell = false;
+                                _builderMode = 1;
                                 _builderCreature = sb.glyphCreatureType;
                                 _builderLevelOrTier = sb.glyphCrTier;
                                 _builderShapeOverride = null;
                                 _builderRings = List.from(sb.glyphActionRings);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    // Magic Item Preset Loader
+                    DropdownButtonHideUnderline(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color:
+                              isDark ? const Color(0xFF1E293B) : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: isDark ? Colors.white24 : Colors.black12),
+                        ),
+                        child: DropdownButton<GlyphItemEntry>(
+                          hint: const Text('🛡️ Read Magic Item...',
+                              style: TextStyle(fontSize: 13)),
+                          icon: const Icon(Icons.arrow_drop_down, size: 18),
+                          isDense: true,
+                          items: GlyphGalleryData.allItems.map((item) {
+                            return DropdownMenuItem<GlyphItemEntry>(
+                              value: item,
+                              child: Text('${item.name} (${item.rarity.displayName})',
+                                  style: const TextStyle(fontSize: 13)),
+                            );
+                          }).toList(),
+                          onChanged: (item) {
+                            if (item != null) {
+                              setState(() {
+                                _builderMode = 2;
+                                _builderItemCategory = item.category;
+                                _builderItemRarity = item.rarity;
+                                _builderItemRequiresAttunement =
+                                    item.requiresAttunement;
+                                _builderLevelOrTier = item.rarity.tierLevel;
+                                _builderShapeOverride = null;
+                                _builderRings = List.from(item.actionRings);
                               });
                             }
                           },
@@ -919,28 +1367,32 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
           Row(
             children: [
               Expanded(
-                child: SegmentedButton<bool>(
+                child: SegmentedButton<int>(
                   segments: const [
                     ButtonSegment(
-                        value: true,
+                        value: 0,
                         icon: Icon(Icons.auto_awesome),
                         label: Text('Spell School')),
                     ButtonSegment(
-                        value: false,
+                        value: 1,
                         icon: Icon(Icons.pets),
                         label: Text('Creature Type')),
+                    ButtonSegment(
+                        value: 2,
+                        icon: Icon(Icons.shield_outlined),
+                        label: Text('Magic Item')),
                   ],
-                  selected: {_builderIsSpell},
+                  selected: {_builderMode},
                   onSelectionChanged: (set) =>
-                      setState(() => _builderIsSpell = set.first),
+                      setState(() => _builderMode = set.first),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // School / Creature Picker
-          if (_builderIsSpell) ...[
+          // School / Creature / Item Picker
+          if (_builderMode == 0) ...[
             const Text('Select Arcane Spell School:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
@@ -957,7 +1409,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                 );
               }).toList(),
             ),
-          ] else ...[
+          ] else if (_builderMode == 1) ...[
             const Text('Select Creature Classification:',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
@@ -974,6 +1426,58 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                 );
               }).toList(),
             ),
+          ] else ...[
+            const Text('Select Item Category:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ItemCategory.values.map((c) {
+                return ChoiceChip(
+                  label: Text(c.displayName),
+                  selected: _builderItemCategory == c,
+                  onSelected: (sel) {
+                    if (sel) setState(() => _builderItemCategory = c);
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 12),
+            const Text('Select Item Rarity:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ItemRarity.values.map((r) {
+                return ChoiceChip(
+                  label: Text(r.displayName),
+                  selected: _builderItemRarity == r,
+                  onSelected: (sel) {
+                    if (sel) {
+                      setState(() {
+                        _builderItemRarity = r;
+                        _builderLevelOrTier = r.tierLevel;
+                      });
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 12),
+            FilterChip(
+              avatar: Icon(
+                _builderItemRequiresAttunement
+                    ? Icons.link
+                    : Icons.link_off,
+                size: 16,
+              ),
+              label: const Text('Requires Attunement'),
+              selected: _builderItemRequiresAttunement,
+              onSelected: (sel) =>
+                  setState(() => _builderItemRequiresAttunement = sel),
+            ),
           ],
 
           const SizedBox(height: 20),
@@ -983,17 +1487,21 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                  _builderIsSpell
+                  _builderMode == 0
                       ? 'Spell Level: $_builderLevelOrTier'
-                      : 'Threat Tier: Tier $_builderLevelOrTier',
+                      : _builderMode == 1
+                          ? 'Threat Tier: Tier $_builderLevelOrTier'
+                          : 'Rarity Tier: Tier $_builderLevelOrTier (${_builderItemRarity.displayName})',
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 14)),
               Text(
-                  _builderIsSpell
+                  _builderMode == 0
                       ? (_builderLevelOrTier == 0
                           ? 'Cantrip'
                           : 'Tier ${(_builderLevelOrTier / 3).ceil()}')
-                      : 'CR ${(1 << (_builderLevelOrTier - 1)) * 4}',
+                      : _builderMode == 1
+                          ? 'CR ${(1 << (_builderLevelOrTier - 1)) * 4}'
+                          : _builderItemRarity.displayName,
                   style:
                       const TextStyle(fontSize: 12, fontFamily: 'monospace')),
             ],
@@ -1001,11 +1509,17 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
           Slider(
             value: _builderLevelOrTier.toDouble(),
             min: 0,
-            max: _builderIsSpell ? 9 : 4,
-            divisions: _builderIsSpell ? 9 : 4,
+            max: _builderMode == 0 ? 9 : (_builderMode == 1 ? 4 : 5),
+            divisions: _builderMode == 0 ? 9 : (_builderMode == 1 ? 4 : 5),
             label: '$_builderLevelOrTier',
-            onChanged: (val) =>
-                setState(() => _builderLevelOrTier = val.toInt()),
+            onChanged: (val) {
+              setState(() {
+                _builderLevelOrTier = val.toInt();
+                if (_builderMode == 2 && _builderLevelOrTier < ItemRarity.values.length) {
+                  _builderItemRarity = ItemRarity.values[_builderLevelOrTier];
+                }
+              });
+            },
           ),
 
           const SizedBox(height: 12),
@@ -1351,7 +1865,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
         ? 'const []'
         : 'const [\n${ringsList.join('\n')}\n  ]';
 
-    if (_builderIsSpell) {
+    if (_builderMode == 0) {
       buffer.writeln('DndGlyph.spell(');
       buffer.writeln('  school: SpellSchool.${_builderSchool.name},');
       buffer.writeln('  level: $_builderLevelOrTier,');
@@ -1362,10 +1876,24 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
       }
       buffer.writeln('  actionRings: $ringsFormatted,');
       buffer.write(')');
-    } else {
+    } else if (_builderMode == 1) {
       buffer.writeln('DndGlyph.monster(');
       buffer.writeln('  creatureType: CreatureType.${_builderCreature.name},');
       buffer.writeln('  crTier: $_builderLevelOrTier,');
+      buffer.writeln('  size: ${_builderSize.toStringAsFixed(1)},');
+      if (_builderShapeOverride != null) {
+        buffer.writeln(
+            '  frameShapeOverride: GlyphFrameShape.${_builderShapeOverride!.name},');
+      }
+      buffer.writeln('  actionRings: $ringsFormatted,');
+      buffer.write(')');
+    } else {
+      buffer.writeln('DndGlyph.item(');
+      buffer.writeln('  category: ItemCategory.${_builderItemCategory.name},');
+      buffer.writeln('  rarity: ItemRarity.${_builderItemRarity.name},');
+      if (_builderItemRequiresAttunement) {
+        buffer.writeln('  requiresAttunement: true,');
+      }
       buffer.writeln('  size: ${_builderSize.toStringAsFixed(1)},');
       if (_builderShapeOverride != null) {
         buffer.writeln(
@@ -1388,9 +1916,11 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
           await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData != null) {
         final bytes = byteData.buffer.asUint8List();
-        final name = _builderIsSpell
+        final name = _builderMode == 0
             ? 'glyph_spell_${_builderSchool.name}_lv$_builderLevelOrTier.png'
-            : 'glyph_creature_${_builderCreature.name}_cr$_builderLevelOrTier.png';
+            : _builderMode == 1
+                ? 'glyph_creature_${_builderCreature.name}_cr$_builderLevelOrTier.png'
+                : 'glyph_item_${_builderItemCategory.name}_${_builderItemRarity.name}.png';
         await GlyphImageExporter.downloadPngBytes(bytes, name);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1537,8 +2067,112 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
 
           const SizedBox(height: 32),
 
-          // Section 3: 4 Progression Tiers & Threat Architecture
-          const Text('3. The 4 Progression Tiers & Threat Architecture',
+          // Section 3: 9 Magic Item Categories
+          const Text('3. The 9 Magic Item & Equipment Categories',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: ItemCategory.values.map((c) {
+              final col = c.getLegibleColor(isDark);
+              return Card(
+                color: isDark ? const Color(0xFF090D16) : Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DndGlyph.item(
+                        category: c,
+                        rarity: ItemRarity.rare,
+                        size: 52,
+                        isDarkMode: isDark,
+                      ),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(c.displayName,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: col)),
+                          Text('Frame: ${c.frameShape.displayName}',
+                              style: const TextStyle(
+                                  fontSize: 11, fontFamily: 'monospace')),
+                          Text(
+                              '#${c.primaryColor.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: col,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'monospace')),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Section 4: 6 Standard 5e Item Rarities
+          const Text('4. The 6 Standard 5e Item Rarities',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: ItemRarity.values.map((r) {
+              final col = r.getLegibleColor(isDark);
+              return Card(
+                color: isDark ? const Color(0xFF090D16) : Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DndGlyph.item(
+                        category: ItemCategory.wondrousItem,
+                        rarity: r,
+                        size: 52,
+                        isDarkMode: isDark,
+                      ),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(r.displayName,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: col)),
+                          Text('Rarity Tier: ${r.tierLevel}',
+                              style: const TextStyle(
+                                  fontSize: 11, fontFamily: 'monospace')),
+                          Text(
+                              '#${r.color.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: col,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'monospace')),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Section 5: 4 Progression Tiers & Threat Architecture
+          const Text('5. The 4 Progression Tiers & Threat Architecture',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
@@ -1786,6 +2420,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
       ActionRingType.sustain =>
         'Harmonic Cradle Loop for Healing and Regeneration',
       ActionRingType.concentration => 'Dual-Harmonic Orbital Wireframe Loop',
+      ActionRingType.attunement =>
+        'Sacred Tether Wireframe Ring with 4 Nexus Knot Links',
       ActionRingType.legendary => 'Radial Starburst Crown with 8 Apex Rays',
     };
 
@@ -2238,6 +2874,19 @@ class _StandaloneRingPainter extends CustomPainter {
           canvas.drawOval(
               Rect.fromCenter(center: center, width: r * 1.5, height: r * 2.1),
               finePaint);
+        }
+      case ActionRingType.attunement:
+        canvas.drawCircle(center, r, strokePaint);
+        if (!isGlow) {
+          for (int i = 0; i < 4; i++) {
+            final a = (i * 90.0) * pi / 180.0;
+            final pOuter = Offset(center.dx + (r + 1.2 * scale) * cos(a),
+                center.dy + (r + 1.2 * scale) * sin(a));
+            final pInner = Offset(center.dx + (r - 1.2 * scale) * cos(a),
+                center.dy + (r - 1.2 * scale) * sin(a));
+            canvas.drawLine(pInner, pOuter, finePaint);
+            canvas.drawCircle(pOuter, 0.85 * scale, nodeFill);
+          }
         }
       case ActionRingType.legendary:
         final path = Path();

@@ -204,8 +204,13 @@ void main() {
     });
 
     testWidgets(
-        'GlyphShowcaseScreen renders known spells, minions, custom builder, and full style guide',
+        'GlyphShowcaseScreen renders known spells, minions, items, custom builder, and full style guide',
         (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1600, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(
         const MaterialApp(
           home: GlyphShowcaseScreen(),
@@ -216,6 +221,7 @@ void main() {
       expect(find.text('D&D Glyph Studio & Codex'), findsOneWidget);
       expect(find.text('Spellbook Schematics'), findsOneWidget);
       expect(find.text('Minion & Summon Matrix'), findsOneWidget);
+      expect(find.text('Magic Item Reliquary'), findsOneWidget);
       expect(find.text('Custom Glyph Studio'), findsOneWidget);
       expect(find.text('Full Style Guide Codex'), findsOneWidget);
 
@@ -229,6 +235,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Tiny Animated Object'), findsOneWidget);
       expect(find.text('Small Animated Object'), findsOneWidget);
+
+      // Switch to Magic Item Reliquary tab
+      await tester.tap(find.text('Magic Item Reliquary'));
+      await tester.pumpAndSettle();
+      expect(find.text('Flame Tongue'), findsOneWidget);
+      expect(find.text('Frost Brand'), findsOneWidget);
 
       // Switch to Custom Glyph Studio tab
       await tester.tap(find.text('Custom Glyph Studio'));
@@ -262,7 +274,10 @@ void main() {
               'D&D App Glyph System: Techno-Wireframe HUD & Arcane Codex'),
           findsOneWidget);
       expect(find.text('1. The 8 Arcane Schools of Magic'), findsOneWidget);
-      expect(find.text('3. The 4 Progression Tiers & Threat Architecture'),
+      expect(find.text('3. The 9 Magic Item & Equipment Categories'),
+          findsOneWidget);
+      expect(find.text('4. The 6 Standard 5e Item Rarities'), findsOneWidget);
+      expect(find.text('5. The 4 Progression Tiers & Threat Architecture'),
           findsOneWidget);
       expect(find.text('Tier 1 • Initiate / CR 0–4'), findsOneWidget);
     });

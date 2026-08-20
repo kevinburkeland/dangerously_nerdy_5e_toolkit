@@ -848,6 +848,36 @@ class GlyphGeometry {
           }
         }
         break;
+
+      case ActionRingType.attunement:
+        // Sacred Tether Ring with Intersecting Attunement Knot Nodes
+        canvas.drawCircle(center, r, mainPaint);
+        if (!isGlow) {
+          // 4 Cardinal tether links with orbital nexus loops
+          for (int i = 0; i < 4; i++) {
+            final a = (i * 90.0) * pi / 180.0;
+            final pOuter = Offset(center.dx + (r + 1.2 * scale) * cos(a),
+                center.dy + (r + 1.2 * scale) * sin(a));
+            final pInner = Offset(center.dx + (r - 1.2 * scale) * cos(a),
+                center.dy + (r - 1.2 * scale) * sin(a));
+            canvas.drawLine(pInner, pOuter, finePaint);
+            canvas.drawCircle(pOuter, 0.85 * scale, nodeFill);
+          }
+          final diamond = Path();
+          for (int i = 0; i < 4; i++) {
+            final a = (i * 90.0 + 45.0) * pi / 180.0;
+            final pt = Offset(center.dx + (r - 0.8 * scale) * cos(a),
+                center.dy + (r - 0.8 * scale) * sin(a));
+            if (i == 0) {
+              diamond.moveTo(pt.dx, pt.dy);
+            } else {
+              diamond.lineTo(pt.dx, pt.dy);
+            }
+          }
+          diamond.close();
+          canvas.drawPath(diamond, finePaint);
+        }
+        break;
     }
   }
 

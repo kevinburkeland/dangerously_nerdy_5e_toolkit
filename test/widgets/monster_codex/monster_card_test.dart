@@ -81,7 +81,7 @@ void main() {
       }
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Total:'), findsOneWidget);
+      expect(find.textContaining('To Hit:'), findsOneWidget);
     });
   });
 }

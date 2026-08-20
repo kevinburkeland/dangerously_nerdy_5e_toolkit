@@ -61,7 +61,28 @@ class GlyphCreatureEntry {
   });
 }
 
-/// Library of known spells and summons/creatures in the toolkit with multi-ring action traits.
+/// Data model representing a magic item entry in the Glyph Gallery.
+class GlyphItemEntry {
+  final String name;
+  final ItemCategory category;
+  final ItemRarity rarity;
+  final bool requiresAttunement;
+  final DamageAccent? damageAccent;
+  final List<ActionTraitRing> actionRings;
+  final String summary;
+
+  const GlyphItemEntry({
+    required this.name,
+    required this.category,
+    required this.rarity,
+    this.requiresAttunement = false,
+    this.damageAccent,
+    this.actionRings = const [],
+    required this.summary,
+  });
+}
+
+/// Library of known spells, creatures, and magic items in the toolkit with multi-ring action traits.
 class GlyphGalleryData {
   // ---------------------------------------------------------------------------
   // SPELLS (The 7 core summon/minion spells in the toolkit)
@@ -614,6 +635,353 @@ class GlyphGalleryData {
       hp: SrdSummonsLibrary.marbleElephant.maxHp,
       speed: SrdSummonsLibrary.marbleElephant.speed,
       primaryAttack: 'Gore & Trample (+8 to hit, 3d8+6 & 3d10+6)',
+    ),
+  ];
+
+  // ---------------------------------------------------------------------------
+  // MAGIC ITEMS & EQUIPMENT (Iconic 5e SRD Items across all 9 Categories)
+  // ---------------------------------------------------------------------------
+  static const List<GlyphItemEntry> allItems = [
+    // WEAPONS
+    GlyphItemEntry(
+      name: 'Flame Tongue',
+      category: ItemCategory.weapon,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.fire,
+            label: '+2d6 Fire Damage on Hit'),
+      ],
+      summary:
+          'While the sword is ablaze, it deals an extra 2d6 fire damage to any target it hits and sheds bright light.',
+    ),
+    GlyphItemEntry(
+      name: 'Frost Brand',
+      category: ItemCategory.weapon,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.cold,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.cold,
+            label: '+1d6 Cold Damage & Resistance'),
+      ],
+      summary:
+          'Deals an extra 1d6 cold damage to any target it hits, grants resistance to fire damage, and extinguishes open flames.',
+    ),
+    GlyphItemEntry(
+      name: 'Sun Blade',
+      category: ItemCategory.weapon,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.radiant,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.radiant,
+            label: '+2 Attack & 1d8 Radiant Damage'),
+      ],
+      summary:
+          'A blade of pure radiant sunlight that deals radiant damage instead of slashing, with +2 bonus to attack and damage rolls.',
+    ),
+    GlyphItemEntry(
+      name: 'Holy Avenger',
+      category: ItemCategory.weapon,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.radiant,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.radiant,
+            label: '+3 Attack & +2d10 vs Fiends/Undead'),
+        ActionTraitRing(
+            ringType: ActionRingType.sustain,
+            label: '10-ft Aura of Advantage on Spell Saves'),
+      ],
+      summary:
+          'Legendary paladin blade granting +3 bonus to attack and damage rolls, +2d10 radiant damage vs fiends/undead, and an aura of spell saving throw advantage.',
+    ),
+
+    // ARMOR & SHIELDS
+    GlyphItemEntry(
+      name: 'Mithral Armor',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.uncommon,
+      summary:
+          'Mithral is a light, flexible metal. A mithral chain shirt or breastplate can be worn under normal clothes without Stealth disadvantage.',
+    ),
+    GlyphItemEntry(
+      name: 'Adamantine Armor',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            label: 'Critical Hit Immunity'),
+      ],
+      summary:
+          'Reinforced with one of the hardest substances in existence. Any critical hit against you becomes a normal hit.',
+    ),
+    GlyphItemEntry(
+      name: 'Armor of Invulnerability',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            label: 'Nonmagical Damage Resistance'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            label: 'Immunity Action (1/Day for 10 Min)'),
+      ],
+      summary:
+          'Plate armor granting resistance to nonmagical damage, and an action to become immune to all nonmagical damage for 10 minutes.',
+    ),
+
+    // POTIONS
+    GlyphItemEntry(
+      name: 'Potion of Healing',
+      category: ItemCategory.potion,
+      rarity: ItemRarity.common,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.sustain,
+            label: 'Regain 2d4 + 2 Hit Points'),
+      ],
+      summary:
+          'A magical red fluid that glimmers when agitated. Drinking it restores 2d4 + 2 hit points.',
+    ),
+    GlyphItemEntry(
+      name: 'Potion of Greater Healing',
+      category: ItemCategory.potion,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.sustain,
+            label: 'Regain 4d4 + 4 Hit Points'),
+      ],
+      summary:
+          'Restores 4d4 + 4 hit points when consumed as a bonus action (2024) or action (2014).',
+    ),
+    GlyphItemEntry(
+      name: 'Potion of Invisibility',
+      category: ItemCategory.potion,
+      rarity: ItemRarity.veryRare,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.control,
+            label: 'Invisible for 1 Hour'),
+      ],
+      summary:
+          'Become invisible for 1 hour after drinking. The effect ends early if you attack or cast a spell.',
+    ),
+
+    // RINGS
+    GlyphItemEntry(
+      name: 'Ring of Protection',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            label: '+1 to AC & Saving Throws'),
+      ],
+      summary:
+          'You gain a +1 bonus to Armor Class and saving throws while wearing this ring.',
+    ),
+    GlyphItemEntry(
+      name: 'Ring of Spell Storing',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            label: 'Store up to 5 Levels of Spells'),
+      ],
+      summary:
+          'Holds up to 5 levels of spells that any creature can cast into the ring and the wearer can release without spell slots.',
+    ),
+    GlyphItemEntry(
+      name: 'Ring of Three Wishes',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.legendary,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.legendary,
+            label: '3 Charges of the Wish Spell'),
+      ],
+      summary:
+          'Set with three rubies. While wearing it, you can use an action to expend 1 charge and cast the Wish spell.',
+    ),
+
+    // RODS
+    GlyphItemEntry(
+      name: 'Rod of the Pact Keeper',
+      category: ItemCategory.rod,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.necrotic,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.sustain,
+            label: '+1 Spell Attack/DC & Regain 1 Slot'),
+      ],
+      summary:
+          'Grants a bonus to warlock spell attack rolls and spell save DCs, and allows the warlock to regain 1 warlock spell slot once per long rest.',
+    ),
+    GlyphItemEntry(
+      name: 'Rod of Lordly Might',
+      category: ItemCategory.rod,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            label: 'Morphs into Flame Sword, Battleaxe, Spear'),
+        ActionTraitRing(
+            ringType: ActionRingType.control,
+            label: 'Paralyze / Drain Life Actions'),
+      ],
+      summary:
+          'Versatile sovereign rod featuring six buttons that transform the rod into magical weapons, ladders, battering rams, and life-drain conduits.',
+    ),
+
+    // SCROLLS
+    GlyphItemEntry(
+      name: 'Spell Scroll (Fireball)',
+      category: ItemCategory.scroll,
+      rarity: ItemRarity.uncommon,
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: DamageAccent.fire,
+            label: '8d6 Fire Damage (DC 15 Save)'),
+      ],
+      summary:
+          'Bears the words of Fireball. If the spell is on your class’s spell list, you can read and cast it without material components.',
+    ),
+    GlyphItemEntry(
+      name: 'Scroll of Resurrection',
+      category: ItemCategory.scroll,
+      rarity: ItemRarity.veryRare,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.sustain,
+            label: 'Restore Dead Creature to Life'),
+      ],
+      summary:
+          'Touches a dead creature and restores it to life with all its hit points, closing mortal wounds and curing nonmagical poisons.',
+    ),
+
+    // STAVES
+    GlyphItemEntry(
+      name: 'Staff of Power',
+      category: ItemCategory.staff,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.force,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.melee,
+            damageType: DamageAccent.force,
+            label: '+2 Quarterstaff & +2 AC/Saves'),
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            label: '20 Charges (Fireball, Lightning, Cone of Cold)'),
+      ],
+      summary:
+          'Mighty archmage staff with 20 charges, granting +2 to AC, saving throws, and spell attack rolls, with retributive strike capability.',
+    ),
+    GlyphItemEntry(
+      name: 'Staff of the Magi',
+      category: ItemCategory.staff,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.force,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            label: 'Spell Absorption Reaction'),
+        ActionTraitRing(
+            ringType: ActionRingType.legendary,
+            label: '50 Charges across 7th-Level Spells'),
+      ],
+      summary:
+          'Supreme focus for wizards, sorcerers, and warlocks with 50 charges, advantage on saving throws against spells, and spell absorption.',
+    ),
+
+    // WANDS
+    GlyphItemEntry(
+      name: 'Wand of Magic Missiles',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.uncommon,
+      damageAccent: DamageAccent.force,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.ranged,
+            damageType: DamageAccent.force,
+            label: '7 Charges: Auto-Hit Darts'),
+      ],
+      summary:
+          'Contains 7 charges. Can cast the 1st-level Magic Missile spell or upcast it by expending additional charges.',
+    ),
+    GlyphItemEntry(
+      name: 'Wand of Fireballs',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: DamageAccent.fire,
+            label: '7 Charges: 8d6+ Fireball (DC 15)'),
+      ],
+      summary:
+          'Contains 7 charges. While holding it, you can use an action to expend charges and cast Fireball at 3rd level or higher.',
+    ),
+
+    // WONDROUS ITEMS
+    GlyphItemEntry(
+      name: 'Bag of Holding',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      summary:
+          'A magical bag that opens into an extradimensional space holding up to 500 pounds and 64 cubic feet while always weighing 15 pounds.',
+    ),
+    GlyphItemEntry(
+      name: 'Cloak of Protection',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.reaction,
+            label: '+1 to AC and Saving Throws'),
+      ],
+      summary:
+          'You gain a +1 bonus to AC and saving throws while you wear this cloak.',
+    ),
+    GlyphItemEntry(
+      name: 'Deck of Many Things',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.legendary,
+      actionRings: [
+        ActionTraitRing(
+            ringType: ActionRingType.legendary,
+            label: 'Fate Altering Arcane Cards'),
+      ],
+      summary:
+          'A deck of vellum cards containing cosmic fortunes and catastrophes that irrevocably warp destinies.',
     ),
   ];
 }

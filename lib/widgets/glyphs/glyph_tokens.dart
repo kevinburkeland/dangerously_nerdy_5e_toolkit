@@ -159,6 +159,120 @@ enum CreatureType {
   }
 }
 
+/// 9 Core D&D 5e Magic Item & Equipment Categories.
+enum ItemCategory {
+  weapon('Weapon', Color(0xFFEF4444), Color(0xFFFEF2F2), Color(0xFF7F1D1D),
+      GlyphFrameShape.sharpDiamondShield),
+  armor('Armor & Shield', Color(0xFF3B82F6), Color(0xFFEFF6FF),
+      Color(0xFF1E3A8A), GlyphFrameShape.heaterShield),
+  potion('Potion & Elixir', Color(0xFF10B981), Color(0xFFECFDF5),
+      Color(0xFF064E3B), GlyphFrameShape.teardrop),
+  ring('Ring & Band', Color(0xFFF59E0B), Color(0xFFFFFBEB),
+      Color(0xFF78350F), GlyphFrameShape.circle),
+  rod('Rod & Scepter', Color(0xFFA855F7), Color(0xFFFAF5FF),
+      Color(0xFF581C87), GlyphFrameShape.heavySquare),
+  scroll('Scroll & Tome', Color(0xFF0EA5E9), Color(0xFFF0F9FF),
+      Color(0xFF0C4A6E), GlyphFrameShape.filigreeOval),
+  staff('Staff & Focus', Color(0xFF8B5CF6), Color(0xFFF5F3FF),
+      Color(0xFF4C1D95), GlyphFrameShape.heavyHex),
+  wand('Wand & Baton', Color(0xFFF43F5E), Color(0xFFFFF1F2),
+      Color(0xFF881337), GlyphFrameShape.diamond),
+  wondrousItem('Wondrous Item', Color(0xFFEC4899), Color(0xFFFDF2F8),
+      Color(0xFF831843), GlyphFrameShape.crest);
+
+  final String displayName;
+  final Color primaryColor;
+  final Color lightFillTint;
+  final Color darkFillTint;
+  final GlyphFrameShape frameShape;
+
+  const ItemCategory(
+    this.displayName,
+    this.primaryColor,
+    this.lightFillTint,
+    this.darkFillTint,
+    this.frameShape,
+  );
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      return switch (this) {
+        ItemCategory.weapon => const Color(0xFFB91C1C),
+        ItemCategory.armor => const Color(0xFF1D4ED8),
+        ItemCategory.potion => const Color(0xFF047857),
+        ItemCategory.ring => const Color(0xFFB45309),
+        ItemCategory.rod => const Color(0xFF7E22CE),
+        ItemCategory.scroll => const Color(0xFF0369A1),
+        ItemCategory.staff => const Color(0xFF6D28D9),
+        ItemCategory.wand => const Color(0xFFBE123C),
+        ItemCategory.wondrousItem => const Color(0xFFBE185D),
+      };
+    }
+    return switch (this) {
+      ItemCategory.weapon => const Color(0xFFF87171),
+      ItemCategory.armor => const Color(0xFF60A5FA),
+      ItemCategory.potion => const Color(0xFF34D399),
+      ItemCategory.ring => const Color(0xFFFBBF24),
+      ItemCategory.rod => const Color(0xFFC084FC),
+      ItemCategory.scroll => const Color(0xFF38BDF8),
+      ItemCategory.staff => const Color(0xFFA78BFA),
+      ItemCategory.wand => const Color(0xFFFB7185),
+      ItemCategory.wondrousItem => const Color(0xFFF472B6),
+    };
+  }
+
+  String get label => displayName;
+  Color get color => primaryColor;
+  IconData get icon => switch (this) {
+        ItemCategory.weapon => Icons.shield_outlined,
+        ItemCategory.armor => Icons.shield_outlined,
+        ItemCategory.potion => Icons.science_outlined,
+        ItemCategory.ring => Icons.album_outlined,
+        ItemCategory.rod => Icons.straighten_outlined,
+        ItemCategory.scroll => Icons.article_outlined,
+        ItemCategory.staff => Icons.brush_outlined,
+        ItemCategory.wand => Icons.auto_fix_normal_outlined,
+        ItemCategory.wondrousItem => Icons.diamond_outlined,
+      };
+}
+
+/// 6 Standard 5e Item Rarities.
+enum ItemRarity {
+  common('Common', Color(0xFF94A3B8), 0),
+  uncommon('Uncommon', Color(0xFF22C55E), 1),
+  rare('Rare', Color(0xFF3B82F6), 2),
+  veryRare('Very Rare', Color(0xFFA855F7), 3),
+  legendary('Legendary', Color(0xFFF59E0B), 4),
+  artifact('Artifact', Color(0xFFEF4444), 5);
+
+  final String displayName;
+  final Color color;
+  final int tierLevel;
+
+  const ItemRarity(this.displayName, this.color, this.tierLevel);
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      return switch (this) {
+        ItemRarity.common => const Color(0xFF475569),
+        ItemRarity.uncommon => const Color(0xFF15803D),
+        ItemRarity.rare => const Color(0xFF1D4ED8),
+        ItemRarity.veryRare => const Color(0xFF7E22CE),
+        ItemRarity.legendary => const Color(0xFFB45309),
+        ItemRarity.artifact => const Color(0xFFB91C1C),
+      };
+    }
+    return switch (this) {
+      ItemRarity.common => const Color(0xFFCBD5E1),
+      ItemRarity.uncommon => const Color(0xFF4ADE80),
+      ItemRarity.rare => const Color(0xFF60A5FA),
+      ItemRarity.veryRare => const Color(0xFFC084FC),
+      ItemRarity.legendary => const Color(0xFFFBBF24),
+      ItemRarity.artifact => const Color(0xFFF87171),
+    };
+  }
+}
+
 /// 22 Geometric Frame Shapes specified by the Style Guide.
 enum GlyphFrameShape {
   circle('Circle Shield'),
@@ -202,7 +316,8 @@ enum ActionRingType {
   sustain(
       'Sustain/Healing'), // Harmonic cradle ring for healing, regeneration, and shielding
   legendary('Legendary Trait'), // Spiked Starburst Crown Ring
-  concentration('Concentration'); // Dual-Harmonic Orbital Wireframe Loop Ring
+  concentration('Concentration'), // Dual-Harmonic Orbital Wireframe Loop Ring
+  attunement('Attunement'); // Sacred Attunement Tether Wireframe Ring
 
   final String displayName;
   const ActionRingType(this.displayName);
@@ -256,6 +371,9 @@ class ActionTraitRing {
     bool isDarkMode = false,
     double phase = 0.0,
   }) {
+    if (ringType == ActionRingType.attunement) {
+      return isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
+    }
     if (ringType == ActionRingType.concentration) {
       return isDarkMode
           ? const Color(0xFF38BDF8)
@@ -395,6 +513,18 @@ class GlyphThemeData {
       darkFill: type.darkFillTint,
       border: type.primaryColor,
       frameShape: shapeOverride ?? type.frameShape,
+    );
+  }
+
+  factory GlyphThemeData.fromItem(ItemCategory category,
+      {ItemRarity? rarity, GlyphFrameShape? shapeOverride}) {
+    final effectivePrimary = rarity?.color ?? category.primaryColor;
+    return GlyphThemeData(
+      primary: effectivePrimary,
+      lightFill: category.lightFillTint,
+      darkFill: category.darkFillTint,
+      border: effectivePrimary,
+      frameShape: shapeOverride ?? category.frameShape,
     );
   }
 

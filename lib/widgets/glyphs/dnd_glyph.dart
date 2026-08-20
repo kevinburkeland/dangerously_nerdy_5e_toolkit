@@ -6,14 +6,16 @@ import 'glyph_geometry.dart';
 import 'glyph_motifs.dart';
 import '../../providers/settings_provider.dart';
 
-/// Universal Dynamic D&D Vector Glyph Widget for Spells and Monsters.
+/// Universal Dynamic D&D Vector Glyph Widget for Spells, Monsters, and Magic Items.
 /// Renders an authentic holographic wireframe techno-rune schematic HUD with
 /// dynamic, damage-colored geometric action trait rings.
 class DndGlyph extends StatefulWidget {
   final SpellSchool? school;
   final CreatureType? creatureType;
+  final ItemCategory? itemCategory;
+  final ItemRarity? itemRarity;
   final GlyphThemeData themeData;
-  final int tierLevel; // Spell Level (0-9) or Monster CR Tier (1-4)
+  final int tierLevel; // Spell Level (0-9), Monster CR Tier (1-4), or Item Rarity (0-5)
   final List<ActionTraitRing> actionRings;
   final DamageAccent? damageAccent; // Legacy support
   final ActionBadge? actionBadge; // Legacy support
@@ -27,6 +29,8 @@ class DndGlyph extends StatefulWidget {
     super.key,
     this.school,
     this.creatureType,
+    this.itemCategory,
+    this.itemRarity,
     required this.themeData,
     this.tierLevel = 0,
     this.actionRings = const [],
@@ -116,6 +120,61 @@ class DndGlyph extends StatefulWidget {
       isActive: isActive,
       onTap: onTap,
       tooltip: tooltip ?? '${creatureType.displayName} (Tier $crTier)',
+    );
+  }
+
+  /// Factory constructor for Magic Items & Equipment Glyphs.
+  factory DndGlyph.item({
+    Key? key,
+    required ItemCategory category,
+    ItemRarity rarity = ItemRarity.common,
+    bool requiresAttunement = false,
+    GlyphFrameShape? frameShapeOverride,
+    GlyphThemeData? themeData,
+    List<ActionTraitRing>? actionRings,
+    DamageAccent? damageAccent,
+    double size = 32.0,
+    bool? isDarkMode,
+    bool isActive = false,
+    VoidCallback? onTap,
+    String? tooltip,
+  }) {
+    final rings = <ActionTraitRing>[
+      if (requiresAttunement)
+        const ActionTraitRing(
+          ringType: ActionRingType.attunement,
+          label: 'Requires Attunement',
+        ),
+      if (damageAccent != null)
+        ActionTraitRing(
+          ringType: ActionRingType.recharge,
+          damageType: damageAccent,
+          label: damageAccent.displayName,
+        ),
+      if (actionRings != null) ...actionRings,
+    ];
+
+    final effectiveTheme = themeData ??
+        GlyphThemeData.fromItem(
+          category,
+          rarity: rarity,
+          shapeOverride: frameShapeOverride,
+        );
+
+    return DndGlyph._(
+      key: key,
+      itemCategory: category,
+      itemRarity: rarity,
+      themeData: effectiveTheme,
+      tierLevel: rarity.tierLevel,
+      actionRings: rings,
+      damageAccent: damageAccent,
+      size: size,
+      isDarkMode: isDarkMode,
+      isActive: isActive,
+      onTap: onTap,
+      tooltip: tooltip ??
+          '${category.displayName} (${rarity.displayName}${requiresAttunement ? ", Attunement" : ""})',
     );
   }
 
@@ -251,6 +310,8 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
         painter: _DndHolographicWireframePainter(
           school: widget.school,
           creatureType: widget.creatureType,
+          itemCategory: widget.itemCategory,
+          itemRarity: widget.itemRarity,
           themeData: widget.themeData,
           tierLevel: widget.tierLevel,
           actionRings: widget.actionRings,
@@ -313,6 +374,8 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
 class _DndHolographicWireframePainter extends CustomPainter {
   final SpellSchool? school;
   final CreatureType? creatureType;
+  final ItemCategory? itemCategory;
+  final ItemRarity? itemRarity;
   final GlyphThemeData themeData;
   final int tierLevel;
   final List<ActionTraitRing> actionRings;
@@ -328,6 +391,8 @@ class _DndHolographicWireframePainter extends CustomPainter {
   _DndHolographicWireframePainter({
     required this.school,
     required this.creatureType,
+    this.itemCategory,
+    this.itemRarity,
     required this.themeData,
     required this.tierLevel,
     required this.actionRings,
@@ -635,6 +700,16 @@ class _DndHolographicWireframePainter extends CustomPainter {
         pulseTurns: ringRotationProgress.value,
         animatePulse: false,
       );
+    } else if (itemCategory != null) {
+      GlyphMotifs.drawItemMotif(
+        canvas: canvas,
+        size: size,
+        category: itemCategory!,
+        color: motifColor,
+        isDarkMode: isDarkMode,
+        pulseTurns: ringRotationProgress.value,
+        animatePulse: false,
+      );
     }
     canvas.restore();
 
@@ -664,6 +739,8 @@ class _DndHolographicWireframePainter extends CustomPainter {
   bool shouldRepaint(covariant _DndHolographicWireframePainter old) {
     return old.school != school ||
         old.creatureType != creatureType ||
+        old.itemCategory != itemCategory ||
+        old.itemRarity != itemRarity ||
         old.themeData != themeData ||
         old.tierLevel != tierLevel ||
         !listEquals(old.actionRings, actionRings) ||

@@ -722,4 +722,339 @@ class GlyphMotifs {
 
     canvas.restore();
   }
+
+  // ---------------------------------------------------------------------------
+  // 9 MAGIC ITEM & EQUIPMENT TECHNO-RUNES
+  // ---------------------------------------------------------------------------
+
+  static void drawItemMotif({
+    required Canvas canvas,
+    required Size size,
+    required ItemCategory category,
+    required Color color,
+    required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
+  }) {
+    final w = size.width;
+    final h = size.height;
+    final s = min(w, h);
+    final center = Offset(w / 2.0, h / 2.0);
+    final scale = s / baseGrid;
+    final pulseWave =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+    final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
+    final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
+    final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
+    final fineAlpha =
+        animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(pulseScale, pulseScale);
+    canvas.translate(-center.dx, -center.dy);
+
+    final primaryLine = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.35 * scale
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fineLine = Paint()
+      ..color = color.withValues(alpha: fineAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.85 * scale
+      ..strokeCap = StrokeCap.round;
+
+    final nodeFill = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.fill;
+
+    final nodeHollow = Paint()
+      ..color = isDarkMode ? const Color(0xFF0F172A) : Colors.white
+      ..style = PaintingStyle.fill;
+
+    switch (category) {
+      case ItemCategory.weapon:
+        // CROSSED BLADES & APEX THRUST VECTOR
+        final blade1 = Path()
+          ..moveTo(center.dx - 5.5 * scale, center.dy + 5.5 * scale)
+          ..lineTo(center.dx + 5.5 * scale, center.dy - 5.5 * scale);
+        final blade2 = Path()
+          ..moveTo(center.dx + 5.5 * scale, center.dy + 5.5 * scale)
+          ..lineTo(center.dx - 5.5 * scale, center.dy - 5.5 * scale);
+        canvas.drawPath(blade1, primaryLine);
+        canvas.drawPath(blade2, primaryLine);
+
+        // Crossguard tick bars
+        canvas.drawLine(
+          center - Offset(2.2 * scale, 0),
+          center + Offset(2.2 * scale, 0),
+          primaryLine,
+        );
+        canvas.drawLine(
+          center - Offset(0, 2.2 * scale),
+          center + Offset(0, 2.2 * scale),
+          primaryLine,
+        );
+
+        // Apex thrust point & pommel nodes
+        canvas.drawCircle(center - Offset(5.5 * scale, 5.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(5.5 * scale, -5.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(5.5 * scale, 5.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(center - Offset(5.5 * scale, -5.5 * scale), 1.1 * scale, nodeFill);
+        canvas.drawCircle(center, 1.5 * scale, nodeHollow);
+        canvas.drawCircle(center, 1.5 * scale, primaryLine);
+        break;
+
+      case ItemCategory.armor:
+        // INTERLOCKING CHEVRON CARAPACE PLATES
+        final shieldPath = Path()
+          ..moveTo(center.dx - 5.0 * scale, center.dy - 5.0 * scale)
+          ..lineTo(center.dx + 5.0 * scale, center.dy - 5.0 * scale)
+          ..lineTo(center.dx + 4.0 * scale, center.dy + 1.0 * scale)
+          ..lineTo(center.dx, center.dy + 6.0 * scale)
+          ..lineTo(center.dx - 4.0 * scale, center.dy + 1.0 * scale)
+          ..close();
+        canvas.drawPath(shieldPath, primaryLine);
+
+        // Internal chevron plate reinforcement
+        final chevron = Path()
+          ..moveTo(center.dx - 3.2 * scale, center.dy - 1.5 * scale)
+          ..lineTo(center.dx, center.dy + 2.0 * scale)
+          ..lineTo(center.dx + 3.2 * scale, center.dy - 1.5 * scale);
+        canvas.drawPath(chevron, fineLine);
+
+        // Vertical spine strut
+        canvas.drawLine(
+          center - Offset(0, 5.0 * scale),
+          center + Offset(0, 6.0 * scale),
+          fineLine,
+        );
+
+        // Deflection rivets
+        canvas.drawCircle(center - Offset(3.5 * scale, 4.0 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(3.5 * scale, -4.0 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(0, 1.8 * scale), 1.1 * scale, nodeFill);
+        break;
+
+      case ItemCategory.potion:
+        // ALCHEMICAL CRUCIBLE FLASK & CATALYTIC NODES
+        final flask = Path()
+          // Neck lip
+          ..moveTo(center.dx - 2.2 * scale, center.dy - 6.0 * scale)
+          ..lineTo(center.dx + 2.2 * scale, center.dy - 6.0 * scale)
+          // Neck
+          ..moveTo(center.dx - 1.5 * scale, center.dy - 6.0 * scale)
+          ..lineTo(center.dx - 1.5 * scale, center.dy - 2.5 * scale)
+          // Bulb left
+          ..lineTo(center.dx - 5.2 * scale, center.dy + 3.5 * scale)
+          // Bottom
+          ..quadraticBezierTo(
+              center.dx - 3.5 * scale, center.dy + 6.0 * scale, center.dx, center.dy + 6.0 * scale)
+          ..quadraticBezierTo(center.dx + 3.5 * scale, center.dy + 6.0 * scale,
+              center.dx + 5.2 * scale, center.dy + 3.5 * scale)
+          // Bulb right
+          ..lineTo(center.dx + 1.5 * scale, center.dy - 2.5 * scale)
+          ..lineTo(center.dx + 1.5 * scale, center.dy - 6.0 * scale);
+        canvas.drawPath(flask, primaryLine);
+
+        // Meniscus level line
+        canvas.drawLine(
+          center - Offset(3.8 * scale, -1.0 * scale),
+          center + Offset(3.8 * scale, 1.0 * scale),
+          fineLine,
+        );
+
+        // Catalytic bubble nodes
+        canvas.drawCircle(center + Offset(0, 3.2 * scale), 1.2 * scale, nodeFill);
+        canvas.drawCircle(center - Offset(1.8 * scale, -2.0 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(2.0 * scale, 1.5 * scale), 0.8 * scale, nodeFill);
+        break;
+
+      case ItemCategory.ring:
+        // CONCENTRIC TORUS & GEMSTONE SETTING
+        canvas.drawCircle(center, 5.5 * scale, primaryLine);
+        canvas.drawCircle(center, 3.2 * scale, fineLine);
+
+        // Top gemstone bezel diamond
+        final gem = Path()
+          ..moveTo(center.dx, center.dy - 7.0 * scale)
+          ..lineTo(center.dx + 2.2 * scale, center.dy - 5.0 * scale)
+          ..lineTo(center.dx, center.dy - 3.2 * scale)
+          ..lineTo(center.dx - 2.2 * scale, center.dy - 5.0 * scale)
+          ..close();
+        canvas.drawPath(gem, primaryLine);
+
+        // Radiating prong rays
+        canvas.drawLine(center - Offset(0, 5.5 * scale), center - Offset(0, 7.5 * scale), primaryLine);
+        canvas.drawCircle(center - Offset(0, 5.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(0, 5.5 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(center - Offset(5.5 * scale, 0), 1.0 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(5.5 * scale, 0), 1.0 * scale, nodeFill);
+        break;
+
+      case ItemCategory.rod:
+        // SOVEREIGN FOCUS PILLAR & FLANGES
+        // Vertical shaft
+        canvas.drawLine(
+          center - Offset(0, 6.5 * scale),
+          center + Offset(0, 6.5 * scale),
+          primaryLine,
+        );
+
+        // Channeled focus brackets
+        final leftFlange = Path()
+          ..moveTo(center.dx - 3.5 * scale, center.dy - 4.5 * scale)
+          ..lineTo(center.dx - 1.2 * scale, center.dy - 2.0 * scale)
+          ..lineTo(center.dx - 1.2 * scale, center.dy + 2.0 * scale)
+          ..lineTo(center.dx - 3.5 * scale, center.dy + 4.5 * scale);
+        final rightFlange = Path()
+          ..moveTo(center.dx + 3.5 * scale, center.dy - 4.5 * scale)
+          ..lineTo(center.dx + 1.2 * scale, center.dy - 2.0 * scale)
+          ..lineTo(center.dx + 1.2 * scale, center.dy + 2.0 * scale)
+          ..lineTo(center.dx + 3.5 * scale, center.dy + 4.5 * scale);
+        canvas.drawPath(leftFlange, primaryLine);
+        canvas.drawPath(rightFlange, primaryLine);
+
+        // Terminal crown nodes
+        canvas.drawCircle(center - Offset(0, 6.5 * scale), 1.3 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(0, 6.5 * scale), 1.3 * scale, nodeFill);
+        canvas.drawCircle(center, 1.4 * scale, nodeHollow);
+        canvas.drawCircle(center, 1.4 * scale, primaryLine);
+        break;
+
+      case ItemCategory.scroll:
+        // DUAL SCROLL CYLINDERS & INSCRIBED CIPHER LATTICE
+        final parchment = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy + 5.5 * scale)
+          ..lineTo(center.dx - 4.5 * scale, center.dy + 5.5 * scale)
+          ..close();
+        canvas.drawPath(parchment, primaryLine);
+
+        // Scroll roll curl cylinders
+        canvas.drawLine(
+          center - Offset(5.5 * scale, 5.5 * scale),
+          center - Offset(5.5 * scale, -5.5 * scale),
+          primaryLine,
+        );
+        canvas.drawLine(
+          center + Offset(5.5 * scale, -5.5 * scale),
+          center + Offset(5.5 * scale, 5.5 * scale),
+          primaryLine,
+        );
+
+        // Horizontal runic cipher lines
+        canvas.drawLine(center - Offset(3.0 * scale, 2.5 * scale),
+            center + Offset(3.0 * scale, -2.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(3.0 * scale, 0),
+            center + Offset(3.0 * scale, 0), fineLine);
+        canvas.drawLine(center - Offset(3.0 * scale, -2.5 * scale),
+            center + Offset(3.0 * scale, 2.5 * scale), fineLine);
+
+        // Seal node
+        canvas.drawCircle(center, 1.2 * scale, nodeFill);
+        break;
+
+      case ItemCategory.staff:
+        // PRISMATIC FOCUS SPIRE & HELICAL RINGS
+        canvas.drawLine(
+          center - Offset(0, 7.0 * scale),
+          center + Offset(0, 7.0 * scale),
+          primaryLine,
+        );
+
+        // Crown crystal headpiece
+        final headpiece = Path()
+          ..moveTo(center.dx, center.dy - 7.0 * scale)
+          ..lineTo(center.dx + 3.0 * scale, center.dy - 3.5 * scale)
+          ..lineTo(center.dx, center.dy - 1.5 * scale)
+          ..lineTo(center.dx - 3.0 * scale, center.dy - 3.5 * scale)
+          ..close();
+        canvas.drawPath(headpiece, primaryLine);
+
+        // Helical cross traces
+        canvas.drawLine(center - Offset(2.0 * scale, -1.0 * scale),
+            center + Offset(2.0 * scale, 2.5 * scale), fineLine);
+        canvas.drawLine(center - Offset(2.0 * scale, -4.0 * scale),
+            center + Offset(2.0 * scale, -0.5 * scale), fineLine);
+
+        // Focus nodes
+        canvas.drawCircle(center - Offset(0, 4.0 * scale), 1.2 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(0, 7.0 * scale), 1.1 * scale, nodeFill);
+        break;
+
+      case ItemCategory.wand:
+        // TAPERED CONDUCTOR NEEDLE & EMITTER TIP
+        final wandPath = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy + 6.0 * scale)
+          ..lineTo(center.dx + 5.5 * scale, center.dy - 5.5 * scale);
+        canvas.drawPath(wandPath, primaryLine);
+
+        // Grip collar
+        canvas.drawLine(
+          center + Offset(-3.2 * scale, 4.8 * scale) - Offset(1.2 * scale, 1.2 * scale),
+          center + Offset(-3.2 * scale, 4.8 * scale) + Offset(1.2 * scale, 1.2 * scale),
+          primaryLine,
+        );
+
+        // Radiating tip sparks
+        canvas.drawLine(
+          center + Offset(5.5 * scale, -5.5 * scale),
+          center + Offset(7.2 * scale, -5.5 * scale),
+          fineLine,
+        );
+        canvas.drawLine(
+          center + Offset(5.5 * scale, -5.5 * scale),
+          center + Offset(5.5 * scale, -7.2 * scale),
+          fineLine,
+        );
+        canvas.drawLine(
+          center + Offset(5.5 * scale, -5.5 * scale),
+          center + Offset(7.0 * scale, -7.0 * scale),
+          fineLine,
+        );
+
+        canvas.drawCircle(center + Offset(5.5 * scale, -5.5 * scale), 1.2 * scale, nodeFill);
+        canvas.drawCircle(center - Offset(4.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
+        break;
+
+      case ItemCategory.wondrousItem:
+        // 8-POINT ASTRAL STAR RELIC & COMPASS NEXUS
+        final rStarOuter = 6.2 * scale;
+        final rStarInner = 2.5 * scale;
+        final star = Path();
+        for (int i = 0; i < 8; i++) {
+          final aOuter = (i * 45.0) * pi / 180.0;
+          final aInner = (i * 45.0 + 22.5) * pi / 180.0;
+          final pOuter = Offset(
+              center.dx + rStarOuter * cos(aOuter), center.dy + rStarOuter * sin(aOuter));
+          final pInner = Offset(
+              center.dx + rStarInner * cos(aInner), center.dy + rStarInner * sin(aInner));
+          if (i == 0) {
+            star.moveTo(pOuter.dx, pOuter.dy);
+          } else {
+            star.lineTo(pOuter.dx, pOuter.dy);
+          }
+          star.lineTo(pInner.dx, pInner.dy);
+        }
+        star.close();
+        canvas.drawPath(star, primaryLine);
+
+        // Concentric relic ring
+        canvas.drawCircle(center, 4.0 * scale, fineLine);
+
+        // Central astral nexus
+        canvas.drawCircle(center, 1.4 * scale, nodeHollow);
+        canvas.drawCircle(center, 1.4 * scale, primaryLine);
+        canvas.drawCircle(center, 0.7 * scale, nodeFill);
+        break;
+    }
+
+    canvas.restore();
+  }
 }
+
