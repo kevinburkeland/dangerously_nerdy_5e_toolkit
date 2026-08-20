@@ -91,7 +91,7 @@ void main() {
       await tester.tap(chipFinder);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Aboleth'), findsOneWidget);
+      expect(find.textContaining('Bone Devil'), findsOneWidget);
       expect(find.byType(MonsterCard), findsWidgets);
     });
 

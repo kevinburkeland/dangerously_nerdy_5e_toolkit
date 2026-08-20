@@ -325,15 +325,51 @@ class MonsterCodexLibrary {
   }
 
   static List<MonsterItem> _buildAllMonsters() {
-    final byId = <String, MonsterItem>{};
+    final byNormalizedKey = <String, MonsterItem>{};
 
-    // 1. Ingest spell-summoned & companion minions
+    String normalizeKey(String id, String name) {
+      return name.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    }
+
+    // 1. Ingest modular bestiary catalogs (definitive SRD stats)
+    for (final item in [
+      ...BestiaryCr0ToQuarter.entries,
+      ...BestiaryCrHalfToOne.entries,
+      ...BestiaryCrTwoToFour.entries,
+      ...BestiaryCrFiveToEight.entries,
+      ...BestiaryCrNinePlus.entries,
+    ]) {
+      final key = normalizeKey(item.id, item.name);
+      byNormalizedKey[key] = item;
+    }
+
+    // 2. Ingest spell-summoned & companion minions (augment with spell preset if matching, or add if unique)
     for (final sourceEntry in SrdMonsterCrBands.allEntriesByCrBand) {
       final preset = sourceEntry.preset;
       final statBlock = sourceEntry.statBlock;
-      byId.putIfAbsent(
-        statBlock.id,
-        () => MonsterItem.simple(
+      final key = normalizeKey(statBlock.id, statBlock.name);
+
+      final existing = byNormalizedKey[key];
+      if (existing != null) {
+        if (existing.sourceSpellId == null && preset.spellId != null) {
+          byNormalizedKey[key] = MonsterItem(
+            id: existing.id,
+            name: existing.name,
+            name2014: existing.name2014,
+            name2024: existing.name2024,
+            statBlock2014: existing.statBlock2014,
+            statBlock2024: existing.statBlock2024,
+            isChangedIn2024: existing.isChangedIn2024,
+            diffSummary: existing.diffSummary,
+            diffHighlights: existing.diffHighlights,
+            sourcePresetId: preset.id,
+            sourcePresetName: preset.name,
+            sourceSpellId: preset.spellId,
+            sourceCategory: preset.category,
+          );
+        }
+      } else {
+        byNormalizedKey[key] = MonsterItem.simple(
           id: statBlock.id,
           name: statBlock.name,
           statBlock: statBlock,
@@ -341,28 +377,11 @@ class MonsterCodexLibrary {
           sourcePresetName: preset.name,
           sourceSpellId: preset.spellId,
           sourceCategory: preset.category,
-        ),
-      );
+        );
+      }
     }
 
-    // 2. Ingest modular bestiary catalogs
-    for (final item in BestiaryCr0ToQuarter.entries) {
-      byId.putIfAbsent(item.id, () => item);
-    }
-    for (final item in BestiaryCrHalfToOne.entries) {
-      byId.putIfAbsent(item.id, () => item);
-    }
-    for (final item in BestiaryCrTwoToFour.entries) {
-      byId.putIfAbsent(item.id, () => item);
-    }
-    for (final item in BestiaryCrFiveToEight.entries) {
-      byId.putIfAbsent(item.id, () => item);
-    }
-    for (final item in BestiaryCrNinePlus.entries) {
-      byId.putIfAbsent(item.id, () => item);
-    }
-
-    final monsters = byId.values.toList()
+    final monsters = byNormalizedKey.values.toList()
       ..sort((a, b) {
         final crCompare = a.challengeRating.compareTo(b.challengeRating);
         if (crCompare != 0) return crCompare;
