@@ -1,8 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('DiceRoomService Tests', () {
     test('generateRoomCode produces 6-character uppercase room format', () {
       final service = DiceRoomService();
@@ -40,21 +45,22 @@ void main() {
       await service.broadcastRoll(roll);
     });
 
-    test('joinRoom and leaveRoom manage active room session state reactively', () {
+    test('joinRoom and leaveRoom manage active room session state and persistence', () {
       final service = DiceRoomService();
       expect(service.activeRoomCode, isNull);
       expect(service.playerName, isNull);
 
-      service.joinRoom('room-42', 'Legolas');
+      service.joinRoom('room-42', 'Legolas', remember: true);
       expect(service.activeRoomCode, 'ROOM-42');
       expect(service.playerName, 'Legolas');
+      expect(service.isSessionRemembered, isTrue);
       expect(service.activeSessionNotifier.value, isNotNull);
 
       service.leaveRoom();
       expect(service.activeRoomCode, isNull);
       expect(service.playerName, isNull);
+      expect(service.isSessionRemembered, isFalse);
       expect(service.activeSessionNotifier.value, isNull);
     });
   });
 }
-

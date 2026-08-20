@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/room_banner_widget.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   Widget createTestableWidget(Widget child) {
     return MaterialApp(
       home: Scaffold(body: child),
@@ -21,7 +26,7 @@ void main() {
     ));
 
     expect(find.text('Solo Mode'), findsOneWidget);
-    expect(find.text('Join / Create Room'), findsOneWidget);
+    expect(find.text('Join Room'), findsOneWidget);
   });
 
   testWidgets('RoomBannerWidget renders Room Code and Player Name when connected', (WidgetTester tester) async {
@@ -35,11 +40,11 @@ void main() {
     ));
 
     expect(find.text('ROOM-1234'), findsOneWidget);
-    expect(find.text('Player: Gandalf'), findsOneWidget);
+    expect(find.textContaining('Gandalf'), findsOneWidget);
     expect(find.text('Leave'), findsOneWidget);
   });
 
-  testWidgets('Tapping Join / Create Room opens dialog modal and handles cancel action', (WidgetTester tester) async {
+  testWidgets('Tapping Join Room opens dialog modal and handles cancel action', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(
       RoomBannerWidget(
         activeRoomCode: null,
@@ -49,12 +54,13 @@ void main() {
       ),
     ));
 
-    await tester.tap(find.text('Join / Create Room'));
+    await tester.tap(find.text('Join Room'));
     await tester.pumpAndSettle();
 
     expect(find.text('Shared Dice Room'), findsOneWidget);
     expect(find.text('Your Display Name'), findsOneWidget);
     expect(find.text('Room Code'), findsOneWidget);
+    expect(find.text('Remember room on this device'), findsOneWidget);
     expect(find.text('Enter Room'), findsOneWidget);
 
     await tester.tap(find.text('Cancel'));
@@ -77,7 +83,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ROOM-TEST99'), findsOneWidget);
-    expect(find.text('Player: Aragorn'), findsOneWidget);
+    expect(find.textContaining('Aragorn'), findsOneWidget);
+    expect(find.text('Saved'), findsOneWidget);
 
     roomService.leaveRoom();
     await tester.pumpAndSettle();
@@ -85,7 +92,7 @@ void main() {
     expect(find.text('Solo Mode'), findsOneWidget);
   });
 
-  testWidgets('JoinCreateRoomDialog submits and joins room when Enter key is pressed', (WidgetTester tester) async {
+  testWidgets('JoinCreateRoomDialog submits and joins room with persistence', (WidgetTester tester) async {
     final roomService = DiceRoomService();
     roomService.leaveRoom();
 
@@ -93,7 +100,7 @@ void main() {
       RoomBannerWidget(roomService: roomService),
     ));
 
-    await tester.tap(find.text('Join / Create Room'));
+    await tester.tap(find.text('Join Room'));
     await tester.pumpAndSettle();
 
     // Enter name
@@ -104,9 +111,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ROOM-ELVEN'), findsOneWidget);
-    expect(find.text('Player: Legolas'), findsOneWidget);
+    expect(find.textContaining('Legolas'), findsOneWidget);
     expect(roomService.activeRoomCode, 'ROOM-ELVEN');
     expect(roomService.playerName, 'Legolas');
+    expect(roomService.isSessionRemembered, isTrue);
 
     roomService.leaveRoom();
   });

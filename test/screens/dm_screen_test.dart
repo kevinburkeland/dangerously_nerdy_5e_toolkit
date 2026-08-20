@@ -78,6 +78,13 @@ void main() {
     });
 
     testWidgets('tapping card opens Compare 2014 vs 2024 dialog', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       final attackCard = find.text('Attack Action & Extra Attack');
@@ -99,6 +106,13 @@ void main() {
     });
 
     testWidgets('tapping pin button on card pins rule to top section', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       // Initially no Pinned section header
@@ -185,10 +199,16 @@ void main() {
     });
 
     testWidgets('pin button inside compare dialog toggles pinned state', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
       final attackCard = find.text('Attack Action & Extra Attack');
-      await tester.ensureVisible(attackCard);
       await tester.tap(attackCard);
       await tester.pumpAndSettle();
 

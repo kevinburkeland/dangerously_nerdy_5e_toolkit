@@ -38,12 +38,16 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _roomController;
   final DiceRoomService _roomService = DiceRoomService();
+  bool _rememberRoom = true;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialPlayerName ?? '');
-    _roomController = TextEditingController(text: widget.initialRoomCode ?? '');
+    final defaultName = widget.initialPlayerName ?? _roomService.playerName ?? '';
+    final defaultRoom = widget.initialRoomCode ?? _roomService.activeRoomCode ?? '';
+    _nameController = TextEditingController(text: defaultName);
+    _roomController = TextEditingController(text: defaultRoom);
+    _rememberRoom = _roomService.isSessionRemembered || _roomService.activeRoomCode == null;
   }
 
   @override
@@ -55,9 +59,9 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
 
   void _submit() {
     final name = _nameController.text.trim();
-    final room = _roomController.text.trim();
+    final room = _roomController.text.trim().toUpperCase();
     if (name.isNotEmpty && room.isNotEmpty) {
-      DiceRoomService().joinRoom(room, name);
+      _roomService.joinRoom(room, name, remember: _rememberRoom);
       widget.onJoinRoom?.call(room, name);
       Navigator.pop(context);
     } else {
@@ -91,85 +95,112 @@ class _JoinCreateRoomDialogState extends State<JoinCreateRoomDialog> {
           ),
         ],
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Join or create a live shared dice room to see everyone\'s rolls in real time.',
-            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
-          ),
-          const SizedBox(height: 16),
-
-          // Player Name Input
-          TextField(
-            controller: _nameController,
-            autofocus: widget.initialPlayerName == null || widget.initialPlayerName!.isEmpty,
-            maxLength: 50,
-            textInputAction: TextInputAction.next,
-            onSubmitted: (_) => _submit(),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9 _\-\'\.]")),
-            ],
-            style: TextStyle(color: colorScheme.onSurface),
-            decoration: InputDecoration(
-              counterText: '',
-              labelText: 'Your Display Name',
-              hintText: 'e.g. Gandalf, Gimli',
-              hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Join or create a live shared dice room to see everyone\'s rolls and broadcast your quick rolls in real time.',
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
             ),
-          ),
-          const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
-          // Room Code Input with Generator
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _roomController,
-                  maxLength: 30,
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _submit(),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\-]')),
-                    TextInputFormatter.withFunction(
-                      (oldVal, newVal) => newVal.copyWith(text: newVal.text.toUpperCase()),
+            // Player Name Input
+            TextField(
+              controller: _nameController,
+              autofocus: widget.initialPlayerName == null || widget.initialPlayerName!.isEmpty,
+              maxLength: 50,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) => _submit(),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z0-9 _\-\'\.]")),
+              ],
+              style: TextStyle(color: colorScheme.onSurface),
+              decoration: InputDecoration(
+                counterText: '',
+                labelText: 'Your Display Name',
+                hintText: 'e.g. Gandalf, DM Kevin',
+                hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Room Code Input with Generator
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _roomController,
+                    maxLength: 30,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submit(),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\-]')),
+                      TextInputFormatter.withFunction(
+                        (oldVal, newVal) => newVal.copyWith(text: newVal.text.toUpperCase()),
+                      ),
+                    ],
+                    style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      counterText: '',
+                      labelText: 'Room Code',
+                      hintText: 'e.g. ROOM-A82F',
+                      hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                  ],
-                  style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: InputDecoration(
-                    counterText: '',
-                    labelText: 'Room Code',
-                    hintText: 'e.g. ROOM-A82F',
-                    hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primaryContainer,
-                  foregroundColor: colorScheme.onPrimaryContainer,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primaryContainer,
+                    foregroundColor: colorScheme.onPrimaryContainer,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _roomController.text = _roomService.generateRoomCode();
+                    });
+                  },
+                  child: const Column(
+                    children: [
+                      Icon(Icons.autorenew, size: 18),
+                      Text('New', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                 ),
-                onPressed: () {
-                  setState(() {
-                    _roomController.text = _roomService.generateRoomCode();
-                  });
-                },
-                child: const Column(
-                  children: [
-                    Icon(Icons.autorenew, size: 18),
-                    Text('New', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                  ],
-                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Remember Room Switch / Checkbox
+            Material(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
               ),
-            ],
-          ),
-        ],
+              child: CheckboxListTile(
+                value: _rememberRoom,
+                onChanged: (val) => setState(() => _rememberRoom = val ?? true),
+                title: const Text(
+                  'Remember room on this device',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text(
+                  'Automatically reconnect on future visits until you choose to leave',
+                  style: TextStyle(fontSize: 11),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                dense: true,
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(

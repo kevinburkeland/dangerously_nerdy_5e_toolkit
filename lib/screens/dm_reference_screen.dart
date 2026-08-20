@@ -7,6 +7,7 @@ import '../utils/secure_random.dart';
 import '../widgets/dm_reference/dm_rule_card.dart';
 import '../widgets/dm_reference/dm_rule_comparison_dialog.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../widgets/room_banner_widget.dart';
 
 class DmReferenceScreen extends StatefulWidget {
   final DmRulesEdition? initialEdition;
@@ -156,7 +157,9 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHeaderBanner(theme, edition),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
+                        RoomBannerWidget(compact: true),
+                        const SizedBox(height: 12),
                         _buildQuickRollBar(theme),
                         const SizedBox(height: 16),
                         _buildSearchAndFilters(theme, pinnedIds.length),

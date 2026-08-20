@@ -8,6 +8,7 @@ class RoomBannerWidget extends StatelessWidget {
   final DiceRoomService roomService;
   final String? activeRoomCode;
   final String? playerName;
+  final bool compact;
   final Function(String roomCode, String playerName)? onJoinRoom;
   final VoidCallback? onLeaveRoom;
 
@@ -16,6 +17,7 @@ class RoomBannerWidget extends StatelessWidget {
     DiceRoomService? roomService,
     this.activeRoomCode,
     this.playerName,
+    this.compact = false,
     this.onJoinRoom,
     this.onLeaveRoom,
   }) : roomService = roomService ?? DiceRoomService();
@@ -46,93 +48,156 @@ class RoomBannerWidget extends StatelessWidget {
         final String? effectiveName = playerName ?? session?.playerName;
         final bool isConnected = effectiveRoom != null && effectiveRoom.isNotEmpty;
         final String roomCode = effectiveRoom ?? '';
+        final bool isRemembered = session?.isRemembered ?? false;
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 14,
+            vertical: compact ? 6 : 9,
+          ),
           decoration: BoxDecoration(
-            color: isConnected ? primary.withValues(alpha: 0.1) : tabletop.cardBackground,
-            borderRadius: BorderRadius.circular(12),
+            color: isConnected
+                ? primary.withValues(alpha: isDark ? 0.12 : 0.08)
+                : tabletop.cardBackground,
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isConnected ? primary.withValues(alpha: 0.5) : tabletop.cardBorder,
+              color: isConnected
+                  ? primary.withValues(alpha: 0.45)
+                  : tabletop.cardBorder.withValues(alpha: 0.6),
             ),
           ),
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
+          child: Row(
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isConnected ? Icons.sensors : Icons.sensors_off,
-                    color: isConnected ? primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                    size: 22,
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              Icon(
+                isConnected ? Icons.sensors : Icons.sensors_off,
+                color: isConnected ? primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                size: compact ? 18 : 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          isConnected ? roomCode : 'Solo Mode',
-                          style: TextStyle(
-                            color: isConnected ? primary : theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                        Flexible(
+                          child: Text(
+                            isConnected ? roomCode : 'Solo Mode',
+                            style: TextStyle(
+                              color: isConnected ? primary : theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                              fontSize: compact ? 13 : 13.5,
+                              letterSpacing: 0.3,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          isConnected ? 'Player: ${effectiveName ?? "Anonymous"}' : 'Not connected to a live room',
-                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        if (isConnected && isRemembered) ...[
+                          const SizedBox(width: 6),
+                          Tooltip(
+                            message: 'Room saved across visits until you leave',
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: primary.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.bookmark_added, color: primary, size: 10),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    'Saved',
+                                    style: TextStyle(
+                                      color: primary,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isConnected) ...[
-                    IconButton(
-                      icon: Icon(Icons.copy, color: primary, size: 18),
-                      tooltip: 'Copy Room Code',
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: roomCode));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Copied "$roomCode" to clipboard!'),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        roomService.leaveRoom();
-                        onLeaveRoom?.call();
-                      },
-                      child: Text('Leave', style: TextStyle(color: tabletop.fumbleRed, fontSize: 13)),
-                    ),
-                  ] else
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary.withValues(alpha: 0.15),
-                        foregroundColor: primary,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    Text(
+                      isConnected
+                          ? 'Broadcasting as ${effectiveName ?? "Anonymous"}'
+                          : 'Not connected to a live room',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: compact ? 11 : 11.5,
                       ),
-                      onPressed: () => _showJoinCreateRoomDialog(context, effectiveName, effectiveRoom),
-                      icon: const Icon(Icons.hub, size: 16),
-                      label: const Text('Join / Create Room', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
+              if (isConnected) ...[
+                IconButton(
+                  icon: Icon(Icons.copy, color: primary, size: 17),
+                  tooltip: 'Copy Room Code',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: roomCode));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Copied "$roomCode" to clipboard!'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                  ),
+                  onPressed: () {
+                    roomService.leaveRoom();
+                    onLeaveRoom?.call();
+                  },
+                  child: Text(
+                    'Leave',
+                    style: TextStyle(
+                      color: tabletop.fumbleRed,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ] else
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary.withValues(alpha: 0.15),
+                    foregroundColor: primary,
+                    elevation: 0,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 8 : 10,
+                      vertical: compact ? 4 : 6,
+                    ),
+                    minimumSize: Size.zero,
+                  ),
+                  onPressed: () => _showJoinCreateRoomDialog(context, effectiveName, effectiveRoom),
+                  icon: Icon(Icons.hub, size: compact ? 13 : 14),
+                  label: Text(
+                    'Join Room',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: compact ? 11 : 11.5,
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -140,4 +205,3 @@ class RoomBannerWidget extends StatelessWidget {
     );
   }
 }
-

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/room_roll.dart';
 import '../utils/secure_random.dart';
 import 'logging_service.dart';
@@ -9,17 +10,26 @@ import 'logging_service.dart';
 class RoomSession {
   final String roomCode;
   final String playerName;
+  final bool isRemembered;
 
   RoomSession({
     required this.roomCode,
     required this.playerName,
+    this.isRemembered = true,
   });
 }
 
 class DiceRoomService {
+  static const _kPersistedRoomCode = 'dice_room_persisted_code';
+  static const _kPersistedPlayerName = 'dice_room_persisted_player_name';
+  static const _kPersistedRemember = 'dice_room_persisted_remember';
+
   static final DiceRoomService _instance = DiceRoomService._internal();
   factory DiceRoomService() => _instance;
-  DiceRoomService._internal();
+
+  DiceRoomService._internal() {
+    _restorePersistedSession();
+  }
 
   @visibleForTesting
   DiceRoomService.newInstance();
@@ -29,24 +39,107 @@ class DiceRoomService {
 
   String? get activeRoomCode => activeSessionNotifier.value?.roomCode;
   String? get playerName => activeSessionNotifier.value?.playerName;
+  bool get isSessionRemembered => activeSessionNotifier.value?.isRemembered ?? false;
 
-  void joinRoom(String roomCode, String playerName) {
+  /// Restores any previously remembered room session from persistent storage
+  Future<void> _restorePersistedSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final remember = prefs.getBool(_kPersistedRemember) ?? false;
+      final savedRoom = prefs.getString(_kPersistedRoomCode);
+      final savedName = prefs.getString(_kPersistedPlayerName);
+
+      if (remember &&
+          savedRoom != null &&
+          savedRoom.isNotEmpty &&
+          savedName != null &&
+          savedName.isNotEmpty) {
+        // Only set if not already overridden by an in-flight session
+        if (activeSessionNotifier.value == null) {
+          activeSessionNotifier.value = RoomSession(
+            roomCode: savedRoom.trim().toUpperCase(),
+            playerName: savedName.trim(),
+            isRemembered: true,
+          );
+        }
+      }
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to restore persisted dice room session',
+      );
+    }
+  }
+
+  /// Joins a room, with optional persistent storage across app visits
+  void joinRoom(String roomCode, String playerName, {bool remember = true}) {
     final cleanCode = roomCode.trim().toUpperCase();
     final cleanName = playerName.trim();
     if (cleanCode.isNotEmpty && cleanName.isNotEmpty) {
       activeSessionNotifier.value = RoomSession(
         roomCode: cleanCode,
         playerName: cleanName,
+        isRemembered: remember,
+      );
+
+      // Async write to persistent storage
+      _persistSession(cleanCode, cleanName, remember);
+    }
+  }
+
+  Future<void> _persistSession(String roomCode, String playerName, bool remember) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (remember) {
+        await Future.wait([
+          prefs.setBool(_kPersistedRemember, true),
+          prefs.setString(_kPersistedRoomCode, roomCode),
+          prefs.setString(_kPersistedPlayerName, playerName),
+        ]);
+      } else {
+        await Future.wait([
+          prefs.remove(_kPersistedRemember),
+          prefs.remove(_kPersistedRoomCode),
+          prefs.remove(_kPersistedPlayerName),
+        ]);
+      }
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to write persisted dice room session',
       );
     }
   }
 
+  /// Leaves the current room session and clears any remembered room persistence
   void leaveRoom() {
     final currentCode = activeRoomCode;
     if (currentCode != null) {
       disposeRoomStream(currentCode);
     }
     activeSessionNotifier.value = null;
+
+    // Clear persisted room storage
+    _clearPersistedSession();
+  }
+
+  Future<void> _clearPersistedSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await Future.wait([
+        prefs.remove(_kPersistedRemember),
+        prefs.remove(_kPersistedRoomCode),
+        prefs.remove(_kPersistedPlayerName),
+      ]);
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to clear persisted dice room session',
+      );
+    }
   }
 
   // In-memory fallback stream for local/offline testing
@@ -170,4 +263,3 @@ class DiceRoomService {
     }
   }
 }
-

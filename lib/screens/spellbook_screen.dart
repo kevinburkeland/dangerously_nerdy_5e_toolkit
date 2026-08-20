@@ -5,6 +5,7 @@ import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../widgets/room_banner_widget.dart';
 import '../widgets/spellbook/spell_card.dart';
 import '../widgets/spellbook/spell_comparison_dialog.dart';
 import '../widgets/spellbook/spell_filter_sheet.dart';
@@ -269,9 +270,13 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: RoomBannerWidget(compact: true),
+            ),
             // Search Bar & Filter Button
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
               child: Row(
                 children: [
                   Expanded(

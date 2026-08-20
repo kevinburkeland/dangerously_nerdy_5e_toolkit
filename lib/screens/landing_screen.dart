@@ -10,6 +10,7 @@ import '../widgets/interactive/pressable_card.dart';
 import '../widgets/dialogs/legal_dialogs.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
+import '../widgets/room_banner_widget.dart';
 import 'dm_reference_screen.dart';
 import 'settings_screen.dart';
 import 'spellbook_screen.dart';
@@ -220,7 +221,9 @@ class _LandingScreenState extends State<LandingScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  RoomBannerWidget(),
+                  const SizedBox(height: 16),
 
                   // HIGH-CONTRAST SEARCH BAR
                   Container(

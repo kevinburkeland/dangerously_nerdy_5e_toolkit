@@ -121,6 +121,13 @@ void main() {
     });
 
     testWidgets('renders spell level section headers without dashes in ordinal suffixes', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(buildTestScreen());
       await tester.pumpAndSettle();
 

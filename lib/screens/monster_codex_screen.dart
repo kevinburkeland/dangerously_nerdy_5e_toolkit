@@ -13,6 +13,7 @@ import '../widgets/monster_codex/monster_card.dart';
 import '../widgets/monster_codex/monster_comparison_dialog.dart';
 import '../widgets/monster_codex/monster_filter_sheet.dart';
 import '../widgets/monster_codex/monster_quick_roll_dialog.dart';
+import '../widgets/room_banner_widget.dart';
 
 enum MonsterCodexViewMode {
   allMonsters('All Monsters', Icons.pets),
@@ -404,9 +405,13 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Bar & Filter Sheet Trigger Header
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: RoomBannerWidget(compact: true),
+            ),
+            // Search Bar & Filter Sheet Trigger Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
               child: Row(
                 children: [
                   Expanded(
@@ -867,30 +872,31 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
   Widget _buildEmptyState(ThemeData theme, bool isPersonalBestiaryEmpty) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               isPersonalBestiaryEmpty
                   ? Icons.bookmark_border
                   : Icons.search_off_outlined,
-              size: 48,
+              size: 40,
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               isPersonalBestiaryEmpty
                   ? 'Your Personal Bestiary is Empty'
                   : 'No Monsters Found',
               style: TextStyle(
                 color: theme.colorScheme.onSurface,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               isPersonalBestiaryEmpty
                   ? 'Tap the bookmark icon on any monster card to pin favorite creatures here for quick DM access.'
@@ -898,11 +904,11 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
             if (!isPersonalBestiaryEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               FilledButton.tonalIcon(
                 icon: const Icon(Icons.refresh, size: 16),
                 label: const Text('Reset All Filters'),
