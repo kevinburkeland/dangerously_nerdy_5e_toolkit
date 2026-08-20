@@ -10,6 +10,7 @@ import '../widgets/dialogs/creature_stat_block_dialog.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
 import '../widgets/monster_codex/monster_card.dart';
+import '../widgets/monster_codex/monster_comparison_dialog.dart';
 import '../widgets/monster_codex/monster_filter_sheet.dart';
 import '../widgets/monster_codex/monster_quick_roll_dialog.dart';
 
@@ -55,6 +56,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
   bool _showOnlyReactions = false;
   bool _showOnlyResistances = false;
   bool _showOnlyLegendary = false;
+  bool _showOnly2024Diff = false;
 
   String? _lastQuickRollLabel;
 
@@ -107,6 +109,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       _showOnlyReactions = false;
       _showOnlyResistances = false;
       _showOnlyLegendary = false;
+      _showOnly2024Diff = false;
     });
   }
 
@@ -123,6 +126,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     if (_showOnlyReactions) count++;
     if (_showOnlyResistances) count++;
     if (_showOnlyLegendary) count++;
+    if (_showOnly2024Diff) count++;
     return count;
   }
 
@@ -140,6 +144,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       showOnlyReactions: _showOnlyReactions,
       showOnlyResistances: _showOnlyResistances,
       showOnlyLegendary: _showOnlyLegendary,
+      showOnly2024Diff: _showOnly2024Diff,
       onTypeChanged: (type) => setState(() => _selectedType = type),
       onSizeChanged: (size) => setState(() => _selectedSize = size),
       onCrBandChanged: (band) => setState(() => _selectedCrBand = band),
@@ -151,6 +156,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       onReactionsToggled: (val) => setState(() => _showOnlyReactions = val),
       onResistancesToggled: (val) => setState(() => _showOnlyResistances = val),
       onLegendaryToggled: (val) => setState(() => _showOnlyLegendary = val),
+      on2024DiffToggled: (val) => setState(() => _showOnly2024Diff = val),
       onResetAll: _clearAllFilters,
     );
   }
@@ -303,6 +309,9 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
         return false;
       }
       if (_showOnlyLegendary && !statBlock.hasLegendary) {
+        return false;
+      }
+      if (_showOnly2024Diff && !monster.isChangedIn2024) {
         return false;
       }
 
@@ -834,6 +843,15 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
                               onQuickRoll: _performQuickRoll,
                               onOpenQuickRoll: () =>
                                   _openQuickRollDialog(context, rowMonsters[c]),
+                              onOpenComparison: () {
+                                MonsterComparisonDialog.show(
+                                  context,
+                                  monster: rowMonsters[c],
+                                  edition: edition,
+                                  isPinned: pinnedIds.contains(rowMonsters[c].id),
+                                  onTogglePin: () => _togglePinMonster(context, rowMonsters[c].id),
+                                );
+                              },
                             ),
                           )
                         : const SizedBox.shrink(),

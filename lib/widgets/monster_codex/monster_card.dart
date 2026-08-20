@@ -14,6 +14,7 @@ class MonsterCard extends StatelessWidget {
   final VoidCallback onTap;
   final void Function(String formula, String label)? onQuickRoll;
   final VoidCallback? onOpenQuickRoll;
+  final VoidCallback? onOpenComparison;
 
   const MonsterCard({
     super.key,
@@ -24,6 +25,7 @@ class MonsterCard extends StatelessWidget {
     required this.onTap,
     this.onQuickRoll,
     this.onOpenQuickRoll,
+    this.onOpenComparison,
   });
 
   @override
@@ -92,27 +94,34 @@ class MonsterCard extends StatelessWidget {
                 ),
               ),
               if (monster.isChangedIn2024) ...[
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: diffColor.withValues(alpha: 0.15),
+                Tooltip(
+                  message: 'Compare 2014 RAW vs 2024 Revised rules',
+                  child: InkWell(
+                    onTap: onOpenComparison,
                     borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: diffColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome, color: diffColor, size: 10),
-                      const SizedBox(width: 2),
-                      Text(
-                        '2024 Diff',
-                        style: TextStyle(
-                            color: diffColor,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold),
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: diffColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: diffColor.withValues(alpha: 0.4)),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.auto_awesome, color: diffColor, size: 10),
+                          const SizedBox(width: 2),
+                          Text(
+                            '2024 Diff',
+                            style: TextStyle(
+                                color: diffColor,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 2),

@@ -4,6 +4,7 @@ import 'monster_codex/bestiary/bestiary_cr_five_to_eight.dart';
 import 'monster_codex/bestiary/bestiary_cr_half_to_one.dart';
 import 'monster_codex/bestiary/bestiary_cr_nine_plus.dart';
 import 'monster_codex/bestiary/bestiary_cr_two_to_four.dart';
+import 'monster_codex/srd_monster_2024_diffs.dart';
 import 'monster_codex/srd_monster_cr_bands.dart';
 import 'srd_summons/srd_summons_library.dart';
 
@@ -381,7 +382,27 @@ class MonsterCodexLibrary {
       }
     }
 
-    final monsters = byNormalizedKey.values.toList()
+    final monsters = byNormalizedKey.values.map((item) {
+      final diffInfo = SrdMonster2024Diffs.getDiff(item.id, item.name);
+      if (diffInfo != null) {
+        return MonsterItem(
+          id: item.id,
+          name: item.name,
+          name2014: item.name2014,
+          name2024: item.name2024,
+          statBlock2014: item.statBlock2014,
+          statBlock2024: item.statBlock2024,
+          isChangedIn2024: true,
+          diffSummary: diffInfo.summary,
+          diffHighlights: diffInfo.highlights,
+          sourcePresetId: item.sourcePresetId,
+          sourcePresetName: item.sourcePresetName,
+          sourceSpellId: item.sourceSpellId,
+          sourceCategory: item.sourceCategory,
+        );
+      }
+      return item;
+    }).toList()
       ..sort((a, b) {
         final crCompare = a.challengeRating.compareTo(b.challengeRating);
         if (crCompare != 0) return crCompare;

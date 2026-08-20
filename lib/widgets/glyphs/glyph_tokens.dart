@@ -256,7 +256,6 @@ class ActionTraitRing {
     bool isDarkMode = false,
     double phase = 0.0,
   }) {
-    // Concentration is pure harmonic orbital arcane wireframe and never has an elemental damage type
     if (ringType == ActionRingType.concentration) {
       return isDarkMode
           ? const Color(0xFF38BDF8)
@@ -267,6 +266,12 @@ class ActionTraitRing {
     }
     if (ringType == ActionRingType.sustain) {
       return isDarkMode ? const Color(0xFF86EFAC) : const Color(0xFF15803D);
+    }
+    if (ringType == ActionRingType.legendary) {
+      return isDarkMode ? const Color(0xFFFDE047) : const Color(0xFFCA8A04);
+    }
+    if (ringType == ActionRingType.reaction) {
+      return isDarkMode ? const Color(0xFF67E8F9) : const Color(0xFF0891B2);
     }
 
     final accents = allDamageTypes;

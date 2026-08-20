@@ -16,6 +16,7 @@ class MonsterFilterSheet extends StatelessWidget {
   final bool showOnlyReactions;
   final bool showOnlyResistances;
   final bool showOnlyLegendary;
+  final bool showOnly2024Diff;
 
   final ValueChanged<String?> onTypeChanged;
   final ValueChanged<String?> onSizeChanged;
@@ -28,6 +29,7 @@ class MonsterFilterSheet extends StatelessWidget {
   final ValueChanged<bool> onReactionsToggled;
   final ValueChanged<bool> onResistancesToggled;
   final ValueChanged<bool> onLegendaryToggled;
+  final ValueChanged<bool> on2024DiffToggled;
   final VoidCallback onResetAll;
 
   const MonsterFilterSheet({
@@ -43,6 +45,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required this.showOnlyReactions,
     required this.showOnlyResistances,
     required this.showOnlyLegendary,
+    required this.showOnly2024Diff,
     required this.onTypeChanged,
     required this.onSizeChanged,
     required this.onCrBandChanged,
@@ -54,6 +57,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required this.onReactionsToggled,
     required this.onResistancesToggled,
     required this.onLegendaryToggled,
+    required this.on2024DiffToggled,
     required this.onResetAll,
   });
 
@@ -70,6 +74,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required bool showOnlyReactions,
     required bool showOnlyResistances,
     required bool showOnlyLegendary,
+    required bool showOnly2024Diff,
     required ValueChanged<String?> onTypeChanged,
     required ValueChanged<String?> onSizeChanged,
     required ValueChanged<MonsterCrBand> onCrBandChanged,
@@ -81,6 +86,7 @@ class MonsterFilterSheet extends StatelessWidget {
     required ValueChanged<bool> onReactionsToggled,
     required ValueChanged<bool> onResistancesToggled,
     required ValueChanged<bool> onLegendaryToggled,
+    required ValueChanged<bool> on2024DiffToggled,
     required VoidCallback onResetAll,
   }) {
     HapticService.selectionTick(context);
@@ -111,6 +117,7 @@ class MonsterFilterSheet extends StatelessWidget {
             showOnlyReactions: showOnlyReactions,
             showOnlyResistances: showOnlyResistances,
             showOnlyLegendary: showOnlyLegendary,
+            showOnly2024Diff: showOnly2024Diff,
             onTypeChanged: onTypeChanged,
             onSizeChanged: onSizeChanged,
             onCrBandChanged: onCrBandChanged,
@@ -122,6 +129,7 @@ class MonsterFilterSheet extends StatelessWidget {
             onReactionsToggled: onReactionsToggled,
             onResistancesToggled: onResistancesToggled,
             onLegendaryToggled: onLegendaryToggled,
+            on2024DiffToggled: on2024DiffToggled,
             onResetAll: onResetAll,
           ),
         ),
@@ -134,35 +142,31 @@ class MonsterFilterSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
+    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
 
-    final allMonsters = MonsterCodexLibrary.allMonsters;
-    final sizeOptions = allMonsters.map((m) => m.size).toSet().toList()..sort();
+    final sizeOptions = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Drag handle and header
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
+        // Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Filter Monster Codex',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Icon(Icons.filter_list, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Filter Monster Codex',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ),
             TextButton.icon(
               onPressed: () {
@@ -176,9 +180,17 @@ class MonsterFilterSheet extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Quick Toggle Switches
+        // Quick Flags Section
         _buildSectionHeader(theme, 'Quick Flags & Bookmarks'),
         const SizedBox(height: 6),
+        _buildSwitchTile(
+          title: '2024 Revised / Diffs Only',
+          subtitle: 'Show creatures with 2024 revised rules changes',
+          value: showOnly2024Diff,
+          activeColor: diffColor,
+          icon: Icons.auto_awesome,
+          onChanged: on2024DiffToggled,
+        ),
         _buildSwitchTile(
           title: 'My Bookmarked Bestiary Only',
           subtitle: 'Show only creatures pinned to your favorites',
@@ -268,11 +280,11 @@ class MonsterFilterSheet extends StatelessWidget {
         const SizedBox(height: 16),
 
         // Creature Type Filter
-        _buildSectionHeader(theme, 'Creature Type (14 SRD Classifications)'),
+        _buildSectionHeader(theme, 'Creature Type'),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             ChoiceChip(
               label: const Text('All Types', style: TextStyle(fontSize: 12)),
@@ -285,13 +297,9 @@ class MonsterFilterSheet extends StatelessWidget {
               },
             ),
             ...CreatureType.values.map((type) {
-              final typeColor = type.getLegibleColor(isDark);
-              final isSelected =
-                  selectedType?.toLowerCase() == type.displayName.toLowerCase();
               return ChoiceChip(
                 label: Text(type.displayName, style: const TextStyle(fontSize: 12)),
-                selected: isSelected,
-                selectedColor: typeColor.withValues(alpha: 0.25),
+                selected: selectedType?.toLowerCase() == type.displayName.toLowerCase(),
                 onSelected: (selected) {
                   HapticService.selectionTick(context);
                   onTypeChanged(selected ? type.displayName : null);
@@ -306,8 +314,8 @@ class MonsterFilterSheet extends StatelessWidget {
         _buildSectionHeader(theme, 'Creature Size'),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             ChoiceChip(
               label: const Text('All Sizes', style: TextStyle(fontSize: 12)),

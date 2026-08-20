@@ -147,5 +147,40 @@ void main() {
 
       expect(find.byType(MonsterCard), findsWidgets);
     });
+
+    testWidgets('switches to 2024 Diffs tab and opens MonsterComparisonDialog',
+        (tester) async {
+      await tester.pumpWidget(buildTestScreen());
+      await tester.pumpAndSettle();
+
+      // Switch to 2024 Diffs tab
+      final diffTab = find.textContaining('2024 Diffs');
+      expect(diffTab, findsOneWidget);
+      await tester.tap(diffTab);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MonsterCard), findsWidgets);
+      expect(find.text('2024 Diff'), findsWidgets);
+
+      // Tap 2024 Diff badge to open MonsterComparisonDialog
+      await tester.tap(find.text('2024 Diff').first);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('2024 REVISED RULES DIFF HIGHLIGHTS'), findsOneWidget);
+      expect(find.textContaining('2024 Revised View'), findsOneWidget);
+
+      // Toggle Compare Diff / Single View
+      final compareButton = find.text('Compare Diff');
+      if (compareButton.evaluate().isNotEmpty) {
+        await tester.tap(compareButton);
+        await tester.pumpAndSettle();
+        expect(find.textContaining('2014 RAW RULES'), findsOneWidget);
+        expect(find.textContaining('2024 REVISED RULES'), findsWidgets);
+      }
+
+      // Close dialog
+      await tester.tap(find.byTooltip('Close comparison dialog'));
+      await tester.pumpAndSettle();
+    });
   });
 }

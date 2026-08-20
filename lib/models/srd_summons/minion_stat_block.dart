@@ -273,9 +273,12 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
     }
 
     if (hasRecharge && rings.length < 3) {
+      final rechargeDamage = allAccents.isNotEmpty && allAccents.first != DamageAccent.physical
+          ? allAccents.first
+          : (dmgAccent != DamageAccent.physical ? dmgAccent : null);
       rings.add(ActionTraitRing(
         ringType: ActionRingType.recharge,
-        damageType: dmgAccent,
+        damageType: rechargeDamage,
         damageTypes: allAccents.toList(),
       ));
     }

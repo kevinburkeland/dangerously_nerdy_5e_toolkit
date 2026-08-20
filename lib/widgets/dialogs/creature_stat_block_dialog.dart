@@ -4,7 +4,7 @@ import '../../services/haptic_service.dart';
 import '../../utils/dice_formatters.dart';
 import '../glyphs/dnd_glyph.dart';
 
-class CreatureStatBlockDialog extends StatelessWidget {
+class CreatureStatBlockDialog extends StatefulWidget {
   final MinionStatBlock statBlock;
   final VoidCallback? onAddToSquad;
 
@@ -30,8 +30,20 @@ class CreatureStatBlockDialog extends StatelessWidget {
   }
 
   @override
+  State<CreatureStatBlockDialog> createState() => _CreatureStatBlockDialogState();
+}
+
+class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
+  bool _isGlyphActive = false;
+
+  void _toggleGlyphAnimation() {
+    HapticService.selectionTick(context);
+    setState(() => _isGlyphActive = !_isGlyphActive);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final sb = statBlock;
+    final sb = widget.statBlock;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -103,44 +115,53 @@ class CreatureStatBlockDialog extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 1. Creature Glyph, Name & Type / Alignment
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          DndGlyph.monster(
-                            creatureType: sb.glyphCreatureType,
-                            crTier: sb.glyphCrTier,
-                            actionRings: sb.glyphActionRings,
-                            size: 64,
-                            isDarkMode: true,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  sb.name,
-                                  style: const TextStyle(
-                                    color: Color(0xFFFFD54F), // 5e Monster Manual Gold
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
-                                    fontFamily: 'serif',
-                                  ),
+                      InkWell(
+                        onTap: _toggleGlyphAnimation,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              DndGlyph.monster(
+                                creatureType: sb.glyphCreatureType,
+                                crTier: sb.glyphCrTier,
+                                actionRings: sb.glyphActionRings,
+                                size: 64,
+                                isDarkMode: true,
+                                isActive: _isGlyphActive,
+                                onTap: _toggleGlyphAnimation,
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      sb.name,
+                                      style: const TextStyle(
+                                        color: Color(0xFFFFD54F), // 5e Monster Manual Gold
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                        fontFamily: 'serif',
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${sb.sizeDisplay} ${sb.typeDisplay.toLowerCase()}, ${sb.alignment}',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${sb.sizeDisplay} ${sb.typeDisplay.toLowerCase()}, ${sb.alignment}',
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 13,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
 
                       const SizedBox(height: 10),
@@ -431,7 +452,7 @@ class CreatureStatBlockDialog extends StatelessWidget {
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('CLOSE', style: TextStyle(color: Colors.white70)),
                     ),
-                    if (onAddToSquad != null) ...[
+                    if (widget.onAddToSquad != null) ...[
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.add, size: 18),
@@ -445,7 +466,7 @@ class CreatureStatBlockDialog extends StatelessWidget {
                         onPressed: () {
                           HapticService.mediumImpact(context);
                           Navigator.of(context).pop();
-                          onAddToSquad!();
+                          widget.onAddToSquad!();
                         },
                       ),
                     ],
