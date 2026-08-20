@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_tokens.dart';
@@ -340,6 +341,50 @@ void main() {
         ),
         isTrue,
       );
+    });
+
+    testWidgets('DndGlyph handles repeated sequential mouse hover enter and exit cycles without freezing', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: DndGlyph.monster(
+                creatureType: CreatureType.dragon,
+                actionRings: const [ActionTraitRing(ringType: ActionRingType.recharge)],
+                size: 64,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      await tester.pump();
+
+      final glyphFinder = find.byType(DndGlyph);
+      expect(glyphFinder, findsOneWidget);
+      final center = tester.getCenter(glyphFinder);
+
+      // Cycle 1: Hover in -> Hover out
+      await gesture.moveTo(center);
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.moveTo(Offset.zero);
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Cycle 2: Hover in again immediately (verifying no early exit while settling)
+      await gesture.moveTo(center);
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.moveTo(Offset.zero);
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Cycle 3: Third hover in
+      await gesture.moveTo(center);
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.moveTo(Offset.zero);
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(glyphFinder, findsOneWidget);
     });
   });
 }

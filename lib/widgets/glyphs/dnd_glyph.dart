@@ -201,9 +201,10 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
     _isRingAnimating = shouldAnimate;
 
     if (shouldAnimate) {
-      if (_ringRotationController.isAnimating) return;
       if (_isTestEnvironment) {
-        _ringRotationController.forward(from: 0.0);
+        if (!_ringRotationController.isAnimating) {
+          _ringRotationController.forward(from: 0.0);
+        }
       } else {
         _ringRotationController.repeat();
       }
@@ -213,7 +214,6 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
     if (!_ringRotationController.isAnimating) return;
     final currentValue = _ringRotationController.value;
     final settleTarget = currentValue > 0.8 ? 1.0 : 0.0;
-    _ringRotationController.stop(canceled: false);
     _ringRotationController
         .animateTo(
       settleTarget,
