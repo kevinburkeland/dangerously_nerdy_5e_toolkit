@@ -53,6 +53,7 @@ class AppSettings {
   final bool enableCritFumbleFx;
   final bool enableSpellParticles;
   final bool enable3dDiceOverlays;
+  final bool enableGlyphAnimations;
   final bool performanceMode;
   final DmRulesEdition rulesEdition;
   final Set<String> pinnedRuleIds;
@@ -67,6 +68,7 @@ class AppSettings {
     this.enableCritFumbleFx = true,
     this.enableSpellParticles = true,
     this.enable3dDiceOverlays = true,
+    this.enableGlyphAnimations = true,
     this.performanceMode = false,
     this.rulesEdition = DmRulesEdition.v2024,
     this.pinnedRuleIds = const <String>{},
@@ -80,6 +82,9 @@ class AppSettings {
   /// Whether critical hit and fumble animations are permitted to run
   bool get areCritFxAllowed => enableCritFumbleFx && !performanceMode;
 
+  /// Whether creature and spell techno-rune glyph animations are permitted to run
+  bool get areGlyphAnimationsAllowed => enableGlyphAnimations && !performanceMode;
+
   AppSettings copyWith({
     ThemeMode? themeMode,
     FantasyAccent? fantasyAccent,
@@ -88,6 +93,7 @@ class AppSettings {
     bool? enableCritFumbleFx,
     bool? enableSpellParticles,
     bool? enable3dDiceOverlays,
+    bool? enableGlyphAnimations,
     bool? performanceMode,
     DmRulesEdition? rulesEdition,
     Set<String>? pinnedRuleIds,
@@ -102,6 +108,7 @@ class AppSettings {
       enableCritFumbleFx: enableCritFumbleFx ?? this.enableCritFumbleFx,
       enableSpellParticles: enableSpellParticles ?? this.enableSpellParticles,
       enable3dDiceOverlays: enable3dDiceOverlays ?? this.enable3dDiceOverlays,
+      enableGlyphAnimations: enableGlyphAnimations ?? this.enableGlyphAnimations,
       performanceMode: performanceMode ?? this.performanceMode,
       rulesEdition: rulesEdition ?? this.rulesEdition,
       pinnedRuleIds: pinnedRuleIds ?? this.pinnedRuleIds,
@@ -122,6 +129,7 @@ class AppSettings {
           enableCritFumbleFx == other.enableCritFumbleFx &&
           enableSpellParticles == other.enableSpellParticles &&
           enable3dDiceOverlays == other.enable3dDiceOverlays &&
+          enableGlyphAnimations == other.enableGlyphAnimations &&
           performanceMode == other.performanceMode &&
           rulesEdition == other.rulesEdition &&
           setEquals(pinnedRuleIds, other.pinnedRuleIds) &&
@@ -137,6 +145,7 @@ class AppSettings {
         enableCritFumbleFx,
         enableSpellParticles,
         enable3dDiceOverlays,
+        enableGlyphAnimations,
         performanceMode,
         rulesEdition,
         Object.hashAll(pinnedRuleIds),

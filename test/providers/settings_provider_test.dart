@@ -22,17 +22,20 @@ void main() {
       expect(settings.enableCritFumbleFx, isTrue);
       expect(settings.enableSpellParticles, isTrue);
       expect(settings.enable3dDiceOverlays, isTrue);
+      expect(settings.enableGlyphAnimations, isTrue);
       expect(settings.performanceMode, isFalse);
       expect(settings.areParticlesAllowed, isTrue);
       expect(settings.areCritFxAllowed, isTrue);
+      expect(settings.areGlyphAnimationsAllowed, isTrue);
       expect(settings.rulesEdition, DmRulesEdition.v2024);
       expect(settings.pinnedRuleIds, isEmpty);
     });
 
-    test('performanceMode disables particle and crit effects getters', () {
+    test('performanceMode disables particle, crit, and glyph effects getters', () {
       const settings = AppSettings(performanceMode: true);
       expect(settings.areParticlesAllowed, isFalse);
       expect(settings.areCritFxAllowed, isFalse);
+      expect(settings.areGlyphAnimationsAllowed, isFalse);
     });
   });
 
@@ -58,6 +61,12 @@ void main() {
       provider.setPerformanceMode(true);
       expect(provider.settings.performanceMode, isTrue);
       expect(provider.settings.areParticlesAllowed, isFalse);
+      expect(provider.settings.areGlyphAnimationsAllowed, isFalse);
+
+      provider.setPerformanceMode(false);
+      provider.setGlyphAnimations(false);
+      expect(provider.settings.enableGlyphAnimations, isFalse);
+      expect(provider.settings.areGlyphAnimationsAllowed, isFalse);
 
       provider.setRulesEdition(DmRulesEdition.v2014);
       expect(provider.settings.rulesEdition, DmRulesEdition.v2014);

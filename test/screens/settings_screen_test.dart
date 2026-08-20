@@ -34,6 +34,7 @@ void main() {
     expect(find.text('RPG MICRO-INTERACTIONS & FX'), findsOneWidget);
     expect(find.text('Spell Particle Canvas FX'), findsOneWidget);
     expect(find.text('Critical Hit & Fumble Effects'), findsOneWidget);
+    expect(find.text('Creature & Spell Glyph Animations'), findsOneWidget);
 
     // Verify Test Lab buttons exist
     expect(find.text('Test Nat 20'), findsOneWidget);

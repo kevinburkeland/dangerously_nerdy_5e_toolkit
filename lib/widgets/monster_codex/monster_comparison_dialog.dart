@@ -92,6 +92,7 @@ class _MonsterComparisonDialogState extends State<MonsterComparisonDialog> {
                   actionRings: statBlock.glyphActionRings,
                   size: 46,
                   isDarkMode: isDark,
+                  isActive: true,
                 ),
                 const SizedBox(width: 14),
                 Expanded(

@@ -361,6 +361,7 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
                       actionRings: statBlock.glyphActionRings,
                       size: 28,
                       isDarkMode: isDark,
+                      isActive: true,
                     ),
                     const SizedBox(width: 10),
                     Expanded(

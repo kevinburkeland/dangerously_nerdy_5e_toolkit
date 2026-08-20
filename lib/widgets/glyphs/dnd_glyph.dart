@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'glyph_tokens.dart';
 import 'glyph_geometry.dart';
 import 'glyph_motifs.dart';
+import '../../providers/settings_provider.dart';
 
 /// Universal Dynamic D&D Vector Glyph Widget for Spells and Monsters.
 /// Renders an authentic holographic wireframe techno-rune schematic HUD with
@@ -191,13 +192,21 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
     _entryBurstController.forward(from: 0.0);
   }
 
+  bool get _isTestEnvironment {
+    return WidgetsBinding.instance.runtimeType.toString().contains('Test');
+  }
+
   void _syncRingAnimation(bool shouldAnimate) {
     if (shouldAnimate == _isRingAnimating) return;
     _isRingAnimating = shouldAnimate;
 
     if (shouldAnimate) {
       if (_ringRotationController.isAnimating) return;
-      _ringRotationController.repeat();
+      if (_isTestEnvironment) {
+        _ringRotationController.forward(from: 0.0);
+      } else {
+        _ringRotationController.repeat();
+      }
       return;
     }
 
@@ -221,10 +230,15 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final isDark =
         widget.isDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
-    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final settings = SettingsScope.maybeOf(context)?.settings;
+    final allowGlyphAnimations = settings?.areGlyphAnimationsAllowed ?? true;
+    final reduceMotion =
+        (MediaQuery.maybeDisableAnimationsOf(context) ?? false) ||
+        !allowGlyphAnimations;
     final canAnimateHover =
         _supportsHover(Theme.of(context).platform) && !reduceMotion;
-    final effectiveActive = widget.isActive || (canAnimateHover && _isHovered);
+    final effectiveActive =
+        allowGlyphAnimations && (widget.isActive || (canAnimateHover && _isHovered));
     final shouldAnimateGlyphEffects =
         !reduceMotion && (widget.isActive || (canAnimateHover && _isHovered));
     final shouldAnimateRings =

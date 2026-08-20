@@ -199,6 +199,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             settingsProvider.set3dDiceOverlays(val);
                           },
                   ),
+                  const Divider(height: 1),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.blur_on, color: Colors.purpleAccent),
+                    title: const Text('Creature & Spell Glyph Animations'),
+                    subtitle: const Text('Rotating trait rings and holographic techno-rune pulses'),
+                    value: s.enableGlyphAnimations,
+                    onChanged: s.performanceMode
+                        ? null
+                        : (val) {
+                            HapticService.selectionTick(context);
+                            settingsProvider.setGlyphAnimations(val);
+                          },
+                  ),
                 ],
               ),
             ),

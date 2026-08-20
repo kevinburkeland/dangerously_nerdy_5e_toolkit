@@ -34,7 +34,7 @@ class CreatureStatBlockDialog extends StatefulWidget {
 }
 
 class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
-  bool _isGlyphActive = false;
+  bool _isGlyphActive = true;
 
   void _toggleGlyphAnimation() {
     HapticService.selectionTick(context);

@@ -135,6 +135,7 @@ class _SpellQuickRollDialogState extends State<SpellQuickRollDialog> {
                   actionRings: widget.spell.getGlyphActionRings(widget.edition),
                   size: 40,
                   isDarkMode: isDark,
+                  isActive: true,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

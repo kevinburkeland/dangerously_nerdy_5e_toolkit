@@ -11,6 +11,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _kCritFumbleFx = 'setting_crit_fumble_fx';
   static const _kSpellParticles = 'setting_spell_particles';
   static const _k3dDice = 'setting_3d_dice';
+  static const _kGlyphAnimations = 'setting_enable_glyph_animations';
   static const _kPerformanceMode = 'setting_performance_mode';
   static const _kRulesEdition = 'setting_rules_edition';
   static const _kPinnedRuleIds = 'setting_pinned_rule_ids';
@@ -34,6 +35,7 @@ class SettingsProvider extends ChangeNotifier {
     final critFx = prefs.getBool(_kCritFumbleFx);
     final particles = prefs.getBool(_kSpellParticles);
     final dice = prefs.getBool(_k3dDice);
+    final glyphs = prefs.getBool(_kGlyphAnimations);
     final perf = prefs.getBool(_kPerformanceMode);
     final editionIndex = prefs.getInt(_kRulesEdition);
     final pinnedList = prefs.getStringList(_kPinnedRuleIds);
@@ -54,6 +56,7 @@ class SettingsProvider extends ChangeNotifier {
       enableCritFumbleFx: critFx ?? _settings.enableCritFumbleFx,
       enableSpellParticles: particles ?? _settings.enableSpellParticles,
       enable3dDiceOverlays: dice ?? _settings.enable3dDiceOverlays,
+      enableGlyphAnimations: glyphs ?? _settings.enableGlyphAnimations,
       performanceMode: perf ?? _settings.performanceMode,
       rulesEdition: (editionIndex != null && editionIndex >= 0 && editionIndex < DmRulesEdition.values.length)
           ? DmRulesEdition.values[editionIndex]
@@ -78,6 +81,7 @@ class SettingsProvider extends ChangeNotifier {
       prefs.setBool(_kCritFumbleFx, newSettings.enableCritFumbleFx),
       prefs.setBool(_kSpellParticles, newSettings.enableSpellParticles),
       prefs.setBool(_k3dDice, newSettings.enable3dDiceOverlays),
+      prefs.setBool(_kGlyphAnimations, newSettings.enableGlyphAnimations),
       prefs.setBool(_kPerformanceMode, newSettings.performanceMode),
       prefs.setInt(_kRulesEdition, newSettings.rulesEdition.index),
       prefs.setStringList(_kPinnedRuleIds, newSettings.pinnedRuleIds.toList()),
@@ -93,6 +97,7 @@ class SettingsProvider extends ChangeNotifier {
   void setCritFumbleFx(bool value) => updateSettings(_settings.copyWith(enableCritFumbleFx: value));
   void setSpellParticles(bool value) => updateSettings(_settings.copyWith(enableSpellParticles: value));
   void set3dDiceOverlays(bool value) => updateSettings(_settings.copyWith(enable3dDiceOverlays: value));
+  void setGlyphAnimations(bool value) => updateSettings(_settings.copyWith(enableGlyphAnimations: value));
   void setPerformanceMode(bool value) => updateSettings(_settings.copyWith(performanceMode: value));
   void setRulesEdition(DmRulesEdition edition) => updateSettings(_settings.copyWith(rulesEdition: edition));
 
