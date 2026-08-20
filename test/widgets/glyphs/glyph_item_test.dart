@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_tokens.dart';
-import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_geometry.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/glyph_gallery_data.dart';
 
