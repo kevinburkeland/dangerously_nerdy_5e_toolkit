@@ -140,6 +140,281 @@ class MagicItem {
     return null;
   }
 
+  /// Dynamic action rings for DndGlyph HUD rendering derived from tags, mechanics, and explicit rings.
+  List<ActionTraitRing> getGlyphActionRings([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final rings = <ActionTraitRing>[];
+    final rules = getRules(edition);
+    final text = [
+      name,
+      category.displayName,
+      rarity.displayName,
+      ...tags,
+      rules.summary,
+      rules.description,
+      rules.activation ?? '',
+      rules.charges ?? '',
+      rules.masteryProperties ?? '',
+      rules.savingThrowDc ?? '',
+      ...rules.properties,
+      if (diffSummary != null) diffSummary!,
+      ...diffHighlights,
+    ].map((value) => value.toLowerCase()).join(' ');
+
+    bool hasControlSemantics() {
+      const controlTerms = [
+        'restrain',
+        'restrained',
+        'paralyze',
+        'paralyzed',
+        'charm',
+        'charmed',
+        'frighten',
+        'frightened',
+        'incapacitated',
+        'stun',
+        'stunned',
+        'banish',
+        'banished',
+        'grapple',
+        'grappled',
+        'prone',
+        'sleep',
+        'confusion',
+        'petrif',
+        'blind',
+        'blinded',
+      ];
+      return controlTerms.any(text.contains);
+    }
+
+    bool hasSustainSemantics() {
+      const sustainTerms = [
+        'healing',
+        'heal',
+        'regain hit points',
+        'regains hit points',
+        'regain hp',
+        'regains hp',
+        'temporary hit points',
+        'temp hp',
+        'regeneration',
+        'regenerate',
+        'restore',
+        'cures',
+        'curing',
+        'neutralize poison',
+        'remove curse',
+      ];
+      return sustainTerms.any(text.contains);
+    }
+
+    bool hasRechargeOrCharges() {
+      const rechargeTerms = [
+        'charge',
+        'charges',
+        'recharge',
+        'recharges',
+        'daily at dawn',
+        'daily at dusk',
+        'per day',
+        'cone',
+        'sphere',
+        'cylinder',
+        'emanation',
+        'radius',
+        'line of effect',
+        'area of effect',
+      ];
+      return rechargeTerms.any(text.contains);
+    }
+
+    bool sameDamageTypes(List<DamageAccent> a, List<DamageAccent> b) {
+      if (identical(a, b)) return true;
+      if (a.length != b.length) return false;
+      for (int i = 0; i < a.length; i++) {
+        if (a[i] != b[i]) return false;
+      }
+      return true;
+    }
+
+    void addRing(ActionRingType type,
+        {DamageAccent? damageType, List<DamageAccent> damageTypes = const [], String? label}) {
+      final exists = rings.any((r) =>
+          r.ringType == type &&
+          r.damageType == damageType &&
+          sameDamageTypes(r.damageTypes, damageTypes));
+      if (exists) return;
+      rings.add(ActionTraitRing(
+        ringType: type,
+        damageType: damageType,
+        damageTypes: damageTypes,
+        label: label,
+      ));
+    }
+
+    // 1. First add any explicitly configured actionRings
+    for (final ring in actionRings) {
+      addRing(
+        ring.ringType,
+        damageType: ring.damageType,
+        damageTypes: ring.damageTypes,
+        label: ring.label,
+      );
+    }
+
+    // 2. Attunement ring if required
+    if (requiresAttunement || tags.contains('attunement')) {
+      addRing(ActionRingType.attunement, label: getAttunementLabel());
+    }
+
+    final primaryDamage = getGlyphPrimaryDamageAccent(edition);
+    final allDamageAccents = getGlyphDamageAccents(edition);
+    final extraAccents = allDamageAccents.length > 1
+        ? allDamageAccents.sublist(1)
+        : const <DamageAccent>[];
+
+    // 3. Category & Tag based combat dynamics
+    final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
+
+    // Melee weapons
+    if (category == ItemCategory.weapon &&
+        !lowerTags.contains('ranged') &&
+        !lowerTags.contains('ammunition') &&
+        !lowerTags.contains('bow') &&
+        !lowerTags.contains('crossbow')) {
+      addRing(
+        ActionRingType.melee,
+        damageType: primaryDamage,
+        damageTypes: extraAccents,
+      );
+    } else if (lowerTags.contains('melee')) {
+      addRing(
+        ActionRingType.melee,
+        damageType: primaryDamage,
+        damageTypes: extraAccents,
+      );
+    }
+
+    // Ranged weapons / items
+    if (lowerTags.contains('ranged') ||
+        lowerTags.contains('bow') ||
+        lowerTags.contains('crossbow') ||
+        lowerTags.contains('ammunition') ||
+        lowerTags.contains('dart') ||
+        lowerTags.contains('sling') ||
+        lowerTags.contains('blowgun') ||
+        lowerTags.contains('firearm')) {
+      addRing(
+        ActionRingType.ranged,
+        damageType: primaryDamage,
+        damageTypes: extraAccents,
+      );
+    }
+
+    // Reaction items (shields, parry, deflection, reaction activation)
+    final activation = (rules.activation ?? '').toLowerCase();
+    if (lowerTags.contains('reaction') ||
+        lowerTags.contains('shield') ||
+        lowerTags.contains('deflect') ||
+        activation.contains('reaction')) {
+      addRing(ActionRingType.reaction);
+    }
+
+    // Control mechanics
+    if (hasControlSemantics()) {
+      addRing(ActionRingType.control);
+    }
+
+    // Sustain / Healing
+    if (hasSustainSemantics()) {
+      addRing(ActionRingType.sustain);
+    }
+
+    // Recharge / Charges / AoE / Spells in items
+    if (hasRechargeOrCharges() ||
+        category == ItemCategory.wand ||
+        category == ItemCategory.staff ||
+        category == ItemCategory.rod ||
+        category == ItemCategory.scroll ||
+        category == ItemCategory.potion) {
+      addRing(
+        ActionRingType.recharge,
+        damageType: primaryDamage,
+        damageTypes: extraAccents,
+      );
+    }
+
+    // Concentration
+    if (lowerTags.contains('concentration') || text.contains('concentration')) {
+      addRing(ActionRingType.concentration);
+    }
+
+    // Legendary / Artifact
+    if (rarity == ItemRarity.legendary ||
+        rarity == ItemRarity.artifact ||
+        lowerTags.contains('legendary') ||
+        lowerTags.contains('artifact')) {
+      addRing(ActionRingType.legendary);
+    }
+
+    return rings.take(3).toList(growable: false);
+  }
+
+  /// Primary damage accent used by glyphs for this magic item.
+  DamageAccent? getGlyphPrimaryDamageAccent([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    if (damageAccent != null) return damageAccent;
+    final accents = getGlyphDamageAccents(edition);
+    return accents.isNotEmpty ? accents.first : null;
+  }
+
+  /// Ordered damage accents used by glyphs for this magic item.
+  List<DamageAccent> getGlyphDamageAccents([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final accents = <DamageAccent>[];
+    if (damageAccent != null) {
+      accents.add(damageAccent!);
+    }
+
+    final rules = getRules(edition);
+    final text = [
+      name,
+      ...tags,
+      rules.summary,
+      rules.description,
+      rules.masteryProperties ?? '',
+      ...rules.properties,
+      if (diffSummary != null) diffSummary!,
+      ...diffHighlights,
+    ].map((value) => value.toLowerCase()).join(' ');
+
+    void addIfMatch(String keyword, DamageAccent accent) {
+      if (!accents.contains(accent) && text.contains(keyword)) {
+        accents.add(accent);
+      }
+    }
+
+    addIfMatch('fire', DamageAccent.fire);
+    addIfMatch('flame', DamageAccent.fire);
+    addIfMatch('cold', DamageAccent.cold);
+    addIfMatch('frost', DamageAccent.cold);
+    addIfMatch('ice', DamageAccent.cold);
+    addIfMatch('lightning', DamageAccent.lightning);
+    addIfMatch('shock', DamageAccent.lightning);
+    addIfMatch('thunder', DamageAccent.thunder);
+    addIfMatch('acid', DamageAccent.acid);
+    addIfMatch('poison', DamageAccent.poison);
+    addIfMatch('necrotic', DamageAccent.necrotic);
+    addIfMatch('radiant', DamageAccent.radiant);
+    addIfMatch('holy', DamageAccent.radiant);
+    addIfMatch('sun', DamageAccent.radiant);
+    addIfMatch('psychic', DamageAccent.psychic);
+    addIfMatch('force', DamageAccent.force);
+    addIfMatch('slashing', DamageAccent.slashing);
+    addIfMatch('piercing', DamageAccent.piercing);
+    addIfMatch('bludgeoning', DamageAccent.bludgeoning);
+
+    return accents;
+  }
+
   /// Formatted item name for the requested rules edition.
   String getName(DmRulesEdition edition) {
     if (edition == DmRulesEdition.v2014 && name2014 != null) {

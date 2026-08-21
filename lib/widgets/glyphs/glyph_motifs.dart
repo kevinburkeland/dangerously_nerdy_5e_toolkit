@@ -27,7 +27,7 @@ class GlyphMotifs {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
     final pulseWave =
-        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
     final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
     final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
     final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
@@ -350,7 +350,7 @@ class GlyphMotifs {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
     final pulseWave =
-        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
     final pulseScale = animatePulse ? (1.0 + 0.038 * pulseWave) : 1.0;
     final primaryAlpha = animatePulse ? (0.86 + 0.14 * pulseWave) : 1.0;
     final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
@@ -742,7 +742,7 @@ class GlyphMotifs {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
     final pulseWave =
-        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
     final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
     final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
     final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;

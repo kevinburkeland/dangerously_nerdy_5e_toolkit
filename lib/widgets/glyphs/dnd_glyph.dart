@@ -140,20 +140,37 @@ class DndGlyph extends StatefulWidget {
     VoidCallback? onTap,
     String? tooltip,
   }) {
-    final rings = <ActionTraitRing>[
-      if (requiresAttunement)
-        const ActionTraitRing(
-          ringType: ActionRingType.attunement,
-          label: 'Requires Attunement',
-        ),
-      if (damageAccent != null)
-        ActionTraitRing(
-          ringType: ActionRingType.recharge,
-          damageType: damageAccent,
-          label: damageAccent.displayName,
-        ),
-      if (actionRings != null) ...actionRings,
-    ];
+    final rings = <ActionTraitRing>[];
+    if (actionRings != null && actionRings.isNotEmpty) {
+      rings.addAll(actionRings);
+      if (requiresAttunement && !rings.any((r) => r.ringType == ActionRingType.attunement)) {
+        rings.insert(
+          0,
+          const ActionTraitRing(
+            ringType: ActionRingType.attunement,
+            label: 'Requires Attunement',
+          ),
+        );
+      }
+    } else {
+      if (requiresAttunement) {
+        rings.add(
+          const ActionTraitRing(
+            ringType: ActionRingType.attunement,
+            label: 'Requires Attunement',
+          ),
+        );
+      }
+      if (damageAccent != null) {
+        rings.add(
+          ActionTraitRing(
+            ringType: ActionRingType.recharge,
+            damageType: damageAccent,
+            label: damageAccent.displayName,
+          ),
+        );
+      }
+    }
 
     final effectiveTheme = themeData ??
         GlyphThemeData.fromItem(
@@ -201,6 +218,7 @@ class DndGlyph extends StatefulWidget {
 
 class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
   bool _isHovered = false;
+  bool _isFocused = false;
   bool _isRingAnimating = false;
   late final AnimationController _ringRotationController;
   late final AnimationController _entryBurstController;
@@ -210,7 +228,7 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
     super.initState();
     _ringRotationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 6200),
+      duration: const Duration(milliseconds: 12000),
     );
     _entryBurstController = AnimationController(
       vsync: this,
@@ -247,6 +265,14 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
       _triggerEntryBurst();
     }
     setState(() => _isHovered = hovering);
+  }
+
+  void _handleFocus(bool focused, bool canAnimate) {
+    if (!canAnimate || _isFocused == focused) return;
+    if (focused) {
+      _triggerEntryBurst();
+    }
+    setState(() => _isFocused = focused);
   }
 
   void _triggerEntryBurst() {
@@ -298,10 +324,12 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
         !allowGlyphAnimations;
     final canAnimateHover =
         _supportsHover(Theme.of(context).platform) && !reduceMotion;
+    final isInteractiveFocused = _isFocused || (Focus.maybeOf(context)?.hasFocus ?? false);
+    final isFocusedOrHovered = (canAnimateHover && _isHovered) || (!reduceMotion && isInteractiveFocused);
     final effectiveActive =
-        allowGlyphAnimations && (widget.isActive || (canAnimateHover && _isHovered));
+        allowGlyphAnimations && (widget.isActive || isFocusedOrHovered);
     final shouldAnimateGlyphEffects =
-        !reduceMotion && (widget.isActive || (canAnimateHover && _isHovered));
+        !reduceMotion && (widget.isActive || isFocusedOrHovered);
     final shouldAnimateRings =
         shouldAnimateGlyphEffects && widget.actionRings.isNotEmpty;
     _syncRingAnimation(shouldAnimateGlyphEffects);
@@ -341,7 +369,7 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
     }
 
     glyph = AnimatedScale(
-      scale: canAnimateHover && _isHovered ? 1.08 : 1.0,
+      scale: (!reduceMotion && isFocusedOrHovered) ? 1.08 : 1.0,
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutBack,
       child: glyph,
@@ -355,12 +383,15 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
           )
         : glyph;
 
-    glyph = MouseRegion(
-      cursor:
-          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
-      onEnter: (_) => _handleHover(true, canAnimateHover),
-      onExit: (_) => _handleHover(false, canAnimateHover),
-      child: interactiveGlyph,
+    glyph = Focus(
+      onFocusChange: (focused) => _handleFocus(focused, !reduceMotion),
+      child: MouseRegion(
+        cursor:
+            widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+        onEnter: (_) => _handleHover(true, canAnimateHover),
+        onExit: (_) => _handleHover(false, canAnimateHover),
+        child: interactiveGlyph,
+      ),
     );
 
     return SizedBox(
@@ -416,7 +447,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
     final center = Offset(size.width / 2.0, size.height / 2.0);
     final primary = themeData.primary;
     final energyWave = animateMotifPulse
-        ? (0.5 + 0.5 * sin(ringRotationProgress.value * 2.0 * pi * 3.0))
+        ? (0.5 + 0.5 * sin(ringRotationProgress.value * 2.0 * pi * 1.5))
         : 0.0;
     final int effectiveTier = school != null
         ? (tierLevel <= 2 ? 1 : (tierLevel <= 5 ? 2 : (tierLevel <= 8 ? 3 : 4)))
@@ -596,7 +627,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
           .transform(entryBurstProgress.value.clamp(0.0, 1.0));
       final burstIntensity = (1.0 - burstT).clamp(0.0, 1.0);
       final scanWave =
-          0.5 + 0.5 * sin(t * 2.0 * pi * (2.2 + tierIntensity * 1.4));
+          0.5 + 0.5 * sin(t * 2.0 * pi * (1.0 + tierIntensity * 0.5));
 
       // Aggressive lock-in burst on hover enter/activate.
       final burstRing = Paint()
@@ -622,7 +653,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
           center, scale * (1.6 + burstIntensity * 1.6), coreFlash);
 
       // Tactical scanner bar in steady hover state.
-      final scanAngle = t * 2.0 * pi * 1.05;
+      final scanAngle = t * 2.0 * pi * 0.60;
       final scanLength = scale * 20.0;
       final scanThickness =
           scale * (1.2 + scanWave * 0.45 + burstIntensity * 0.55);

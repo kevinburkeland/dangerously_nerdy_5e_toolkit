@@ -360,7 +360,7 @@ class GlyphGeometry {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
     final pulse =
-        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 2.2)) : 0.0;
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
 
     // Tier 2 (Adept / Levels 3-5 / CR 5-10): instrument-panel brace, not a cluster. The visual reads as a refined, advanced glyph.
     if (tierLevel == 2) {
@@ -376,7 +376,7 @@ class GlyphGeometry {
 
       final barY = center.dy +
           9.0 * scale +
-          sin(pulseTurns * 2.0 * pi * 2.0) * 0.6 * scale;
+          sin(pulseTurns * 2.0 * pi * 1.0) * 0.6 * scale;
       final barLeft = center.dx - 6.0 * scale;
       final barRight = center.dx + 6.0 * scale;
 
@@ -558,9 +558,9 @@ class GlyphGeometry {
       final normalizedTurns = rotationTurns % 1.0;
       final colorCyclesPerLoop = switch (idx % 4) {
         0 => 1,
-        1 => 2,
-        2 => 3,
-        _ => 2,
+        1 => 1,
+        2 => 2,
+        _ => 1,
       };
       final colorPhase = animateRotation
           ? (normalizedTurns * colorCyclesPerLoop + idx * 0.17)
@@ -574,15 +574,15 @@ class GlyphGeometry {
       // Use whole-number cycles per controller loop so orientation matches at wrap.
       final speedFactor = switch (tierLevel) {
         1 => 1.0,
-        2 => (idx + 1).toDouble(),
-        3 => (idx + 2).toDouble(),
-        _ => (idx + 2).toDouble(),
+        2 => 1.0,
+        3 => (idx == 0 ? 1.0 : 2.0),
+        _ => (idx == 0 ? 1.0 : (idx == 1 ? 1.0 : 2.0)),
       };
       final breathFrequency = switch (tierLevel) {
-        1 => (idx % 3) + 1,
-        2 => (idx % 3) + 2,
-        3 => (idx % 3) + 3,
-        _ => (idx % 3) + 4,
+        1 => 1,
+        2 => 1,
+        3 => 2,
+        _ => 2,
       };
       final breathPhase = idx * 1.37 + tierPulse * 2.2;
       final breathSin = animateRotation

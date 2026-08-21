@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
 
 void main() {
@@ -62,6 +61,40 @@ void main() {
       final shield = SpellbookLibrary.allSpells.firstWhere((s) => s.name == 'Shield');
       final shieldRings = shield.getGlyphActionRings(DmRulesEdition.v2014);
       expect(shieldRings.any((r) => r.ringType == ActionRingType.reaction), isTrue);
+    });
+
+    test('Magic Item tag semantics map correctly to ActionTraitRings and DamageAccents', () {
+      // Flame Tongue -> Melee ring with Fire damage accent
+      final flameTongue = MagicItemLibrary.findByName('Flame Tongue')!;
+      final flameRings = flameTongue.getGlyphActionRings(DmRulesEdition.v2024);
+      expect(flameRings.any((r) => r.ringType == ActionRingType.attunement), isTrue);
+      expect(flameRings.any((r) => r.ringType == ActionRingType.melee), isTrue);
+      expect(flameTongue.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024), DamageAccent.fire);
+
+      // Staff of Healing -> Attunement + Sustain + Recharge rings
+      final staffOfHealing = MagicItemLibrary.findByName('Staff of Healing')!;
+      final staffRings = staffOfHealing.getGlyphActionRings(DmRulesEdition.v2024);
+      expect(staffRings.any((r) => r.ringType == ActionRingType.attunement), isTrue);
+      expect(staffRings.any((r) => r.ringType == ActionRingType.sustain), isTrue);
+      expect(staffRings.any((r) => r.ringType == ActionRingType.recharge), isTrue);
+
+      // Wand of Magic Missiles -> Recharge / Force damage accent
+      final wandMm = MagicItemLibrary.findByName('Wand of Magic Missiles')!;
+      final wandRings = wandMm.getGlyphActionRings(DmRulesEdition.v2024);
+      expect(wandRings.any((r) => r.ringType == ActionRingType.recharge), isTrue);
+      expect(wandMm.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024), DamageAccent.force);
+
+      // Ring of Protection -> Attunement + Reaction/Defense ring
+      final ringProt = MagicItemLibrary.findByName('Ring of Protection')!;
+      final ringProtRings = ringProt.getGlyphActionRings(DmRulesEdition.v2024);
+      expect(ringProtRings.any((r) => r.ringType == ActionRingType.attunement), isTrue);
+      expect(ringProtRings.any((r) => r.ringType == ActionRingType.reaction), isTrue);
+
+      // Longsword -> Melee ring with Slashing damage
+      final longsword = MagicItemLibrary.findByName('Longsword')!;
+      final longswordRings = longsword.getGlyphActionRings(DmRulesEdition.v2024);
+      expect(longswordRings.any((r) => r.ringType == ActionRingType.melee), isTrue);
+      expect(longsword.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024), DamageAccent.slashing);
     });
 
     test('Monster type display strings map accurately to CreatureType and CR Tiers', () {

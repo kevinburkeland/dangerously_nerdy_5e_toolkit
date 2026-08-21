@@ -135,6 +135,71 @@ void main() {
       expect(find.byType(DndGlyph), findsOneWidget);
     });
 
+    testWidgets('DndGlyph.item responds to focus state and enables active animations',
+        (WidgetTester tester) async {
+      final focusNode = FocusNode();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: Focus(
+                focusNode: focusNode,
+                child: DndGlyph.item(
+                  category: ItemCategory.weapon,
+                  rarity: ItemRarity.rare,
+                  requiresAttunement: true,
+                  actionRings: const [
+                    ActionTraitRing(
+                      ringType: ActionRingType.melee,
+                      damageType: DamageAccent.fire,
+                    ),
+                  ],
+                  size: 64,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(DndGlyph), findsOneWidget);
+
+      // Request focus
+      focusNode.requestFocus();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(focusNode.hasFocus, isTrue);
+      expect(find.byType(DndGlyph), findsOneWidget);
+
+      focusNode.unfocus();
+      await tester.pump();
+      focusNode.dispose();
+    });
+
+    testWidgets('DndGlyph.item renders with isActive: true',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: DndGlyph.item(
+                category: ItemCategory.staff,
+                rarity: ItemRarity.veryRare,
+                requiresAttunement: true,
+                isActive: true,
+                size: 64,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(DndGlyph), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byType(DndGlyph), findsOneWidget);
+    });
+
     test('GlyphThemeData.fromItem applies primaryColorOverride', () {
       const customColor = Color(0xFFC2410C);
       final theme = GlyphThemeData.fromItem(
