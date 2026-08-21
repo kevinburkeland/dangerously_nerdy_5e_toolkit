@@ -28,6 +28,8 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   int _selectedAc = 15;
   bool _showPowerAttack = true;
   bool _showAdvantage = false;
+  bool _showDisadvantage = false;
+  DprChartMode _chartMode = DprChartMode.dpr;
   bool _anythingGoesMode = false;
 
   @override
@@ -193,6 +195,12 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
       minAc: 5,
       maxAc: 30,
     );
+    final disadvantageCurve = DprCalculatorEngine.generateCurve(
+      _profile,
+      advantageOverride: AdvantageType.disadvantage,
+      minAc: 5,
+      maxAc: 30,
+    );
 
     final activePoint = baselineCurve.pointAt(_selectedAc) ??
         const DprPoint(
@@ -254,6 +262,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                             baselineCurve,
                             powerCurve,
                             advantageCurve,
+                            disadvantageCurve,
                             breakEvenAnalysis.maxOptimalAcForGwm,
                           ),
                           const SizedBox(height: 12),
@@ -279,6 +288,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                   baselineCurve,
                   powerCurve,
                   advantageCurve,
+                  disadvantageCurve,
                   breakEvenAnalysis.maxOptimalAcForGwm,
                 ),
                 const SizedBox(height: 12),
@@ -343,8 +353,11 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     DprCurveData baselineCurve,
     DprCurveData powerCurve,
     DprCurveData advantageCurve,
+    DprCurveData disadvantageCurve,
     int? breakEvenAc,
   ) {
+    final hasGraze = baselineCurve.points.values.any((p) => p.expectedDamageOnMiss > 0);
+
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -353,20 +366,70 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                const Icon(Icons.show_chart, color: Colors.cyanAccent, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Animated DPR Curve vs Target AC',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.show_chart, color: Colors.cyanAccent, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      _chartMode == DprChartMode.dpr
+                          ? 'DPR Curve vs Target AC'
+                          : _chartMode == DprChartMode.accuracy
+                              ? 'Accuracy & Hit Rate % vs AC'
+                              : 'Damage on Hit vs Miss (Breakdown)',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+
+                // Graph Mode Segmented Selector
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<DprChartMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: DprChartMode.dpr,
+                        icon: Icon(Icons.auto_graph, size: 14),
+                        label: Text('DPR', style: TextStyle(fontSize: 11)),
+                      ),
+                      ButtonSegment(
+                        value: DprChartMode.accuracy,
+                        icon: Icon(Icons.percent, size: 14),
+                        label: Text('Accuracy', style: TextStyle(fontSize: 11)),
+                      ),
+                      ButtonSegment(
+                        value: DprChartMode.damageBreakdown,
+                        icon: Icon(Icons.stacked_bar_chart, size: 14),
+                        label: Text('Breakdown', style: TextStyle(fontSize: 11)),
+                      ),
+                    ],
+                    selected: {_chartMode},
+                    onSelectionChanged: (newSelection) {
+                      HapticService.selectionTick(context);
+                      setState(() => _chartMode = newSelection.first);
+                    },
+                    style: const ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Drag along the chart to inspect damage output across AC 5 to 30.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            const SizedBox(height: 6),
+            Text(
+              _chartMode == DprChartMode.dpr
+                  ? 'Drag along the chart to inspect DPR output across AC 5 to 30.'
+                  : _chartMode == DprChartMode.accuracy
+                      ? 'Inspect exact hit, crit, and miss probabilities against enemy AC.'
+                      : 'Compare expected damage on normal hits, crits, and miss graze damage.',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 16),
 
@@ -375,10 +438,13 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               baselineCurve: baselineCurve,
               powerAttackCurve: powerCurve,
               advantageCurve: advantageCurve,
+              disadvantageCurve: disadvantageCurve,
               selectedAc: _selectedAc,
               breakEvenAc: breakEvenAc,
               showPowerAttack: _showPowerAttack,
               showAdvantage: _showAdvantage,
+              showDisadvantage: _showDisadvantage,
+              chartMode: _chartMode,
               onAcChanged: (ac) {
                 HapticService.selectionTick(context);
                 setState(() => _selectedAc = ac);
@@ -386,29 +452,73 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Curve toggles & Legend
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              alignment: WrapAlignment.center,
-              children: [
-                _buildLegendItem('Baseline DPR', const Color(0xFF00E5FF)),
-                FilterChip(
-                  label: const Text('GWM / SS Curve', style: TextStyle(fontSize: 11)),
-                  selected: _showPowerAttack,
-                  selectedColor: const Color(0xFFFFB300).withValues(alpha: 0.3),
-                  checkmarkColor: const Color(0xFFFFB300),
-                  onSelected: (val) => setState(() => _showPowerAttack = val),
-                ),
-                FilterChip(
-                  label: const Text('Advantage Curve', style: TextStyle(fontSize: 11)),
-                  selected: _showAdvantage,
-                  selectedColor: const Color(0xFF00E676).withValues(alpha: 0.3),
-                  checkmarkColor: const Color(0xFF00E676),
-                  onSelected: (val) => setState(() => _showAdvantage = val),
-                ),
-              ],
-            ),
+            // Dynamic Curve toggles & Legend based on Mode
+            if (_chartMode == DprChartMode.dpr)
+              Wrap(
+                spacing: 10,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: [
+                  _buildLegendItem('Baseline', const Color(0xFF00E5FF)),
+                  FilterChip(
+                    label: const Text('GWM / SS', style: TextStyle(fontSize: 11)),
+                    selected: _showPowerAttack,
+                    selectedColor: const Color(0xFFFFB300).withValues(alpha: 0.3),
+                    checkmarkColor: const Color(0xFFFFB300),
+                    onSelected: (val) => setState(() => _showPowerAttack = val),
+                  ),
+                  FilterChip(
+                    label: const Text('Advantage', style: TextStyle(fontSize: 11)),
+                    selected: _showAdvantage,
+                    selectedColor: const Color(0xFF00E676).withValues(alpha: 0.3),
+                    checkmarkColor: const Color(0xFF00E676),
+                    onSelected: (val) => setState(() => _showAdvantage = val),
+                  ),
+                  FilterChip(
+                    label: const Text('Disadvantage', style: TextStyle(fontSize: 11)),
+                    selected: _showDisadvantage,
+                    selectedColor: const Color(0xFFFF5252).withValues(alpha: 0.3),
+                    checkmarkColor: const Color(0xFFFF5252),
+                    onSelected: (val) => setState(() => _showDisadvantage = val),
+                  ),
+                ],
+              )
+            else if (_chartMode == DprChartMode.accuracy)
+              Wrap(
+                spacing: 10,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: [
+                  _buildLegendItem('Normal Hit %', const Color(0xFF00E5FF)),
+                  FilterChip(
+                    label: const Text('Advantage %', style: TextStyle(fontSize: 11)),
+                    selected: _showAdvantage,
+                    selectedColor: const Color(0xFF00E676).withValues(alpha: 0.3),
+                    checkmarkColor: const Color(0xFF00E676),
+                    onSelected: (val) => setState(() => _showAdvantage = val),
+                  ),
+                  FilterChip(
+                    label: const Text('Disadvantage %', style: TextStyle(fontSize: 11)),
+                    selected: _showDisadvantage,
+                    selectedColor: const Color(0xFFFF5252).withValues(alpha: 0.3),
+                    checkmarkColor: const Color(0xFFFF5252),
+                    onSelected: (val) => setState(() => _showDisadvantage = val),
+                  ),
+                  _buildLegendItem('Crit %', const Color(0xFFFFD700)),
+                ],
+              )
+            else
+              Wrap(
+                spacing: 12,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: [
+                  _buildLegendItem('Regular Hit Damage', const Color(0xFF00E5FF)),
+                  _buildLegendItem('Critical Hit Damage', const Color(0xFFFFD700)),
+                  if (hasGraze)
+                    _buildLegendItem('Miss Damage (Graze)', const Color(0xFFB388FF)),
+                ],
+              ),
           ],
         ),
       ),

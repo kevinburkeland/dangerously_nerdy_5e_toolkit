@@ -47,6 +47,17 @@ enum WeaponMastery {
   const WeaponMastery(this.label);
 }
 
+/// Modes of graphical visualization in the DPR interactive chart.
+enum DprChartMode {
+  dpr('DPR vs AC', 'Damage Per Round curve across AC 5 to 30'),
+  accuracy('Accuracy %', 'Hit, Crit, and Miss probabilities across AC'),
+  damageBreakdown('Damage on Hit', 'Expected damage on Hit, Crit, and Miss');
+
+  final String label;
+  final String description;
+  const DprChartMode(this.label, this.description);
+}
+
 /// Catalog item representing a base weapon or magic weapon to easily equip or customize.
 class DprWeaponPreset {
   final String id;

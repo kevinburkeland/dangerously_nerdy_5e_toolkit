@@ -34,7 +34,7 @@ void main() {
       // AC Target & Metrics
       expect(find.text('Target Armor Class (AC):'), findsOneWidget);
       expect(find.text('AC 15'), findsOneWidget);
-      expect(find.text('Accuracy'), findsOneWidget);
+      expect(find.text('Accuracy'), findsNWidgets(2));
       expect(find.text('Crit Rate'), findsOneWidget);
 
       // Combatant Configurator
@@ -234,6 +234,42 @@ void main() {
 
       // Verify chip is toggled and rendered
       expect(find.textContaining('Agonizing Blast (+4 dmg)'), findsOneWidget);
+    });
+
+    testWidgets('toggles Disadvantage curve and switches between DPR, Accuracy, and Breakdown modes', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      // Find Disadvantage curve toggle
+      final disadvChip = find.text('Disadvantage');
+      expect(disadvChip, findsOneWidget);
+      await tester.tap(disadvChip);
+      await tester.pumpAndSettle();
+
+      // Switch to Accuracy % mode
+      final accuracySegment = find.byIcon(Icons.percent);
+      expect(accuracySegment, findsOneWidget);
+      await tester.tap(accuracySegment);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accuracy & Hit Rate % vs AC'), findsOneWidget);
+      expect(find.text('Normal Hit %'), findsOneWidget);
+      expect(find.text('Crit %'), findsOneWidget);
+
+      // Switch to Damage on Hit Breakdown mode
+      final breakdownSegment = find.byIcon(Icons.stacked_bar_chart);
+      expect(breakdownSegment, findsOneWidget);
+      await tester.tap(breakdownSegment);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Damage on Hit vs Miss (Breakdown)'), findsOneWidget);
+      expect(find.text('Regular Hit Damage'), findsOneWidget);
+      expect(find.text('Critical Hit Damage'), findsOneWidget);
     });
   });
 }
