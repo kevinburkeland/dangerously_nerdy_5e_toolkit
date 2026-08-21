@@ -1022,7 +1022,7 @@ const List<SpellItem> srdLevel6Spells = [
     rules2014: SpellEditionDetails(
       castingTime: '10 minutes',
       range: 'Touch',
-      components: 'V, S, M (burning incense, a small measure of brimstone and oil, a knotted string, a small amount of blood from a umber hulk, and a small silver rod worth at least 10 gp)',
+      components: 'V, S, M (burning incense, a small measure of brimstone and oil, a knotted string, a small amount of blood from a monstrosity, and a small silver rod worth at least 10 gp)',
       materialDetails: SpellMaterialComponent(
         description: 'incense, brimstone, blood, and silver rod worth 10 gp',
         hasCost: true,
@@ -1040,7 +1040,7 @@ const List<SpellItem> srdLevel6Spells = [
     rules2024: SpellEditionDetails(
       castingTime: '10 minutes',
       range: 'Touch',
-      components: 'V, S, M (burning incense, a small measure of brimstone and oil, a knotted string, a small amount of blood from a umber hulk, and a small silver rod worth at least 10 gp)',
+      components: 'V, S, M (burning incense, a small measure of brimstone and oil, a knotted string, a small amount of blood from a monstrosity, and a small silver rod worth at least 10 gp)',
       materialDetails: SpellMaterialComponent(
         description: 'incense, brimstone, blood, and silver rod worth 10 gp',
         hasCost: true,

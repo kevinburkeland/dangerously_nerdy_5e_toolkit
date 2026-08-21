@@ -49,17 +49,66 @@ class ValhallaSummons {
     accentColor: Color(0xFFD32F2F),
   );
 
-  static const hornOfValhallaPreset = SummonPreset(
-    id: 'horn_of_valhalla',
-    name: 'Horn of Valhalla',
+  static const silverHornPreset = SummonPreset(
+    id: 'horn_of_valhalla_silver',
+    name: 'Silver Horn of Valhalla',
     category: SummonCategory.magicItem,
-    levelDisplay: 'Wondrous Item (Rare to Legendary)',
+    levelDisplay: 'Wondrous Item (Rare)',
     castingTime: '1 Action',
     range: 'Self (60-foot radius)',
     components: 'Action (Wind Instrument)',
     duration: '1 Hour',
-    description: 'You blow the horn to summon heroic warrior spirits from Valhalla. Silver summons 2d4+2, Brass summons 3d4+3, Bronze summons 4d4+4, Iron summons 5d4+5 Berserkers.',
+    description: 'You blow the Silver Horn of Valhalla to summon 2d4 + 2 heroic warrior spirits (Berserkers) from Valhalla for 1 hour.',
     upcastRules: 'Cannot be used again for 7 days.',
     statBlocks: [berserker],
+    isRandomTable: true,
   );
+
+  static const brassHornPreset = SummonPreset(
+    id: 'horn_of_valhalla_brass',
+    name: 'Brass Horn of Valhalla',
+    category: SummonCategory.magicItem,
+    levelDisplay: 'Wondrous Item (Rare)',
+    castingTime: '1 Action',
+    range: 'Self (60-foot radius)',
+    components: 'Action (Wind Instrument)',
+    duration: '1 Hour',
+    description: 'You blow the Brass Horn of Valhalla to summon 3d4 + 3 heroic warrior spirits (Berserkers) from Valhalla for 1 hour.',
+    upcastRules: 'Cannot be used again for 7 days.',
+    statBlocks: [berserker],
+    isRandomTable: true,
+  );
+
+  static const bronzeHornPreset = SummonPreset(
+    id: 'horn_of_valhalla_bronze',
+    name: 'Bronze Horn of Valhalla',
+    category: SummonCategory.magicItem,
+    levelDisplay: 'Wondrous Item (Very Rare)',
+    castingTime: '1 Action',
+    range: 'Self (60-foot radius)',
+    components: 'Action (Wind Instrument)',
+    duration: '1 Hour',
+    description: 'You blow the Bronze Horn of Valhalla to summon 4d4 + 4 heroic warrior spirits (Berserkers) from Valhalla for 1 hour.',
+    upcastRules: 'Cannot be used again for 7 days.',
+    statBlocks: [berserker],
+    isRandomTable: true,
+  );
+
+  static const ironHornPreset = SummonPreset(
+    id: 'horn_of_valhalla_iron',
+    name: 'Iron Horn of Valhalla',
+    category: SummonCategory.magicItem,
+    levelDisplay: 'Wondrous Item (Legendary)',
+    castingTime: '1 Action',
+    range: 'Self (60-foot radius)',
+    components: 'Action (Wind Instrument)',
+    duration: '1 Hour',
+    description: 'You blow the Iron Horn of Valhalla to summon 5d4 + 5 heroic warrior spirits (Berserkers) from Valhalla for 1 hour.',
+    upcastRules: 'Cannot be used again for 7 days.',
+    statBlocks: [berserker],
+    isRandomTable: true,
+  );
+
+  // Backward compatibility alias
+  static const hornOfValhallaPreset = silverHornPreset;
 }

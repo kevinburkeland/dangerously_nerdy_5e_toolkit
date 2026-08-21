@@ -43,8 +43,15 @@ class MinionSessionService {
       }
     } else if (id.startsWith('bag_of_tricks') || id == 'bag_of_tricks') {
       session.rollBagOfTricks();
-    } else if (id == 'horn_of_valhalla') {
-      session.rollHornOfValhalla('silver');
+    } else if (id.startsWith('horn_of_valhalla') || id == 'horn_of_valhalla') {
+      final variant = id.contains('brass')
+          ? 'brass'
+          : id.contains('bronze')
+              ? 'bronze'
+              : id.contains('iron')
+                  ? 'iron'
+                  : 'silver';
+      session.rollHornOfValhalla(variant);
     } else if (preset.statBlocks.isNotEmpty) {
       final defaultStat = preset.statBlocks.first;
       final count = preset.defaultMinionCount;

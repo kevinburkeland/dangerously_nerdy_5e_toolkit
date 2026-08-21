@@ -292,7 +292,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   if (isSearching) ...[
                     // SEARCH RESULTS SECTION
                     _buildSectionHeader(
-                      '🔍 SEARCH RESULTS (${searchResults.length})',
+                      'SEARCH RESULTS (${searchResults.length})',
                       theme.colorScheme.primary,
                       glyph: DndGlyph.spell(
                         school: SpellSchool.divination,
@@ -365,7 +365,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   ] else ...[
                     // CATEGORY 1: GENERAL UTILITIES (CORE APP AT TOP)
                     _buildSectionHeader(
-                      '🎲 CORE UTILITIES',
+                      'CORE UTILITIES',
                       theme.colorScheme.primary,
                       glyph: DndGlyph.spell(
                         school: SpellSchool.divination,
@@ -387,7 +387,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     // CATEGORY 2: TOOLS FOR NERDS (COMBAT MATH, THEORYCRAFT & DPS)
                     _buildSectionHeader(
-                      '🤓 TOOLS FOR NERDS',
+                      'TOOLS FOR NERDS',
                       isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE),
                       glyph: DndGlyph.item(
                         category: ItemCategory.weapon,
@@ -410,7 +410,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     // CATEGORY 3: SPELL MINION COMPANIONS (ANIMATE OBJECTS & CONJURE SPELLS)
                     _buildSectionHeader(
-                      '🔮 SPELL MINION COMPANIONS',
+                      'SPELL MINION COMPANIONS',
                       theme.colorScheme.secondary,
                       glyph: DndGlyph.spell(
                         school: SpellSchool.conjuration,
@@ -432,7 +432,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     // CATEGORY 4: MAGIC ITEMS & SUMMONING ARTIFACTS
                     _buildSectionHeader(
-                      '📯 MAGIC ITEM ROLLERS & MINIONS',
+                      'MAGIC ITEM ROLLERS & MINIONS',
                       isDark ? Colors.amberAccent : const Color(0xFFB45309),
                       glyph: DndGlyph.item(
                         category: ItemCategory.wondrousItem,
@@ -455,7 +455,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     // CATEGORY 5: ART & DESIGN TOOLS (SUBSECTION AT BOTTOM)
                     _buildSectionHeader(
-                      '🎨 ART & DESIGN TOOLS',
+                      'ART & DESIGN TOOLS',
                       isDark
                           ? const Color(0xFFC084FC)
                           : const Color(0xFF7E22CE),
@@ -879,10 +879,37 @@ class _LandingScreenState extends State<LandingScreen> {
             isDarkMode: isDark,
           );
           break;
-        case 'horn_of_valhalla':
+        case 'horn_of_valhalla_silver':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.rare,
+            damageAccent: DamageAccent.slashing,
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'horn_of_valhalla_brass':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.wondrousItem,
+            rarity: ItemRarity.rare,
+            damageAccent: DamageAccent.slashing,
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'horn_of_valhalla_bronze':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.wondrousItem,
+            rarity: ItemRarity.veryRare,
+            damageAccent: DamageAccent.slashing,
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'horn_of_valhalla_iron':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.wondrousItem,
+            rarity: ItemRarity.legendary,
             damageAccent: DamageAccent.slashing,
             size: 42,
             isDarkMode: isDark,

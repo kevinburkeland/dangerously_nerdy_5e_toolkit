@@ -339,11 +339,43 @@ class SrdMonsterLists {
     ),
     MonsterSourceEntry(
       preset: FigurinesSummons.figurinesPreset,
-      statBlock: FigurinesSummons.onyxDog,
+      statBlock: FigurinesSummons.ebonyFly,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.goldenLion,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.ivoryGoatTraveling,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.ivoryGoatTravail,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.ivoryGoatTerror,
     ),
     MonsterSourceEntry(
       preset: FigurinesSummons.figurinesPreset,
       statBlock: FigurinesSummons.marbleElephant,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.obsidianSteed,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.onyxDog,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.serpentineOwl,
+    ),
+    MonsterSourceEntry(
+      preset: FigurinesSummons.figurinesPreset,
+      statBlock: FigurinesSummons.silverRaven,
     ),
   ];
 

@@ -75,8 +75,16 @@ class SrdSummonsLibrary {
 
   static const berserker = ValhallaSummons.berserker;
   static const bronzeGriffon = FigurinesSummons.bronzeGriffon;
-  static const onyxDog = FigurinesSummons.onyxDog;
+  static const ebonyFly = FigurinesSummons.ebonyFly;
+  static const goldenLion = FigurinesSummons.goldenLion;
+  static const ivoryGoatTraveling = FigurinesSummons.ivoryGoatTraveling;
+  static const ivoryGoatTravail = FigurinesSummons.ivoryGoatTravail;
+  static const ivoryGoatTerror = FigurinesSummons.ivoryGoatTerror;
   static const marbleElephant = FigurinesSummons.marbleElephant;
+  static const obsidianSteed = FigurinesSummons.obsidianSteed;
+  static const onyxDog = FigurinesSummons.onyxDog;
+  static const serpentineOwl = FigurinesSummons.serpentineOwl;
+  static const silverRaven = FigurinesSummons.silverRaven;
 
   // Decoupled Spell Presets
   static const spellPresets = <SummonPreset>[
@@ -94,7 +102,10 @@ class SrdSummonsLibrary {
     BagOfTricksSummons.grayBagPreset,
     BagOfTricksSummons.rustBagPreset,
     BagOfTricksSummons.tanBagPreset,
-    ValhallaSummons.hornOfValhallaPreset,
+    ValhallaSummons.silverHornPreset,
+    ValhallaSummons.brassHornPreset,
+    ValhallaSummons.bronzeHornPreset,
+    ValhallaSummons.ironHornPreset,
     FigurinesSummons.figurinesPreset,
   ];
 

@@ -131,7 +131,7 @@ void main() {
 
     test('SrdSummonsLibrary decouples spellPresets and magicItemPresets', () {
       expect(SrdSummonsLibrary.spellPresets.length, equals(7));
-      expect(SrdSummonsLibrary.magicItemPresets.length, equals(5));
+      expect(SrdSummonsLibrary.magicItemPresets.length, equals(8));
 
       for (var p in SrdSummonsLibrary.spellPresets) {
         expect(p.category, equals(SummonCategory.spell));

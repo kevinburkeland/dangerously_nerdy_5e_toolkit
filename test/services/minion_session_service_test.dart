@@ -90,5 +90,45 @@ void main() {
       expect(service.hasSession(AnimateObjectsSummon.preset.id), isFalse);
       expect(service.hasSession(BeastSummons.conjureAnimalsPreset.id), isFalse);
     });
+
+    test('Bag of Tricks variants auto-roll upon initial session creation and persist across visits', () {
+      final graySession = service.getOrCreateSession(BagOfTricksSummons.grayBagPreset);
+      expect(graySession.activeObjects.length, equals(1));
+      final firstCreatureName = graySession.activeObjects.first.name;
+
+      // Re-fetching session keeps the same rolled creature
+      final graySession2 = service.getOrCreateSession(BagOfTricksSummons.grayBagPreset);
+      expect(identical(graySession, graySession2), isTrue);
+      expect(graySession2.activeObjects.first.name, equals(firstCreatureName));
+
+      final rustSession = service.getOrCreateSession(BagOfTricksSummons.rustBagPreset);
+      expect(rustSession.activeObjects.length, equals(1));
+
+      final tanSession = service.getOrCreateSession(BagOfTricksSummons.tanBagPreset);
+      expect(tanSession.activeObjects.length, equals(1));
+    });
+
+    test('Each Horn of Valhalla variant rolls appropriate Berserker squad and persists through session', () {
+      final silverSession = service.getOrCreateSession(ValhallaSummons.silverHornPreset);
+      // Silver: 2d4 + 2 -> between 4 and 10 berserkers
+      expect(silverSession.activeObjects.length, inInclusiveRange(4, 10));
+      final silverCount = silverSession.activeObjects.length;
+
+      // Persists on re-query
+      final silverSession2 = service.getOrCreateSession(ValhallaSummons.silverHornPreset);
+      expect(silverSession2.activeObjects.length, equals(silverCount));
+
+      final brassSession = service.getOrCreateSession(ValhallaSummons.brassHornPreset);
+      // Brass: 3d4 + 3 -> between 6 and 15 berserkers
+      expect(brassSession.activeObjects.length, inInclusiveRange(6, 15));
+
+      final bronzeSession = service.getOrCreateSession(ValhallaSummons.bronzeHornPreset);
+      // Bronze: 4d4 + 4 -> between 8 and 20 berserkers
+      expect(bronzeSession.activeObjects.length, inInclusiveRange(8, 20));
+
+      final ironSession = service.getOrCreateSession(ValhallaSummons.ironHornPreset);
+      // Iron: 5d4 + 5 -> between 10 and 25 berserkers
+      expect(ironSession.activeObjects.length, inInclusiveRange(10, 25));
+    });
   });
 }

@@ -92,8 +92,13 @@ class MagicItem {
         lowerName.contains('dust of') ||
         lowerName.contains('feather token') ||
         lowerName.contains('elemental gem') ||
-        lowerName.contains('bead of nourishment') ||
-        lowerName.contains('bead of refreshment') ||
+        lowerName.contains('bead of') ||
+        lowerName.contains('manual of') ||
+        lowerName.contains('tome of') ||
+        lowerName.contains('sovereign glue') ||
+        lowerName.contains('universal solvent') ||
+        lowerName.contains('restorative ointment') ||
+        lowerName.contains('incense of') ||
         lowerName.contains('spell scroll');
   }
 

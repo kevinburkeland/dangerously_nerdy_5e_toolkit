@@ -219,9 +219,9 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             ],
 
             // Horn of Valhalla Special Variant Rollers
-            if (_selectedPreset.id == 'horn_of_valhalla') ...[
+            if (_selectedPreset.id.startsWith('horn_of_valhalla') || _selectedPreset.id == 'horn_of_valhalla') ...[
               Text(
-                '📯 ROLL HORN OF VALHALLA VARIANTS',
+                'ROLL HORN OF VALHALLA VARIANTS',
                 style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
@@ -229,10 +229,10 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildChip('📯 Silver (2d4+2)', () => _rollHornOfValhalla('silver', 'Silver Horn')),
-                  _buildChip('📯 Brass (3d4+3)', () => _rollHornOfValhalla('brass', 'Brass Horn')),
-                  _buildChip('📯 Bronze (4d4+4)', () => _rollHornOfValhalla('bronze', 'Bronze Horn')),
-                  _buildChip('📯 Iron (5d4+5)', () => _rollHornOfValhalla('iron', 'Iron Horn')),
+                  _buildChip('Silver (2d4+2)', () => _rollHornOfValhalla('silver', 'Silver Horn')),
+                  _buildChip('Brass (3d4+3)', () => _rollHornOfValhalla('brass', 'Brass Horn')),
+                  _buildChip('Bronze (4d4+4)', () => _rollHornOfValhalla('bronze', 'Bronze Horn')),
+                  _buildChip('Iron (5d4+5)', () => _rollHornOfValhalla('iron', 'Iron Horn')),
                 ],
               ),
               const SizedBox(height: 16),
