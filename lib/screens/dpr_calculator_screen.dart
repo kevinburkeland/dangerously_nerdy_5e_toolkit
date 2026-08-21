@@ -772,6 +772,19 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     FilterChip(
+                      avatar: const Icon(Icons.casino, size: 14),
+                      label: const Text('Halfling Luck', style: TextStyle(fontSize: 11)),
+                      tooltip: 'Reroll natural 1s on attack rolls (Halfling Luck / Lucky trait)',
+                      selected: _profile.hasHalflingLuck,
+                      selectedColor: Colors.amber.withValues(alpha: 0.25),
+                      checkmarkColor: Colors.amber,
+                      onSelected: (val) {
+                        HapticService.selectionTick(context);
+                        _updateProfile(_profile.copyWith(hasHalflingLuck: val));
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    FilterChip(
                       avatar: const Icon(Icons.shuffle, size: 14),
                       label: const Text('Anything Goes', style: TextStyle(fontSize: 11)),
                       tooltip: 'Unlock and mix all 2014 & 2024 feats, fighting styles, and weapon masteries',

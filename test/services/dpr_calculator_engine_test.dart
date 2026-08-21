@@ -210,6 +210,42 @@ void main() {
       expect(ptWith.dpr, greaterThan(ptWithout.dpr));
     });
 
+    test('Halfling Luck rerolls natural 1s and boosts accuracy and crit chances', () {
+      const attack = DprAttackAction(
+        id: 'halfling_dagger',
+        name: 'Dagger',
+        attackBonus: 5,
+        diceCount: 1,
+        diceSides: 4,
+        damageBonus: 3,
+      );
+
+      final standardPt = DprCalculatorEngine.calculateSingleAttackDpr(attack, 15, AdvantageType.normal, hasHalflingLuck: false);
+      final luckyPt = DprCalculatorEngine.calculateSingleAttackDpr(attack, 15, AdvantageType.normal, hasHalflingLuck: true);
+
+      expect(luckyPt.hitChance, greaterThan(standardPt.hitChance));
+      expect(luckyPt.critChance, greaterThan(standardPt.critChance));
+      expect(luckyPt.dpr, greaterThan(standardPt.dpr));
+    });
+
+    test('DprWeaponPreset contains Shillelagh, Magic Stone, and Shadow Blade presets', () {
+      final shillelagh = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'shillelagh');
+      expect(shillelagh.name, contains('Shillelagh'));
+      expect(shillelagh.diceSides, equals(8));
+      expect(shillelagh.isCantrip, isTrue);
+
+      final magicStone = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'magic_stone');
+      expect(magicStone.name, contains('Magic Stone'));
+      expect(magicStone.isRanged, isTrue);
+      expect(magicStone.isCantrip, isTrue);
+
+      final shadowBlade = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'shadow_blade_2');
+      expect(shadowBlade.name, contains('Shadow Blade'));
+      expect(shadowBlade.diceCount, equals(2));
+      expect(shadowBlade.diceSides, equals(8));
+      expect(shadowBlade.damageType, equals('psychic'));
+    });
+
     test('MonsterItem adapter cleanly parses monster actions for future monster arena reuse', () {
       final monster = MonsterCodexLibrary.allMonsters.firstWhere(
         (m) => m.name.toLowerCase().contains('goblin'),

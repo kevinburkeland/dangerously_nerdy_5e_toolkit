@@ -121,10 +121,15 @@ class DprWeaponPreset {
     DprWeaponPreset(id: 'chill_touch_1', name: 'Chill Touch (1d8 Necrotic)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'necrotic', isRanged: true, isCantrip: true),
     DprWeaponPreset(id: 'produce_flame_1', name: 'Produce Flame (1d8 Fire)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'fire', isRanged: true, isCantrip: true),
     DprWeaponPreset(id: 'primal_savagery_1', name: 'Primal Savagery (1d10 Acid)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'acid', isCantrip: true),
+    DprWeaponPreset(id: 'shillelagh', name: 'Shillelagh (1d8 Magical Bludgeoning)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'bludgeoning', isCantrip: true),
+    DprWeaponPreset(id: 'magic_stone', name: 'Magic Stone (1d6 Bludgeoning Ranged)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'bludgeoning', isRanged: true, isCantrip: true),
     DprWeaponPreset(id: 'booming_blade', name: 'Booming Blade (1d8 Weapon + 1d8 Thunder)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 1, secondaryDiceSides: 8, secondaryDamageType: 'thunder', isCantrip: true),
     DprWeaponPreset(id: 'green_flame_blade', name: 'Green-Flame Blade (1d8 Weapon + 1d8 Fire)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 1, secondaryDiceSides: 8, secondaryDamageType: 'fire', isCantrip: true),
 
-    // Magic Weapons
+    // Magic & Spell Weapons
+    DprWeaponPreset(id: 'shadow_blade_2', name: 'Shadow Blade (2d8 Psychic, 2nd Lvl)', category: 'Magic Weapon', diceCount: 2, diceSides: 8, damageType: 'psychic', defaultMastery: WeaponMastery.vex),
+    DprWeaponPreset(id: 'shadow_blade_3', name: 'Shadow Blade (3d8 Psychic, 3rd-4th Lvl)', category: 'Magic Weapon', diceCount: 3, diceSides: 8, damageType: 'psychic', defaultMastery: WeaponMastery.vex),
+    DprWeaponPreset(id: 'shadow_blade_5', name: 'Shadow Blade (4d8 Psychic, 5th+ Lvl)', category: 'Magic Weapon', diceCount: 4, diceSides: 8, damageType: 'psychic', defaultMastery: WeaponMastery.vex),
     DprWeaponPreset(id: 'magic_plus_1', name: '+1 Magic Weapon (+1 hit & dmg)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 1),
     DprWeaponPreset(id: 'magic_plus_2', name: '+2 Magic Weapon (+2 hit & dmg)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 2),
     DprWeaponPreset(id: 'magic_plus_3', name: '+3 Magic Weapon (+3 hit & dmg)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 3),
@@ -162,6 +167,7 @@ class DprAttackAction {
   final bool isOffhandWithoutTwf; // no ability mod to damage
   final bool hasAgonizingBlast;   // adds ability modifier to cantrip / Eldritch Blast damage
   final int abilityModForAgonizing;
+  final bool hasHalflingLuck;     // rerolls natural 1s on attack rolls
 
   // Weapon Mastery
   final WeaponMastery weaponMastery;
@@ -200,6 +206,7 @@ class DprAttackAction {
     this.isOffhandWithoutTwf = false,
     this.hasAgonizingBlast = false,
     this.abilityModForAgonizing = 0,
+    this.hasHalflingLuck = false,
     this.weaponMastery = WeaponMastery.none,
     this.abilityModForGraze = 0,
     this.critThreshold = 20,
@@ -231,6 +238,7 @@ class DprAttackAction {
     bool? isOffhandWithoutTwf,
     bool? hasAgonizingBlast,
     int? abilityModForAgonizing,
+    bool? hasHalflingLuck,
     WeaponMastery? weaponMastery,
     int? abilityModForGraze,
     int? critThreshold,
@@ -261,6 +269,7 @@ class DprAttackAction {
       isOffhandWithoutTwf: isOffhandWithoutTwf ?? this.isOffhandWithoutTwf,
       hasAgonizingBlast: hasAgonizingBlast ?? this.hasAgonizingBlast,
       abilityModForAgonizing: abilityModForAgonizing ?? this.abilityModForAgonizing,
+      hasHalflingLuck: hasHalflingLuck ?? this.hasHalflingLuck,
       weaponMastery: weaponMastery ?? this.weaponMastery,
       abilityModForGraze: abilityModForGraze ?? this.abilityModForGraze,
       critThreshold: critThreshold ?? this.critThreshold,
@@ -331,9 +340,11 @@ class DprCombatantProfile {
     this.defaultAdvantage = AdvantageType.normal,
     this.sneakAttackDiceCount = 0,
     this.sneakAttackDiceSides = 6,
+    this.hasHalflingLuck = false,
     this.attacks = const [],
   });
 
+  final bool hasHalflingLuck;
   int get abilityModifier => abilityScore.dndModifier;
 
   /// Creates a completely clean default custom profile with NO situational feats/styles toggled on.
@@ -354,6 +365,7 @@ class DprCombatantProfile {
       proficiencyBonus: proficiencyBonus,
       defaultAdvantage: AdvantageType.normal,
       sneakAttackDiceCount: 0,
+      hasHalflingLuck: false,
       attacks: [
         DprAttackAction(
           id: 'attack_primary',
@@ -379,6 +391,7 @@ class DprCombatantProfile {
     AdvantageType? defaultAdvantage,
     int? sneakAttackDiceCount,
     int? sneakAttackDiceSides,
+    bool? hasHalflingLuck,
     List<DprAttackAction>? attacks,
   }) {
     return DprCombatantProfile(
@@ -391,6 +404,7 @@ class DprCombatantProfile {
       defaultAdvantage: defaultAdvantage ?? this.defaultAdvantage,
       sneakAttackDiceCount: sneakAttackDiceCount ?? this.sneakAttackDiceCount,
       sneakAttackDiceSides: sneakAttackDiceSides ?? this.sneakAttackDiceSides,
+      hasHalflingLuck: hasHalflingLuck ?? this.hasHalflingLuck,
       attacks: attacks ?? this.attacks,
     );
   }

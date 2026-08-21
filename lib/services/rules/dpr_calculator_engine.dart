@@ -45,17 +45,22 @@ class DprCalculatorEngine {
     return bonus;
   }
 
-  /// Calculates hit probability (including crits) against target AC for given advantage state.
+  /// Calculates hit probability given effective attack bonus, target AC, and advantage state.
   static double calculateHitProbability(
     double effectiveAttackBonus,
     int targetAc,
-    AdvantageType advantage,
-  ) {
+    AdvantageType advantage, {
+    bool hasHalflingLuck = false,
+  }) {
     // 5e standard rule: Natural 1 always misses, Natural 20 always hits.
     // Minimum roll required on d20:
     final neededRoll = (targetAc - effectiveAttackBonus).ceil().clamp(2, 20);
-    final baseSingleHitP = (21.0 - neededRoll) / 20.0;
-    final clampedBase = baseSingleHitP.clamp(0.05, 0.95);
+    var baseSingleHitP = (21.0 - neededRoll) / 20.0;
+    if (hasHalflingLuck) {
+      // Halfling Luck: on rolling 1 (5% chance), reroll once with standard hit probability
+      baseSingleHitP += 0.05 * baseSingleHitP;
+    }
+    final clampedBase = baseSingleHitP.clamp(0.05, 0.9975);
 
     switch (advantage) {
       case AdvantageType.normal:
@@ -73,9 +78,14 @@ class DprCalculatorEngine {
   static double calculateCritProbability(
     AdvantageType advantage, {
     int critThreshold = 20,
+    bool hasHalflingLuck = false,
   }) {
     final clampedThreshold = critThreshold.clamp(1, 20);
-    final baseCritP = (21.0 - clampedThreshold) / 20.0;
+    var baseCritP = (21.0 - clampedThreshold) / 20.0;
+    if (hasHalflingLuck) {
+      // Halfling Luck: on rolling 1 (5% chance), reroll once with standard crit probability
+      baseCritP += 0.05 * baseCritP;
+    }
 
     switch (advantage) {
       case AdvantageType.normal:
@@ -95,10 +105,12 @@ class DprCalculatorEngine {
     int targetAc,
     AdvantageType advantage, {
     int proficiencyBonus = 2,
+    bool hasHalflingLuck = false,
   }) {
     final effBonus = calculateEffectiveAttackBonus(attack);
-    final totalHitChance = calculateHitProbability(effBonus, targetAc, advantage);
-    final critChance = calculateCritProbability(advantage, critThreshold: attack.critThreshold);
+    final luck = hasHalflingLuck || attack.hasHalflingLuck;
+    final totalHitChance = calculateHitProbability(effBonus, targetAc, advantage, hasHalflingLuck: luck);
+    final critChance = calculateCritProbability(advantage, critThreshold: attack.critThreshold, hasHalflingLuck: luck);
 
     // Regular hit chance is total hit chance minus critical hit chance (clamped to 0)
     final regularHitChance = math.max(0.0, totalHitChance - critChance);
@@ -184,6 +196,7 @@ class DprCalculatorEngine {
         targetAc,
         adv,
         proficiencyBonus: profile.proficiencyBonus,
+        hasHalflingLuck: profile.hasHalflingLuck,
       );
 
       totalDpr += pt.dpr;
