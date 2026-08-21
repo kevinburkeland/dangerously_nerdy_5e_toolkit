@@ -33,7 +33,6 @@ void main() {
       expect(find.textContaining('All Monsters'), findsOneWidget);
       expect(find.textContaining('My Bestiary'), findsOneWidget);
       expect(find.textContaining('2024 Diffs'), findsOneWidget);
-      expect(find.textContaining('Summons'), findsOneWidget);
       expect(find.textContaining('entries'), findsOneWidget);
       expect(find.byType(MonsterCard), findsWidgets);
     });

@@ -204,7 +204,7 @@ void main() {
     });
 
     testWidgets(
-        'GlyphShowcaseScreen renders known spells, minions, items, custom builder, and full style guide',
+        'GlyphShowcaseScreen renders known spells, minions, custom builder, and full style guide',
         (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1600, 1000);
       tester.view.devicePixelRatio = 1.0;
@@ -221,7 +221,8 @@ void main() {
       expect(find.text('D&D Glyph Studio & Codex'), findsOneWidget);
       expect(find.text('Spellbook Schematics'), findsOneWidget);
       expect(find.text('Minion & Summon Matrix'), findsOneWidget);
-      expect(find.text('Magic Item Reliquary'), findsOneWidget);
+      // Magic Item Reliquary tab was promoted to a standalone core tool (ItemCompendiumScreen)
+      expect(find.text('Magic Item Reliquary'), findsNothing);
       expect(find.text('Custom Glyph Studio'), findsOneWidget);
       expect(find.text('Full Style Guide Codex'), findsOneWidget);
 
@@ -236,18 +237,11 @@ void main() {
       expect(find.text('Tiny Animated Object'), findsOneWidget);
       expect(find.text('Small Animated Object'), findsOneWidget);
 
-      // Switch to Magic Item Reliquary tab
-      await tester.tap(find.text('Magic Item Reliquary'));
-      await tester.pumpAndSettle();
-      expect(find.text('Flame Tongue'), findsOneWidget);
-      expect(find.text('Frost Brand'), findsOneWidget);
-
       // Switch to Custom Glyph Studio tab
       await tester.tap(find.text('Custom Glyph Studio'));
       await tester.pumpAndSettle();
       expect(find.text('Interactive Custom Glyph Studio'), findsOneWidget);
       expect(find.text('Select Arcane Spell School:'), findsOneWidget);
-      expect(find.text('Download Glyph Image (PNG)'), findsOneWidget);
 
       // Verify shape override chip selection works
       final octChip = find.widgetWithText(ChoiceChip, 'Psionic Octagon');

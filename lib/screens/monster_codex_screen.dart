@@ -18,8 +18,7 @@ import '../widgets/room_banner_widget.dart';
 enum MonsterCodexViewMode {
   allMonsters('All Monsters', Icons.pets),
   myBestiary('My Bestiary', Icons.bookmark),
-  revisions2024('2024 Diffs', Icons.auto_awesome),
-  summonCatalog('Summons', Icons.auto_fix_high);
+  revisions2024('2024 Diffs', Icons.auto_awesome);
 
   final String label;
   final IconData icon;
@@ -278,10 +277,6 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
           !monster.isChangedIn2024) {
         return false;
       }
-      if (_viewMode == MonsterCodexViewMode.summonCatalog &&
-          monster.sourceCategory != SummonCategory.spell) {
-        return false;
-      }
       if (_showOnlyPinned && !pinnedIds.contains(monster.id)) {
         return false;
       }
@@ -480,24 +475,48 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
               ),
             ),
 
-            // Segmented View Selector: All Monsters / My Bestiary / 2024 Diffs / Summons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: SegmentedButton<MonsterCodexViewMode>(
-                segments: MonsterCodexViewMode.values.map((mode) {
-                  return ButtonSegment<MonsterCodexViewMode>(
-                    value: mode,
-                    label: Text(mode.label, style: const TextStyle(fontSize: 11)),
-                    icon: Icon(mode.icon, size: 15),
-                  );
-                }).toList(),
-                selected: {_viewMode},
-                onSelectionChanged: (newSelection) {
-                  HapticService.selectionTick(context);
-                  setState(() {
-                    _viewMode = newSelection.first;
-                  });
-                },
+            // Segmented View Selector: All Monsters / My Bestiary / 2024 Diffs
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  SegmentedButton<MonsterCodexViewMode>(
+                    segments: [
+                      ButtonSegment<MonsterCodexViewMode>(
+                        value: MonsterCodexViewMode.allMonsters,
+                        label: Text(
+                          '${MonsterCodexViewMode.allMonsters.label} (${allMonsters.length})',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        icon: Icon(MonsterCodexViewMode.allMonsters.icon, size: 15),
+                      ),
+                      ButtonSegment<MonsterCodexViewMode>(
+                        value: MonsterCodexViewMode.myBestiary,
+                        label: Text(
+                          '${MonsterCodexViewMode.myBestiary.label} (${pinnedIds.length})',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        icon: Icon(MonsterCodexViewMode.myBestiary.icon, size: 15),
+                      ),
+                      ButtonSegment<MonsterCodexViewMode>(
+                        value: MonsterCodexViewMode.revisions2024,
+                        label: Text(
+                          '${MonsterCodexViewMode.revisions2024.label} (${allMonsters.where((m) => m.isChangedIn2024).length})',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        icon: Icon(MonsterCodexViewMode.revisions2024.icon, size: 15),
+                      ),
+                    ],
+                    selected: {_viewMode},
+                    onSelectionChanged: (newSelection) {
+                      HapticService.selectionTick(context);
+                      setState(() {
+                        _viewMode = newSelection.first;
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
 

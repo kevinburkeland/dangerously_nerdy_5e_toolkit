@@ -29,9 +29,6 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // Creature Filters
   CreatureType? _selectedCreatureType;
 
-  // Item Filters
-  ItemCategory? _selectedItemCategory;
-  ItemRarity? _selectedItemRarity;
 
   bool? _overrideDarkMode;
   double _glyphDisplaySize = 68.0;
@@ -63,7 +60,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -110,7 +107,6 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
             tabs: const [
               Tab(icon: Icon(Icons.memory), text: 'Spellbook Schematics'),
               Tab(icon: Icon(Icons.hub), text: 'Minion & Summon Matrix'),
-              Tab(icon: Icon(Icons.shield_outlined), text: 'Magic Item Reliquary'),
               Tab(icon: Icon(Icons.build_circle), text: 'Custom Glyph Studio'),
               Tab(
                   icon: Icon(Icons.architecture),
@@ -120,7 +116,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
         ),
         body: Column(
           children: [
-            if (_tabController.index == 0 || _tabController.index == 1 || _tabController.index == 2)
+            if (_tabController.index == 0 || _tabController.index == 1)
               _buildSearchAndFilters(isDark),
             const Divider(height: 1),
             Expanded(
@@ -129,7 +125,6 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                 children: [
                   _buildSpellsGallery(isDark),
                   _buildCreaturesGallery(isDark),
-                  _buildItemsGallery(isDark),
                   _buildCustomBuilder(isDark),
                   _buildFullStyleGuide(isDark),
                 ],
@@ -262,75 +257,6 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                       ),
                     ],
                   ),
-                );
-              } else if (activeTab == 2) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          FilterChip(
-                            label: const Text('All Categories'),
-                            selected: _selectedItemCategory == null,
-                            onSelected: (_) =>
-                                setState(() => _selectedItemCategory = null),
-                          ),
-                          const SizedBox(width: 6),
-                          ...ItemCategory.values.map(
-                            (c) => Padding(
-                              padding: const EdgeInsets.only(right: 6),
-                              child: FilterChip(
-                                avatar: Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                        color: c.getLegibleColor(isDark),
-                                        shape: BoxShape.circle)),
-                                label: Text(c.displayName),
-                                selected: _selectedItemCategory == c,
-                                onSelected: (sel) => setState(
-                                    () => _selectedItemCategory = sel ? c : null),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          FilterChip(
-                            label: const Text('All Rarities'),
-                            selected: _selectedItemRarity == null,
-                            onSelected: (_) =>
-                                setState(() => _selectedItemRarity = null),
-                          ),
-                          const SizedBox(width: 6),
-                          ...ItemRarity.values.map(
-                            (r) => Padding(
-                              padding: const EdgeInsets.only(right: 6),
-                              child: FilterChip(
-                                avatar: Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                        color: r.getLegibleColor(isDark),
-                                        shape: BoxShape.circle)),
-                                label: Text(r.displayName),
-                                selected: _selectedItemRarity == r,
-                                onSelected: (sel) => setState(
-                                    () => _selectedItemRarity = sel ? r : null),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 );
               }
               return const SizedBox.shrink();
@@ -755,315 +681,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // MAGIC ITEMS GALLERY
+  // MAGIC ITEMS — Moved to ItemCompendiumScreen (core tool)
   // ---------------------------------------------------------------------------
-
-  Widget _buildItemsGallery(bool isDark) {
-    var items = GlyphGalleryData.allItems.where((item) {
-      if (_selectedItemCategory != null && item.category != _selectedItemCategory) {
-        return false;
-      }
-      if (_selectedItemRarity != null && item.rarity != _selectedItemRarity) {
-        return false;
-      }
-      if (_searchQuery.isNotEmpty) {
-        final match = item.name.toLowerCase().contains(_searchQuery) ||
-            item.category.displayName.toLowerCase().contains(_searchQuery) ||
-            item.rarity.displayName.toLowerCase().contains(_searchQuery) ||
-            item.summary.toLowerCase().contains(_searchQuery) ||
-            item.actionRings.any((r) =>
-                r.ringType.displayName.toLowerCase().contains(_searchQuery) ||
-                r.damageLegend.toLowerCase().contains(_searchQuery) ||
-                (r.label?.toLowerCase().contains(_searchQuery) ?? false));
-        if (!match) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
-
-    if (items.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.search_off,
-                  size: 48, color: isDark ? Colors.white38 : Colors.black38),
-              const SizedBox(height: 12),
-              const Text('No magic items matching current filters.',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 460,
-        mainAxisExtent: _glyphDisplaySize > 60 ? 225 : 190,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, idx) {
-        final item = items[idx];
-        return _buildItemCard(item, isDark);
-      },
-    );
-  }
-
-  Widget _buildItemCard(GlyphItemEntry item, bool isDark) {
-    final rarityColor = item.rarity.getLegibleColor(isDark);
-    final categoryColor = item.category.getLegibleColor(isDark);
-
-    return Card(
-      elevation: 4,
-      color: isDark ? const Color(0xFF090D16) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: rarityColor.withValues(alpha: 0.55), width: 1.5),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _showItemDetails(item, isDark),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              DndGlyph.item(
-                category: item.category,
-                rarity: item.rarity,
-                requiresAttunement: item.requiresAttunement,
-                damageAccent: item.damageAccent,
-                actionRings: item.actionRings,
-                size: _glyphDisplaySize,
-                isDarkMode: isDark,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: rarityColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: rarityColor.withValues(alpha: 0.5)),
-                          ),
-                          child: Text(
-                            item.rarity.displayName.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: rarityColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Wrap(
-                      spacing: 6,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          item.category.displayName.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: categoryColor,
-                          ),
-                        ),
-                        if (item.requiresAttunement)
-                          Text(
-                            '• ATTUNEMENT',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-                            ),
-                          ),
-                      ],
-                    ),
-                    Text(
-                      item.summary,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white70 : Colors.black87),
-                    ),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: item.actionRings.map((r) {
-                          final ringColor = r.getEffectiveColor(rarityColor);
-                          return Container(
-                            margin: const EdgeInsets.only(right: 6),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: ringColor.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(5),
-                              border: Border.all(
-                                  color: ringColor.withValues(alpha: 0.5)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                      color: ringColor, shape: BoxShape.circle),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  r.damageLegend.isNotEmpty
-                                      ? '${r.ringType.displayName} (${r.damageLegend})'
-                                      : r.ringType.displayName,
-                                  style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      color: ringColor,
-                                      fontFamily: 'monospace'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showItemDetails(GlyphItemEntry item, bool isDark) {
-    final rarityColor = item.rarity.getLegibleColor(isDark);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF090D16) : Colors.white,
-        title: Row(
-          children: [
-            DndGlyph.item(
-              category: item.category,
-              rarity: item.rarity,
-              requiresAttunement: item.requiresAttunement,
-              damageAccent: item.damageAccent,
-              actionRings: item.actionRings,
-              size: 72,
-              isDarkMode: isDark,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.name,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 20)),
-                  Text(
-                    '${item.category.displayName} • ${item.rarity.displayName}${item.requiresAttunement ? " (Requires Attunement)" : ""}',
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: rarityColor,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow('Category', item.category.displayName),
-            _buildDetailRow('Rarity', item.rarity.displayName),
-            _buildDetailRow(
-                'Attunement', item.requiresAttunement ? 'Required' : 'No'),
-            if (item.damageAccent != null)
-              _buildDetailRow('Damage / Element', item.damageAccent!.displayName),
-            const SizedBox(height: 12),
-            Text(item.summary,
-                style: TextStyle(
-                    fontSize: 14,
-                    height: 1.4,
-                    color: isDark ? Colors.white70 : Colors.black87)),
-            if (item.actionRings.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text('Action & Trait Rings:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              const SizedBox(height: 8),
-              ...item.actionRings.map((r) {
-                final ringColor = r.getEffectiveColor(rarityColor);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                            color: ringColor, shape: BoxShape.circle),
-                      ),
-                      const SizedBox(width: 8),
-                      Text('${r.ringType.displayName}: ',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: ringColor)),
-                      Expanded(
-                        child: Text(r.label ?? r.damageLegend,
-                            style: const TextStyle(fontSize: 12)),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ---------------------------------------------------------------------------
   // TAB 4: CUSTOM GLYPH STUDIO & BUILDER

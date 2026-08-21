@@ -3,6 +3,7 @@ import '../models/srd_summons/srd_summons_library.dart';
 import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/glyph_showcase_screen.dart';
+import '../screens/item_compendium_screen.dart';
 import '../screens/minion_tool_screen.dart';
 import '../screens/monster_codex_screen.dart';
 import '../screens/spellbook_screen.dart';
@@ -230,9 +231,44 @@ class LandingToolRegistry {
             );
           },
         ),
-        // Core Utilities
-        // (Glyph Studio moved to bottom Art Tools category)
-
+        LandingToolItem(
+          id: 'item_compendium',
+          title: 'Magic Item Compendium',
+          category: 'Core Utilities',
+          badgeText: 'SRD Items',
+          badgeColor: Colors.tealAccent,
+          icon: Icons.auto_fix_high,
+          accentColor: Colors.tealAccent,
+          description:
+              'Browse SRD magic items by category and rarity, filter by attunement, view full glyph visuals, and bookmark favorites to your personal Reliquary.',
+          keywords: [
+            'magic',
+            'item',
+            'weapon',
+            'armor',
+            'potion',
+            'ring',
+            'rod',
+            'scroll',
+            'staff',
+            'wand',
+            'wondrous',
+            'attunement',
+            'rarity',
+            'flame tongue',
+            'bag of holding',
+            'reliquary',
+            'legendary',
+            'rare',
+            'uncommon',
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ItemCompendiumScreen()),
+            );
+          },
+        ),
         // Spell Minion Companions
         LandingToolItem(
           id: 'animate_objects',
