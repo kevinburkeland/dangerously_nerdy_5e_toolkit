@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import '../models/glyph_gallery_data.dart';
+import '../models/magic_items/magic_item_library.dart';
+import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
-import '../widgets/glyphs/dnd_glyph.dart';
-import '../widgets/glyphs/glyph_tokens.dart';
-
-// ---------------------------------------------------------------------------
-// VIEW MODE
-// ---------------------------------------------------------------------------
+import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../widgets/item_compendium/item_card.dart';
+import '../widgets/item_compendium/item_comparison_dialog.dart';
+import '../widgets/item_compendium/item_detail_dialog.dart';
+import '../widgets/item_compendium/item_filter_sheet.dart';
+import '../widgets/room_banner_widget.dart';
 
 enum ItemCompendiumViewMode {
   allItems('All Items', Icons.auto_fix_high),
-  myReliquary('My Reliquary', Icons.bookmark);
+  myReliquary('Personal Reliquary', Icons.bookmark),
+  revisions2024('2024 Diffs', Icons.auto_awesome);
 
   final String label;
   final IconData icon;
@@ -18,20 +20,22 @@ enum ItemCompendiumViewMode {
   const ItemCompendiumViewMode(this.label, this.icon);
 }
 
-// ---------------------------------------------------------------------------
-// SCREEN
-// ---------------------------------------------------------------------------
-
-/// Standalone Magic Item Compendium — searchable, filterable browser of SRD
-/// magic items with full glyph visuals and action-trait ring details.
+/// Standalone Magic Item Compendium — searchable, filterable browser of SRD 5.1 & 5.2
+/// magic items with full glyph visuals, 2014/2024 rules comparison, persistent bookmarks, and action trait rings.
 class ItemCompendiumScreen extends StatefulWidget {
-  const ItemCompendiumScreen({super.key});
+  final DmRulesEdition? initialEdition;
+
+  const ItemCompendiumScreen({
+    super.key,
+    this.initialEdition,
+  });
 
   @override
   State<ItemCompendiumScreen> createState() => _ItemCompendiumScreenState();
 }
 
 class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
+  DmRulesEdition? _localEditionOverride;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -41,9 +45,17 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
   ItemCategory? _selectedCategory;
   ItemRarity? _selectedRarity;
   bool _showOnlyAttunement = false;
+  bool _showOnlyPinned = false;
+  bool _showOnlyChangedIn2024 = false;
+  DamageAccent? _selectedDamageAccent;
 
-  // Local "My Reliquary" pinned items (session-level, no persistence needed for MVP)
-  final Set<String> _pinnedItemNames = {};
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialEdition != null) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
 
   @override
   void dispose() {
@@ -51,15 +63,18 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     super.dispose();
   }
 
-  void _togglePin(String itemName) {
+  Set<String> _getPinnedIds(BuildContext context) {
+    return SettingsScope.of(context).settings.pinnedItemIds;
+  }
+
+  void _togglePinItem(BuildContext context, String itemId) {
     HapticService.selectionTick(context);
-    setState(() {
-      if (_pinnedItemNames.contains(itemName)) {
-        _pinnedItemNames.remove(itemName);
-      } else {
-        _pinnedItemNames.add(itemName);
-      }
-    });
+    SettingsScope.of(context).togglePinItem(itemId);
+  }
+
+  void _clearAllPinnedItems(BuildContext context) {
+    HapticService.selectionTick(context);
+    SettingsScope.of(context).clearPinnedItems();
   }
 
   void _clearAllFilters() {
@@ -70,6 +85,9 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
       _selectedCategory = null;
       _selectedRarity = null;
       _showOnlyAttunement = false;
+      _showOnlyPinned = false;
+      _showOnlyChangedIn2024 = false;
+      _selectedDamageAccent = null;
     });
   }
 
@@ -78,848 +96,535 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     if (_selectedCategory != null) count++;
     if (_selectedRarity != null) count++;
     if (_showOnlyAttunement) count++;
+    if (_showOnlyPinned) count++;
+    if (_showOnlyChangedIn2024) count++;
+    if (_selectedDamageAccent != null) count++;
     return count;
   }
 
-  List<GlyphItemEntry> _buildFilteredItems() {
-    return GlyphGalleryData.allItems.where((item) {
-      if (_viewMode == ItemCompendiumViewMode.myReliquary &&
-          !_pinnedItemNames.contains(item.name)) {
-        return false;
-      }
-      if (_selectedCategory != null && item.category != _selectedCategory) {
-        return false;
-      }
-      if (_selectedRarity != null && item.rarity != _selectedRarity) {
-        return false;
-      }
-      if (_showOnlyAttunement && !item.requiresAttunement) {
-        return false;
-      }
-      if (_searchQuery.isNotEmpty) {
-        final q = _searchQuery;
-        final match = item.name.toLowerCase().contains(q) ||
-            item.category.displayName.toLowerCase().contains(q) ||
-            item.rarity.displayName.toLowerCase().contains(q) ||
-            item.summary.toLowerCase().contains(q) ||
-            (item.damageAccent?.displayName.toLowerCase().contains(q) ??
-                false) ||
-            item.actionRings.any((r) =>
-                r.ringType.displayName.toLowerCase().contains(q) ||
-                r.damageLegend.toLowerCase().contains(q) ||
-                (r.label?.toLowerCase().contains(q) ?? false));
-        if (!match) return false;
-      }
-      return true;
-    }).toList();
+  void _openFilterSheet(BuildContext context) {
+    ItemFilterSheet.show(
+      context,
+      selectedCategory: _selectedCategory,
+      selectedRarity: _selectedRarity,
+      showOnlyAttunement: _showOnlyAttunement,
+      showOnlyPinned: _showOnlyPinned,
+      showOnlyChangedIn2024: _showOnlyChangedIn2024,
+      selectedDamageAccent: _selectedDamageAccent,
+      onCategoryChanged: (cat) => setState(() => _selectedCategory = cat),
+      onRarityChanged: (rarity) => setState(() => _selectedRarity = rarity),
+      onAttunementToggled: (val) => setState(() => _showOnlyAttunement = val),
+      onPinnedToggled: (val) => setState(() => _showOnlyPinned = val),
+      onChangedIn2024Toggled: (val) => setState(() => _showOnlyChangedIn2024 = val),
+      onDamageAccentChanged: (dmg) => setState(() => _selectedDamageAccent = dmg),
+      onResetAll: _clearAllFilters,
+    );
+  }
+
+  void _showItemDetails(MagicItem item, DmRulesEdition edition, bool isPinned) {
+    HapticService.lightImpact(context);
+    ItemDetailDialog.show(
+      context,
+      item: item,
+      edition: edition,
+      isPinned: isPinned,
+      onTogglePin: () => _togglePinItem(context, item.id),
+    );
+  }
+
+  void _showItemComparison(MagicItem item, DmRulesEdition edition, bool isPinned) {
+    ItemComparisonDialog.show(
+      context,
+      item: item,
+      edition: edition,
+      isPinned: isPinned,
+      onTogglePin: () => _togglePinItem(context, item.id),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final activeFilters = _getActiveFilterCount();
-    final filteredItems = _buildFilteredItems();
+    final settingsProvider = SettingsScope.maybeOf(context);
+    final activeEdition = _localEditionOverride ??
+        settingsProvider?.settings.rulesEdition ??
+        DmRulesEdition.v2024;
+    final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
+    final pinnedIds = _getPinnedIds(context);
+    const allItems = MagicItemLibrary.allItems;
+    final diffCount = allItems.where((i) => i.isChangedIn2024).length;
+    final activeFilterCount = _getActiveFilterCount();
+
+    // Filter items based on search, view mode, and sheet filters
+    final filteredItems = allItems.where((item) {
+      if (_viewMode == ItemCompendiumViewMode.myReliquary &&
+          !pinnedIds.contains(item.id)) {
+        return false;
+      }
+      if (_viewMode == ItemCompendiumViewMode.revisions2024 &&
+          !item.isChangedIn2024) {
+        return false;
+      }
+      if (_showOnlyPinned && !pinnedIds.contains(item.id)) {
+        return false;
+      }
+      return item.matches(
+        _searchQuery,
+        categoryFilter: _selectedCategory,
+        rarityFilter: _selectedRarity,
+        attunementOnly: _showOnlyAttunement,
+        changedOnly: _showOnlyChangedIn2024,
+        damageAccentFilter: _selectedDamageAccent,
+        edition: activeEdition,
+      );
+    }).toList();
+
+    // Grouping for "All Items" view mode
+    final pinnedItemsInResults =
+        filteredItems.where((item) => pinnedIds.contains(item.id)).toList();
+    final otherItemsInResults =
+        filteredItems.where((item) => !pinnedIds.contains(item.id)).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.auto_fix_high, color: Color(0xFF2DD4BF)),
-            SizedBox(width: 10),
-            Text('Magic Item Compendium'),
+            Icon(Icons.auto_fix_high, color: pinColor, size: 24),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  'Magic Item Compendium',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
         actions: [
-          // View mode toggle
-          _buildViewModeToggle(isDark),
-          const SizedBox(width: 8),
-          // Filter badge button
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.tune_rounded),
-                tooltip: 'Filters',
-                onPressed: () => _showFilterSheet(context, isDark),
-              ),
-              if (activeFilters > 0)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF2DD4BF),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '$activeFilters',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          RulesEditionToggle(
+            currentEdition: activeEdition,
+            onEditionChanged: (newEdition) {
+              setState(() {
+                _localEditionOverride = newEdition;
+              });
+            },
           ),
-          const SizedBox(width: 4),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: _buildSearchBar(isDark),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildCategoryChips(isDark),
-          const Divider(height: 1),
-          Expanded(
-            child: filteredItems.isEmpty
-                ? _buildEmptyState(isDark)
-                : _buildItemGrid(filteredItems, isDark),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // APP BAR HELPERS
-  // ---------------------------------------------------------------------------
-
-  Widget _buildViewModeToggle(bool isDark) {
-    return SegmentedButton<ItemCompendiumViewMode>(
-      style: const ButtonStyle(visualDensity: VisualDensity.compact),
-      segments: [
-        ButtonSegment(
-          value: ItemCompendiumViewMode.allItems,
-          icon: Icon(ItemCompendiumViewMode.allItems.icon, size: 16),
-          label: Text(
-            '${ItemCompendiumViewMode.allItems.label} (${GlyphGalleryData.allItems.length})',
-          ),
-        ),
-        ButtonSegment(
-          value: ItemCompendiumViewMode.myReliquary,
-          icon: Icon(ItemCompendiumViewMode.myReliquary.icon, size: 16),
-          label: Text(
-            '${ItemCompendiumViewMode.myReliquary.label} (${_pinnedItemNames.length})',
-          ),
-        ),
-      ],
-      selected: {_viewMode},
-      onSelectionChanged: (sel) {
-        HapticService.selectionTick(context);
-        setState(() => _viewMode = sel.first);
-      },
-    );
-  }
-
-  Widget _buildSearchBar(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Search items, rarity, traits, damage type…',
-          prefixIcon: const Icon(Icons.search, size: 20),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                )
-              : null,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          isDense: true,
-          filled: true,
-          fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide:
-                BorderSide(color: isDark ? Colors.white24 : Colors.black12),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide:
-                BorderSide(color: isDark ? Colors.white24 : Colors.black12),
-          ),
-        ),
-        onChanged: (val) =>
-            setState(() => _searchQuery = val.trim().toLowerCase()),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChips(bool isDark) {
-    return Container(
-      color: isDark ? const Color(0xFF030712) : const Color(0xFFF1F5F9),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                FilterChip(
-                  label: const Text('All Types'),
-                  selected: _selectedCategory == null,
-                  onSelected: (_) => setState(() => _selectedCategory = null),
-                ),
-                const SizedBox(width: 6),
-                ...ItemCategory.values.map(
-                  (c) => Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: FilterChip(
-                      avatar: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: c.getLegibleColor(isDark),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      label: Text(c.displayName),
-                      selected: _selectedCategory == c,
-                      onSelected: (sel) =>
-                          setState(() => _selectedCategory = sel ? c : null),
-                    ),
-                  ),
-                ),
-              ],
+          if (_viewMode == ItemCompendiumViewMode.myReliquary &&
+              pinnedIds.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.bookmark_remove_outlined),
+              tooltip: 'Clear Personal Reliquary',
+              onPressed: () => _clearAllPinnedItems(context),
             ),
-          ),
-          const SizedBox(height: 6),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                FilterChip(
-                  label: const Text('All Rarities'),
-                  selected: _selectedRarity == null,
-                  onSelected: (_) => setState(() => _selectedRarity = null),
-                ),
-                const SizedBox(width: 6),
-                ...ItemRarity.values.map(
-                  (r) => Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: FilterChip(
-                      avatar: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: r.getLegibleColor(isDark),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      label: Text(r.displayName),
-                      selected: _selectedRarity == r,
-                      onSelected: (sel) =>
-                          setState(() => _selectedRarity = sel ? r : null),
-                    ),
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'About Magic Item Compendium',
+            onPressed: () {
+              showDialog<void>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.auto_fix_high),
+                      SizedBox(width: 8),
+                      Text('Magic Item Compendium'),
+                    ],
                   ),
+                  content: const Text(
+                    'Browse, filter, and inspect magic items from the 5e SRD 5.1 & 5.2.\n\n'
+                    '• Switch between 2014 RAW and 2024 Revised rules editions.\n'
+                    '• Check the 2024 Diffs tab to compare side-by-side rule changes.\n'
+                    '• Bookmark items to your Personal Reliquary with the bookmark icon.\n'
+                    '• Inspect action trait rings and attunement requirements.\n'
+                    '• Tap any card to open complete details; tap 2024 Diff badges to compare editions.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Got it'),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                FilterChip(
-                  avatar: const Icon(Icons.link, size: 14),
-                  label: const Text('Attunement'),
-                  selected: _showOnlyAttunement,
-                  onSelected: (sel) =>
-                      setState(() => _showOnlyAttunement = sel),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // FILTER SHEET
-  // ---------------------------------------------------------------------------
-
-  void _showFilterSheet(BuildContext context, bool isDark) {
-    final activeFilters = _getActiveFilterCount();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: RoomBannerWidget(compact: true),
+            ),
+            // Search Bar & Filter Sheet Trigger Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: Row(
                 children: [
-                  Text(
-                    'Filters',
-                    style: Theme.of(ctx)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  if (activeFilters > 0)
-                    TextButton.icon(
-                      onPressed: () {
-                        _clearAllFilters();
-                        Navigator.of(ctx).pop();
-                      },
-                      icon: const Icon(Icons.clear_all, size: 18),
-                      label:
-                          Text('Reset All ($activeFilters active)'),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                      decoration: InputDecoration(
+                        hintText: 'Search magic items, traits, rarity, element...',
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.35),
+                      ),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.tune, size: 20),
+                        tooltip: 'Filter Magic Items',
+                        onPressed: () => _openFilterSheet(context),
+                      ),
+                      if (activeFilterCount > 0)
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$activeFilterCount',
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
-              const Divider(),
-              const SizedBox(height: 8),
-              Text('Attunement',
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Requires Attunement only'),
-                value: _showOnlyAttunement,
-                onChanged: (val) {
-                  setState(() => _showOnlyAttunement = val);
-                  setSheetState(() {});
-                },
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Done'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+            ),
 
-  // ---------------------------------------------------------------------------
-  // EMPTY STATE
-  // ---------------------------------------------------------------------------
+            // View Mode Segments (All Items / Personal Reliquary / 2024 Diffs)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  SegmentedButton<ItemCompendiumViewMode>(
+                    segments: [
+                      ButtonSegment(
+                        value: ItemCompendiumViewMode.allItems,
+                        label: Text('All Items (${allItems.length})',
+                            style: const TextStyle(fontSize: 12)),
+                        icon: const Icon(Icons.auto_fix_high, size: 15),
+                      ),
+                      ButtonSegment(
+                        value: ItemCompendiumViewMode.myReliquary,
+                        label: Text('Personal Reliquary (${pinnedIds.length})',
+                            style: const TextStyle(fontSize: 12)),
+                        icon: const Icon(Icons.bookmark, size: 15),
+                      ),
+                      ButtonSegment(
+                        value: ItemCompendiumViewMode.revisions2024,
+                        label: Text('2024 Diffs ($diffCount)',
+                            style: const TextStyle(fontSize: 12)),
+                        icon: const Icon(Icons.auto_awesome, size: 15),
+                      ),
+                    ],
+                    selected: {_viewMode},
+                    onSelectionChanged: (val) {
+                      HapticService.selectionTick(context);
+                      setState(() => _viewMode = val.first);
+                    },
+                  ),
+                ],
+              ),
+            ),
 
-  Widget _buildEmptyState(bool isDark) {
-    final isMyReliquary = _viewMode == ItemCompendiumViewMode.myReliquary;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isMyReliquary ? Icons.bookmark_border : Icons.search_off,
-              size: 56,
-              color: isDark ? Colors.white24 : Colors.black26,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              isMyReliquary
-                  ? 'Your reliquary is empty'
-                  : 'No items match the current filters',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isMyReliquary
-                  ? 'Tap the bookmark icon on any item card to add it to your personal reliquary.'
-                  : 'Try adjusting filters or clearing your search query.',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.white54 : Colors.black54,
+            // Item Category Horizontal Filter Row
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: const Text('All Types',
+                          style: TextStyle(fontSize: 11)),
+                      selected: _selectedCategory == null,
+                      onSelected: (selected) {
+                        if (selected) {
+                          HapticService.selectionTick(context);
+                          setState(() => _selectedCategory = null);
+                        }
+                      },
+                    ),
+                  ),
+                  ...ItemCategory.values.map((cat) {
+                    final catColor = cat.getLegibleColor(isDark);
+                    final isSelected = _selectedCategory == cat;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        avatar: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: catColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        label: Text(
+                          cat.displayName,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.normal,
+                            color: isSelected ? null : catColor,
+                          ),
+                        ),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          HapticService.selectionTick(context);
+                          setState(
+                              () => _selectedCategory = selected ? cat : null);
+                        },
+                      ),
+                    );
+                  }),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
-            if (!isMyReliquary && _getActiveFilterCount() > 0) ...[
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: _clearAllFilters,
-                icon: const Icon(Icons.clear_all, size: 18),
-                label: const Text('Clear All Filters'),
+
+            // Results count and attribution header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+              child: Row(
+                children: [
+                  Text(
+                    '${filteredItems.length} entries',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${activeEdition.label} SRD magic items',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                      fontSize: 11.5,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
+
+            // Content List / Grouped Slivers
+            Expanded(
+              child: filteredItems.isEmpty
+                  ? _buildEmptyState(
+                      theme,
+                      pinnedIds.isEmpty &&
+                          _viewMode == ItemCompendiumViewMode.myReliquary,
+                    )
+                  : CustomScrollView(
+                      slivers: [
+                        // Personal Reliquary Pinned Section in All Items view
+                        if (_viewMode == ItemCompendiumViewMode.allItems &&
+                            pinnedItemsInResults.isNotEmpty) ...[
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                            sliver: SliverToBoxAdapter(
+                              child: Row(
+                                children: [
+                                  Icon(Icons.bookmark,
+                                      color: pinColor, size: 18),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Personal Reliquary (${pinnedItemsInResults.length})',
+                                    style: TextStyle(
+                                      color: pinColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          _buildSliverItemCards(
+                            context,
+                            pinnedItemsInResults,
+                            activeEdition,
+                            pinnedIds,
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
+                            sliver: SliverToBoxAdapter(
+                              child: Divider(
+                                color: theme.colorScheme.outlineVariant
+                                    .withValues(alpha: 0.2),
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (_viewMode == ItemCompendiumViewMode.allItems &&
+                            pinnedItemsInResults.isNotEmpty)
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                            sliver: SliverToBoxAdapter(
+                              child: Text(
+                                'Other Magic Items (${otherItemsInResults.length})',
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.7),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        _buildSliverItemCards(
+                          context,
+                          _viewMode == ItemCompendiumViewMode.allItems &&
+                                  pinnedItemsInResults.isNotEmpty
+                              ? otherItemsInResults
+                              : filteredItems,
+                          activeEdition,
+                          pinnedIds,
+                        ),
+                        const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+                      ],
+                    ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // ITEM GRID
-  // ---------------------------------------------------------------------------
-
-  Widget _buildItemGrid(List<GlyphItemEntry> items, bool isDark) {
-    // Category header grouping
-    final byCategory = <ItemCategory, List<GlyphItemEntry>>{};
-    for (final item in items) {
-      byCategory.putIfAbsent(item.category, () => []).add(item);
-    }
-
-    // Flatten into sections: header + items per category
-    final sections = <_SectionItem>[];
-    for (final cat in ItemCategory.values) {
-      final catItems = byCategory[cat];
-      if (catItems == null || catItems.isEmpty) continue;
-      sections.add(_SectionItem.header(cat));
-      for (final item in catItems) {
-        sections.add(_SectionItem.item(item));
-      }
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 24),
-      itemCount: sections.length,
-      itemBuilder: (context, idx) {
-        final section = sections[idx];
-        if (section.isHeader) {
-          return _buildCategoryHeader(section.category!, isDark);
-        }
-        return _buildItemCard(section.item!, isDark);
-      },
-    );
-  }
-
-  Widget _buildCategoryHeader(ItemCategory category, bool isDark) {
-    final color = category.getLegibleColor(isDark);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 20,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            category.displayName.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              color: color,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Divider(color: color.withValues(alpha: 0.3)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemCard(GlyphItemEntry item, bool isDark) {
-    final rarityColor = item.rarity.getLegibleColor(isDark);
-    final categoryColor = item.category.getLegibleColor(isDark);
-    final isPinned = _pinnedItemNames.contains(item.name);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      child: Card(
-        elevation: isPinned ? 6 : 3,
-        color: isDark ? const Color(0xFF090D16) : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: isPinned
-                ? const Color(0xFF2DD4BF).withValues(alpha: 0.7)
-                : rarityColor.withValues(alpha: 0.45),
-            width: isPinned ? 2 : 1.5,
-          ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _showItemDetails(item, isDark),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Glyph
-                DndGlyph.item(
-                  category: item.category,
-                  rarity: item.rarity,
-                  requiresAttunement: item.requiresAttunement,
-                  damageAccent: item.damageAccent,
-                  actionRings: item.actionRings,
-                  size: 72,
-                  isDarkMode: isDark,
-                ),
-                const SizedBox(width: 14),
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name + rarity badge
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                height: 1.2,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: rarityColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: rarityColor.withValues(alpha: 0.5)),
-                            ),
-                            child: Text(
-                              item.rarity.displayName.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: rarityColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      // Category + attunement
-                      Wrap(
-                        spacing: 6,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            item.category.displayName.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: categoryColor,
-                            ),
-                          ),
-                          if (item.requiresAttunement)
-                            Text(
-                              '• ATTUNEMENT',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? const Color(0xFF38BDF8)
-                                    : const Color(0xFF0284C7),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      // Summary
-                      Text(
-                        item.summary,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          height: 1.4,
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
-                      ),
-                      // Action rings
-                      if (item.actionRings.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: item.actionRings.map((r) {
-                              final ringColor =
-                                  r.getEffectiveColor(rarityColor);
-                              return Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: ringColor.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(
-                                      color: ringColor.withValues(alpha: 0.5)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: BoxDecoration(
-                                          color: ringColor,
-                                          shape: BoxShape.circle),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      r.damageLegend.isNotEmpty
-                                          ? '${r.ringType.displayName} (${r.damageLegend})'
-                                          : r.ringType.displayName,
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        color: ringColor,
-                                        fontFamily: 'monospace',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                // Bookmark button
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(
-                    isPinned ? Icons.bookmark : Icons.bookmark_border,
-                    size: 20,
-                    color: isPinned
-                        ? const Color(0xFF2DD4BF)
-                        : (isDark ? Colors.white38 : Colors.black38),
-                  ),
-                  tooltip: isPinned
-                      ? 'Remove from My Reliquary'
-                      : 'Add to My Reliquary',
-                  onPressed: () => _togglePin(item.name),
-                ),
-              ],
-            ),
-          ),
+  Widget _buildSliverItemCards(
+    BuildContext context,
+    List<MagicItem> items,
+    DmRulesEdition edition,
+    Set<String> pinnedIds,
+  ) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final item = items[index];
+            final isPinned = pinnedIds.contains(item.id);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: ItemCard(
+                item: item,
+                edition: edition,
+                isPinned: isPinned,
+                onTogglePin: () => _togglePinItem(context, item.id),
+                onTap: () => _showItemDetails(item, edition, isPinned),
+                onCompare: () => _showItemComparison(item, edition, isPinned),
+              ),
+            );
+          },
+          childCount: items.length,
         ),
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // DETAIL DIALOG
-  // ---------------------------------------------------------------------------
-
-  void _showItemDetails(GlyphItemEntry item, bool isDark) {
-    final rarityColor = item.rarity.getLegibleColor(isDark);
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          final pinned = _pinnedItemNames.contains(item.name);
-          return AlertDialog(
-            backgroundColor: isDark ? const Color(0xFF090D16) : Colors.white,
-            title: Row(
-              children: [
-                DndGlyph.item(
-                  category: item.category,
-                  rarity: item.rarity,
-                  requiresAttunement: item.requiresAttunement,
-                  damageAccent: item.damageAccent,
-                  actionRings: item.actionRings,
-                  size: 72,
-                  isDarkMode: isDark,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${item.category.displayName} • ${item.rarity.displayName}'
-                        '${item.requiresAttunement ? ' (Requires Attunement)' : ''}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: rarityColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+  Widget _buildEmptyState(ThemeData theme, bool isReliquaryEmpty) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isReliquaryEmpty ? Icons.bookmark_border : Icons.search_off,
+              size: 48,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow('Category', item.category.displayName,
-                      isDark: isDark),
-                  _buildDetailRow('Rarity', item.rarity.displayName,
-                      accentColor: rarityColor, isDark: isDark),
-                  _buildDetailRow(
-                      'Attunement',
-                      item.requiresAttunement ? 'Required' : 'Not required',
-                      isDark: isDark),
-                  if (item.damageAccent != null)
-                    _buildDetailRow(
-                        'Damage / Element', item.damageAccent!.displayName,
-                        isDark: isDark),
-                  const SizedBox(height: 12),
-                  Text(
-                    item.summary,
-                    style: TextStyle(
-                      fontSize: 14,
-                      height: 1.5,
-                      color: isDark ? Colors.white70 : Colors.black87,
-                    ),
-                  ),
-                  if (item.actionRings.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Action & Trait Rings:',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(height: 8),
-                    ...item.actionRings.map((r) {
-                      final ringColor = r.getEffectiveColor(rarityColor);
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                  color: ringColor, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${r.ringType.displayName}: ',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: ringColor,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                r.label ?? r.damageLegend,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton.icon(
-                onPressed: () {
-                  _togglePin(item.name);
-                  setDialogState(() {});
-                },
-                icon: Icon(
-                  pinned ? Icons.bookmark : Icons.bookmark_border,
-                  size: 18,
-                  color: pinned
-                      ? const Color(0xFF2DD4BF)
-                      : null,
-                ),
-                label: Text(pinned
-                    ? 'Remove from Reliquary'
-                    : 'Add to Reliquary'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Close'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value,
-      {Color? accentColor, required bool isDark}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
+            const SizedBox(height: 12),
+            Text(
+              isReliquaryEmpty
+                  ? 'Your Personal Reliquary is empty'
+                  : 'No magic items match your filters',
               style: TextStyle(
-                fontSize: 12,
-                color: accentColor,
-                fontWeight:
-                    accentColor != null ? FontWeight.bold : FontWeight.normal,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: theme.colorScheme.onSurface,
               ),
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              isReliquaryEmpty
+                  ? 'Tap the bookmark icon on any magic item card to save it to your personal reliquary.'
+                  : 'Try clearing your search query or adjusting your filters.',
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            if (isReliquaryEmpty)
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  HapticService.selectionTick(context);
+                  setState(() => _viewMode = ItemCompendiumViewMode.allItems);
+                },
+                icon: const Icon(Icons.auto_fix_high, size: 16),
+                label: const Text('Browse All Magic Items'),
+              )
+            else
+              FilledButton.tonalIcon(
+                onPressed: _clearAllFilters,
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Reset All Filters'),
+              ),
+          ],
+        ),
       ),
     );
   }
-}
-
-// ---------------------------------------------------------------------------
-// HELPERS
-// ---------------------------------------------------------------------------
-
-/// Union type for ListView sections (header or item row).
-class _SectionItem {
-  final bool isHeader;
-  final ItemCategory? category;
-  final GlyphItemEntry? item;
-
-  const _SectionItem.header(this.category)
-      : isHeader = true,
-        item = null;
-
-  const _SectionItem.item(this.item)
-      : isHeader = false,
-        category = null;
 }

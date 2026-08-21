@@ -17,6 +17,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _kPinnedRuleIds = 'setting_pinned_rule_ids';
   static const _kPinnedSpellIds = 'setting_pinned_spell_ids';
   static const _kPinnedMonsterIds = 'setting_pinned_monster_ids';
+  static const _kPinnedItemIds = 'setting_pinned_item_ids';
 
   AppSettings _settings;
   AppSettings get settings => _settings;
@@ -41,6 +42,7 @@ class SettingsProvider extends ChangeNotifier {
     final pinnedList = prefs.getStringList(_kPinnedRuleIds);
     final pinnedSpellList = prefs.getStringList(_kPinnedSpellIds);
     final pinnedMonsterList = prefs.getStringList(_kPinnedMonsterIds);
+    final pinnedItemList = prefs.getStringList(_kPinnedItemIds);
 
     _settings = AppSettings(
       themeMode: (themeIndex != null && themeIndex >= 0 && themeIndex < ThemeMode.values.length)
@@ -64,6 +66,7 @@ class SettingsProvider extends ChangeNotifier {
       pinnedRuleIds: pinnedList?.toSet() ?? _settings.pinnedRuleIds,
       pinnedSpellIds: pinnedSpellList?.toSet() ?? _settings.pinnedSpellIds,
       pinnedMonsterIds: pinnedMonsterList?.toSet() ?? _settings.pinnedMonsterIds,
+      pinnedItemIds: pinnedItemList?.toSet() ?? _settings.pinnedItemIds,
     );
     notifyListeners();
   }
@@ -87,6 +90,7 @@ class SettingsProvider extends ChangeNotifier {
       prefs.setStringList(_kPinnedRuleIds, newSettings.pinnedRuleIds.toList()),
       prefs.setStringList(_kPinnedSpellIds, newSettings.pinnedSpellIds.toList()),
       prefs.setStringList(_kPinnedMonsterIds, newSettings.pinnedMonsterIds.toList()),
+      prefs.setStringList(_kPinnedItemIds, newSettings.pinnedItemIds.toList()),
     ]);
   }
 
@@ -186,6 +190,35 @@ class SettingsProvider extends ChangeNotifier {
   void clearPinnedMonsters() {
     if (_settings.pinnedMonsterIds.isEmpty) return;
     updateSettings(_settings.copyWith(pinnedMonsterIds: const <String>{}));
+  }
+
+  bool isItemPinned(String itemId) => _settings.pinnedItemIds.contains(itemId);
+
+  void togglePinItem(String itemId) {
+    final updated = Set<String>.from(_settings.pinnedItemIds);
+    if (updated.contains(itemId)) {
+      updated.remove(itemId);
+    } else {
+      updated.add(itemId);
+    }
+    updateSettings(_settings.copyWith(pinnedItemIds: updated));
+  }
+
+  void pinItem(String itemId) {
+    if (_settings.pinnedItemIds.contains(itemId)) return;
+    final updated = Set<String>.from(_settings.pinnedItemIds)..add(itemId);
+    updateSettings(_settings.copyWith(pinnedItemIds: updated));
+  }
+
+  void unpinItem(String itemId) {
+    if (!_settings.pinnedItemIds.contains(itemId)) return;
+    final updated = Set<String>.from(_settings.pinnedItemIds)..remove(itemId);
+    updateSettings(_settings.copyWith(pinnedItemIds: updated));
+  }
+
+  void clearPinnedItems() {
+    if (_settings.pinnedItemIds.isEmpty) return;
+    updateSettings(_settings.copyWith(pinnedItemIds: const <String>{}));
   }
 }
 

@@ -59,6 +59,7 @@ class AppSettings {
   final Set<String> pinnedRuleIds;
   final Set<String> pinnedSpellIds;
   final Set<String> pinnedMonsterIds;
+  final Set<String> pinnedItemIds;
 
   const AppSettings({
     this.themeMode = ThemeMode.dark,
@@ -74,6 +75,7 @@ class AppSettings {
     this.pinnedRuleIds = const <String>{},
     this.pinnedSpellIds = const <String>{},
     this.pinnedMonsterIds = const <String>{},
+    this.pinnedItemIds = const <String>{},
   });
 
   /// Whether particle and continuous visual FX are permitted to render
@@ -99,6 +101,7 @@ class AppSettings {
     Set<String>? pinnedRuleIds,
     Set<String>? pinnedSpellIds,
     Set<String>? pinnedMonsterIds,
+    Set<String>? pinnedItemIds,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -114,6 +117,7 @@ class AppSettings {
       pinnedRuleIds: pinnedRuleIds ?? this.pinnedRuleIds,
       pinnedSpellIds: pinnedSpellIds ?? this.pinnedSpellIds,
       pinnedMonsterIds: pinnedMonsterIds ?? this.pinnedMonsterIds,
+      pinnedItemIds: pinnedItemIds ?? this.pinnedItemIds,
     );
   }
 
@@ -134,7 +138,8 @@ class AppSettings {
           rulesEdition == other.rulesEdition &&
           setEquals(pinnedRuleIds, other.pinnedRuleIds) &&
           setEquals(pinnedSpellIds, other.pinnedSpellIds) &&
-          setEquals(pinnedMonsterIds, other.pinnedMonsterIds);
+          setEquals(pinnedMonsterIds, other.pinnedMonsterIds) &&
+          setEquals(pinnedItemIds, other.pinnedItemIds);
 
   @override
   int get hashCode => Object.hash(
@@ -151,5 +156,6 @@ class AppSettings {
         Object.hashAll(pinnedRuleIds),
         Object.hashAll(pinnedSpellIds),
         Object.hashAll(pinnedMonsterIds),
+        Object.hashAll(pinnedItemIds),
       );
 }
