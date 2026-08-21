@@ -35,6 +35,9 @@ class MagicItem {
   final String? name2024;
   final ItemCategory category;
   final ItemRarity rarity;
+  final String? cost;
+  final String? cost2014;
+  final String? cost2024;
   final bool requiresAttunement;
   final String? attunementRequirement;
   final DamageAccent? damageAccent;
@@ -54,6 +57,9 @@ class MagicItem {
     this.name2024,
     required this.category,
     required this.rarity,
+    this.cost,
+    this.cost2014,
+    this.cost2024,
     this.requiresAttunement = false,
     this.attunementRequirement,
     this.damageAccent,
@@ -66,6 +72,30 @@ class MagicItem {
     this.glyphColor,
     this.tags = const [],
   });
+
+  /// True if this item is a consumable (potion, scroll, oil, ammunition, single-use token).
+  bool get isConsumable {
+    if (category == ItemCategory.potion || category == ItemCategory.scroll) {
+      return true;
+    }
+    final lowerName = name.toLowerCase();
+    final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
+    return lowerTags.contains('consumable') ||
+        lowerTags.contains('potion') ||
+        lowerTags.contains('scroll') ||
+        lowerTags.contains('oil') ||
+        lowerTags.contains('ammunition') ||
+        lowerName.contains('potion of') ||
+        lowerName.contains('scroll of') ||
+        lowerName.contains('oil of') ||
+        lowerName.contains('elixir') ||
+        lowerName.contains('dust of') ||
+        lowerName.contains('feather token') ||
+        lowerName.contains('elemental gem') ||
+        lowerName.contains('bead of nourishment') ||
+        lowerName.contains('bead of refreshment') ||
+        lowerName.contains('spell scroll');
+  }
 
   /// Automatically resolves an item's glyph color, prioritizing an explicit [glyphColor]
   /// override, and falling back to keyword color detection in the item's name or tags.
@@ -415,6 +445,450 @@ class MagicItem {
     return accents;
   }
 
+  /// Formatted market cost or estimated price for the specified rules edition.
+  String getEffectivePrice([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    if (edition == DmRulesEdition.v2014 && cost2014 != null && cost2014!.isNotEmpty) {
+      return cost2014!;
+    }
+    if (edition == DmRulesEdition.v2024 && cost2024 != null && cost2024!.isNotEmpty) {
+      return cost2024!;
+    }
+    if (cost != null && cost!.isNotEmpty) {
+      return cost!;
+    }
+
+    // Check for explicit 'Cost: ...' in properties
+    final rules = getRules(edition);
+    for (final prop in rules.properties) {
+      final lower = prop.toLowerCase();
+      if (lower.startsWith('cost:')) {
+        return prop.substring(5).trim();
+      }
+    }
+
+    // Standard 5e / DMG Rarity-based pricing
+    final consumable = isConsumable;
+    return switch (rarity) {
+      ItemRarity.nonmagical => 'Varies',
+      ItemRarity.common => consumable ? '25–50 gp' : '50–100 gp',
+      ItemRarity.uncommon => consumable ? '100–250 gp' : '100–500 gp',
+      ItemRarity.rare => consumable ? '1,000–2,500 gp' : '500–5,000 gp',
+      ItemRarity.veryRare => consumable ? '10,000–25,000 gp' : '5,000–50,000 gp',
+      ItemRarity.legendary => consumable ? '50,000–100,000+ gp' : '50,000–200,000+ gp',
+      ItemRarity.artifact => 'Priceless / Unique',
+    };
+  }
+
+  /// Formatted attunement label (e.g. "Requires Attunement by a Spellcaster").
+  String getAttunementLabel() {
+    if (!requiresAttunement) return 'No Attunement Required';
+    if (attunementRequirement != null && attunementRequirement!.isNotEmpty) {
+      return 'Requires Attunement ($attunementRequirement)';
+    }
+    return 'Requires Attunement';
+  }
+
+  /// Resolves comprehensive 5e (2014 & 2024) crafting rules and downtime parameters for this item.
+  ItemCraftingDetails getCraftingDetails([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final lowerName = name.toLowerCase();
+    final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
+    final rules = getRules(edition);
+    final text = '${rules.summary} ${rules.description} ${rules.properties.join(" ")}'.toLowerCase();
+    final consumable = isConsumable;
+
+    // 1. Resolve Tool Proficiencies
+    String primaryTool;
+    List<String> altTools = [];
+
+    if (category == ItemCategory.potion) {
+      if (lowerName.contains('healing') ||
+          lowerName.contains('antitoxin') ||
+          lowerTags.contains('healing') ||
+          lowerTags.contains('herbalism')) {
+        primaryTool = 'Herbalism Kit';
+        altTools = ['Alchemist\'s Supplies'];
+      } else {
+        primaryTool = 'Alchemist\'s Supplies';
+        altTools = ['Herbalism Kit', 'Brewer\'s Supplies'];
+      }
+    } else if (category == ItemCategory.scroll) {
+      primaryTool = 'Calligrapher\'s Supplies';
+      altTools = ['Arcana (Spell Focus)'];
+    } else if (category == ItemCategory.weapon) {
+      if (lowerTags.contains('bow') ||
+          lowerTags.contains('crossbow') ||
+          lowerTags.contains('arrow') ||
+          lowerTags.contains('ammunition') ||
+          lowerName.contains('bow') ||
+          lowerName.contains('arrow') ||
+          lowerName.contains('club') ||
+          lowerName.contains('staff') ||
+          lowerName.contains('sling') ||
+          lowerName.contains('blowgun') ||
+          lowerName.contains('dart')) {
+        primaryTool = 'Woodcarver\'s Tools';
+        altTools = ['Carpenter\'s Tools', 'Smith\'s Tools'];
+      } else {
+        primaryTool = 'Smith\'s Tools';
+        altTools = ['Tinker\'s Tools'];
+      }
+    } else if (category == ItemCategory.armor) {
+      if (lowerTags.contains('leather') ||
+          lowerTags.contains('hide') ||
+          lowerTags.contains('padded') ||
+          lowerName.contains('leather') ||
+          lowerName.contains('hide') ||
+          lowerName.contains('padded') ||
+          lowerName.contains('studded')) {
+        primaryTool = 'Leatherworker\'s Tools';
+        altTools = ['Cobbler\'s Tools', 'Weaver\'s Tools'];
+      } else if (lowerTags.contains('robe') ||
+          lowerTags.contains('cloak') ||
+          lowerTags.contains('cloth') ||
+          lowerName.contains('robe') ||
+          lowerName.contains('cloak') ||
+          lowerName.contains('cloth') ||
+          lowerName.contains('garb')) {
+        primaryTool = 'Weaver\'s Tools';
+        altTools = ['Leatherworker\'s Tools'];
+      } else {
+        primaryTool = 'Smith\'s Tools';
+        altTools = ['Leatherworker\'s Tools'];
+      }
+    } else if (category == ItemCategory.ring) {
+      primaryTool = 'Jeweler\'s Tools';
+      altTools = ['Smith\'s Tools'];
+    } else if (category == ItemCategory.rod ||
+        category == ItemCategory.wand ||
+        category == ItemCategory.staff) {
+      if (lowerTags.contains('metal') ||
+          lowerTags.contains('iron') ||
+          lowerTags.contains('steel') ||
+          lowerName.contains('iron') ||
+          lowerName.contains('steel') ||
+          lowerName.contains('silver') ||
+          lowerName.contains('gold')) {
+        primaryTool = 'Smith\'s Tools';
+        altTools = ['Jeweler\'s Tools', 'Woodcarver\'s Tools'];
+      } else {
+        primaryTool = 'Woodcarver\'s Tools';
+        altTools = ['Jeweler\'s Tools', 'Glassblower\'s Tools'];
+      }
+    } else {
+      // Wondrous item or Adventuring gear
+      if (lowerTags.contains('leather') ||
+          lowerTags.contains('boot') ||
+          lowerTags.contains('shoe') ||
+          lowerName.contains('boot') ||
+          lowerName.contains('shoe') ||
+          lowerName.contains('slipper') ||
+          lowerName.contains('glove') ||
+          lowerName.contains('gauntlet') ||
+          lowerName.contains('belt') ||
+          lowerName.contains('saddle') ||
+          lowerName.contains('bag') ||
+          lowerName.contains('pouch') ||
+          lowerName.contains('quiver') ||
+          lowerName.contains('scabbard')) {
+        primaryTool = 'Leatherworker\'s Tools';
+        altTools = ['Cobbler\'s Tools', 'Weaver\'s Tools'];
+      } else if (lowerTags.contains('cloth') ||
+          lowerTags.contains('robe') ||
+          lowerTags.contains('cloak') ||
+          lowerName.contains('robe') ||
+          lowerName.contains('cloak') ||
+          lowerName.contains('hat') ||
+          lowerName.contains('cap') ||
+          lowerName.contains('carpet') ||
+          lowerName.contains('rope') ||
+          lowerName.contains('sail') ||
+          lowerName.contains('banner') ||
+          lowerName.contains('flag') ||
+          lowerName.contains('tent') ||
+          lowerName.contains('blanket')) {
+        primaryTool = 'Weaver\'s Tools';
+        altTools = ['Leatherworker\'s Tools'];
+      } else if (lowerTags.contains('gem') ||
+          lowerTags.contains('jewel') ||
+          lowerTags.contains('amulet') ||
+          lowerTags.contains('necklace') ||
+          lowerName.contains('gem') ||
+          lowerName.contains('jewel') ||
+          lowerName.contains('amulet') ||
+          lowerName.contains('necklace') ||
+          lowerName.contains('periapt') ||
+          lowerName.contains('brooch') ||
+          lowerName.contains('circlet') ||
+          lowerName.contains('medallion') ||
+          lowerName.contains('crown') ||
+          lowerName.contains('pearl') ||
+          lowerName.contains('bead') ||
+          lowerName.contains('stone') ||
+          lowerName.contains('ioun') ||
+          lowerName.contains('crystal') ||
+          lowerName.contains('talisman')) {
+        primaryTool = 'Jeweler\'s Tools';
+        altTools = ['Smith\'s Tools'];
+      } else if (lowerTags.contains('instrument') ||
+          lowerName.contains('instrument') ||
+          lowerName.contains('horn') ||
+          lowerName.contains('flute') ||
+          lowerName.contains('lute') ||
+          lowerName.contains('harp') ||
+          lowerName.contains('drum') ||
+          lowerName.contains('pipe') ||
+          lowerName.contains('bell') ||
+          lowerName.contains('whistle') ||
+          lowerName.contains('chime')) {
+        primaryTool = 'Musical Instrument (relevant)';
+        altTools = ['Woodcarver\'s Tools', 'Smith\'s Tools'];
+      } else if (lowerTags.contains('clockwork') ||
+          lowerTags.contains('device') ||
+          lowerName.contains('clockwork') ||
+          lowerName.contains('apparatus') ||
+          lowerName.contains('cube') ||
+          lowerName.contains('box') ||
+          lowerName.contains('tinker') ||
+          lowerName.contains('folding') ||
+          lowerName.contains('compass') ||
+          lowerName.contains('sphere') ||
+          lowerName.contains('mechanism')) {
+        primaryTool = 'Tinker\'s Tools';
+        altTools = ['Smith\'s Tools', 'Carpenter\'s Tools'];
+      } else if (lowerTags.contains('glass') ||
+          lowerName.contains('glass') ||
+          lowerName.contains('flask') ||
+          lowerName.contains('bottle') ||
+          lowerName.contains('mirror') ||
+          lowerName.contains('lens') ||
+          lowerName.contains('orb') ||
+          lowerName.contains('beaker') ||
+          lowerName.contains('decanter') ||
+          lowerName.contains('hourglass')) {
+        primaryTool = 'Glassblower\'s Tools';
+        altTools = ['Jeweler\'s Tools', 'Tinker\'s Tools'];
+      } else if (lowerTags.contains('wood') ||
+          lowerName.contains('boat') ||
+          lowerName.contains('ship') ||
+          lowerName.contains('canoe') ||
+          lowerName.contains('chest') ||
+          lowerName.contains('statue') ||
+          lowerName.contains('figurine') ||
+          lowerName.contains('feather')) {
+        primaryTool = 'Woodcarver\'s Tools';
+        altTools = ['Carpenter\'s Tools'];
+      } else if (lowerTags.contains('metal') ||
+          lowerName.contains('iron') ||
+          lowerName.contains('steel') ||
+          lowerName.contains('horseshoe') ||
+          lowerName.contains('brazier') ||
+          lowerName.contains('anvil') ||
+          lowerName.contains('chain') ||
+          lowerName.contains('shackles')) {
+        primaryTool = 'Smith\'s Tools';
+        altTools = ['Tinker\'s Tools'];
+      } else {
+        primaryTool = 'Tinker\'s Tools';
+        altTools = ['Jeweler\'s Tools', 'Arcana Focus'];
+      }
+    }
+
+    // 2. Bastion Facility Recommendation (2024 DMG)
+    String bastionFacility;
+    if (category == ItemCategory.potion) {
+      bastionFacility = 'Laboratory or Garden';
+    } else if (category == ItemCategory.scroll) {
+      bastionFacility = 'Arcane Study or Scriptorium';
+    } else if (category == ItemCategory.weapon ||
+        category == ItemCategory.armor ||
+        primaryTool == 'Smith\'s Tools') {
+      bastionFacility = 'Smithy or Workshop';
+    } else if (lowerTags.contains('radiant') ||
+        lowerTags.contains('holy') ||
+        lowerTags.contains('healing') ||
+        lowerName.contains('holy') ||
+        lowerName.contains('divine')) {
+      bastionFacility = 'Sanctuary or Arcane Study';
+    } else {
+      bastionFacility = 'Workshop or Arcane Study';
+    }
+
+    // 3. Prerequisite Spells Detection
+    final spells = <String>[];
+    void checkSpell(String keyword, String spellName) {
+      if (text.contains(keyword) || lowerName.contains(keyword)) {
+        if (!spells.contains(spellName)) spells.add(spellName);
+      }
+    }
+
+    checkSpell('fireball', 'Fireball');
+    checkSpell('cure wounds', 'Cure Wounds');
+    checkSpell('healing word', 'Healing Word');
+    checkSpell('lightning bolt', 'Lightning Bolt');
+    checkSpell('invisibility', 'Invisibility');
+    checkSpell('fly', 'Fly');
+    checkSpell('haste', 'Haste');
+    checkSpell('teleport', 'Teleport');
+    checkSpell('misty step', 'Misty Step');
+    checkSpell('dimension door', 'Dimension Door');
+    checkSpell('shield', 'Shield');
+    checkSpell('mage armor', 'Mage Armor');
+    checkSpell('detect magic', 'Detect Magic');
+    checkSpell('identify', 'Identify');
+    checkSpell('water breathing', 'Water Breathing');
+    checkSpell('water walk', 'Water Walk');
+    checkSpell('feather fall', 'Feather Fall');
+    checkSpell('polymorph', 'Polymorph');
+    checkSpell('scrying', 'Scrying');
+    checkSpell('revivify', 'Revivify');
+    checkSpell('restoration', 'Lesser/Greater Restoration');
+
+    // 4. Gold Cost & Crafting Time Resolution
+    int goldCost;
+    String goldCostDisplay;
+    int days2024;
+    String time2024Display;
+    String time2014Display;
+    int? minLevel;
+    String exoticCr;
+    bool formulaRequired = true;
+    final notes = <String>[];
+
+    if (rarity == ItemRarity.nonmagical) {
+      final priceStr = getEffectivePrice(edition);
+      final match = RegExp(r'(\d[\d,]*)').firstMatch(priceStr);
+      final basePrice = match != null ? int.tryParse(match.group(1)!.replaceAll(',', '')) ?? 10 : 10;
+      goldCost = (basePrice / 2).ceil().clamp(1, 1000000);
+      goldCostDisplay = '$goldCost gp (50% of $priceStr base price)';
+      days2024 = (basePrice / 10).ceil().clamp(1, 365);
+      final days2014 = (basePrice / 5).ceil().clamp(1, 730);
+      time2024Display = '$days2024 ${days2024 == 1 ? 'day' : 'days'} (at 10 gp/day progress rate)';
+      time2014Display = '$days2014 ${days2014 == 1 ? 'day' : 'days'} (at 5 gp/day RAW progress)';
+      minLevel = null;
+      exoticCr = 'Standard raw materials (No monster harvest needed)';
+      formulaRequired = false;
+      notes.add('Requires proficiency with $primaryTool.');
+      notes.add('Raw materials cost 50% of the item\'s market purchase price.');
+      notes.add('2024 Rules: Progress is made at 10 gp per day during downtime.');
+    } else if (rarity == ItemRarity.common) {
+      goldCost = consumable ? 25 : 50;
+      goldCostDisplay = '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
+      days2024 = consumable ? 3 : 5;
+      time2024Display = consumable
+          ? '2.5 days (approx 3 days @ 10 gp/day)'
+          : '5 days (1 workweek @ 10 gp/day)';
+      time2014Display = consumable ? '2.5 days' : '1 workweek (5 days)';
+      minLevel = 3;
+      exoticCr = 'CR 1–3 monster component or minor planar harvest';
+      notes.add('Requires Arcane Formula / Schematic.');
+      notes.add('Character must be at least 3rd level.');
+      if (consumable) {
+        notes.add('Consumable item: Halves crafting time and gold material costs.');
+      }
+    } else if (rarity == ItemRarity.uncommon) {
+      goldCost = consumable ? 100 : 200;
+      goldCostDisplay = '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
+      days2024 = consumable ? 10 : 20;
+      time2024Display = consumable
+          ? '10 days (2 workweeks @ 10 gp/day)'
+          : '20 days (4 workweeks @ 10 gp/day)';
+      time2014Display = consumable ? '1 workweek (5 days)' : '2 workweeks (10 days)';
+      minLevel = 3;
+      exoticCr = 'CR 4–8 monster component or rare elemental essence';
+      notes.add('Requires Arcane Formula / Blueprint.');
+      notes.add('Character must be at least 3rd level.');
+      if (consumable) {
+        notes.add('Consumable item: Halves crafting time and gold material costs.');
+      }
+    } else if (rarity == ItemRarity.rare) {
+      goldCost = consumable ? 1000 : 2000;
+      goldCostDisplay = '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
+      days2024 = consumable ? 100 : 200;
+      time2024Display = consumable
+          ? '100 days (or 25 days with 4 workshop assistants)'
+          : '200 days (or 50 days with 4 workshop assistants)';
+      time2014Display = consumable ? '5 workweeks (25 days)' : '10 workweeks (50 days)';
+      minLevel = 6;
+      exoticCr = 'CR 9–12 monster component (e.g., Young Dragon, Salamander, Chimera)';
+      notes.add('Requires Arcane Formula / Blueprint.');
+      notes.add('Character must be at least 6th level.');
+      notes.add('Assistant crafters with tool proficiency can divide the crafting time.');
+      if (consumable) {
+        notes.add('Consumable item: Halves crafting time and gold material costs.');
+      }
+    } else if (rarity == ItemRarity.veryRare) {
+      goldCost = consumable ? 10000 : 20000;
+      goldCostDisplay = '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
+      days2024 = consumable ? 1000 : 2000;
+      time2024Display = consumable
+          ? '1,000 days (Bastion workshop / guild assisted)'
+          : '2,000 days (Bastion workshop / guild assisted)';
+      time2014Display = consumable ? '12.5 workweeks (62.5 days)' : '25 workweeks (125 days)';
+      minLevel = 11;
+      exoticCr = 'CR 13–18 monster component (e.g., Adult Dragon, Beholder, Marilith)';
+      notes.add('Requires Arcane Formula / Master Blueprint.');
+      notes.add('Character must be at least 11th level.');
+      notes.add('Typically crafted in a high-tier Bastion or with an organized artisan guild.');
+      if (consumable) {
+        notes.add('Consumable item: Halves crafting time and gold material costs.');
+      }
+    } else if (rarity == ItemRarity.legendary) {
+      goldCost = consumable ? 50000 : 100000;
+      goldCostDisplay = '$goldCost gp${consumable ? " (Consumable half-cost)" : ""}';
+      days2024 = consumable ? 10000 : 20000;
+      time2024Display = consumable
+          ? '10,000 days (Mythic Bastion enterprise)'
+          : '20,000 days (Mythic Bastion enterprise)';
+      time2014Display = consumable ? '25 workweeks (125 days)' : '50 workweeks (250 days)';
+      minLevel = 17;
+      exoticCr = 'CR 19+ monster component (e.g., Ancient Dragon, Pit Fiend, Kraken, Lich)';
+      notes.add('Requires Master Arcane Formula.');
+      notes.add('Character must be at least 17th level.');
+      notes.add('Requires mythic planar forging or grand guild/Bastion enterprise.');
+      if (consumable) {
+        notes.add('Consumable item: Halves crafting time and gold material costs.');
+      }
+    } else {
+      // Artifact
+      goldCost = 0;
+      goldCostDisplay = 'Priceless / Cosmic (Cannot be crafted via standard downtime)';
+      days2024 = 0;
+      time2024Display = 'Planar / Divine Quest Undertaking';
+      time2014Display = 'Artifact Quest / Divine Intervention';
+      minLevel = 20;
+      exoticCr = 'Divine / Cosmic catalyst or deity forge';
+      formulaRequired = false;
+      notes.add('Artifacts cannot be forged through ordinary mortal downtime crafting.');
+      notes.add('Forging an artifact requires a cosmic quest, planar furnace, or divine patron.');
+    }
+
+    if (spells.isNotEmpty) {
+      notes.add('Spellcasting Prerequisite: Must be capable of casting ${spells.join(", ")} or expend the requisite spell slot daily during crafting.');
+    }
+
+    final quickSummary = rarity == ItemRarity.artifact
+        ? 'Artifact: Divine quest or planar forge required.'
+        : '$goldCostDisplay • $primaryTool • ${edition == DmRulesEdition.v2024 ? time2024Display : time2014Display}';
+
+    return ItemCraftingDetails(
+      primaryTool: primaryTool,
+      alternativeTools: altTools,
+      goldCost: goldCost,
+      goldCostDisplay: goldCostDisplay,
+      craftingDays2024: days2024,
+      craftingTime2024Display: time2024Display,
+      craftingTime2014Display: time2014Display,
+      minimumCharacterLevel: minLevel,
+      exoticIngredientCr: exoticCr,
+      bastionFacility: bastionFacility,
+      isConsumable: consumable,
+      formulaRequired: formulaRequired,
+      prerequisiteSpells: spells,
+      specialNotes: notes,
+      quickSummary: quickSummary,
+    );
+  }
+
   /// Formatted item name for the requested rules edition.
   String getName(DmRulesEdition edition) {
     if (edition == DmRulesEdition.v2014 && name2014 != null) {
@@ -429,15 +903,6 @@ class MagicItem {
   /// Rules details for the active rules edition.
   ItemEditionDetails getRules(DmRulesEdition edition) {
     return edition == DmRulesEdition.v2014 ? rules2014 : rules2024;
-  }
-
-  /// Formatted attunement label (e.g. "Requires Attunement by a Spellcaster").
-  String getAttunementLabel() {
-    if (!requiresAttunement) return 'No Attunement Required';
-    if (attunementRequirement != null && attunementRequirement!.isNotEmpty) {
-      return 'Requires Attunement ($attunementRequirement)';
-    }
-    return 'Requires Attunement';
   }
 
   /// Checks if this item matches search and filter criteria.
@@ -460,10 +925,16 @@ class MagicItem {
     final q = query.toLowerCase();
     final effectiveName = getName(edition).toLowerCase();
     final effectiveRules = getRules(edition);
+    final priceStr = getEffectivePrice(edition).toLowerCase();
+    final crafting = getCraftingDetails(edition);
 
     return effectiveName.contains(q) ||
         category.displayName.toLowerCase().contains(q) ||
         rarity.displayName.toLowerCase().contains(q) ||
+        priceStr.contains(q) ||
+        crafting.primaryTool.toLowerCase().contains(q) ||
+        crafting.bastionFacility.toLowerCase().contains(q) ||
+        crafting.alternativeTools.any((t) => t.toLowerCase().contains(q)) ||
         (damageAccent?.displayName.toLowerCase().contains(q) ?? false) ||
         effectiveRules.summary.toLowerCase().contains(q) ||
         effectiveRules.description.toLowerCase().contains(q) ||
@@ -475,3 +946,41 @@ class MagicItem {
             (r.label?.toLowerCase().contains(q) ?? false));
   }
 }
+
+/// Comprehensive 5e Crafting and Downtime Metadata for magic & mundane items.
+class ItemCraftingDetails {
+  final String primaryTool;
+  final List<String> alternativeTools;
+  final int goldCost;
+  final String goldCostDisplay;
+  final int craftingDays2024;
+  final String craftingTime2024Display;
+  final String craftingTime2014Display;
+  final int? minimumCharacterLevel;
+  final String exoticIngredientCr;
+  final String bastionFacility;
+  final bool isConsumable;
+  final bool formulaRequired;
+  final List<String> prerequisiteSpells;
+  final List<String> specialNotes;
+  final String quickSummary;
+
+  const ItemCraftingDetails({
+    required this.primaryTool,
+    this.alternativeTools = const [],
+    required this.goldCost,
+    required this.goldCostDisplay,
+    required this.craftingDays2024,
+    required this.craftingTime2024Display,
+    required this.craftingTime2014Display,
+    this.minimumCharacterLevel,
+    required this.exoticIngredientCr,
+    required this.bastionFacility,
+    this.isConsumable = false,
+    this.formulaRequired = true,
+    this.prerequisiteSpells = const [],
+    this.specialNotes = const [],
+    required this.quickSummary,
+  });
+}
+

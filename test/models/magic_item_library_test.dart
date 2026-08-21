@@ -106,5 +106,67 @@ void main() {
         expect(item.isChangedIn2024, isTrue);
       }
     });
+
+    test('verifies effective price resolution for nonmagical, magic items, and consumables', () {
+      final dagger = MagicItemLibrary.findById('weapon_dagger');
+      expect(dagger, isNotNull);
+      expect(dagger!.getEffectivePrice(), equals('2 gp'));
+
+      final potionOfHealing = MagicItemLibrary.findByName('Potion of Healing');
+      expect(potionOfHealing, isNotNull);
+      expect(potionOfHealing!.isConsumable, isTrue);
+      expect(potionOfHealing.getEffectivePrice(), equals('25–50 gp'));
+
+      final flameTongue = MagicItemLibrary.findById('item_flame_tongue');
+      expect(flameTongue, isNotNull);
+      expect(flameTongue!.rarity, equals(ItemRarity.rare));
+      expect(flameTongue.isConsumable, isFalse);
+      expect(flameTongue.getEffectivePrice(), equals('500–5,000 gp'));
+    });
+
+    test('verifies crafting details resolution across categories and rarities', () {
+      // 1. Potion of Healing -> Herbalism Kit, 25 gp, 2.5-3 days 2024, CR 1-3
+      final potionOfHealing = MagicItemLibrary.findByName('Potion of Healing');
+      expect(potionOfHealing, isNotNull);
+      final potionCrafting = potionOfHealing!.getCraftingDetails();
+      expect(potionCrafting.primaryTool, equals('Herbalism Kit'));
+      expect(potionCrafting.goldCost, equals(25));
+      expect(potionCrafting.isConsumable, isTrue);
+      expect(potionCrafting.bastionFacility, contains('Laboratory'));
+      expect(potionCrafting.minimumCharacterLevel, equals(3));
+      expect(potionCrafting.exoticIngredientCr, contains('CR 1–3'));
+
+      // 2. Flame Tongue (Rare Weapon) -> Smith's Tools, 2,000 gp, 200 days 2024, Level 6, CR 9-12
+      final flameTongue = MagicItemLibrary.findById('item_flame_tongue');
+      expect(flameTongue, isNotNull);
+      final ftCrafting = flameTongue!.getCraftingDetails();
+      expect(ftCrafting.primaryTool, equals('Smith\'s Tools'));
+      expect(ftCrafting.goldCost, equals(2000));
+      expect(ftCrafting.craftingDays2024, equals(200));
+      expect(ftCrafting.minimumCharacterLevel, equals(6));
+      expect(ftCrafting.exoticIngredientCr, contains('CR 9–12'));
+      expect(ftCrafting.bastionFacility, contains('Smithy'));
+
+      // 3. Scroll of Fireball (Uncommon Scroll) -> Calligrapher's Supplies, 100 gp, Level 3
+      final scroll = MagicItemLibrary.findById('item_spell_scroll_level_3');
+      if (scroll != null) {
+        final scrollCrafting = scroll.getCraftingDetails();
+        expect(scrollCrafting.primaryTool, equals('Calligrapher\'s Supplies'));
+        expect(scrollCrafting.isConsumable, isTrue);
+        expect(scrollCrafting.bastionFacility, contains('Arcane Study'));
+      }
+    });
+
+    test('matches method searches by price strings and crafting tools', () {
+      final smithItems = MagicItemLibrary.allItems
+          .where((i) => i.matches('smith\'s tools'))
+          .toList();
+      expect(smithItems, isNotEmpty);
+
+      final potionItems = MagicItemLibrary.allItems
+          .where((i) => i.matches('herbalism kit'))
+          .toList();
+      expect(potionItems, isNotEmpty);
+    });
   });
 }

@@ -127,13 +127,14 @@ class ItemCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Metadata Badges (Category, Rarity, Attunement, Damage, Activation)
+          // Metadata Badges (Category, Rarity, Price, Attunement, Damage, Activation)
           Wrap(
             spacing: 4,
             runSpacing: 4,
             children: [
               _buildBadge(context, Icons.category_outlined, item.category.displayName, categoryColor),
               _buildBadge(context, Icons.diamond_outlined, item.rarity.displayName, rarityColor),
+              _buildPriceBadge(context, item.getEffectivePrice(edition)),
               if (item.requiresAttunement)
                 _buildTag(
                   item.attunementRequirement != null
@@ -250,6 +251,39 @@ class ItemCard extends StatelessWidget {
                 fontSize: 10.5,
                 fontWeight: FontWeight.w500,
                 color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceBadge(BuildContext context, String price) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final goldColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 220),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: goldColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: goldColor.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.monetization_on_outlined, size: 11, color: goldColor),
+          const SizedBox(width: 3),
+          Flexible(
+            child: Text(
+              price,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: goldColor,
               ),
             ),
           ),

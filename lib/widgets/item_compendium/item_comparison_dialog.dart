@@ -138,6 +138,15 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
                               fontSize: 12,
                             ),
                           ),
+                          Text('•', style: TextStyle(color: theme.colorScheme.outline)),
+                          Text(
+                            item.getEffectivePrice(_activeEdition),
+                            style: TextStyle(
+                              color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11.5,
+                            ),
+                          ),
                           if (item.requiresAttunement) ...[
                             Text('•', style: TextStyle(color: theme.colorScheme.outline)),
                             Text(
@@ -250,6 +259,10 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
           ),
           const SizedBox(height: 12),
         ],
+        _buildStatRow(context, 'Market Price', item.getEffectivePrice(edition)),
+        _buildStatRow(context, 'Crafting Cost', item.getCraftingDetails(edition).goldCostDisplay),
+        _buildStatRow(context, 'Crafting Time', edition == DmRulesEdition.v2024 ? item.getCraftingDetails(edition).craftingTime2024Display : item.getCraftingDetails(edition).craftingTime2014Display),
+        _buildStatRow(context, 'Primary Tool', item.getCraftingDetails(edition).primaryTool),
         _buildStatRow(context, 'Activation', rules.activation ?? 'Standard Action'),
         if (rules.charges != null)
           _buildStatRow(context, 'Charges', rules.charges!),
@@ -381,6 +394,8 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
             ),
           ),
           const SizedBox(height: 10),
+          _buildStatRow(context, 'Market Price', item.getEffectivePrice(edition)),
+          _buildStatRow(context, 'Primary Tool', item.getCraftingDetails(edition).primaryTool),
           _buildStatRow(context, 'Activation', rules.activation ?? 'Standard Action'),
           if (rules.charges != null)
             _buildStatRow(context, 'Charges', rules.charges!),
