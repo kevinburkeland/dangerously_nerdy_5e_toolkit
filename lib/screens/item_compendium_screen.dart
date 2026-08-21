@@ -521,15 +521,21 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
                               ),
                             ),
                           ),
-                        _buildSliverItemCards(
-                          context,
-                          _viewMode == ItemCompendiumViewMode.allItems &&
-                                  pinnedItemsInResults.isNotEmpty
-                              ? otherItemsInResults
-                              : filteredItems,
-                          activeEdition,
-                          pinnedIds,
-                        ),
+                        if (_viewMode == ItemCompendiumViewMode.allItems &&
+                            pinnedItemsInResults.isNotEmpty)
+                          ..._buildGroupedCategorySlivers(
+                            context,
+                            otherItemsInResults,
+                            activeEdition,
+                            pinnedIds,
+                          )
+                        else
+                          ..._buildGroupedCategorySlivers(
+                            context,
+                            filteredItems,
+                            activeEdition,
+                            pinnedIds,
+                          ),
                         const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
                       ],
                     ),
@@ -540,33 +546,138 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     );
   }
 
+  List<Widget> _buildGroupedCategorySlivers(
+    BuildContext context,
+    List<MagicItem> items,
+    DmRulesEdition edition,
+    Set<String> pinnedIds,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final slivers = <Widget>[];
+
+    // Group items by category in predefined canonical order
+    final groupedByCategory = <ItemCategory, List<MagicItem>>{};
+    for (final cat in ItemCategory.values) {
+      final inCat = items.where((i) => i.category == cat).toList();
+      if (inCat.isNotEmpty) {
+        groupedByCategory[cat] = inCat;
+      }
+    }
+
+    int catIndex = 0;
+    for (final entry in groupedByCategory.entries) {
+      final category = entry.key;
+      final categoryItems = entry.value;
+      final catColor = category.getLegibleColor(isDark);
+
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, catIndex == 0 ? 8 : 20, 16, 10),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: catColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: catColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    category.displayName.toUpperCase(),
+                    style: TextStyle(
+                      color: catColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  category.displayName,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${categoryItems.length} ${categoryItems.length == 1 ? 'Item' : 'Items'}',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      slivers.add(
+        _buildSliverItemCards(
+          context,
+          categoryItems,
+          edition,
+          pinnedIds,
+        ),
+      );
+      catIndex++;
+    }
+
+    return slivers;
+  }
+
   Widget _buildSliverItemCards(
     BuildContext context,
     List<MagicItem> items,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
+    final rowCount = (items.length / crossAxisCount).ceil();
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final item = items[index];
-            final isPinned = pinnedIds.contains(item.id);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: ItemCard(
-                item: item,
-                edition: edition,
-                isPinned: isPinned,
-                onTogglePin: () => _togglePinItem(context, item.id),
-                onTap: () => _showItemDetails(item, edition, isPinned),
-                onCompare: () => _showItemComparison(item, edition, isPinned),
-              ),
-            );
-          },
-          childCount: items.length,
-        ),
+      sliver: SliverList.builder(
+        itemCount: rowCount,
+        itemBuilder: (context, rowIndex) {
+          final startIndex = rowIndex * crossAxisCount;
+          final rowItems = items.skip(startIndex).take(crossAxisCount).toList();
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int c = 0; c < crossAxisCount; c++) ...[
+                  if (c > 0) const SizedBox(width: 14),
+                  Expanded(
+                    child: c < rowItems.length
+                        ? RepaintBoundary(
+                            child: ItemCard(
+                              item: rowItems[c],
+                              edition: edition,
+                              isPinned: pinnedIds.contains(rowItems[c].id),
+                              onTogglePin: () =>
+                                  _togglePinItem(context, rowItems[c].id),
+                              onTap: () => _showItemDetails(
+                                  rowItems[c], edition, pinnedIds.contains(rowItems[c].id)),
+                              onCompare: () => _showItemComparison(
+                                  rowItems[c], edition, pinnedIds.contains(rowItems[c].id)),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
       ),
     );
   }

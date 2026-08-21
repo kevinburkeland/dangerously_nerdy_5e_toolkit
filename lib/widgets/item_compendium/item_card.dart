@@ -58,7 +58,7 @@ class ItemCard extends StatelessWidget {
                 requiresAttunement: item.requiresAttunement,
                 damageAccent: item.damageAccent,
                 actionRings: item.actionRings,
-                size: 42,
+                size: 38,
                 isDarkMode: isDark,
               ),
               const SizedBox(width: 10),
@@ -250,6 +250,7 @@ class ItemCard extends StatelessWidget {
       BuildContext context, IconData icon, String text, Color accent) {
     final theme = Theme.of(context);
     return Container(
+      constraints: const BoxConstraints(maxWidth: 220),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -263,12 +264,16 @@ class ItemCard extends StatelessWidget {
         children: [
           Icon(icon, size: 11, color: accent),
           const SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w500,
-              color: theme.colorScheme.onSurfaceVariant,
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -278,6 +283,7 @@ class ItemCard extends StatelessWidget {
 
   Widget _buildTag(String text, Color color, {IconData? icon}) {
     return Container(
+      constraints: const BoxConstraints(maxWidth: 240),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
@@ -291,12 +297,16 @@ class ItemCard extends StatelessWidget {
             Icon(icon, size: 10, color: color),
             const SizedBox(width: 2.5),
           ],
-          Text(
-            text,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

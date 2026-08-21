@@ -574,78 +574,240 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     DprPoint point,
     DprBreakEvenAnalysis breakEven,
   ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Expected DPR vs AC $_selectedAc:',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                Text(
-                  point.dpr.toStringAsFixed(2),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.cyanAccent,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 16),
+    final isDark = theme.brightness == Brightness.dark;
+    final hitPercent = (point.hitChance * 100).toStringAsFixed(1);
+    final critPercent = (point.critChance * 100).toStringAsFixed(1);
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatMetric('Accuracy', '${(point.hitChance * 100).toStringAsFixed(1)}%'),
-                _buildStatMetric('Crit Rate', '${(point.critChance * 100).toStringAsFixed(1)}%'),
-                _buildStatMetric('Avg on Hit', point.expectedDamageOnHit.toStringAsFixed(1)),
-                _buildStatMetric('Avg on Crit', point.expectedDamageOnCrit.toStringAsFixed(1)),
-              ],
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0E0C1B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.cyanAccent.withValues(alpha: 0.25) : Colors.cyan.withValues(alpha: 0.3),
+          width: 1.2,
+        ),
+        boxShadow: [
+          if (isDark)
+            BoxShadow(
+              color: Colors.cyanAccent.withValues(alpha: 0.06),
+              blurRadius: 16,
+              spreadRadius: -2,
             ),
-            const SizedBox(height: 12),
-
-            // Break-Even Recommendation Banner
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-              ),
-              child: Row(
+        ],
+      ),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header Row with Giant DPR Number
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
                 children: [
-                  const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      breakEven.recommendation,
-                      style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.cyanAccent.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
                     ),
+                    child: const Icon(Icons.bolt, color: Colors.cyanAccent, size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'COMBAT STATS (AC $_selectedAc)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                          letterSpacing: 0.8,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        'Expected Damage Output',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white38 : Colors.black45,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF00E5FF).withValues(alpha: 0.2), const Color(0xFF7C3AED).withValues(alpha: 0.2)]
+                        : [Colors.cyan.shade100, Colors.purple.shade100],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark ? Colors.cyanAccent.withValues(alpha: 0.4) : Colors.cyan.shade300,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      point.dpr.toStringAsFixed(2),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: 'monospace',
+                        color: isDark ? Colors.cyanAccent : const Color(0xFF0284C7),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'DPR',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // 4 Grid Stat Cards
+          Row(
+            children: [
+              Expanded(
+                child: _buildHudTile(
+                  icon: Icons.track_changes,
+                  title: 'Accuracy',
+                  value: '$hitPercent%',
+                  color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildHudTile(
+                  icon: Icons.whatshot,
+                  title: 'Crit Rate',
+                  value: '$critPercent%',
+                  color: isDark ? const Color(0xFFF43F5E) : const Color(0xFFE11D48),
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildHudTile(
+                  icon: Icons.shield_outlined,
+                  title: 'Avg on Hit',
+                  value: point.expectedDamageOnHit.toStringAsFixed(1),
+                  color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildHudTile(
+                  icon: Icons.auto_awesome,
+                  title: 'Avg on Crit',
+                  value: point.expectedDamageOnCrit.toStringAsFixed(1),
+                  color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
+                  isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Tactical Recommendation Banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF261E08), const Color(0xFF191307)]
+                    : [Colors.amber.shade50, Colors.amber.shade100],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? Colors.amber.withValues(alpha: 0.5) : Colors.amber.shade400,
+              ),
             ),
-          ],
-        ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.psychology, color: Colors.amberAccent, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    breakEven.recommendation,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.amberAccent : const Color(0xFF92400E),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStatMetric(String title, String val) {
-    return Column(
-      children: [
-        Text(val, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 2),
-        Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-      ],
+  Widget _buildHudTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF171427) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: color.withValues(alpha: isDark ? 0.3 : 0.4),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14.5,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'monospace',
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white54 : Colors.black54,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -803,16 +965,43 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
 
   Widget _buildAttackEditor(DprAttackAction attack, int index, bool isDark, DmRulesEdition edition) {
     final is2024 = edition == DmRulesEdition.v2024;
+    final damageTypeLower = attack.damageType.toLowerCase();
+
+    Color auraColor = Colors.cyanAccent;
+    if (damageTypeLower.contains('fire')) {
+      auraColor = const Color(0xFFFF5722);
+    } else if (damageTypeLower.contains('cold')) {
+      auraColor = const Color(0xFF00E5FF);
+    } else if (damageTypeLower.contains('radiant') || damageTypeLower.contains('holy')) {
+      auraColor = const Color(0xFFFFC107);
+    } else if (damageTypeLower.contains('necrotic')) {
+      auraColor = const Color(0xFFA855F7);
+    } else if (damageTypeLower.contains('force')) {
+      auraColor = const Color(0xFFE040FB);
+    } else if (damageTypeLower.contains('lightning') || damageTypeLower.contains('thunder')) {
+      auraColor = const Color(0xFF38BDF8);
+    } else if (damageTypeLower.contains('poison') || damageTypeLower.contains('acid')) {
+      auraColor = const Color(0xFF10B981);
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? const Color(0xFF161327) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? const Color(0x33FFFFFF) : const Color(0x22000000),
+          color: auraColor.withValues(alpha: isDark ? 0.35 : 0.4),
+          width: 1.2,
         ),
+        boxShadow: [
+          if (isDark)
+            BoxShadow(
+              color: auraColor.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1058,10 +1247,10 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                   },
                 ),
 
-              // GWF Style (2014 rerolls or 2024 floor-3)
+              // GWF Style (2014 reroll 1s/2s or 2024 treat 1s/2s as 3)
               FilterChip(
                 label: Text(
-                  is2024 ? 'GWF 2024 (Floor 3)' : 'GWF 2014 (Reroll 1/2)',
+                  is2024 ? 'GWF 2024 (1s & 2s ➔ 3)' : 'GWF 2014 (Reroll 1s & 2s)',
                   style: const TextStyle(fontSize: 11),
                 ),
                 selected: attack.gwfVersion != GwfVersion.none,
