@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/dm_screen_data.dart';
 import '../models/dpr/dpr_models.dart';
@@ -26,6 +27,8 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   late DprCombatantProfile _profile;
   DmRulesEdition? _localEditionOverride;
   int _selectedAc = 15;
+  int _chartMinAc = 8;
+  int _chartMaxAc = 25;
   bool _showPowerAttack = true;
   bool _showAdvantage = false;
   bool _showDisadvantage = false;
@@ -71,6 +74,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     HapticService.selectionTick(context);
     setState(() {
       _profile = DprCombatantProfile.cleanCustom();
+      _selectedAc = 15;
     });
   }
 
@@ -82,10 +86,10 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
 
   void _updateAttack(int index, DprAttackAction updated) {
     final newAttacks = List<DprAttackAction>.from(_profile.attacks);
-    if (index >= 0 && index < newAttacks.length) {
-      newAttacks[index] = updated;
-      _updateProfile(_profile.copyWith(attacks: newAttacks));
-    }
+    newAttacks[index] = updated;
+    setState(() {
+      _profile = _profile.copyWith(attacks: newAttacks);
+    });
   }
 
   void _openWeaponPicker(int attackIndex) {
@@ -135,36 +139,50 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.analytics_outlined, color: Colors.cyanAccent),
-              const SizedBox(width: 10),
-              Text('5e DPR Math Guide (${edition == DmRulesEdition.v2024 ? '2024' : '2014'})'),
+              Icon(Icons.analytics_outlined, color: Colors.cyanAccent),
+              SizedBox(width: 10),
+              Text('5e DPR Math Guide'),
             ],
           ),
-          content: const SingleChildScrollView(
+          content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'How Damage Per Round (DPR) is Calculated:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                const Text(
+                  'Core Formula for Damage Per Round (DPR):',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black38,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: const Text(
+                    'DPR = (P(Hit) × E(Hit Dmg)) + (P(Crit) × E(Crit Extra Dmg)) + (P(Miss) × Graze Dmg)',
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.cyanAccent),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Rules Engine Highlights:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 6),
                 Text(
-                  '• DPR = (P_hit - P_crit) × HitDamage + P_crit × CritDamage + P_miss × MissDamage.\n'
-                  '• Hit Probability: Required d20 roll = Target AC - Attack Bonus (clamped to Nat 20 = 95% and Nat 1 = 5%).\n'
-                  '• Advantage: 1 - (1 - P)^2\n'
-                  '• Disadvantage: P^2\n'
-                  '• Elven Accuracy: 1 - (1 - P)^3\n'
-                  '• Great Weapon Master 2014 (-5 to hit / +10 dmg): Higher per-hit damage vs lower accuracy.\n'
-                  '• Great Weapon Master 2024 (+PB dmg): Flat damage bonus to heavy weapons on hits.\n'
-                  '• Great Weapon Fighting 2014: Rerolls 1s and 2s (2d6 avg = 8.33).\n'
-                  '• Great Weapon Fighting 2024: 1s and 2s count as 3 (2d6 avg = 8.00).\n'
-                  '• Weapon Masteries (2024): Graze deals ability mod on miss; Vex gives advantage on hit; Nick provides extra light attack without bonus action.\n'
-                  '• Break-Even Point: The target AC where GWM/SS switches from optimal to suboptimal.',
-                  style: TextStyle(fontSize: 13, height: 1.4),
+                  '• Bounded Accuracy: Rolls of 1 always miss and 20 always hit/crit.\n'
+                  '• 2014 Great Weapon Master / Sharpshooter: -5 to hit for +10 flat damage.\n'
+                  '• 2024 Great Weapon Master: Adds Proficiency Bonus (+PB) damage without -5 penalty.\n'
+                  '• 2024 Graze Mastery: Deals Ability Modifier damage even on a missed strike.\n'
+                  '• 2024 Vex Mastery: Automatically factors in chained advantage upon hitting.\n'
+                  '• Sneak Attack: Calculated accurately as a once-per-turn trigger across all strikes.\n'
+                  '• Current Mode: ${edition == DmRulesEdition.v2024 ? "2024 Revised Rules" : "2014 RAW Rules"}.',
+                  style: const TextStyle(fontSize: 12, height: 1.4),
                 ),
               ],
             ),
@@ -172,7 +190,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Got It'),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -186,21 +204,21 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final edition = _resolveEdition(context);
 
-    // Calculate curves and break-even analysis across focused 5e combat range (AC 8..25)
-    final baselineCurve = DprCalculatorEngine.generateCurve(_profile, minAc: 8, maxAc: 25);
-    final breakEvenAnalysis = DprCalculatorEngine.calculateGwmBreakEven(_profile, minAc: 8, maxAc: 25);
+    // Calculate curves and break-even analysis across full potential spectrum (AC 5..30)
+    final baselineCurve = DprCalculatorEngine.generateCurve(_profile, minAc: 5, maxAc: 30);
+    final breakEvenAnalysis = DprCalculatorEngine.calculateGwmBreakEven(_profile, minAc: 5, maxAc: 30);
     final powerCurve = breakEvenAnalysis.powerAttackCurve;
     final advantageCurve = DprCalculatorEngine.generateCurve(
       _profile,
       advantageOverride: AdvantageType.advantage,
-      minAc: 8,
-      maxAc: 25,
+      minAc: 5,
+      maxAc: 30,
     );
     final disadvantageCurve = DprCalculatorEngine.generateCurve(
       _profile,
       advantageOverride: AdvantageType.disadvantage,
-      minAc: 8,
-      maxAc: 25,
+      minAc: 5,
+      maxAc: 30,
     );
 
     final activePoint = baselineCurve.pointAt(_selectedAc) ??
@@ -358,6 +376,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     int? breakEvenAc,
   ) {
     final hasGraze = baselineCurve.points.values.any((p) => p.expectedDamageOnMiss > 0);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Card(
       elevation: 3,
@@ -426,13 +445,131 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             const SizedBox(height: 6),
             Text(
               _chartMode == DprChartMode.dpr
-                  ? 'Drag along the chart to inspect DPR output across AC 5 to 30.'
+                  ? 'Drag along the chart to inspect DPR output across active AC scale.'
                   : _chartMode == DprChartMode.accuracy
                       ? 'Inspect exact hit, crit, and miss probabilities against enemy AC.'
                       : 'Compare expected damage on normal hits, crits, and miss graze damage.',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // Scale & Dynamic Zoom Controls
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark ? Colors.white12 : Colors.grey.shade300,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.straighten, size: 14, color: Colors.cyanAccent),
+                  const SizedBox(width: 6),
+                  const Text('Scale:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ChoiceChip(
+                            label: const Text('8–25 5e', style: TextStyle(fontSize: 10)),
+                            selected: _chartMinAc == 8 && _chartMaxAc == 25,
+                            visualDensity: VisualDensity.compact,
+                            onSelected: (sel) {
+                              if (sel) {
+                                HapticService.selectionTick(context);
+                                setState(() {
+                                  _chartMinAc = 8;
+                                  _chartMaxAc = 25;
+                                  _selectedAc = _selectedAc.clamp(8, 25);
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          ChoiceChip(
+                            label: const Text('10–20 Focus', style: TextStyle(fontSize: 10)),
+                            selected: _chartMinAc == 10 && _chartMaxAc == 20,
+                            visualDensity: VisualDensity.compact,
+                            onSelected: (sel) {
+                              if (sel) {
+                                HapticService.selectionTick(context);
+                                setState(() {
+                                  _chartMinAc = 10;
+                                  _chartMaxAc = 20;
+                                  _selectedAc = _selectedAc.clamp(10, 20);
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          ChoiceChip(
+                            label: const Text('5–30 Epic', style: TextStyle(fontSize: 10)),
+                            selected: _chartMinAc == 5 && _chartMaxAc == 30,
+                            visualDensity: VisualDensity.compact,
+                            onSelected: (sel) {
+                              if (sel) {
+                                HapticService.selectionTick(context);
+                                setState(() {
+                                  _chartMinAc = 5;
+                                  _chartMaxAc = 30;
+                                  _selectedAc = _selectedAc.clamp(5, 30);
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    icon: const Icon(Icons.zoom_in, size: 18),
+                    tooltip: 'Zoom In (Narrow AC range)',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: (_chartMaxAc - _chartMinAc > 6)
+                        ? () {
+                            HapticService.selectionTick(context);
+                            setState(() {
+                              if (_chartMinAc < _selectedAc - 2) _chartMinAc++;
+                              if (_chartMaxAc > _selectedAc + 2) _chartMaxAc--;
+                            });
+                          }
+                        : null,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.zoom_out, size: 18),
+                    tooltip: 'Zoom Out (Widen AC range)',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: (_chartMinAc > 5 || _chartMaxAc < 30)
+                        ? () {
+                            HapticService.selectionTick(context);
+                            setState(() {
+                              if (_chartMinAc > 5) _chartMinAc--;
+                              if (_chartMaxAc < 30) _chartMaxAc++;
+                            });
+                          }
+                        : null,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.center_focus_strong, size: 18),
+                    tooltip: 'Center on Target AC',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () {
+                      HapticService.selectionTick(context);
+                      setState(() {
+                        _chartMinAc = math.max(5, _selectedAc - 5);
+                        _chartMaxAc = math.min(30, _selectedAc + 5);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
 
             // Animated interactive canvas
             DprChartWidget(
@@ -440,6 +577,8 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               powerAttackCurve: powerCurve,
               advantageCurve: advantageCurve,
               disadvantageCurve: disadvantageCurve,
+              minAc: _chartMinAc,
+              maxAc: _chartMaxAc,
               selectedAc: _selectedAc,
               breakEvenAc: breakEvenAc,
               showPowerAttack: _showPowerAttack,
@@ -581,7 +720,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline, size: 20),
-                  onPressed: _selectedAc > 8
+                  onPressed: _selectedAc > _chartMinAc
                       ? () {
                           HapticService.selectionTick(context);
                           setState(() => _selectedAc--);
@@ -590,10 +729,10 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                 ),
                 Expanded(
                   child: Slider(
-                    value: _selectedAc.toDouble().clamp(8.0, 25.0),
-                    min: 8,
-                    max: 25,
-                    divisions: 17,
+                    value: _selectedAc.toDouble().clamp(_chartMinAc.toDouble(), _chartMaxAc.toDouble()),
+                    min: _chartMinAc.toDouble(),
+                    max: _chartMaxAc.toDouble(),
+                    divisions: math.max(1, _chartMaxAc - _chartMinAc),
                     label: 'AC $_selectedAc',
                     activeColor: Colors.cyanAccent,
                     onChanged: (val) {
@@ -603,7 +742,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline, size: 20),
-                  onPressed: _selectedAc < 25
+                  onPressed: _selectedAc < _chartMaxAc
                       ? () {
                           HapticService.selectionTick(context);
                           setState(() => _selectedAc++);

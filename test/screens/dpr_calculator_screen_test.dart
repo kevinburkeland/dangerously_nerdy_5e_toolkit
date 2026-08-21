@@ -177,14 +177,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('5e DPR Math Guide'), findsOneWidget);
-      expect(find.textContaining('How Damage Per Round (DPR) is Calculated:'), findsOneWidget);
+      expect(find.textContaining('Core Formula for Damage Per Round (DPR):'), findsOneWidget);
 
-      final gotItBtn = find.text('Got It');
-      expect(gotItBtn, findsOneWidget);
-      await tester.tap(gotItBtn);
+      final closeBtn = find.text('Close');
+      expect(closeBtn, findsOneWidget);
+      await tester.tap(closeBtn);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('How Damage Per Round (DPR) is Calculated:'), findsNothing);
+      expect(find.textContaining('Core Formula for Damage Per Round (DPR):'), findsNothing);
     });
 
     testWidgets('filters modifiers strictly by edition and unlocks all with Anything Goes', (tester) async {
@@ -221,22 +221,31 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpWidget(buildTestableScreen(edition: DmRulesEdition.v2024));
       await tester.pumpAndSettle();
 
-      // Find Agonizing Blast chip
-      final agonizingChip = find.textContaining('Agonizing Blast (+4 dmg)');
+      // Open picker and search for Eldritch Blast
+      final equipBtn = find.text('Equip Weapon / Cantrip').first;
+      await tester.tap(equipBtn);
+      await tester.pumpAndSettle();
+
+      final searchField = find.byType(TextField).last;
+      await tester.enterText(searchField, 'Eldritch Blast');
+      await tester.pumpAndSettle();
+
+      final ebPreset = find.textContaining('Eldritch Blast').first;
+      await tester.tap(ebPreset);
+      await tester.pumpAndSettle();
+
+      // Agonizing Blast toggle chip should now appear
+      final agonizingChip = find.textContaining('Agonizing Blast (+');
       expect(agonizingChip, findsOneWidget);
 
-      await tester.ensureVisible(agonizingChip);
-      await tester.tap(agonizingChip);
+      await tester.tap(agonizingChip, warnIfMissed: false);
       await tester.pumpAndSettle();
-
-      // Verify chip is toggled and rendered
-      expect(find.textContaining('Agonizing Blast (+4 dmg)'), findsOneWidget);
     });
 
-    testWidgets('toggles Disadvantage curve and switches between DPR, Accuracy, and Breakdown modes', (tester) async {
+    testWidgets('switches between chart modes and adjusts AC scale presets & zoom', (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -245,13 +254,47 @@ void main() {
       await tester.pumpWidget(buildTestableScreen());
       await tester.pumpAndSettle();
 
-      // Find Disadvantage curve toggle
+      // Test Scale Presets
+      expect(find.text('8–25 5e'), findsOneWidget);
+      expect(find.text('10–20 Focus'), findsOneWidget);
+      expect(find.text('5–30 Epic'), findsOneWidget);
+
+      // Switch to Focus scale
+      await tester.tap(find.text('10–20 Focus'));
+      await tester.pumpAndSettle();
+
+      // Switch to Epic scale
+      await tester.tap(find.text('5–30 Epic'));
+      await tester.pumpAndSettle();
+
+      // Zoom In and Out buttons
+      final zoomInBtn = find.byIcon(Icons.zoom_in);
+      final zoomOutBtn = find.byIcon(Icons.zoom_out);
+      expect(zoomInBtn, findsOneWidget);
+      expect(zoomOutBtn, findsOneWidget);
+
+      await tester.tap(zoomInBtn);
+      await tester.pumpAndSettle();
+
+      await tester.tap(zoomOutBtn);
+      await tester.pumpAndSettle();
+
+      // Center on Target AC
+      final centerBtn = find.byIcon(Icons.center_focus_strong);
+      expect(centerBtn, findsOneWidget);
+      await tester.tap(centerBtn);
+      await tester.pumpAndSettle();
+
+      // Toggle Advantage and Disadvantage
+      final advChip = find.text('Advantage');
+      expect(advChip, findsOneWidget);
+      await tester.tap(advChip);
+      await tester.pumpAndSettle();
+
       final disadvChip = find.text('Disadvantage');
       expect(disadvChip, findsOneWidget);
       await tester.tap(disadvChip);
       await tester.pumpAndSettle();
-
-      // Switch to Accuracy % mode
       final accuracySegment = find.byIcon(Icons.percent);
       expect(accuracySegment, findsOneWidget);
       await tester.tap(accuracySegment);

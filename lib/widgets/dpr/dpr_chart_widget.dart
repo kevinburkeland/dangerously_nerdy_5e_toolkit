@@ -13,6 +13,8 @@ class DprChartWidget extends StatefulWidget {
   final DprCurveData? powerAttackCurve;
   final DprCurveData? advantageCurve;
   final DprCurveData? disadvantageCurve;
+  final int minAc;
+  final int maxAc;
   final int selectedAc;
   final int? breakEvenAc;
   final ValueChanged<int> onAcChanged;
@@ -27,6 +29,8 @@ class DprChartWidget extends StatefulWidget {
     this.powerAttackCurve,
     this.advantageCurve,
     this.disadvantageCurve,
+    this.minAc = 8,
+    this.maxAc = 25,
     required this.selectedAc,
     this.breakEvenAc,
     required this.onAcChanged,
@@ -131,29 +135,39 @@ class _DprChartWidgetState extends State<DprChartWidget>
     final tabletop = theme.extension<TabletopColors>() ??
         (isDark ? TabletopColors.dark : TabletopColors.createLight(FantasyAccent.paladinGold));
 
-    const minAc = 8;
-    const maxAc = 25;
+    final minAc = widget.minAc;
+    final maxAc = widget.maxAc;
 
-    // Calculate dynamic Y-axis maximum depending on mode with tighter zoom padding
+    // Calculate dynamic Y-axis maximum depending on mode across the active [minAc, maxAc] domain
     double yMax;
     if (widget.chartMode == DprChartMode.accuracy) {
       yMax = 100.0; // 0% to 100%
     } else if (widget.chartMode == DprChartMode.damageBreakdown) {
-      final maxCritDamage = widget.baselineCurve.points.values.fold<double>(
-        0.0,
-        (prev, pt) => math.max<double>(prev, pt.expectedDamageOnCrit),
-      );
+      double maxCritDamage = 0.0;
+      for (int ac = minAc; ac <= maxAc; ac++) {
+        final pt = widget.baselineCurve.pointAt(ac);
+        if (pt != null) {
+          maxCritDamage = math.max(maxCritDamage, pt.expectedDamageOnCrit);
+        }
+      }
       yMax = (math.max(8.0, (maxCritDamage * 1.08) / 5.0).ceil() * 5).toDouble();
     } else {
-      var maxDpr = widget.baselineCurve.maxDpr;
-      if (widget.showPowerAttack && widget.powerAttackCurve != null) {
-        maxDpr = math.max(maxDpr, widget.powerAttackCurve!.maxDpr);
-      }
-      if (widget.showAdvantage && widget.advantageCurve != null) {
-        maxDpr = math.max(maxDpr, widget.advantageCurve!.maxDpr);
-      }
-      if (widget.showDisadvantage && widget.disadvantageCurve != null) {
-        maxDpr = math.max(maxDpr, widget.disadvantageCurve!.maxDpr);
+      double maxDpr = 0.0;
+      for (int ac = minAc; ac <= maxAc; ac++) {
+        final bPt = widget.baselineCurve.pointAt(ac);
+        if (bPt != null) maxDpr = math.max(maxDpr, bPt.dpr);
+        if (widget.showPowerAttack && widget.powerAttackCurve != null) {
+          final pPt = widget.powerAttackCurve!.pointAt(ac);
+          if (pPt != null) maxDpr = math.max(maxDpr, pPt.dpr);
+        }
+        if (widget.showAdvantage && widget.advantageCurve != null) {
+          final aPt = widget.advantageCurve!.pointAt(ac);
+          if (aPt != null) maxDpr = math.max(maxDpr, aPt.dpr);
+        }
+        if (widget.showDisadvantage && widget.disadvantageCurve != null) {
+          final dPt = widget.disadvantageCurve!.pointAt(ac);
+          if (dPt != null) maxDpr = math.max(maxDpr, dPt.dpr);
+        }
       }
       yMax = (math.max(8.0, (maxDpr * 1.08) / 5.0).ceil() * 5).toDouble();
     }
@@ -604,7 +618,16 @@ class _DprChartPainter extends CustomPainter {
     }
 
     // 2. Draw Vertical X Grid Lines & Labels
-    const xTicks = [8, 10, 15, 20, 25];
+    final xTicks = <int>[];
+    final span = maxAc - minAc;
+    final step = span <= 10 ? 2 : (span <= 18 ? 3 : 5);
+    for (int ac = minAc; ac <= maxAc; ac++) {
+      if (ac == minAc || ac == maxAc || (ac % step == 0 && (ac - minAc >= 2) && (maxAc - ac >= 2))) {
+        if (!xTicks.contains(ac)) {
+          xTicks.add(ac);
+        }
+      }
+    }
     for (final ac in xTicks) {
       final xFrac = (ac - minAc) / (maxAc - minAc);
       final x = leftPadding + (chartWidth * xFrac);
