@@ -131,10 +131,10 @@ class _DprChartWidgetState extends State<DprChartWidget>
     final tabletop = theme.extension<TabletopColors>() ??
         (isDark ? TabletopColors.dark : TabletopColors.createLight(FantasyAccent.paladinGold));
 
-    const minAc = 5;
-    const maxAc = 30;
+    const minAc = 8;
+    const maxAc = 25;
 
-    // Calculate dynamic Y-axis maximum depending on mode
+    // Calculate dynamic Y-axis maximum depending on mode with tighter zoom padding
     double yMax;
     if (widget.chartMode == DprChartMode.accuracy) {
       yMax = 100.0; // 0% to 100%
@@ -143,7 +143,7 @@ class _DprChartWidgetState extends State<DprChartWidget>
         0.0,
         (prev, pt) => math.max<double>(prev, pt.expectedDamageOnCrit),
       );
-      yMax = (math.max(10.0, (maxCritDamage * 1.15) / 5.0).ceil() * 5).toDouble();
+      yMax = (math.max(8.0, (maxCritDamage * 1.08) / 5.0).ceil() * 5).toDouble();
     } else {
       var maxDpr = widget.baselineCurve.maxDpr;
       if (widget.showPowerAttack && widget.powerAttackCurve != null) {
@@ -155,7 +155,7 @@ class _DprChartWidgetState extends State<DprChartWidget>
       if (widget.showDisadvantage && widget.disadvantageCurve != null) {
         maxDpr = math.max(maxDpr, widget.disadvantageCurve!.maxDpr);
       }
-      yMax = (math.max(10.0, (maxDpr * 1.18) / 5.0).ceil() * 5).toDouble();
+      yMax = (math.max(8.0, (maxDpr * 1.08) / 5.0).ceil() * 5).toDouble();
     }
 
     final activeAc = _hoverAc ?? widget.selectedAc;
@@ -342,7 +342,7 @@ class _DprChartWidgetState extends State<DprChartWidget>
                   ],
                 ),
               ),
-              if (mode == DprChartMode.dpr && widget.breakEvenAc != null) ...[
+              if (mode == DprChartMode.dpr && widget.showPowerAttack && widget.breakEvenAc != null) ...[
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -603,8 +603,9 @@ class _DprChartPainter extends CustomPainter {
       tp.paint(canvas, Offset(leftPadding - tp.width - 8, y - (tp.height / 2)));
     }
 
-    // 2. Draw Vertical X Grid Lines & Labels (every 5 ACs)
-    for (int ac = minAc; ac <= maxAc; ac += 5) {
+    // 2. Draw Vertical X Grid Lines & Labels
+    const xTicks = [8, 10, 15, 20, 25];
+    for (final ac in xTicks) {
       final xFrac = (ac - minAc) / (maxAc - minAc);
       final x = leftPadding + (chartWidth * xFrac);
 
@@ -811,8 +812,9 @@ class _DprChartPainter extends CustomPainter {
       }
     }
 
-    // 4. Break-Even Crossover Beacon & Indicator (in DPR mode)
+    // 4. Break-Even Crossover Beacon & Indicator (in DPR mode only when Power Attack is visible)
     if (chartMode == DprChartMode.dpr &&
+        powerCurve != null &&
         breakEvenAc != null &&
         breakEvenAc! >= minAc &&
         breakEvenAc! <= maxAc) {

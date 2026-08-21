@@ -364,7 +364,22 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     const SizedBox(height: 28),
 
-                    // CATEGORY 2: SPELL MINION COMPANIONS (ANIMATE OBJECTS & CONJURE SPELLS)
+                    // CATEGORY 2: TOOLS FOR NERDS (COMBAT MATH, THEORYCRAFT & DPS)
+                    _buildSectionHeader(
+                        '🤓 TOOLS FOR NERDS',
+                        isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE)),
+                    const SizedBox(height: 12),
+                    _buildToolGrid(
+                      context,
+                      children: _tools
+                          .where((t) => t.category == 'Tools for Nerds')
+                          .map((tool) => _buildToolCardFromItem(context, tool))
+                          .toList(),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // CATEGORY 3: SPELL MINION COMPANIONS (ANIMATE OBJECTS & CONJURE SPELLS)
                     _buildSectionHeader('🔮 SPELL MINION COMPANIONS',
                         theme.colorScheme.secondary),
                     const SizedBox(height: 12),

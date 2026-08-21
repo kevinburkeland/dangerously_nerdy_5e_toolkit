@@ -127,15 +127,16 @@ class LandingToolRegistry {
         LandingToolItem(
           id: 'dpr_calculator',
           title: 'DPR Calculator & Graph',
-          category: 'Core Utilities',
-          badgeText: 'Combat Math',
-          badgeColor: Colors.cyanAccent,
+          category: 'Tools for Nerds',
+          badgeText: 'Combat Math & DPS',
+          badgeColor: Colors.purpleAccent,
           icon: Icons.auto_graph,
           accentColor: Colors.cyanAccent,
           description:
-              'Damage Per Round (DPR) analyzer with interactive animated graphs, GWM & Sharpshooter break-even AC calculator, and build archetypes.',
+              'Damage Per Round (DPR) analyzer with interactive animated graphs, accuracy curves, GWM & Sharpshooter break-even AC, and damage breakdown.',
           keywords: [
             'dpr',
+            'dps',
             'calculator',
             'damage',
             'gwm',
@@ -146,7 +147,9 @@ class LandingToolRegistry {
             'break-even',
             'accuracy',
             'math',
-            'combat'
+            'combat',
+            'nerd',
+            'theorycraft'
           ],
           onLaunch: (context) {
             Navigator.push(

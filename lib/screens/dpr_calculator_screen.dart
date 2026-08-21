@@ -185,21 +185,21 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final edition = _resolveEdition(context);
 
-    // Calculate curves and break-even analysis
-    final baselineCurve = DprCalculatorEngine.generateCurve(_profile, minAc: 5, maxAc: 30);
-    final breakEvenAnalysis = DprCalculatorEngine.calculateGwmBreakEven(_profile, minAc: 5, maxAc: 30);
+    // Calculate curves and break-even analysis across focused 5e combat range (AC 8..25)
+    final baselineCurve = DprCalculatorEngine.generateCurve(_profile, minAc: 8, maxAc: 25);
+    final breakEvenAnalysis = DprCalculatorEngine.calculateGwmBreakEven(_profile, minAc: 8, maxAc: 25);
     final powerCurve = breakEvenAnalysis.powerAttackCurve;
     final advantageCurve = DprCalculatorEngine.generateCurve(
       _profile,
       advantageOverride: AdvantageType.advantage,
-      minAc: 5,
-      maxAc: 30,
+      minAc: 8,
+      maxAc: 25,
     );
     final disadvantageCurve = DprCalculatorEngine.generateCurve(
       _profile,
       advantageOverride: AdvantageType.disadvantage,
-      minAc: 5,
-      maxAc: 30,
+      minAc: 8,
+      maxAc: 25,
     );
 
     final activePoint = baselineCurve.pointAt(_selectedAc) ??
@@ -580,7 +580,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline, size: 20),
-                  onPressed: _selectedAc > 5
+                  onPressed: _selectedAc > 8
                       ? () {
                           HapticService.selectionTick(context);
                           setState(() => _selectedAc--);
@@ -589,10 +589,10 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                 ),
                 Expanded(
                   child: Slider(
-                    value: _selectedAc.toDouble(),
-                    min: 5,
-                    max: 30,
-                    divisions: 25,
+                    value: _selectedAc.toDouble().clamp(8.0, 25.0),
+                    min: 8,
+                    max: 25,
+                    divisions: 17,
                     label: 'AC $_selectedAc',
                     activeColor: Colors.cyanAccent,
                     onChanged: (val) {
@@ -602,7 +602,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline, size: 20),
-                  onPressed: _selectedAc < 30
+                  onPressed: _selectedAc < 25
                       ? () {
                           HapticService.selectionTick(context);
                           setState(() => _selectedAc++);

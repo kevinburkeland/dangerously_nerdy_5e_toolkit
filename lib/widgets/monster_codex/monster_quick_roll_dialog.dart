@@ -658,19 +658,22 @@ class _MonsterQuickRollDialogState extends State<MonsterQuickRollDialog> {
                 size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                single.isCrit
-                    ? 'NATURAL 20 CRITICAL HIT!'
-                    : (single.isFumble ? 'NATURAL 1 FUMBLE!' : 'Attack Result'),
-                style: TextStyle(
-                  color: single.isCrit
-                      ? Colors.greenAccent
-                      : (single.isFumble ? Colors.redAccent : typeColor),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+              Expanded(
+                child: Text(
+                  single.isCrit
+                      ? 'NATURAL 20 CRITICAL HIT!'
+                      : (single.isFumble ? 'NATURAL 1 FUMBLE!' : 'Attack Result'),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: single.isCrit
+                        ? Colors.greenAccent
+                        : (single.isFumble ? Colors.redAccent : typeColor),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 'To Hit: ${single.attackTotal}',
                 style: const TextStyle(
