@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
+import '../services/persistence/app_backup_service.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
 import '../widgets/interactive/pressable_card.dart';
@@ -309,11 +310,265 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+            _buildSectionHeader(context, 'Data Management & Backup', Icons.storage_rounded),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Archive & Storage Hygiene',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Export your character builds, custom presets, and pinned compendium entries as a JSON file, or restore a backup.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        FilledButton.tonalIcon(
+                          onPressed: _exportAppBackup,
+                          icon: const Icon(Icons.file_download_outlined, size: 18),
+                          label: const Text('Export Backup'),
+                        ),
+                        FilledButton.tonalIcon(
+                          onPressed: _importAppBackup,
+                          icon: const Icon(Icons.file_upload_outlined, size: 18),
+                          label: const Text('Import Backup'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _confirmResetSettings,
+                          icon: const Icon(Icons.restore, size: 18),
+                          label: const Text('Reset Settings'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _confirmClearAllData,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: theme.colorScheme.error,
+                          ),
+                          icon: const Icon(Icons.delete_forever_outlined, size: 18),
+                          label: const Text('Clear All Data'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 30),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _exportAppBackup() async {
+    HapticService.selectionTick(context);
+    final settings = SettingsScope.of(context).settings;
+    final jsonStr = await AppBackupService().exportFullBackupJson(settings);
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.file_download_outlined, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Backup JSON Payload'),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Copy your full app backup JSON payload to save it safely or transfer to another device:',
+                style: TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                height: 160,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SingleChildScrollView(
+                  child: SelectableText(
+                    jsonStr,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _importAppBackup() async {
+    HapticService.selectionTick(context);
+    final controller = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.file_upload_outlined, color: Colors.cyan),
+            SizedBox(width: 8),
+            Text('Import Backup JSON'),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Paste your exported backup JSON payload below to restore presets and character builds:',
+                style: TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: controller,
+                maxLines: 6,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: '{\n  "schemaVersion": 2,\n  ...\n}',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Restore Backup'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && controller.text.trim().isNotEmpty && mounted) {
+      final restoreResult = await AppBackupService().importFullBackupJson(controller.text);
+      if (!mounted) return;
+      if (restoreResult.success) {
+        HapticService.mediumImpact(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Successfully restored ${restoreResult.restoredPresetsCount} presets and ${restoreResult.restoredDprProfilesCount} character builds!',
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Theme.of(context).colorScheme.error,
+            content: Text(restoreResult.errorMessage ?? 'Failed to import backup'),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmResetSettings() async {
+    HapticService.selectionTick(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset Settings?'),
+        content: const Text(
+          'This will reset your theme, haptics, animations, and pinned items to default values.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final settingsProvider = SettingsScope.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      await settingsProvider.updateSettings(const AppSettings());
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Settings reset to defaults')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmClearAllData() async {
+    HapticService.selectionTick(context);
+    final theme = Theme.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear All Local Data?'),
+        content: const Text(
+          'WARNING: This will permanently delete all saved custom dice presets, character builds, active minion sessions, and reset settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete Everything'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final settingsProvider = SettingsScope.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      await AppBackupService().clearAllAppData();
+      await settingsProvider.updateSettings(const AppSettings());
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('All local data cleared successfully')),
+        );
+      }
+    }
   }
 
   Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {

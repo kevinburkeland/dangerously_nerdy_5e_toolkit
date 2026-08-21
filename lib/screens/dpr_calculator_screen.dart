@@ -4,6 +4,7 @@ import '../models/dm_screen_data.dart';
 import '../models/dpr/dpr_models.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
+import '../services/persistence/dpr_persistence_service.dart';
 import '../services/rules/dpr_calculator_engine.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/dpr/dpr_chart_widget.dart';
@@ -40,6 +41,32 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     super.initState();
     _localEditionOverride = widget.initialEdition;
     _profile = widget.initialProfile ?? DprCombatantProfile.cleanCustom();
+    if (widget.initialProfile == null) {
+      _restorePersistedDraft();
+    }
+  }
+
+  Future<void> _restorePersistedDraft() async {
+    final draft = await DprPersistenceService().loadActiveDraft();
+    if (draft != null && mounted) {
+      setState(() {
+        _profile = draft.profile;
+        _selectedAc = draft.selectedAc;
+        _chartMode = draft.chartMode;
+        _anythingGoesMode = draft.anythingGoesMode;
+      });
+    }
+  }
+
+  void _autoSaveDraft() {
+    DprPersistenceService().saveActiveDraftDebounced(
+      DprActiveDraftState(
+        profile: _profile,
+        selectedAc: _selectedAc,
+        chartMode: _chartMode,
+        anythingGoesMode: _anythingGoesMode,
+      ),
+    );
   }
 
   DmRulesEdition _resolveEdition(BuildContext context) {
@@ -68,6 +95,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
       }).toList();
       _profile = _profile.copyWith(attacks: updatedAttacks);
     });
+    _autoSaveDraft();
   }
 
   void _resetToCleanBuild() {
@@ -76,12 +104,14 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
       _profile = DprCombatantProfile.cleanCustom();
       _selectedAc = 15;
     });
+    _autoSaveDraft();
   }
 
   void _updateProfile(DprCombatantProfile newProfile) {
     setState(() {
       _profile = newProfile;
     });
+    _autoSaveDraft();
   }
 
   void _updateAttack(int index, DprAttackAction updated) {
@@ -90,6 +120,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     setState(() {
       _profile = _profile.copyWith(attacks: newAttacks);
     });
+    _autoSaveDraft();
   }
 
   void _openWeaponPicker(int attackIndex) {
@@ -588,6 +619,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               onAcChanged: (ac) {
                 HapticService.selectionTick(context);
                 setState(() => _selectedAc = ac);
+                _autoSaveDraft();
               },
             ),
             const SizedBox(height: 12),
@@ -745,6 +777,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                     activeColor: Colors.cyanAccent,
                     onChanged: (val) {
                       setState(() => _selectedAc = val.round());
+                      _autoSaveDraft();
                     },
                   ),
                 ),
@@ -754,6 +787,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                       ? () {
                           HapticService.selectionTick(context);
                           setState(() => _selectedAc++);
+                          _autoSaveDraft();
                         }
                       : null,
                 ),
@@ -788,6 +822,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                             setState(() {
                               _selectedAc = preset.typicalAc.clamp(_chartMinAc, _chartMaxAc);
                             });
+                            _autoSaveDraft();
                           }
                         },
                       ),

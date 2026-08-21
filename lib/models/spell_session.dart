@@ -387,4 +387,33 @@ class SpellSession {
       totalDamage: results.fold<int>(0, (sum, r) => sum + r.totalDamage),
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'presetId': activePreset.id,
+      'spellLevel': spellLevel,
+      'activeObjects': activeObjects.map((o) => o.toMap()).toList(),
+    };
+  }
+
+  factory SpellSession.fromMap(Map<String, dynamic> map) {
+    final presetId = map['presetId']?.toString() ?? 'animate_objects';
+    final preset = SrdSummonsLibrary.allPresets.firstWhere(
+      (p) => p.id == presetId,
+      orElse: () => SrdSummonsLibrary.allPresets.first,
+    );
+    final rawObjects = map['activeObjects'];
+    List<AnimatedObjectInstance> objects = [];
+    if (rawObjects is List) {
+      objects = rawObjects
+          .whereType<Map>()
+          .map((m) => AnimatedObjectInstance.fromMap(Map<String, dynamic>.from(m)))
+          .toList();
+    }
+    return SpellSession(
+      activePreset: preset,
+      spellLevel: (map['spellLevel'] as num?)?.toInt() ?? 5,
+      activeObjects: objects,
+    );
+  }
 }

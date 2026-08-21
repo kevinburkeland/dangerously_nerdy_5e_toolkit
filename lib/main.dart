@@ -4,10 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
+import 'models/app_settings.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
 import 'services/logging_service.dart';
+import 'services/persistence/debounced_storage_service.dart';
+import 'services/persistence/storage_migration_service.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -33,6 +37,26 @@ void main() {
       return true;
     };
 
+    // 1. Synchronously pre-hydrate SharedPreferences & run schema migrations
+    // prior to rendering Frame 1 to eliminate any flash-of-unstyled-content (FOUC).
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+      await StorageMigrationService().runMigrations(prefs);
+    } catch (e, stackTrace) {
+      logger.logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to initialize SharedPreferences / migrations during startup',
+      );
+    }
+
+    final initialSettings = prefs != null
+        ? SettingsProvider.hydrateFromPrefs(prefs)
+        : const AppSettings();
+    final settingsProvider = SettingsProvider(initialSettings: initialSettings);
+
+    // 2. Initialize Firebase & App Check
     try {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
@@ -65,8 +89,6 @@ void main() {
       );
     }
 
-    final settingsProvider = SettingsProvider();
-
     runApp(
       SettingsScope(
         notifier: settingsProvider,
@@ -78,8 +100,35 @@ void main() {
   });
 }
 
-class DangerouslyNerdy5eToolkitApp extends StatelessWidget {
+class DangerouslyNerdy5eToolkitApp extends StatefulWidget {
   const DangerouslyNerdy5eToolkitApp({super.key});
+
+  @override
+  State<DangerouslyNerdy5eToolkitApp> createState() => _DangerouslyNerdy5eToolkitAppState();
+}
+
+class _DangerouslyNerdy5eToolkitAppState extends State<DangerouslyNerdy5eToolkitApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      // Immediately flush all debounced disk writes to avoid data loss on background kill
+      DebouncedStorageService().flushAll();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

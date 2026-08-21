@@ -71,6 +71,11 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     );
   }
 
+  void _persistSession() {
+    final service = widget.sessionService ?? MinionSessionService();
+    service.saveSessionDebounced(widget.preset.id);
+  }
+
   void _openSquadBuilder() {
     HapticService.selectionTick(context);
     showModalBottomSheet(
@@ -81,6 +86,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
         session: _session,
         onSquadUpdated: () {
           _critController.trigger(CritEffectType.spellBurst);
+          _persistSession();
           setState(() {});
         },
       ),
@@ -95,6 +101,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
       setState(() {
         _session.applyGroupDamage(dmg);
       });
+      _persistSession();
     }
   }
 
@@ -133,6 +140,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
           }
         }
       });
+      _persistSession();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Granted +$amount Temp HP to all living minions!'),
@@ -310,9 +318,15 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
           onOpenSquadBuilder: _openSquadBuilder,
           onRollInitiative: _rollSquadInitiative,
           onGrantGroupTempHp: _grantGroupTempHp,
-          onHealAll: () => setState(() => _session.healAll()),
+          onHealAll: () {
+            setState(() => _session.healAll());
+            _persistSession();
+          },
           onShowMassDamageDialog: _showMassDamageDialog,
-          onClearSquad: _confirmClearSquad,
+          onClearSquad: () async {
+            await _confirmClearSquad();
+            _persistSession();
+          },
         ),
         Expanded(
           child: _session.activeObjects.isEmpty
@@ -324,7 +338,10 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
                     return ObjectCard(
                       key: ValueKey(obj.id),
                       object: obj,
-                      onDelete: () => setState(() => _session.removeObject(obj.id)),
+                      onDelete: () {
+                        setState(() => _session.removeObject(obj.id));
+                        _persistSession();
+                      },
                       onHpChanged: (delta) {
                         setState(() {
                           if (delta < 0) {
@@ -333,14 +350,19 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
                             obj.heal(delta);
                           }
                         });
+                        _persistSession();
                       },
                       onHpDataSet: (newHp, newTemp) {
                         setState(() {
                           obj.currentHp = newHp;
                           obj.tempHp = newTemp;
                         });
+                        _persistSession();
                       },
-                      onNameChanged: (name) => setState(() => _session.renameObject(obj.id, name)),
+                      onNameChanged: (name) {
+                        setState(() => _session.renameObject(obj.id, name));
+                        _persistSession();
+                      },
                     );
                   },
                 ),
