@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/magic_items/magic_item_data.dart';
 import '../../services/haptic_service.dart';
+import '../common/diff_highlight_banner.dart';
+import '../dm_reference/rules_edition_toggle.dart';
 import '../glyphs/dnd_glyph.dart';
 
 /// Interactive modal comparing 2014 RAW magic item mechanics vs 2024 Revised rules side-by-side.
@@ -197,22 +199,12 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (!showDualView)
-                  SegmentedButton<DmRulesEdition>(
-                    segments: const [
-                      ButtonSegment(
-                        value: DmRulesEdition.v2014,
-                        label: Text('2014 RAW', style: TextStyle(fontSize: 11)),
-                      ),
-                      ButtonSegment(
-                        value: DmRulesEdition.v2024,
-                        label: Text('2024 Revised', style: TextStyle(fontSize: 11)),
-                      ),
-                    ],
-                    selected: {_activeEdition},
-                    onSelectionChanged: (val) {
-                      HapticService.selectionTick(context);
-                      setState(() => _activeEdition = val.first);
+                  RulesEditionToggle(
+                    currentEdition: _activeEdition,
+                    onEditionChanged: (newEdition) {
+                      setState(() => _activeEdition = newEdition);
                     },
+                    isDense: true,
                   )
                 else
                   Text(
@@ -248,8 +240,12 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (item.isChangedIn2024 && item.diffSummary != null) ...[
-          _buildDiffBanner(context, item.diffSummary!, isDark),
+        if (item.isChangedIn2024 &&
+            (item.diffSummary != null || item.diffHighlights.isNotEmpty)) ...[
+          DiffHighlightBanner(
+            diffSummary: item.diffSummary,
+            diffHighlights: item.diffHighlights,
+          ),
           const SizedBox(height: 12),
         ],
         _buildStatRow(context, 'Activation', rules.activation ?? 'Standard Action'),
@@ -295,50 +291,10 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (item.diffSummary != null) ...[
-          _buildDiffBanner(context, item.diffSummary!, isDark),
-          const SizedBox(height: 12),
-        ],
-        if (item.diffHighlights.isNotEmpty) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: isDark ? 0.12 : 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.auto_awesome, color: Colors.amber, size: 16),
-                    SizedBox(width: 6),
-                    Text(
-                      'Key Revision Differences',
-                      style: TextStyle(
-                        color: Colors.amber,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.5,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ...item.diffHighlights.map(
-                  (h) => Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('• ', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(h, style: const TextStyle(fontSize: 12))),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        if (item.diffSummary != null || item.diffHighlights.isNotEmpty) ...[
+          DiffHighlightBanner(
+            diffSummary: item.diffSummary,
+            diffHighlights: item.diffHighlights,
           ),
           const SizedBox(height: 16),
         ],
@@ -437,32 +393,6 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
               fontSize: 12.5,
               height: 1.45,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDiffBanner(BuildContext context, String text, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline, color: Colors.amber, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
             ),
           ),
         ],

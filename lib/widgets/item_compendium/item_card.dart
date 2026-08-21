@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/magic_items/magic_item_data.dart';
+import '../common/edition_diff_badge.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
 
@@ -29,7 +30,6 @@ class ItemCard extends StatelessWidget {
     final rules = item.getRules(edition);
     final rarityColor = item.rarity.getLegibleColor(isDark);
     final categoryColor = item.category.getLegibleColor(isDark);
-    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final cardBorderColor = isPinned
         ? pinColor.withValues(alpha: 0.85)
@@ -104,32 +104,8 @@ class ItemCard extends StatelessWidget {
               ),
               if (item.isChangedIn2024) ...[
                 const SizedBox(width: 4),
-                InkWell(
+                EditionDiffBadge(
                   onTap: onCompare,
-                  borderRadius: BorderRadius.circular(5),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: diffColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: diffColor.withValues(alpha: 0.4)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.auto_awesome, color: diffColor, size: 10),
-                        const SizedBox(width: 2),
-                        Text(
-                          '2024 Diff',
-                          style: TextStyle(
-                            color: diffColor,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
               const SizedBox(width: 4),

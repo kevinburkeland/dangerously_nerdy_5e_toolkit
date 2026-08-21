@@ -159,7 +159,7 @@ enum CreatureType {
   }
 }
 
-/// 9 Core D&D 5e Magic Item & Equipment Categories.
+/// 10 Core D&D 5e Magic Item & Equipment Categories.
 enum ItemCategory {
   weapon('Weapon', Color(0xFFEF4444), Color(0xFFFEF2F2), Color(0xFF7F1D1D),
       GlyphFrameShape.sharpDiamondShield),
@@ -178,7 +178,9 @@ enum ItemCategory {
   wand('Wand & Baton', Color(0xFFF43F5E), Color(0xFFFFF1F2),
       Color(0xFF881337), GlyphFrameShape.diamond),
   wondrousItem('Wondrous Item', Color(0xFFEC4899), Color(0xFFFDF2F8),
-      Color(0xFF831843), GlyphFrameShape.crest);
+      Color(0xFF831843), GlyphFrameShape.crest),
+  adventuringGear('Adventuring Gear', Color(0xFF64748B), Color(0xFFF8FAFC),
+      Color(0xFF0F172A), GlyphFrameShape.heavyHex);
 
   final String displayName;
   final Color primaryColor;
@@ -206,6 +208,7 @@ enum ItemCategory {
         ItemCategory.staff => const Color(0xFF6D28D9),
         ItemCategory.wand => const Color(0xFFBE123C),
         ItemCategory.wondrousItem => const Color(0xFFBE185D),
+        ItemCategory.adventuringGear => const Color(0xFF475569),
       };
     }
     return switch (this) {
@@ -218,6 +221,7 @@ enum ItemCategory {
       ItemCategory.staff => const Color(0xFFA78BFA),
       ItemCategory.wand => const Color(0xFFFB7185),
       ItemCategory.wondrousItem => const Color(0xFFF472B6),
+      ItemCategory.adventuringGear => const Color(0xFF94A3B8),
     };
   }
 
@@ -233,11 +237,13 @@ enum ItemCategory {
         ItemCategory.staff => Icons.brush_outlined,
         ItemCategory.wand => Icons.auto_fix_normal_outlined,
         ItemCategory.wondrousItem => Icons.diamond_outlined,
+        ItemCategory.adventuringGear => Icons.backpack_outlined,
       };
 }
 
-/// 6 Standard 5e Item Rarities.
+/// 7 Standard 5e Item Rarities.
 enum ItemRarity {
+  nonmagical('Nonmagical', Color(0xFF64748B), 0),
   common('Common', Color(0xFF94A3B8), 0),
   uncommon('Uncommon', Color(0xFF22C55E), 1),
   rare('Rare', Color(0xFF3B82F6), 2),
@@ -254,6 +260,7 @@ enum ItemRarity {
   Color getLegibleColor(bool isDarkMode) {
     if (!isDarkMode) {
       return switch (this) {
+        ItemRarity.nonmagical => const Color(0xFF475569),
         ItemRarity.common => const Color(0xFF475569),
         ItemRarity.uncommon => const Color(0xFF15803D),
         ItemRarity.rare => const Color(0xFF1D4ED8),
@@ -263,6 +270,7 @@ enum ItemRarity {
       };
     }
     return switch (this) {
+      ItemRarity.nonmagical => const Color(0xFF94A3B8),
       ItemRarity.common => const Color(0xFFCBD5E1),
       ItemRarity.uncommon => const Color(0xFF4ADE80),
       ItemRarity.rare => const Color(0xFF60A5FA),
@@ -444,9 +452,12 @@ class ActionTraitRing {
       Object.hash(ringType, damageType, Object.hashAll(damageTypes), label);
 }
 
-/// 11 Damage Accents (10 Elemental + Physical/Neutral Titanium Steel).
+/// 14 Damage Accents (10 Elemental + Physical/Neutral, Slashing, Piercing, Bludgeoning).
 enum DamageAccent {
   physical('Physical / Neutral', Color(0xFF94A3B8)),
+  slashing('Slashing', Color(0xFFE2E8F0)),
+  piercing('Piercing', Color(0xFFCBD5E1)),
+  bludgeoning('Bludgeoning', Color(0xFF94A3B8)),
   fire('Fire', Color(0xFFEF4444)),
   cold('Cold / Ice', Color(0xFF06B6D4)),
   lightning('Lightning', Color(0xFFEAB308)),

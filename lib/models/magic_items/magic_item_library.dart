@@ -1,3 +1,4 @@
+import 'items/adventuring_gear.dart';
 import 'items/armor_and_shields.dart';
 import 'items/potions_and_oils.dart';
 import 'items/rings.dart';
@@ -15,7 +16,7 @@ export 'magic_item_data.dart';
 class MagicItemLibrary {
   MagicItemLibrary._();
 
-  /// Complete list of all SRD 5.1 & 5.2 Magic Items in the toolkit.
+  /// Complete list of all SRD 5.1 & 5.2 Magic Items and Equipment in the toolkit.
   static const List<MagicItem> allItems = [
     ...SrdMagicWeapons.items,
     ...SrdArmorAndShields.items,
@@ -26,6 +27,7 @@ class MagicItemLibrary {
     ...SrdMagicStaves.items,
     ...SrdMagicWands.items,
     ...SrdWondrousItems.items,
+    ...SrdAdventuringGear.items,
   ];
 
   /// Find an item by its unique identifier.

@@ -1052,6 +1052,43 @@ class GlyphMotifs {
         canvas.drawCircle(center, 1.4 * scale, primaryLine);
         canvas.drawCircle(center, 0.7 * scale, nodeFill);
         break;
+
+      case ItemCategory.adventuringGear:
+        // EXPEDITION GEAR PACK & HARNESS SCHEMATIC
+        final packRect = Rect.fromCenter(
+          center: center + Offset(0, 1.0 * scale),
+          width: 9.0 * scale,
+          height: 8.0 * scale,
+        );
+        final rpack = RRect.fromRectAndRadius(packRect, Radius.circular(1.5 * scale));
+        canvas.drawRRect(rpack, primaryLine);
+
+        // Flap & strap lines
+        canvas.drawLine(
+          Offset(center.dx - 4.5 * scale, center.dy - 1.5 * scale),
+          Offset(center.dx + 4.5 * scale, center.dy - 1.5 * scale),
+          primaryLine,
+        );
+        canvas.drawLine(
+          Offset(center.dx - 2.2 * scale, center.dy - 3.0 * scale),
+          Offset(center.dx - 2.2 * scale, center.dy + 4.5 * scale),
+          fineLine,
+        );
+        canvas.drawLine(
+          Offset(center.dx + 2.2 * scale, center.dy - 3.0 * scale),
+          Offset(center.dx + 2.2 * scale, center.dy + 4.5 * scale),
+          fineLine,
+        );
+
+        // Buckle and bedroll roll
+        canvas.drawCircle(Offset(center.dx - 2.2 * scale, center.dy + 0.5 * scale), 0.8 * scale, nodeFill);
+        canvas.drawCircle(Offset(center.dx + 2.2 * scale, center.dy + 0.5 * scale), 0.8 * scale, nodeFill);
+        canvas.drawLine(
+          Offset(center.dx - 4.0 * scale, center.dy - 4.0 * scale),
+          Offset(center.dx + 4.0 * scale, center.dy - 4.0 * scale),
+          primaryLine,
+        );
+        break;
     }
 
     canvas.restore();

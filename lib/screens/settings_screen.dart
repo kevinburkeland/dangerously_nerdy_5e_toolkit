@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
-import '../models/dm_screen_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/meters/animated_resource_meter.dart';
@@ -54,27 +54,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<DmRulesEdition>(
-                        segments: const [
-                          ButtonSegment(
-                            value: DmRulesEdition.v2024,
-                            label: Text('2024 Revised'),
-                            icon: Icon(Icons.auto_awesome),
-                          ),
-                          ButtonSegment(
-                            value: DmRulesEdition.v2014,
-                            label: Text('2014 5e RAW'),
-                            icon: Icon(Icons.history_edu),
-                          ),
-                        ],
-                        selected: {s.rulesEdition},
-                        onSelectionChanged: (set) {
-                          HapticService.selectionTick(context);
-                          settingsProvider.setRulesEdition(set.first);
-                        },
-                      ),
+                    RulesEditionToggle(
+                      currentEdition: s.rulesEdition,
+                      onEditionChanged: (newEdition) {
+                        settingsProvider.setRulesEdition(newEdition);
+                      },
+                      isExpanded: true,
+                      showIcons: true,
+                      showSubtext: true,
                     ),
                   ],
                 ),

@@ -983,5 +983,21 @@ class GlyphGalleryData {
       summary:
           'A deck of vellum cards containing cosmic fortunes and catastrophes that irrevocably warp destinies.',
     ),
+
+    // ADVENTURING GEAR
+    GlyphItemEntry(
+      name: 'Explorer\'s Pack & Harness',
+      category: ItemCategory.adventuringGear,
+      rarity: ItemRarity.nonmagical,
+      summary:
+          'A heavy canvas expedition backpack rigged with bedroll, torches, rations, and 50 feet of silk climbing rope.',
+    ),
+    GlyphItemEntry(
+      name: 'Thieves\' Tools',
+      category: ItemCategory.adventuringGear,
+      rarity: ItemRarity.nonmagical,
+      summary:
+          'A set of lock picks, tension wrenches, small mirror, narrow file, and pliers in a folding leather case.',
+    ),
   ];
 }

@@ -3,6 +3,8 @@ import '../../models/dm_screen_data.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../services/haptic_service.dart';
+import '../common/diff_highlight_banner.dart';
+import '../dm_reference/rules_edition_toggle.dart';
 import '../glyphs/dnd_glyph.dart';
 
 /// Interactive modal comparing 2014 RAW monster stat blocks vs 2024 Revised rules side-by-side.
@@ -195,98 +197,21 @@ class _MonsterComparisonDialogState extends State<MonsterComparisonDialog> {
             if (monster.isChangedIn2024 &&
                 (monster.diffSummary != null ||
                     monster.diffHighlights.isNotEmpty)) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: diffColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: diffColor.withValues(alpha: 0.4)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.auto_awesome, color: diffColor, size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          '2024 REVISED RULES DIFF HIGHLIGHTS',
-                          style: TextStyle(
-                            color: diffColor,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (monster.diffSummary != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        monster.diffSummary!,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 12.5,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                    if (monster.diffHighlights.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: monster.diffHighlights.map((hl) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: diffColor.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: diffColor.withValues(alpha: 0.3)),
-                            ),
-                            child: Text(
-                              '• $hl',
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.amberAccent
-                                    : const Color(0xFF92400E),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ],
-                ),
+              DiffHighlightBanner(
+                diffSummary: monster.diffSummary,
+                diffHighlights: monster.diffHighlights,
               ),
               const SizedBox(height: 12),
             ],
 
-            // Edition Toggle Segments (if not dual view)
+            // Edition Toggle (if not dual view)
             if (!showDualView) ...[
-              SegmentedButton<DmRulesEdition>(
-                segments: const [
-                  ButtonSegment(
-                    value: DmRulesEdition.v2014,
-                    label: Text('2014 Rules (5.1)'),
-                    icon: Icon(Icons.history, size: 16),
-                  ),
-                  ButtonSegment(
-                    value: DmRulesEdition.v2024,
-                    label: Text('2024 Revised (5.2)'),
-                    icon: Icon(Icons.auto_awesome, size: 16),
-                  ),
-                ],
-                selected: {_activeEdition},
-                onSelectionChanged: (val) {
-                  HapticService.selectionTick(context);
-                  setState(() => _activeEdition = val.first);
+              RulesEditionToggle(
+                currentEdition: _activeEdition,
+                onEditionChanged: (newEdition) {
+                  setState(() => _activeEdition = newEdition);
                 },
+                isDense: true,
               ),
               const SizedBox(height: 12),
             ],

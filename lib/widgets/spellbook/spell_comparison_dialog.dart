@@ -3,6 +3,7 @@ import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import '../common/diff_highlight_banner.dart';
 import '../glyphs/dnd_glyph.dart';
 
 /// Interactive modal comparing 2014 RAW spell mechanics vs 2024 Revised rules side-by-side.
@@ -200,86 +201,15 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
               ],
             ),
             const SizedBox(height: 12),
-
             // Diff Summary & Highlights Banner
             if (spell.isChangedIn2024 &&
                 (spell.diffSummary != null ||
                     spell.diffHighlights.isNotEmpty)) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: (isDark ? Colors.amber : const Color(0xFFB45309))
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: (isDark ? Colors.amber : const Color(0xFFB45309))
-                          .withValues(alpha: 0.4)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (spell.diffSummary != null)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Icons.auto_awesome,
-                              color: isDark
-                                  ? Colors.amber
-                                  : const Color(0xFFB45309),
-                              size: 18),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              spell.diffSummary!,
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.amber
-                                    : const Color(0xFFB45309),
-                                fontSize: 13,
-                                height: 1.35,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (spell.diffHighlights.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      ...spell.diffHighlights.map(
-                        (h) => Padding(
-                          padding: const EdgeInsets.only(left: 28, bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('▸ ',
-                                  style: TextStyle(
-                                      color: isDark
-                                          ? Colors.amber
-                                          : const Color(0xFFB45309),
-                                      fontSize: 12)),
-                              Expanded(
-                                child: Text(
-                                  h,
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.amber.shade100
-                                        : theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.9),
-                                    fontSize: 12,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+              DiffHighlightBanner(
+                diffSummary: spell.diffSummary,
+                diffHighlights: spell.diffHighlights,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
             ],
 
             // Side-by-side or stacked comparison columns

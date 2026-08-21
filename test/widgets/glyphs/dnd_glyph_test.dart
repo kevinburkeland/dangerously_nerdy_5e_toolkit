@@ -34,8 +34,8 @@ void main() {
       }
     });
 
-    test('All 11 DamageAccents and 5 ActionBadges have valid colors', () {
-      expect(DamageAccent.values.length, equals(11));
+    test('All 14 DamageAccents and 5 ActionBadges have valid colors', () {
+      expect(DamageAccent.values.length, equals(14));
       for (final acc in DamageAccent.values) {
         expect(acc.displayName.isNotEmpty, isTrue);
         expect(acc.color, isNotNull);

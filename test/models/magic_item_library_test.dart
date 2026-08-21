@@ -10,11 +10,26 @@ void main() {
       expect(ids.length, equals(MagicItemLibrary.allItems.length));
     });
 
-    test('verifies all 9 item categories are populated', () {
+    test('verifies all 10 item categories are populated', () {
+      expect(ItemCategory.values.length, equals(10));
       for (final cat in ItemCategory.values) {
         final itemsInCat = MagicItemLibrary.getByCategory(cat);
         expect(itemsInCat, isNotEmpty, reason: 'Category ${cat.name} should have items');
       }
+    });
+
+    test('verifies nonmagical items and specific armor/weapon types exist', () {
+      final fullPlate = MagicItemLibrary.findById('armor_plate');
+      expect(fullPlate, isNotNull);
+      expect(fullPlate!.rarity, equals(ItemRarity.nonmagical));
+
+      final platePlus3 = MagicItemLibrary.findById('plate_plus_3');
+      expect(platePlus3, isNotNull);
+      expect(platePlus3!.name, equals('Plate Armor +3'));
+
+      final backpack = MagicItemLibrary.findById('backpack');
+      expect(backpack, isNotNull);
+      expect(backpack!.category, equals(ItemCategory.adventuringGear));
     });
 
     test('findById and findByName lookups work accurately', () {

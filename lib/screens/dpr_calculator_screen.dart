@@ -6,6 +6,7 @@ import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/rules/dpr_calculator_engine.dart';
 import '../theme/app_theme.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/dpr/dpr_chart_widget.dart';
 
 /// Full-featured Damage Per Round (DPR) Calculator and Statistical Analysis Screen.
@@ -335,23 +336,9 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               ),
             ],
           ),
-          SegmentedButton<DmRulesEdition>(
-            segments: const [
-              ButtonSegment(
-                value: DmRulesEdition.v2024,
-                label: Text('2024', style: TextStyle(fontSize: 12)),
-              ),
-              ButtonSegment(
-                value: DmRulesEdition.v2014,
-                label: Text('2014', style: TextStyle(fontSize: 12)),
-              ),
-            ],
-            selected: {edition},
-            onSelectionChanged: (selection) {
-              if (selection.isNotEmpty) {
-                _onEditionChanged(selection.first);
-              }
-            },
+          RulesEditionToggle(
+            currentEdition: edition,
+            onEditionChanged: _onEditionChanged,
           ),
         ],
       ),

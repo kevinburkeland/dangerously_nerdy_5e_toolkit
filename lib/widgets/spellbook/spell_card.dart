@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
+import '../common/edition_diff_badge.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
 
@@ -102,30 +103,8 @@ class SpellCard extends StatelessWidget {
                 ),
               ),
               if (spell.isChangedIn2024) ...[
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: diffColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: diffColor.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome, color: diffColor, size: 10),
-                      const SizedBox(width: 2),
-                      Text(
-                        '2024 Diff',
-                        style: TextStyle(
-                            color: diffColor,
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 2),
+                const EditionDiffBadge(),
+                const SizedBox(width: 4),
               ],
               IconButton(
                 icon: Icon(

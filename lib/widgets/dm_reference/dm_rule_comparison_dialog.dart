@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import '../common/diff_highlight_banner.dart';
 
 /// Interactive modal comparing 2014 RAW rules vs 2024 Revised rules side-by-side.
 class DmRuleComparisonDialog extends StatefulWidget {
@@ -126,32 +127,8 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
 
             // Diff Summary Banner if changed
             if (item.isChangedIn2024 && item.diffSummary != null) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: diffColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: diffColor.withValues(alpha: 0.4)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.auto_awesome, color: diffColor, size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        item.diffSummary!,
-                        style: TextStyle(
-                          color: diffColor,
-                          fontSize: 13,
-                          height: 1.35,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              DiffHighlightBanner(
+                diffSummary: item.diffSummary,
               ),
               const SizedBox(height: 16),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
+import '../common/edition_diff_badge.dart';
 import '../interactive/pressable_card.dart';
 
 /// Modular, interactive card presenting a single 5e rulebook entry.
@@ -77,25 +78,7 @@ class DmRuleCard extends StatelessWidget {
                 ),
               ),
               if (item.isChangedIn2024) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: diffColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: diffColor.withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome, color: diffColor, size: 11),
-                      const SizedBox(width: 3),
-                      Text(
-                        '2024 Diff',
-                        style: TextStyle(color: diffColor, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
+                const EditionDiffBadge(),
                 const SizedBox(width: 6),
               ],
               IconButton(

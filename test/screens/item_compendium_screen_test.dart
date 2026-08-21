@@ -42,8 +42,8 @@ void main() {
       expect(find.textContaining('2024 Diffs'), findsOneWidget);
 
       // Check items exist
-      expect(find.text('Weapon +1'), findsOneWidget);
-      expect(find.text('Weapon +2'), findsOneWidget);
+      expect(find.text('Longsword'), findsOneWidget);
+      expect(find.text('Greatsword'), findsOneWidget);
     });
 
     testWidgets('filters items when entering query into search bar', (tester) async {
@@ -68,7 +68,7 @@ void main() {
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(ItemCard, 'Weapon +1'), findsOneWidget);
+      expect(find.widgetWithText(ItemCard, 'Longsword'), findsOneWidget);
     });
 
     testWidgets('switches to Personal Reliquary tab and shows empty state until pinned', (tester) async {
@@ -109,7 +109,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Your Personal Reliquary is empty'), findsNothing);
-      expect(find.widgetWithText(ItemCard, 'Weapon +1'), findsOneWidget);
+      expect(find.widgetWithText(ItemCard, 'Longsword'), findsOneWidget);
     });
 
     testWidgets('switches to 2024 Diffs view mode and opens ItemComparisonDialog', (tester) async {
@@ -130,8 +130,8 @@ void main() {
       await tester.tap(diffsSegment);
       await tester.pumpAndSettle();
 
-      // Verify diff items appear (e.g. Weapon +1)
-      expect(find.widgetWithText(ItemCard, 'Weapon +1'), findsOneWidget);
+      // Verify diff items appear (e.g. Longsword with 2024 Sap Weapon Mastery)
+      expect(find.widgetWithText(ItemCard, 'Longsword'), findsOneWidget);
 
       // Tap the 2024 Diff badge to open comparison dialog
       final diffBadge = find.text('2024 Diff').first;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../common/edition_diff_badge.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
 
@@ -37,7 +38,6 @@ class MonsterCard extends StatelessWidget {
     final typeColor = creatureType.getLegibleColor(isDark);
     final glyphRings = statBlock.glyphActionRings;
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
-    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
     final cardBorderColor = isPinned
         ? pinColor.withValues(alpha: 0.85)
         : typeColor.withValues(alpha: 0.35);
@@ -94,37 +94,10 @@ class MonsterCard extends StatelessWidget {
                 ),
               ),
               if (monster.isChangedIn2024) ...[
-                Tooltip(
-                  message: 'Compare 2014 RAW vs 2024 Revised rules',
-                  child: InkWell(
-                    onTap: onOpenComparison,
-                    borderRadius: BorderRadius.circular(5),
-                    child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: diffColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: diffColor.withValues(alpha: 0.4)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.auto_awesome, color: diffColor, size: 10),
-                          const SizedBox(width: 2),
-                          Text(
-                            '2024 Diff',
-                            style: TextStyle(
-                                color: diffColor,
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                EditionDiffBadge(
+                  onTap: onOpenComparison,
                 ),
-                const SizedBox(width: 2),
+                const SizedBox(width: 4),
               ],
               IconButton(
                 icon: Icon(
