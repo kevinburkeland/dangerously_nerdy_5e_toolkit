@@ -62,7 +62,7 @@ enum DprChartMode {
 class DprWeaponPreset {
   final String id;
   final String name;
-  final String category; // e.g. "Standard Melee", "Standard Ranged", "Magic Weapon"
+  final String category; // e.g. "Standard Melee", "Standard Ranged", "Magic Weapon", "Damage Cantrip"
   final int diceCount;
   final int diceSides;
   final String damageType;
@@ -74,6 +74,7 @@ class DprWeaponPreset {
   final bool isRanged;
   final bool isHeavy;
   final bool isCantrip;
+  final int defaultAttacksPerRound;
 
   const DprWeaponPreset({
     required this.id,
@@ -90,18 +91,18 @@ class DprWeaponPreset {
     this.isRanged = false,
     this.isHeavy = false,
     this.isCantrip = false,
+    this.defaultAttacksPerRound = 1,
   });
 
   static const List<DprWeaponPreset> allPresets = [
     // Standard Melee
-    DprWeaponPreset(id: 'greatsword', name: 'Greatsword (2d6 Slashing)', category: 'Standard Melee', diceCount: 2, diceSides: 6, damageType: 'slashing', defaultMastery: WeaponMastery.graze, isHeavy: true),
-    DprWeaponPreset(id: 'greataxe', name: 'Greataxe (1d12 Slashing)', category: 'Standard Melee', diceCount: 1, diceSides: 12, damageType: 'slashing', defaultMastery: WeaponMastery.none, isHeavy: true),
-    DprWeaponPreset(id: 'maul', name: 'Maul (2d6 Bludgeoning)', category: 'Standard Melee', diceCount: 2, diceSides: 6, damageType: 'bludgeoning', defaultMastery: WeaponMastery.topple, isHeavy: true),
-    DprWeaponPreset(id: 'longsword', name: 'Longsword (1d8 Slashing)', category: 'Standard Melee', diceCount: 1, diceSides: 8, damageType: 'slashing', defaultMastery: WeaponMastery.none),
-    DprWeaponPreset(id: 'longsword_2h', name: 'Longsword (2-Handed 1d10)', category: 'Standard Melee', diceCount: 1, diceSides: 10, damageType: 'slashing', defaultMastery: WeaponMastery.none),
-    DprWeaponPreset(id: 'glaive', name: 'Glaive / Halberd (1d10 Slashing)', category: 'Standard Melee', diceCount: 1, diceSides: 10, damageType: 'slashing', defaultMastery: WeaponMastery.graze, isHeavy: true),
-    DprWeaponPreset(id: 'polearm_butt', name: 'Polearm Master Butt-End (1d4)', category: 'Standard Melee', diceCount: 1, diceSides: 4, damageType: 'bludgeoning', defaultMastery: WeaponMastery.none),
-    DprWeaponPreset(id: 'rapier', name: 'Rapier (1d8 Piercing)', category: 'Standard Melee', diceCount: 1, diceSides: 8, damageType: 'piercing', defaultMastery: WeaponMastery.vex),
+    DprWeaponPreset(id: 'greatsword', name: 'Greatsword (2d6 Slashing)', category: 'Standard Melee', diceCount: 2, diceSides: 6, damageType: 'slashing', isHeavy: true, defaultMastery: WeaponMastery.graze),
+    DprWeaponPreset(id: 'greataxe', name: 'Greataxe (1d12 Slashing)', category: 'Standard Melee', diceCount: 1, diceSides: 12, damageType: 'slashing', isHeavy: true, defaultMastery: WeaponMastery.topple),
+    DprWeaponPreset(id: 'maul', name: 'Maul (2d6 Bludgeoning)', category: 'Standard Melee', diceCount: 2, diceSides: 6, damageType: 'bludgeoning', isHeavy: true, defaultMastery: WeaponMastery.topple),
+    DprWeaponPreset(id: 'halberd', name: 'Halberd / Glaive (1d10 Slashing, Reach)', category: 'Standard Melee', diceCount: 1, diceSides: 10, damageType: 'slashing', isHeavy: true, defaultMastery: WeaponMastery.graze),
+    DprWeaponPreset(id: 'pam_butt', name: 'Polearm Master Butt-End (1d4 Bludgeoning)', category: 'Standard Melee', diceCount: 1, diceSides: 4, damageType: 'bludgeoning', defaultMastery: WeaponMastery.none),
+    DprWeaponPreset(id: 'longsword', name: 'Longsword / Warhammer (1d8 / 1d10 Versatile)', category: 'Standard Melee', diceCount: 1, diceSides: 8, damageType: 'slashing', defaultMastery: WeaponMastery.none),
+    DprWeaponPreset(id: 'rapier', name: 'Rapier (1d8 Piercing, Finesse)', category: 'Standard Melee', diceCount: 1, diceSides: 8, damageType: 'piercing', defaultMastery: WeaponMastery.vex),
     DprWeaponPreset(id: 'shortsword', name: 'Shortsword (1d6 Piercing)', category: 'Standard Melee', diceCount: 1, diceSides: 6, damageType: 'piercing', defaultMastery: WeaponMastery.vex),
     DprWeaponPreset(id: 'scimitar', name: 'Scimitar / Dagger (1d6 / 1d4)', category: 'Standard Melee', diceCount: 1, diceSides: 6, damageType: 'slashing', defaultMastery: WeaponMastery.nick),
     DprWeaponPreset(id: 'unarmed', name: 'Unarmed Strike (1d6 Monk)', category: 'Standard Melee', diceCount: 1, diceSides: 6, damageType: 'bludgeoning', defaultMastery: WeaponMastery.none),
@@ -112,30 +113,115 @@ class DprWeaponPreset {
     DprWeaponPreset(id: 'longbow', name: 'Longbow (1d8 Piercing)', category: 'Standard Ranged', diceCount: 1, diceSides: 8, damageType: 'piercing', defaultMastery: WeaponMastery.none, isRanged: true, isHeavy: true),
     DprWeaponPreset(id: 'shortbow', name: 'Shortbow (1d6 Piercing)', category: 'Standard Ranged', diceCount: 1, diceSides: 6, damageType: 'piercing', defaultMastery: WeaponMastery.vex, isRanged: true),
 
-    // Damage Cantrips
+    // Damage Cantrips (Tier 1: Lvl 1-4, Tier 2: Lvl 5-10, Tier 3: Lvl 11-16, Tier 4: Lvl 17-20)
+    // Eldritch Blast (Multi-Beam)
+    DprWeaponPreset(id: 'eldritch_blast_1', name: 'Eldritch Blast (1x 1d10 Force, 1 Beam, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'force', isRanged: true, isCantrip: true, defaultAttacksPerRound: 1),
+    DprWeaponPreset(id: 'eldritch_blast_2', name: 'Eldritch Blast (2x 1d10 Force, 2 Beams, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'force', isRanged: true, isCantrip: true, defaultAttacksPerRound: 2),
+    DprWeaponPreset(id: 'eldritch_blast_3', name: 'Eldritch Blast (3x 1d10 Force, 3 Beams, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'force', isRanged: true, isCantrip: true, defaultAttacksPerRound: 3),
+    DprWeaponPreset(id: 'eldritch_blast_4', name: 'Eldritch Blast (4x 1d10 Force, 4 Beams, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'force', isRanged: true, isCantrip: true, defaultAttacksPerRound: 4),
+
+    // Fire Bolt
     DprWeaponPreset(id: 'fire_bolt_1', name: 'Fire Bolt (1d10 Fire, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'fire', isRanged: true, isCantrip: true),
     DprWeaponPreset(id: 'fire_bolt_2', name: 'Fire Bolt (2d10 Fire, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 10, damageType: 'fire', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'eldritch_blast_1', name: 'Eldritch Blast (1d10 Force, 1 Beam)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'force', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'eldritch_blast_2', name: 'Eldritch Blast (2x 1d10 Force, Lvl 5+)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'force', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'fire_bolt_3', name: 'Fire Bolt (3d10 Fire, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 10, damageType: 'fire', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'fire_bolt_4', name: 'Fire Bolt (4d10 Fire, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 10, damageType: 'fire', isRanged: true, isCantrip: true),
+
+    // Toll the Dead
+    DprWeaponPreset(id: 'toll_the_dead_1', name: 'Toll the Dead (1d12 Necrotic, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 12, damageType: 'necrotic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'toll_the_dead_2', name: 'Toll the Dead (2d12 Necrotic, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 12, damageType: 'necrotic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'toll_the_dead_3', name: 'Toll the Dead (3d12 Necrotic, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 12, damageType: 'necrotic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'toll_the_dead_4', name: 'Toll the Dead (4d12 Necrotic, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 12, damageType: 'necrotic', isRanged: true, isCantrip: true),
+
+    // Ray of Frost
     DprWeaponPreset(id: 'ray_of_frost_1', name: 'Ray of Frost (1d8 Cold, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'cold', isRanged: true, isCantrip: true),
     DprWeaponPreset(id: 'ray_of_frost_2', name: 'Ray of Frost (2d8 Cold, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 8, damageType: 'cold', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'toll_the_dead_1', name: 'Toll the Dead (1d12 Necrotic)', category: 'Damage Cantrip', diceCount: 1, diceSides: 12, damageType: 'necrotic', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'toll_the_dead_2', name: 'Toll the Dead (2d12 Necrotic, Lvl 5+)', category: 'Damage Cantrip', diceCount: 2, diceSides: 12, damageType: 'necrotic', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'sacred_flame_1', name: 'Sacred Flame (1d8 Radiant)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'radiant', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'sacred_flame_2', name: 'Sacred Flame (2d8 Radiant, Lvl 5+)', category: 'Damage Cantrip', diceCount: 2, diceSides: 8, damageType: 'radiant', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'shocking_grasp_1', name: 'Shocking Grasp (1d8 Lightning Melee)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'lightning', isCantrip: true),
-    DprWeaponPreset(id: 'shocking_grasp_2', name: 'Shocking Grasp (2d8 Lightning, Lvl 5+)', category: 'Damage Cantrip', diceCount: 2, diceSides: 8, damageType: 'lightning', isCantrip: true),
-    DprWeaponPreset(id: 'poison_spray_1', name: 'Poison Spray (1d12 Poison)', category: 'Damage Cantrip', diceCount: 1, diceSides: 12, damageType: 'poison', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'poison_spray_2', name: 'Poison Spray (2d12 Poison, Lvl 5+)', category: 'Damage Cantrip', diceCount: 2, diceSides: 12, damageType: 'poison', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'vicious_mockery_1', name: 'Vicious Mockery (1d4 Psychic)', category: 'Damage Cantrip', diceCount: 1, diceSides: 4, damageType: 'psychic', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'mind_sliver_1', name: 'Mind Sliver (1d6 Psychic)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'psychic', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'chill_touch_1', name: 'Chill Touch (1d8 Necrotic)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'necrotic', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'produce_flame_1', name: 'Produce Flame (1d8 Fire)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'fire', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'primal_savagery_1', name: 'Primal Savagery (1d10 Acid)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'acid', isCantrip: true),
-    DprWeaponPreset(id: 'shillelagh', name: 'Shillelagh (1d8 Magical Bludgeoning)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'bludgeoning', isCantrip: true),
-    DprWeaponPreset(id: 'magic_stone', name: 'Magic Stone (1d6 Bludgeoning Ranged)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'bludgeoning', isRanged: true, isCantrip: true),
-    DprWeaponPreset(id: 'booming_blade', name: 'Booming Blade (1d8 Weapon + 1d8 Thunder)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 1, secondaryDiceSides: 8, secondaryDamageType: 'thunder', isCantrip: true),
-    DprWeaponPreset(id: 'green_flame_blade', name: 'Green-Flame Blade (1d8 Weapon + 1d8 Fire)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 1, secondaryDiceSides: 8, secondaryDamageType: 'fire', isCantrip: true),
+    DprWeaponPreset(id: 'ray_of_frost_3', name: 'Ray of Frost (3d8 Cold, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 8, damageType: 'cold', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'ray_of_frost_4', name: 'Ray of Frost (4d8 Cold, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 8, damageType: 'cold', isRanged: true, isCantrip: true),
+
+    // Sacred Flame
+    DprWeaponPreset(id: 'sacred_flame_1', name: 'Sacred Flame (1d8 Radiant, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'radiant', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'sacred_flame_2', name: 'Sacred Flame (2d8 Radiant, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 8, damageType: 'radiant', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'sacred_flame_3', name: 'Sacred Flame (3d8 Radiant, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 8, damageType: 'radiant', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'sacred_flame_4', name: 'Sacred Flame (4d8 Radiant, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 8, damageType: 'radiant', isRanged: true, isCantrip: true),
+
+    // Chill Touch
+    DprWeaponPreset(id: 'chill_touch_1', name: 'Chill Touch (1d8 Necrotic, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'necrotic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'chill_touch_2', name: 'Chill Touch (2d8 Necrotic, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 8, damageType: 'necrotic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'chill_touch_3', name: 'Chill Touch (3d8 Necrotic, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 8, damageType: 'necrotic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'chill_touch_4', name: 'Chill Touch (4d8 Necrotic, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 8, damageType: 'necrotic', isRanged: true, isCantrip: true),
+
+    // Mind Sliver
+    DprWeaponPreset(id: 'mind_sliver_1', name: 'Mind Sliver (1d6 Psychic, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'psychic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'mind_sliver_2', name: 'Mind Sliver (2d6 Psychic, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 6, damageType: 'psychic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'mind_sliver_3', name: 'Mind Sliver (3d6 Psychic, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 6, damageType: 'psychic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'mind_sliver_4', name: 'Mind Sliver (4d6 Psychic, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 6, damageType: 'psychic', isRanged: true, isCantrip: true),
+
+    // Shocking Grasp
+    DprWeaponPreset(id: 'shocking_grasp_1', name: 'Shocking Grasp (1d8 Lightning, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'lightning', isCantrip: true),
+    DprWeaponPreset(id: 'shocking_grasp_2', name: 'Shocking Grasp (2d8 Lightning, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 8, damageType: 'lightning', isCantrip: true),
+    DprWeaponPreset(id: 'shocking_grasp_3', name: 'Shocking Grasp (3d8 Lightning, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 8, damageType: 'lightning', isCantrip: true),
+    DprWeaponPreset(id: 'shocking_grasp_4', name: 'Shocking Grasp (4d8 Lightning, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 8, damageType: 'lightning', isCantrip: true),
+
+    // Poison Spray
+    DprWeaponPreset(id: 'poison_spray_1', name: 'Poison Spray (1d12 Poison, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 12, damageType: 'poison', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'poison_spray_2', name: 'Poison Spray (2d12 Poison, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 12, damageType: 'poison', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'poison_spray_3', name: 'Poison Spray (3d12 Poison, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 12, damageType: 'poison', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'poison_spray_4', name: 'Poison Spray (4d12 Poison, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 12, damageType: 'poison', isRanged: true, isCantrip: true),
+
+    // Acid Splash
+    DprWeaponPreset(id: 'acid_splash_1', name: 'Acid Splash (1d6 Acid, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'acid', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'acid_splash_2', name: 'Acid Splash (2d6 Acid, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 6, damageType: 'acid', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'acid_splash_3', name: 'Acid Splash (3d6 Acid, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 6, damageType: 'acid', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'acid_splash_4', name: 'Acid Splash (4d6 Acid, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 6, damageType: 'acid', isRanged: true, isCantrip: true),
+
+    // Vicious Mockery
+    DprWeaponPreset(id: 'vicious_mockery_1', name: 'Vicious Mockery (1d4 Psychic, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 4, damageType: 'psychic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'vicious_mockery_2', name: 'Vicious Mockery (2d4 Psychic, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 4, damageType: 'psychic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'vicious_mockery_3', name: 'Vicious Mockery (3d4 Psychic, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 4, damageType: 'psychic', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'vicious_mockery_4', name: 'Vicious Mockery (4d4 Psychic, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 4, damageType: 'psychic', isRanged: true, isCantrip: true),
+
+    // Produce Flame
+    DprWeaponPreset(id: 'produce_flame_1', name: 'Produce Flame (1d8 Fire, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'fire', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'produce_flame_2', name: 'Produce Flame (2d8 Fire, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 8, damageType: 'fire', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'produce_flame_3', name: 'Produce Flame (3d8 Fire, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 8, damageType: 'fire', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'produce_flame_4', name: 'Produce Flame (4d8 Fire, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 8, damageType: 'fire', isRanged: true, isCantrip: true),
+
+    // Primal Savagery
+    DprWeaponPreset(id: 'primal_savagery_1', name: 'Primal Savagery (1d10 Acid, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'acid', isCantrip: true),
+    DprWeaponPreset(id: 'primal_savagery_2', name: 'Primal Savagery (2d10 Acid, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 10, damageType: 'acid', isCantrip: true),
+    DprWeaponPreset(id: 'primal_savagery_3', name: 'Primal Savagery (3d10 Acid, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 10, damageType: 'acid', isCantrip: true),
+    DprWeaponPreset(id: 'primal_savagery_4', name: 'Primal Savagery (4d10 Acid, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 10, damageType: 'acid', isCantrip: true),
+
+    // Thorn Whip
+    DprWeaponPreset(id: 'thorn_whip_1', name: 'Thorn Whip (1d6 Piercing, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'piercing', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'thorn_whip_2', name: 'Thorn Whip (2d6 Piercing, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 6, damageType: 'piercing', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'thorn_whip_3', name: 'Thorn Whip (3d6 Piercing, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 6, damageType: 'piercing', isRanged: true, isCantrip: true),
+    DprWeaponPreset(id: 'thorn_whip_4', name: 'Thorn Whip (4d6 Piercing, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 6, damageType: 'piercing', isRanged: true, isCantrip: true),
+
+    // Word of Radiance
+    DprWeaponPreset(id: 'word_of_radiance_1', name: 'Word of Radiance (1d6 Radiant, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'radiant', isCantrip: true),
+    DprWeaponPreset(id: 'word_of_radiance_2', name: 'Word of Radiance (2d6 Radiant, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 2, diceSides: 6, damageType: 'radiant', isCantrip: true),
+    DprWeaponPreset(id: 'word_of_radiance_3', name: 'Word of Radiance (3d6 Radiant, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 3, diceSides: 6, damageType: 'radiant', isCantrip: true),
+    DprWeaponPreset(id: 'word_of_radiance_4', name: 'Word of Radiance (4d6 Radiant, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 4, diceSides: 6, damageType: 'radiant', isCantrip: true),
+
+    // Booming Blade
+    DprWeaponPreset(id: 'booming_blade_1', name: 'Booming Blade (1d8 Weapon, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', isCantrip: true),
+    DprWeaponPreset(id: 'booming_blade_2', name: 'Booming Blade (1d8 Weapon + 1d8 Thunder, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 1, secondaryDiceSides: 8, secondaryDamageType: 'thunder', isCantrip: true),
+    DprWeaponPreset(id: 'booming_blade_3', name: 'Booming Blade (1d8 Weapon + 2d8 Thunder, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 2, secondaryDiceSides: 8, secondaryDamageType: 'thunder', isCantrip: true),
+    DprWeaponPreset(id: 'booming_blade_4', name: 'Booming Blade (1d8 Weapon + 3d8 Thunder, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 3, secondaryDiceSides: 8, secondaryDamageType: 'thunder', isCantrip: true),
+
+    // Green-Flame Blade
+    DprWeaponPreset(id: 'green_flame_blade_1', name: 'Green-Flame Blade (1d8 Weapon, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', isCantrip: true),
+    DprWeaponPreset(id: 'green_flame_blade_2', name: 'Green-Flame Blade (1d8 Weapon + 1d8 Fire, Lvl 5-10)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 1, secondaryDiceSides: 8, secondaryDamageType: 'fire', isCantrip: true),
+    DprWeaponPreset(id: 'green_flame_blade_3', name: 'Green-Flame Blade (1d8 Weapon + 2d8 Fire, Lvl 11-16)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 2, secondaryDiceSides: 8, secondaryDamageType: 'fire', isCantrip: true),
+    DprWeaponPreset(id: 'green_flame_blade_4', name: 'Green-Flame Blade (1d8 Weapon + 3d8 Fire, Lvl 17-20)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 3, secondaryDiceSides: 8, secondaryDamageType: 'fire', isCantrip: true),
+
+    // Weapon Enhancing & Ranged Utility Cantrips
+    DprWeaponPreset(id: 'shillelagh', name: 'Shillelagh (1d8 Magical Bludgeoning, Lvl 1-4)', category: 'Damage Cantrip', diceCount: 1, diceSides: 8, damageType: 'bludgeoning', isCantrip: true),
+    DprWeaponPreset(id: 'shillelagh_2', name: 'Shillelagh (1d10 Magical Bludgeoning, 2024 Lvl 5+)', category: 'Damage Cantrip', diceCount: 1, diceSides: 10, damageType: 'bludgeoning', isCantrip: true),
+    DprWeaponPreset(id: 'shillelagh_3', name: 'Shillelagh (1d12 Magical Bludgeoning, 2024 Lvl 11+)', category: 'Damage Cantrip', diceCount: 1, diceSides: 12, damageType: 'bludgeoning', isCantrip: true),
+    DprWeaponPreset(id: 'shillelagh_4', name: 'Shillelagh (2d6 Magical Bludgeoning, 2024 Lvl 17+)', category: 'Damage Cantrip', diceCount: 2, diceSides: 6, damageType: 'bludgeoning', isCantrip: true),
+    DprWeaponPreset(id: 'magic_stone', name: 'Magic Stone (1d6 Bludgeoning Ranged, 3 Stones)', category: 'Damage Cantrip', diceCount: 1, diceSides: 6, damageType: 'bludgeoning', isRanged: true, isCantrip: true),
 
     // Magic & Spell Weapons
     DprWeaponPreset(id: 'shadow_blade_2', name: 'Shadow Blade (2d8 Psychic, 2nd Lvl)', category: 'Magic Weapon', diceCount: 2, diceSides: 8, damageType: 'psychic', defaultMastery: WeaponMastery.vex),

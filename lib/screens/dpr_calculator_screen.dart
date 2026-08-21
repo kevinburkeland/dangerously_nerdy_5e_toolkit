@@ -105,6 +105,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             diceCount: preset.diceCount,
             diceSides: preset.diceSides,
             damageType: preset.damageType,
+            attacksPerRound: preset.defaultAttacksPerRound,
             // For damage cantrips, baseline damage does not add ability modifier
             damageBonus: preset.isCantrip ? preset.flatBonus : (abilityMod + preset.flatBonus),
             attackBonus: abilityMod + pb + preset.flatBonus + (preset.isRanged && current.hasArchery ? 2 : 0),

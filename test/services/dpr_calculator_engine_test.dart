@@ -239,6 +239,20 @@ void main() {
       expect(magicStone.isRanged, isTrue);
       expect(magicStone.isCantrip, isTrue);
 
+      final eb1 = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'eldritch_blast_1');
+      final eb2 = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'eldritch_blast_2');
+      final eb3 = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'eldritch_blast_3');
+      final eb4 = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'eldritch_blast_4');
+
+      expect(eb1.defaultAttacksPerRound, equals(1));
+      expect(eb2.defaultAttacksPerRound, equals(2));
+      expect(eb3.defaultAttacksPerRound, equals(3));
+      expect(eb4.defaultAttacksPerRound, equals(4));
+
+      final fb4 = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'fire_bolt_4');
+      expect(fb4.diceCount, equals(4));
+      expect(fb4.diceSides, equals(10));
+
       final shadowBlade = DprWeaponPreset.allPresets.firstWhere((p) => p.id == 'shadow_blade_2');
       expect(shadowBlade.name, contains('Shadow Blade'));
       expect(shadowBlade.diceCount, equals(2));
