@@ -3,6 +3,7 @@ import '../../models/srd_summons/minion_stat_block.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/dice_formatters.dart';
 import '../glyphs/dnd_glyph.dart';
+import '../monster_codex/creature_dpr_view.dart';
 
 class CreatureStatBlockDialog extends StatefulWidget {
   final MinionStatBlock statBlock;
@@ -35,6 +36,7 @@ class CreatureStatBlockDialog extends StatefulWidget {
 
 class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
   bool _isGlyphActive = true;
+  int _selectedTabIndex = 0;
 
   void _toggleGlyphAnimation() {
     HapticService.selectionTick(context);
@@ -49,7 +51,7 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 580, maxHeight: 720),
+        constraints: const BoxConstraints(maxWidth: 620, maxHeight: 760),
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xFF1E1A2E),
@@ -107,22 +109,56 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                 ),
               ),
 
-              // Scrollable Stat Block Body
+              // Navigation Tabs: Stat Block & DPR Calculator
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildHeaderTabButton(
+                        index: 0,
+                        label: 'Stat Block',
+                        icon: Icons.menu_book,
+                        accent: sb.accentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildHeaderTabButton(
+                        index: 1,
+                        label: 'Damage / DPR',
+                        icon: Icons.calculate_outlined,
+                        accent: sb.accentColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Body: Stat Block or DPR View
               Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 1. Creature Glyph, Name & Type / Alignment
-                      InkWell(
-                        onTap: _toggleGlyphAnimation,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
+                child: _selectedTabIndex == 1
+                    ? CreatureDprView(statBlock: sb)
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 1. Creature Glyph, Name & Type / Alignment
+                            InkWell(
+                              onTap: _toggleGlyphAnimation,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
                               DndGlyph.monster(
                                 creatureType: sb.glyphCreatureType,
                                 crTier: sb.glyphCrTier,
@@ -584,4 +620,57 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
       ),
     );
   }
+
+  Widget _buildHeaderTabButton({
+    required int index,
+    required String label,
+    required IconData icon,
+    required Color accent,
+  }) {
+    final isSelected = _selectedTabIndex == index;
+    return InkWell(
+      onTap: () {
+        HapticService.selectionTick(context);
+        setState(() => _selectedTabIndex = index);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? accent.withValues(alpha: 0.25)
+              : Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? accent : Colors.white.withValues(alpha: 0.1),
+            width: isSelected ? 1.4 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? const Color(0xFFFFD54F) : Colors.white70,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? const Color(0xFFFFD54F) : Colors.white70,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+

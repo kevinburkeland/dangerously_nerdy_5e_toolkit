@@ -730,3 +730,157 @@ class DprMonsterAcPreset {
   ];
 }
 
+/// Extension on MinionStatBlock providing DPR conversion, attack extraction, and routine calculations.
+extension MinionStatBlockDprExt on MinionStatBlock {
+  /// Extracts structured DprAttackAction objects from this monster's stat block and actions.
+  List<DprAttackAction> extractDprAttacks() {
+    final attacks = <DprAttackAction>[];
+    CreatureAction? multiattackAction;
+
+    for (final action in actions) {
+      if (action.name.toLowerCase().contains('multiattack')) {
+        multiattackAction = action;
+        break;
+      }
+    }
+
+    for (final action in actions) {
+      if (action == multiattackAction) continue;
+
+      final isAttack = action.attackBonus != null ||
+          action.hitDamage != null ||
+          (action.attackType != null && action.attackType!.isNotEmpty) ||
+          action.description.toLowerCase().contains('to hit') ||
+          action.description.toLowerCase().contains('weapon attack') ||
+          action.description.toLowerCase().contains('spell attack');
+
+      if (!isAttack) continue;
+
+      final parsed = _parseCreatureActionToDpr(action, multiattackAction);
+      if (parsed != null) {
+        attacks.add(parsed);
+      }
+    }
+
+    if (attacks.isEmpty) {
+      attacks.add(
+        DprAttackAction(
+          id: '${id}_primary',
+          name: actions.isNotEmpty ? actions.first.name : 'Primary Attack',
+          attackBonus: attackBonus,
+          diceCount: damageDiceCount,
+          diceSides: damageDiceSides,
+          damageBonus: damageBonus,
+          damageType: damageType,
+          secondaryDiceCount: secondaryDamageDiceCount,
+          secondaryDiceSides: secondaryDamageDiceSides,
+          secondaryDamageType: secondaryDamageType,
+          attacksPerRound: multiattackAction != null ? 2 : 1,
+        ),
+      );
+    }
+
+    return attacks;
+  }
+
+  DprAttackAction? _parseCreatureActionToDpr(
+    CreatureAction action,
+    CreatureAction? multiattack,
+  ) {
+    int bonus = action.attackBonus ?? attackBonus;
+    final bonusMatch = RegExp(r'([+-]\s*\d+)\s+to\s+hit', caseSensitive: false)
+        .firstMatch(action.description);
+    if (bonusMatch != null) {
+      final parsed = int.tryParse(bonusMatch.group(1)!.replaceAll(' ', ''));
+      if (parsed != null) bonus = parsed;
+    }
+
+    final text = '${action.hitDamage ?? ""} ${action.description}';
+    final diceMatches = RegExp(r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?', caseSensitive: false)
+        .allMatches(text)
+        .toList();
+
+    int dCount = damageDiceCount;
+    int dSides = damageDiceSides;
+    int dBonus = damageBonus;
+    String dType = damageType;
+
+    int secDCount = 0;
+    int secDSides = 0;
+    String? secDType;
+
+    if (diceMatches.isNotEmpty) {
+      final m1 = diceMatches[0];
+      dCount = int.tryParse(m1.group(1) ?? '') ?? damageDiceCount;
+      dSides = int.tryParse(m1.group(2) ?? '') ?? damageDiceSides;
+      if (m1.group(4) != null) {
+        final sign = m1.group(3) == '-' ? -1 : 1;
+        dBonus = sign * (int.tryParse(m1.group(4)!) ?? 0);
+      } else {
+        dBonus = 0;
+      }
+
+      if (diceMatches.length > 1) {
+        final m2 = diceMatches[1];
+        secDCount = int.tryParse(m2.group(1) ?? '') ?? 0;
+        secDSides = int.tryParse(m2.group(2) ?? '') ?? 0;
+      }
+    }
+
+    final typeMatch = RegExp(
+      r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)\s+damage',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (typeMatch != null) {
+      dType = typeMatch.group(1)!.toLowerCase();
+    }
+
+    int countPerRound = 1;
+    if (multiattack != null) {
+      final multiDesc = multiattack.description.toLowerCase();
+      final actionNameLower = action.name.toLowerCase();
+
+      if (multiDesc.contains('three $actionNameLower') ||
+          multiDesc.contains('3 $actionNameLower') ||
+          multiDesc.contains('three with its $actionNameLower') ||
+          multiDesc.contains('three with their $actionNameLower')) {
+        countPerRound = 3;
+      } else if (multiDesc.contains('two $actionNameLower') ||
+          multiDesc.contains('2 $actionNameLower') ||
+          multiDesc.contains('two with its $actionNameLower') ||
+          multiDesc.contains('two with their $actionNameLower') ||
+          multiDesc.contains('two with either $actionNameLower')) {
+        countPerRound = 2;
+      } else if (multiDesc.contains('four $actionNameLower') ||
+          multiDesc.contains('4 $actionNameLower')) {
+        countPerRound = 4;
+      } else if (multiDesc.contains('one with its $actionNameLower') ||
+          multiDesc.contains('one $actionNameLower')) {
+        countPerRound = 1;
+      } else if (multiDesc.contains('makes two attacks') ||
+          multiDesc.contains('makes two melee attacks') ||
+          multiDesc.contains('makes two weapon attacks')) {
+        countPerRound = 2;
+      } else if (multiDesc.contains('makes three attacks') ||
+          multiDesc.contains('makes three melee attacks')) {
+        countPerRound = 3;
+      }
+    }
+
+    return DprAttackAction(
+      id: '${id}_${action.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_')}',
+      name: action.name,
+      attackBonus: bonus,
+      diceCount: dCount,
+      diceSides: dSides,
+      damageBonus: dBonus,
+      damageType: dType,
+      secondaryDiceCount: secDCount,
+      secondaryDiceSides: secDSides,
+      secondaryDamageType: secDType,
+      attacksPerRound: countPerRound,
+    );
+  }
+}
+
+

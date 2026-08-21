@@ -66,5 +66,42 @@ void main() {
 
       expect(added, isTrue);
     });
+
+    testWidgets('switches between Stat Block and Damage / DPR tabs smoothly', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CreatureStatBlockDialog(
+              statBlock: SrdSummonsLibrary.wolf,
+            ),
+          ),
+        ),
+      );
+
+      // Verify both tab headers are visible
+      expect(find.text('Stat Block'), findsOneWidget);
+      expect(find.text('Damage / DPR'), findsOneWidget);
+
+      // Default tab is Stat Block
+      expect(find.text('Medium beast, unaligned'), findsOneWidget);
+      expect(find.text('EXPECTED DAMAGE / ROUND'), findsNothing);
+
+      // Switch to Damage / DPR tab
+      await tester.tap(find.text('Damage / DPR'));
+      await tester.pumpAndSettle();
+
+      // Verify DPR view is now visible
+      expect(find.text('EXPECTED DAMAGE / ROUND'), findsOneWidget);
+      expect(find.text('Target Armor Class: '), findsOneWidget);
+
+      // Switch back to Stat Block tab
+      await tester.tap(find.text('Stat Block'));
+      await tester.pumpAndSettle();
+
+      // Verify Stat Block is back
+      expect(find.text('Medium beast, unaligned'), findsOneWidget);
+      expect(find.text('EXPECTED DAMAGE / ROUND'), findsNothing);
+    });
   });
 }
+
