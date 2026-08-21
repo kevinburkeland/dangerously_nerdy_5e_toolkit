@@ -825,7 +825,7 @@ class MagicItem {
           : '2,000 days (Bastion workshop / guild assisted)';
       time2014Display = consumable ? '12.5 workweeks (62.5 days)' : '25 workweeks (125 days)';
       minLevel = 11;
-      exoticCr = 'CR 13–18 monster component (e.g., Adult Dragon, Beholder, Marilith)';
+      exoticCr = 'CR 13–18 monster component (e.g., Adult Dragon, Iron Golem, Marilith, Purple Worm)';
       notes.add('Requires Arcane Formula / Master Blueprint.');
       notes.add('Character must be at least 11th level.');
       notes.add('Typically crafted in a high-tier Bastion or with an organized artisan guild.');

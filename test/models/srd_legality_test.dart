@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
 
 void main() {
   group('SRD & Open Gaming License / CC-BY-4.0 Legality Audit', () {
@@ -114,6 +115,61 @@ void main() {
             isFalse,
             reason: 'Spell diff summary in "${spell.name}" contains Product Identity term "$forbidden"',
           );
+        }
+      }
+    });
+
+    test('Magic Item Library and Crafting Rules contain no WotC Product Identity terms', () {
+      final items = MagicItemLibrary.allItems;
+      expect(items, isNotEmpty);
+
+      for (final item in items) {
+        final lowerName = item.name.toLowerCase();
+        final lowerId = item.id.toLowerCase();
+        final lowerDiff = (item.diffSummary ?? '').toLowerCase();
+
+        for (final forbidden in forbiddenProductIdentity) {
+          expect(
+            lowerName.contains(forbidden),
+            isFalse,
+            reason: 'Item "${item.name}" contains Product Identity term "$forbidden"',
+          );
+          expect(
+            lowerId.contains(forbidden),
+            isFalse,
+            reason: 'Item ID "${item.id}" contains Product Identity term "$forbidden"',
+          );
+          expect(
+            lowerDiff.contains(forbidden),
+            isFalse,
+            reason: 'Item diff in "${item.name}" contains Product Identity term "$forbidden"',
+          );
+        }
+
+        // Test Crafting Details for both 2014 and 2024 editions
+        for (final edition in [DmRulesEdition.v2014, DmRulesEdition.v2024]) {
+          final crafting = item.getCraftingDetails(edition);
+          final textBlobs = [
+            crafting.primaryTool.toLowerCase(),
+            crafting.alternativeTools.join(' ').toLowerCase(),
+            crafting.goldCostDisplay.toLowerCase(),
+            crafting.craftingTime2024Display.toLowerCase(),
+            crafting.craftingTime2014Display.toLowerCase(),
+            crafting.exoticIngredientCr.toLowerCase(),
+            crafting.bastionFacility.toLowerCase(),
+            crafting.specialNotes.join(' ').toLowerCase(),
+            crafting.quickSummary.toLowerCase(),
+          ];
+
+          for (final blob in textBlobs) {
+            for (final forbidden in forbiddenProductIdentity) {
+              expect(
+                blob.contains(forbidden),
+                isFalse,
+                reason: 'Crafting details for "${item.name}" ($edition) contains Product Identity term "$forbidden" in text: "$blob"',
+              );
+            }
+          }
         }
       }
     });
