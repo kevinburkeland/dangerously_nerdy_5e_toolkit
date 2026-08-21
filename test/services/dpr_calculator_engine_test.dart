@@ -178,6 +178,38 @@ void main() {
       expect(pt!.dpr, greaterThan(10.0)); // 1d6+4 + 3d6 sneak attack with advantage
     });
 
+    test('Agonizing Blast adds ability modifier to cantrip damage', () {
+      const ebWithoutAgonizing = DprAttackAction(
+        id: 'eb_1',
+        name: 'Eldritch Blast',
+        attackBonus: 7,
+        diceCount: 1,
+        diceSides: 10,
+        damageBonus: 0,
+        damageType: 'force',
+        hasAgonizingBlast: false,
+      );
+
+      const ebWithAgonizing = DprAttackAction(
+        id: 'eb_2',
+        name: 'Eldritch Blast',
+        attackBonus: 7,
+        diceCount: 1,
+        diceSides: 10,
+        damageBonus: 0,
+        damageType: 'force',
+        hasAgonizingBlast: true,
+        abilityModForAgonizing: 4,
+      );
+
+      final ptWithout = DprCalculatorEngine.calculateSingleAttackDpr(ebWithoutAgonizing, 15, AdvantageType.normal);
+      final ptWith = DprCalculatorEngine.calculateSingleAttackDpr(ebWithAgonizing, 15, AdvantageType.normal);
+
+      // Hit chance = 0.65 (need 8+ on d20). Expected hit damage increases by 4.
+      expect(ptWith.expectedDamageOnHit, equals(ptWithout.expectedDamageOnHit + 4.0));
+      expect(ptWith.dpr, greaterThan(ptWithout.dpr));
+    });
+
     test('MonsterItem adapter cleanly parses monster actions for future monster arena reuse', () {
       final monster = MonsterCodexLibrary.allMonsters.firstWhere(
         (m) => m.name.toLowerCase().contains('goblin'),

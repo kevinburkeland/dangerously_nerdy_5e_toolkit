@@ -112,6 +112,9 @@ class DprCalculatorEngine {
     var flatDamage = attack.damageBonus;
     if (attack.hasDueling) flatDamage += 2;
     if (attack.hasThrownWeapon) flatDamage += 2;
+    if (attack.hasAgonizingBlast && attack.abilityModForAgonizing > 0) {
+      flatDamage += attack.abilityModForAgonizing;
+    }
     if (attack.gwmMode == GwmMode.v2014PowerAttack) flatDamage += 10;
     if (attack.gwmMode == GwmMode.v2024ProficiencyBonus) flatDamage += proficiencyBonus;
     if (attack.isOffhandWithoutTwf) {

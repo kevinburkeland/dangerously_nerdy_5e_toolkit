@@ -153,13 +153,15 @@ class DprAttackAction {
   final int secondaryDamageBonus;
   final String? secondaryDamageType;
 
-  // Feats & Fighting Styles
+  // Feats, Invocations & Fighting Styles
   final GwmMode gwmMode;
   final GwfVersion gwfVersion;
   final bool hasDueling;          // +2 damage on 1H melee
   final bool hasArchery;          // +2 to-hit on ranged
   final bool hasThrownWeapon;     // +2 damage on thrown
   final bool isOffhandWithoutTwf; // no ability mod to damage
+  final bool hasAgonizingBlast;   // adds ability modifier to cantrip / Eldritch Blast damage
+  final int abilityModForAgonizing;
 
   // Weapon Mastery
   final WeaponMastery weaponMastery;
@@ -196,6 +198,8 @@ class DprAttackAction {
     this.hasArchery = false,
     this.hasThrownWeapon = false,
     this.isOffhandWithoutTwf = false,
+    this.hasAgonizingBlast = false,
+    this.abilityModForAgonizing = 0,
     this.weaponMastery = WeaponMastery.none,
     this.abilityModForGraze = 0,
     this.critThreshold = 20,
@@ -225,6 +229,8 @@ class DprAttackAction {
     bool? hasArchery,
     bool? hasThrownWeapon,
     bool? isOffhandWithoutTwf,
+    bool? hasAgonizingBlast,
+    int? abilityModForAgonizing,
     WeaponMastery? weaponMastery,
     int? abilityModForGraze,
     int? critThreshold,
@@ -253,6 +259,8 @@ class DprAttackAction {
       hasArchery: hasArchery ?? this.hasArchery,
       hasThrownWeapon: hasThrownWeapon ?? this.hasThrownWeapon,
       isOffhandWithoutTwf: isOffhandWithoutTwf ?? this.isOffhandWithoutTwf,
+      hasAgonizingBlast: hasAgonizingBlast ?? this.hasAgonizingBlast,
+      abilityModForAgonizing: abilityModForAgonizing ?? this.abilityModForAgonizing,
       weaponMastery: weaponMastery ?? this.weaponMastery,
       abilityModForGraze: abilityModForGraze ?? this.abilityModForGraze,
       critThreshold: critThreshold ?? this.critThreshold,
@@ -274,6 +282,7 @@ class DprAttackAction {
     var totalBonus = damageBonus + attackBuffFlat;
     if (hasDueling) totalBonus += 2;
     if (hasThrownWeapon) totalBonus += 2;
+    if (hasAgonizingBlast && abilityModForAgonizing > 0) totalBonus += abilityModForAgonizing;
     if (gwmMode == GwmMode.v2014PowerAttack) totalBonus += 10;
 
     if (totalBonus > 0) {

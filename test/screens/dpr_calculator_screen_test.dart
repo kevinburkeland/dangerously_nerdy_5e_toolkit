@@ -214,5 +214,26 @@ void main() {
       expect(find.text('GWM 2014 (-5/+10)'), findsOneWidget);
       expect(find.text('GWF 2014 (Reroll 1s & 2s)'), findsOneWidget);
     });
+
+    testWidgets('toggles Agonizing Blast chip to add ability modifier damage', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      // Find Agonizing Blast chip
+      final agonizingChip = find.textContaining('Agonizing Blast (+4 dmg)');
+      expect(agonizingChip, findsOneWidget);
+
+      await tester.ensureVisible(agonizingChip);
+      await tester.tap(agonizingChip);
+      await tester.pumpAndSettle();
+
+      // Verify chip is toggled and rendered
+      expect(find.textContaining('Agonizing Blast (+4 dmg)'), findsOneWidget);
+    });
   });
 }

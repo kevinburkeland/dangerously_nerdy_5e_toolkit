@@ -115,6 +115,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             abilityModForGraze: (!preset.isCantrip && preset.defaultMastery == WeaponMastery.graze)
                 ? abilityMod
                 : 0,
+            abilityModForAgonizing: abilityMod,
             hasArchery: preset.isRanged ? current.hasArchery : false,
           );
           _updateAttack(attackIndex, updated);
@@ -835,7 +836,14 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                     min: 1,
                     max: 30,
                     onChanged: (val) {
-                      _updateProfile(_profile.copyWith(abilityScore: val));
+                      final newMod = ((val - 10) / 2).floor();
+                      final updatedAttacks = _profile.attacks.map((a) {
+                        return a.copyWith(
+                          abilityModForAgonizing: a.hasAgonizingBlast ? newMod : a.abilityModForAgonizing,
+                          abilityModForGraze: a.weaponMastery == WeaponMastery.graze ? newMod : a.abilityModForGraze,
+                        );
+                      }).toList();
+                      _updateProfile(_profile.copyWith(abilityScore: val, attacks: updatedAttacks));
                     },
                   ),
                 ),
@@ -1264,6 +1272,25 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                   _updateAttack(
                     index,
                     attack.copyWith(attackBuffDiceSides: val ? 4 : 0),
+                  );
+                },
+              ),
+
+              // Agonizing Blast / Cantrip Ability Mod (+Mod dmg)
+              FilterChip(
+                avatar: const Icon(Icons.auto_awesome, size: 12, color: Colors.purpleAccent),
+                label: Text('Agonizing Blast (+${_profile.abilityModifier} dmg)', style: const TextStyle(fontSize: 11)),
+                tooltip: 'Add spellcasting ability modifier to cantrip / Eldritch Blast damage',
+                selected: attack.hasAgonizingBlast,
+                selectedColor: Colors.purple.withValues(alpha: 0.25),
+                checkmarkColor: Colors.purpleAccent,
+                onSelected: (val) {
+                  _updateAttack(
+                    index,
+                    attack.copyWith(
+                      hasAgonizingBlast: val,
+                      abilityModForAgonizing: _profile.abilityModifier,
+                    ),
                   );
                 },
               ),
