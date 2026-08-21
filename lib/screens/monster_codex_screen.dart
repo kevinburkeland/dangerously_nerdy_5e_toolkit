@@ -6,6 +6,9 @@ import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
 import '../services/rules/spellcasting_rules_engine.dart';
+import '../widgets/common/compendium_search_header.dart';
+import '../widgets/common/empty_state_card.dart';
+import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dialogs/creature_stat_block_dialog.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
@@ -405,74 +408,18 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
               child: RoomBannerWidget(compact: true),
             ),
             // Search Bar & Filter Sheet Trigger Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      decoration: InputDecoration(
-                        hintText: 'Search monsters, CR, traits, actions...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = '');
-                                },
-                              )
-                            : null,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.35),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      IconButton.filledTonal(
-                        icon: const Icon(Icons.tune, size: 20),
-                        tooltip: 'Filter Bestiary',
-                        onPressed: () => _openFilterSheet(context),
-                      ),
-                      if (activeFilterCount > 0)
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            '$activeFilterCount',
-                            style: TextStyle(
-                              color: theme.colorScheme.onPrimary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+            CompendiumSearchHeader(
+              controller: _searchController,
+              searchQuery: _searchQuery,
+              onChanged: (val) => setState(() => _searchQuery = val),
+              onClear: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+              hintText: 'Search monsters, CR, traits, actions...',
+              activeFilterCount: activeFilterCount,
+              filterTooltip: 'Filter Bestiary',
+              onFilterTap: () => _openFilterSheet(context),
             ),
 
             // Segmented View Selector: All Monsters / My Bestiary / 2024 Diffs
@@ -829,60 +776,28 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
-    final rowCount = (monsters.length / crossAxisCount).ceil();
-
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList.builder(
-        itemCount: rowCount,
-        itemBuilder: (context, rowIndex) {
-          final startIndex = rowIndex * crossAxisCount;
-          final rowMonsters =
-              monsters.skip(startIndex).take(crossAxisCount).toList();
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int c = 0; c < crossAxisCount; c++) ...[
-                  if (c > 0) const SizedBox(width: 14),
-                  Expanded(
-                    child: c < rowMonsters.length
-                        ? RepaintBoundary(
-                            child: MonsterCard(
-                              monster: rowMonsters[c],
-                              edition: edition,
-                              isPinned: pinnedIds.contains(rowMonsters[c].id),
-                              onTogglePin: () =>
-                                  _togglePinMonster(context, rowMonsters[c].id),
-                              onTap: () {
-                                CreatureStatBlockDialog.show(
-                                  context,
-                                  statBlock: rowMonsters[c].getStatBlock(edition),
-                                );
-                              },
-                              onQuickRoll: _performQuickRoll,
-                              onOpenQuickRoll: () =>
-                                  _openQuickRollDialog(context, rowMonsters[c]),
-                              onOpenComparison: () {
-                                MonsterComparisonDialog.show(
-                                  context,
-                                  monster: rowMonsters[c],
-                                  edition: edition,
-                                  isPinned: pinnedIds.contains(rowMonsters[c].id),
-                                  onTogglePin: () => _togglePinMonster(context, rowMonsters[c].id),
-                                );
-                              },
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ],
-            ),
+    return SliverResponsiveCardGrid<MonsterItem>(
+      items: monsters,
+      itemBuilder: (context, monster) => MonsterCard(
+        monster: monster,
+        edition: edition,
+        isPinned: pinnedIds.contains(monster.id),
+        onTogglePin: () => _togglePinMonster(context, monster.id),
+        onTap: () {
+          CreatureStatBlockDialog.show(
+            context,
+            statBlock: monster.getStatBlock(edition),
+          );
+        },
+        onQuickRoll: _performQuickRoll,
+        onOpenQuickRoll: () => _openQuickRollDialog(context, monster),
+        onOpenComparison: () {
+          MonsterComparisonDialog.show(
+            context,
+            monster: monster,
+            edition: edition,
+            isPinned: pinnedIds.contains(monster.id),
+            onTogglePin: () => _togglePinMonster(context, monster.id),
           );
         },
       ),
@@ -890,53 +805,19 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
   }
 
   Widget _buildEmptyState(ThemeData theme, bool isPersonalBestiaryEmpty) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isPersonalBestiaryEmpty
-                  ? Icons.bookmark_border
-                  : Icons.search_off_outlined,
-              size: 40,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isPersonalBestiaryEmpty
-                  ? 'Your Personal Bestiary is Empty'
-                  : 'No Monsters Found',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              isPersonalBestiaryEmpty
-                  ? 'Tap the bookmark icon on any monster card to pin favorite creatures here for quick DM access.'
-                  : 'Try adjusting your search query, CR band, or creature type filters.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 12,
-              ),
-            ),
-            if (!isPersonalBestiaryEmpty) ...[
-              const SizedBox(height: 10),
-              FilledButton.tonalIcon(
-                icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('Reset All Filters'),
-                onPressed: _clearAllFilters,
-              ),
-            ],
-          ],
-        ),
-      ),
+    return EmptyStateCard(
+      icon: isPersonalBestiaryEmpty
+          ? Icons.bookmark_border
+          : Icons.search_off_outlined,
+      title: isPersonalBestiaryEmpty
+          ? 'Your Personal Bestiary is Empty'
+          : 'No Monsters Found',
+      message: isPersonalBestiaryEmpty
+          ? 'Tap the bookmark icon on any monster card to pin favorite creatures here for quick DM access.'
+          : 'Try adjusting your search query, CR band, or creature type filters.',
+      actionLabel: !isPersonalBestiaryEmpty ? 'Reset All Filters' : null,
+      actionIcon: Icons.refresh,
+      onAction: !isPersonalBestiaryEmpty ? _clearAllFilters : null,
     );
   }
 }

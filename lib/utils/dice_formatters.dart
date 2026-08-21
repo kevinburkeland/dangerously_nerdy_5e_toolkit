@@ -59,3 +59,22 @@ class DiceFormatters {
     return primary;
   }
 }
+
+/// Standard D&D 5e Ability Score Math & Modifier Helpers.
+class Dnd5eScoreMath {
+  Dnd5eScoreMath._();
+
+  /// Calculates the ability modifier for a given ability score (e.g., 10 -> 0, 16 -> +3, 9 -> -1).
+  static int scoreToModifier(int score) => ((score - 10) / 2).floor();
+
+  /// Formats an ability score with its modifier (e.g., "16 (+3)" or "9 (-1)").
+  static String formatScoreWithModifier(int score) {
+    final mod = scoreToModifier(score);
+    final sign = mod >= 0 ? '+$mod' : '$mod';
+    return '$score ($sign)';
+  }
+
+  /// Calculates the standard proficiency bonus by character level (1-20).
+  static int levelToProficiencyBonus(int level) =>
+      ((level.clamp(1, 20) - 1) ~/ 4) + 2;
+}

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/magic_items/magic_item_library.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
+import '../widgets/common/compendium_search_header.dart';
+import '../widgets/common/empty_state_card.dart';
+import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/item_compendium/item_card.dart';
 import '../widgets/item_compendium/item_comparison_dialog.dart';
@@ -266,75 +269,18 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               child: RoomBannerWidget(compact: true),
             ),
-            // Search Bar & Filter Sheet Trigger Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                      decoration: InputDecoration(
-                        hintText: 'Search magic items, traits, rarity, element...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = '');
-                                },
-                              )
-                            : null,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.35),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      IconButton.filledTonal(
-                        icon: const Icon(Icons.tune, size: 20),
-                        tooltip: 'Filter Magic Items',
-                        onPressed: () => _openFilterSheet(context),
-                      ),
-                      if (activeFilterCount > 0)
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            '$activeFilterCount',
-                            style: TextStyle(
-                              color: theme.colorScheme.onPrimary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+            CompendiumSearchHeader(
+              controller: _searchController,
+              searchQuery: _searchQuery,
+              onChanged: (val) => setState(() => _searchQuery = val.trim()),
+              onClear: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+              hintText: 'Search magic items, traits, rarity, element...',
+              activeFilterCount: activeFilterCount,
+              filterTooltip: 'Filter Magic Items',
+              onFilterTap: () => _openFilterSheet(context),
             ),
 
             // View Mode Segments (All Items / Personal Reliquary / 2024 Diffs)
@@ -637,105 +583,42 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
-    final rowCount = (items.length / crossAxisCount).ceil();
-
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList.builder(
-        itemCount: rowCount,
-        itemBuilder: (context, rowIndex) {
-          final startIndex = rowIndex * crossAxisCount;
-          final rowItems = items.skip(startIndex).take(crossAxisCount).toList();
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int c = 0; c < crossAxisCount; c++) ...[
-                  if (c > 0) const SizedBox(width: 14),
-                  Expanded(
-                    child: c < rowItems.length
-                        ? RepaintBoundary(
-                            child: ItemCard(
-                              item: rowItems[c],
-                              edition: edition,
-                              isPinned: pinnedIds.contains(rowItems[c].id),
-                              onTogglePin: () =>
-                                  _togglePinItem(context, rowItems[c].id),
-                              onTap: () => _showItemDetails(
-                                  rowItems[c], edition, pinnedIds.contains(rowItems[c].id)),
-                              onCompare: () => _showItemComparison(
-                                  rowItems[c], edition, pinnedIds.contains(rowItems[c].id)),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ],
-            ),
-          );
-        },
+    return SliverResponsiveCardGrid<MagicItem>(
+      items: items,
+      itemBuilder: (context, item) => ItemCard(
+        item: item,
+        edition: edition,
+        isPinned: pinnedIds.contains(item.id),
+        onTogglePin: () => _togglePinItem(context, item.id),
+        onTap: () => _showItemDetails(
+            item, edition, pinnedIds.contains(item.id)),
+        onCompare: () => _showItemComparison(
+            item, edition, pinnedIds.contains(item.id)),
       ),
     );
   }
 
   Widget _buildEmptyState(ThemeData theme, bool isReliquaryEmpty) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isReliquaryEmpty ? Icons.bookmark_border : Icons.search_off,
-              size: 48,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isReliquaryEmpty
-                  ? 'Your Personal Reliquary is empty'
-                  : 'No magic items match your filters',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: theme.colorScheme.onSurface,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              isReliquaryEmpty
-                  ? 'Tap the bookmark icon on any magic item card to save it to your personal reliquary.'
-                  : 'Try clearing your search query or adjusting your filters.',
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-                fontSize: 13,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            if (isReliquaryEmpty)
-              FilledButton.tonalIcon(
-                onPressed: () {
-                  HapticService.selectionTick(context);
-                  setState(() => _viewMode = ItemCompendiumViewMode.allItems);
-                },
-                icon: const Icon(Icons.auto_fix_high, size: 16),
-                label: const Text('Browse All Magic Items'),
-              )
-            else
-              FilledButton.tonalIcon(
-                onPressed: _clearAllFilters,
-                icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('Reset All Filters'),
-              ),
-          ],
-        ),
-      ),
+    return EmptyStateCard(
+      icon: isReliquaryEmpty ? Icons.bookmark_border : Icons.search_off,
+      title: isReliquaryEmpty
+          ? 'Your Personal Reliquary is empty'
+          : 'No magic items match your filters',
+      message: isReliquaryEmpty
+          ? 'Tap the bookmark icon on any magic item card to save it to your personal reliquary.'
+          : 'Try clearing your search query or adjusting your filters.',
+      actionLabel: isReliquaryEmpty
+          ? 'Browse All Magic Items'
+          : 'Reset All Filters',
+      actionIcon: isReliquaryEmpty ? Icons.auto_fix_high : Icons.refresh,
+      onAction: () {
+        HapticService.selectionTick(context);
+        if (isReliquaryEmpty) {
+          setState(() => _viewMode = ItemCompendiumViewMode.allItems);
+        } else {
+          _clearAllFilters();
+        }
+      },
     );
   }
 }

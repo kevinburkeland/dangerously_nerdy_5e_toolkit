@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../../utils/dice_formatters.dart';
 import '../common/edition_diff_badge.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
@@ -334,7 +335,7 @@ class MonsterCard extends StatelessWidget {
     Color color,
   ) {
     final bonus = action.attackBonus != null
-        ? '${action.attackBonus! >= 0 ? '+' : ''}${action.attackBonus}'
+        ? DiceFormatters.formatBonus(action.attackBonus!, includeZero: true)
         : null;
     final label = bonus != null ? '${action.name} $bonus' : action.name;
 

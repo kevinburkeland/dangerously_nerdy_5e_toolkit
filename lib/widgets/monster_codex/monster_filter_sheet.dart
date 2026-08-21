@@ -3,6 +3,8 @@ import '../../models/monster_codex_data.dart';
 import '../../services/haptic_service.dart';
 import '../glyphs/glyph_tokens.dart';
 
+import '../common/filter_bottom_sheet_frame.dart';
+
 /// Modal bottom sheet allowing multi-dimensional filtering of the Monster Codex.
 class MonsterFilterSheet extends StatelessWidget {
   final String? selectedType;
@@ -90,49 +92,34 @@ class MonsterFilterSheet extends StatelessWidget {
     required VoidCallback onResetAll,
   }) {
     HapticService.selectionTick(context);
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        maxChildSize: 0.95,
-        minChildSize: 0.4,
-        expand: false,
-        builder: (_, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: MonsterFilterSheet(
-            selectedType: selectedType,
-            selectedSize: selectedSize,
-            selectedCrBand: selectedCrBand,
-            showOnlyPinned: showOnlyPinned,
-            showOnlySpellSummons: showOnlySpellSummons,
-            showOnlyMagicItems: showOnlyMagicItems,
-            showOnlyMultiattack: showOnlyMultiattack,
-            showOnlySpellcasters: showOnlySpellcasters,
-            showOnlyReactions: showOnlyReactions,
-            showOnlyResistances: showOnlyResistances,
-            showOnlyLegendary: showOnlyLegendary,
-            showOnly2024Diff: showOnly2024Diff,
-            onTypeChanged: onTypeChanged,
-            onSizeChanged: onSizeChanged,
-            onCrBandChanged: onCrBandChanged,
-            onPinnedToggled: onPinnedToggled,
-            onSpellSummonsToggled: onSpellSummonsToggled,
-            onMagicItemsToggled: onMagicItemsToggled,
-            onMultiattackToggled: onMultiattackToggled,
-            onSpellcastersToggled: onSpellcastersToggled,
-            onReactionsToggled: onReactionsToggled,
-            onResistancesToggled: onResistancesToggled,
-            onLegendaryToggled: onLegendaryToggled,
-            on2024DiffToggled: on2024DiffToggled,
-            onResetAll: onResetAll,
-          ),
-        ),
+    return FilterBottomSheetFrame.show(
+      context,
+      builder: (ctx) => MonsterFilterSheet(
+        selectedType: selectedType,
+        selectedSize: selectedSize,
+        selectedCrBand: selectedCrBand,
+        showOnlyPinned: showOnlyPinned,
+        showOnlySpellSummons: showOnlySpellSummons,
+        showOnlyMagicItems: showOnlyMagicItems,
+        showOnlyMultiattack: showOnlyMultiattack,
+        showOnlySpellcasters: showOnlySpellcasters,
+        showOnlyReactions: showOnlyReactions,
+        showOnlyResistances: showOnlyResistances,
+        showOnlyLegendary: showOnlyLegendary,
+        showOnly2024Diff: showOnly2024Diff,
+        onTypeChanged: onTypeChanged,
+        onSizeChanged: onSizeChanged,
+        onCrBandChanged: onCrBandChanged,
+        onPinnedToggled: onPinnedToggled,
+        onSpellSummonsToggled: onSpellSummonsToggled,
+        onMagicItemsToggled: onMagicItemsToggled,
+        onMultiattackToggled: onMultiattackToggled,
+        onSpellcastersToggled: onSpellcastersToggled,
+        onReactionsToggled: onReactionsToggled,
+        onResistancesToggled: onResistancesToggled,
+        onLegendaryToggled: onLegendaryToggled,
+        on2024DiffToggled: on2024DiffToggled,
+        onResetAll: onResetAll,
       ),
     );
   }
@@ -146,38 +133,14 @@ class MonsterFilterSheet extends StatelessWidget {
 
     final sizeOptions = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+    return FilterBottomSheetFrame(
+      icon: Icons.filter_list,
+      title: 'Filter Monster Codex',
+      onResetAll: () {
+        HapticService.selectionTick(context);
+        onResetAll();
+      },
       children: [
-        // Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.filter_list, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Filter Monster Codex',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            TextButton.icon(
-              onPressed: () {
-                HapticService.selectionTick(context);
-                onResetAll();
-              },
-              icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Reset All'),
-            ),
-          ],
-        ),
         const SizedBox(height: 16),
 
         // Quick Flags Section
@@ -339,20 +302,6 @@ class MonsterFilterSheet extends StatelessWidget {
             }),
           ],
         ),
-        const SizedBox(height: 24),
-
-        // Done button
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: () {
-              HapticService.selectionTick(context);
-              Navigator.of(context).pop();
-            },
-            child: const Text('Apply Filters'),
-          ),
-        ),
-        const SizedBox(height: 16),
       ],
     );
   }

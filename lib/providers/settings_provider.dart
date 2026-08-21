@@ -198,121 +198,52 @@ class SettingsProvider extends ChangeNotifier {
   void setPerformanceMode(bool value) => updateSettings(_settings.copyWith(performanceMode: value));
   void setRulesEdition(DmRulesEdition edition) => updateSettings(_settings.copyWith(rulesEdition: edition));
 
+  // --- Generic Pinning Helpers ---
+  Set<String> _toggleSetId(Set<String> current, String id) {
+    final updated = Set<String>.from(current);
+    if (!updated.remove(id)) {
+      updated.add(id);
+    }
+    return updated;
+  }
+
+  Set<String> _addSetId(Set<String> current, String id) {
+    if (current.contains(id)) return current;
+    return Set<String>.from(current)..add(id);
+  }
+
+  Set<String> _removeSetId(Set<String> current, String id) {
+    if (!current.contains(id)) return current;
+    return Set<String>.from(current)..remove(id);
+  }
+
+  // --- Rules Pinning ---
   bool isRulePinned(String ruleId) => _settings.pinnedRuleIds.contains(ruleId);
+  void togglePinRule(String ruleId) => updateSettings(_settings.copyWith(pinnedRuleIds: _toggleSetId(_settings.pinnedRuleIds, ruleId)));
+  void pinRule(String ruleId) => updateSettings(_settings.copyWith(pinnedRuleIds: _addSetId(_settings.pinnedRuleIds, ruleId)));
+  void unpinRule(String ruleId) => updateSettings(_settings.copyWith(pinnedRuleIds: _removeSetId(_settings.pinnedRuleIds, ruleId)));
+  void clearPinnedRules() => _settings.pinnedRuleIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedRuleIds: const <String>{}));
 
-  void togglePinRule(String ruleId) {
-    final updated = Set<String>.from(_settings.pinnedRuleIds);
-    if (updated.contains(ruleId)) {
-      updated.remove(ruleId);
-    } else {
-      updated.add(ruleId);
-    }
-    updateSettings(_settings.copyWith(pinnedRuleIds: updated));
-  }
-
-  void pinRule(String ruleId) {
-    if (_settings.pinnedRuleIds.contains(ruleId)) return;
-    final updated = Set<String>.from(_settings.pinnedRuleIds)..add(ruleId);
-    updateSettings(_settings.copyWith(pinnedRuleIds: updated));
-  }
-
-  void unpinRule(String ruleId) {
-    if (!_settings.pinnedRuleIds.contains(ruleId)) return;
-    final updated = Set<String>.from(_settings.pinnedRuleIds)..remove(ruleId);
-    updateSettings(_settings.copyWith(pinnedRuleIds: updated));
-  }
-
-  void clearPinnedRules() {
-    if (_settings.pinnedRuleIds.isEmpty) return;
-    updateSettings(_settings.copyWith(pinnedRuleIds: const <String>{}));
-  }
-
+  // --- Spells Pinning ---
   bool isSpellPinned(String spellId) => _settings.pinnedSpellIds.contains(spellId);
+  void togglePinSpell(String spellId) => updateSettings(_settings.copyWith(pinnedSpellIds: _toggleSetId(_settings.pinnedSpellIds, spellId)));
+  void pinSpell(String spellId) => updateSettings(_settings.copyWith(pinnedSpellIds: _addSetId(_settings.pinnedSpellIds, spellId)));
+  void unpinSpell(String spellId) => updateSettings(_settings.copyWith(pinnedSpellIds: _removeSetId(_settings.pinnedSpellIds, spellId)));
+  void clearPinnedSpells() => _settings.pinnedSpellIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedSpellIds: const <String>{}));
 
-  void togglePinSpell(String spellId) {
-    final updated = Set<String>.from(_settings.pinnedSpellIds);
-    if (updated.contains(spellId)) {
-      updated.remove(spellId);
-    } else {
-      updated.add(spellId);
-    }
-    updateSettings(_settings.copyWith(pinnedSpellIds: updated));
-  }
-
-  void pinSpell(String spellId) {
-    if (_settings.pinnedSpellIds.contains(spellId)) return;
-    final updated = Set<String>.from(_settings.pinnedSpellIds)..add(spellId);
-    updateSettings(_settings.copyWith(pinnedSpellIds: updated));
-  }
-
-  void unpinSpell(String spellId) {
-    if (!_settings.pinnedSpellIds.contains(spellId)) return;
-    final updated = Set<String>.from(_settings.pinnedSpellIds)..remove(spellId);
-    updateSettings(_settings.copyWith(pinnedSpellIds: updated));
-  }
-
-  void clearPinnedSpells() {
-    if (_settings.pinnedSpellIds.isEmpty) return;
-    updateSettings(_settings.copyWith(pinnedSpellIds: const <String>{}));
-  }
-
+  // --- Monsters Pinning ---
   bool isMonsterPinned(String monsterId) => _settings.pinnedMonsterIds.contains(monsterId);
+  void togglePinMonster(String monsterId) => updateSettings(_settings.copyWith(pinnedMonsterIds: _toggleSetId(_settings.pinnedMonsterIds, monsterId)));
+  void pinMonster(String monsterId) => updateSettings(_settings.copyWith(pinnedMonsterIds: _addSetId(_settings.pinnedMonsterIds, monsterId)));
+  void unpinMonster(String monsterId) => updateSettings(_settings.copyWith(pinnedMonsterIds: _removeSetId(_settings.pinnedMonsterIds, monsterId)));
+  void clearPinnedMonsters() => _settings.pinnedMonsterIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedMonsterIds: const <String>{}));
 
-  void togglePinMonster(String monsterId) {
-    final updated = Set<String>.from(_settings.pinnedMonsterIds);
-    if (updated.contains(monsterId)) {
-      updated.remove(monsterId);
-    } else {
-      updated.add(monsterId);
-    }
-    updateSettings(_settings.copyWith(pinnedMonsterIds: updated));
-  }
-
-  void pinMonster(String monsterId) {
-    if (_settings.pinnedMonsterIds.contains(monsterId)) return;
-    final updated = Set<String>.from(_settings.pinnedMonsterIds)..add(monsterId);
-    updateSettings(_settings.copyWith(pinnedMonsterIds: updated));
-  }
-
-  void unpinMonster(String monsterId) {
-    if (!_settings.pinnedMonsterIds.contains(monsterId)) return;
-    final updated = Set<String>.from(_settings.pinnedMonsterIds)..remove(monsterId);
-    updateSettings(_settings.copyWith(pinnedMonsterIds: updated));
-  }
-
-  void clearPinnedMonsters() {
-    if (_settings.pinnedMonsterIds.isEmpty) return;
-    updateSettings(_settings.copyWith(pinnedMonsterIds: const <String>{}));
-  }
-
+  // --- Magic Items Pinning ---
   bool isItemPinned(String itemId) => _settings.pinnedItemIds.contains(itemId);
-
-  void togglePinItem(String itemId) {
-    final updated = Set<String>.from(_settings.pinnedItemIds);
-    if (updated.contains(itemId)) {
-      updated.remove(itemId);
-    } else {
-      updated.add(itemId);
-    }
-    updateSettings(_settings.copyWith(pinnedItemIds: updated));
-  }
-
-  void pinItem(String itemId) {
-    if (_settings.pinnedItemIds.contains(itemId)) return;
-    final updated = Set<String>.from(_settings.pinnedItemIds)..add(itemId);
-    updateSettings(_settings.copyWith(pinnedItemIds: updated));
-  }
-
-  void unpinItem(String itemId) {
-    if (!_settings.pinnedItemIds.contains(itemId)) return;
-    final updated = Set<String>.from(_settings.pinnedItemIds)..remove(itemId);
-    updateSettings(_settings.copyWith(pinnedItemIds: updated));
-  }
-
-  void clearPinnedItems() {
-    if (_settings.pinnedItemIds.isEmpty) return;
-    updateSettings(_settings.copyWith(pinnedItemIds: const <String>{}));
-  }
+  void togglePinItem(String itemId) => updateSettings(_settings.copyWith(pinnedItemIds: _toggleSetId(_settings.pinnedItemIds, itemId)));
+  void pinItem(String itemId) => updateSettings(_settings.copyWith(pinnedItemIds: _addSetId(_settings.pinnedItemIds, itemId)));
+  void unpinItem(String itemId) => updateSettings(_settings.copyWith(pinnedItemIds: _removeSetId(_settings.pinnedItemIds, itemId)));
+  void clearPinnedItems() => _settings.pinnedItemIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedItemIds: const <String>{}));
 }
 
 class SettingsScope extends InheritedNotifier<SettingsProvider> {

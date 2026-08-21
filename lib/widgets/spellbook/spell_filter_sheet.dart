@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 
+import '../common/filter_bottom_sheet_frame.dart';
+
 /// Modal bottom sheet or embedded panel allowing multi-dimensional filtering of the Spellbook.
 class SpellFilterSheet extends StatelessWidget {
   final int? selectedLevel;
@@ -59,39 +61,24 @@ class SpellFilterSheet extends StatelessWidget {
     required VoidCallback onResetAll,
   }) {
     HapticService.selectionTick(context);
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        maxChildSize: 0.95,
-        minChildSize: 0.4,
-        expand: false,
-        builder: (_, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: SpellFilterSheet(
-            selectedLevel: selectedLevel,
-            selectedSchool: selectedSchool,
-            selectedClass: selectedClass,
-            showOnlyChangedIn2024: showOnlyChangedIn2024,
-            showOnlyPinned: showOnlyPinned,
-            showOnlyRitual: showOnlyRitual,
-            showOnlyConcentration: showOnlyConcentration,
-            onLevelChanged: onLevelChanged,
-            onSchoolChanged: onSchoolChanged,
-            onClassChanged: onClassChanged,
-            onChangedIn2024Toggled: onChangedIn2024Toggled,
-            onPinnedToggled: onPinnedToggled,
-            onRitualToggled: onRitualToggled,
-            onConcentrationToggled: onConcentrationToggled,
-            onResetAll: onResetAll,
-          ),
-        ),
+    return FilterBottomSheetFrame.show(
+      context,
+      builder: (ctx) => SpellFilterSheet(
+        selectedLevel: selectedLevel,
+        selectedSchool: selectedSchool,
+        selectedClass: selectedClass,
+        showOnlyChangedIn2024: showOnlyChangedIn2024,
+        showOnlyPinned: showOnlyPinned,
+        showOnlyRitual: showOnlyRitual,
+        showOnlyConcentration: showOnlyConcentration,
+        onLevelChanged: onLevelChanged,
+        onSchoolChanged: onSchoolChanged,
+        onClassChanged: onClassChanged,
+        onChangedIn2024Toggled: onChangedIn2024Toggled,
+        onPinnedToggled: onPinnedToggled,
+        onRitualToggled: onRitualToggled,
+        onConcentrationToggled: onConcentrationToggled,
+        onResetAll: onResetAll,
       ),
     );
   }
@@ -105,44 +92,14 @@ class SpellFilterSheet extends StatelessWidget {
     final concColor = isDark ? Colors.amberAccent : const Color(0xFFB45309);
     final ritualColor = isDark ? Colors.cyanAccent : const Color(0xFF0E7490);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return FilterBottomSheetFrame(
+      icon: Icons.menu_book,
+      title: 'Filter Spellbook',
+      onResetAll: () {
+        HapticService.selectionTick(context);
+        onResetAll();
+      },
       children: [
-        // Drag handle and header
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Filter Spellbook',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                HapticService.selectionTick(context);
-                onResetAll();
-              },
-              icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Reset All'),
-            ),
-          ],
-        ),
-        Divider(height: 20, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
-
         // Quick Feature Toggles (2024 Diffs, Pinned, Ritual, Concentration)
         Text(
           'Quick Filters',

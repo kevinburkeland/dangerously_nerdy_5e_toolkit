@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/haptic_service.dart';
 import '../glyphs/glyph_tokens.dart';
 
+import '../common/filter_bottom_sheet_frame.dart';
+
 /// Modal bottom sheet allowing multi-dimensional filtering of the Item Compendium.
 class ItemFilterSheet extends StatelessWidget {
   final ItemCategory? selectedCategory;
@@ -53,37 +55,22 @@ class ItemFilterSheet extends StatelessWidget {
     required VoidCallback onResetAll,
   }) {
     HapticService.selectionTick(context);
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        maxChildSize: 0.95,
-        minChildSize: 0.4,
-        expand: false,
-        builder: (_, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: ItemFilterSheet(
-            selectedCategory: selectedCategory,
-            selectedRarity: selectedRarity,
-            showOnlyAttunement: showOnlyAttunement,
-            showOnlyPinned: showOnlyPinned,
-            showOnlyChangedIn2024: showOnlyChangedIn2024,
-            selectedDamageAccent: selectedDamageAccent,
-            onCategoryChanged: onCategoryChanged,
-            onRarityChanged: onRarityChanged,
-            onAttunementToggled: onAttunementToggled,
-            onPinnedToggled: onPinnedToggled,
-            onChangedIn2024Toggled: onChangedIn2024Toggled,
-            onDamageAccentChanged: onDamageAccentChanged,
-            onResetAll: onResetAll,
-          ),
-        ),
+    return FilterBottomSheetFrame.show(
+      context,
+      builder: (ctx) => ItemFilterSheet(
+        selectedCategory: selectedCategory,
+        selectedRarity: selectedRarity,
+        showOnlyAttunement: showOnlyAttunement,
+        showOnlyPinned: showOnlyPinned,
+        showOnlyChangedIn2024: showOnlyChangedIn2024,
+        selectedDamageAccent: selectedDamageAccent,
+        onCategoryChanged: onCategoryChanged,
+        onRarityChanged: onRarityChanged,
+        onAttunementToggled: onAttunementToggled,
+        onPinnedToggled: onPinnedToggled,
+        onChangedIn2024Toggled: onChangedIn2024Toggled,
+        onDamageAccentChanged: onDamageAccentChanged,
+        onResetAll: onResetAll,
       ),
     );
   }
@@ -93,40 +80,15 @@ class ItemFilterSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+    return FilterBottomSheetFrame(
+      icon: Icons.tune,
+      title: 'Filter Magic Items',
+      onResetAll: () {
+        HapticService.selectionTick(context);
+        onResetAll();
+        Navigator.of(context).pop();
+      },
       children: [
-        // Header Row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.tune, color: theme.colorScheme.primary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Filter Magic Items',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            TextButton.icon(
-              onPressed: () {
-                HapticService.selectionTick(context);
-                onResetAll();
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Reset All'),
-            ),
-          ],
-        ),
-        const Divider(),
-        const SizedBox(height: 8),
-
         // Quick Toggles Section
         Text(
           'Quick Filters',
@@ -311,16 +273,6 @@ class ItemFilterSheet extends StatelessWidget {
               );
             }),
           ],
-        ),
-        const SizedBox(height: 24),
-
-        // Apply Button
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Apply Filters'),
-          ),
         ),
       ],
     );

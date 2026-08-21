@@ -3,6 +3,7 @@ import '../../models/dm_screen_data.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/dice_formatters.dart';
 import '../common/diff_highlight_banner.dart';
 import '../dm_reference/rules_edition_toggle.dart';
 import '../glyphs/dnd_glyph.dart';
@@ -472,12 +473,10 @@ class _MonsterComparisonDialogState extends State<MonsterComparisonDialog> {
   }
 
   Widget _buildAbilityScore(String name, int score) {
-    final mod = (score - 10) ~/ 2;
-    final modStr = mod >= 0 ? '+$mod' : '$mod';
     return Column(
       children: [
         Text(name, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-        Text('$score ($modStr)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        Text(Dnd5eScoreMath.formatScoreWithModifier(score), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
       ],
     );
   }

@@ -4,6 +4,8 @@ import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
+import '../widgets/common/empty_state_card.dart';
+import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/dm_rule_card.dart';
 import '../widgets/dm_reference/dm_rule_comparison_dialog.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
@@ -664,93 +666,37 @@ class _DmReferenceScreenState extends State<DmReferenceScreen> {
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
-    final rowCount = (items.length / crossAxisCount).ceil();
-
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList.builder(
-        itemCount: rowCount,
-        itemBuilder: (context, rowIndex) {
-          final startIndex = rowIndex * crossAxisCount;
-          final rowItems = items.skip(startIndex).take(crossAxisCount).toList();
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int c = 0; c < crossAxisCount; c++) ...[
-                  if (c > 0) const SizedBox(width: 14),
-                  Expanded(
-                    child: c < rowItems.length
-                        ? RepaintBoundary(
-                            child: DmRuleCard(
-                              item: rowItems[c],
-                              edition: edition,
-                              isPinned: pinnedIds.contains(rowItems[c].id),
-                              onTogglePin: () => _togglePinRule(context, rowItems[c].id),
-                              onTap: () => _showCompareDialog(context, rowItems[c]),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ],
-            ),
-          );
-        },
+    return SliverResponsiveCardGrid<DmReferenceItem>(
+      items: items,
+      itemBuilder: (context, item) => DmRuleCard(
+        item: item,
+        edition: edition,
+        isPinned: pinnedIds.contains(item.id),
+        onTogglePin: () => _togglePinRule(context, item.id),
+        onTap: () => _showCompareDialog(context, item),
       ),
     );
   }
 
   Widget _buildEmptyState(ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(36),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.search_off, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.4)),
-          const SizedBox(height: 12),
-          Text(
-            'No matching rules found',
-            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _showOnlyPinned
-                ? 'No rules are pinned yet. Tap the pin icon on any rule card to pin it!'
-                : 'Try clearing your search or removing the active filters.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 13),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
-            ),
-            onPressed: () {
-              HapticService.selectionTick(context);
-              _searchController.clear();
-              setState(() {
-                _searchQuery = '';
-                _selectedCategory = null;
-                _showOnlyChangedIn2024 = false;
-                _showOnlyPinned = false;
-              });
-            },
-            icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Reset Filters'),
-          ),
-        ],
-      ),
+    return EmptyStateCard(
+      icon: Icons.search_off,
+      title: 'No matching rules found',
+      message: _showOnlyPinned
+          ? 'No rules are pinned yet. Tap the pin icon on any rule card to pin it!'
+          : 'Try clearing your search or removing the active filters.',
+      actionLabel: 'Reset Filters',
+      actionIcon: Icons.refresh,
+      onAction: () {
+        HapticService.selectionTick(context);
+        _searchController.clear();
+        setState(() {
+          _searchQuery = '';
+          _selectedCategory = null;
+          _showOnlyChangedIn2024 = false;
+          _showOnlyPinned = false;
+        });
+      },
     );
   }
 }

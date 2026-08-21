@@ -4,6 +4,9 @@ import '../models/spellbook_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
+import '../widgets/common/compendium_search_header.dart';
+import '../widgets/common/empty_state_card.dart';
+import '../widgets/common/responsive_card_grid.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/room_banner_widget.dart';
 import '../widgets/spellbook/spell_card.dart';
@@ -275,65 +278,18 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
               child: RoomBannerWidget(compact: true),
             ),
             // Search Bar & Filter Button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      decoration: InputDecoration(
-                        hintText:
-                            'Search spells, damage, components, classes...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = '');
-                                },
-                              )
-                            : null,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Stack(
-                    children: [
-                      IconButton.filledTonal(
-                        icon: const Icon(Icons.tune),
-                        tooltip: 'Filter Spells',
-                        onPressed: () => _openFilterSheet(context),
-                      ),
-                      if (activeFilterCount > 0)
-                        Positioned(
-                          right: 4,
-                          top: 4,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '$activeFilterCount',
-                              style: TextStyle(
-                                  color: theme.colorScheme.onPrimary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+            CompendiumSearchHeader(
+              controller: _searchController,
+              searchQuery: _searchQuery,
+              onChanged: (val) => setState(() => _searchQuery = val),
+              onClear: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+              hintText: 'Search spells, damage, components, classes...',
+              activeFilterCount: activeFilterCount,
+              filterTooltip: 'Filter Spells',
+              onFilterTap: () => _openFilterSheet(context),
             ),
 
             // View Mode Segments (All Spells / Personal Spellbook / 2024 Revisions)
@@ -653,60 +609,31 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   }
 
   Widget _buildEmptyState(ThemeData theme, bool isSpellbookEmpty) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSpellbookEmpty ? Icons.bookmark_border : Icons.search_off,
-              size: 54,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              isSpellbookEmpty
-                  ? 'Your Personal Spellbook is Empty'
-                  : 'No Spells Found',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              isSpellbookEmpty
-                  ? 'Browse the Spellbook Companion and tap the bookmark icon on any spell to pin it to your personal spellbook.'
-                  : 'Try adjusting your search terms or clearing active filters.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
-            ),
-            if (!isSpellbookEmpty) ...[
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() {
-                    _searchQuery = '';
-                    _selectedLevel = null;
-                    _selectedSchool = null;
-                    _selectedClass = null;
-                    _showOnlyChangedIn2024 = false;
-                    _showOnlyPinned = false;
-                    _showOnlyRitual = false;
-                    _showOnlyConcentration = false;
-                  });
-                },
-                icon: const Icon(Icons.refresh, size: 16),
-                label: const Text('Clear All Filters'),
-              ),
-            ],
-          ],
-        ),
-      ),
+    return EmptyStateCard(
+      icon: isSpellbookEmpty ? Icons.bookmark_border : Icons.search_off,
+      title: isSpellbookEmpty
+          ? 'Your Personal Spellbook is Empty'
+          : 'No Spells Found',
+      message: isSpellbookEmpty
+          ? 'Browse the Spellbook Companion and tap the bookmark icon on any spell to pin it to your personal spellbook.'
+          : 'Try adjusting your search terms or clearing active filters.',
+      actionLabel: !isSpellbookEmpty ? 'Clear All Filters' : null,
+      onAction: !isSpellbookEmpty
+          ? () {
+              _searchController.clear();
+              setState(() {
+                _searchQuery = '';
+                _selectedLevel = null;
+                _selectedSchool = null;
+                _selectedClass = null;
+                _showOnlyChangedIn2024 = false;
+                _showOnlyPinned = false;
+                _showOnlyRitual = false;
+                _showOnlyConcentration = false;
+              });
+            }
+          : null,
+      actionIcon: Icons.refresh,
     );
   }
 
@@ -716,49 +643,16 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 1000 ? 3 : (width > 650 ? 2 : 1);
-    final rowCount = (spells.length / crossAxisCount).ceil();
-
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverList.builder(
-        itemCount: rowCount,
-        itemBuilder: (context, rowIndex) {
-          final startIndex = rowIndex * crossAxisCount;
-          final rowSpells =
-              spells.skip(startIndex).take(crossAxisCount).toList();
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int c = 0; c < crossAxisCount; c++) ...[
-                  if (c > 0) const SizedBox(width: 14),
-                  Expanded(
-                    child: c < rowSpells.length
-                        ? RepaintBoundary(
-                            child: SpellCard(
-                              spell: rowSpells[c],
-                              edition: edition,
-                              isPinned: pinnedIds.contains(rowSpells[c].id),
-                              onTogglePin: () =>
-                                  _togglePinSpell(context, rowSpells[c].id),
-                              onTap: () => _showCompareDialog(
-                                  context, rowSpells[c], edition),
-                              onOpenQuickRoll: () => _openQuickRollDialog(
-                                  context, rowSpells[c], edition),
-                              onQuickRoll: _performSpellRoll,
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ],
-            ),
-          );
-        },
+    return SliverResponsiveCardGrid<SpellItem>(
+      items: spells,
+      itemBuilder: (context, spell) => SpellCard(
+        spell: spell,
+        edition: edition,
+        isPinned: pinnedIds.contains(spell.id),
+        onTogglePin: () => _togglePinSpell(context, spell.id),
+        onTap: () => _showCompareDialog(context, spell, edition),
+        onOpenQuickRoll: () => _openQuickRollDialog(context, spell, edition),
+        onQuickRoll: _performSpellRoll,
       ),
     );
   }
