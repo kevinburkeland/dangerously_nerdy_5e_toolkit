@@ -684,19 +684,27 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   }
 
   Widget _buildAcSliderCard(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Target Armor Class (AC):',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                const Row(
+                  children: [
+                    Icon(Icons.shield, size: 16, color: Colors.cyanAccent),
+                    SizedBox(width: 6),
+                    Text(
+                      'Target Armor Class (AC):',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -750,6 +758,43 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                       : null,
                 ),
               ],
+            ),
+            const SizedBox(height: 6),
+            // Monster CR Benchmarks Quick-Select
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  Text(
+                    'CR Targets: ',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                  ),
+                  ...DprMonsterAcPreset.standardPresets.map((preset) {
+                    final isSelected = _selectedAc == preset.typicalAc;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: ChoiceChip(
+                        label: Text('CR ${preset.crDisplay} (AC ${preset.typicalAc})', style: const TextStyle(fontSize: 10.5)),
+                        tooltip: '${preset.label}: ${preset.examples}',
+                        selected: isSelected,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (selected) {
+                          if (selected) {
+                            HapticService.selectionTick(context);
+                            setState(() {
+                              _selectedAc = preset.typicalAc.clamp(_chartMinAc, _chartMaxAc);
+                            });
+                          }
+                        },
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
           ],
         ),

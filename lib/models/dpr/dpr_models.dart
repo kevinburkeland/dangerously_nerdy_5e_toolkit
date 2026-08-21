@@ -703,3 +703,30 @@ class DprBreakEvenAnalysis {
     required this.recommendation,
   });
 }
+
+/// Standard 5e Monster AC Benchmarks by Challenge Rating (CR) for quick target selection.
+class DprMonsterAcPreset {
+  final String label;
+  final String crDisplay;
+  final int typicalAc;
+  final String examples;
+
+  const DprMonsterAcPreset({
+    required this.label,
+    required this.crDisplay,
+    required this.typicalAc,
+    required this.examples,
+  });
+
+  static const List<DprMonsterAcPreset> standardPresets = [
+    DprMonsterAcPreset(label: 'CR 1/4 - Minion/Unarmored', crDisplay: '1/4', typicalAc: 11, examples: 'Goblin, Skeleton, Cultist'),
+    DprMonsterAcPreset(label: 'CR 1 - Standard Monster', crDisplay: '1', typicalAc: 13, examples: 'Bugbear, Ghoul, Spy'),
+    DprMonsterAcPreset(label: 'CR 5 - Tough Veteran', crDisplay: '5', typicalAc: 15, examples: 'Gladiator, Troll, Wraith'),
+    DprMonsterAcPreset(label: 'CR 10 - Elite / Monster', crDisplay: '10', typicalAc: 17, examples: 'Young Red Dragon, Stone Golem'),
+    DprMonsterAcPreset(label: 'CR 15 - Adult Dragon', crDisplay: '15', typicalAc: 18, examples: 'Adult Blue Dragon, Mummy Lord'),
+    DprMonsterAcPreset(label: 'CR 20 - Ancient Fiend', crDisplay: '20', typicalAc: 19, examples: 'Pit Fiend, Ancient Brass Dragon'),
+    DprMonsterAcPreset(label: 'CR 25+ - Legendary Avatar', crDisplay: '25', typicalAc: 22, examples: 'Solar, Tiamat Avatar'),
+    DprMonsterAcPreset(label: 'CR 30 - The Tarrasque', crDisplay: '30', typicalAc: 25, examples: 'Tarrasque (AC 25, Reflective)'),
+  ];
+}
+

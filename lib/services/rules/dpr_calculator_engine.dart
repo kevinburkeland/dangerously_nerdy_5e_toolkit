@@ -99,6 +99,29 @@ class DprCalculatorEngine {
     }
   }
 
+  /// Calculates saving throw failure probability for spells (Save-for-Half or Save-for-None).
+  static double calculateSaveFailureProbability({
+    required int saveDc,
+    required int targetSaveBonus,
+    bool targetHasAdvantage = false,
+    bool targetHasDisadvantage = false,
+  }) {
+    // 5e standard saving throw rule: Target succeeds if d20 + saveBonus >= saveDc
+    final neededRoll = (saveDc - targetSaveBonus).clamp(1, 20);
+    final singlePassProb = ((21.0 - neededRoll) / 20.0).clamp(0.05, 0.95);
+
+    double totalPassProb;
+    if (targetHasAdvantage) {
+      totalPassProb = 1.0 - math.pow(1.0 - singlePassProb, 2).toDouble();
+    } else if (targetHasDisadvantage) {
+      totalPassProb = math.pow(singlePassProb, 2).toDouble();
+    } else {
+      totalPassProb = singlePassProb;
+    }
+
+    return 1.0 - totalPassProb;
+  }
+
   /// Calculates single attack expected DPR against target AC.
   static DprPoint calculateSingleAttackDpr(
     DprAttackAction attack,
@@ -179,7 +202,7 @@ class DprCalculatorEngine {
     int targetAc, {
     AdvantageType? advantageOverride,
   }) {
-    final adv = advantageOverride ?? profile.defaultAdvantage;
+    final baseAdv = advantageOverride ?? profile.defaultAdvantage;
     double totalDpr = 0.0;
     double primaryHitChance = 0.0;
     double primaryCritChance = 0.0;
@@ -188,43 +211,55 @@ class DprCalculatorEngine {
     double primaryDamageOnMiss = 0.0;
 
     final hitChances = <double>[];
+    final critChances = <double>[];
+
+    AdvantageType currentAdv = baseAdv;
 
     for (int i = 0; i < profile.attacks.length; i++) {
       final attack = profile.attacks[i];
-      final pt = calculateSingleAttackDpr(
-        attack,
-        targetAc,
-        adv,
-        proficiencyBonus: profile.proficiencyBonus,
-        hasHalflingLuck: profile.hasHalflingLuck,
-      );
 
-      totalDpr += pt.dpr;
-
-      // Track hit chances for once-per-turn procs (Sneak Attack)
       for (int count = 0; count < attack.attacksPerRound; count++) {
-        hitChances.add(pt.hitChance);
-      }
+        final pt = calculateSingleAttackDpr(
+          attack.copyWith(attacksPerRound: 1),
+          targetAc,
+          currentAdv,
+          proficiencyBonus: profile.proficiencyBonus,
+          hasHalflingLuck: profile.hasHalflingLuck,
+        );
 
-      if (i == 0) {
-        primaryHitChance = pt.hitChance;
-        primaryCritChance = pt.critChance;
-        primaryDamageOnHit = pt.expectedDamageOnHit;
-        primaryDamageOnCrit = pt.expectedDamageOnCrit;
-        primaryDamageOnMiss = pt.expectedDamageOnMiss;
+        totalDpr += pt.dpr;
+        hitChances.add(pt.hitChance);
+        critChances.add(pt.critChance);
+
+        if (i == 0 && count == 0) {
+          primaryHitChance = pt.hitChance;
+          primaryCritChance = pt.critChance;
+          primaryDamageOnHit = pt.expectedDamageOnHit;
+          primaryDamageOnCrit = pt.expectedDamageOnCrit;
+          primaryDamageOnMiss = pt.expectedDamageOnMiss;
+        }
+
+        // 2024 Vex Mastery: Hitting grants Advantage on the subsequent attack
+        if (attack.weaponMastery == WeaponMastery.vex && baseAdv == AdvantageType.normal) {
+          currentAdv = AdvantageType.advantage;
+        }
       }
     }
 
-    // Process once-per-turn damage procs like Rogue Sneak Attack
+    // Rogue Sneak Attack: Calculated accurately across all attacks in the turn with Crits
     if (profile.sneakAttackDiceCount > 0 && hitChances.isNotEmpty) {
-      // Probability of landing AT LEAST ONE hit in the turn
       final probMissAll = hitChances.fold<double>(1.0, (acc, p) => acc * (1.0 - p));
       final probAtLeastOneHit = 1.0 - probMissAll;
 
-      final sneakDieEv = expectedDieValue(profile.sneakAttackDiceSides);
-      final sneakDamage = profile.sneakAttackDiceCount * sneakDieEv;
+      final probNoCrit = critChances.fold<double>(1.0, (acc, c) => acc * (1.0 - c));
+      final probAtLeastOneCrit = 1.0 - probNoCrit;
 
-      totalDpr += probAtLeastOneHit * sneakDamage;
+      final sneakDieEv = expectedDieValue(profile.sneakAttackDiceSides);
+      final singleSneakDamage = profile.sneakAttackDiceCount * sneakDieEv;
+
+      // EV = [P(>=1 Hit) + P(>=1 Crit)] * SneakDamage
+      final sneakDpr = (probAtLeastOneHit + probAtLeastOneCrit) * singleSneakDamage;
+      totalDpr += sneakDpr;
     }
 
     return DprPoint(

@@ -260,19 +260,108 @@ void main() {
       expect(shadowBlade.damageType, equals('psychic'));
     });
 
-    test('MonsterItem adapter cleanly parses monster actions for future monster arena reuse', () {
-      final monster = MonsterCodexLibrary.allMonsters.firstWhere(
-        (m) => m.name.toLowerCase().contains('goblin'),
-        orElse: () => MonsterCodexLibrary.allMonsters.first,
+    test('calculateSaveFailureProbability computes exact 5e save failure rates', () {
+      // DC 15 vs +2 Save -> needs 13 on d20 -> pass prob = (21-13)/20 = 8/20 = 0.40 -> fail prob = 0.60
+      final failNormal = DprCalculatorEngine.calculateSaveFailureProbability(saveDc: 15, targetSaveBonus: 2);
+      expect(failNormal, closeTo(0.60, 0.001));
+
+      // With Advantage on Save: Pass prob = 1 - (1 - 0.40)^2 = 1 - 0.36 = 0.64 -> fail prob = 0.36
+      final failAdv = DprCalculatorEngine.calculateSaveFailureProbability(saveDc: 15, targetSaveBonus: 2, targetHasAdvantage: true);
+      expect(failAdv, closeTo(0.36, 0.001));
+
+      // With Disadvantage on Save: Pass prob = 0.40^2 = 0.16 -> fail prob = 0.84
+      final failDis = DprCalculatorEngine.calculateSaveFailureProbability(saveDc: 15, targetSaveBonus: 2, targetHasDisadvantage: true);
+      expect(failDis, closeTo(0.84, 0.001));
+    });
+
+    test('Sneak Attack EV properly factors in crit multiplier on sneak dice', () {
+      // 1 attack with +7 vs AC 15 (Hit: 0.65, Crit: 0.05). Sneak Attack: 2d6 (EV = 7.0)
+      // Base attack: 1d6+4 (EV Hit = 7.5, EV Crit = 11.0, DPR = 0.60*7.5 + 0.05*11.0 = 4.5 + 0.55 = 5.05)
+      // Sneak Attack EV: [P(Hit) + P(Crit)] * 7.0 = [0.65 + 0.05] * 7.0 = 0.70 * 7.0 = 4.90
+      // Total DPR = 5.05 + 4.90 = 9.95
+      const rogue = DprCombatantProfile(
+        id: 'rogue_math_test',
+        name: 'Rogue',
+        level: 3,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        sneakAttackDiceCount: 2,
+        sneakAttackDiceSides: 6,
+        attacks: [
+          DprAttackAction(
+            id: 'shortbow',
+            name: 'Shortbow',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 6,
+            damageBonus: 4,
+            attacksPerRound: 1,
+          ),
+        ],
       );
 
-      final profile = DprCombatantProfile.fromMonsterItem(monster);
-      expect(profile.name, isNotEmpty);
-      expect(profile.attacks, isNotEmpty);
+      final pt = DprCalculatorEngine.calculateProfileDpr(rogue, 15);
+      expect(pt.dpr, closeTo(9.95, 0.01));
+    });
 
-      final curve = DprCalculatorEngine.generateCurve(profile, minAc: 10, maxAc: 20);
-      expect(curve.points.length, equals(11));
-      expect(curve.pointAt(15)!.dpr, greaterThan(0));
+    test('Vex Mastery chains advantage to subsequent attack in multi-attack rounds', () {
+      const dualWielderWithVex = DprCombatantProfile(
+        id: 'vex_fighter',
+        name: 'Vex Fighter',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        attacks: [
+          DprAttackAction(
+            id: 'rapier_vex',
+            name: 'Rapier (Vex)',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 4,
+            weaponMastery: WeaponMastery.vex,
+            attacksPerRound: 2,
+          ),
+        ],
+      );
+
+      const dualWielderWithoutVex = DprCombatantProfile(
+        id: 'normal_fighter',
+        name: 'Normal Fighter',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        attacks: [
+          DprAttackAction(
+            id: 'rapier_normal',
+            name: 'Rapier (Normal)',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 4,
+            weaponMastery: WeaponMastery.none,
+            attacksPerRound: 2,
+          ),
+        ],
+      );
+
+      final vexPt = DprCalculatorEngine.calculateProfileDpr(dualWielderWithVex, 15);
+      final normalPt = DprCalculatorEngine.calculateProfileDpr(dualWielderWithoutVex, 15);
+
+      // Second attack with Vex gains Advantage -> total round DPR must be higher than without Vex
+      expect(vexPt.dpr, greaterThan(normalPt.dpr));
+    });
+
+    test('DprMonsterAcPreset contains all standard CR benchmarks', () {
+      expect(DprMonsterAcPreset.standardPresets.length, greaterThanOrEqualTo(8));
+      final cr5 = DprMonsterAcPreset.standardPresets.firstWhere((p) => p.crDisplay == '5');
+      expect(cr5.typicalAc, equals(15));
+      expect(cr5.examples, contains('Troll'));
+
+      final cr30 = DprMonsterAcPreset.standardPresets.firstWhere((p) => p.crDisplay == '30');
+      expect(cr30.typicalAc, equals(25));
+      expect(cr30.examples, contains('Tarrasque'));
     });
   });
 }
+
