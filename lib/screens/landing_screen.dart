@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/dm_screen_data.dart';
 import '../models/landing_tool_item.dart';
 import '../models/spellbook_data.dart';
+import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
@@ -546,6 +547,17 @@ class _LandingScreenState extends State<LandingScreen> {
           size: 40,
           isDarkMode: isDark,
         );
+      }
+    }
+
+    // Check for Magic Item or Spell Summon presets
+    if (glyphWidget == null) {
+      final summonPreset = SrdSummonsLibrary.allPresets.cast<SummonPreset?>().firstWhere(
+        (p) => p?.id == item.id,
+        orElse: () => null,
+      );
+      if (summonPreset != null) {
+        glyphWidget = summonPreset.buildGlyph(size: 40, isDarkMode: isDark);
       }
     }
 

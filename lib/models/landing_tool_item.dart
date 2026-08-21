@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
+import '../screens/dpr_calculator_screen.dart';
 import '../screens/glyph_showcase_screen.dart';
 import '../screens/item_compendium_screen.dart';
 import '../screens/minion_tool_screen.dart';
@@ -120,6 +121,37 @@ class LandingToolRegistry {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'dpr_calculator',
+          title: 'DPR Calculator & Graph',
+          category: 'Core Utilities',
+          badgeText: 'Combat Math',
+          badgeColor: Colors.cyanAccent,
+          icon: Icons.auto_graph,
+          accentColor: Colors.cyanAccent,
+          description:
+              'Damage Per Round (DPR) analyzer with interactive animated graphs, GWM & Sharpshooter break-even AC calculator, and build archetypes.',
+          keywords: [
+            'dpr',
+            'calculator',
+            'damage',
+            'gwm',
+            'great weapon master',
+            'sharpshooter',
+            'graph',
+            'ac',
+            'break-even',
+            'accuracy',
+            'math',
+            'combat'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DprCalculatorScreen()),
             );
           },
         ),

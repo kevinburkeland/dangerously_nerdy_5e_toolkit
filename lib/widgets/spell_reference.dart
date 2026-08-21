@@ -61,10 +61,7 @@ class _SpellReferenceWidgetState extends State<SpellReferenceWidget> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    DndGlyph.spell(
-                      school: p.glyphSchool,
-                      level: p.glyphSpellLevel,
-                      actionRings: p.glyphActionRings,
+                    p.buildGlyph(
                       size: 48,
                       isDarkMode: true,
                     ),

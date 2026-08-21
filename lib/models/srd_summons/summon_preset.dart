@@ -1,4 +1,6 @@
+import 'package:flutter/widgets.dart';
 import '../spellbook_data.dart';
+import '../../widgets/glyphs/dnd_glyph.dart';
 import 'minion_stat_block.dart';
 
 typedef BudgetCalculator = int Function(int spellLevel);
@@ -81,6 +83,29 @@ extension SummonPresetGlyphExt on SummonPreset {
     return 5;
   }
 
+  ItemCategory get glyphItemCategory {
+    final lower = name.toLowerCase() + levelDisplay.toLowerCase();
+    if (lower.contains('staff')) return ItemCategory.staff;
+    if (lower.contains('wand')) return ItemCategory.wand;
+    if (lower.contains('rod')) return ItemCategory.rod;
+    if (lower.contains('scroll')) return ItemCategory.scroll;
+    if (lower.contains('potion')) return ItemCategory.potion;
+    if (lower.contains('ring')) return ItemCategory.ring;
+    if (lower.contains('armor') || lower.contains('shield')) return ItemCategory.armor;
+    if (lower.contains('sword') || lower.contains('weapon') || lower.contains('bow')) return ItemCategory.weapon;
+    return ItemCategory.wondrousItem;
+  }
+
+  ItemRarity get glyphItemRarity {
+    final lower = levelDisplay.toLowerCase();
+    if (lower.contains('uncommon')) return ItemRarity.uncommon;
+    if (lower.contains('very rare')) return ItemRarity.veryRare;
+    if (lower.contains('legendary')) return ItemRarity.legendary;
+    if (lower.contains('artifact')) return ItemRarity.artifact;
+    if (lower.contains('rare')) return ItemRarity.rare;
+    return ItemRarity.uncommon;
+  }
+
   List<ActionTraitRing> get glyphActionRings {
     final rings = <ActionTraitRing>[];
     if (duration.toLowerCase().contains('concentration')) {
@@ -102,5 +127,23 @@ extension SummonPresetGlyphExt on SummonPreset {
 
     return rings;
   }
-}
 
+  Widget buildGlyph({double size = 40, bool isDarkMode = true}) {
+    if (category == SummonCategory.magicItem) {
+      return DndGlyph.item(
+        category: glyphItemCategory,
+        rarity: glyphItemRarity,
+        actionRings: glyphActionRings,
+        size: size,
+        isDarkMode: isDarkMode,
+      );
+    }
+    return DndGlyph.spell(
+      school: glyphSchool,
+      level: glyphSpellLevel,
+      actionRings: glyphActionRings,
+      size: size,
+      isDarkMode: isDarkMode,
+    );
+  }
+}

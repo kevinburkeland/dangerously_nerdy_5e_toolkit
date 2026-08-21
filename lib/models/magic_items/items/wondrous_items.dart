@@ -225,5 +225,98 @@ class SrdWondrousItems {
       isChangedIn2024: false,
       tags: ['wondrous', 'robe', 'archmagi', 'wizard', 'sorcerer', 'warlock', 'legendary'],
     ),
+
+    // Bag of Tricks
+    MagicItem(
+      id: 'item_bag_of_tricks',
+      name: 'Bag of Tricks',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Pull & Summon 1d8 Random Beast Minion (3/Day)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Use an action to pull a furry object and throw it up to 20 feet: summons a friendly beast determined by rolling on the bag\'s d8 table (3 times per day).',
+        description: 'This ordinary cloth sack appears empty. Reaching inside pulls out a small fuzzy ball. As an action, you can throw it up to 20 feet. When it lands, it transforms into a friendly beast rolled on the table (Gray, Rust, or Tan). You can summon up to 3 creatures per day (recharges daily at dawn). The beasts act on your turn and obey your verbal commands.',
+        activation: '1 Action (3/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: throw a fuzzy ball up to 20 ft to summon a friendly beast from the d8 table (3 creatures per Long Rest).',
+        description: 'Pull a fuzzy ball from the bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8. Up to 3 creatures per Long Rest.',
+        activation: '1 Action (3/Long Rest)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'bag', 'summon', 'beast', 'tricks', 'minions'],
+    ),
+
+    // Horn of Valhalla
+    MagicItem(
+      id: 'item_horn_of_valhalla',
+      name: 'Horn of Valhalla',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Action: Blow Horn to Summon Berserker Warrior Squad (1/7 Days)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Blow the horn to summon a squad of legendary warrior spirits from Ysgard (Silver 2d4+2, Brass 3d4+3, Bronze 4d4+4, Iron 5d4+5) for 1 hour.',
+        description: 'You can use an action to blow this horn. In response, warrior spirits from Ysgard appear within 60 feet of you. They use the Berserker stat block and are friendly to you and your companions. They return to Ysgard after 1 hour or when reduced to 0 hit points. Once you blow the horn, it can\'t be blown again for 7 days.',
+        activation: '1 Action (1/7 Days)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Summon an allied squad of spirit Berserkers for 1 hour (recharges every 7 days).',
+        description: 'Blow the horn as an Action to summon Berserker warrior spirits that fight alongside you for up to 1 hour (usable once every 7 days).',
+        activation: '1 Action (1/7 Days)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'horn', 'summon', 'valhalla', 'berserker', 'warrior'],
+    ),
+
+    // Figurine of Wondrous Power
+    MagicItem(
+      id: 'item_figurine_of_wondrous_power',
+      name: 'Figurine of Wondrous Power',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Animate Statuette into Living Creature Mount/Companion'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Statue of a creature (Bronze Griffon, Onyx Dog, Marble Elephant, etc.) that transforms into a living creature when command word is spoken.',
+        description: 'A figurine of wondrous power is a statuette small enough to fit in a pocket. If you use an action to speak the command word and throw the figurine to a point on the ground within 60 feet of you, it becomes a living creature (Bronze Griffon for 24 hours, Onyx Dog for 6 hours, Marble Elephant for 24 hours). It understands your languages and obeys your spoken commands.',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: throw figurine up to 60 ft and speak command word to animate into a loyal living creature/mount.',
+        description: 'Throw the statuette up to 60 feet and speak its command word as an Action: transforms into a loyal living creature companion that obeys your verbal commands.',
+        activation: '1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'figurine', 'summon', 'mount', 'griffon', 'elephant', 'companion'],
+    ),
+
+    // Elemental Gem
+    MagicItem(
+      id: 'item_elemental_gem',
+      name: 'Elemental Gem',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Crush Gem to Summon Elemental (Air, Earth, Fire, or Water)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Use an action to break the gem: casts Conjure Elemental summoning an elemental corresponding to the gem type (Air, Earth, Fire, or Water).',
+        description: 'This gem contains a mote of elemental energy. When you use an action to break the gem, an elemental appears as if you had cast the conjure elemental spell. The gem determines the elemental summoned: Blue Sapphire (Air Elemental), Yellow Diamond (Earth Elemental), Red Corundum (Fire Elemental), or Emerald (Water Elemental). The gem is destroyed.',
+        activation: '1 Action (Consumable)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: crush gem to summon a CR 5 Elemental (Air, Earth, Fire, or Water) for up to 1 hour.',
+        description: 'Break the gem as an Action to summon a friendly CR 5 Elemental companion for up to 1 hour (consumable).',
+        activation: '1 Action (Consumable)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'gem', 'elemental', 'summon', 'fire', 'water', 'air', 'earth'],
+    ),
   ];
 }

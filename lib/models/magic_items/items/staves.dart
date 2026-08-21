@@ -148,5 +148,33 @@ class SrdMagicStaves {
       ],
       tags: ['staff', 'healing', 'cleric', 'druid', 'bard'],
     ),
+
+    // Staff of the Woodlands
+    MagicItem(
+      id: 'item_staff_of_the_woodlands',
+      name: 'Staff of the Woodlands',
+      category: ItemCategory.staff,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      attunementRequirement: 'by a Druid',
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: '+2 Quarterstaff & +2 to Spell Attacks'),
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '10 Charges: Awaken (Tree Summon), Wall of Thorns, Pass Without Trace'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+2 Quarterstaff, +2 to spell attacks, pass without trace at will, and 10 charges for Awaken, Wall of Thorns, Animal Friendship, etc.',
+        description: 'This staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls made with it. While holding it, you gain a +2 bonus to spell attack rolls. Has 10 charges (regains 1d6 + 4 daily at dawn). You can cast Pass Without Trace at will without expending charges. You can expend charges to cast: Animal Friendship (1 charge), Awaken (5 charges, animates a beast/tree companion), Barkskin (2 charges), Locate Animals or Plants (2 charges), Speak with Animals (1 charge), Speak with Plants (3 charges), or Wall of Thorns (6 charges). You can also turn the staff into a 60-foot-tall living tree.',
+        activation: '1 Action (Spells / Living Tree)',
+        charges: '10 charges (recharges 1d6 + 4 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+2 Quarterstaff and +2 to Spell Attacks for Druids; at-will Pass Without Trace, 10 charges (Awaken companion, Wall of Thorns).',
+        description: 'Quarterstaff (+2 attack and damage). Grants +2 to spell attack rolls. Cast Pass Without Trace at will. Contains 10 charges for Awaken (creates an Awakened Tree/Beast companion), Wall of Thorns, Barkskin, and transforms into a living tree.',
+        activation: '1 Action',
+        charges: '10 charges (recharges 1d6 + 4 daily at dawn)',
+      ),
+      isChangedIn2024: false,
+      tags: ['staff', 'druid', 'summon', 'awaken', 'woodlands', 'nature'],
+    ),
   ];
 }
