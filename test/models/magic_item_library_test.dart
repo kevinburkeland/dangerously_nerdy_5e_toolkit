@@ -16,11 +16,20 @@ void main() {
       expect(duplicates, isEmpty, reason: 'Duplicate item IDs found: $duplicates');
     });
 
-    test('verifies all 10 item categories are populated', () {
+    test('verifies all 10 item categories are populated with substantial depth', () {
       expect(ItemCategory.values.length, equals(10));
       for (final cat in ItemCategory.values) {
         final itemsInCat = MagicItemLibrary.getByCategory(cat);
         expect(itemsInCat, isNotEmpty, reason: 'Category ${cat.name} should have items');
+        expect(itemsInCat.length, greaterThanOrEqualTo(5),
+            reason: 'Category ${cat.name} should have rich SRD coverage');
+        for (final item in itemsInCat) {
+          expect(item.id, isNotEmpty);
+          expect(item.name, isNotEmpty);
+          expect(item.rules2014.summary, isNotEmpty);
+          expect(item.rules2024.summary, isNotEmpty);
+          expect(item.tags, isNotEmpty);
+        }
       }
     });
 

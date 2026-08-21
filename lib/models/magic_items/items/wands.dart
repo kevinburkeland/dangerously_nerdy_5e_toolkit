@@ -313,5 +313,161 @@ class SrdMagicWands {
       ],
       tags: ['wand', 'paralysis', 'crowd control', 'ray'],
     ),
+
+    // Wand of Binding
+    MagicItem(
+      id: 'item_wand_of_binding',
+      name: 'Wand of Binding',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      attunementRequirement: 'by a Spellcaster',
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '7 Charges: Hold Person (2 charges), Hold Monster (5 charges) • Reaction (1 charge): Advantage to escape Paralyzed/Restrained'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 7 charges. Cast Hold Person (2 charges, save DC 17) or Hold Monster (5 charges, save DC 17). Reaction (1 charge): gain advantage on saving throw to end paralyzed or restrained condition.',
+        description: 'This wand has 7 charges (regains 1d6 + 1 daily at dawn). While holding it, you can expend charges to cast Hold Person (2 charges, save DC 17) or Hold Monster (5 charges, save DC 17). Assisted Escape: While holding the wand, you can use your reaction and expend 1 charge to gain advantage on a saving throw you make to avoid or end the paralyzed or restrained condition on yourself.',
+        activation: '1 Action (Spells) / 1 Reaction (Escape)',
+        charges: '7 charges (recharges 1d6 + 1 daily at dawn)',
+        savingThrowDc: 'Fixed DC 17',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '7 charges for Hold Person, Hold Monster, and Reaction to escape Paralyzed/Restrained conditions with Advantage.',
+        description: 'Arcane control wand locking targets in place or freeing the caster from paralyzing entrapment.',
+        activation: '1 Action / 1 Reaction',
+        charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
+        savingThrowDc: 'Your Spell Save DC or DC 17',
+      ),
+      tags: ['wand', 'binding', 'hold person', 'hold monster', 'paralysis', 'crowd control'],
+    ),
+
+    // Wand of Enemy Detection
+    MagicItem(
+      id: 'item_wand_of_enemy_detection',
+      name: 'Wand of Enemy Detection',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '7 Charges: Action (1 charge): Detects Direction & Distance of Nearest Hostile Creature within 60 Feet (1 Min Concentration)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 7 charges. Action (1 charge): for 1 minute (concentration), you learn the direction and distance to the closest hostile creature within 60 feet.',
+        description: 'This wand has 7 charges (regains 1d6 + 1 daily at dawn). While holding it, you can use an action and expend 1 charge to cause the wand to pulse and point in the direction of the nearest creature hostile to you within 60 feet. For 1 minute, as long as you maintain concentration (as if concentrating on a spell), you learn the creature\'s direction and distance from you. Effect ends early if no hostiles are within 60 feet.',
+        activation: '1 Action (1 Min Concentration)',
+        charges: '7 charges (recharges 1d6 + 1 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '7 charges: detect and track distance/direction to nearest hostile within 60 ft for 1 minute.',
+        description: 'Tactical scouting wand piercing invisibility and darkness to locate enemies.',
+        activation: '1 Action (Concentration)',
+        charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
+      ),
+      tags: ['wand', 'enemy detection', 'scouting', 'radar', 'utility'],
+    ),
+
+    // Wand of Fear
+    MagicItem(
+      id: 'item_wand_of_fear',
+      name: 'Wand of Fear',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      attunementRequirement: 'by a Spellcaster',
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '7 Charges: Command "Flee" (1 charge, DC 15) • 60-ft Cone of Fear (2 charges, DC 15 WIS Save, 1 Min)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 7 charges. Cast Command ("Flee", 1 charge, save DC 15) or project a 60-foot cone of fear (2 charges: DC 15 Wis save or frightened and drops held items for 1 min).',
+        description: 'This wand has 7 charges (regains 1d6 + 1 daily at dawn). While holding it, you can expend 1 charge to cast Command (save DC 15) to force a creature within 60 feet to flee. Alternatively, expend 2 charges to project a 60-foot cone of amber light. Each creature in the cone must succeed on a DC 15 Wisdom save or drop whatever it is holding and become frightened for 1 minute, dashing away on its turns.',
+        activation: '1 Action',
+        charges: '7 charges (recharges 1d6 + 1 daily at dawn)',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '7 charges for Command (Flee) and 60-ft Cone of Fear (Frightened condition, drops items, dashes away).',
+        description: 'Mind-shattering wand compelling creatures to drop their weapons and flee in terror.',
+        activation: '1 Action',
+        charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
+        savingThrowDc: 'Your Spell Save DC or DC 15',
+      ),
+      tags: ['wand', 'fear', 'frightened', 'command', 'flee', 'crowd control'],
+    ),
+
+    // Wand of Magic Detection
+    MagicItem(
+      id: 'item_wand_of_magic_detection',
+      name: 'Wand of Magic Detection',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '3 Charges: Cast Detect Magic at Will (30-ft Radius Aura Sensing)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'This wand has 3 charges (regains 1d3 daily at dawn). While holding it, you can expend 1 charge to cast Detect Magic.',
+        description: 'This wand has 3 charges. While holding it, you can use an action and expend 1 charge to cast the Detect Magic spell from it. The wand regains 1d3 expended charges daily at dawn.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '3 charges: cast Detect Magic without expending spell slots.',
+        description: 'Convenient divination wand detecting magical auras and spell schools within 30 feet.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 on Long Rest)',
+      ),
+      tags: ['wand', 'detect magic', 'divination', 'utility'],
+    ),
+
+    // Wand of Pyrotechnics
+    MagicItem(
+      id: 'item_wand_of_pyrotechnics',
+      name: 'Wand of Pyrotechnics',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.uncommon,
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: '7 Charges: Fireworks (60 ft, DC 15 CON Save or Blinded) or Thick Obscuring Smoke (20-ft Radius Sphere)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 7 charges. Cast Pyrotechnics (1 charge, save DC 15) on a nonmagical flame within 60 feet to create blinding fireworks or heavy smoke.',
+        description: 'This wand has 7 charges (regains 1d6 + 1 daily at dawn). While holding it, you can use an action and expend 1 charge to cast the Pyrotechnics spell (save DC 15) from it, targeting a nonmagical flame you can see within 60 feet. Choose fireworks (blinded for 1 round on DC 15 Con save) or smoke (20-ft radius heavily obscured area for 1 minute).',
+        activation: '1 Action',
+        charges: '7 charges (recharges 1d6 + 1 daily at dawn)',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '7 charges: create blinding fireworks or heavy smoke screen from any flame.',
+        description: 'Arcane fire wand creating blinding flashes or tactical obscuring clouds.',
+        activation: '1 Action',
+        charges: '7 charges (recharges 1d6 + 1 on Long Rest)',
+        savingThrowDc: 'Your Spell Save DC or DC 15',
+      ),
+      tags: ['wand', 'pyrotechnics', 'fire', 'smoke', 'blindness', 'tactical'],
+    ),
+
+    // Wand of Secrets
+    MagicItem(
+      id: 'item_wand_of_secrets',
+      name: 'Wand of Secrets',
+      category: ItemCategory.wand,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '3 Charges: Action (1 charge): Pulses & Points to Nearest Secret Door or Trap within 30 Feet'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'This wand has 3 charges (regains 1d3 daily at dawn). Action: expend 1 charge to detect and point to the nearest secret door or trap within 30 feet.',
+        description: 'This wand has 3 charges. While holding it, you can use an action and expend 1 charge to cause the wand to pulse and point in the direction of the nearest secret door or trap within 30 feet of you. The wand regains 1d3 expended charges daily at dawn.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '3 charges: locate closest hidden door or trap mechanism within 30 feet.',
+        description: 'Dungeon delver\'s essential wand revealing secret pathways and deadly mechanisms.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 on Long Rest)',
+      ),
+      tags: ['wand', 'secrets', 'traps', 'doors', 'exploration', 'dungeon'],
+    ),
   ];
 }

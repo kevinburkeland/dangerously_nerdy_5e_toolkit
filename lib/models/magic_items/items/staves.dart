@@ -338,5 +338,89 @@ class SrdMagicStaves {
       isChangedIn2024: false,
       tags: ['staff', 'python', 'snake', 'summon', 'companion', 'druid', 'cleric'],
     ),
+
+    // Staff of Swarming Insects
+    MagicItem(
+      id: 'item_staff_of_swarming_insects',
+      name: 'Staff of Swarming Insects',
+      category: ItemCategory.staff,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      attunementRequirement: 'by a Bard, Cleric, Druid, Sorcerer, Warlock, or Wizard',
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '10 Charges: Giant Insect (4 charges), Insect Plague (5 charges) • Action (1 charge): 30-ft Cloud of Heavy Obscurement & Half Cover'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 10 charges. Cast Giant Insect (4 charges) or Insect Plague (5 charges, save DC 15). Action (1 charge): create a 30-foot-radius swarm around you providing half cover and heavy obscurement to others.',
+        description: 'This staff has 10 charges (regains 1d6 + 4 daily at dawn). While holding it, you can expend charges to cast: Giant Insect (4 charges) or Insect Plague (5 charges, save DC 15). Cloud: You can use an action and expend 1 charge to cause a swarm of harmless flying insects to fill a 30-foot-radius sphere centered on you. The insects remain for 10 minutes, making the area heavily obscured for other creatures and granting you half cover.',
+        activation: '1 Action',
+        charges: '10 charges (recharges 1d6 + 4 daily at dawn)',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '10 charges for Giant Insect, Insect Plague, and 30-ft obscuring swarm cloud (with half cover).',
+        description: 'Nature caster staff unleashing swarms and giant insect minions with scaled save DC.',
+        activation: '1 Action',
+        charges: '10 charges (recharges 1d6 + 4 on Long Rest)',
+        savingThrowDc: 'Your Spell Save DC or DC 15',
+      ),
+      tags: ['staff', 'insects', 'plague', 'obscurement', 'cover', 'druid', 'spellcaster'],
+    ),
+
+    // Staff of the Adder
+    MagicItem(
+      id: 'item_staff_of_the_adder',
+      name: 'Staff of the Adder',
+      category: ItemCategory.staff,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      attunementRequirement: 'by a Cleric, Druid, or Warlock',
+      damageAccent: DamageAccent.poison,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.poison, label: 'Bonus Action: Snake Head animates for 1 Min • Melee Attack: 1d6 Piercing + 3d6 Poison (DC 15 CON Save)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Bonus action: staff head turns into an animated serpent for 1 minute. Melee attack (+2 to hit, 5 ft reach) deals 1d6 piercing damage plus 3d6 poison damage on a failed DC 15 Constitution save.',
+        description: 'You can use a bonus action to speak this staff\'s command word and cause the head of the staff to become that of an animate venomous snake for 1 minute. You can make a melee attack using the snake head, which has a reach of 5 feet. Your proficiency bonus applies to the attack roll. On a hit, the target takes 1d6 piercing damage and must succeed on a DC 15 Constitution saving throw or take 3d6 poison damage. The snake head can be attacked (AC 15, 20 HP).',
+        activation: '1 Bonus Action (Animate) / 1 Action (Attack)',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Bonus Action: animate serpent head dealing 1d6 Piercing + 3d6 Poison damage on DC 15 Con save.',
+        description: 'Enchanted serpentine staff transforming into a biting venomous serpent head in melee.',
+        activation: '1 Bonus Action / 1 Action',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      tags: ['staff', 'adder', 'snake', 'poison', 'venom', 'cleric', 'druid', 'warlock'],
+    ),
+
+    // Staff of Thunder and Lightning
+    MagicItem(
+      id: 'item_staff_of_thunder_and_lightning',
+      name: 'Staff of Thunder and Lightning',
+      category: ItemCategory.staff,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.lightning,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, damageType: DamageAccent.lightning, label: '+2 Quarterstaff • 5 Charges: Lightning (9d6), Thundercone (2d10 + Deafen), Lightning Strike (+2d6), Thunder Strike (+2d6 + Stun), Thunder & Lightning'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+2 quarterstaff with 5 charges (regains 1d5 daily at dawn) granting 5 distinct thunder and lightning powers.',
+        description: 'This staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls. Has 5 charges (regains 1d5 daily at dawn). Powers: Lightning (1 charge: 9d6 lightning in 120-ft line, DC 17 Dex save), Thunder (1 charge: 2d10 thunder in 60-ft cone and deafens for 1 min, DC 17 Con save), Lightning Strike (1 charge: +2d6 lightning on hit), Thunder Strike (1 charge: +2d6 thunder and stunned until end of next turn, DC 17 Con save), Thunder and Lightning (2 charges: combines Lightning Strike and Thunder Strike together).',
+        activation: 'Passive / 1 Action / On Hit',
+        charges: '5 charges (recharges 1d5 daily at dawn)',
+        savingThrowDc: 'Fixed DC 17',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+2 Quarterstaff with 5 charges: Lightning beam (9d6), Thundercone (2d10), Lightning Strike, Thunder Strike (Stun), or double Thunder and Lightning burst.',
+        description: 'Versatile martial-caster quarterstaff harnessing the fury of storm magic.',
+        activation: 'Passive / 1 Action / On Hit',
+        charges: '5 charges (recharges 1d5 on Long Rest)',
+        savingThrowDc: 'Your Spell Save DC or DC 17',
+        masteryProperties: 'Topple',
+      ),
+      tags: ['staff', 'thunder', 'lightning', 'storm', 'stun', 'damage'],
+    ),
   ];
 }

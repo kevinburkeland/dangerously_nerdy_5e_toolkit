@@ -286,6 +286,96 @@ class SrdArmorAndShields {
       tags: ['armor', 'light', 'leather', 'nonmagical'],
     ),
     MagicItem(
+      id: 'armor_padded',
+      name: 'Padded Armor',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.nonmagical,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Base AC 11 + Full Dex Mod (Stealth Disadvantage)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'AC 11 + Dex modifier. Quilted layers of cloth and batting. Imposes Disadvantage on Stealth.',
+        description: 'Padded armor consists of quilted layers of cloth and batting.',
+        properties: [
+          'Armor Class: 11 + Dex modifier.',
+          'Stealth: Disadvantage.',
+          'Weight: 8 lbs.',
+          'Cost: 5 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'AC 11 + Dex modifier. Quilted cloth armor with Stealth Disadvantage.',
+        description: 'Quilted fabric and batting padding.',
+        properties: [
+          'Armor Class: 11 + Dex modifier.',
+          'Stealth: Disadvantage.',
+          'Weight: 8 lbs.',
+          'Cost: 5 gp.',
+        ],
+      ),
+      tags: ['armor', 'light', 'padded', 'nonmagical'],
+    ),
+    MagicItem(
+      id: 'armor_hide',
+      name: 'Hide Armor',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.nonmagical,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Base AC 12 + Dex Mod (max 2)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'AC 12 + Dex modifier (max 2). Crude armor made from thick furs and pelts.',
+        description: 'This crude armor consists of thick furs and pelts. It is commonly worn by barbarian tribes, evil humanoids, and other folk who lack the tools and materials to make better armor.',
+        properties: [
+          'Armor Class: 12 + Dex modifier (max 2).',
+          'Stealth: Normal.',
+          'Weight: 12 lbs.',
+          'Cost: 10 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'AC 12 + Dex modifier (max 2). Medium armor of cured pelts.',
+        description: 'Thick pelt armor providing basic medium defense.',
+        properties: [
+          'Armor Class: 12 + Dex modifier (max 2).',
+          'Stealth: Normal.',
+          'Weight: 12 lbs.',
+          'Cost: 10 gp.',
+        ],
+      ),
+      tags: ['armor', 'medium', 'hide', 'nonmagical'],
+    ),
+    MagicItem(
+      id: 'armor_ring_mail',
+      name: 'Ring Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.nonmagical,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Base AC 14 (Heavy Armor; No Str Req; Stealth Disadvantage)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'AC 14. Heavy armor consisting of large metal rings sewn into leather backing. Has no Strength requirement and imposes Disadvantage on Stealth.',
+        description: 'This armor is leather armor with heavy rings sewn into it. The rings help reinforce the armor against blows from swords and axes.',
+        properties: [
+          'Armor Class: 14.',
+          'Stealth: Disadvantage.',
+          'Weight: 40 lbs.',
+          'Cost: 30 gp.',
+        ],
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'AC 14. Heavy armor with no Strength requirement.',
+        description: 'Leather armor reinforced with heavy iron rings.',
+        properties: [
+          'Armor Class: 14.',
+          'Stealth: Disadvantage.',
+          'Weight: 40 lbs.',
+          'Cost: 30 gp.',
+        ],
+      ),
+      tags: ['armor', 'heavy', 'ring mail', 'nonmagical'],
+    ),
+    MagicItem(
       id: 'armor_shield_standard',
       name: 'Shield',
       category: ItemCategory.armor,
@@ -1106,6 +1196,112 @@ class SrdArmorAndShields {
       ),
       isChangedIn2024: false,
       tags: ['shield', 'curse', 'missile', 'ranged defense'],
+    ),
+    MagicItem(
+      id: 'item_armor_of_invulnerability',
+      name: 'Armor of Invulnerability',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Resistance to Nonmagical Damage • Action (1/Day): Immune to Nonmagical Damage for 10 Minutes'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Plate armor. Resistance to nonmagical damage. Action (1/day): gain immunity to nonmagical damage for 10 minutes.',
+        description: 'You have resistance to nonmagical damage while you wear this armor. Additionally, you can use an action to make yourself immune to nonmagical damage for 10 minutes or until you are no longer wearing the armor. Once this special action is used, it can\'t be used again until the next dawn.',
+        activation: 'Passive / 1 Action (1/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Plate armor granting Resistance to nonmagical damage; Action for 10 minutes of complete immunity to nonmagical damage.',
+        description: 'Legendary plate armor granting passive damage reduction and a daily surge of absolute physical invulnerability.',
+        activation: 'Passive / 1 Action (1/Long Rest)',
+      ),
+      tags: ['armor', 'plate', 'invulnerability', 'immunity', 'legendary'],
+    ),
+    MagicItem(
+      id: 'item_armor_of_resistance',
+      name: 'Armor of Resistance',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Resistance to 1 Damage Type (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, Thunder)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'You have resistance to one type of damage while you wear this armor (Acid, Cold, Fire, Force, Lightning, Necrotic, Poison, Psychic, Radiant, or Thunder).',
+        description: 'You have resistance to one type of damage while you wear this armor. The DM chooses the type or determines it randomly.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Grants Resistance to one designated damage type.',
+        description: 'Enchanted suit granting persistent Resistance to an elemental or energy damage type.',
+        activation: 'Passive',
+      ),
+      tags: ['armor', 'resistance', 'elemental', 'defense'],
+    ),
+    MagicItem(
+      id: 'item_armor_of_vulnerability',
+      name: 'Armor of Vulnerability',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Resistance to 1 Damage Type (Bludgeoning, Piercing, or Slashing) • Cursed: Vulnerability to the Other Two'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Plate armor granting resistance to one physical damage type (bludgeoning, piercing, or slashing). Cursed: you are vulnerable to the other two physical damage types.',
+        description: 'While wearing this armor, you have resistance to one of the following damage types: bludgeoning, piercing, or slashing. Curse: This armor is cursed. Attuning to it curses you until you are targeted by the Remove Curse spell. While cursed, you have vulnerability to the two other damage types associated with this armor.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Plate armor granting Resistance to one weapon damage type and Vulnerability to the other two.',
+        description: 'Cursed plate armor with dual-edged resistance and vulnerability.',
+        activation: 'Passive',
+      ),
+      tags: ['armor', 'plate', 'cursed', 'vulnerability', 'resistance'],
+    ),
+    MagicItem(
+      id: 'item_demon_armor',
+      name: 'Demon Armor',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      damageAccent: DamageAccent.slashing,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: '+1 Plate Armor (AC 19) • Claw Attacks (1d8 Slashing + 1 Magic Weapon) • Cursed: Disadvantage vs Demons'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 plate armor (AC 19). Gauntlets have claws dealing 1d8 slashing (magic +1). Cursed: cannot remove without Remove Curse; disadvantage on attacks and saves vs demons.',
+        description: 'While wearing this armor, you gain a +1 bonus to AC, and you can understand and speak Abyssal. In addition, the armor\'s clawed gauntlets turn unarmed strikes with your hands into magic weapons that deal slashing damage, with a +1 bonus to attack rolls and damage rolls and a damage die of 1d8. Curse: Once you don this cursed armor, you can\'t doff it unless you are targeted by the Remove Curse spell. You have disadvantage on attack rolls against demons and on saving throws against their spells and special abilities.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Plate Armor with 1d8 claw unarmed strikes and Abyssal fluency. Cursed disadvantage against demons.',
+        description: 'Demonic plate armor offering claw weaponry and Abyssal speech, bound with a fiendish curse.',
+        activation: 'Passive',
+      ),
+      tags: ['armor', 'plate', 'demon', 'cursed', 'claws', 'unarmed'],
+    ),
+    MagicItem(
+      id: 'item_plate_armor_of_etherealness',
+      name: 'Plate Armor of Etherealness',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Cast Etherealness for up to 10 Minutes (Recharges Daily at Dawn)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Plate armor. Action: speak command word to gain the effect of the Etherealness spell for up to 10 minutes or until dismissed as a bonus action.',
+        description: 'While you wear this armor, you can use an action to speak its command word. When you do so, you gain the effect of the Etherealness spell for 10 minutes or until you use a bonus action to dismiss the effect. Once used, this property can\'t be used again until the next dawn.',
+        activation: '1 Action (1/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Plate armor; Action to shift into the Border Ethereal for 10 minutes (1/Long Rest).',
+        description: 'Legendary plate armor allowing dimensional phasing into the Border Ethereal plane.',
+        activation: '1 Action (1/Long Rest)',
+      ),
+      tags: ['armor', 'plate', 'etherealness', 'phase', 'legendary'],
     ),
   ];
 }

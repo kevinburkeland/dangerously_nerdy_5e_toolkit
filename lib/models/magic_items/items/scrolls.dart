@@ -179,6 +179,84 @@ class SrdMagicScrolls {
       tags: ['scroll', '5th level', 'spell scroll', 'consumable'],
     ),
 
+    // Spell Scroll (6th Level)
+    MagicItem(
+      id: 'item_spell_scroll_level_6',
+      name: 'Spell Scroll (6th Level)',
+      category: ItemCategory.scroll,
+      rarity: ItemRarity.veryRare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Cast 6th-Level Spell (Save DC 17, +9 Attack; Chain Lightning, Disintegrate, Heal)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Cast 6th-level spell without material components (Save DC 17, +9 Attack). Ability check DC 16 if above your spell slot level.',
+        description: 'A spell scroll bearing a 6th-level spell (such as Disintegrate, Heal, Sunbeam, or True Seeing). If the spell is above your level, make a DC 16 spellcasting ability check.',
+        activation: 'Matches Spell Casting Time',
+        savingThrowDc: 'Fixed DC 17 (+9 Attack)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Cast 6th-level spell. Save DC uses your DC or DC 17.',
+        description: 'Read scroll to cast 6th-level spell. DC 16 check if beyond your spell level.',
+        activation: 'Matches Spell Casting Time',
+        savingThrowDc: 'Your Spell Save DC or DC 17',
+      ),
+      isChangedIn2024: true,
+      diffSummary: '2024 cross-class scroll mechanics.',
+      tags: ['scroll', '6th level', 'spell scroll', 'consumable'],
+    ),
+
+    // Spell Scroll (7th Level)
+    MagicItem(
+      id: 'item_spell_scroll_level_7',
+      name: 'Spell Scroll (7th Level)',
+      category: ItemCategory.scroll,
+      rarity: ItemRarity.veryRare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Cast 7th-Level Spell (Save DC 18, +10 Attack; Plane Shift, Forcecage, Teleport)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Cast 7th-level spell without material components (Save DC 18, +10 Attack). Ability check DC 17 if above your spell slot level.',
+        description: 'A spell scroll bearing a 7th-level spell (such as Plane Shift, Forcecage, Teleport, or Finger of Death). Ability check DC 17 if above your spell slot level.',
+        activation: 'Matches Spell Casting Time',
+        savingThrowDc: 'Fixed DC 18 (+10 Attack)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Cast 7th-level spell. Save DC uses your DC or DC 18.',
+        description: 'Read scroll to cast 7th-level spell. DC 17 check if beyond your spell level.',
+        activation: 'Matches Spell Casting Time',
+        savingThrowDc: 'Your Spell Save DC or DC 18',
+      ),
+      isChangedIn2024: true,
+      diffSummary: '2024 cross-class scroll mechanics.',
+      tags: ['scroll', '7th level', 'spell scroll', 'consumable'],
+    ),
+
+    // Spell Scroll (8th Level)
+    MagicItem(
+      id: 'item_spell_scroll_level_8',
+      name: 'Spell Scroll (8th Level)',
+      category: ItemCategory.scroll,
+      rarity: ItemRarity.veryRare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Cast 8th-Level Spell (Save DC 18, +10 Attack; Sunburst, Dominate Monster, Mind Blank)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Cast 8th-level spell without material components (Save DC 18, +10 Attack). Ability check DC 18 if above your spell slot level.',
+        description: 'A spell scroll bearing an 8th-level spell (such as Sunburst, Dominate Monster, Mind Blank, or Demiplane). Ability check DC 18 if above your spell slot level.',
+        activation: 'Matches Spell Casting Time',
+        savingThrowDc: 'Fixed DC 18 (+10 Attack)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Cast 8th-level spell. Save DC uses your DC or DC 18.',
+        description: 'Read scroll to cast 8th-level spell. DC 18 check if beyond your spell level.',
+        activation: 'Matches Spell Casting Time',
+        savingThrowDc: 'Your Spell Save DC or DC 18',
+      ),
+      isChangedIn2024: true,
+      diffSummary: '2024 cross-class scroll mechanics.',
+      tags: ['scroll', '8th level', 'spell scroll', 'consumable'],
+    ),
+
     // Spell Scroll (9th Level)
     MagicItem(
       id: 'item_spell_scroll_level_9',

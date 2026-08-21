@@ -1309,5 +1309,536 @@ class SrdWondrousItems {
       ],
       tags: ['wondrous', 'vehicle', 'crab', 'kwalish', 'submersible', 'legendary'],
     ),
+
+    // Boots of Elvenkind
+    MagicItem(
+      id: 'item_boots_of_elvenkind',
+      name: 'Boots of Elvenkind',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Steps Make No Sound • Advantage on Stealth Checks that Rely on Moving Silently'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While you wear these boots, your steps make no sound, regardless of the surface you are moving across. You also have advantage on Dexterity (Stealth) checks that rely on moving silently.',
+        description: 'While you wear these boots, your steps make no sound, regardless of the surface you are moving across. You also have advantage on Dexterity (Stealth) checks that rely on moving silently.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Footsteps produce zero sound; gain Advantage on Stealth checks relying on silent movement.',
+        description: 'Silences all footsteps and grants Advantage on Stealth checks.',
+        activation: 'Passive',
+      ),
+      tags: ['wondrous', 'boots', 'stealth', 'silence', 'elven'],
+    ),
+
+    // Boots of Levitation
+    MagicItem(
+      id: 'item_boots_of_levitation',
+      name: 'Boots of Levitation',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Cast Levitate on Yourself at Will (Rise or Descend up to 20 ft/round)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While you wear these boots, you can cast the Levitate spell on yourself at will as an action.',
+        description: 'While you wear these boots, you can use an action to cast Levitate on yourself at will.',
+        activation: '1 Action (At Will)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: cast Levitate at will on yourself.',
+        description: 'Allows at-will vertical levitation up to 20 feet per round.',
+        activation: '1 Action',
+      ),
+      tags: ['wondrous', 'boots', 'levitate', 'mobility', 'flight'],
+    ),
+
+    // Boots of the Winterlands
+    MagicItem(
+      id: 'item_boots_of_the_winterlands',
+      name: 'Boots of the Winterlands',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Resistance to Cold Damage • Ignore Snow/Ice Difficult Terrain • Immune to Extreme Cold down to -50°F'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Grants resistance to cold damage, ignores difficult terrain composed of ice or snow, and protects you against extreme cold down to -50 degrees Fahrenheit.',
+        description: 'These furred boots provide warmth and stability in arctic conditions.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Cold Resistance, ignore snow/ice difficult terrain, complete protection against Extreme Cold.',
+        description: 'Arctic exploration boots providing cold defense and unimpeded winter mobility.',
+        activation: 'Passive',
+      ),
+      tags: ['wondrous', 'boots', 'cold', 'winter', 'resistance', 'survival'],
+    ),
+
+    // Brooch of Shielding
+    MagicItem(
+      id: 'item_brooch_of_shielding',
+      name: 'Brooch of Shielding',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Resistance to Force Damage • Complete Immunity to Magic Missile Damage'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing this brooch, you have resistance to force damage, and you have immunity to damage from the Magic Missile spell.',
+        description: 'While wearing this brooch, you have resistance to force damage, and you have immunity to damage from the magic missile spell.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Resistance to Force damage and 100% immunity to damage from Magic Missile.',
+        description: 'Warded brooch neutralizing force darts and reducing force blasts by half.',
+        activation: 'Passive',
+      ),
+      tags: ['wondrous', 'brooch', 'magic missile', 'force', 'immunity', 'defense'],
+    ),
+
+    // Broom of Flying
+    MagicItem(
+      id: 'item_broom_of_flying',
+      name: 'Broom of Flying',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Flying Speed 50 ft (Holds up to 400 lbs; 30 ft speed if over 200 lbs) • Remote Recall 1 Mile'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: speak command word to gain a flying speed of 50 feet (30 feet if carrying over 200 lbs, max 400 lbs). Can send the broom alone up to 1 mile away.',
+        description: 'This wooden broom functions as a magic vehicle with a flying speed of 50 feet while carrying up to 200 pounds, or 30 feet while carrying between 200 and 400 pounds. You can also command it to fly on its own to any location within 1 mile.',
+        activation: '1 Action (Command Word)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Flying Speed 50 ft (30 ft if carrying 200–400 lbs). Remote summonable within 1 mile.',
+        description: 'Iconic flying broom supporting aerial transport for rider and gear.',
+        activation: '1 Action',
+      ),
+      tags: ['wondrous', 'broom', 'flying', 'flight', 'vehicle', 'mobility'],
+    ),
+
+    // Cape of the Mountebank
+    MagicItem(
+      id: 'item_cape_of_the_mountebank',
+      name: 'Cape of the Mountebank',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action (1/Day): Cast Dimension Door with Smoke Cloud at Origin & Destination'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: cast Dimension Door (recharges daily at dawn). Leaves behind a 5-foot-radius cloud of heavy smoke at both the origin and destination.',
+        description: 'This cape smells faintly of brimstone. While wearing it, you can use an action to cast the Dimension Door spell from it. When the spell takes effect, you vanish in a cloud of thick smoke that heavily obscures the space you left and the destination space until the end of your next turn.',
+        activation: '1 Action (1/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: cast Dimension Door with dramatic obscuring smoke clouds (1/Long Rest).',
+        description: 'Teleportation cape allowing a 500-foot jump and sensory concealment.',
+        activation: '1 Action (1/Long Rest)',
+      ),
+      tags: ['wondrous', 'cape', 'dimension door', 'teleport', 'escape', 'stealth'],
+    ),
+
+    // Chime of Opening
+    MagicItem(
+      id: 'item_chime_of_opening',
+      name: 'Chime of Opening',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Unlock Any Mundane or Magical Lock within 120 ft (10 Charges Total)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 10 charges. Action: point at a lock, door, gate, chest, or vehicle within 120 feet. Strikes open the lock (dispelling Arcane Lock or picking normal locks).',
+        description: 'This hollow metal tube contains 10 charges. Striking it points a tone at a lock, latch, or barrier, unlocking or unbarring it instantly. Non-rechargeable; cracks when empty.',
+        activation: '1 Action',
+        charges: '10 charges (non-rechargeable)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: instantly open mundane or magical locks within 120 ft (10 charges).',
+        description: 'Acoustic lock-breaking chime opening reinforced barriers and overcoming Arcane Lock.',
+        activation: '1 Action',
+        charges: '10 charges (non-rechargeable)',
+      ),
+      tags: ['wondrous', 'chime', 'knock', 'lock', 'dungeon', 'utility'],
+    ),
+
+    // Circlet of Blasting
+    MagicItem(
+      id: 'item_circlet_of_blasting',
+      name: 'Circlet of Blasting',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.ranged, damageType: DamageAccent.fire, label: 'Action (1/Day): Cast Scorching Ray (+5 to Hit; 3 Rays dealing 2d6 Fire each)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action (1/day): cast the Scorching Ray spell (+5 attack bonus, 120 ft range). Recharges daily at dawn.',
+        description: 'While wearing this circlet, you can use an action to cast the Scorching Ray spell with a +5 bonus to the attack roll.',
+        activation: '1 Action (1/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: cast Scorching Ray (+5 attack bonus or your spell attack bonus) once per Long Rest.',
+        description: 'Golden circlet shooting fiery rays at targets up to 120 feet away.',
+        activation: '1 Action (1/Long Rest)',
+      ),
+      tags: ['wondrous', 'circlet', 'scorching ray', 'fire', 'damage'],
+    ),
+
+    // Cloak of Displacement
+    MagicItem(
+      id: 'item_cloak_of_displacement',
+      name: 'Cloak of Displacement',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Attack Rolls against you have Disadvantage (Temporarily deactivated until start of next turn if you take damage)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Attack rolls against you have disadvantage. If you take damage, this property ceases to function until the start of your next turn (also inactive if incapacitated or unable to move).',
+        description: 'While you wear this cloak, it projects an illusion that makes you appear to be standing in a place near your actual location, causing any creature to have disadvantage on attack rolls against you. If you take damage, the property is suppressed until the start of your next turn.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Imposes Disadvantage on all incoming attack rolls. Suppressed until next turn when you take damage.',
+        description: 'Projects an illusory optical shift, conferring constant defensive evasion.',
+        activation: 'Passive',
+      ),
+      tags: ['wondrous', 'cloak', 'displacement', 'defense', 'illusion'],
+    ),
+
+    // Cloak of the Manta Ray
+    MagicItem(
+      id: 'item_cloak_of_the_manta_ray',
+      name: 'Cloak of the Manta Ray',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Breathe Underwater • Gain Swimming Speed of 60 Feet while Hood is Pulled Up'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing this cloak with the hood up, you can breathe underwater and gain a swimming speed of 60 feet. Pulling the hood up or down requires an action.',
+        description: 'While wearing this cloak with its hood up, you can breathe underwater, and you have a swimming speed of 60 feet.',
+        activation: '1 Action (Toggle Hood)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Underwater breathing and 60 ft Swim Speed while hood is active.',
+        description: 'Aquatic cloak enabling rapid swimming and amphibious survival.',
+        activation: '1 Action / Bonus Action',
+      ),
+      tags: ['wondrous', 'cloak', 'manta ray', 'aquatic', 'swimming', 'water breathing'],
+    ),
+
+    // Cube of Force
+    MagicItem(
+      id: 'item_cube_of_force',
+      name: 'Cube of Force',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: '36 Charges: Action: Deploy 15-ft Force Barrier blocking Gas, Nonliving Matter, Living Matter, Spell Effects, or ALL Things'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Has 36 charges (regains 1d20 daily at dawn). Press one of 6 faces as an action to create a 15-foot cubic barrier blocking gas, nonliving matter, living matter, spells, or all things.',
+        description: 'This cube has 36 charges. Pressing faces creates custom protective force barriers around you that move with you.',
+        activation: '1 Action',
+        charges: '36 charges (recharges 1d20 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '36 charges: customizable 15-ft impenetrable barrier blocking matter, spells, and environmental hazards.',
+        description: 'Tactical force field generator adapting to block various types of incoming harm.',
+        activation: '1 Action',
+        charges: '36 charges (recharges 1d20 on Long Rest)',
+      ),
+      tags: ['wondrous', 'cube', 'force', 'barrier', 'defense', 'shield'],
+    ),
+
+    // Eversmoking Bottle
+    MagicItem(
+      id: 'item_eversmoking_bottle',
+      name: 'Eversmoking Bottle',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Uncork to produce 60-ft up to 120-ft radius Cloud of Heavy Obscurement (100 ft/minute)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: uncork to emit thick smoke in a 60-foot radius, expanding 10 feet per minute up to 120 feet. Heavily obscures vision. Action to recork.',
+        description: 'Smoke constantly trickles from the lead stopper of this brass bottle. Uncorking releases a massive cloud of thick smoke.',
+        activation: '1 Action (Uncork / Recork)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: uncork for massive 60–120 ft radius obscuring smoke field.',
+        description: 'Creates vast tactical smoke concealment blocking line of sight.',
+        activation: '1 Action',
+      ),
+      tags: ['wondrous', 'bottle', 'smoke', 'obscurement', 'tactical'],
+    ),
+
+    // Eyes of the Eagle
+    MagicItem(
+      id: 'item_eyes_of_the_eagle',
+      name: 'Eyes of the Eagle',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Advantage on Perception Checks that Rely on Sight • Discern Fine Detail up to 1 Mile Away'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing these crystal lenses, you have advantage on Wisdom (Perception) checks that rely on sight. Can discern fine details up to 1 mile away.',
+        description: 'These crystal lenses fit over the eyes and magnify distant objects.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Advantage on sight-based Perception; eagle telescopic sight up to 1 mile.',
+        description: 'Precision scout optics granting telescopic sight and Advantage on visual search.',
+        activation: 'Passive',
+      ),
+      tags: ['wondrous', 'eyes', 'eagle', 'perception', 'scouting', 'vision'],
+    ),
+
+    // Folding Boat
+    MagicItem(
+      id: 'item_folding_boat',
+      name: 'Folding Boat',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Unfolds from 12-in Box into 10-ft Rowboat (4 People) or 24-ft Ship (15 People)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: speak command word 1 to unfold into a 10-foot rowboat (4 passengers), command word 2 for a 24-foot sailing ship with cabin (15 passengers), or command word 3 to fold back into a 12-inch wooden box.',
+        description: 'This wooden box is 12 inches long, 6 inches wide, and 6 inches deep. Commands unfold it into ocean-ready vessels.',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: expands into 10-ft rowboat or 24-ft sailing vessel; folds into portable box.',
+        description: 'Modular nautical vessel box providing instant maritime transportation.',
+        activation: '1 Action',
+      ),
+      tags: ['wondrous', 'boat', 'vehicle', 'ship', 'transport', 'nautical'],
+    ),
+
+    // Gem of Brightness
+    MagicItem(
+      id: 'item_gem_of_brightness',
+      name: 'Gem of Brightness',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '50 Charges: Shed Bright Light (At Will) • Blind 1 Creature (DC 15 CON, 1 charge) • Blind All in 60-ft Cone (DC 15 CON, 5 charges)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 50 charges. Shed light (0 charges), shoot beam blinding 1 creature on DC 15 Con save (1 charge), or unleash 60-foot cone blinding all creatures for 1 minute (5 charges). Non-rechargeable.',
+        description: 'This prism has 50 charges and emits dazzling bursts of solar brilliance.',
+        activation: '1 Action',
+        charges: '50 charges (non-rechargeable)',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '50 charges: at-will illumination, single-target blindness ray, and 60-ft cone blinding flash.',
+        description: 'Crystal prism generating intense radiant bursts to blind foes.',
+        activation: '1 Action',
+        charges: '50 charges (non-rechargeable)',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      tags: ['wondrous', 'gem', 'brightness', 'blindness', 'light', 'radiant'],
+    ),
+
+    // Gem of Seeing
+    MagicItem(
+      id: 'item_gem_of_seeing',
+      name: 'Gem of Seeing',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: '3 Charges: Action (1 charge): Gain Truesight out to 120 Feet for 10 Minutes (Sees Invisible, Ethereal, Illusions & Shapechangers)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Has 3 charges (regains 1d3 daily at dawn). Action: peer through the gem for 10 minutes to gain Truesight out to 120 feet.',
+        description: 'This gem has 3 charges. Peering through it grants Truesight to see through magical darkness, invisible creatures, illusions, visual shapechangers, and into the Ethereal Plane.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '3 charges: peer through lens for 10 minutes of 120 ft Truesight.',
+        description: 'Divination prism revealing all invisible, ethereal, and shapeshifted entities.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 on Long Rest)',
+      ),
+      tags: ['wondrous', 'gem', 'truesight', 'invisible', 'illusions', 'divination'],
+    ),
+
+    // Gloves of Missile Snaring
+    MagicItem(
+      id: 'item_gloves_of_missile_snaring',
+      name: 'Gloves of Missile Snaring',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Reaction: Reduce Ranged Weapon Attack Damage by 1d10 + DEX Mod • Catch Missile if Damage is 0'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'When a ranged weapon attack hits you, use your reaction to reduce the damage by 1d10 + Dexterity modifier. If damage is reduced to 0, you catch the missile if you have a free hand.',
+        description: 'These gloves seem to move on their own to snatch projectiles out of the air.',
+        activation: '1 Reaction',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Reaction: deflect ranged weapon attacks, reducing damage by 1d10 + Dex and catching missile if damage reaches 0.',
+        description: 'Enchanted defensive gloves snatching arrows and thrown weapons out of flight.',
+        activation: '1 Reaction',
+      ),
+      tags: ['wondrous', 'gloves', 'missile snaring', 'deflect', 'reaction', 'defense'],
+    ),
+
+    // Gloves of Thievery
+    MagicItem(
+      id: 'item_gloves_of_thievery',
+      name: 'Gloves of Thievery',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: '+5 Bonus to Sleight of Hand & Thieves\' Tools Ability Checks (Invisible while Worn)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'These gloves are invisible while worn. While wearing them, you gain a +5 bonus to Dexterity (Sleight of Hand) checks and Dexterity checks made to pick locks with thieves\' tools.',
+        description: 'Supple, translucent rogue\'s gloves boosting precision manual dexterity.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+5 bonus on Sleight of Hand and Thieves\' Tools checks; invisible while equipped.',
+        description: 'Masterwork lockpicking and pickpocketing gloves adding a flat +5 bonus.',
+        activation: 'Passive',
+      ),
+      tags: ['wondrous', 'gloves', 'thievery', 'sleight of hand', 'lockpicking', 'rogue'],
+    ),
+
+    // Helm of Teleportation
+    MagicItem(
+      id: 'item_helm_of_teleportation',
+      name: 'Helm of Teleportation',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '3 Charges: Action (1 charge): Cast Teleport spell anywhere on the same plane'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 3 charges (regains 1d3 daily at dawn). While wearing it, use an action to expend 1 charge to cast the Teleport spell.',
+        description: 'This helm has 3 charges. While wearing it, you can use an action to expend 1 charge to cast Teleport.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '3 charges: cast Teleport (7th level) anywhere across the current plane.',
+        description: 'Legendary long-distance traversal helm.',
+        activation: '1 Action',
+        charges: '3 charges (recharges 1d3 on Long Rest)',
+      ),
+      tags: ['wondrous', 'helm', 'teleport', 'travel', 'mobility'],
+    ),
+
+    // Lantern of Revealing
+    MagicItem(
+      id: 'item_lantern_of_revealing',
+      name: 'Lantern of Revealing',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Burns for 6 Hours on 1 Pint of Oil: Sheds 30 ft Bright Light (30 ft Dim) • Invisible Creatures & Objects are Visible in Bright Light'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While lit, sheds bright light in a 30-foot radius and dim light for an additional 30 feet. Invisible creatures and objects are visible as long as they are in the lantern\'s bright light.',
+        description: 'While lit, this hooded lantern reveals invisible creatures and hidden ethereal objects in its bright light beam.',
+        activation: '1 Action (Light / Hood)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Reveals all invisible creatures and objects within 30 ft bright light radius.',
+        description: 'Essential dungeon exploration lantern unmasking invisible stalkers and hidden objects.',
+        activation: '1 Action',
+      ),
+      tags: ['wondrous', 'lantern', 'revealing', 'invisibility', 'light', 'scouting'],
+    ),
+
+    // Rope of Climbing
+    MagicItem(
+      id: 'item_rope_of_climbing',
+      name: 'Rope of Climbing',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: 60-ft Silk Rope moves up to 50 ft to tie/fasten itself to any object • Supports up to 3,000 lbs • AC 20, 20 HP'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: command this 60-foot rope to snake forward up to 50 feet and securely knot/fasten itself to an anchor point. Bonus action: create knot handholds (advantage on Athletics to climb). Supports up to 3,000 lbs.',
+        description: 'This 60-foot silk rope moves under telepathic/verbal command to scale cliffs and secure rappels.',
+        activation: '1 Action / 1 Bonus Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: snake up to 50 ft to tie off to anchors. Creates knot handholds for effortless climbing.',
+        description: 'Enchanted climbing rope securing ascents and descents across sheer surfaces.',
+        activation: '1 Action',
+      ),
+      tags: ['wondrous', 'rope', 'climbing', 'athletics', 'utility', 'dungeon'],
+    ),
+
+    // Rope of Entanglement
+    MagicItem(
+      id: 'item_rope_of_entanglement',
+      name: 'Rope of Entanglement',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.ranged, label: 'Action: Target creature within 20 ft (DC 15 DEX Save or Restrained) • DC 15 STR or DC 20 Acrobatics to Escape • AC 20, 20 HP'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: command rope to lash out at a creature within 20 feet. Target must pass DC 15 Dex save or become restrained. DC 15 Strength or DC 20 Dexterity check to break free.',
+        description: 'This 30-foot rope springs forward to wrap around and bind a target with supernatural strength.',
+        activation: '1 Action',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: bind target in 20 ft with Restrained condition on failed DC 15 Dex save.',
+        description: 'Tactical crowd-control rope restraining foes without requiring spell slots.',
+        activation: '1 Action',
+        savingThrowDc: 'Fixed DC 15',
+      ),
+      tags: ['wondrous', 'rope', 'entanglement', 'restrained', 'crowd control'],
+    ),
+
+    // Wings of Flying
+    MagicItem(
+      id: 'item_wings_of_flying',
+      name: 'Wings of Flying',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Transform Cloak into Bat/Bird Wings for 1 Hour (Flying Speed 60 ft; Recharges in 1d12 Hours)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: speak command word to transform cloak into bat or bird wings, gaining a flying speed of 60 feet for 1 hour. Can\'t be used again for 1d12 hours.',
+        description: 'While wearing this cloak, you can use an action to speak its command word. This turns the cloak into a pair of bat wings or bird wings on your back for 1 hour or until you repeat the command word as an action. While the wings are present, you have a flying speed of 60 feet.',
+        activation: '1 Action (1 Hour Duration)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: deploy wings granting 60 ft Flying Speed for 1 hour (recharges in 1d12 hours).',
+        description: 'Transforms cloak into wings enabling rapid 60-foot flight speed.',
+        activation: '1 Action',
+      ),
+      tags: ['wondrous', 'wings', 'flying', 'flight', 'mobility', 'aerial'],
+    ),
   ];
 }

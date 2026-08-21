@@ -200,5 +200,53 @@ class SrdMagicRods {
       isChangedIn2024: false,
       tags: ['rod', 'charm', 'command', 'social', 'enchantment'],
     ),
+
+    // Rod of Security
+    MagicItem(
+      id: 'item_rod_of_security',
+      name: 'Rod of Security',
+      category: ItemCategory.rod,
+      rarity: ItemRarity.veryRare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Transport up to 200 Creatures to Paradise Demiplane for up to 200 Days'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: transport yourself and up to 199 other willing creatures to a tranquil extradimensional paradise demiplane for up to 200 days (10 days recharge per day spent in paradise).',
+        description: 'While holding this rod, you can use an action to activate it. The rod teleports you and up to 199 other willing creatures you can see to a tranquil pocket dimension paradise. Visitors do not age, natural healing occurs at twice normal rate, and lavish feasts and pristine lodging are provided. When the effect ends, all visitors return to their original locations. Can\'t be used again until 10 days pass for each day spent in the paradise.',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: transport up to 200 creatures to a tranquil, restorative demiplane paradise.',
+        description: 'Teleports up to 200 willing creatures to a safe pocket dimension with food, clean lodging, and accelerated healing for up to 200 days.',
+        activation: '1 Action',
+      ),
+      tags: ['rod', 'security', 'demiplane', 'teleport', 'sanctuary', 'utility'],
+    ),
+
+    // Rod of Resurrection
+    MagicItem(
+      id: 'item_rod_of_resurrection',
+      name: 'Rod of Resurrection',
+      category: ItemCategory.rod,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      attunementRequirement: 'by a Cleric, Druid, or Paladin',
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.legendary, label: '5 Charges: Cast Heal (1 charge) or Resurrection (5 charges; 5% Destruction Risk)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 5 charges. Cast Heal (6th level) for 1 charge or Resurrection (7th level) for 5 charges. 5% chance of rod crumbling to dust when 0 charges remain.',
+        description: 'This rod has 5 charges (regains 1 daily at dawn). While holding it, you can use an action to cast Heal (1 charge) or Resurrection (5 charges). If you expend the last charge, roll a d20. On a 1, the rod turns to dust and is destroyed.',
+        activation: '1 Action',
+        charges: '5 charges (recharges 1 daily at dawn)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '5 charges: cast Heal (1 charge) or Resurrection (5 charges). Essential divine restoration staff.',
+        description: 'Divine artifact with 5 charges to cast Heal (6th level) or bring the deceased back with Resurrection (5 charges).',
+        activation: '1 Action',
+        charges: '5 charges (recharges 1 on Long Rest)',
+      ),
+      tags: ['rod', 'resurrection', 'heal', 'life', 'divine', 'cleric', 'druid', 'paladin', 'legendary'],
+    ),
   ];
 }

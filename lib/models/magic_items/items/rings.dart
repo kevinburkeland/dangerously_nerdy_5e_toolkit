@@ -400,5 +400,148 @@ class SrdMagicRings {
       isChangedIn2024: false,
       tags: ['ring', 'animal', 'beast', 'charm', 'druid', 'ranger'],
     ),
+
+    // Ring of Djinni Summoning
+    MagicItem(
+      id: 'item_ring_of_djinni_summoning',
+      name: 'Ring of Djinni Summoning',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.legendary, label: 'Action: Summon Djinni from Elemental Plane of Air for up to 1 Hour (1/Day)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: summon a friendly Djinni from the Elemental Plane of Air for up to 1 hour (recharges daily at dawn).',
+        description: 'While wearing this ring, you can use an action to summon a djinni from the Elemental Plane of Air. The djinni appears in an unoccupied space within 30 feet of you. It remains for up to 1 hour, until you dismiss it as an action, or until it drops to 0 hit points. The djinni is friendly to you and your companions and obeys your verbal commands.',
+        activation: '1 Action (1/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: summon allied Djinni for 1 hour. Friendly and follows verbal commands (1/Long Rest).',
+        description: 'Summons a noble Djinni elemental ally from the Elemental Plane of Air to fight, transport, or assist for up to 1 hour.',
+        activation: '1 Action (1/Long Rest)',
+      ),
+      tags: ['ring', 'djinni', 'summon', 'elemental', 'legendary'],
+    ),
+
+    // Ring of Elemental Command
+    MagicItem(
+      id: 'item_ring_of_elemental_command',
+      name: 'Ring of Elemental Command (Air / Earth / Fire / Water)',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.legendary, label: 'Dominion over Chosen Element: 5 Charges for High-Tier Spells, Element Resistance & Flight/Swim'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Contains 5 charges. Grants advantage on attacks vs elementals of its type, resistance to matching element, and allows casting signature high-level elemental spells (Chain Lightning, Earthquake, Fire Storm, Wall of Ice, etc.).',
+        description: 'This ring is linked to one of the four Elemental Planes (Air, Earth, Fire, or Water). Has 5 charges (regains 1d4 + 1 daily at dawn). Grants resistance to the associated damage type, elemental speech, and powerful thematic spellcasting.',
+        activation: '1 Action',
+        charges: '5 charges (recharges 1d4 + 1 daily at dawn)',
+        savingThrowDc: 'Fixed DC 17',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '5 charges: elemental immunity/resistance, domination over planar creatures, and devastating elemental magic.',
+        description: 'Legendary elemental focus ring granting elemental control and signature planar spells.',
+        activation: '1 Action',
+        charges: '5 charges (recharges 1d4 + 1 on Long Rest)',
+        savingThrowDc: 'Your Spell Save DC or DC 17',
+      ),
+      tags: ['ring', 'elemental', 'command', 'fire', 'air', 'earth', 'water', 'legendary'],
+    ),
+
+    // Ring of Jumping
+    MagicItem(
+      id: 'item_ring_of_jumping',
+      name: 'Ring of Jumping',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Bonus Action: Cast Jump on Yourself at Will (Triples Jump Distance)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing this ring, you can cast the Jump spell from it as a bonus action at will, but can target only yourself.',
+        description: 'While wearing this ring, you can cast the Jump spell from it as a bonus action at will, but can target only yourself.',
+        activation: '1 Bonus Action (At Will)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Bonus Action: cast Jump at will targeting self (triples jumping distances).',
+        description: 'Cast Jump on yourself as a Bonus Action at will without expending spell slots.',
+        activation: '1 Bonus Action',
+      ),
+      tags: ['ring', 'jump', 'mobility', 'athletics', 'utility'],
+    ),
+
+    // Ring of Spell Turning
+    MagicItem(
+      id: 'item_ring_of_spell_turning',
+      name: 'Ring of Spell Turning',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Advantage on Saves vs Spells targeting only you • Natural 20 Save Reflects Spell back to Caster (up to 7th Level)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Advantage on saving throws against any spell that targets only you (not an area). If you roll a 20 on the save and the spell is 7th level or lower, the spell is reflected back onto the caster.',
+        description: 'While wearing this ring, you have advantage on saving throws against any spell that targets only you (not an area). If you roll a 20 on the save and the spell is 7th level or lower, the spell has no effect on you and instead targets the caster, using the slot level, spell save DC, attack bonus, and spellcasting ability of the caster.',
+        activation: 'Passive on Save',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Advantage on saves vs targeted spells; Natural 20 reflects spells up to 7th level back onto original caster.',
+        description: 'Legendary abjuration ring reflecting hostile targeted spells back at their casters.',
+        activation: 'Passive on Save',
+      ),
+      tags: ['ring', 'spell turning', 'reflect', 'abjuration', 'legendary'],
+    ),
+
+    // Ring of Swimming
+    MagicItem(
+      id: 'item_ring_of_swimming',
+      name: 'Ring of Swimming',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Gain Swimming Speed of 40 Feet'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'You have a swimming speed of 40 feet while wearing this ring.',
+        description: 'You have a swimming speed of 40 feet while wearing this ring.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Grants Swim Speed of 40 feet.',
+        description: 'While wearing this ring, you gain a Swim Speed of 40 feet.',
+        activation: 'Passive',
+      ),
+      tags: ['ring', 'swimming', 'aquatic', 'mobility'],
+    ),
+
+    // Ring of X-ray Vision
+    MagicItem(
+      id: 'item_ring_of_xray_vision',
+      name: 'Ring of X-ray Vision',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: See Through 1 ft Stone, 1 in Metal, 3 ft Wood/Dirt (30 ft Range, 1 Min; Exhaustion Risk on Reuse)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: gain X-ray vision for 1 minute up to 30 feet (penetrates 1 ft stone, 1 inch metal, 3 ft wood/dirt; blocked by lead). Each use past the first per rest requires DC 15 Con save or 1 level of exhaustion.',
+        description: 'While wearing this ring, you can use an action to speak its command word. For 1 minute, you gain X-ray vision out to 30 feet. To you, solid matter appears transparent. The vision can penetrate 1 foot of stone, 1 inch of common metal, or up to 3 feet of wood or dirt. Thicker substances block the vision, as does a thin sheet of lead.',
+        activation: '1 Action (1 Min Duration)',
+        savingThrowDc: 'DC 15 Constitution (Exhaustion Risk)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: 30 ft X-ray vision through walls and doors for 1 minute. Con save against Exhaustion on repeated uses.',
+        description: 'Enables vision through physical barriers up to 30 feet away for 1 minute.',
+        activation: '1 Action',
+        savingThrowDc: 'DC 15 Constitution',
+      ),
+      tags: ['ring', 'xray vision', 'scouting', 'vision', 'investigation'],
+    ),
   ];
 }

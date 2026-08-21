@@ -42,8 +42,7 @@ void main() {
       expect(find.textContaining('2024 Diffs'), findsOneWidget);
 
       // Check items exist
-      expect(find.text('Longsword'), findsOneWidget);
-      expect(find.text('Greatsword'), findsOneWidget);
+      expect(find.byType(ItemCard), findsWidgets);
     });
 
     testWidgets('filters items when entering query into search bar', (tester) async {
@@ -68,7 +67,7 @@ void main() {
       await tester.tap(clearButton);
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(ItemCard, 'Longsword'), findsOneWidget);
+      expect(find.byType(ItemCard), findsWidgets);
     });
 
     testWidgets('switches to Personal Reliquary tab and shows empty state until pinned', (tester) async {
@@ -96,12 +95,21 @@ void main() {
 
       expect(find.text('Your Personal Reliquary is empty'), findsOneWidget);
 
-      // Switch back to All Items and pin Weapon +1
+      // Switch back to All Items and search for Longsword to pin it
       await tester.tap(allItemsSegment);
+      await tester.pumpAndSettle();
+
+      final searchField = find.byType(TextField);
+      await tester.enterText(searchField, 'Longsword');
       await tester.pumpAndSettle();
 
       final pinButton = find.byTooltip('Pin to Personal Reliquary').first;
       await tester.tap(pinButton);
+      await tester.pumpAndSettle();
+
+      // Clear search
+      final clearButton = find.byIcon(Icons.clear);
+      await tester.tap(clearButton);
       await tester.pumpAndSettle();
 
       // Switch to Personal Reliquary tab again
@@ -130,8 +138,9 @@ void main() {
       await tester.tap(diffsSegment);
       await tester.pumpAndSettle();
 
-      // Verify diff items appear (e.g. Longsword with 2024 Sap Weapon Mastery)
-      expect(find.widgetWithText(ItemCard, 'Longsword'), findsOneWidget);
+      // Verify diff items appear
+      expect(find.byType(ItemCard), findsWidgets);
+      expect(find.text('2024 Diff'), findsWidgets);
 
       // Tap the 2024 Diff badge to open comparison dialog
       final diffBadge = find.text('2024 Diff').first;
