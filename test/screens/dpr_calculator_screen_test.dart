@@ -3,20 +3,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dpr_calculator_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 
 void main() {
-  Widget buildTestableScreen() {
+  Widget buildTestableScreen({DmRulesEdition edition = DmRulesEdition.v2024}) {
     return MaterialApp(
       theme: AppTheme.buildTheme(
         brightness: Brightness.dark,
         accent: FantasyAccent.paladinGold,
       ),
-      home: const DprCalculatorScreen(),
+      home: DprCalculatorScreen(initialEdition: edition),
     );
   }
 
   group('DprCalculatorScreen Widget Tests', () {
-    testWidgets('renders DPR Calculator screen with chart, presets, AC slider, and metrics', (tester) async {
+    testWidgets('renders DPR Calculator with clean unselected custom build default and 2024 header', (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -25,22 +26,73 @@ void main() {
       await tester.pumpWidget(buildTestableScreen());
       await tester.pumpAndSettle();
 
-      // App bar
+      // App bar & Rules Edition Header
       expect(find.text('DPR Calculator & Graph'), findsOneWidget);
+      expect(find.text('Active: 2024 Revised Rules'), findsOneWidget);
 
       // Presets
-      expect(find.text('Level 5 Barbarian (Greatsword + Reckless)'), findsOneWidget);
-      expect(find.text('Custom Build'), findsOneWidget);
+      expect(find.text('Custom Build (Clean)'), findsOneWidget);
+      expect(find.text('Level 5 Barbarian'), findsOneWidget);
 
       // AC Target & Metrics
-      expect(find.textContaining('Target Armor Class (AC):'), findsOneWidget);
-      expect(find.text('Round DPR'), findsOneWidget);
-      expect(find.text('Hit Chance'), findsOneWidget);
-      expect(find.text('Crit Chance'), findsOneWidget);
+      expect(find.text('Target Armor Class (AC):'), findsOneWidget);
+      expect(find.text('AC 15'), findsOneWidget);
+      expect(find.text('Accuracy'), findsOneWidget);
+      expect(find.text('Crit Rate'), findsOneWidget);
 
       // Combatant Configurator
-      expect(find.text('Combatant & Attack Profile'), findsOneWidget);
-      expect(find.text('Add Attack'), findsOneWidget);
+      expect(find.text('Character & Attacks Config'), findsOneWidget);
+      expect(find.text('Equip / Select Weapon Item'), findsOneWidget);
+      expect(find.text('Custom Weapon / Attack Name'), findsOneWidget);
+    });
+
+    testWidgets('switches between 2024 and 2014 rules edition toggles', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active: 2024 Revised Rules'), findsOneWidget);
+
+      // Tap 2014 Segmented Button
+      final btn2014 = find.text('2014');
+      expect(btn2014, findsOneWidget);
+      await tester.tap(btn2014);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active: 2014 5e RAW'), findsOneWidget);
+    });
+
+    testWidgets('opens weapon picker sheet and selects a magic weapon item', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      final equipBtn = find.text('Equip / Select Weapon Item').first;
+      expect(equipBtn, findsOneWidget);
+      await tester.tap(equipBtn);
+      await tester.pumpAndSettle();
+
+      // Verify modal sheet is open
+      expect(find.text('Select Weapon or Magic Item'), findsOneWidget);
+      expect(find.text('Standard Melee'), findsOneWidget);
+
+      // Select Greatsword
+      final greatswordOption = find.text('Greatsword (2d6 Slashing)');
+      expect(greatswordOption, findsOneWidget);
+      await tester.tap(greatswordOption);
+      await tester.pumpAndSettle();
+
+      // Modal closed and weapon applied
+      expect(find.text('Select Weapon or Magic Item'), findsNothing);
+      expect(find.text('Greatsword'), findsOneWidget);
     });
 
     testWidgets('switches presets when tapping on preset chips', (tester) async {
@@ -53,7 +105,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Find and tap Level 5 Fighter chip
-      final fighterChip = find.text('Level 5 Fighter (Crossbow Expert + Sharpshooter)');
+      final fighterChip = find.text('Level 5 Fighter');
       expect(fighterChip, findsOneWidget);
 
       await tester.ensureVisible(fighterChip);
@@ -73,7 +125,7 @@ void main() {
       await tester.pumpWidget(buildTestableScreen());
       await tester.pumpAndSettle();
 
-      expect(find.text('Target Armor Class (AC): 15'), findsOneWidget);
+      expect(find.text('AC 15'), findsOneWidget);
 
       // Tap + button
       final plusButton = find.byIcon(Icons.add_circle_outline);
@@ -83,7 +135,7 @@ void main() {
       await tester.tap(plusButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Target Armor Class (AC): 16'), findsOneWidget);
+      expect(find.text('AC 16'), findsOneWidget);
     });
 
     testWidgets('opens 5e DPR Math Guide dialog when tapping info icon', (tester) async {
@@ -101,13 +153,15 @@ void main() {
       await tester.tap(infoBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('5e DPR Math Guide'), findsOneWidget);
-      expect(find.text('Got It'), findsOneWidget);
+      expect(find.textContaining('5e DPR Math Guide'), findsOneWidget);
+      expect(find.textContaining('How Damage Per Round (DPR) is Calculated:'), findsOneWidget);
 
-      await tester.tap(find.text('Got It'));
+      final gotItBtn = find.text('Got It');
+      expect(gotItBtn, findsOneWidget);
+      await tester.tap(gotItBtn);
       await tester.pumpAndSettle();
 
-      expect(find.text('5e DPR Math Guide'), findsNothing);
+      expect(find.textContaining('How Damage Per Round (DPR) is Calculated:'), findsNothing);
     });
   });
 }

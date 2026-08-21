@@ -47,6 +47,71 @@ enum WeaponMastery {
   const WeaponMastery(this.label);
 }
 
+/// Catalog item representing a base weapon or magic weapon to easily equip or customize.
+class DprWeaponPreset {
+  final String id;
+  final String name;
+  final String category; // e.g. "Standard Melee", "Standard Ranged", "Magic Weapon"
+  final int diceCount;
+  final int diceSides;
+  final String damageType;
+  final int flatBonus;
+  final int secondaryDiceCount;
+  final int secondaryDiceSides;
+  final String? secondaryDamageType;
+  final WeaponMastery defaultMastery;
+  final bool isRanged;
+  final bool isHeavy;
+
+  const DprWeaponPreset({
+    required this.id,
+    required this.name,
+    this.category = 'Standard Weapon',
+    required this.diceCount,
+    required this.diceSides,
+    required this.damageType,
+    this.flatBonus = 0,
+    this.secondaryDiceCount = 0,
+    this.secondaryDiceSides = 0,
+    this.secondaryDamageType,
+    this.defaultMastery = WeaponMastery.none,
+    this.isRanged = false,
+    this.isHeavy = false,
+  });
+
+  static const List<DprWeaponPreset> allPresets = [
+    // Standard Melee
+    DprWeaponPreset(id: 'greatsword', name: 'Greatsword (2d6 Slashing)', category: 'Standard Melee', diceCount: 2, diceSides: 6, damageType: 'slashing', defaultMastery: WeaponMastery.graze, isHeavy: true),
+    DprWeaponPreset(id: 'greataxe', name: 'Greataxe (1d12 Slashing)', category: 'Standard Melee', diceCount: 1, diceSides: 12, damageType: 'slashing', defaultMastery: WeaponMastery.none, isHeavy: true),
+    DprWeaponPreset(id: 'maul', name: 'Maul (2d6 Bludgeoning)', category: 'Standard Melee', diceCount: 2, diceSides: 6, damageType: 'bludgeoning', defaultMastery: WeaponMastery.topple, isHeavy: true),
+    DprWeaponPreset(id: 'longsword', name: 'Longsword (1d8 Slashing)', category: 'Standard Melee', diceCount: 1, diceSides: 8, damageType: 'slashing', defaultMastery: WeaponMastery.none),
+    DprWeaponPreset(id: 'longsword_2h', name: 'Longsword (2-Handed 1d10)', category: 'Standard Melee', diceCount: 1, diceSides: 10, damageType: 'slashing', defaultMastery: WeaponMastery.none),
+    DprWeaponPreset(id: 'glaive', name: 'Glaive / Halberd (1d10 Slashing)', category: 'Standard Melee', diceCount: 1, diceSides: 10, damageType: 'slashing', defaultMastery: WeaponMastery.graze, isHeavy: true),
+    DprWeaponPreset(id: 'polearm_butt', name: 'Polearm Master Butt-End (1d4)', category: 'Standard Melee', diceCount: 1, diceSides: 4, damageType: 'bludgeoning', defaultMastery: WeaponMastery.none),
+    DprWeaponPreset(id: 'rapier', name: 'Rapier (1d8 Piercing)', category: 'Standard Melee', diceCount: 1, diceSides: 8, damageType: 'piercing', defaultMastery: WeaponMastery.vex),
+    DprWeaponPreset(id: 'shortsword', name: 'Shortsword (1d6 Piercing)', category: 'Standard Melee', diceCount: 1, diceSides: 6, damageType: 'piercing', defaultMastery: WeaponMastery.vex),
+    DprWeaponPreset(id: 'scimitar', name: 'Scimitar / Dagger (1d6 / 1d4)', category: 'Standard Melee', diceCount: 1, diceSides: 6, damageType: 'slashing', defaultMastery: WeaponMastery.nick),
+    DprWeaponPreset(id: 'unarmed', name: 'Unarmed Strike (1d6 Monk)', category: 'Standard Melee', diceCount: 1, diceSides: 6, damageType: 'bludgeoning', defaultMastery: WeaponMastery.none),
+
+    // Standard Ranged
+    DprWeaponPreset(id: 'hand_crossbow', name: 'Hand Crossbow (1d6 Piercing)', category: 'Standard Ranged', diceCount: 1, diceSides: 6, damageType: 'piercing', defaultMastery: WeaponMastery.vex, isRanged: true),
+    DprWeaponPreset(id: 'heavy_crossbow', name: 'Heavy Crossbow (1d10 Piercing)', category: 'Standard Ranged', diceCount: 1, diceSides: 10, damageType: 'piercing', defaultMastery: WeaponMastery.none, isRanged: true, isHeavy: true),
+    DprWeaponPreset(id: 'longbow', name: 'Longbow (1d8 Piercing)', category: 'Standard Ranged', diceCount: 1, diceSides: 8, damageType: 'piercing', defaultMastery: WeaponMastery.none, isRanged: true, isHeavy: true),
+    DprWeaponPreset(id: 'shortbow', name: 'Shortbow (1d6 Piercing)', category: 'Standard Ranged', diceCount: 1, diceSides: 6, damageType: 'piercing', defaultMastery: WeaponMastery.vex, isRanged: true),
+
+    // Magic Weapons
+    DprWeaponPreset(id: 'magic_plus_1', name: '+1 Magic Weapon (+1 hit & dmg)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 1),
+    DprWeaponPreset(id: 'magic_plus_2', name: '+2 Magic Weapon (+2 hit & dmg)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 2),
+    DprWeaponPreset(id: 'magic_plus_3', name: '+3 Magic Weapon (+3 hit & dmg)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 3),
+    DprWeaponPreset(id: 'flame_tongue_greatsword', name: 'Flame Tongue Greatsword (2d6 + 2d6 Fire)', category: 'Magic Weapon', diceCount: 2, diceSides: 6, damageType: 'slashing', secondaryDiceCount: 2, secondaryDiceSides: 6, secondaryDamageType: 'fire', isHeavy: true, defaultMastery: WeaponMastery.graze),
+    DprWeaponPreset(id: 'flame_tongue_sword', name: 'Flame Tongue Longsword (1d8 + 2d6 Fire)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 2, secondaryDiceSides: 6, secondaryDamageType: 'fire'),
+    DprWeaponPreset(id: 'frost_brand', name: 'Frost Brand (+1d6 Cold)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', secondaryDiceCount: 1, secondaryDiceSides: 6, secondaryDamageType: 'cold'),
+    DprWeaponPreset(id: 'sun_blade', name: 'Sun Blade (+2, 1d8 Radiant + 1d8 Undead)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'radiant', flatBonus: 2, defaultMastery: WeaponMastery.none),
+    DprWeaponPreset(id: 'dragon_slayer', name: 'Dragon Slayer (+1, +3d6 vs Dragons)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 1, secondaryDiceCount: 3, secondaryDiceSides: 6, secondaryDamageType: 'slashing'),
+    DprWeaponPreset(id: 'holy_avenger', name: 'Holy Avenger (+3, +2d10 Radiant)', category: 'Magic Weapon', diceCount: 1, diceSides: 8, damageType: 'slashing', flatBonus: 3, secondaryDiceCount: 2, secondaryDiceSides: 10, secondaryDamageType: 'radiant'),
+  ];
+}
+
 /// Represents a single weapon attack or action profile in a combatant's turn.
 class DprAttackAction {
   final String id;
@@ -181,7 +246,7 @@ class DprAttackAction {
     if (diceCount > 0 && diceSides > 0) {
       buffer.write('${diceCount}d$diceSides');
     }
-    var totalBonus = damageBonus;
+    var totalBonus = damageBonus + attackBuffFlat;
     if (hasDueling) totalBonus += 2;
     if (hasThrownWeapon) totalBonus += 2;
     if (gwmMode == GwmMode.v2014PowerAttack) totalBonus += 10;
@@ -236,6 +301,39 @@ class DprCombatantProfile {
   });
 
   int get abilityModifier => abilityScore.dndModifier;
+
+  /// Creates a completely clean default custom profile with NO situational feats/styles toggled on.
+  factory DprCombatantProfile.cleanCustom({
+    int level = 5,
+    int abilityScore = 18,
+    int proficiencyBonus = 3,
+  }) {
+    final abilityMod = abilityScore.dndModifier;
+    final attackBonus = abilityMod + proficiencyBonus;
+
+    return DprCombatantProfile(
+      id: 'custom',
+      name: 'Custom Character Build',
+      description: 'Level $level Character (+$abilityMod Mod, +$proficiencyBonus PB)',
+      level: level,
+      abilityScore: abilityScore,
+      proficiencyBonus: proficiencyBonus,
+      defaultAdvantage: AdvantageType.normal,
+      sneakAttackDiceCount: 0,
+      attacks: [
+        DprAttackAction(
+          id: 'attack_primary',
+          name: 'Primary Weapon',
+          attackBonus: attackBonus,
+          diceCount: 1,
+          diceSides: 8,
+          damageBonus: abilityMod,
+          damageType: 'slashing',
+          attacksPerRound: 1,
+        ),
+      ],
+    );
+  }
 
   DprCombatantProfile copyWith({
     String? id,

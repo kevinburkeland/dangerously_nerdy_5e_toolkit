@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
+import '../models/dm_screen_data.dart';
 import '../models/dpr/dpr_models.dart';
+import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/rules/dpr_calculator_engine.dart';
 import '../theme/app_theme.dart';
@@ -9,10 +11,12 @@ import '../widgets/dpr/dpr_chart_widget.dart';
 /// Full-featured Damage Per Round (DPR) Calculator and Statistical Analysis Screen.
 class DprCalculatorScreen extends StatefulWidget {
   final DprCombatantProfile? initialProfile;
+  final DmRulesEdition? initialEdition;
 
   const DprCalculatorScreen({
     super.key,
     this.initialProfile,
+    this.initialEdition,
   });
 
   @override
@@ -21,21 +25,52 @@ class DprCalculatorScreen extends StatefulWidget {
 
 class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   late DprCombatantProfile _profile;
+  DmRulesEdition? _localEditionOverride;
   int _selectedAc = 15;
   bool _showPowerAttack = true;
   bool _showAdvantage = false;
-  String _selectedPresetId = 'barbarian_gwm';
+  String _selectedPresetId = 'custom';
 
   @override
   void initState() {
     super.initState();
+    _localEditionOverride = widget.initialEdition;
     if (widget.initialProfile != null) {
       _profile = widget.initialProfile!;
       _selectedPresetId = 'custom';
     } else {
-      _profile = DprCalculatorEngine.defaultPresets.first;
-      _selectedPresetId = _profile.id;
+      // Clean custom build with NO forced default modifier toggles
+      _profile = DprCombatantProfile.cleanCustom();
+      _selectedPresetId = 'custom';
     }
+  }
+
+  DmRulesEdition _resolveEdition(BuildContext context) {
+    if (_localEditionOverride != null) return _localEditionOverride!;
+    final settingsProvider = SettingsScope.maybeOf(context);
+    return settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
+  }
+
+  void _onEditionChanged(DmRulesEdition newEdition) {
+    HapticService.selectionTick(context);
+    setState(() {
+      _localEditionOverride = newEdition;
+      // Adjust GWF / Mastery options to match edition
+      final updatedAttacks = _profile.attacks.map((a) {
+        var gwf = a.gwfVersion;
+        if (gwf != GwfVersion.none) {
+          gwf = newEdition == DmRulesEdition.v2024
+              ? GwfVersion.v2024Floor3
+              : GwfVersion.v2014Reroll;
+        }
+        var mastery = a.weaponMastery;
+        if (newEdition == DmRulesEdition.v2014) {
+          mastery = WeaponMastery.none;
+        }
+        return a.copyWith(gwfVersion: gwf, weaponMastery: mastery);
+      }).toList();
+      _profile = _profile.copyWith(attacks: updatedAttacks);
+    });
   }
 
   void _loadPreset(DprCombatantProfile preset) {
@@ -53,17 +88,59 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     });
   }
 
+  void _updateAttack(int index, DprAttackAction updated) {
+    final newAttacks = List<DprAttackAction>.from(_profile.attacks);
+    if (index >= 0 && index < newAttacks.length) {
+      newAttacks[index] = updated;
+      _updateProfile(_profile.copyWith(attacks: newAttacks));
+    }
+  }
+
+  void _openWeaponPicker(int attackIndex) {
+    HapticService.selectionTick(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _WeaponPickerSheet(
+        onSelected: (preset) {
+          final current = _profile.attacks[attackIndex];
+          final abilityMod = _profile.abilityModifier;
+          final pb = _profile.proficiencyBonus;
+
+          final updated = current.copyWith(
+            name: preset.name.split(' (').first,
+            diceCount: preset.diceCount,
+            diceSides: preset.diceSides,
+            damageType: preset.damageType,
+            damageBonus: abilityMod + preset.flatBonus,
+            attackBonus: abilityMod + pb + preset.flatBonus + (preset.isRanged && current.hasArchery ? 2 : 0),
+            secondaryDiceCount: preset.secondaryDiceCount,
+            secondaryDiceSides: preset.secondaryDiceSides,
+            secondaryDamageType: preset.secondaryDamageType,
+            weaponMastery: _resolveEdition(context) == DmRulesEdition.v2024 ? preset.defaultMastery : WeaponMastery.none,
+            abilityModForGraze: preset.defaultMastery == WeaponMastery.graze ? abilityMod : 0,
+            hasArchery: preset.isRanged ? current.hasArchery : false,
+          );
+          _updateAttack(attackIndex, updated);
+          Navigator.pop(ctx);
+        },
+      ),
+    );
+  }
+
   void _showInfoDialog() {
     HapticService.selectionTick(context);
+    final edition = _resolveEdition(context);
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.analytics_outlined, color: Colors.cyanAccent),
-              SizedBox(width: 10),
-              Text('5e DPR Math Guide'),
+              const Icon(Icons.analytics_outlined, color: Colors.cyanAccent),
+              const SizedBox(width: 10),
+              Text('5e DPR Math Guide (${edition == DmRulesEdition.v2024 ? '2024' : '2014'})'),
             ],
           ),
           content: const SingleChildScrollView(
@@ -77,13 +154,17 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  '• DPR = (P_hit - P_crit) × HitDamage + P_crit × CritDamage + P_miss × MissDamage (Graze).\n'
-                  '• Hit Probability: Required roll on d20 = Target AC - Attack Bonus. Clamped to 5% (Nat 20) and 95% (Nat 1).\n'
+                  '• DPR = (P_hit - P_crit) × HitDamage + P_crit × CritDamage + P_miss × MissDamage.\n'
+                  '• Hit Probability: Required d20 roll = Target AC - Attack Bonus (clamped to Nat 20 = 95% and Nat 1 = 5%).\n'
                   '• Advantage: 1 - (1 - P)^2\n'
                   '• Disadvantage: P^2\n'
                   '• Elven Accuracy: 1 - (1 - P)^3\n'
-                  '• Great Weapon Master / Sharpshooter (-5 to hit / +10 dmg): Increases damage per hit at the cost of 25% lower base accuracy.\n'
-                  '• Break-Even Point: The exact AC threshold where GWM deals more average damage than standard attacks.',
+                  '• Great Weapon Master 2014 (-5 to hit / +10 dmg): Higher per-hit damage vs lower accuracy.\n'
+                  '• Great Weapon Master 2024 (+PB dmg): Flat damage bonus to heavy weapons on hits.\n'
+                  '• Great Weapon Fighting 2014: Rerolls 1s and 2s (2d6 avg = 8.33).\n'
+                  '• Great Weapon Fighting 2024: 1s and 2s count as 3 (2d6 avg = 8.00).\n'
+                  '• Weapon Masteries (2024): Graze deals ability mod on miss; Vex gives advantage on hit; Nick provides extra light attack without bonus action.\n'
+                  '• Break-Even Point: The target AC where GWM/SS switches from optimal to suboptimal.',
                   style: TextStyle(fontSize: 13, height: 1.4),
                 ),
               ],
@@ -106,6 +187,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final tabletop = theme.extension<TabletopColors>() ??
         (isDark ? TabletopColors.dark : TabletopColors.createLight(FantasyAccent.paladinGold));
+    final edition = _resolveEdition(context);
 
     // Calculate curves and break-even analysis
     final baselineCurve = DprCalculatorEngine.generateCurve(_profile, minAc: 5, maxAc: 30);
@@ -148,189 +230,209 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 1. Archetype Preset Selector Chips
-                _buildPresetSelector(isDark),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Top Rules Edition Segmented Selector
+              _buildEditionHeader(theme, edition),
+              const SizedBox(height: 12),
+
+              // Presets Selection Carousel
+              _buildPresetSelector(tabletop, isDark),
+              const SizedBox(height: 16),
+
+              if (isWide) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left Column: Interactive Graph & Summary Cards
+                    Expanded(
+                      flex: 6,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildChartCard(
+                            theme,
+                            baselineCurve,
+                            powerCurve,
+                            advantageCurve,
+                            breakEvenAnalysis.maxOptimalAcForGwm,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildAcSliderCard(theme),
+                          const SizedBox(height: 12),
+                          _buildMetricsSummaryCard(theme, activePoint, breakEvenAnalysis),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Right Column: Full Combatant Profile & Attack Configurator
+                    Expanded(
+                      flex: 5,
+                      child: _buildCombatantConfigurator(theme, isDark, edition),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                // Mobile layout: Stacked
+                _buildChartCard(
+                  theme,
+                  baselineCurve,
+                  powerCurve,
+                  advantageCurve,
+                  breakEvenAnalysis.maxOptimalAcForGwm,
+                ),
+                const SizedBox(height: 12),
+                _buildAcSliderCard(theme),
+                const SizedBox(height: 12),
+                _buildMetricsSummaryCard(theme, activePoint, breakEvenAnalysis),
                 const SizedBox(height: 16),
-
-                // 2. Main Content (Dual pane on desktop, column on mobile)
-                if (isWide)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Left Column: Interactive Graph & Stats
-                      Expanded(
-                        flex: 6,
-                        child: Column(
-                          children: [
-                            _buildChartCard(
-                              baselineCurve: baselineCurve,
-                              powerCurve: powerCurve,
-                              advantageCurve: advantageCurve,
-                              breakEvenAc: breakEvenAnalysis.maxOptimalAcForGwm,
-                              tabletop: tabletop,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildAcSliderCard(isDark, breakEvenAnalysis.maxOptimalAcForGwm),
-                            const SizedBox(height: 16),
-                            _buildMetricsRow(activePoint, isDark),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-
-                      // Right Column: Attack Configurator & Feats
-                      Expanded(
-                        flex: 5,
-                        child: _buildCombatantConfigurator(isDark),
-                      ),
-                    ],
-                  )
-                else
-                  Column(
-                    children: [
-                      _buildChartCard(
-                        baselineCurve: baselineCurve,
-                        powerCurve: powerCurve,
-                        advantageCurve: advantageCurve,
-                        breakEvenAc: breakEvenAnalysis.maxOptimalAcForGwm,
-                        tabletop: tabletop,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildAcSliderCard(isDark, breakEvenAnalysis.maxOptimalAcForGwm),
-                      const SizedBox(height: 16),
-                      _buildMetricsRow(activePoint, isDark),
-                      const SizedBox(height: 20),
-                      _buildCombatantConfigurator(isDark),
-                    ],
-                  ),
+                _buildCombatantConfigurator(theme, isDark, edition),
               ],
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPresetSelector(bool isDark) {
-    final presets = DprCalculatorEngine.defaultPresets;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+  Widget _buildEditionHeader(ThemeData theme, DmRulesEdition edition) {
+    final is2024 = edition == DmRulesEdition.v2024;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: is2024
+            ? Colors.cyan.withValues(alpha: 0.12)
+            : Colors.amber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: is2024 ? Colors.cyanAccent.withValues(alpha: 0.4) : Colors.amber.withValues(alpha: 0.4),
+        ),
+      ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          ...presets.map((p) {
-            final isSelected = _selectedPresetId == p.id;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: ChoiceChip(
-                label: Text(p.name),
-                selected: isSelected,
-                selectedColor: isDark ? Colors.cyanAccent.withValues(alpha: 0.25) : Colors.cyan.shade100,
-                onSelected: (_) => _loadPreset(p),
+          Row(
+            children: [
+              Icon(
+                is2024 ? Icons.auto_awesome : Icons.history_edu,
+                color: is2024 ? Colors.cyanAccent : Colors.amber,
+                size: 18,
               ),
-            );
-          }),
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ChoiceChip(
-              label: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.tune, size: 16),
-                  SizedBox(width: 6),
-                  Text('Custom Build'),
-                ],
+              const SizedBox(width: 8),
+              Text(
+                is2024 ? 'Active: 2024 Revised Rules' : 'Active: 2014 5e RAW',
+                style: TextStyle(
+                  color: is2024 ? Colors.cyanAccent : Colors.amber,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
-              selected: _selectedPresetId == 'custom',
-              onSelected: (_) {
-                setState(() {
-                  _selectedPresetId = 'custom';
-                });
-              },
-            ),
+            ],
+          ),
+          SegmentedButton<DmRulesEdition>(
+            segments: const [
+              ButtonSegment(
+                value: DmRulesEdition.v2024,
+                label: Text('2024', style: TextStyle(fontSize: 12)),
+              ),
+              ButtonSegment(
+                value: DmRulesEdition.v2014,
+                label: Text('2014', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+            selected: {edition},
+            onSelectionChanged: (selection) {
+              if (selection.isNotEmpty) {
+                _onEditionChanged(selection.first);
+              }
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildChartCard({
-    required DprCurveData baselineCurve,
-    required DprCurveData powerCurve,
-    required DprCurveData advantageCurve,
-    required int? breakEvenAc,
-    required TabletopColors tabletop,
-    required bool isDark,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? const Color(0x33FFFFFF) : const Color(0x22000000),
-        ),
+  Widget _buildPresetSelector(TabletopColors tabletop, bool isDark) {
+    final presets = [
+      DprCombatantProfile.cleanCustom(),
+      ...DprCalculatorEngine.defaultPresets,
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: presets.map((p) {
+          final isSelected = _selectedPresetId == p.id;
+          final isCleanCustom = p.id == 'custom';
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ChoiceChip(
+              avatar: Icon(
+                isCleanCustom ? Icons.create : Icons.shield_outlined,
+                size: 16,
+                color: isSelected ? Colors.white : Colors.grey,
+              ),
+              label: Text(
+                isCleanCustom ? 'Custom Build (Clean)' : p.name.split(' (').first,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.white : null,
+                  fontSize: 12,
+                ),
+              ),
+              selected: isSelected,
+              selectedColor: isCleanCustom ? Colors.indigoAccent : Colors.teal,
+              onSelected: (selected) {
+                if (selected) {
+                  _loadPreset(p);
+                }
+              },
+            ),
+          );
+        }).toList(),
       ),
+    );
+  }
+
+  Widget _buildChartCard(
+    ThemeData theme,
+    DprCurveData baselineCurve,
+    DprCurveData powerCurve,
+    DprCurveData advantageCurve,
+    int? breakEvenAc,
+  ) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Chart Title and Curve Visibility Toggles
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
+            Row(
               children: [
-                const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.timeline, color: Colors.cyanAccent, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'DPR Curve Across Target AC',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ],
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    FilterChip(
-                      label: const Text('GWM/SS', style: TextStyle(fontSize: 11)),
-                      selected: _showPowerAttack,
-                      selectedColor: isDark ? Colors.amber.withValues(alpha: 0.25) : Colors.amber.shade100,
-                      onSelected: (val) {
-                        HapticService.selectionTick(context);
-                        setState(() => _showPowerAttack = val);
-                      },
-                    ),
-                    FilterChip(
-                      label: const Text('Advantage', style: TextStyle(fontSize: 11)),
-                      selected: _showAdvantage,
-                      selectedColor: isDark ? Colors.green.withValues(alpha: 0.25) : Colors.green.shade100,
-                      onSelected: (val) {
-                        HapticService.selectionTick(context);
-                        setState(() => _showAdvantage = val);
-                      },
-                    ),
-                  ],
+                const Icon(Icons.show_chart, color: Colors.cyanAccent, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Animated DPR Curve vs Target AC',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
+            const Text(
+              'Drag along the chart to inspect damage output across AC 5 to 30.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
 
-            // Animated Interactive Chart Widget
+            // Animated interactive canvas
             DprChartWidget(
               baselineCurve: baselineCurve,
               powerAttackCurve: powerCurve,
@@ -339,11 +441,35 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               breakEvenAc: breakEvenAc,
               showPowerAttack: _showPowerAttack,
               showAdvantage: _showAdvantage,
-              onAcChanged: (newAc) {
-                setState(() {
-                  _selectedAc = newAc;
-                });
+              onAcChanged: (ac) {
+                HapticService.selectionTick(context);
+                setState(() => _selectedAc = ac);
               },
+            ),
+            const SizedBox(height: 12),
+
+            // Curve toggles & Legend
+            Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              alignment: WrapAlignment.center,
+              children: [
+                _buildLegendItem('Baseline DPR', const Color(0xFF00E5FF)),
+                FilterChip(
+                  label: const Text('GWM / SS Curve', style: TextStyle(fontSize: 11)),
+                  selected: _showPowerAttack,
+                  selectedColor: const Color(0xFFFFB300).withValues(alpha: 0.3),
+                  checkmarkColor: const Color(0xFFFFB300),
+                  onSelected: (val) => setState(() => _showPowerAttack = val),
+                ),
+                FilterChip(
+                  label: const Text('Advantage Curve', style: TextStyle(fontSize: 11)),
+                  selected: _showAdvantage,
+                  selectedColor: const Color(0xFF00E676).withValues(alpha: 0.3),
+                  checkmarkColor: const Color(0xFF00E676),
+                  onSelected: (val) => setState(() => _showAdvantage = val),
+                ),
+              ],
             ),
           ],
         ),
@@ -351,219 +477,260 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     );
   }
 
-  Widget _buildAcSliderCard(bool isDark, int? breakEvenAc) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? const Color(0x33FFFFFF) : const Color(0x1F000000),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.shield_outlined, size: 18, color: Colors.cyanAccent),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Target Armor Class (AC): $_selectedAc',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, size: 20),
-                    onPressed: _selectedAc > 5
-                        ? () {
-                            HapticService.selectionTick(context);
-                            setState(() => _selectedAc--);
-                          }
-                        : null,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline, size: 20),
-                    onPressed: _selectedAc < 30
-                        ? () {
-                            HapticService.selectionTick(context);
-                            setState(() => _selectedAc++);
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: Colors.cyanAccent,
-              thumbColor: Colors.cyanAccent,
-              inactiveTrackColor: isDark ? Colors.white12 : Colors.black12,
-            ),
-            child: Slider(
-              value: _selectedAc.toDouble(),
-              min: 5.0,
-              max: 30.0,
-              divisions: 25,
-              label: 'AC $_selectedAc',
-              onChanged: (val) {
-                setState(() => _selectedAc = val.round());
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricsRow(DprPoint activePoint, bool isDark) {
+  Widget _buildLegendItem(String label, Color color) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: _buildMetricTile(
-            title: 'Round DPR',
-            value: activePoint.dpr.toStringAsFixed(1),
-            subtitle: 'Average dmg per turn',
-            icon: Icons.bolt,
-            accentColor: Colors.cyanAccent,
-            isDark: isDark,
+        Container(
+          width: 14,
+          height: 4,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _buildMetricTile(
-            title: 'Hit Chance',
-            value: '${(activePoint.hitChance * 100).round()}%',
-            subtitle: 'vs AC $_selectedAc',
-            icon: Icons.gps_fixed,
-            accentColor: const Color(0xFF69F0AE),
-            isDark: isDark,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _buildMetricTile(
-            title: 'Crit Chance',
-            value: '${(activePoint.critChance * 100).toStringAsFixed(1)}%',
-            subtitle: 'Critical hit odds',
-            icon: Icons.star,
-            accentColor: Colors.amberAccent,
-            isDark: isDark,
-          ),
-        ),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
       ],
     );
   }
 
-  Widget _buildMetricTile({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color accentColor,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF231F34) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0x2EFFFFFF) : const Color(0x1F000000),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: accentColor),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  title,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+  Widget _buildAcSliderCard(ThemeData theme) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Target Armor Class (AC):',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: accentColor,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.cyan.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.cyanAccent, width: 1),
+                  ),
+                  child: Text(
+                    'AC $_selectedAc',
+                    style: const TextStyle(
+                      color: Colors.cyanAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            subtitle,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10, color: Colors.grey),
-          ),
-        ],
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline, size: 20),
+                  onPressed: _selectedAc > 5
+                      ? () {
+                          HapticService.selectionTick(context);
+                          setState(() => _selectedAc--);
+                        }
+                      : null,
+                ),
+                Expanded(
+                  child: Slider(
+                    value: _selectedAc.toDouble(),
+                    min: 5,
+                    max: 30,
+                    divisions: 25,
+                    label: 'AC $_selectedAc',
+                    activeColor: Colors.cyanAccent,
+                    onChanged: (val) {
+                      setState(() => _selectedAc = val.round());
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 20),
+                  onPressed: _selectedAc < 30
+                      ? () {
+                          HapticService.selectionTick(context);
+                          setState(() => _selectedAc++);
+                        }
+                      : null,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCombatantConfigurator(bool isDark) {
+  Widget _buildMetricsSummaryCard(
+    ThemeData theme,
+    DprPoint point,
+    DprBreakEvenAnalysis breakEven,
+  ) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? const Color(0x33FFFFFF) : const Color(0x22000000),
-        ),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Configurator Title
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.tune, color: Colors.amberAccent, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Combatant & Attack Profile',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ],
+                Text(
+                  'Expected DPR vs AC $_selectedAc:',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
-                TextButton.icon(
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Add Attack'),
+                Text(
+                  point.dpr.toStringAsFixed(2),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.cyanAccent,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 16),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatMetric('Accuracy', '${(point.hitChance * 100).toStringAsFixed(1)}%'),
+                _buildStatMetric('Crit Rate', '${(point.critChance * 100).toStringAsFixed(1)}%'),
+                _buildStatMetric('Avg on Hit', point.expectedDamageOnHit.toStringAsFixed(1)),
+                _buildStatMetric('Avg on Crit', point.expectedDamageOnCrit.toStringAsFixed(1)),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Break-Even Recommendation Banner
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      breakEven.recommendation,
+                      style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatMetric(String title, String val) {
+    return Column(
+      children: [
+        Text(val, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildCombatantConfigurator(ThemeData theme, bool isDark, DmRulesEdition edition) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Character & Attacks Config',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                IconButton.filledTonal(
+                  icon: const Icon(Icons.add, size: 18),
+                  tooltip: 'Add Attack Action',
                   onPressed: () {
                     HapticService.selectionTick(context);
                     final newAttacks = List<DprAttackAction>.from(_profile.attacks)
                       ..add(
                         DprAttackAction(
                           id: 'attack_${DateTime.now().millisecondsSinceEpoch}',
-                          name: 'Bonus Attack',
-                          attackBonus: 7,
+                          name: 'Weapon #${_profile.attacks.length + 1}',
+                          attackBonus: _profile.abilityModifier + _profile.proficiencyBonus,
                           diceCount: 1,
                           diceSides: 6,
-                          damageBonus: 4,
+                          damageBonus: _profile.abilityModifier,
+                          damageType: 'slashing',
+                          attacksPerRound: 1,
                         ),
                       );
                     _updateProfile(_profile.copyWith(attacks: newAttacks));
                   },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Character Level & Ability Mod Adjuster
+            Row(
+              children: [
+                Expanded(
+                  child: _buildNumberAdjuster(
+                    label: 'Level',
+                    value: _profile.level,
+                    display: 'Lv ${_profile.level}',
+                    min: 1,
+                    max: 20,
+                    onChanged: (val) {
+                      final pb = ((val - 1) ~/ 4) + 2;
+                      _updateProfile(_profile.copyWith(level: val, proficiencyBonus: pb));
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildNumberAdjuster(
+                    label: 'Ability Score',
+                    value: _profile.abilityScore,
+                    display: '${_profile.abilityScore} (+${_profile.abilityModifier})',
+                    min: 1,
+                    max: 30,
+                    onChanged: (val) {
+                      _updateProfile(_profile.copyWith(abilityScore: val));
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildNumberAdjuster(
+                    label: 'Prof. Bonus',
+                    value: _profile.proficiencyBonus,
+                    display: '+${_profile.proficiencyBonus}',
+                    min: 2,
+                    max: 6,
+                    onChanged: (val) {
+                      _updateProfile(_profile.copyWith(proficiencyBonus: val));
+                    },
+                  ),
                 ),
               ],
             ),
@@ -597,19 +764,24 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               children: [
                 const Icon(Icons.flash_on, size: 16, color: Colors.purpleAccent),
                 const SizedBox(width: 8),
-                Text(
-                  'Sneak Attack: ${_profile.sneakAttackDiceCount}d6',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                Expanded(
+                  child: Text(
+                    'Sneak Attack (Once/Turn): ${_profile.sneakAttackDiceCount}d${_profile.sneakAttackDiceSides}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                 ),
-                const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.remove, size: 18),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                   onPressed: _profile.sneakAttackDiceCount > 0
                       ? () => _updateProfile(_profile.copyWith(sneakAttackDiceCount: _profile.sneakAttackDiceCount - 1))
                       : null,
                 ),
                 IconButton(
                   icon: const Icon(Icons.add, size: 18),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                   onPressed: _profile.sneakAttackDiceCount < 10
                       ? () => _updateProfile(_profile.copyWith(sneakAttackDiceCount: _profile.sneakAttackDiceCount + 1))
                       : null,
@@ -621,7 +793,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             // List of Attack Actions
             ...List.generate(_profile.attacks.length, (index) {
               final attack = _profile.attacks[index];
-              return _buildAttackEditor(attack, index, isDark);
+              return _buildAttackEditor(attack, index, isDark, edition);
             }),
           ],
         ),
@@ -629,7 +801,9 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     );
   }
 
-  Widget _buildAttackEditor(DprAttackAction attack, int index, bool isDark) {
+  Widget _buildAttackEditor(DprAttackAction attack, int index, bool isDark, DmRulesEdition edition) {
+    final is2024 = edition == DmRulesEdition.v2024;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
@@ -643,18 +817,18 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Attack Name & Delete Row
+          // Equip Preset Weapon / Magic Item Row
           Row(
             children: [
               Expanded(
-                child: Text(
-                  attack.name.isNotEmpty ? attack.name : 'Attack #${index + 1}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.auto_fix_high, size: 16),
+                  label: const Text('Equip / Select Weapon Item', style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  ),
+                  onPressed: () => _openWeaponPicker(index),
                 ),
-              ),
-              Text(
-                '${attack.attacksPerRound}x per round',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               if (_profile.attacks.length > 1) ...[
                 const SizedBox(width: 8),
@@ -669,9 +843,26 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               ],
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // Attack Bonus & Dice Inputs
+          // Custom Weapon Name Free-Form Text Field
+          TextFormField(
+            key: ValueKey('${attack.id}_${attack.name}'),
+            initialValue: attack.name,
+            decoration: InputDecoration(
+              labelText: 'Custom Weapon / Attack Name',
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            onChanged: (text) {
+              _updateAttack(index, attack.copyWith(name: text));
+            },
+          ),
+          const SizedBox(height: 10),
+
+          // Attack Bonus & Primary Damage Dice Inputs
           Row(
             children: [
               // To-Hit Bonus
@@ -743,6 +934,69 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
           ),
           const SizedBox(height: 10),
 
+          // Secondary / Rider Damage (Smite, Hunter's Mark, Flame Tongue, Poison)
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: _buildNumberAdjuster(
+                  label: 'Rider Dice',
+                  value: attack.secondaryDiceCount,
+                  display: '${attack.secondaryDiceCount}',
+                  min: 0,
+                  max: 10,
+                  onChanged: (val) {
+                    _updateAttack(index, attack.copyWith(secondaryDiceCount: val));
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<int>(
+                  key: ValueKey('${attack.id}_sec_${attack.secondaryDiceSides}'),
+                  initialValue: attack.secondaryDiceSides > 0 ? attack.secondaryDiceSides : 6,
+                  decoration: InputDecoration(
+                    labelText: 'Rider Die',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  items: const [4, 6, 8, 10, 12].map((sides) {
+                    return DropdownMenuItem(
+                      value: sides,
+                      child: Text('d$sides', style: const TextStyle(fontSize: 12)),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      _updateAttack(index, attack.copyWith(secondaryDiceSides: val));
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 3,
+                child: TextFormField(
+                  key: ValueKey('${attack.id}_sec_type'),
+                  initialValue: attack.secondaryDamageType ?? '',
+                  decoration: InputDecoration(
+                    labelText: 'Rider Type (Fire, Radiant...)',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  style: const TextStyle(fontSize: 12),
+                  onChanged: (text) {
+                    _updateAttack(index, attack.copyWith(secondaryDamageType: text));
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
           // Attacks per round counter
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -768,14 +1022,14 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             ],
           ),
 
-          // Modifiers & Style Chips Wrap
+          // Modifiers & Style Chips Wrap (2014 & 2024 aware)
           Wrap(
             spacing: 6,
             runSpacing: 6,
             children: [
-              // GWM / Sharpshooter (-5 / +10)
+              // GWM 2014 Power Attack (-5/+10)
               FilterChip(
-                label: const Text('GWM / SS (-5/+10)', style: TextStyle(fontSize: 11)),
+                label: const Text('GWM 2014 (-5/+10)', style: TextStyle(fontSize: 11)),
                 selected: attack.gwmMode == GwmMode.v2014PowerAttack,
                 selectedColor: Colors.amber.withValues(alpha: 0.25),
                 onSelected: (val) {
@@ -788,15 +1042,36 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                 },
               ),
 
-              // GWF Style (Reroll 1s & 2s)
+              // GWM 2024 (+PB flat damage on hit)
+              if (is2024)
+                FilterChip(
+                  label: Text('GWM 2024 (+${_profile.proficiencyBonus} dmg)', style: const TextStyle(fontSize: 11)),
+                  selected: attack.gwmMode == GwmMode.v2024ProficiencyBonus,
+                  selectedColor: Colors.cyan.withValues(alpha: 0.25),
+                  onSelected: (val) {
+                    _updateAttack(
+                      index,
+                      attack.copyWith(
+                        gwmMode: val ? GwmMode.v2024ProficiencyBonus : GwmMode.none,
+                      ),
+                    );
+                  },
+                ),
+
+              // GWF Style (2014 rerolls or 2024 floor-3)
               FilterChip(
-                label: const Text('GWF Rerolls', style: TextStyle(fontSize: 11)),
-                selected: attack.gwfVersion == GwfVersion.v2014Reroll,
+                label: Text(
+                  is2024 ? 'GWF 2024 (Floor 3)' : 'GWF 2014 (Reroll 1/2)',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                selected: attack.gwfVersion != GwfVersion.none,
                 onSelected: (val) {
                   _updateAttack(
                     index,
                     attack.copyWith(
-                      gwfVersion: val ? GwfVersion.v2014Reroll : GwfVersion.none,
+                      gwfVersion: val
+                          ? (is2024 ? GwfVersion.v2024Floor3 : GwfVersion.v2014Reroll)
+                          : GwfVersion.none,
                     ),
                   );
                 },
@@ -832,24 +1107,40 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                 },
               ),
 
-              // Graze Mastery
-              FilterChip(
-                label: const Text('Graze (Miss Dmg)', style: TextStyle(fontSize: 11)),
-                selected: attack.weaponMastery == WeaponMastery.graze,
-                onSelected: (val) {
-                  _updateAttack(
-                    index,
-                    attack.copyWith(
-                      weaponMastery: val ? WeaponMastery.graze : WeaponMastery.none,
-                      abilityModForGraze: val ? attack.damageBonus : 0,
-                    ),
-                  );
-                },
-              ),
+              // 2024 Weapon Masteries
+              if (is2024) ...[
+                FilterChip(
+                  label: const Text('Graze (Miss Dmg)', style: TextStyle(fontSize: 11)),
+                  selected: attack.weaponMastery == WeaponMastery.graze,
+                  selectedColor: Colors.teal.withValues(alpha: 0.25),
+                  onSelected: (val) {
+                    _updateAttack(
+                      index,
+                      attack.copyWith(
+                        weaponMastery: val ? WeaponMastery.graze : WeaponMastery.none,
+                        abilityModForGraze: val ? attack.damageBonus : 0,
+                      ),
+                    );
+                  },
+                ),
+                FilterChip(
+                  label: const Text('Vex (Adv on Hit)', style: TextStyle(fontSize: 11)),
+                  selected: attack.weaponMastery == WeaponMastery.vex,
+                  selectedColor: Colors.teal.withValues(alpha: 0.25),
+                  onSelected: (val) {
+                    _updateAttack(
+                      index,
+                      attack.copyWith(
+                        weaponMastery: val ? WeaponMastery.vex : WeaponMastery.none,
+                      ),
+                    );
+                  },
+                ),
+              ],
 
               // Expanded Crit (19-20)
               FilterChip(
-                label: const Text('Crit on 19-20', style: TextStyle(fontSize: 11)),
+                label: const Text('Crit 19-20', style: TextStyle(fontSize: 11)),
                 selected: attack.critThreshold == 19,
                 onSelected: (val) {
                   _updateAttack(
@@ -865,49 +1156,196 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     );
   }
 
-  void _updateAttack(int index, DprAttackAction updatedAttack) {
-    HapticService.selectionTick(context);
-    final newAttacks = List<DprAttackAction>.from(_profile.attacks);
-    newAttacks[index] = updatedAttack;
-    _updateProfile(_profile.copyWith(attacks: newAttacks));
-  }
-
   Widget _buildNumberAdjuster({
     required String label,
     required int value,
     required String display,
-    int min = -20,
-    int max = 30,
+    int? min,
+    int? max,
     required ValueChanged<int> onChanged,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+          ),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               InkWell(
-                onTap: value > min ? () => onChanged(value - 1) : null,
-                child: const Icon(Icons.arrow_drop_down, size: 18),
+                onTap: (min == null || value > min) ? () => onChanged(value - 1) : null,
+                child: const Padding(
+                  padding: EdgeInsets.all(2.0),
+                  child: Icon(Icons.remove, size: 14),
+                ),
               ),
-              Text(
-                display,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              ),
+              Text(display, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               InkWell(
-                onTap: value < max ? () => onChanged(value + 1) : null,
-                child: const Icon(Icons.arrow_drop_up, size: 18),
+                onTap: (max == null || value < max) ? () => onChanged(value + 1) : null,
+                child: const Padding(
+                  padding: EdgeInsets.all(2.0),
+                  child: Icon(Icons.add, size: 14),
+                ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
+
+/// Bottom Sheet for selecting Standard & Magic Weapons
+class _WeaponPickerSheet extends StatefulWidget {
+  final ValueChanged<DprWeaponPreset> onSelected;
+
+  const _WeaponPickerSheet({required this.onSelected});
+
+  @override
+  State<_WeaponPickerSheet> createState() => _WeaponPickerSheetState();
+}
+
+class _WeaponPickerSheetState extends State<_WeaponPickerSheet> {
+  String _search = '';
+  String _selectedCategory = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final categories = ['All', 'Standard Melee', 'Standard Ranged', 'Magic Weapon'];
+
+    final filtered = DprWeaponPreset.allPresets.where((p) {
+      if (_selectedCategory != 'All' && p.category != _selectedCategory) {
+        return false;
+      }
+      if (_search.isNotEmpty && !p.name.toLowerCase().contains(_search.toLowerCase())) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    return Material(
+      color: theme.scaffoldBackgroundColor,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+          // Drag handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 8),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                const Icon(Icons.auto_fix_high, color: Colors.cyanAccent),
+                const SizedBox(width: 10),
+                Text(
+                  'Select Weapon or Magic Item',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Search Field
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search Greatsword, Flame Tongue, Rapier...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                isDense: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onChanged: (val) => setState(() => _search = val),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Category Filter Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: categories.map((cat) {
+                final isSelected = _selectedCategory == cat;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6.0),
+                  child: FilterChip(
+                    label: Text(cat, style: const TextStyle(fontSize: 12)),
+                    selected: isSelected,
+                    onSelected: (val) => setState(() => _selectedCategory = cat),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const Divider(height: 16),
+
+          // Weapon Preset List
+          Expanded(
+            child: ListView.builder(
+              itemCount: filtered.length,
+              itemBuilder: (ctx, index) {
+                final item = filtered[index];
+                final isMagic = item.category == 'Magic Weapon';
+
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: isMagic
+                        ? Colors.purpleAccent.withValues(alpha: 0.2)
+                        : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                    child: Icon(
+                      isMagic ? Icons.auto_awesome : (item.isRanged ? Icons.gps_fixed : Icons.colorize),
+                      color: isMagic ? Colors.purpleAccent : (isDark ? Colors.white70 : Colors.black87),
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    item.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: isMagic ? Colors.purpleAccent : null,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '${item.diceCount}d${item.diceSides} ${item.damageType}'
+                    '${item.flatBonus > 0 ? ' (+${item.flatBonus} magic)' : ''}'
+                    '${item.secondaryDiceCount > 0 ? ' + ${item.secondaryDiceCount}d${item.secondaryDiceSides} ${item.secondaryDamageType ?? ""}' : ''}'
+                    '${item.defaultMastery != WeaponMastery.none ? ' • Mastery: ${item.defaultMastery.label.split(" ").first}' : ''}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, size: 18),
+                  onTap: () => widget.onSelected(item),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }
