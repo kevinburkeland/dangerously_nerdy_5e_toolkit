@@ -17,7 +17,7 @@ void main() {
   }
 
   group('DprCalculatorScreen Widget Tests', () {
-    testWidgets('renders DPR Calculator with clean unselected custom build default and 2024 header', (tester) async {
+    testWidgets('renders DPR Calculator with clean custom build default and 2024 header', (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -29,10 +29,7 @@ void main() {
       // App bar & Rules Edition Header
       expect(find.text('DPR Calculator & Graph'), findsOneWidget);
       expect(find.text('Active: 2024 Revised Rules'), findsOneWidget);
-
-      // Presets
-      expect(find.text('Custom Build (Clean)'), findsOneWidget);
-      expect(find.text('Level 5 Barbarian'), findsOneWidget);
+      expect(find.byIcon(Icons.refresh), findsOneWidget);
 
       // AC Target & Metrics
       expect(find.text('Target Armor Class (AC):'), findsOneWidget);
@@ -41,9 +38,9 @@ void main() {
       expect(find.text('Crit Rate'), findsOneWidget);
 
       // Combatant Configurator
-      expect(find.text('Character & Attacks Config'), findsOneWidget);
-      expect(find.text('Equip / Select Weapon Item'), findsOneWidget);
-      expect(find.text('Custom Weapon / Attack Name'), findsOneWidget);
+      expect(find.text('Attacks, Weapons & Cantrips'), findsOneWidget);
+      expect(find.text('Equip Weapon / Cantrip'), findsOneWidget);
+      expect(find.text('Attack / Weapon / Cantrip Name'), findsOneWidget);
     });
 
     testWidgets('switches between 2024 and 2014 rules edition toggles', (tester) async {
@@ -66,7 +63,7 @@ void main() {
       expect(find.text('Active: 2014 5e RAW'), findsOneWidget);
     });
 
-    testWidgets('opens weapon picker sheet and selects a magic weapon item', (tester) async {
+    testWidgets('opens weapon picker sheet and selects a weapon', (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -75,14 +72,15 @@ void main() {
       await tester.pumpWidget(buildTestableScreen());
       await tester.pumpAndSettle();
 
-      final equipBtn = find.text('Equip / Select Weapon Item').first;
+      final equipBtn = find.text('Equip Weapon / Cantrip').first;
       expect(equipBtn, findsOneWidget);
       await tester.tap(equipBtn);
       await tester.pumpAndSettle();
 
       // Verify modal sheet is open
-      expect(find.text('Select Weapon or Magic Item'), findsOneWidget);
+      expect(find.text('Select Weapon, Cantrip, or Magic Item'), findsOneWidget);
       expect(find.text('Standard Melee'), findsOneWidget);
+      expect(find.text('Damage Cantrip'), findsOneWidget);
 
       // Select Greatsword
       final greatswordOption = find.text('Greatsword (2d6 Slashing)');
@@ -91,12 +89,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Modal closed and weapon applied
-      expect(find.text('Select Weapon or Magic Item'), findsNothing);
+      expect(find.text('Select Weapon, Cantrip, or Magic Item'), findsNothing);
       expect(find.text('Greatsword'), findsOneWidget);
     });
 
-    testWidgets('switches presets when tapping on preset chips', (tester) async {
-      tester.view.physicalSize = const Size(1400, 900);
+    testWidgets('opens picker sheet and selects a damage cantrip', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -104,16 +102,41 @@ void main() {
       await tester.pumpWidget(buildTestableScreen());
       await tester.pumpAndSettle();
 
-      // Find and tap Level 5 Fighter chip
-      final fighterChip = find.text('Level 5 Fighter');
-      expect(fighterChip, findsOneWidget);
-
-      await tester.ensureVisible(fighterChip);
-      await tester.tap(fighterChip);
+      final equipBtn = find.text('Equip Weapon / Cantrip').first;
+      await tester.tap(equipBtn);
       await tester.pumpAndSettle();
 
-      // Verify that the attack list reflects the fighter attack
-      expect(find.text('Hand Crossbow (Action + BA)'), findsOneWidget);
+      // Search for Fire Bolt in the picker sheet
+      final searchField = find.byType(TextField).last;
+      await tester.enterText(searchField, 'Fire Bolt');
+      await tester.pumpAndSettle();
+
+      // Select Fire Bolt
+      final fireBoltOption = find.textContaining('Fire Bolt');
+      expect(fireBoltOption, findsWidgets);
+      await tester.tap(fireBoltOption.first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Fire Bolt'), findsOneWidget);
+    });
+
+    testWidgets('resets build to clean custom when tapping refresh icon in app bar', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      // Tap refresh
+      final refreshBtn = find.byIcon(Icons.refresh);
+      expect(refreshBtn, findsOneWidget);
+      await tester.tap(refreshBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Attacks, Weapons & Cantrips'), findsOneWidget);
+      expect(find.text('Lv 5'), findsOneWidget);
     });
 
     testWidgets('adjusts target AC when pressing + / - buttons', (tester) async {

@@ -133,6 +133,7 @@ class DndGlyph extends StatefulWidget {
     GlyphThemeData? themeData,
     List<ActionTraitRing>? actionRings,
     DamageAccent? damageAccent,
+    Color? glyphColor,
     double size = 32.0,
     bool? isDarkMode,
     bool isActive = false,
@@ -158,6 +159,7 @@ class DndGlyph extends StatefulWidget {
         GlyphThemeData.fromItem(
           category,
           rarity: rarity,
+          primaryColorOverride: glyphColor,
           shapeOverride: frameShapeOverride,
         );
 

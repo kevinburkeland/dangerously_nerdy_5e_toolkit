@@ -583,123 +583,731 @@ class SrdWondrousItems {
       tags: ['wondrous', 'pearl', 'spell slot', 'spellcaster'],
     ),
 
-    // Robe of the Archmagi
+    // Robe of the Archmagi (White)
     MagicItem(
-      id: 'item_robe_of_the_archmagi',
-      name: 'Robe of the Archmagi',
+      id: 'item_robe_of_the_archmagi_white',
+      name: 'Robe of the Archmagi (White)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.legendary,
       requiresAttunement: true,
-      attunementRequirement: 'by a Sorcerer, Warlock, or Wizard',
+      attunementRequirement: 'by a Good Sorcerer, Warlock, or Wizard',
+      glyphColor: Color(0xFFF8FAFC),
       actionRings: [
         ActionTraitRing(ringType: ActionRingType.reaction, label: 'Base AC 15 + Dex & Advantage on Saves vs Spells'),
         ActionTraitRing(ringType: ActionRingType.legendary, label: '+2 to Spell Save DC & Spell Attack Rolls'),
       ],
       rules2014: ItemEditionDetails(
-        summary: 'Base AC 15 + Dex modifier, advantage on saving throws against spells and magical effects, and +2 bonus to spell save DCs and spell attack rolls.',
-        description: 'This garment comes in white (good), gray (neutral), or black (evil). You gain these benefits while wearing it: your base AC becomes 15 + your Dexterity modifier; you have advantage on saving throws against spells and other magical effects; and your spell save DC and spell attack bonus each increase by 2.',
+        summary: 'White Robe (Good): Base AC 15 + Dex, Advantage on saves vs spells, and +2 bonus to spell save DCs and spell attack rolls.',
+        description: 'This white silk garment is made for good-aligned spellcasters. Your base AC becomes 15 + Dex; you have advantage on saving throws against spells and magical effects; and your spell save DC and spell attack bonus each increase by 2.',
         activation: 'Passive',
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Base AC 15 + Dex, Advantage on saves vs spells/effects, and +2 to your Spell Save DC and spell attack rolls.',
-        description: 'While wearing this robe, your base Armor Class equals 15 + Dexterity modifier. You have Advantage on saving throws against spells and magical effects, and your Spell Save DC and spell attack bonus each increase by 2.',
+        summary: 'White Robe (Good): Base AC 15 + Dex, Advantage on saves vs spells/effects, and +2 to your Spell Save DC and spell attack rolls.',
+        description: 'While wearing this white robe, your base Armor Class equals 15 + Dexterity modifier. You have Advantage on saving throws against spells and magical effects, and your Spell Save DC and spell attack bonus each increase by 2.',
         activation: 'Passive',
       ),
       isChangedIn2024: false,
-      tags: ['wondrous', 'robe', 'archmagi', 'wizard', 'sorcerer', 'warlock', 'legendary'],
+      tags: ['wondrous', 'robe', 'white', 'archmagi', 'good', 'wizard', 'sorcerer', 'warlock', 'legendary'],
     ),
 
-    // Bag of Tricks
+    // Robe of the Archmagi (Gray)
     MagicItem(
-      id: 'item_bag_of_tricks',
-      name: 'Bag of Tricks',
+      id: 'item_robe_of_the_archmagi_gray',
+      name: 'Robe of the Archmagi (Gray)',
       category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.uncommon,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      attunementRequirement: 'by a Neutral Sorcerer, Warlock, or Wizard',
+      glyphColor: Color(0xFF94A3B8),
       actionRings: [
-        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Pull & Summon 1d8 Random Beast Minion (3/Day)'),
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Base AC 15 + Dex & Advantage on Saves vs Spells'),
+        ActionTraitRing(ringType: ActionRingType.legendary, label: '+2 to Spell Save DC & Spell Attack Rolls'),
       ],
       rules2014: ItemEditionDetails(
-        summary: 'Use an action to pull a furry object and throw it up to 20 feet: summons a friendly beast determined by rolling on the bag\'s d8 table (3 times per day).',
-        description: 'This ordinary cloth sack appears empty. Reaching inside pulls out a small fuzzy ball. As an action, you can throw it up to 20 feet. When it lands, it transforms into a friendly beast rolled on the table (Gray, Rust, or Tan). You can summon up to 3 creatures per day (recharges daily at dawn). The beasts act on your turn and obey your verbal commands.',
+        summary: 'Gray Robe (Neutral): Base AC 15 + Dex, Advantage on saves vs spells, and +2 bonus to spell save DCs and spell attack rolls.',
+        description: 'This gray silk garment is made for neutral-aligned spellcasters. Your base AC becomes 15 + Dex; you have advantage on saving throws against spells and magical effects; and your spell save DC and spell attack bonus each increase by 2.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Gray Robe (Neutral): Base AC 15 + Dex, Advantage on saves vs spells/effects, and +2 to your Spell Save DC and spell attack rolls.',
+        description: 'While wearing this gray robe, your base Armor Class equals 15 + Dexterity modifier. You have Advantage on saving throws against spells and magical effects, and your Spell Save DC and spell attack bonus each increase by 2.',
+        activation: 'Passive',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'robe', 'gray', 'grey', 'archmagi', 'neutral', 'wizard', 'sorcerer', 'warlock', 'legendary'],
+    ),
+
+    // Robe of the Archmagi (Black)
+    MagicItem(
+      id: 'item_robe_of_the_archmagi_black',
+      name: 'Robe of the Archmagi (Black)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      attunementRequirement: 'by an Evil Sorcerer, Warlock, or Wizard',
+      glyphColor: Color(0xFF334155),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Base AC 15 + Dex & Advantage on Saves vs Spells'),
+        ActionTraitRing(ringType: ActionRingType.legendary, label: '+2 to Spell Save DC & Spell Attack Rolls'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Black Robe (Evil): Base AC 15 + Dex, Advantage on saves vs spells, and +2 bonus to spell save DCs and spell attack rolls.',
+        description: 'This black silk garment is made for evil-aligned spellcasters. Your base AC becomes 15 + Dex; you have advantage on saving throws against spells and magical effects; and your spell save DC and spell attack bonus each increase by 2.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Black Robe (Evil): Base AC 15 + Dex, Advantage on saves vs spells/effects, and +2 to your Spell Save DC and spell attack rolls.',
+        description: 'While wearing this black robe, your base Armor Class equals 15 + Dexterity modifier. You have Advantage on saving throws against spells and magical effects, and your Spell Save DC and spell attack bonus each increase by 2.',
+        activation: 'Passive',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'robe', 'black', 'archmagi', 'evil', 'wizard', 'sorcerer', 'warlock', 'legendary'],
+    ),
+
+    // Bag of Tricks (Gray)
+    MagicItem(
+      id: 'item_bag_of_tricks_gray',
+      name: 'Bag of Tricks (Gray)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      glyphColor: Color(0xFF94A3B8),
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sustain,
+          label: 'Action: Pull & Throw Gray Fuzzy Object (1d8 Summon Table) (3/Day)',
+        ),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: throw a fuzzy ball up to 20 ft to summon a Gray Beast (d8: 1=Weasel, 2=Giant Rat, 3=Badger, 4=Boar, 5=Panther, 6=Giant Badger, 7=Dire Wolf, 8=Giant Elk). 3 pulls/day.',
+        description: 'Reaching inside this gray cloth sack pulls out a small fuzzy ball. As an action, throw it up to 20 feet: transforms into a friendly beast rolled on the Gray Table (1: Weasel, 2: Giant Rat, 3: Badger, 4: Boar, 5: Panther, 6: Giant Badger, 7: Dire Wolf, 8: Giant Elk). Max 3 creatures per day (recharges at dawn). Acts on your turn and obeys verbal commands.',
         activation: '1 Action (3/Day)',
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Action: throw a fuzzy ball up to 20 ft to summon a friendly beast from the d8 table (3 creatures per Long Rest).',
-        description: 'Pull a fuzzy ball from the bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8. Up to 3 creatures per Long Rest.',
+        summary: 'Action: throw fuzzy ball up to 20 ft to summon a Gray Beast (d8: Weasel, Giant Rat, Badger, Boar, Panther, Giant Badger, Dire Wolf, Giant Elk). 3/Long Rest.',
+        description: 'Pull a fuzzy ball from the gray bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8 (1: Weasel, 2: Giant Rat, 3: Badger, 4: Boar, 5: Panther, 6: Giant Badger, 7: Dire Wolf, 8: Giant Elk). Up to 3 creatures per Long Rest.',
         activation: '1 Action (3/Long Rest)',
       ),
       isChangedIn2024: false,
-      tags: ['wondrous', 'bag', 'summon', 'beast', 'tricks', 'minions'],
+      tags: ['wondrous', 'bag', 'summon', 'gray', 'grey', 'beast', 'tricks', 'minions'],
     ),
 
-    // Horn of Valhalla
+    // Bag of Tricks (Rust)
     MagicItem(
-      id: 'item_horn_of_valhalla',
-      name: 'Horn of Valhalla',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.melee, label: 'Action: Blow Horn to Summon Berserker Warrior Squad (1/7 Days)'),
-      ],
-      rules2014: ItemEditionDetails(
-        summary: 'Action: Blow the horn to summon a squad of legendary warrior spirits from Ysgard (Silver 2d4+2, Brass 3d4+3, Bronze 4d4+4, Iron 5d4+5) for 1 hour.',
-        description: 'You can use an action to blow this horn. In response, warrior spirits from Ysgard appear within 60 feet of you. They use the Berserker stat block and are friendly to you and your companions. They return to Ysgard after 1 hour or when reduced to 0 hit points. Once you blow the horn, it can\'t be blown again for 7 days.',
-        activation: '1 Action (1/7 Days)',
-      ),
-      rules2024: ItemEditionDetails(
-        summary: 'Action: Summon an allied squad of spirit Berserkers for 1 hour (recharges every 7 days).',
-        description: 'Blow the horn as an Action to summon Berserker warrior spirits that fight alongside you for up to 1 hour (usable once every 7 days).',
-        activation: '1 Action (1/7 Days)',
-      ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'horn', 'summon', 'valhalla', 'berserker', 'warrior'],
-    ),
-
-    // Figurine of Wondrous Power
-    MagicItem(
-      id: 'item_figurine_of_wondrous_power',
-      name: 'Figurine of Wondrous Power',
-      category: ItemCategory.wondrousItem,
-      rarity: ItemRarity.rare,
-      actionRings: [
-        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Animate Statuette into Living Creature Mount/Companion'),
-      ],
-      rules2014: ItemEditionDetails(
-        summary: 'Statue of a creature (Bronze Griffon, Onyx Dog, Marble Elephant, etc.) that transforms into a living creature when command word is spoken.',
-        description: 'A figurine of wondrous power is a statuette small enough to fit in a pocket. If you use an action to speak the command word and throw the figurine to a point on the ground within 60 feet of you, it becomes a living creature (Bronze Griffon for 24 hours, Onyx Dog for 6 hours, Marble Elephant for 24 hours). It understands your languages and obeys your spoken commands.',
-        activation: '1 Action',
-      ),
-      rules2024: ItemEditionDetails(
-        summary: 'Action: throw figurine up to 60 ft and speak command word to animate into a loyal living creature/mount.',
-        description: 'Throw the statuette up to 60 feet and speak its command word as an Action: transforms into a loyal living creature companion that obeys your verbal commands.',
-        activation: '1 Action',
-      ),
-      isChangedIn2024: false,
-      tags: ['wondrous', 'figurine', 'summon', 'mount', 'griffon', 'elephant', 'companion'],
-    ),
-
-    // Elemental Gem
-    MagicItem(
-      id: 'item_elemental_gem',
-      name: 'Elemental Gem',
+      id: 'item_bag_of_tricks_rust',
+      name: 'Bag of Tricks (Rust)',
       category: ItemCategory.wondrousItem,
       rarity: ItemRarity.uncommon,
-      damageAccent: DamageAccent.fire,
+      glyphColor: Color(0xFFC2410C),
       actionRings: [
-        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Crush Gem to Summon Elemental (Air, Earth, Fire, or Water)'),
+        ActionTraitRing(
+          ringType: ActionRingType.sustain,
+          label: 'Action: Pull & Throw Rust Fuzzy Object (1d8 Summon Table) (3/Day)',
+        ),
       ],
       rules2014: ItemEditionDetails(
-        summary: 'Use an action to break the gem: casts Conjure Elemental summoning an elemental corresponding to the gem type (Air, Earth, Fire, or Water).',
-        description: 'This gem contains a mote of elemental energy. When you use an action to break the gem, an elemental appears as if you had cast the conjure elemental spell. The gem determines the elemental summoned: Blue Sapphire (Air Elemental), Yellow Diamond (Earth Elemental), Red Corundum (Fire Elemental), or Emerald (Water Elemental). The gem is destroyed.',
+        summary: 'Action: throw a fuzzy ball up to 20 ft to summon a Rust Beast (d8: 1=Rat, 2=Owl, 3=Mastiff, 4=Goat, 5=Giant Goat, 6=Giant Boar, 7=Lion, 8=Brown Bear). 3 pulls/day.',
+        description: 'Reaching inside this rust-colored sack pulls out a small fuzzy ball. As an action, throw it up to 20 feet: transforms into a friendly beast rolled on the Rust Table (1: Rat, 2: Owl, 3: Mastiff, 4: Goat, 5: Giant Goat, 6: Giant Boar, 7: Lion, 8: Brown Bear). Max 3 creatures per day (recharges at dawn). Acts on your turn and obeys verbal commands.',
+        activation: '1 Action (3/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: throw fuzzy ball up to 20 ft to summon a Rust Beast (d8: Rat, Owl, Mastiff, Goat, Giant Goat, Giant Boar, Lion, Brown Bear). 3/Long Rest.',
+        description: 'Pull a fuzzy ball from the rust bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8 (1: Rat, 2: Owl, 3: Mastiff, 4: Goat, 5: Giant Goat, 6: Giant Boar, 7: Lion, 8: Brown Bear). Up to 3 creatures per Long Rest.',
+        activation: '1 Action (3/Long Rest)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'bag', 'summon', 'rust', 'beast', 'tricks', 'minions'],
+    ),
+
+    // Bag of Tricks (Tan)
+    MagicItem(
+      id: 'item_bag_of_tricks_tan',
+      name: 'Bag of Tricks (Tan)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      glyphColor: Color(0xFFD4A373),
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sustain,
+          label: 'Action: Pull & Throw Tan Fuzzy Object (1d8 Summon Table) (3/Day)',
+        ),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: throw a fuzzy ball up to 20 ft to summon a Tan Beast (d8: 1=Jackal, 2=Ape, 3=Baboon, 4=Axe Beak, 5=Black Bear, 6=Giant Weasel, 7=Giant Hyena, 8=Tiger). 3 pulls/day.',
+        description: 'Reaching inside this tan cloth sack pulls out a small fuzzy ball. As an action, throw it up to 20 feet: transforms into a friendly beast rolled on the Tan Table (1: Jackal, 2: Ape, 3: Baboon, 4: Axe Beak, 5: Black Bear, 6: Giant Weasel, 7: Giant Hyena, 8: Tiger). Max 3 creatures per day (recharges at dawn). Acts on your turn and obeys verbal commands.',
+        activation: '1 Action (3/Day)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: throw fuzzy ball up to 20 ft to summon a Tan Beast (d8: Jackal, Ape, Baboon, Axe Beak, Black Bear, Giant Weasel, Giant Hyena, Tiger). 3/Long Rest.',
+        description: 'Pull a fuzzy ball from the tan bag and throw it up to 20 feet as an Action. It turns into a friendly beast chosen by rolling a d8 (1: Jackal, 2: Ape, 3: Baboon, 4: Axe Beak, 5: Black Bear, 6: Giant Weasel, 7: Giant Hyena, 8: Tiger). Up to 3 creatures per Long Rest.',
+        activation: '1 Action (3/Long Rest)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'bag', 'summon', 'tan', 'beast', 'tricks', 'minions'],
+    ),
+
+    // Ioun Stone (Deep Red)
+    MagicItem(
+      id: 'item_ioun_stone_deep_red',
+      name: 'Ioun Stone (Deep Red)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFEF4444),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Orbiting Sphere: +2 Dexterity Score (Max 20)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Your Dexterity score increases by 2, to a maximum of 20, while this deep red sphere orbits your head.',
+        description: 'While this deep red marble orbits your head, your Dexterity score increases by 2, to a maximum of 20.',
+        activation: '1 Action (Toss into orbit)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Orbiting deep red sphere gives +2 Dexterity score (max 20).',
+        description: 'Your Dexterity score increases by 2 (maximum of 20) while this stone orbits your head.',
+        activation: '1 Action (Orbit)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'ioun stone', 'deep red', 'dexterity', 'stat boost'],
+    ),
+
+    // Ioun Stone (Incandescent Blue)
+    MagicItem(
+      id: 'item_ioun_stone_incandescent_blue',
+      name: 'Ioun Stone (Incandescent Blue)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFF38BDF8),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Orbiting Sphere: +2 Wisdom Score (Max 20)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Your Wisdom score increases by 2, to a maximum of 20, while this incandescent blue sphere orbits your head.',
+        description: 'While this glowing blue sphere orbits your head, your Wisdom score increases by 2, to a maximum of 20.',
+        activation: '1 Action (Toss into orbit)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Orbiting blue sphere gives +2 Wisdom score (max 20).',
+        description: 'Your Wisdom score increases by 2 (maximum of 20) while this stone orbits your head.',
+        activation: '1 Action (Orbit)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'ioun stone', 'incandescent blue', 'wisdom', 'stat boost'],
+    ),
+
+    // Ioun Stone (Pale Green)
+    MagicItem(
+      id: 'item_ioun_stone_pale_green',
+      name: 'Ioun Stone (Pale Green)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFF10B981),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Orbiting Prism: +1 to All Attack Rolls, Checks & Saves'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'You gain a +1 bonus to all attack rolls, saving throws, ability checks, and skill checks while this pale green prism orbits your head.',
+        description: 'You gain a +1 bonus to attack rolls, saving throws, ability checks, and skill checks while this pale green prism orbits your head.',
+        activation: '1 Action (Toss into orbit)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Orbiting prism gives +1 bonus to attack rolls, saving throws, and ability checks.',
+        description: 'While this prism orbits your head, you gain a +1 bonus to all attack rolls, saving throws, and ability checks.',
+        activation: '1 Action (Orbit)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'ioun stone', 'pale green', 'attacks', 'saves', 'checks'],
+    ),
+
+    // Ioun Stone (Dusty Rose)
+    MagicItem(
+      id: 'item_ioun_stone_dusty_rose',
+      name: 'Ioun Stone (Dusty Rose)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFFB7185),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, label: 'Orbiting Prism: +1 Bonus to Armor Class (AC)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'You gain a +1 bonus to AC while this dusty rose prism orbits your head.',
+        description: 'You gain a +1 bonus to AC while this dusty rose prism orbits your head.',
+        activation: '1 Action (Toss into orbit)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Orbiting prism gives +1 bonus to Armor Class (AC).',
+        description: 'You gain a +1 bonus to AC while this stone orbits your head.',
+        activation: '1 Action (Orbit)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'ioun stone', 'dusty rose', 'ac', 'protection', 'pink'],
+    ),
+
+    // Ioun Stone (Clear Spindle)
+    MagicItem(
+      id: 'item_ioun_stone_clear_spindle',
+      name: 'Ioun Stone (Clear Spindle)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFF1F5F9),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Orbiting Spindle: Full Sustenance Without Food or Water'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'You don\'t need to eat or drink while this clear spindle orbits your head.',
+        description: 'A translucent crystal spindle that sustains your biological body completely without food or water while orbiting.',
+        activation: '1 Action (Toss into orbit)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Orbiting crystal provides total sustenance without food or water.',
+        description: 'You don\'t need food or water while this clear spindle orbits your head.',
+        activation: '1 Action (Orbit)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'ioun stone', 'clear spindle', 'sustenance', 'white'],
+    ),
+
+    // Ioun Stone (Reserve)
+    MagicItem(
+      id: 'item_ioun_stone_reserve',
+      name: 'Ioun Stone (Reserve)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFA855F7),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Orbiting Rhomboid: Store Up to 3 Levels of Spells'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Stores up to 3 levels of spells that any creature can cast into it by touching it. You can cast stored spells using original caster stats.',
+        description: 'This vibrant purple rhomboid stores up to 3 levels of spells. Any creature can cast a spell of 1st through 3rd level into it by touching it as the spell is cast. You can cast any spell stored in it with the original slot level, save DC, attack bonus, and spellcasting ability.',
+        activation: 'Cast stored spell',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Stores up to 3 levels of spells. Cast stored spells with original caster stats.',
+        description: 'Holds up to 3 spell slot levels that can be cast by the attuner.',
+        activation: 'Cast stored spell',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'ioun stone', 'reserve', 'spell storage', 'purple'],
+    ),
+
+    // Belt of Hill Giant Strength
+    MagicItem(
+      id: 'item_belt_of_hill_giant_strength',
+      name: 'Belt of Hill Giant Strength',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Sets Strength Score to 21 (+5 Modifier)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing this belt, your Strength score is 21 (+5 modifier). Has no effect if your Strength is already 21 or higher.',
+        description: 'While wearing this belt, your Strength score changes to 21. If your Strength is already equal to or greater than 21, the item has no effect on you.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Sets your Strength score to 21 (+5).',
+        description: 'Your Strength score becomes 21 while wearing this belt.',
+        activation: 'Passive',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'belt', 'giant strength', 'hill giant', 'strength', 'melee'],
+    ),
+
+    // Belt of Frost Giant Strength
+    MagicItem(
+      id: 'item_belt_of_frost_giant_strength',
+      name: 'Belt of Frost Giant Strength',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Sets Strength Score to 23 (+6 Modifier)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing this belt, your Strength score is 23 (+6 modifier).',
+        description: 'While wearing this belt, your Strength score changes to 23.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Sets your Strength score to 23 (+6).',
+        description: 'Your Strength score becomes 23 while wearing this belt.',
+        activation: 'Passive',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'belt', 'giant strength', 'frost giant', 'strength', 'melee'],
+    ),
+
+    // Belt of Fire Giant Strength
+    MagicItem(
+      id: 'item_belt_of_fire_giant_strength',
+      name: 'Belt of Fire Giant Strength',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Sets Strength Score to 25 (+7 Modifier)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing this belt, your Strength score is 25 (+7 modifier).',
+        description: 'While wearing this belt, your Strength score changes to 25.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Sets your Strength score to 25 (+7).',
+        description: 'Your Strength score becomes 25 while wearing this belt.',
+        activation: 'Passive',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'belt', 'giant strength', 'fire giant', 'strength', 'melee'],
+    ),
+
+    // Belt of Storm Giant Strength
+    MagicItem(
+      id: 'item_belt_of_storm_giant_strength',
+      name: 'Belt of Storm Giant Strength',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.legendary,
+      requiresAttunement: true,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Sets Strength Score to 29 (+9 Modifier)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'While wearing this belt, your Strength score is 29 (+9 modifier).',
+        description: 'While wearing this belt, your Strength score changes to 29.',
+        activation: 'Passive',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Sets your Strength score to 29 (+9).',
+        description: 'Your Strength score becomes 29 while wearing this belt.',
+        activation: 'Passive',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'belt', 'giant strength', 'storm giant', 'strength', 'melee', 'legendary'],
+    ),
+
+    // Silver Horn of Valhalla
+    MagicItem(
+      id: 'item_horn_of_valhalla_silver',
+      name: 'Silver Horn of Valhalla',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      glyphColor: Color(0xFFCBD5E1),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Action: Summon 2d4+2 Spirit Berserkers (1/7 Days)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Blow horn to summon 2d4 + 2 warrior spirits from Ysgard for 1 hour. Recharges in 7 days.',
+        description: 'You can use an action to blow this silver horn: summons 2d4 + 2 spirit Berserkers to fight alongside you for up to 1 hour (recharges every 7 days). Requires martial weapon proficiency.',
+        activation: '1 Action (1/7 Days)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Summon 2d4 + 2 spirit Berserkers for 1 hour (1/7 Days).',
+        description: 'Blow the silver horn as an Action to summon allied Berserker warrior spirits.',
+        activation: '1 Action (1/7 Days)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'horn', 'valhalla', 'silver', 'summon', 'berserker'],
+    ),
+
+    // Iron Horn of Valhalla
+    MagicItem(
+      id: 'item_horn_of_valhalla_iron',
+      name: 'Iron Horn of Valhalla',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.legendary,
+      glyphColor: Color(0xFF475569),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Action: Summon 5d4+5 Spirit Berserkers (1/7 Days)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Blow horn to summon 5d4 + 5 warrior spirits from Ysgard for 1 hour. Recharges in 7 days.',
+        description: 'You can use an action to blow this heavy iron horn: summons 5d4 + 5 spirit Berserkers to fight alongside you for up to 1 hour (recharges every 7 days). Requires proficiency with all armor.',
+        activation: '1 Action (1/7 Days)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Summon 5d4 + 5 spirit Berserkers for 1 hour (1/7 Days).',
+        description: 'Blow the iron horn as an Action to summon allied Berserker warrior spirits.',
+        activation: '1 Action (1/7 Days)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'horn', 'valhalla', 'iron', 'summon', 'berserker', 'legendary'],
+    ),
+
+    // Figurine of Wondrous Power (Bronze Griffon)
+    MagicItem(
+      id: 'item_figurine_bronze_griffon',
+      name: 'Figurine of Wondrous Power (Bronze Griffon)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      glyphColor: Color(0xFFCD7F32),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Animate Living Griffon Mount (24 Hours, 2/10 Days)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Speak command word and throw figurine to animate into a living Griffon mount for up to 24 hours (usable twice every 10 days).',
+        description: 'This bronze statuette transforms into a living Griffon when thrown up to 60 feet. It obeys your spoken commands and serves as a flying mount for up to 24 hours. Usable twice per 10 days.',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Animate into a living Griffon mount for 24 hours.',
+        description: 'Throws up to 60 feet to become a loyal flying Griffon mount for up to 24 hours.',
+        activation: '1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'figurine', 'bronze', 'griffon', 'summon', 'mount'],
+    ),
+
+    // Figurine of Wondrous Power (Ebony Fly)
+    MagicItem(
+      id: 'item_figurine_ebony_fly',
+      name: 'Figurine of Wondrous Power (Ebony Fly)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      glyphColor: Color(0xFF334155),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Animate Giant Fly Mount (12 Hours, 3/10 Days)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Speak command word to animate into a pony-sized giant fly for up to 12 hours (usable three times per 8 days).',
+        description: 'Transforms into a giant fly with fly speed 60 ft for up to 12 hours. Can carry up to 240 lbs.',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Animate into a giant fly mount for 12 hours.',
+        description: 'Transforms into a pony-sized flying mount for 12 hours.',
+        activation: '1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'figurine', 'ebony', 'fly', 'summon', 'mount'],
+    ),
+
+    // Figurine of Wondrous Power (Marble Elephant)
+    MagicItem(
+      id: 'item_figurine_marble_elephant',
+      name: 'Figurine of Wondrous Power (Marble Elephant)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      glyphColor: Color(0xFFF1F5F9),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Animate True Elephant Mount/Beast (24 Hours, 1/7 Days)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Transforms into a living Elephant for up to 24 hours (recharges once every 7 days).',
+        description: 'Transforms into a full-sized Elephant for up to 24 hours. Usable once every 7 days.',
+        activation: '1 Action (1/7 Days)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Animate into an Elephant for 24 hours (1/7 Days).',
+        description: 'Transforms into a massive elephant mount and heavy beast for 24 hours.',
+        activation: '1 Action (1/7 Days)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'figurine', 'marble', 'elephant', 'summon', 'mount', 'white'],
+    ),
+
+    // Elemental Gem (Blue Sapphire - Air)
+    MagicItem(
+      id: 'item_elemental_gem_blue_sapphire',
+      name: 'Elemental Gem (Blue Sapphire)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      glyphColor: Color(0xFF38BDF8),
+      damageAccent: DamageAccent.lightning,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Crush Gem to Summon CR 5 Air Elemental'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Air Elemental for up to 1 hour (consumable).',
+        description: 'Crush this sapphire as an action to summon a friendly Air Elemental for 1 hour. The gem is destroyed.',
         activation: '1 Action (Consumable)',
       ),
       rules2024: ItemEditionDetails(
-        summary: 'Action: crush gem to summon a CR 5 Elemental (Air, Earth, Fire, or Water) for up to 1 hour.',
-        description: 'Break the gem as an Action to summon a friendly CR 5 Elemental companion for up to 1 hour (consumable).',
+        summary: 'Action: Crush gem to summon a CR 5 Air Elemental for 1 hour.',
+        description: 'Summons an Air Elemental companion for 1 hour.',
         activation: '1 Action (Consumable)',
       ),
       isChangedIn2024: false,
-      tags: ['wondrous', 'gem', 'elemental', 'summon', 'fire', 'water', 'air', 'earth'],
+      tags: ['wondrous', 'gem', 'elemental', 'blue sapphire', 'air', 'summon'],
+    ),
+
+    // Elemental Gem (Red Corundum - Fire)
+    MagicItem(
+      id: 'item_elemental_gem_red_corundum',
+      name: 'Elemental Gem (Red Corundum)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      glyphColor: Color(0xFFEF4444),
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Crush Gem to Summon CR 5 Fire Elemental'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Fire Elemental for up to 1 hour (consumable).',
+        description: 'Crush this red corundum as an action to summon a friendly Fire Elemental for 1 hour. The gem is destroyed.',
+        activation: '1 Action (Consumable)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Crush gem to summon a CR 5 Fire Elemental for 1 hour.',
+        description: 'Summons a Fire Elemental companion for 1 hour.',
+        activation: '1 Action (Consumable)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'gem', 'elemental', 'red corundum', 'fire', 'summon'],
+    ),
+
+    // Elemental Gem (Yellow Diamond - Earth)
+    MagicItem(
+      id: 'item_elemental_gem_yellow_diamond',
+      name: 'Elemental Gem (Yellow Diamond)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      glyphColor: Color(0xFFF59E0B),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Crush Gem to Summon CR 5 Earth Elemental'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Earth Elemental for up to 1 hour (consumable).',
+        description: 'Crush this yellow diamond as an action to summon a friendly Earth Elemental for 1 hour. The gem is destroyed.',
+        activation: '1 Action (Consumable)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Crush gem to summon a CR 5 Earth Elemental for 1 hour.',
+        description: 'Summons an Earth Elemental companion for 1 hour.',
+        activation: '1 Action (Consumable)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'gem', 'elemental', 'yellow diamond', 'earth', 'summon'],
+    ),
+
+    // Elemental Gem (Emerald - Water)
+    MagicItem(
+      id: 'item_elemental_gem_emerald',
+      name: 'Elemental Gem (Emerald)',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      glyphColor: Color(0xFF10B981),
+      damageAccent: DamageAccent.cold,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Crush Gem to Summon CR 5 Water Elemental'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Crush gem to cast Conjure Elemental summoning a CR 5 Water Elemental for up to 1 hour (consumable).',
+        description: 'Crush this emerald as an action to summon a friendly Water Elemental for 1 hour. The gem is destroyed.',
+        activation: '1 Action (Consumable)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Crush gem to summon a CR 5 Water Elemental for 1 hour.',
+        description: 'Summons a Water Elemental companion for 1 hour.',
+        activation: '1 Action (Consumable)',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'gem', 'elemental', 'emerald', 'water', 'summon'],
+    ),
+
+    // Decanter of Endless Water
+    MagicItem(
+      id: 'item_decanter_of_endless_water',
+      name: 'Decanter of Endless Water',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      glyphColor: Color(0xFF38BDF8),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.ranged, label: 'Action: Stream / Fountain / Geyser (30 ft Line, 1d4 Bludgeoning, DC 13 Str or Prone)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Unstopper and produce endless water: Stream (1 gal), Fountain (5 gal), or Geyser (30 gal, 30 ft blast, 1d4 bludgeoning, DC 13 Str or prone).',
+        description: 'You can use an action and speak one of three command words to produce fresh or salt water: Stream (1 gallon), Fountain (5 gallons), or Geyser (30 gallons, 30 ft line, DC 13 Strength save or take 1d4 bludgeoning damage and fall prone).',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Produces continuous fresh/salt water up to Geyser mode (30 gal/round, 30 ft push/prone).',
+        description: 'Produces Stream, Fountain, or Geyser volume on command.',
+        activation: '1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'decanter', 'water', 'utility', 'geyser'],
+    ),
+
+    // Instant Fortress
+    MagicItem(
+      id: 'item_instant_fortress',
+      name: 'Instant Fortress',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.rare,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: 'Action: Expands into 30-ft Adamantine Tower (10d10 Bludgeoning to Nearby Creatures)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Action: Place 1-inch cube on ground and speak command word to instantly expand into a 20-ft square, 30-ft tall adamantine tower (10d10 bludgeoning, DC 15 Dex save for half).',
+        description: 'A 1-inch metal cube that expands into a 30-foot tall adamantine fortress with arrow slits and battlement roof. Creatures in its footprint must make a DC 15 Dex save or take 10d10 bludgeoning damage and be pushed away.',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Expands into 30-ft tall adamantine fortress (10d10 bludgeoning damage on expansion).',
+        description: 'Expands into a fortified tower and shelter.',
+        activation: '1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'fortress', 'adamantine', 'shelter', 'cube', 'structure'],
+    ),
+
+    // Robe of Useful Items
+    MagicItem(
+      id: 'item_robe_of_useful_items',
+      name: 'Robe of Useful Items',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.uncommon,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.sustain, label: 'Action: Detach Patch to Produce Real Physical Object'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Robe covered with cloth patches representing items (Daggers, Lanterns, Mirrors, 10-ft Poles, Ropes, Horses, Boats, etc.). Detach patch as an action to transform it into the real item.',
+        description: 'This robe has cloth patches of various shapes and colors. You can use an action to detach one of the patches, causing it to become the object or creature it represents.',
+        activation: '1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Action: Detach patch to produce the depicted mundane object, vehicle, or creature.',
+        description: 'Detach cloth patch as an Action to materialize the item in your space.',
+        activation: '1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['wondrous', 'robe', 'useful items', 'patches', 'utility'],
+    ),
+
+    // Apparatus of the Crab (Apparatus of Kwalish)
+    MagicItem(
+      id: 'item_apparatus_of_the_crab',
+      name: 'Apparatus of the Crab',
+      name2014: 'Apparatus of Kwalish',
+      name2024: 'Apparatus of the Crab',
+      category: ItemCategory.wondrousItem,
+      rarity: ItemRarity.legendary,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.melee, label: 'Piloted Submersible Vehicle (AC 20, 200 HP, 2 Pincer Attacks 2d6 Bludgeoning)'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: 'Large iron barrel that transforms into a piloted mechanical lobster/crab submersible holding up to 2 medium creatures with 10 levers.',
+        description: 'This item appears as a large sealed iron barrel. When activated, it transforms into an amphibious crab vehicle with speed 30 ft, swim 30 ft, AC 20, 200 HP, and mechanical levers to operate pincer attacks and floodlights.',
+        activation: 'Action (Lever operation)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Piloted mechanical crab vehicle with swim speed, heavy pincers, and sealed life support.',
+        description: 'Amphibious submersible mechanical vehicle for 2 creatures.',
+        activation: 'Action (Operate)',
+      ),
+      isChangedIn2024: true,
+      diffSummary: 'Renamed from Apparatus of Kwalish to Apparatus of the Crab in 2024 Free SRD 5.2.',
+      diffHighlights: [
+        'Free SRD 5.2 trademark-clean name: Apparatus of the Crab',
+        'Updated vehicle helm controls and simplified speed mechanics',
+      ],
+      tags: ['wondrous', 'vehicle', 'crab', 'kwalish', 'submersible', 'legendary'],
     ),
   ];
 }

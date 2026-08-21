@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/app_settings.dart';
 import '../models/dm_screen_data.dart';
 import '../models/dpr/dpr_models.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/rules/dpr_calculator_engine.dart';
-import '../theme/app_theme.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/dpr/dpr_chart_widget.dart';
 
@@ -31,20 +29,12 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   bool _showPowerAttack = true;
   bool _showAdvantage = false;
   bool _anythingGoesMode = false;
-  String _selectedPresetId = 'custom';
 
   @override
   void initState() {
     super.initState();
     _localEditionOverride = widget.initialEdition;
-    if (widget.initialProfile != null) {
-      _profile = widget.initialProfile!;
-      _selectedPresetId = 'custom';
-    } else {
-      // Clean custom build with NO forced default modifier toggles
-      _profile = DprCombatantProfile.cleanCustom();
-      _selectedPresetId = 'custom';
-    }
+    _profile = widget.initialProfile ?? DprCombatantProfile.cleanCustom();
   }
 
   DmRulesEdition _resolveEdition(BuildContext context) {
@@ -75,18 +65,16 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
     });
   }
 
-  void _loadPreset(DprCombatantProfile preset) {
+  void _resetToCleanBuild() {
     HapticService.selectionTick(context);
     setState(() {
-      _profile = preset;
-      _selectedPresetId = preset.id;
+      _profile = DprCombatantProfile.cleanCustom();
     });
   }
 
   void _updateProfile(DprCombatantProfile newProfile) {
     setState(() {
       _profile = newProfile;
-      _selectedPresetId = 'custom';
     });
   }
 
@@ -115,13 +103,18 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             diceCount: preset.diceCount,
             diceSides: preset.diceSides,
             damageType: preset.damageType,
-            damageBonus: abilityMod + preset.flatBonus,
+            // For damage cantrips, baseline damage does not add ability modifier
+            damageBonus: preset.isCantrip ? preset.flatBonus : (abilityMod + preset.flatBonus),
             attackBonus: abilityMod + pb + preset.flatBonus + (preset.isRanged && current.hasArchery ? 2 : 0),
             secondaryDiceCount: preset.secondaryDiceCount,
             secondaryDiceSides: preset.secondaryDiceSides,
             secondaryDamageType: preset.secondaryDamageType,
-            weaponMastery: _resolveEdition(context) == DmRulesEdition.v2024 ? preset.defaultMastery : WeaponMastery.none,
-            abilityModForGraze: preset.defaultMastery == WeaponMastery.graze ? abilityMod : 0,
+            weaponMastery: (!preset.isCantrip && _resolveEdition(context) == DmRulesEdition.v2024)
+                ? preset.defaultMastery
+                : WeaponMastery.none,
+            abilityModForGraze: (!preset.isCantrip && preset.defaultMastery == WeaponMastery.graze)
+                ? abilityMod
+                : 0,
             hasArchery: preset.isRanged ? current.hasArchery : false,
           );
           _updateAttack(attackIndex, updated);
@@ -187,8 +180,6 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final tabletop = theme.extension<TabletopColors>() ??
-        (isDark ? TabletopColors.dark : TabletopColors.createLight(FantasyAccent.paladinGold));
     final edition = _resolveEdition(context);
 
     // Calculate curves and break-even analysis
@@ -226,6 +217,11 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset to Clean Custom Build',
+            onPressed: _resetToCleanBuild,
+          ),
+          IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'DPR Calculation Guide',
             onPressed: _showInfoDialog,
@@ -240,10 +236,6 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             children: [
               // Top Rules Edition Segmented Selector
               _buildEditionHeader(theme, edition),
-              const SizedBox(height: 12),
-
-              // Presets Selection Carousel
-              _buildPresetSelector(tabletop, isDark),
               const SizedBox(height: 16),
 
               if (isWide) ...[
@@ -341,49 +333,6 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             onEditionChanged: _onEditionChanged,
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPresetSelector(TabletopColors tabletop, bool isDark) {
-    final presets = [
-      DprCombatantProfile.cleanCustom(),
-      ...DprCalculatorEngine.defaultPresets,
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: presets.map((p) {
-          final isSelected = _selectedPresetId == p.id;
-          final isCleanCustom = p.id == 'custom';
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ChoiceChip(
-              avatar: Icon(
-                isCleanCustom ? Icons.create : Icons.shield_outlined,
-                size: 16,
-                color: isSelected ? Colors.white : Colors.grey,
-              ),
-              label: Text(
-                isCleanCustom ? 'Custom Build (Clean)' : p.name.split(' (').first,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? Colors.white : null,
-                  fontSize: 12,
-                ),
-              ),
-              selected: isSelected,
-              selectedColor: isCleanCustom ? Colors.indigoAccent : Colors.teal,
-              onSelected: (selected) {
-                if (selected) {
-                  _loadPreset(p);
-                }
-              },
-            ),
-          );
-        }).toList(),
       ),
     );
   }
@@ -815,7 +764,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               runSpacing: 8,
               children: [
                 Text(
-                  'Character & Attacks Config',
+                  'Attacks, Weapons & Cantrips',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Row(
@@ -836,14 +785,14 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                     const SizedBox(width: 6),
                     IconButton.filledTonal(
                       icon: const Icon(Icons.add, size: 18),
-                      tooltip: 'Add Attack Action',
+                      tooltip: 'Add Attack / Cantrip Action',
                       onPressed: () {
                         HapticService.selectionTick(context);
                         final newAttacks = List<DprAttackAction>.from(_profile.attacks)
                           ..add(
                             DprAttackAction(
                               id: 'attack_${DateTime.now().millisecondsSinceEpoch}',
-                              name: 'Weapon #${_profile.attacks.length + 1}',
+                              name: 'Attack #${_profile.attacks.length + 1}',
                               attackBonus: _profile.abilityModifier + _profile.proficiencyBonus,
                               diceCount: 1,
                               diceSides: 6,
@@ -1015,13 +964,13 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Equip Preset Weapon / Magic Item Row
+          // Equip Preset Weapon / Cantrip / Magic Item Row
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.auto_fix_high, size: 16),
-                  label: const Text('Equip / Select Weapon Item', style: TextStyle(fontSize: 12)),
+                  label: const Text('Equip Weapon / Cantrip', style: TextStyle(fontSize: 12)),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   ),
@@ -1043,12 +992,12 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Custom Weapon Name Free-Form Text Field
+          // Custom Weapon/Cantrip Name Free-Form Text Field
           TextFormField(
             key: ValueKey('${attack.id}_${attack.name}'),
             initialValue: attack.name,
             decoration: InputDecoration(
-              labelText: 'Custom Weapon / Attack Name',
+              labelText: 'Attack / Weapon / Cantrip Name',
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -1432,7 +1381,7 @@ class _WeaponPickerSheetState extends State<_WeaponPickerSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final categories = ['All', 'Standard Melee', 'Standard Ranged', 'Magic Weapon'];
+    final categories = ['All', 'Standard Melee', 'Standard Ranged', 'Damage Cantrip', 'Magic Weapon'];
 
     final filtered = DprWeaponPreset.allPresets.where((p) {
       if (_selectedCategory != 'All' && p.category != _selectedCategory) {
@@ -1452,112 +1401,127 @@ class _WeaponPickerSheetState extends State<_WeaponPickerSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          // Drag handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 8, bottom: 8),
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                const Icon(Icons.auto_fix_high, color: Colors.cyanAccent),
-                const SizedBox(width: 10),
-                Text(
-                  'Select Weapon or Magic Item',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            // Drag handle
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 8, bottom: 8),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Search Field
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search Greatsword, Flame Tongue, Rapier...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                isDense: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              onChanged: (val) => setState(() => _search = val),
             ),
-          ),
-          const SizedBox(height: 10),
 
-          // Category Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: categories.map((cat) {
-                final isSelected = _selectedCategory == cat;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6.0),
-                  child: FilterChip(
-                    label: Text(cat, style: const TextStyle(fontSize: 12)),
-                    selected: isSelected,
-                    onSelected: (val) => setState(() => _selectedCategory = cat),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.auto_fix_high, color: Colors.cyanAccent),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Select Weapon, Cantrip, or Magic Item',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                );
-              }).toList(),
+                ],
+              ),
             ),
-          ),
-          const Divider(height: 16),
+            const SizedBox(height: 12),
 
-          // Weapon Preset List
-          Expanded(
-            child: ListView.builder(
-              itemCount: filtered.length,
-              itemBuilder: (ctx, index) {
-                final item = filtered[index];
-                final isMagic = item.category == 'Magic Weapon';
+            // Search Field
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search Greatsword, Fire Bolt, Rapier, Eldritch Blast...',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  isDense: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onChanged: (val) => setState(() => _search = val),
+              ),
+            ),
+            const SizedBox(height: 10),
 
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: isMagic
-                        ? Colors.purpleAccent.withValues(alpha: 0.2)
-                        : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
-                    child: Icon(
-                      isMagic ? Icons.auto_awesome : (item.isRanged ? Icons.gps_fixed : Icons.colorize),
-                      color: isMagic ? Colors.purpleAccent : (isDark ? Colors.white70 : Colors.black87),
-                      size: 20,
+            // Category Filter Chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: categories.map((cat) {
+                  final isSelected = _selectedCategory == cat;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6.0),
+                    child: FilterChip(
+                      label: Text(cat, style: const TextStyle(fontSize: 12)),
+                      selected: isSelected,
+                      onSelected: (val) => setState(() => _selectedCategory = cat),
                     ),
-                  ),
-                  title: Text(
-                    item.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: isMagic ? Colors.purpleAccent : null,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${item.diceCount}d${item.diceSides} ${item.damageType}'
-                    '${item.flatBonus > 0 ? ' (+${item.flatBonus} magic)' : ''}'
-                    '${item.secondaryDiceCount > 0 ? ' + ${item.secondaryDiceCount}d${item.secondaryDiceSides} ${item.secondaryDamageType ?? ""}' : ''}'
-                    '${item.defaultMastery != WeaponMastery.none ? ' • Mastery: ${item.defaultMastery.label.split(" ").first}' : ''}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  trailing: const Icon(Icons.chevron_right, size: 18),
-                  onTap: () => widget.onSelected(item),
-                );
-              },
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-        ],
+            const Divider(height: 16),
+
+            // Weapon Preset List
+            Expanded(
+              child: ListView.builder(
+                itemCount: filtered.length,
+                itemBuilder: (ctx, index) {
+                  final item = filtered[index];
+                  final isMagic = item.category == 'Magic Weapon';
+                  final isCantrip = item.isCantrip || item.category == 'Damage Cantrip';
+
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: isMagic
+                          ? Colors.purpleAccent.withValues(alpha: 0.2)
+                          : isCantrip
+                              ? Colors.amberAccent.withValues(alpha: 0.2)
+                              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                      child: Icon(
+                        isMagic
+                            ? Icons.auto_awesome
+                            : isCantrip
+                                ? Icons.local_fire_department
+                                : (item.isRanged ? Icons.gps_fixed : Icons.colorize),
+                        color: isMagic
+                            ? Colors.purpleAccent
+                            : isCantrip
+                                ? Colors.amberAccent
+                                : (isDark ? Colors.white70 : Colors.black87),
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      item.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: isMagic
+                            ? Colors.purpleAccent
+                            : isCantrip
+                                ? Colors.amberAccent
+                                : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${item.diceCount}d${item.diceSides} ${item.damageType}'
+                      '${item.flatBonus > 0 ? ' (+${item.flatBonus} magic)' : ''}'
+                      '${item.secondaryDiceCount > 0 ? ' + ${item.secondaryDiceCount}d${item.secondaryDiceSides} ${item.secondaryDamageType ?? ""}' : ''}'
+                      '${item.defaultMastery != WeaponMastery.none ? ' • Mastery: ${item.defaultMastery.label.split(" ").first}' : ''}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    trailing: const Icon(Icons.chevron_right, size: 18),
+                    onTap: () => widget.onSelected(item),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

@@ -58,6 +58,7 @@ class ItemCard extends StatelessWidget {
                 requiresAttunement: item.requiresAttunement,
                 damageAccent: item.damageAccent,
                 actionRings: item.actionRings,
+                glyphColor: item.effectiveGlyphColor,
                 size: 38,
                 isDarkMode: isDark,
               ),

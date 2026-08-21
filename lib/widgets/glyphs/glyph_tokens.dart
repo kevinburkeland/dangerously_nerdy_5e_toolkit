@@ -527,13 +527,22 @@ class GlyphThemeData {
     );
   }
 
-  factory GlyphThemeData.fromItem(ItemCategory category,
-      {ItemRarity? rarity, GlyphFrameShape? shapeOverride}) {
-    final effectivePrimary = rarity?.color ?? category.primaryColor;
+  factory GlyphThemeData.fromItem(
+    ItemCategory category, {
+    ItemRarity? rarity,
+    Color? primaryColorOverride,
+    GlyphFrameShape? shapeOverride,
+  }) {
+    final effectivePrimary =
+        primaryColorOverride ?? rarity?.color ?? category.primaryColor;
     return GlyphThemeData(
       primary: effectivePrimary,
-      lightFill: category.lightFillTint,
-      darkFill: category.darkFillTint,
+      lightFill: primaryColorOverride != null
+          ? primaryColorOverride.withValues(alpha: 0.12)
+          : category.lightFillTint,
+      darkFill: primaryColorOverride != null
+          ? primaryColorOverride.withValues(alpha: 0.20)
+          : category.darkFillTint,
       border: effectivePrimary,
       frameShape: shapeOverride ?? category.frameShape,
     );

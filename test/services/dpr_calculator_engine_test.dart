@@ -78,7 +78,27 @@ void main() {
     });
 
     test('calculateGwmBreakEven identifies crossover AC for power attack feats', () {
-      final barbarian = DprCalculatorEngine.defaultPresets.firstWhere((p) => p.id == 'barbarian_gwm');
+      const barbarian = DprCombatantProfile(
+        id: 'barbarian_gwm',
+        name: 'Barbarian GWM',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        defaultAdvantage: AdvantageType.advantage,
+        attacks: [
+          DprAttackAction(
+            id: 'barb_greatsword',
+            name: 'Greatsword',
+            attackBonus: 7,
+            diceCount: 2,
+            diceSides: 6,
+            damageBonus: 6,
+            damageType: 'slashing',
+            gwfVersion: GwfVersion.v2014Reroll,
+            attacksPerRound: 2,
+          ),
+        ],
+      );
       final analysis = DprCalculatorEngine.calculateGwmBreakEven(barbarian);
 
       // Barbarian with Reckless Advantage should have a high break-even AC (typically around AC 16-19)
@@ -128,7 +148,29 @@ void main() {
     });
 
     test('Sneak Attack is factored in once per turn across multiple attacks', () {
-      final rogue = DprCalculatorEngine.defaultPresets.firstWhere((p) => p.id == 'rogue_sneak_attack');
+      const rogue = DprCombatantProfile(
+        id: 'rogue_sneak_attack',
+        name: 'Rogue Sneak Attack',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        defaultAdvantage: AdvantageType.advantage,
+        sneakAttackDiceCount: 3,
+        sneakAttackDiceSides: 6,
+        attacks: [
+          DprAttackAction(
+            id: 'rogue_shortbow',
+            name: 'Shortbow',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 6,
+            damageBonus: 4,
+            damageType: 'piercing',
+            attacksPerRound: 1,
+            weaponMastery: WeaponMastery.vex,
+          ),
+        ],
+      );
       final curve = DprCalculatorEngine.generateCurve(rogue, minAc: 10, maxAc: 20);
 
       final pt = curve.pointAt(15);

@@ -98,6 +98,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
                   requiresAttunement: item.requiresAttunement,
                   damageAccent: item.damageAccent,
                   actionRings: item.actionRings,
+                  glyphColor: item.effectiveGlyphColor,
                   size: 48,
                   isDarkMode: isDark,
                 ),

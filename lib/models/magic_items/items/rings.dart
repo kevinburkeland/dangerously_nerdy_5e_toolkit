@@ -359,6 +359,7 @@ class SrdMagicRings {
       category: ItemCategory.ring,
       rarity: ItemRarity.uncommon,
       requiresAttunement: true,
+      glyphColor: Color(0xFFEF4444),
       actionRings: [
         ActionTraitRing(ringType: ActionRingType.reaction, label: 'Resistance to Cold Damage & Immune to Extreme Cold Environments (down to -50°F)'),
       ],
@@ -374,6 +375,30 @@ class SrdMagicRings {
       ),
       isChangedIn2024: false,
       tags: ['ring', 'warmth', 'cold', 'resistance', 'survival'],
+    ),
+
+    // Ring of Animal Influence
+    MagicItem(
+      id: 'item_ring_of_animal_influence',
+      name: 'Ring of Animal Influence',
+      category: ItemCategory.ring,
+      rarity: ItemRarity.rare,
+      glyphColor: Color(0xFF10B981),
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.recharge, label: '3 Charges: Animal Friendship, Fear (Beasts), Speak with Animals'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '3 charges (recharges 1d3 daily at dawn). Cast Animal Friendship (DC 13), Fear (beasts only, DC 13), or Speak with Animals.',
+        description: 'This ring has 3 charges. While wearing it, you can expend 1 charge to cast Animal Friendship (save DC 13), Fear (save DC 13, targeting only beasts with Int 3 or lower), or Speak with Animals.',
+        activation: '1 Action (Expends 1 Charge)',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: 'Cast Animal Friendship, Fear (beasts), or Speak with Animals (3 charges).',
+        description: 'Allows casting nature spells to communicate with and charm beasts.',
+        activation: '1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['ring', 'animal', 'beast', 'charm', 'druid', 'ranger'],
     ),
   ];
 }

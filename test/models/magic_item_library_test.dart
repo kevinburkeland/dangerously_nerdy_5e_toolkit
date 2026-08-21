@@ -6,8 +6,14 @@ void main() {
     test('allItems contains a large comprehensive catalog of items', () {
       expect(MagicItemLibrary.allItems.length, greaterThanOrEqualTo(100));
       // Ensure all item IDs are unique
-      final ids = MagicItemLibrary.allItems.map((e) => e.id).toSet();
-      expect(ids.length, equals(MagicItemLibrary.allItems.length));
+      final seen = <String>{};
+      final duplicates = <String>[];
+      for (final item in MagicItemLibrary.allItems) {
+        if (!seen.add(item.id)) {
+          duplicates.add(item.id);
+        }
+      }
+      expect(duplicates, isEmpty, reason: 'Duplicate item IDs found: $duplicates');
     });
 
     test('verifies all 10 item categories are populated', () {
@@ -30,6 +36,48 @@ void main() {
       final backpack = MagicItemLibrary.findById('backpack');
       expect(backpack, isNotNull);
       expect(backpack!.category, equals(ItemCategory.adventuringGear));
+    });
+
+    test('Bag of Tricks variants exist with distinct colors and tables', () {
+      final grayBag = MagicItemLibrary.findById('item_bag_of_tricks_gray');
+      expect(grayBag, isNotNull);
+      expect(grayBag!.name, equals('Bag of Tricks (Gray)'));
+      expect(grayBag.effectiveGlyphColor, equals(const Color(0xFF94A3B8)));
+      expect(grayBag.rules2014.summary, contains('Weasel'));
+
+      final rustBag = MagicItemLibrary.findById('item_bag_of_tricks_rust');
+      expect(rustBag, isNotNull);
+      expect(rustBag!.name, equals('Bag of Tricks (Rust)'));
+      expect(rustBag.effectiveGlyphColor, equals(const Color(0xFFC2410C)));
+      expect(rustBag.rules2014.summary, contains('Brown Bear'));
+
+      final tanBag = MagicItemLibrary.findById('item_bag_of_tricks_tan');
+      expect(tanBag, isNotNull);
+      expect(tanBag!.name, equals('Bag of Tricks (Tan)'));
+      expect(tanBag.effectiveGlyphColor, equals(const Color(0xFFD4A373)));
+      expect(tanBag.rules2014.summary, contains('Tiger'));
+    });
+
+    test('explicit item color resolution applies to colored armor and Ioun stones', () {
+      final redDragonArmor = MagicItemLibrary.findById('item_red_dragon_scale_mail');
+      expect(redDragonArmor, isNotNull);
+      expect(redDragonArmor!.effectiveGlyphColor, equals(const Color(0xFFEF4444)));
+
+      final blueDragonArmor = MagicItemLibrary.findById('item_blue_dragon_scale_mail');
+      expect(blueDragonArmor, isNotNull);
+      expect(blueDragonArmor!.effectiveGlyphColor, equals(const Color(0xFF38BDF8)));
+
+      final iounDeepRed = MagicItemLibrary.findById('item_ioun_stone_deep_red');
+      expect(iounDeepRed, isNotNull);
+      expect(iounDeepRed!.effectiveGlyphColor, equals(const Color(0xFFEF4444)));
+
+      final iounPaleGreen = MagicItemLibrary.findById('item_ioun_stone_pale_green');
+      expect(iounPaleGreen, isNotNull);
+      expect(iounPaleGreen!.effectiveGlyphColor, equals(const Color(0xFF10B981)));
+
+      final iounDustyRose = MagicItemLibrary.findById('item_ioun_stone_dusty_rose');
+      expect(iounDustyRose, isNotNull);
+      expect(iounDustyRose!.effectiveGlyphColor, equals(const Color(0xFFFB7185)));
     });
 
     test('findById and findByName lookups work accurately', () {

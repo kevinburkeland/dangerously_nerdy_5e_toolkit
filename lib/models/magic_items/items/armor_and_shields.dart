@@ -741,27 +741,264 @@ class SrdArmorAndShields {
       isChangedIn2024: false,
       tags: ['armor', 'mithral', 'stealth', 'strength'],
     ),
+    // Red Dragon Scale Mail
     MagicItem(
-      id: 'item_dragon_scale_mail',
-      name: 'Dragon Scale Mail',
+      id: 'item_red_dragon_scale_mail',
+      name: 'Red Dragon Scale Mail',
       category: ItemCategory.armor,
       rarity: ItemRarity.veryRare,
       requiresAttunement: true,
+      glyphColor: Color(0xFFEF4444),
+      damageAccent: DamageAccent.fire,
       actionRings: [
-        ActionTraitRing(ringType: ActionRingType.reaction, label: '+1 Scale Mail, Damage Resistance, Advantage vs Dragon Breath & Sense Dragons 30 Miles'),
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.fire, label: '+1 Scale Mail (AC 15 + Dex max 2), Fire Resistance, Advantage vs Fire Breath & 30-Mile Dragon Sense'),
       ],
       rules2014: ItemEditionDetails(
-        summary: '+1 scale mail granting resistance to dragon damage type, advantage on saves against dragon breath weapons and Frightful Presence, and action to sense dragon locations in 30 miles.',
-        description: 'Dragon scale mail is made of the scales of one kind of dragon. While wearing this armor, you gain a +1 bonus to AC, you have resistance to one damage type determined by the dragon species (Black/Copper: Acid, Blue/Bronze: Lightning, Green: Poison, Red/Brass/Gold: Fire, White/Silver: Cold), and you have advantage on saving throws against the breath weapons and Frightful Presence of dragons. Once per day, you can focus to detect the location of any dragon within 30 miles.',
+        summary: '+1 scale mail made of red dragon scales granting Fire Resistance, advantage on saves against dragon breath weapons and Frightful Presence, and action to sense dragon locations in 30 miles.',
+        description: 'While wearing this crimson dragon scale armor, you gain a +1 bonus to AC, you have resistance to Fire damage, and you have advantage on saving throws against the breath weapons and Frightful Presence of dragons. Once per day, you can focus to detect the location of any dragon within 30 miles.',
         activation: 'Passive / 1 Action (Detect)',
       ),
       rules2024: ItemEditionDetails(
-        summary: '+1 Scale Mail; Resistance to dragon element; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
-        description: '+1 Scale Mail granting elemental Resistance, Advantage on saves vs Dragon breath weapons and Frightful Presence, and 30-mile dragon detection.',
+        summary: '+1 Scale Mail; Fire Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail crafted from red dragon scales granting Fire Resistance, Advantage on saves vs Dragon breath weapons and Frightful Presence, and 30-mile dragon detection.',
         activation: 'Passive / 1 Action',
       ),
       isChangedIn2024: false,
-      tags: ['armor', 'dragon', 'resistance', 'breath weapon'],
+      tags: ['armor', 'dragon', 'red dragon', 'fire', 'resistance', 'scale mail'],
+    ),
+
+    // Blue Dragon Scale Mail
+    MagicItem(
+      id: 'item_blue_dragon_scale_mail',
+      name: 'Blue Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFF38BDF8),
+      damageAccent: DamageAccent.lightning,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.lightning, label: '+1 Scale Mail, Lightning Resistance, Advantage vs Lightning Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of blue dragon scales granting Lightning Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Made from iridescent blue dragon scales. Grants +1 AC, Lightning Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Lightning Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Lightning Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'blue dragon', 'lightning', 'resistance', 'scale mail'],
+    ),
+
+    // Green Dragon Scale Mail
+    MagicItem(
+      id: 'item_green_dragon_scale_mail',
+      name: 'Green Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFF10B981),
+      damageAccent: DamageAccent.poison,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.poison, label: '+1 Scale Mail, Poison Resistance, Advantage vs Poison Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of green dragon scales granting Poison Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from forest-green dragon scales. Grants +1 AC, Poison Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Poison Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Poison Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'green dragon', 'poison', 'resistance', 'scale mail'],
+    ),
+
+    // White Dragon Scale Mail
+    MagicItem(
+      id: 'item_white_dragon_scale_mail',
+      name: 'White Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFF1F5F9),
+      damageAccent: DamageAccent.cold,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.cold, label: '+1 Scale Mail, Cold Resistance, Advantage vs Cold Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of white dragon scales granting Cold Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from arctic-white dragon scales. Grants +1 AC, Cold Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Cold Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Cold Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'white dragon', 'cold', 'resistance', 'scale mail'],
+    ),
+
+    // Black Dragon Scale Mail
+    MagicItem(
+      id: 'item_black_dragon_scale_mail',
+      name: 'Black Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFF475569),
+      damageAccent: DamageAccent.acid,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.acid, label: '+1 Scale Mail, Acid Resistance, Advantage vs Acid Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of black dragon scales granting Acid Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from lustrous black dragon scales. Grants +1 AC, Acid Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Acid Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Acid Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'black dragon', 'acid', 'resistance', 'scale mail'],
+    ),
+
+    // Gold Dragon Scale Mail
+    MagicItem(
+      id: 'item_gold_dragon_scale_mail',
+      name: 'Gold Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFF59E0B),
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.fire, label: '+1 Scale Mail, Fire Resistance, Advantage vs Fire Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of gold dragon scales granting Fire Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from gleaming gold dragon scales. Grants +1 AC, Fire Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Fire Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Fire Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'gold dragon', 'fire', 'resistance', 'scale mail'],
+    ),
+
+    // Silver Dragon Scale Mail
+    MagicItem(
+      id: 'item_silver_dragon_scale_mail',
+      name: 'Silver Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFCBD5E1),
+      damageAccent: DamageAccent.cold,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.cold, label: '+1 Scale Mail, Cold Resistance, Advantage vs Cold Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of silver dragon scales granting Cold Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from polished silver dragon scales. Grants +1 AC, Cold Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Cold Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Cold Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'silver dragon', 'cold', 'resistance', 'scale mail'],
+    ),
+
+    // Bronze Dragon Scale Mail
+    MagicItem(
+      id: 'item_bronze_dragon_scale_mail',
+      name: 'Bronze Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFCD7F32),
+      damageAccent: DamageAccent.lightning,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.lightning, label: '+1 Scale Mail, Lightning Resistance, Advantage vs Lightning Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of bronze dragon scales granting Lightning Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from bronze dragon scales. Grants +1 AC, Lightning Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Lightning Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Lightning Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'bronze dragon', 'lightning', 'resistance', 'scale mail'],
+    ),
+
+    // Brass Dragon Scale Mail
+    MagicItem(
+      id: 'item_brass_dragon_scale_mail',
+      name: 'Brass Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFD97706),
+      damageAccent: DamageAccent.fire,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.fire, label: '+1 Scale Mail, Fire Resistance, Advantage vs Fire Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of brass dragon scales granting Fire Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from brass dragon scales. Grants +1 AC, Fire Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Fire Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Fire Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'brass dragon', 'fire', 'resistance', 'scale mail'],
+    ),
+
+    // Copper Dragon Scale Mail
+    MagicItem(
+      id: 'item_copper_dragon_scale_mail',
+      name: 'Copper Dragon Scale Mail',
+      category: ItemCategory.armor,
+      rarity: ItemRarity.veryRare,
+      requiresAttunement: true,
+      glyphColor: Color(0xFFB87333),
+      damageAccent: DamageAccent.acid,
+      actionRings: [
+        ActionTraitRing(ringType: ActionRingType.reaction, damageType: DamageAccent.acid, label: '+1 Scale Mail, Acid Resistance, Advantage vs Acid Breath & 30-Mile Dragon Sense'),
+      ],
+      rules2014: ItemEditionDetails(
+        summary: '+1 scale mail made of copper dragon scales granting Acid Resistance, advantage on saves vs breath/frightful presence, and 30-mile dragon detection.',
+        description: 'Crafted from copper dragon scales. Grants +1 AC, Acid Resistance, and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      rules2024: ItemEditionDetails(
+        summary: '+1 Scale Mail; Acid Resistance; Advantage vs dragon breath/frightful presence; 30-mile dragon sense.',
+        description: '+1 Scale Mail granting Acid Resistance and dragon detection.',
+        activation: 'Passive / 1 Action',
+      ),
+      isChangedIn2024: false,
+      tags: ['armor', 'dragon', 'copper dragon', 'acid', 'resistance', 'scale mail'],
     ),
     MagicItem(
       id: 'item_dwarven_plate',

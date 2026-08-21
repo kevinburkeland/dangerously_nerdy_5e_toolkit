@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import '../dm_screen_data.dart';
 import '../../widgets/glyphs/glyph_tokens.dart';
 
+export 'package:flutter/material.dart' show Color;
 export '../dm_screen_data.dart' show DmRulesEdition;
 export '../../widgets/glyphs/glyph_tokens.dart';
 
@@ -42,6 +44,7 @@ class MagicItem {
   final bool isChangedIn2024;
   final String? diffSummary;
   final List<String> diffHighlights;
+  final Color? glyphColor;
   final List<String> tags;
 
   const MagicItem({
@@ -60,8 +63,82 @@ class MagicItem {
     this.isChangedIn2024 = false,
     this.diffSummary,
     this.diffHighlights = const [],
+    this.glyphColor,
     this.tags = const [],
   });
+
+  /// Automatically resolves an item's glyph color, prioritizing an explicit [glyphColor]
+  /// override, and falling back to keyword color detection in the item's name or tags.
+  Color? get effectiveGlyphColor {
+    if (glyphColor != null) {
+      return glyphColor;
+    }
+    final lowerName = name.toLowerCase();
+    final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
+
+    // Gray / Grey (e.g. Gray Bag of Tricks, Gray Robe)
+    if (lowerName.contains('(gray)') || lowerName.contains('(grey)') || lowerName.contains('gray') || lowerName.contains('grey') || lowerTags.contains('gray') || lowerTags.contains('grey')) {
+      return const Color(0xFF94A3B8); // Slate Ash Gray
+    }
+    // Rust (e.g. Rust Bag of Tricks)
+    if (lowerName.contains('(rust)') || lowerName.contains('rust') || lowerTags.contains('rust')) {
+      return const Color(0xFFC2410C); // Terracotta Burnt Orange Rust
+    }
+    // Tan (e.g. Tan Bag of Tricks)
+    if (lowerName.contains('(tan)') || lowerName.contains('tan') || lowerTags.contains('tan')) {
+      return const Color(0xFFD4A373); // Warm Sandstone Amber Tan
+    }
+    // Deep Red / Ruby / Crimson / Flame / Fire
+    if (lowerName.contains('deep red') || lowerName.contains('ruby') || lowerName.contains('crimson') || lowerName.contains('red dragon') || lowerName.contains('flame tongue') || lowerTags.contains('ruby')) {
+      return const Color(0xFFEF4444); // Crimson Red
+    }
+    // Incandescent Blue / Sapphire / Azure / Frost
+    if (lowerName.contains('incandescent blue') || lowerName.contains('sapphire') || lowerName.contains('blue dragon') || lowerName.contains('frost brand') || lowerName.contains('azure') || lowerTags.contains('sapphire')) {
+      return const Color(0xFF38BDF8); // Electric Sky Azure
+    }
+    // Pale Green / Emerald / Jade / Poison
+    if (lowerName.contains('pale green') || lowerName.contains('emerald') || lowerName.contains('green dragon') || lowerName.contains('jade') || lowerTags.contains('emerald')) {
+      return const Color(0xFF10B981); // Radiant Emerald Green
+    }
+    // Dusty Rose / Pink
+    if (lowerName.contains('dusty rose') || lowerName.contains('pink') || lowerName.contains('rose')) {
+      return const Color(0xFFFB7185); // Dusty Rose Coral
+    }
+    // Clear Spindle / Pearl / White / Ivory / Diamond
+    if (lowerName.contains('clear spindle') || lowerName.contains('pearl') || lowerName.contains('white dragon') || lowerName.contains('(white)') || lowerName.contains('ivory') || lowerName.contains('diamond') || lowerTags.contains('pearl')) {
+      return const Color(0xFFF1F5F9); // Luminous Pearl White
+    }
+    // Black / Obsidian / Ebony
+    if (lowerName.contains('black dragon') || lowerName.contains('(black)') || lowerName.contains('obsidian') || lowerName.contains('ebony')) {
+      return const Color(0xFF475569); // Dark Obsidian Slate
+    }
+    // Gold / Solar / Radiant / Sun
+    if (lowerName.contains('gold dragon') || lowerName.contains('golden') || lowerName.contains('sun blade') || lowerName.contains('radiant')) {
+      return const Color(0xFFF59E0B); // Solar Radiant Gold
+    }
+    // Silver / Lunar / Moon
+    if (lowerName.contains('silver dragon') || lowerName.contains('silver') || lowerName.contains('moon sickle') || lowerName.contains('mithral')) {
+      return const Color(0xFFCBD5E1); // Polished Silver
+    }
+    // Bronze
+    if (lowerName.contains('bronze dragon') || lowerName.contains('bronze')) {
+      return const Color(0xFFCD7F32); // Patina Bronze
+    }
+    // Brass
+    if (lowerName.contains('brass dragon') || lowerName.contains('brass')) {
+      return const Color(0xFFD97706); // Polished Brass
+    }
+    // Copper
+    if (lowerName.contains('copper dragon') || lowerName.contains('copper')) {
+      return const Color(0xFFB87333); // Burnished Copper
+    }
+    // Purple / Violet / Amethyst
+    if (lowerName.contains('purple') || lowerName.contains('violet') || lowerName.contains('amethyst')) {
+      return const Color(0xFFA855F7); // Mystic Amethyst Violet
+    }
+
+    return null;
+  }
 
   /// Formatted item name for the requested rules edition.
   String getName(DmRulesEdition edition) {

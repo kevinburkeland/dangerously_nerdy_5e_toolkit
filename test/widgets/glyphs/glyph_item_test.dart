@@ -114,5 +114,36 @@ void main() {
 
       expect(find.byType(DndGlyph), findsOneWidget);
     });
+
+    testWidgets('DndGlyph.item renders with custom explicit glyphColor',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: DndGlyph.item(
+                category: ItemCategory.wondrousItem,
+                rarity: ItemRarity.uncommon,
+                glyphColor: const Color(0xFFC2410C), // Rust
+                size: 80,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(DndGlyph), findsOneWidget);
+    });
+
+    test('GlyphThemeData.fromItem applies primaryColorOverride', () {
+      const customColor = Color(0xFFC2410C);
+      final theme = GlyphThemeData.fromItem(
+        ItemCategory.wondrousItem,
+        primaryColorOverride: customColor,
+      );
+
+      expect(theme.primary, equals(customColor));
+      expect(theme.border, equals(customColor));
+    });
   });
 }
