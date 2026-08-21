@@ -163,5 +163,33 @@ void main() {
 
       expect(find.textContaining('How Damage Per Round (DPR) is Calculated:'), findsNothing);
     });
+
+    testWidgets('filters modifiers strictly by edition and unlocks all with Anything Goes', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen(edition: DmRulesEdition.v2024));
+      await tester.pumpAndSettle();
+
+      // By default in 2024 mode: 2024 options are shown, 2014 GWM is hidden
+      expect(find.textContaining('GWM 2024'), findsOneWidget);
+      expect(find.textContaining('GWF 2024'), findsOneWidget);
+      expect(find.text('GWM 2014 (-5/+10)'), findsNothing);
+      expect(find.text('GWF 2014 (Reroll 1s & 2s)'), findsNothing);
+
+      // Tap Anything Goes filter chip
+      final anythingGoesChip = find.text('Anything Goes');
+      expect(anythingGoesChip, findsOneWidget);
+      await tester.tap(anythingGoesChip);
+      await tester.pumpAndSettle();
+
+      // Now both 2014 and 2024 options are visible simultaneously
+      expect(find.textContaining('GWM 2024'), findsOneWidget);
+      expect(find.textContaining('GWF 2024'), findsOneWidget);
+      expect(find.text('GWM 2014 (-5/+10)'), findsOneWidget);
+      expect(find.text('GWF 2014 (Reroll 1s & 2s)'), findsOneWidget);
+    });
   });
 }

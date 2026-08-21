@@ -29,6 +29,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   int _selectedAc = 15;
   bool _showPowerAttack = true;
   bool _showAdvantage = false;
+  bool _anythingGoesMode = false;
   String _selectedPresetId = 'custom';
 
   @override
@@ -820,33 +821,54 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 Text(
                   'Character & Attacks Config',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                IconButton.filledTonal(
-                  icon: const Icon(Icons.add, size: 18),
-                  tooltip: 'Add Attack Action',
-                  onPressed: () {
-                    HapticService.selectionTick(context);
-                    final newAttacks = List<DprAttackAction>.from(_profile.attacks)
-                      ..add(
-                        DprAttackAction(
-                          id: 'attack_${DateTime.now().millisecondsSinceEpoch}',
-                          name: 'Weapon #${_profile.attacks.length + 1}',
-                          attackBonus: _profile.abilityModifier + _profile.proficiencyBonus,
-                          diceCount: 1,
-                          diceSides: 6,
-                          damageBonus: _profile.abilityModifier,
-                          damageType: 'slashing',
-                          attacksPerRound: 1,
-                        ),
-                      );
-                    _updateProfile(_profile.copyWith(attacks: newAttacks));
-                  },
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FilterChip(
+                      avatar: const Icon(Icons.shuffle, size: 14),
+                      label: const Text('Anything Goes', style: TextStyle(fontSize: 11)),
+                      tooltip: 'Unlock and mix all 2014 & 2024 feats, fighting styles, and weapon masteries',
+                      selected: _anythingGoesMode,
+                      selectedColor: Colors.purple.withValues(alpha: 0.25),
+                      checkmarkColor: Colors.purpleAccent,
+                      onSelected: (val) {
+                        HapticService.selectionTick(context);
+                        setState(() => _anythingGoesMode = val);
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton.filledTonal(
+                      icon: const Icon(Icons.add, size: 18),
+                      tooltip: 'Add Attack Action',
+                      onPressed: () {
+                        HapticService.selectionTick(context);
+                        final newAttacks = List<DprAttackAction>.from(_profile.attacks)
+                          ..add(
+                            DprAttackAction(
+                              id: 'attack_${DateTime.now().millisecondsSinceEpoch}',
+                              name: 'Weapon #${_profile.attacks.length + 1}',
+                              attackBonus: _profile.abilityModifier + _profile.proficiencyBonus,
+                              diceCount: 1,
+                              diceSides: 6,
+                              damageBonus: _profile.abilityModifier,
+                              damageType: 'slashing',
+                              attacksPerRound: 1,
+                            ),
+                          );
+                        _updateProfile(_profile.copyWith(attacks: newAttacks));
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1211,28 +1233,29 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
             ],
           ),
 
-          // Modifiers & Style Chips Wrap (2014 & 2024 aware)
+          // Modifiers & Style Chips Wrap (strictly filtered to active edition unless Anything Goes is enabled)
           Wrap(
             spacing: 6,
             runSpacing: 6,
             children: [
               // GWM 2014 Power Attack (-5/+10)
-              FilterChip(
-                label: const Text('GWM 2014 (-5/+10)', style: TextStyle(fontSize: 11)),
-                selected: attack.gwmMode == GwmMode.v2014PowerAttack,
-                selectedColor: Colors.amber.withValues(alpha: 0.25),
-                onSelected: (val) {
-                  _updateAttack(
-                    index,
-                    attack.copyWith(
-                      gwmMode: val ? GwmMode.v2014PowerAttack : GwmMode.none,
-                    ),
-                  );
-                },
-              ),
+              if (_anythingGoesMode || !is2024)
+                FilterChip(
+                  label: const Text('GWM 2014 (-5/+10)', style: TextStyle(fontSize: 11)),
+                  selected: attack.gwmMode == GwmMode.v2014PowerAttack,
+                  selectedColor: Colors.amber.withValues(alpha: 0.25),
+                  onSelected: (val) {
+                    _updateAttack(
+                      index,
+                      attack.copyWith(
+                        gwmMode: val ? GwmMode.v2014PowerAttack : GwmMode.none,
+                      ),
+                    );
+                  },
+                ),
 
               // GWM 2024 (+PB flat damage on hit)
-              if (is2024)
+              if (_anythingGoesMode || is2024)
                 FilterChip(
                   label: Text('GWM 2024 (+${_profile.proficiencyBonus} dmg)', style: const TextStyle(fontSize: 11)),
                   selected: attack.gwmMode == GwmMode.v2024ProficiencyBonus,
@@ -1247,24 +1270,37 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
                   },
                 ),
 
-              // GWF Style (2014 reroll 1s/2s or 2024 treat 1s/2s as 3)
-              FilterChip(
-                label: Text(
-                  is2024 ? 'GWF 2024 (1s & 2s ➔ 3)' : 'GWF 2014 (Reroll 1s & 2s)',
-                  style: const TextStyle(fontSize: 11),
+              // GWF Style 2014 (Reroll 1s & 2s)
+              if (_anythingGoesMode || !is2024)
+                FilterChip(
+                  label: const Text('GWF 2014 (Reroll 1s & 2s)', style: TextStyle(fontSize: 11)),
+                  selected: attack.gwfVersion == GwfVersion.v2014Reroll,
+                  selectedColor: Colors.amber.withValues(alpha: 0.25),
+                  onSelected: (val) {
+                    _updateAttack(
+                      index,
+                      attack.copyWith(
+                        gwfVersion: val ? GwfVersion.v2014Reroll : GwfVersion.none,
+                      ),
+                    );
+                  },
                 ),
-                selected: attack.gwfVersion != GwfVersion.none,
-                onSelected: (val) {
-                  _updateAttack(
-                    index,
-                    attack.copyWith(
-                      gwfVersion: val
-                          ? (is2024 ? GwfVersion.v2024Floor3 : GwfVersion.v2014Reroll)
-                          : GwfVersion.none,
-                    ),
-                  );
-                },
-              ),
+
+              // GWF Style 2024 (1s & 2s ➔ 3)
+              if (_anythingGoesMode || is2024)
+                FilterChip(
+                  label: const Text('GWF 2024 (1s & 2s ➔ 3)', style: TextStyle(fontSize: 11)),
+                  selected: attack.gwfVersion == GwfVersion.v2024Floor3,
+                  selectedColor: Colors.cyan.withValues(alpha: 0.25),
+                  onSelected: (val) {
+                    _updateAttack(
+                      index,
+                      attack.copyWith(
+                        gwfVersion: val ? GwfVersion.v2024Floor3 : GwfVersion.none,
+                      ),
+                    );
+                  },
+                ),
 
               // Dueling (+2 dmg)
               FilterChip(
@@ -1297,7 +1333,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
               ),
 
               // 2024 Weapon Masteries
-              if (is2024) ...[
+              if (_anythingGoesMode || is2024) ...[
                 FilterChip(
                   label: const Text('Graze (Miss Dmg)', style: TextStyle(fontSize: 11)),
                   selected: attack.weaponMastery == WeaponMastery.graze,
