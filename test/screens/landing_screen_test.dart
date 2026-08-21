@@ -4,6 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/minion_tool_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/monster_codex_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
 
 void main() {
   Widget createTestableWidget(Widget child) {
@@ -12,11 +13,19 @@ void main() {
     );
   }
 
-  testWidgets('LandingScreen renders branding, headers, and individual tool cards', (WidgetTester tester) async {
+  testWidgets('LandingScreen renders branding, headers, and individual tool cards with DndGlyphs', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
     expect(find.text('DangerouslyNerdy 5e Toolkit'), findsOneWidget);
     expect(find.text('Select a Tool'), findsOneWidget);
+    expect(find.byType(DndGlyph), findsWidgets);
+
+    // Hero quick launch badges
+    expect(find.text('Bestiary Codex'), findsOneWidget);
+    expect(find.text('Magic Items'), findsOneWidget);
+    expect(find.text('Combat DPR'), findsOneWidget);
+    expect(find.text('Dice & Party'), findsOneWidget);
+    expect(find.text('Glyph Studio'), findsOneWidget);
 
     // Section headers
     expect(find.text('🔮 SPELL MINION COMPANIONS'), findsOneWidget);

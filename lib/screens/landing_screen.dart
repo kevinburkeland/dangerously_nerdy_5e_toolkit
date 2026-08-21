@@ -11,8 +11,14 @@ import '../widgets/interactive/pressable_card.dart';
 import '../widgets/dialogs/legal_dialogs.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
+import '../widgets/glyphs/glyph_tokens.dart';
 import '../widgets/room_banner_widget.dart';
+import 'dice_roller_screen.dart';
 import 'dm_reference_screen.dart';
+import 'dpr_calculator_screen.dart';
+import 'glyph_showcase_screen.dart';
+import 'item_compendium_screen.dart';
+import 'monster_codex_screen.dart';
 import 'settings_screen.dart';
 import 'spellbook_screen.dart';
 
@@ -218,6 +224,8 @@ class _LandingScreenState extends State<LandingScreen> {
                             height: 1.4,
                           ),
                         ),
+                        const SizedBox(height: 14),
+                        _buildHeroGlyphBadges(context, isDark),
                       ],
                     ),
                   ),
@@ -287,6 +295,12 @@ class _LandingScreenState extends State<LandingScreen> {
                     _buildSectionHeader(
                       '🔍 SEARCH RESULTS (${searchResults.length})',
                       theme.colorScheme.primary,
+                      glyph: DndGlyph.spell(
+                        school: SpellSchool.divination,
+                        level: 0,
+                        size: 20,
+                        isDarkMode: isDark,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     if (searchResults.isNotEmpty)
@@ -352,7 +366,15 @@ class _LandingScreenState extends State<LandingScreen> {
                   ] else ...[
                     // CATEGORY 1: GENERAL UTILITIES (CORE APP AT TOP)
                     _buildSectionHeader(
-                        '🎲 CORE UTILITIES', theme.colorScheme.primary),
+                      '🎲 CORE UTILITIES',
+                      theme.colorScheme.primary,
+                      glyph: DndGlyph.spell(
+                        school: SpellSchool.divination,
+                        level: 1,
+                        size: 20,
+                        isDarkMode: isDark,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -366,8 +388,16 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     // CATEGORY 2: TOOLS FOR NERDS (COMBAT MATH, THEORYCRAFT & DPS)
                     _buildSectionHeader(
-                        '🤓 TOOLS FOR NERDS',
-                        isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE)),
+                      '🤓 TOOLS FOR NERDS',
+                      isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE),
+                      glyph: DndGlyph.item(
+                        category: ItemCategory.weapon,
+                        rarity: ItemRarity.rare,
+                        damageAccent: DamageAccent.force,
+                        size: 20,
+                        isDarkMode: isDark,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -380,8 +410,16 @@ class _LandingScreenState extends State<LandingScreen> {
                     const SizedBox(height: 28),
 
                     // CATEGORY 3: SPELL MINION COMPANIONS (ANIMATE OBJECTS & CONJURE SPELLS)
-                    _buildSectionHeader('🔮 SPELL MINION COMPANIONS',
-                        theme.colorScheme.secondary),
+                    _buildSectionHeader(
+                      '🔮 SPELL MINION COMPANIONS',
+                      theme.colorScheme.secondary,
+                      glyph: DndGlyph.spell(
+                        school: SpellSchool.conjuration,
+                        level: 3,
+                        size: 20,
+                        isDarkMode: isDark,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -393,9 +431,17 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     const SizedBox(height: 28),
 
-                    // CATEGORY 3: MAGIC ITEMS & SUMMONING ARTIFACTS
-                    _buildSectionHeader('📯 MAGIC ITEM ROLLERS & MINIONS',
-                        isDark ? Colors.amberAccent : const Color(0xFFB45309)),
+                    // CATEGORY 4: MAGIC ITEMS & SUMMONING ARTIFACTS
+                    _buildSectionHeader(
+                      '📯 MAGIC ITEM ROLLERS & MINIONS',
+                      isDark ? Colors.amberAccent : const Color(0xFFB45309),
+                      glyph: DndGlyph.item(
+                        category: ItemCategory.wondrousItem,
+                        rarity: ItemRarity.rare,
+                        size: 20,
+                        isDarkMode: isDark,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -408,12 +454,19 @@ class _LandingScreenState extends State<LandingScreen> {
 
                     const SizedBox(height: 28),
 
-                    // CATEGORY 4: ART & DESIGN TOOLS (SUBSECTION AT BOTTOM)
+                    // CATEGORY 5: ART & DESIGN TOOLS (SUBSECTION AT BOTTOM)
                     _buildSectionHeader(
-                        '🎨 ART & DESIGN TOOLS',
-                        isDark
-                            ? const Color(0xFFC084FC)
-                            : const Color(0xFF7E22CE)),
+                      '🎨 ART & DESIGN TOOLS',
+                      isDark
+                          ? const Color(0xFFC084FC)
+                          : const Color(0xFF7E22CE),
+                      glyph: DndGlyph.spell(
+                        school: SpellSchool.divination,
+                        level: 9,
+                        size: 20,
+                        isDarkMode: isDark,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     _buildToolGrid(
                       context,
@@ -496,19 +549,176 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, Color color) {
+  Widget _buildHeroGlyphBadges(BuildContext context, bool isDark) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildQuickGlyphBadge(
+            context,
+            label: 'Spellbook',
+            glyph: DndGlyph.spell(
+              school: SpellSchool.evocation,
+              level: 3,
+              damageAccent: DamageAccent.fire,
+              size: 24,
+              isDarkMode: isDark,
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SpellbookScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
+            label: 'Bestiary Codex',
+            glyph: DndGlyph.monster(
+              creatureType: CreatureType.dragon,
+              crTier: 3,
+              actionRings: const [
+                ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
+              ],
+              size: 24,
+              isDarkMode: isDark,
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MonsterCodexScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
+            label: 'Magic Items',
+            glyph: DndGlyph.item(
+              category: ItemCategory.wondrousItem,
+              rarity: ItemRarity.veryRare,
+              requiresAttunement: true,
+              size: 24,
+              isDarkMode: isDark,
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ItemCompendiumScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
+            label: 'Combat DPR',
+            glyph: DndGlyph.item(
+              category: ItemCategory.weapon,
+              rarity: ItemRarity.rare,
+              damageAccent: DamageAccent.force,
+              size: 24,
+              isDarkMode: isDark,
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DprCalculatorScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
+            label: 'Dice & Party',
+            glyph: DndGlyph.spell(
+              school: SpellSchool.divination,
+              level: 0,
+              size: 24,
+              isDarkMode: isDark,
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
+            label: 'Glyph Studio',
+            glyph: DndGlyph.spell(
+              school: SpellSchool.divination,
+              level: 9,
+              size: 24,
+              isDarkMode: isDark,
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GlyphShowcaseScreen()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickGlyphBadge(
+    BuildContext context, {
+    required String label,
+    required Widget glyph,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () {
+        HapticService.selectionTick(context);
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            glyph,
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, Color color, {Widget? glyph}) {
     return Semantics(
       header: true,
       child: Padding(
         padding: const EdgeInsets.only(left: 4.0),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (glyph != null) ...[
+              glyph,
+              const SizedBox(width: 8),
+            ],
+            Flexible(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -559,7 +769,7 @@ class _LandingScreenState extends State<LandingScreen> {
           level: spell.level,
           actionRings: spell.getGlyphActionRings(DmRulesEdition.v2024),
           damageAccent: spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024),
-          size: 40,
+          size: 42,
           isDarkMode: isDark,
         );
       }
@@ -572,18 +782,122 @@ class _LandingScreenState extends State<LandingScreen> {
         orElse: () => null,
       );
       if (summonPreset != null) {
-        glyphWidget = summonPreset.buildGlyph(size: 40, isDarkMode: isDark);
+        glyphWidget = summonPreset.buildGlyph(size: 42, isDarkMode: isDark);
       }
     }
 
-    switch (item.id) {
-      case 'glyph_studio':
-        glyphWidget = DndGlyph.spell(
-          school: SpellSchool.divination,
-          level: 9,
-          size: 40,
-          isDarkMode: isDark,
-        );
+    if (glyphWidget == null) {
+      switch (item.id) {
+        case 'dice_roller':
+          glyphWidget = DndGlyph.spell(
+            school: SpellSchool.divination,
+            level: 0,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.legendary, label: 'Multiplayer Dice Rooms'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'dpr_calculator':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.weapon,
+            rarity: ItemRarity.veryRare,
+            damageAccent: DamageAccent.force,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.force, label: 'DPS & Graph'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'dm_screen':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.armor,
+            rarity: ItemRarity.rare,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.legendary, label: '2014 & 2024 Rules'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'srd_spellbook':
+          glyphWidget = DndGlyph.spell(
+            school: SpellSchool.evocation,
+            level: 3,
+            damageAccent: DamageAccent.fire,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Fireball & 2024 Diffs'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'monster_codex':
+          glyphWidget = DndGlyph.monster(
+            creatureType: CreatureType.dragon,
+            crTier: 3,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'SRD Bestiary'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'item_compendium':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.wondrousItem,
+            rarity: ItemRarity.legendary,
+            requiresAttunement: true,
+            damageAccent: DamageAccent.radiant,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.attunement, label: 'Attunement & Crafting'),
+              ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.radiant, label: 'Reliquary'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'glyph_studio':
+          glyphWidget = DndGlyph.spell(
+            school: SpellSchool.divination,
+            level: 9,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.legendary, label: 'Techno-Rune Studio'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'gray_bag':
+        case 'rust_bag':
+        case 'tan_bag':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.wondrousItem,
+            rarity: ItemRarity.uncommon,
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'horn_of_valhalla':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.wondrousItem,
+            rarity: ItemRarity.rare,
+            damageAccent: DamageAccent.slashing,
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'figurines_of_wondrous_power':
+          glyphWidget = DndGlyph.item(
+            category: ItemCategory.wondrousItem,
+            rarity: ItemRarity.rare,
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+      }
     }
 
     return _buildToolCard(
