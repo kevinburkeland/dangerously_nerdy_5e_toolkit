@@ -261,19 +261,19 @@ class ItemCard extends StatelessWidget {
 
   Widget _buildPriceBadge(BuildContext context, String price) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final goldColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+    final coinColor = getCurrencyColor(price, isDark);
     return Container(
       constraints: const BoxConstraints(maxWidth: 220),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: goldColor.withValues(alpha: 0.12),
+        color: coinColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: goldColor.withValues(alpha: 0.4)),
+        border: Border.all(color: coinColor.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.monetization_on_outlined, size: 11, color: goldColor),
+          Icon(Icons.monetization_on_outlined, size: 11, color: coinColor),
           const SizedBox(width: 3),
           Flexible(
             child: Text(
@@ -283,7 +283,7 @@ class ItemCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,
-                color: goldColor,
+                color: coinColor,
               ),
             ),
           ),

@@ -168,5 +168,18 @@ void main() {
           .toList();
       expect(potionItems, isNotEmpty);
     });
+
+    test('CurrencyCoinType accurately resolves and color-codes cp, sp, ep, gp, pp', () {
+      expect(CurrencyCoinType.resolve('5 cp'), equals(CurrencyCoinType.cp));
+      expect(CurrencyCoinType.resolve('1 sp'), equals(CurrencyCoinType.sp));
+      expect(CurrencyCoinType.resolve('5 ep'), equals(CurrencyCoinType.ep));
+      expect(CurrencyCoinType.resolve('500 gp'), equals(CurrencyCoinType.gp));
+      expect(CurrencyCoinType.resolve('10 pp'), equals(CurrencyCoinType.pp));
+
+      expect(getCurrencyColor('5 cp', true), equals(const Color(0xFFFB923C)));
+      expect(getCurrencyColor('1 sp', true), equals(const Color(0xFF94A3B8)));
+      expect(getCurrencyColor('500 gp', true), equals(const Color(0xFFFBBF24)));
+      expect(getCurrencyColor('10 pp', true), equals(const Color(0xFF38BDF8)));
+    });
   });
 }

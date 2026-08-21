@@ -142,7 +142,7 @@ class _ItemComparisonDialogState extends State<ItemComparisonDialog> {
                           Text(
                             item.getEffectivePrice(_activeEdition),
                             style: TextStyle(
-                              color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
+                              color: getCurrencyColor(item.getEffectivePrice(_activeEdition), isDark),
                               fontWeight: FontWeight.bold,
                               fontSize: 11.5,
                             ),

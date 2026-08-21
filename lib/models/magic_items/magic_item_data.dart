@@ -984,3 +984,46 @@ class ItemCraftingDetails {
   });
 }
 
+/// Standard 5e D&D Currency types (cp, sp, ep, gp, pp) with distinct color coding.
+enum CurrencyCoinType {
+  cp('Copper', 'cp', Color(0xFFFB923C), Color(0xFFC2410C)),
+  sp('Silver', 'sp', Color(0xFF94A3B8), Color(0xFF475569)),
+  ep('Electrum', 'ep', Color(0xFFFDE047), Color(0xFF854D0E)),
+  gp('Gold', 'gp', Color(0xFFFBBF24), Color(0xFFB45309)),
+  pp('Platinum', 'pp', Color(0xFF38BDF8), Color(0xFF0369A1));
+
+  final String displayName;
+  final String suffix;
+  final Color darkColor;
+  final Color lightColor;
+
+  const CurrencyCoinType(this.displayName, this.suffix, this.darkColor, this.lightColor);
+
+  Color getLegibleColor(bool isDarkMode) => isDarkMode ? darkColor : lightColor;
+
+  /// Resolves the currency coin type from a price string (e.g. "1 sp", "50 cp", "100 gp", "10 pp").
+  static CurrencyCoinType resolve(String text) {
+    final lower = text.toLowerCase().trim();
+    final tokens = lower.split(RegExp(r'[^a-zA-Z]+'));
+    if (tokens.contains('cp') || lower.endsWith('cp') || lower.contains('copper')) {
+      return CurrencyCoinType.cp;
+    }
+    if (tokens.contains('sp') || lower.endsWith('sp') || lower.contains('silver')) {
+      return CurrencyCoinType.sp;
+    }
+    if (tokens.contains('ep') || lower.endsWith('ep') || lower.contains('electrum')) {
+      return CurrencyCoinType.ep;
+    }
+    if (tokens.contains('pp') || lower.endsWith('pp') || lower.contains('platinum')) {
+      return CurrencyCoinType.pp;
+    }
+    return CurrencyCoinType.gp;
+  }
+}
+
+/// Resolves the theme-aware accent color for a currency or price string (cp, sp, ep, gp, pp).
+Color getCurrencyColor(String priceText, bool isDarkMode) {
+  return CurrencyCoinType.resolve(priceText).getLegibleColor(isDarkMode);
+}
+
+

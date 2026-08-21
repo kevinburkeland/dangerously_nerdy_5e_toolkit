@@ -95,7 +95,8 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
     final rarityColor = item.rarity.getLegibleColor(isDark);
     final categoryColor = item.category.getLegibleColor(isDark);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
-    final goldColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+    final priceStr = item.getEffectivePrice(_activeEdition);
+    final priceColor = getCurrencyColor(priceStr, isDark);
     final crafting = item.getCraftingDetails(_activeEdition);
     final hasDiff = item.isChangedIn2024;
 
@@ -170,21 +171,21 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                             decoration: BoxDecoration(
-                              color: goldColor.withValues(alpha: 0.12),
+                              color: priceColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: goldColor.withValues(alpha: 0.4)),
+                              border: Border.all(color: priceColor.withValues(alpha: 0.4)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.monetization_on_outlined, size: 12, color: goldColor),
+                                Icon(Icons.monetization_on_outlined, size: 12, color: priceColor),
                                 const SizedBox(width: 3),
                                 Text(
-                                  item.getEffectivePrice(_activeEdition),
+                                  priceStr,
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    color: goldColor,
+                                    color: priceColor,
                                   ),
                                 ),
                               ],
@@ -251,8 +252,8 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildRulesTab(context, item, rules, isDark, rarityColor, categoryColor, goldColor),
-                  _buildCraftingTab(context, item, crafting, isDark, rarityColor, goldColor),
+                  _buildRulesTab(context, item, rules, isDark, rarityColor, categoryColor, priceColor),
+                  _buildCraftingTab(context, item, crafting, isDark, rarityColor, priceColor),
                   if (hasDiff)
                     _buildDiffsTab(context, item, isDark, rarityColor),
                 ],
@@ -310,7 +311,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
     bool isDark,
     Color rarityColor,
     Color categoryColor,
-    Color goldColor,
+    Color priceColor,
   ) {
     final theme = Theme.of(context);
 
@@ -328,7 +329,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
             ),
             child: Column(
               children: [
-                _buildDetailRow('Market Price', item.getEffectivePrice(_activeEdition), color: goldColor),
+                _buildDetailRow('Market Price', item.getEffectivePrice(_activeEdition), color: priceColor),
                 _buildDetailRow('Category', item.category.displayName, color: categoryColor),
                 _buildDetailRow('Rarity', item.rarity.displayName, color: rarityColor),
                 _buildDetailRow(

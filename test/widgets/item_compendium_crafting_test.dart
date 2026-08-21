@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/item_compendium/item_card.dart';
@@ -143,6 +142,25 @@ void main() {
 
       expect(find.text('Herbalism Kit'), findsWidgets);
       expect(find.textContaining('Consumable half-cost'), findsWidgets);
+    });
+
+    testWidgets('ItemCard renders silver (sp) price badge with silver color coding', (tester) async {
+      final club = MagicItemLibrary.findById('weapon_club')!;
+      expect(club.getEffectivePrice(), equals('1 sp'));
+
+      await tester.pumpWidget(
+        buildTestDialog(
+          child: ItemCard(
+            item: club,
+            isPinned: false,
+            onTogglePin: () {},
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 sp'), findsOneWidget);
     });
   });
 }
