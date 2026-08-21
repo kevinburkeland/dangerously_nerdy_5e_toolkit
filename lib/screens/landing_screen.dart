@@ -370,6 +370,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       glyph: DndGlyph.spell(
                         school: SpellSchool.divination,
                         level: 1,
+                        glyphColor: theme.colorScheme.primary,
                         size: 20,
                         isDarkMode: isDark,
                       ),
@@ -393,6 +394,7 @@ class _LandingScreenState extends State<LandingScreen> {
                         category: ItemCategory.weapon,
                         rarity: ItemRarity.rare,
                         damageAccent: DamageAccent.force,
+                        glyphColor: isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE),
                         size: 20,
                         isDarkMode: isDark,
                       ),
@@ -415,6 +417,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       glyph: DndGlyph.spell(
                         school: SpellSchool.conjuration,
                         level: 3,
+                        glyphColor: theme.colorScheme.secondary,
                         size: 20,
                         isDarkMode: isDark,
                       ),
@@ -437,6 +440,7 @@ class _LandingScreenState extends State<LandingScreen> {
                       glyph: DndGlyph.item(
                         category: ItemCategory.wondrousItem,
                         rarity: ItemRarity.rare,
+                        glyphColor: isDark ? Colors.amberAccent : const Color(0xFFB45309),
                         size: 20,
                         isDarkMode: isDark,
                       ),
@@ -462,6 +466,9 @@ class _LandingScreenState extends State<LandingScreen> {
                       glyph: DndGlyph.spell(
                         school: SpellSchool.divination,
                         level: 9,
+                        glyphColor: isDark
+                            ? const Color(0xFFC084FC)
+                            : const Color(0xFF7E22CE),
                         size: 20,
                         isDarkMode: isDark,
                       ),
@@ -560,6 +567,7 @@ class _LandingScreenState extends State<LandingScreen> {
               school: SpellSchool.evocation,
               level: 3,
               damageAccent: DamageAccent.fire,
+              glyphColor: Colors.purpleAccent,
               size: 24,
               isDarkMode: isDark,
             ),
@@ -575,6 +583,7 @@ class _LandingScreenState extends State<LandingScreen> {
             glyph: DndGlyph.monster(
               creatureType: CreatureType.dragon,
               crTier: 3,
+              glyphColor: Colors.greenAccent,
               actionRings: const [
                 ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
               ],
@@ -594,6 +603,7 @@ class _LandingScreenState extends State<LandingScreen> {
               category: ItemCategory.wondrousItem,
               rarity: ItemRarity.veryRare,
               requiresAttunement: true,
+              glyphColor: Colors.tealAccent,
               size: 24,
               isDarkMode: isDark,
             ),
@@ -610,6 +620,7 @@ class _LandingScreenState extends State<LandingScreen> {
               category: ItemCategory.weapon,
               rarity: ItemRarity.rare,
               damageAccent: DamageAccent.force,
+              glyphColor: Colors.cyanAccent,
               size: 24,
               isDarkMode: isDark,
             ),
@@ -625,6 +636,7 @@ class _LandingScreenState extends State<LandingScreen> {
             glyph: DndGlyph.spell(
               school: SpellSchool.divination,
               level: 0,
+              glyphColor: Colors.cyanAccent,
               size: 24,
               isDarkMode: isDark,
             ),
@@ -640,6 +652,7 @@ class _LandingScreenState extends State<LandingScreen> {
             glyph: DndGlyph.spell(
               school: SpellSchool.divination,
               level: 9,
+              glyphColor: const Color(0xFFC084FC),
               size: 24,
               isDarkMode: isDark,
             ),
@@ -766,6 +779,7 @@ class _LandingScreenState extends State<LandingScreen> {
         glyphWidget = DndGlyph.spell(
           school: spell.getSchool(DmRulesEdition.v2024),
           level: spell.level,
+          glyphColor: item.accentColor,
           actionRings: spell.getGlyphActionRings(DmRulesEdition.v2024),
           damageAccent: spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024),
           size: 42,
@@ -781,7 +795,11 @@ class _LandingScreenState extends State<LandingScreen> {
         orElse: () => null,
       );
       if (summonPreset != null) {
-        glyphWidget = summonPreset.buildGlyph(size: 42, isDarkMode: isDark);
+        glyphWidget = summonPreset.buildGlyph(
+          size: 42,
+          isDarkMode: isDark,
+          glyphColor: item.accentColor,
+        );
       }
     }
 
@@ -791,6 +809,7 @@ class _LandingScreenState extends State<LandingScreen> {
           glyphWidget = DndGlyph.spell(
             school: SpellSchool.divination,
             level: 0,
+            glyphColor: item.accentColor,
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.legendary, label: 'Multiplayer Dice Rooms'),
             ],
@@ -803,6 +822,7 @@ class _LandingScreenState extends State<LandingScreen> {
             category: ItemCategory.weapon,
             rarity: ItemRarity.veryRare,
             damageAccent: DamageAccent.force,
+            glyphColor: item.accentColor,
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.force, label: 'DPS & Graph'),
             ],
@@ -814,6 +834,7 @@ class _LandingScreenState extends State<LandingScreen> {
           glyphWidget = DndGlyph.item(
             category: ItemCategory.armor,
             rarity: ItemRarity.rare,
+            glyphColor: item.accentColor,
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.legendary, label: '2014 & 2024 Rules'),
             ],
@@ -825,6 +846,7 @@ class _LandingScreenState extends State<LandingScreen> {
           glyphWidget = DndGlyph.spell(
             school: SpellSchool.evocation,
             level: 3,
+            glyphColor: item.accentColor,
             damageAccent: DamageAccent.fire,
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'Fireball & 2024 Diffs'),
@@ -837,6 +859,7 @@ class _LandingScreenState extends State<LandingScreen> {
           glyphWidget = DndGlyph.monster(
             creatureType: CreatureType.dragon,
             crTier: 3,
+            glyphColor: item.accentColor,
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire, label: 'SRD Bestiary'),
             ],
@@ -849,6 +872,7 @@ class _LandingScreenState extends State<LandingScreen> {
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.legendary,
             requiresAttunement: true,
+            glyphColor: item.accentColor,
             damageAccent: DamageAccent.radiant,
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.attunement, label: 'Attunement & Crafting'),
@@ -862,6 +886,7 @@ class _LandingScreenState extends State<LandingScreen> {
           glyphWidget = DndGlyph.spell(
             school: SpellSchool.divination,
             level: 9,
+            glyphColor: item.accentColor,
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.legendary, label: 'Techno-Rune Studio'),
             ],
@@ -875,6 +900,7 @@ class _LandingScreenState extends State<LandingScreen> {
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.uncommon,
+            glyphColor: item.accentColor,
             size: 42,
             isDarkMode: isDark,
           );
@@ -884,6 +910,7 @@ class _LandingScreenState extends State<LandingScreen> {
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.rare,
             damageAccent: DamageAccent.slashing,
+            glyphColor: item.accentColor,
             size: 42,
             isDarkMode: isDark,
           );
@@ -893,6 +920,7 @@ class _LandingScreenState extends State<LandingScreen> {
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.rare,
             damageAccent: DamageAccent.slashing,
+            glyphColor: item.accentColor,
             size: 42,
             isDarkMode: isDark,
           );
@@ -902,6 +930,7 @@ class _LandingScreenState extends State<LandingScreen> {
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.veryRare,
             damageAccent: DamageAccent.slashing,
+            glyphColor: item.accentColor,
             size: 42,
             isDarkMode: isDark,
           );
@@ -911,6 +940,7 @@ class _LandingScreenState extends State<LandingScreen> {
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.legendary,
             damageAccent: DamageAccent.slashing,
+            glyphColor: item.accentColor,
             size: 42,
             isDarkMode: isDark,
           );
@@ -919,6 +949,7 @@ class _LandingScreenState extends State<LandingScreen> {
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
             rarity: ItemRarity.rare,
+            glyphColor: item.accentColor,
             size: 42,
             isDarkMode: isDark,
           );

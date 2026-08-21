@@ -52,6 +52,7 @@ class DndGlyph extends StatefulWidget {
     int level = 0,
     List<ActionTraitRing>? actionRings,
     DamageAccent? damageAccent,
+    Color? glyphColor,
     double size = 32.0,
     bool? isDarkMode,
     bool isActive = false,
@@ -67,7 +68,11 @@ class DndGlyph extends StatefulWidget {
             : const <ActionTraitRing>[]);
 
     final effectiveTheme = themeData ??
-        GlyphThemeData.fromSchool(school, shapeOverride: frameShapeOverride);
+        GlyphThemeData.fromSchool(
+          school,
+          primaryColorOverride: glyphColor,
+          shapeOverride: frameShapeOverride,
+        );
 
     return DndGlyph._(
       key: key,
@@ -93,6 +98,7 @@ class DndGlyph extends StatefulWidget {
     int crTier = 1,
     List<ActionTraitRing>? actionRings,
     ActionBadge? actionBadge,
+    Color? glyphColor,
     double size = 32.0,
     bool? isDarkMode,
     bool isActive = false,
@@ -105,8 +111,11 @@ class DndGlyph extends StatefulWidget {
             : const <ActionTraitRing>[]);
 
     final effectiveTheme = themeData ??
-        GlyphThemeData.fromCreature(creatureType,
-            shapeOverride: frameShapeOverride);
+        GlyphThemeData.fromCreature(
+          creatureType,
+          primaryColorOverride: glyphColor,
+          shapeOverride: frameShapeOverride,
+        );
 
     return DndGlyph._(
       key: key,

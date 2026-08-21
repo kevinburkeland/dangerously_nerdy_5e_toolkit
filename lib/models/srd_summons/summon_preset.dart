@@ -128,12 +128,17 @@ extension SummonPresetGlyphExt on SummonPreset {
     return rings;
   }
 
-  Widget buildGlyph({double size = 40, bool isDarkMode = true}) {
+  Widget buildGlyph({
+    double size = 40,
+    bool isDarkMode = true,
+    Color? glyphColor,
+  }) {
     if (category == SummonCategory.magicItem) {
       return DndGlyph.item(
         category: glyphItemCategory,
         rarity: glyphItemRarity,
         actionRings: glyphActionRings,
+        glyphColor: glyphColor,
         size: size,
         isDarkMode: isDarkMode,
       );
@@ -142,6 +147,7 @@ extension SummonPresetGlyphExt on SummonPreset {
       school: glyphSchool,
       level: glyphSpellLevel,
       actionRings: glyphActionRings,
+      glyphColor: glyphColor,
       size: size,
       isDarkMode: isDarkMode,
     );

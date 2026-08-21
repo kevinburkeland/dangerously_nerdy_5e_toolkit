@@ -505,24 +505,40 @@ class GlyphThemeData {
     required this.frameShape,
   });
 
-  factory GlyphThemeData.fromSchool(SpellSchool school,
-      {GlyphFrameShape? shapeOverride}) {
+  factory GlyphThemeData.fromSchool(
+    SpellSchool school, {
+    Color? primaryColorOverride,
+    GlyphFrameShape? shapeOverride,
+  }) {
+    final effectivePrimary = primaryColorOverride ?? school.primaryColor;
     return GlyphThemeData(
-      primary: school.primaryColor,
-      lightFill: school.lightFillTint,
-      darkFill: school.darkFillTint,
-      border: school.primaryColor,
+      primary: effectivePrimary,
+      lightFill: primaryColorOverride != null
+          ? primaryColorOverride.withValues(alpha: 0.12)
+          : school.lightFillTint,
+      darkFill: primaryColorOverride != null
+          ? primaryColorOverride.withValues(alpha: 0.20)
+          : school.darkFillTint,
+      border: effectivePrimary,
       frameShape: shapeOverride ?? school.frameShape,
     );
   }
 
-  factory GlyphThemeData.fromCreature(CreatureType type,
-      {GlyphFrameShape? shapeOverride}) {
+  factory GlyphThemeData.fromCreature(
+    CreatureType type, {
+    Color? primaryColorOverride,
+    GlyphFrameShape? shapeOverride,
+  }) {
+    final effectivePrimary = primaryColorOverride ?? type.primaryColor;
     return GlyphThemeData(
-      primary: type.primaryColor,
-      lightFill: type.lightFillTint,
-      darkFill: type.darkFillTint,
-      border: type.primaryColor,
+      primary: effectivePrimary,
+      lightFill: primaryColorOverride != null
+          ? primaryColorOverride.withValues(alpha: 0.12)
+          : type.lightFillTint,
+      darkFill: primaryColorOverride != null
+          ? primaryColorOverride.withValues(alpha: 0.20)
+          : type.darkFillTint,
+      border: effectivePrimary,
       frameShape: shapeOverride ?? type.frameShape,
     );
   }
