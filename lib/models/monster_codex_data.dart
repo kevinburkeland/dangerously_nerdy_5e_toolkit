@@ -152,21 +152,74 @@ class MonsterItem {
     if (cached != null) return cached;
 
     final sb = getStatBlock(edition);
-    final attacks = sb.extractDprAttacks();
+    final allAttacks = sb.extractDprAttacks();
     final adv = sb.hasPackTactics ? AdvantageType.advantage : AdvantageType.normal;
 
-    double total = 0.0;
-    for (final attack in attacks) {
-      if (attack.attacksPerRound > 0) {
+    final turnAttacks = allAttacks.where((a) => !a.isLegendaryAction).toList();
+    final legAttacks = allAttacks.where((a) => a.isLegendaryAction).toList();
+
+    // 1. Calculate standard Multiattack / Turn DPR
+    double multiattackDpr = 0.0;
+    for (final attack in turnAttacks) {
+      if (attack.rechargeRoll == null && attack.attacksPerRound > 0) {
         final pt = DprCalculatorEngine.calculateSingleAttackDpr(
           attack.copyWith(attacksPerRound: 1),
           targetAc,
           adv,
         );
-        total += pt.dpr * attack.attacksPerRound;
+        multiattackDpr += pt.dpr * attack.attacksPerRound;
       }
     }
 
+    // 2. Check for recharge actions (e.g. Dragon Breath Recharge 5-6 or Recharge 6)
+    final rechargeActions = turnAttacks.where((a) => a.rechargeRoll != null).toList();
+    double turnDpr = multiattackDpr;
+
+    if (rechargeActions.isNotEmpty) {
+      DprAttackAction? bestRecharge;
+      double maxRechargeDpr = 0.0;
+      for (final r in rechargeActions) {
+        final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+          r.copyWith(attacksPerRound: 1),
+          targetAc,
+          adv,
+        );
+        if (pt.dpr > maxRechargeDpr) {
+          maxRechargeDpr = pt.dpr;
+          bestRecharge = r;
+        }
+      }
+
+      if (bestRecharge != null && maxRechargeDpr > multiattackDpr) {
+        // 3-round amortization (55.6% for Recharge 5-6, 44.4% for Recharge 6)
+        final freq = bestRecharge.rechargeRoll == 5 ? (1.667 / 3.0) : (1.333 / 3.0);
+        turnDpr = (maxRechargeDpr * freq) + (multiattackDpr * (1.0 - freq));
+      }
+    }
+
+    // 3. Evaluate Legendary Actions (3 actions per round budget)
+    double legendaryDpr = 0.0;
+    if (legAttacks.isNotEmpty) {
+      final scoredLeg = <({DprAttackAction attack, double dpr, int cost})>[];
+      for (final la in legAttacks) {
+        final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+          la.copyWith(attacksPerRound: 1),
+          targetAc,
+          adv,
+        );
+        scoredLeg.add((attack: la, dpr: pt.dpr, cost: la.legendaryCost > 0 ? la.legendaryCost : 1));
+      }
+
+      double bestLegSum = 0.0;
+      for (final option in scoredLeg) {
+        final uses = 3 ~/ option.cost;
+        final sum = option.dpr * uses;
+        if (sum > bestLegSum) bestLegSum = sum;
+      }
+      legendaryDpr = bestLegSum;
+    }
+
+    final total = turnDpr + legendaryDpr;
     _dprCache[cacheKey] = total;
     return total;
   }

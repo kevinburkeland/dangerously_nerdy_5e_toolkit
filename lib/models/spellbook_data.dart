@@ -427,6 +427,15 @@ class SpellbookLibrary {
     }
   }
 
+  static SpellItem? getSpellByName(String name) {
+    final lower = name.trim().toLowerCase();
+    try {
+      return allSpells.firstWhere((s) => s.name.toLowerCase() == lower);
+    } catch (_) {
+      return null;
+    }
+  }
+
   static List<SpellItem> getChangedSpells() {
     return allSpells.where((s) => s.isChangedIn2024).toList();
   }

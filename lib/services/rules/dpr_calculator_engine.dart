@@ -129,7 +129,70 @@ class DprCalculatorEngine {
     AdvantageType advantage, {
     int proficiencyBonus = 2,
     bool hasHalflingLuck = false,
+    int? targetSaveBonusOverride,
   }) {
+    // Utility / non-damaging actions
+    if (attack.deliveryType == DprActionDeliveryType.utility ||
+        (attack.diceCount == 0 &&
+            attack.secondaryDiceCount == 0 &&
+            attack.damageBonus == 0 &&
+            attack.secondaryDamageBonus == 0 &&
+            !attack.hasDueling &&
+            !attack.hasThrownWeapon &&
+            attack.gwmMode == GwmMode.none)) {
+      return DprPoint(
+        ac: targetAc,
+        dpr: 0.0,
+        hitChance: 0.0,
+        critChance: 0.0,
+        expectedDamageOnHit: 0.0,
+        expectedDamageOnCrit: 0.0,
+        expectedDamageOnMiss: 0.0,
+      );
+    }
+
+    // Saving throw actions (Spells, Dragon Breaths, Save Cantrips)
+    if (attack.deliveryType == DprActionDeliveryType.savingThrow) {
+      final saveDc = attack.saveDc ?? (8 + proficiencyBonus + math.max(0, attack.damageBonus));
+      final targetSaveBonus = targetSaveBonusOverride ?? ((targetAc - 13).clamp(-2, 12));
+
+      final targetHasAdv = advantage == AdvantageType.disadvantage;
+      final targetHasDisadv = advantage == AdvantageType.advantage || advantage == AdvantageType.elvenAccuracy;
+
+      final failChance = calculateSaveFailureProbability(
+        saveDc: saveDc,
+        targetSaveBonus: targetSaveBonus,
+        targetHasAdvantage: targetHasAdv,
+        targetHasDisadvantage: targetHasDisadv,
+      );
+      final passChance = 1.0 - failChance;
+
+      final primaryDieEv = expectedDieValue(attack.diceSides, gwf: attack.gwfVersion);
+      final secDieEv = expectedDieValue(attack.secondaryDiceSides);
+      final fullDamage = (attack.diceCount * primaryDieEv) +
+          attack.damageBonus +
+          (attack.secondaryDiceCount * secDieEv) +
+          attack.secondaryDamageBonus;
+
+      final damagePerTarget = attack.halfDamageOnSave
+          ? (fullDamage * failChance) + ((fullDamage * 0.5) * passChance)
+          : (fullDamage * failChance);
+
+      final targets = attack.isAoe ? math.max(1, attack.targetCount) : 1;
+      final totalDpr = damagePerTarget * targets * attack.attacksPerRound;
+
+      return DprPoint(
+        ac: targetAc,
+        dpr: totalDpr,
+        hitChance: failChance, // Probability target fails save
+        critChance: 0.0,
+        expectedDamageOnHit: fullDamage,
+        expectedDamageOnCrit: fullDamage,
+        expectedDamageOnMiss: attack.halfDamageOnSave ? (fullDamage * 0.5) : 0.0,
+      );
+    }
+
+    // Standard attack roll actions (to-hit vs target AC)
     final effBonus = calculateEffectiveAttackBonus(attack);
     final luck = hasHalflingLuck || attack.hasHalflingLuck;
     final totalHitChance = calculateHitProbability(effBonus, targetAc, advantage, hasHalflingLuck: luck);
@@ -181,9 +244,11 @@ class DprCalculatorEngine {
       missDamage = math.max(0, attack.abilityModForGraze).toDouble();
     }
 
-    final dpr = (regularHitChance * regularHitDamage) +
-        (critChance * critDamage) +
-        (missChance * missDamage);
+    final targetMult = attack.isAoe ? math.max(1, attack.targetCount) : 1;
+    final dpr = ((regularHitChance * regularHitDamage) +
+            (critChance * critDamage) +
+            (missChance * missDamage)) *
+        targetMult;
 
     return DprPoint(
       ac: targetAc,

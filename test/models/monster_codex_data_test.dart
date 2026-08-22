@@ -223,9 +223,38 @@ void main() {
         expect(totalActiveAttacks, 2,
             reason: 'Oni makes exactly 2 attacks (either 2 claws or 2 glaive), not 4 attacks!');
       }
+
+      final youngRed = MonsterCodexLibrary.getMonsterByName('Young Red Dragon');
+      expect(youngRed, isNotNull);
+      if (youngRed != null) {
+        final attacks = youngRed.statBlock2014.extractDprAttacks();
+        final breath = attacks.firstWhere((a) => a.name.toLowerCase().contains('fire breath'));
+        expect(breath.deliveryType, equals(DprActionDeliveryType.savingThrow));
+        expect(breath.saveDc, equals(17));
+        expect(breath.rechargeRoll, equals(5));
+        expect(breath.isAoe, isTrue);
+
+        final baselineDpr = youngRed.calculateBaselineDpr();
+        expect(baselineDpr > 40 && baselineDpr < 90, isTrue,
+            reason: 'Young Red Dragon baseline DPR ($baselineDpr) amortizes 16d6 breath (55.6%) + Multiattack (44.4%)');
+      }
+
+      final adultRed = MonsterCodexLibrary.getMonsterByName('Adult Red Dragon');
+      expect(adultRed, isNotNull);
+      if (adultRed != null) {
+        final attacks = adultRed.statBlock2014.extractDprAttacks();
+        final legAttacks = attacks.where((a) => a.isLegendaryAction).toList();
+        expect(legAttacks.isNotEmpty, isTrue,
+            reason: 'Adult Red Dragon has legendary actions extracted');
+
+        final totalDpr = adultRed.calculateBaselineDpr();
+        expect(totalDpr > 80 && totalDpr < 160, isTrue,
+            reason: 'Adult Red Dragon total DPR ($totalDpr) includes turn routine + 3 legendary actions');
+      }
     });
   });
 }
+
 
 
 

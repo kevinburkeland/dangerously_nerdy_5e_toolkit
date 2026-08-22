@@ -351,6 +351,70 @@ void main() {
       expect(vexPt.dpr, greaterThan(normalPt.dpr));
     });
 
+    test('Saving Throw AoE damage accurately calculates half-on-save and target multipliers', () {
+      // Fireball spell: 8d6 fire (28 avg damage), DC 15 Dex save for half
+      // Against target with +2 Dex save: target needs 13+ to pass (40% pass, 60% fail)
+      // Per target damage = (28 * 0.60) + ((28 * 0.5) * 0.40) = 16.8 + 5.6 = 22.4 damage
+      // Against 2 targets = 22.4 * 2 = 44.8 DPR
+      const fireball = DprAttackAction(
+        id: 'fireball_spell',
+        name: 'Fireball',
+        attackBonus: 0,
+        diceCount: 8,
+        diceSides: 6,
+        damageBonus: 0,
+        damageType: 'fire',
+        deliveryType: DprActionDeliveryType.savingThrow,
+        saveDc: 15,
+        saveAbility: 'dex',
+        halfDamageOnSave: true,
+        isAoe: true,
+        targetCount: 2,
+      );
+
+      final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+        fireball,
+        15,
+        AdvantageType.normal,
+        targetSaveBonusOverride: 2,
+      );
+
+      expect(pt.dpr, closeTo(44.8, 0.05));
+      expect(pt.hitChance, closeTo(0.60, 0.01)); // 60% fail rate
+      expect(pt.expectedDamageOnHit, closeTo(28.0, 0.01));
+      expect(pt.expectedDamageOnMiss, closeTo(14.0, 0.01)); // half on successful save
+    });
+
+    test('Save-or-suck (no half damage) deals 0 damage on successful save', () {
+      // Cantrip: Sacred Flame / Toll the Dead (1d8 radiant, DC 15 Dex, no half damage on save)
+      // Fail chance = 0.60 vs +2 save (needs 13+ to pass). Damage on fail = 4.5.
+      // Expected DPR = 4.5 * 0.60 = 2.70.
+      const sacredFlame = DprAttackAction(
+        id: 'sacred_flame',
+        name: 'Sacred Flame',
+        attackBonus: 0,
+        diceCount: 1,
+        diceSides: 8,
+        damageBonus: 0,
+        damageType: 'radiant',
+        deliveryType: DprActionDeliveryType.savingThrow,
+        saveDc: 15,
+        halfDamageOnSave: false,
+        isAoe: false,
+        targetCount: 1,
+      );
+
+      final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+        sacredFlame,
+        15,
+        AdvantageType.normal,
+        targetSaveBonusOverride: 2,
+      );
+
+      expect(pt.dpr, closeTo(2.70, 0.01));
+      expect(pt.expectedDamageOnMiss, equals(0.0));
+    });
+
     test('DprMonsterAcPreset contains all standard CR benchmarks', () {
       expect(DprMonsterAcPreset.standardPresets.length, greaterThanOrEqualTo(8));
       final cr5 = DprMonsterAcPreset.standardPresets.firstWhere((p) => p.crDisplay == '5');
@@ -363,4 +427,5 @@ void main() {
     });
   });
 }
+
 

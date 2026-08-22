@@ -239,7 +239,14 @@ class DprWeaponPreset {
   ];
 }
 
-/// Represents a single weapon attack or action profile in a combatant's turn.
+/// Delivery mode of an offensive action (Attack Roll vs Saving Throw vs Utility).
+enum DprActionDeliveryType {
+  attackRoll,
+  savingThrow,
+  utility,
+}
+
+/// Represents a single weapon attack, offensive spell, or action profile in a combatant's turn.
 class DprAttackAction {
   final String id;
   final String name;
@@ -248,6 +255,23 @@ class DprAttackAction {
   final int diceSides;
   final int damageBonus;
   final String damageType;
+
+  // Delivery Mode & Saving Throw Mechanics
+  final DprActionDeliveryType deliveryType;
+  final String? saveAbility; // 'str', 'dex', 'con', 'int', 'wis', 'cha'
+  final int? saveDc;
+  final bool halfDamageOnSave; // true = half damage on save, false = no damage on save
+
+  // Area of Effect & Target Scaling
+  final bool isAoe;
+  final int targetCount; // default 1 for single-target, 2 for standard 5e DMG AoE assumptions
+
+  // Recharge & Action Horizons (e.g. Recharge 5-6 -> 5, Recharge 6 -> 6)
+  final int? rechargeRoll;
+
+  // Legendary Actions
+  final bool isLegendaryAction;
+  final int legendaryCost; // 1, 2, or 3 actions
 
   // Secondary / Rider Damage (e.g. Hunter's Mark, Smite, Hex, Poison)
   final int secondaryDiceCount;
@@ -258,26 +282,26 @@ class DprAttackAction {
   // Feats, Invocations & Fighting Styles
   final GwmMode gwmMode;
   final GwfVersion gwfVersion;
-  final bool hasDueling;          // +2 damage on 1H melee
-  final bool hasArchery;          // +2 to-hit on ranged
-  final bool hasThrownWeapon;     // +2 damage on thrown
+  final bool hasDueling; // +2 damage on 1H melee
+  final bool hasArchery; // +2 to-hit on ranged
+  final bool hasThrownWeapon; // +2 damage on thrown
   final bool isOffhandWithoutTwf; // no ability mod to damage
-  final bool hasAgonizingBlast;   // adds ability modifier to cantrip / Eldritch Blast damage
+  final bool hasAgonizingBlast; // adds ability modifier to cantrip / Eldritch Blast damage
   final int abilityModForAgonizing;
-  final bool hasHalflingLuck;     // rerolls natural 1s on attack rolls
+  final bool hasHalflingLuck; // rerolls natural 1s on attack rolls
 
   // Weapon Mastery
   final WeaponMastery weaponMastery;
-  final int abilityModForGraze;   // Used if Graze mastery is active
+  final int abilityModForGraze; // Used if Graze mastery is active
 
   // Critical Hit Modifiers
-  final int critThreshold;        // 20 for standard, 19 for Champion, 18 for Superior
-  final int extraCritDiceCount;   // +1 for Half-Orc Savage Attacks / Brutal Critical
+  final int critThreshold; // 20 for standard, 19 for Champion, 18 for Superior
+  final int extraCritDiceCount; // +1 for Half-Orc Savage Attacks / Brutal Critical
   final int extraCritDiceSides;
 
   // Buffs / Precision Modifiers
-  final int attackBuffDiceSides;  // e.g. 4 for Bless (+1d4), 6/8/10/12 for Bardic/Precision
-  final int attackBuffFlat;       // e.g. +1/+2/+3 magic weapon or flat buff
+  final int attackBuffDiceSides; // e.g. 4 for Bless (+1d4), 6/8/10/12 for Bardic/Precision
+  final int attackBuffFlat; // e.g. +1/+2/+3 magic weapon or flat buff
 
   // Attack Count & Action Economy
   final int attacksPerRound;
@@ -291,6 +315,15 @@ class DprAttackAction {
     required this.diceSides,
     required this.damageBonus,
     this.damageType = 'slashing',
+    this.deliveryType = DprActionDeliveryType.attackRoll,
+    this.saveAbility,
+    this.saveDc,
+    this.halfDamageOnSave = true,
+    this.isAoe = false,
+    this.targetCount = 1,
+    this.rechargeRoll,
+    this.isLegendaryAction = false,
+    this.legendaryCost = 1,
     this.secondaryDiceCount = 0,
     this.secondaryDiceSides = 0,
     this.secondaryDamageBonus = 0,
@@ -323,6 +356,15 @@ class DprAttackAction {
     int? diceSides,
     int? damageBonus,
     String? damageType,
+    DprActionDeliveryType? deliveryType,
+    String? saveAbility,
+    int? saveDc,
+    bool? halfDamageOnSave,
+    bool? isAoe,
+    int? targetCount,
+    int? rechargeRoll,
+    bool? isLegendaryAction,
+    int? legendaryCost,
     int? secondaryDiceCount,
     int? secondaryDiceSides,
     int? secondaryDamageBonus,
@@ -354,6 +396,15 @@ class DprAttackAction {
       diceSides: diceSides ?? this.diceSides,
       damageBonus: damageBonus ?? this.damageBonus,
       damageType: damageType ?? this.damageType,
+      deliveryType: deliveryType ?? this.deliveryType,
+      saveAbility: saveAbility ?? this.saveAbility,
+      saveDc: saveDc ?? this.saveDc,
+      halfDamageOnSave: halfDamageOnSave ?? this.halfDamageOnSave,
+      isAoe: isAoe ?? this.isAoe,
+      targetCount: targetCount ?? this.targetCount,
+      rechargeRoll: rechargeRoll ?? this.rechargeRoll,
+      isLegendaryAction: isLegendaryAction ?? this.isLegendaryAction,
+      legendaryCost: legendaryCost ?? this.legendaryCost,
       secondaryDiceCount: secondaryDiceCount ?? this.secondaryDiceCount,
       secondaryDiceSides: secondaryDiceSides ?? this.secondaryDiceSides,
       secondaryDamageBonus: secondaryDamageBonus ?? this.secondaryDamageBonus,
@@ -379,7 +430,7 @@ class DprAttackAction {
     );
   }
 
-  /// Formatted damage formula (e.g., "2d6 + 4 slashing + 1d6 fire").
+  /// Formatted damage formula (e.g., "2d6 + 4 slashing", "8d6 fire (DC 15 Dex, 2 targets)").
   String get formulaDisplay {
     final buffer = StringBuffer();
     if (diceCount > 0 && diceSides > 0) {
@@ -410,6 +461,21 @@ class DprAttackAction {
         buffer.write(' $secondaryDamageType');
       }
     }
+
+    if (deliveryType == DprActionDeliveryType.savingThrow && saveDc != null) {
+      final saveLabel = saveAbility != null ? ' ${saveAbility!.toUpperCase()}' : '';
+      buffer.write(' (DC $saveDc$saveLabel)');
+    }
+
+    if (isAoe && targetCount > 1) {
+      buffer.write(' × $targetCount targets');
+    }
+
+    if (rechargeRoll != null) {
+      final rechStr = rechargeRoll == 5 ? '5–6' : '$rechargeRoll';
+      buffer.write(' [Recharge $rechStr]');
+    }
+
     return buffer.toString().trim();
   }
 }
@@ -732,7 +798,7 @@ class DprMonsterAcPreset {
 
 /// Extension on MinionStatBlock providing DPR conversion, attack extraction, and routine calculations.
 extension MinionStatBlockDprExt on MinionStatBlock {
-  /// Extracts structured DprAttackAction objects from this monster's stat block and actions.
+  /// Extracts structured DprAttackAction objects from this monster's stat block, actions, and legendary actions.
   List<DprAttackAction> extractDprAttacks() {
     final attacks = <DprAttackAction>[];
     CreatureAction? multiattackAction;
@@ -755,11 +821,23 @@ extension MinionStatBlockDprExt on MinionStatBlock {
           action.description.toLowerCase().contains('weapon attack') ||
           action.description.toLowerCase().contains('melee attack') ||
           action.description.toLowerCase().contains('ranged attack') ||
-          action.description.toLowerCase().contains('spell attack');
+          action.description.toLowerCase().contains('spell attack') ||
+          (action.description.toLowerCase().contains('saving throw') &&
+              action.description.toLowerCase().contains('damage')) ||
+          (action.description.toLowerCase().contains('recharge') &&
+              action.description.toLowerCase().contains('damage'));
 
       if (!isAttack) continue;
 
       final parsed = _parseCreatureActionToDpr(action);
+      if (parsed != null) {
+        attacks.add(parsed);
+      }
+    }
+
+    // Collect legendary actions
+    for (final legAction in legendaryActions) {
+      final parsed = _parseCreatureActionToDpr(legAction, isLegendary: true);
       if (parsed != null) {
         attacks.add(parsed);
       }
@@ -784,8 +862,13 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       return attacks;
     }
 
-    // Resolve attacksPerRound across all actions according to 5e rules & Multiattack
-    _resolveAttacksPerRound(attacks, multiattackAction);
+    // Resolve attacksPerRound across all regular turn actions
+    final turnAttacks = attacks.where((a) => !a.isLegendaryAction).toList();
+    _resolveAttacksPerRound(turnAttacks, multiattackAction);
+    for (int i = 0; i < turnAttacks.length; i++) {
+      final idx = attacks.indexWhere((a) => a.id == turnAttacks[i].id);
+      if (idx >= 0) attacks[idx] = turnAttacks[i];
+    }
 
     return attacks;
   }
@@ -815,7 +898,6 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     }
 
     // 2. Identify distinct option branches separated by " or ", " either ", ". Or ", "; or "
-    // (e.g. Medusa: "either three with its snake hair, or two with its shortsword..., or two with its longbow")
     final branchSegments = _splitMultiattackBranches(multiDesc);
 
     List<int>? bestBranchCounts;
@@ -835,8 +917,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
 
         int count = _extractAttackCountForName(branch, cleanName, baseName);
 
-        // If the branch mentions the weapon name without a specific number (e.g. "either with its claws or its glaive")
-        // and this branch only mentions this weapon, assign the globalCount.
+        // If the branch mentions the weapon name without a specific number
         if (count == 0 && _branchMentionsWeapon(branch, cleanName, baseName)) {
           count = globalCount;
         }
@@ -923,7 +1004,6 @@ extension MinionStatBlockDprExt on MinionStatBlock {
   }
 
   int _extractAttackCountForName(String desc, String cleanName, String baseName) {
-    // Generate singular, plural, and base aliases
     final aliases = <String>{
       cleanName,
       baseName,
@@ -932,7 +1012,6 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         cleanName.substring(0, cleanName.length - 1),
     };
 
-    // Special irregular plurals in D&D monsters
     if (cleanName == 'staff' || baseName == 'staff') aliases.add('staves');
     if (cleanName == 'hoof' || baseName == 'hoof') aliases.add('hooves');
     if (cleanName == 'tooth' || baseName == 'tooth') aliases.add('teeth');
@@ -940,7 +1019,6 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     for (final name in aliases) {
       final escaped = RegExp.escape(name);
 
-      // 1. Prefix count: "four attacks with its tendrils", "one attack with its bite", "two claws", "two longsword attacks"
       final prefixRegex = RegExp(
         r'\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\s+(?:melee\s+|ranged\s+|weapon\s+)?(?:attacks?\s+)?(?:with\s+(?:its|their|either|a)\s+)?' +
             escaped +
@@ -954,7 +1032,6 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         if (count > 0) return count;
       }
 
-      // 2. "and its bite" / "and one with its bite"
       final andRegex = RegExp(
         r'\band\s+(?:one\s+(?:with\s+(?:its|their)\s+)?|its\s+|their\s+|a\s+)' +
             escaped +
@@ -965,7 +1042,6 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         return 1;
       }
 
-      // 3. Postfix count: "tendrils: 4" or "tendril (two attacks)"
       final postfixRegex = RegExp(
         escaped +
             r'\b(?:\s+attacks?)?\s*[:(]?\s*(?:with\s+(?:its|their)\s+)?\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\b',
@@ -1013,14 +1089,67 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     }
   }
 
-  DprAttackAction? _parseCreatureActionToDpr(CreatureAction action) {
+  DprAttackAction? _parseCreatureActionToDpr(
+    CreatureAction action, {
+    bool isLegendary = false,
+  }) {
+    final descLower = action.description.toLowerCase();
+    final nameLower = action.name.toLowerCase();
+
+    // Legendary action cost
+    int legCost = 1;
+    if (isLegendary && (nameLower.contains('costs 2') || descLower.contains('costs 2'))) {
+      legCost = 2;
+    } else if (isLegendary && (nameLower.contains('costs 3') || descLower.contains('costs 3'))) {
+      legCost = 3;
+    }
+
+    // Recharge roll
+    int? recharge;
+    if (nameLower.contains('recharge 5') || descLower.contains('recharge 5')) {
+      recharge = 5;
+    } else if (nameLower.contains('recharge 6') || descLower.contains('recharge 6')) {
+      recharge = 6;
+    }
+
+    // Saving throw DC & Ability
+    int? sDc;
+    String? sAbility;
+    DprActionDeliveryType delivery = DprActionDeliveryType.attackRoll;
+
+    final saveMatch = RegExp(
+      r'DC\s*(\d+)\s*(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)?',
+      caseSensitive: false,
+    ).firstMatch(action.description);
+    if (saveMatch != null) {
+      sDc = int.tryParse(saveMatch.group(1) ?? '');
+      final abRaw = saveMatch.group(2)?.toLowerCase();
+      if (abRaw != null && abRaw.length >= 3) {
+        sAbility = abRaw.substring(0, 3);
+      }
+    }
+
     int bonus = action.attackBonus ?? attackBonus;
     final bonusMatch = RegExp(r'([+-]\s*\d+)\s+to\s+hit', caseSensitive: false)
         .firstMatch(action.description);
     if (bonusMatch != null) {
       final parsed = int.tryParse(bonusMatch.group(1)!.replaceAll(' ', ''));
       if (parsed != null) bonus = parsed;
+    } else if (sDc != null) {
+      delivery = DprActionDeliveryType.savingThrow;
     }
+
+    // AoE detection
+    final isAoeAction = descLower.contains('cone') ||
+        descLower.contains('line') ||
+        descLower.contains('sphere') ||
+        descLower.contains('cube') ||
+        descLower.contains('radius') ||
+        descLower.contains('each creature') ||
+        descLower.contains('all creatures') ||
+        descLower.contains('breath weapon');
+
+    final halfOnSave = descLower.contains('half as much') || !descLower.contains('taking no damage');
 
     int dCount = 0;
     int dSides = 0;
@@ -1051,9 +1180,11 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         dBonus = 0;
       }
     } else {
-      final flatMatch = RegExp(r'Hit:\s*(\d+)', caseSensitive: false).firstMatch(action.description);
+      final flatMatch = RegExp(r'Hit:\s*(\d+)|taking\s*(\d+)', caseSensitive: false)
+          .firstMatch(action.description);
       if (flatMatch != null) {
-        dBonus = int.tryParse(flatMatch.group(1) ?? '') ?? 0;
+        final numStr = flatMatch.group(1) ?? flatMatch.group(2);
+        dBonus = int.tryParse(numStr ?? '') ?? 0;
       }
     }
 
@@ -1066,7 +1197,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       dType = typeMatch.group(1)!.toLowerCase();
     }
 
-    // 3. Parse secondary / rider damage dice (e.g. "plus 7 (2d6) fire damage" or "extra 1d8 radiant")
+    // 3. Parse secondary / rider damage dice
     final secMatch = RegExp(
       r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s*(?:\d+)?\s*\(?(\d+)\s*d\s*(\d+)\)?(?:\s*([+-]\s*\d+))?\s*(\w+)?\s*damage',
       caseSensitive: false,
@@ -1097,17 +1228,26 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     }
 
     return DprAttackAction(
-      id: '${id}_${action.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_')}',
+      id: '${id}_${isLegendary ? "leg_" : ""}${action.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_')}',
       name: action.name,
       attackBonus: bonus,
       diceCount: dCount,
       diceSides: dSides,
       damageBonus: dBonus,
       damageType: dType,
+      deliveryType: delivery,
+      saveAbility: sAbility,
+      saveDc: sDc,
+      halfDamageOnSave: halfOnSave,
+      isAoe: isAoeAction,
+      targetCount: isAoeAction ? 2 : 1,
+      rechargeRoll: recharge,
+      isLegendaryAction: isLegendary,
+      legendaryCost: legCost,
       secondaryDiceCount: secDCount,
       secondaryDiceSides: secDSides,
       secondaryDamageType: secDType,
-      attacksPerRound: 1, // Will be resolved by _resolveAttacksPerRound
+      attacksPerRound: 1,
     );
   }
 }
