@@ -9,32 +9,58 @@ enum ArenaEnvironment {
     'Open-air arena with standard ground and unobstructed airspace.',
     Icons.stadium_outlined,
     Color(0xFFC084FC),
+    [
+      '☀️ Open Airspace',
+      '🦅 Full Flight Mobility',
+      '⚔️ Standard Combat Rules',
+    ],
   ),
   cageMatch(
     'Iron Cage Match',
-    'Enclosed iron cage with a 10-ft ceiling. Flight is disabled and aerial advantages are negated.',
+    'Enclosed iron cage with a 10-ft ceiling. Flight is grounded and aerial advantages are disabled.',
     Icons.grid_4x4,
     Color(0xFF94A3B8),
+    [
+      '🚫 Flight Grounded',
+      '⚔️ Normal Melee Reach',
+      '🛡️ No Aerial Strafing',
+    ],
   ),
   floodedAbyss(
     'Flooded Abyss (Water Match)',
-    'Submerged aquatic arena. Swimmers gain advantage; non-swimmers suffer melee/ranged disadvantage and fire damage is halved.',
+    'Submerged aquatic arena. Creatures with Swim speed gain Advantage; non-swimmers suffer Disadvantage and fire damage is halved.',
     Icons.water,
     Color(0xFF38BDF8),
+    [
+      '🏊 Swim Speed Advantage',
+      '⚠️ Non-Swimmer Disadvantage',
+      '🛡️ Submerged Fire Resistance',
+    ],
   ),
   volcanicPit(
     'Volcanic Caldera',
-    'Lava-surrounded pit. Fire-resistant creatures thrive while cold-vulnerable creatures suffer disadvantage.',
+    'Lava-surrounded pit. Extreme elemental heat favors fire-resistant and immune combatants.',
     Icons.local_fire_department,
     Color(0xFFF97316),
+    [
+      '🌋 Magma Pit Hazard',
+      '🔥 Elemental Fire Aura',
+    ],
   );
 
   final String label;
   final String description;
   final IconData icon;
   final Color themeColor;
+  final List<String> mechanicTags;
 
-  const ArenaEnvironment(this.label, this.description, this.icon, this.themeColor);
+  const ArenaEnvironment(
+    this.label,
+    this.description,
+    this.icon,
+    this.themeColor,
+    this.mechanicTags,
+  );
 }
 
 /// Targeting strategy used by AI combatants in the Arena.

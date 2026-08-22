@@ -21,6 +21,7 @@ class ArenaClashStage extends StatelessWidget {
   final VoidCallback onSkipToEnd;
   final VoidCallback onResetMatch;
   final ValueChanged<double> onSpeedChanged;
+  final VoidCallback? onEnvironmentTap;
 
   const ArenaClashStage({
     super.key,
@@ -36,6 +37,7 @@ class ArenaClashStage extends StatelessWidget {
     required this.onSkipToEnd,
     required this.onResetMatch,
     required this.onSpeedChanged,
+    this.onEnvironmentTap,
   });
 
   @override
@@ -107,27 +109,35 @@ class ArenaClashStage extends StatelessWidget {
                   ],
                 ),
                 // Environment Indicator Chip
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: environment.themeColor.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: environment.themeColor.withAlpha(80), width: 1),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(environment.icon, size: 13, color: environment.themeColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        environment.label,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: environment.themeColor,
+                InkWell(
+                  onTap: onEnvironmentTap,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: environment.themeColor.withAlpha(25),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: environment.themeColor.withAlpha(80), width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(environment.icon, size: 13, color: environment.themeColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          environment.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: environment.themeColor,
+                          ),
                         ),
-                      ),
-                    ],
+                        if (onEnvironmentTap != null) ...[
+                          const SizedBox(width: 3),
+                          Icon(Icons.info_outline, size: 11, color: environment.themeColor),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ],

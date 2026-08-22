@@ -120,5 +120,43 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Monster Fighting Arena'), findsOneWidget);
     });
+
+    testWidgets('toggles 2014 and 2024 rules via RulesEditionToggle and opens environment descriptors dialog', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      // Check RulesEditionToggle exists
+      expect(find.text('2014'), findsOneWidget);
+      expect(find.text('2024'), findsOneWidget);
+
+      // Tap 2014
+      await tester.tap(find.text('2014'));
+      await tester.pumpAndSettle();
+
+      // Tap 2024
+      await tester.tap(find.text('2024'));
+      await tester.pumpAndSettle();
+
+      // Tap Environment Descriptors info button
+      final infoBtn = find.byTooltip('Arena Rules & Descriptors Guide');
+      expect(infoBtn, findsOneWidget);
+      await tester.tap(infoBtn);
+      await tester.pumpAndSettle();
+
+      // Environment dialog should show
+      expect(find.text('Arena Battlegrounds'), findsOneWidget);
+      expect(find.text('Iron Cage Match'), findsOneWidget);
+      expect(find.text('Flooded Abyss (Water Match)'), findsOneWidget);
+      expect(find.text('Volcanic Caldera'), findsOneWidget);
+
+      // Close dialog
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+    });
   });
 }

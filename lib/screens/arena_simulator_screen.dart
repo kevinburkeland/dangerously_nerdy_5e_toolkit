@@ -13,6 +13,7 @@ import '../widgets/arena/arena_combat_log_view.dart';
 import '../widgets/arena/arena_combatant_card.dart';
 import '../widgets/arena/arena_monster_picker_sheet.dart';
 import '../widgets/arena/arena_monte_carlo_dialog.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
 
 /// Monster Fighting Arena Screen under Tools for Nerds.
@@ -472,6 +473,132 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     );
   }
 
+  void _showEnvironmentDetails(BuildContext context) {
+    HapticService.lightImpact(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF13151F) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: _environment.themeColor.withAlpha(120),
+            width: 1.5,
+          ),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.stadium_outlined, color: theme.colorScheme.primary, size: 24),
+            const SizedBox(width: 10),
+            const Text(
+              'Arena Battlegrounds',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: ArenaEnvironment.values.map((env) {
+                final isSelected = env == _environment;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: env.themeColor.withAlpha(isSelected ? (isDark ? 30 : 20) : (isDark ? 12 : 8)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: env.themeColor.withAlpha(isSelected ? 200 : 50),
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(env.icon, color: env.themeColor, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              env.label,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: env.themeColor,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: env.themeColor,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'ACTIVE',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        env.description,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: env.mechanicTags.map((tag) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: env.themeColor.withAlpha(isSelected ? 30 : 18),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: env.themeColor.withAlpha(60)),
+                          ),
+                          child: Text(
+                            tag,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: env.themeColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )).toList(),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -485,36 +612,16 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
         appBar: AppBar(
           title: const Text('Monster Fighting Arena'),
           actions: [
-            // Environment Battleground Picker Menu
-            PopupMenuButton<ArenaEnvironment>(
-              icon: Icon(_environment.icon, color: _environment.themeColor),
-              tooltip: 'Arena Battleground: ${_environment.label}',
-              onSelected: (env) => setState(() => _environment = env),
-              itemBuilder: (context) => ArenaEnvironment.values.map((env) {
-                return PopupMenuItem(
-                  value: env,
-                  child: Row(
-                    children: [
-                      Icon(env.icon, color: env.themeColor, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(env.label, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            Text(
-                              env.description,
-                              style: const TextStyle(fontSize: 10, color: Colors.grey),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+            // Dedicated Rules Edition Switcher Toggle
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: RulesEditionToggle(
+                currentEdition: _edition,
+                isDense: true,
+                onEditionChanged: (newEdition) {
+                  setState(() => _edition = newEdition);
+                },
+              ),
             ),
 
             // Presets Menu Button
@@ -534,23 +641,6 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                   ),
                 );
               }).toList(),
-            ),
-
-            // Rules Edition Switch
-            PopupMenuButton<DmRulesEdition>(
-              icon: const Icon(Icons.rule_folder_outlined),
-              tooltip: 'Rules Edition (${_edition.name.toUpperCase()})',
-              onSelected: (ed) => setState(() => _edition = ed),
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: DmRulesEdition.v2024,
-                  child: Text('2024 Revised SRD'),
-                ),
-                const PopupMenuItem(
-                  value: DmRulesEdition.v2014,
-                  child: Text('2014 Original RAW'),
-                ),
-              ],
             ),
 
             // Monte Carlo Sim Button
@@ -581,80 +671,144 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                     onSkipToEnd: _skipToEnd,
                     onResetMatch: _resetToSetup,
                     onSpeedChanged: _setPlaybackSpeed,
+                    onEnvironmentTap: () => _showEnvironmentDetails(context),
                   ),
                 ),
 
-              // Targeting Strategy & Battleground Strip (in Setup mode)
+              // Setup Mode: Targeting Strategy & Interactive Battleground Descriptor Box
               if (isSetup)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
                     children: [
-                      // Battleground Quick Pill
-                      PopupMenuButton<ArenaEnvironment>(
-                        tooltip: 'Change Arena Battleground',
-                        onSelected: (env) => setState(() => _environment = env),
-                        itemBuilder: (context) => ArenaEnvironment.values.map((env) {
-                          return PopupMenuItem(
-                            value: env,
-                            child: Row(
-                              children: [
-                                Icon(env.icon, color: env.themeColor, size: 18),
-                                const SizedBox(width: 8),
-                                Text(env.label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _environment.themeColor.withAlpha(20),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: _environment.themeColor.withAlpha(80)),
-                          ),
-                          child: Row(
+                      // Top Row: Battleground Selector & Strategy Dropdown
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Battleground Quick Dropdown Pill + Info Button
+                          Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(_environment.icon, size: 14, color: _environment.themeColor),
+                              PopupMenuButton<ArenaEnvironment>(
+                                tooltip: 'Change Arena Battleground',
+                                onSelected: (env) => setState(() => _environment = env),
+                                itemBuilder: (context) => ArenaEnvironment.values.map((env) {
+                                  return PopupMenuItem(
+                                    value: env,
+                                    child: Row(
+                                      children: [
+                                        Icon(env.icon, color: env.themeColor, size: 18),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            env.label,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _environment.themeColor.withAlpha(25),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: _environment.themeColor.withAlpha(90)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(_environment.icon, size: 14, color: _environment.themeColor),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _environment.label,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: _environment.themeColor,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Icon(Icons.arrow_drop_down, size: 16, color: _environment.themeColor),
+                                    ],
+                                  ),
+                                ),
+                              ),
                               const SizedBox(width: 4),
+                              IconButton(
+                                icon: Icon(Icons.info_outline, size: 16, color: _environment.themeColor),
+                                tooltip: 'Arena Rules & Descriptors Guide',
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () => _showEnvironmentDetails(context),
+                              ),
+                            ],
+                          ),
+
+                          // Targeting strategy dropdown
+                          DropdownButton<ArenaTargetingStrategy>(
+                            value: _strategy,
+                            isDense: true,
+                            underline: const SizedBox(),
+                            items: ArenaTargetingStrategy.values.map((s) {
+                              return DropdownMenuItem(
+                                value: s,
+                                child: Text(s.label, style: const TextStyle(fontSize: 12)),
+                              );
+                            }).toList(),
+                            onChanged: (val) {
+                              if (val != null) setState(() => _strategy = val);
+                            },
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      // Battleground Active Descriptor Banner with Mechanic Tags
+                      InkWell(
+                        onTap: () => _showEnvironmentDetails(context),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _environment.themeColor.withAlpha(isDark ? 20 : 12),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _environment.themeColor.withAlpha(50),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(_environment.icon, size: 14, color: _environment.themeColor),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  _environment.description,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.white70 : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
                               Text(
-                                _environment.label,
+                                'Tap for Rules',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: _environment.themeColor,
                                 ),
                               ),
-                              const SizedBox(width: 2),
-                              Icon(Icons.arrow_drop_down, size: 16, color: _environment.themeColor),
                             ],
                           ),
                         ),
-                      ),
-
-                      // Targeting strategy dropdown
-                      DropdownButton<ArenaTargetingStrategy>(
-                        value: _strategy,
-                        isDense: true,
-                        underline: const SizedBox(),
-                        items: ArenaTargetingStrategy.values.map((s) {
-                          return DropdownMenuItem(
-                            value: s,
-                            child: Text(s.label, style: const TextStyle(fontSize: 12)),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _strategy = val);
-                        },
-                      ),
-
-                      // Monte Carlo Quick Button
-                      TextButton.icon(
-                        icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFC084FC)),
-                        label: const Text('Simulate 500x Odds', style: TextStyle(fontSize: 12)),
-                        onPressed: _openMonteCarlo,
                       ),
                     ],
                   ),

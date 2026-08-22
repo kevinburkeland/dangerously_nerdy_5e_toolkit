@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-400%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-401%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **dedicated player & DM tools**, including a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, a comprehensive **5e Spellbook Companion**, a **Monster Codex & Bestiary Browser**, a **Magic Item Compendium**, advanced **DPR Calculator & Graph Visualizers**, an interactive **Monster Fighting Arena ("Tools for Nerds")** with Monte Carlo simulations, simultaneous batch attack rolling for summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, and a cryptographically secure random number generator.
@@ -214,7 +214,7 @@ dangerously_nerdy_5e_toolkit/
 │       └── spellbook/              # Spell cards, quick-roll dialogs, compare modals, filter sheets
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with cache-busting timestamp
-├── test/                           # Unit, widget, accessibility, & resilience test suites (400 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (401 tests)
 ├── web/                            # Web platform manifest, strict CSP, & service worker
 ├── firestore.rules                 # Strict security rules for Firestore shared rooms
 ├── firestore.indexes.json          # Firestore indexes configuration
@@ -267,7 +267,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, and resilience test suite (400 tests with 100% pass rate):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, and resilience test suite (401 tests with 100% pass rate):
 ```bash
 flutter test
 ```
