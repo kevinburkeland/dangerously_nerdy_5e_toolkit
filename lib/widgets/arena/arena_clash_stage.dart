@@ -80,7 +80,7 @@ class ArenaClashStage extends StatelessWidget {
         children: [
           // Round & Turn Status Bar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1E2230) : const Color(0xFFE2E8F0),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
@@ -88,55 +88,66 @@ class ArenaClashStage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.sports_kabaddi,
-                      size: 18,
-                      color: isDark ? Colors.white70 : Colors.black54,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      currentStep != null
-                          ? 'ROUND ${currentStep!.roundNumber} • STEP #${currentStep!.stepIndex + 1}'
-                          : 'ARENA STAGE READY',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: isDark ? Colors.white : Colors.black87,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.sports_kabaddi,
+                        size: 16,
+                        color: isDark ? Colors.white70 : Colors.black54,
                       ),
-                    ),
-                  ],
-                ),
-                // Environment Indicator Chip
-                InkWell(
-                  onTap: onEnvironmentTap,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: environment.themeColor.withAlpha(25),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: environment.themeColor.withAlpha(80), width: 1),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(environment.icon, size: 13, color: environment.themeColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          environment.label,
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          currentStep != null
+                              ? 'R${currentStep!.roundNumber} • #${currentStep!.stepIndex + 1}'
+                              : 'ARENA STAGE READY',
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: environment.themeColor,
+                            fontSize: 11,
+                            color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
-                        if (onEnvironmentTap != null) ...[
-                          const SizedBox(width: 3),
-                          Icon(Icons.info_outline, size: 11, color: environment.themeColor),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Environment Indicator Chip
+                Flexible(
+                  child: InkWell(
+                    onTap: onEnvironmentTap,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: environment.themeColor.withAlpha(25),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: environment.themeColor.withAlpha(80), width: 1),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(environment.icon, size: 13, color: environment.themeColor),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              environment.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: environment.themeColor,
+                              ),
+                            ),
+                          ),
+                          if (onEnvironmentTap != null) ...[
+                            const SizedBox(width: 3),
+                            Icon(Icons.info_outline, size: 11, color: environment.themeColor),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -242,50 +253,47 @@ class ArenaClashStage extends StatelessWidget {
 
           // Playback Controls Bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Wrap(
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 6,
+              runSpacing: 6,
               children: [
-                // Play / Pause & Step Buttons
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ElevatedButton.icon(
-                      icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow, size: 20),
-                      label: Text(isPlaying ? 'Pause' : 'Play'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isPlaying ? Colors.amber : const Color(0xFF10B981),
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: onTogglePlay,
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.skip_next, size: 18),
-                      label: const Text('Step'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: isPlaying ? null : onStepForward,
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.fast_forward, size: 18),
-                      label: const Text('Skip to End'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: onSkipToEnd,
-                    ),
-                  ],
+                // Play / Pause Button
+                ElevatedButton.icon(
+                  icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow, size: 18),
+                  label: Text(isPlaying ? 'Pause' : 'Play'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isPlaying ? Colors.amber : const Color(0xFF10B981),
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: onTogglePlay,
+                ),
+
+                // Step Button
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.skip_next, size: 16),
+                  label: const Text('Step'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: isPlaying ? null : onStepForward,
+                ),
+
+                // Skip to End Button
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.fast_forward, size: 16),
+                  label: const Text('Skip to End'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: onSkipToEnd,
                 ),
 
                 // Speed Selector & Reset
@@ -306,7 +314,7 @@ class ArenaClashStage extends StatelessWidget {
                             onTap: () => onSpeedChanged(spd),
                             borderRadius: BorderRadius.circular(6),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                               decoration: BoxDecoration(
                                 color: isSel ? const Color(0xFFC084FC) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
@@ -314,7 +322,7 @@ class ArenaClashStage extends StatelessWidget {
                               child: Text(
                                 '${spd == 0.5 ? '0.5' : spd.toInt()}x',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
                                   color: isSel ? Colors.black : (isDark ? Colors.white70 : Colors.black87),
                                 ),
@@ -324,10 +332,12 @@ class ArenaClashStage extends StatelessWidget {
                         }).toList(),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
                     IconButton(
-                      icon: const Icon(Icons.refresh, size: 20),
+                      icon: const Icon(Icons.refresh, size: 18),
                       tooltip: 'Reset Match',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                       onPressed: onResetMatch,
                     ),
                   ],

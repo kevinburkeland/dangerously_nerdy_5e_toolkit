@@ -610,11 +610,28 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       controller: _critController,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Monster Fighting Arena'),
+          titleSpacing: isWide ? 16 : 8,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.stadium_outlined, color: Color(0xFFC084FC), size: 20),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  isWide ? 'Monster Fighting Arena' : 'Monster Arena',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: isWide ? 18 : 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
           actions: [
             // Dedicated Rules Edition Switcher Toggle
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
               child: RulesEditionToggle(
                 currentEdition: _edition,
                 isDense: true,
@@ -628,6 +645,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
             PopupMenuButton<ArenaPresetMatchup>(
               icon: const Icon(Icons.bookmark_outline),
               tooltip: 'Load Pit Fight Preset',
+              padding: EdgeInsets.zero,
               onSelected: _loadPreset,
               itemBuilder: (context) => ArenaPresetMatchup.defaultPresets.map((preset) {
                 return PopupMenuItem(
@@ -647,8 +665,11 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
             IconButton(
               icon: const Icon(Icons.analytics_outlined, color: Color(0xFFC084FC)),
               tooltip: 'Run 500x Monte Carlo Sim',
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
               onPressed: _openMonteCarlo,
             ),
+            const SizedBox(width: 4),
           ],
         ),
         body: SafeArea(
@@ -682,8 +703,11 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                   child: Column(
                     children: [
                       // Top Row: Battleground Selector & Strategy Dropdown
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 6,
                         children: [
                           // Battleground Quick Dropdown Pill + Info Button
                           Row(
@@ -755,7 +779,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                             items: ArenaTargetingStrategy.values.map((s) {
                               return DropdownMenuItem(
                                 value: s,
-                                child: Text(s.label, style: const TextStyle(fontSize: 12)),
+                                child: Text(s.label, style: const TextStyle(fontSize: 11)),
                               );
                             }).toList(),
                             onChanged: (val) {
@@ -847,12 +871,16 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                                 Tab(
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(ArenaTeam.teamA.icon, color: ArenaTeam.teamA.color, size: 18),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '${ArenaTeam.teamA.label} (${isSetup ? _teamA.length : _activeCombatants.where((c) => c.team == ArenaTeam.teamA && c.isAlive).length})',
-                                        style: TextStyle(color: ArenaTeam.teamA.color, fontWeight: FontWeight.bold),
+                                      Icon(ArenaTeam.teamA.icon, color: ArenaTeam.teamA.color, size: 16),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          '${ArenaTeam.teamA.label} (${isSetup ? _teamA.length : _activeCombatants.where((c) => c.team == ArenaTeam.teamA && c.isAlive).length})',
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(color: ArenaTeam.teamA.color, fontWeight: FontWeight.bold, fontSize: 12),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -860,12 +888,16 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                                 Tab(
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(ArenaTeam.teamB.icon, color: ArenaTeam.teamB.color, size: 18),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '${ArenaTeam.teamB.label} (${isSetup ? _teamB.length : _activeCombatants.where((c) => c.team == ArenaTeam.teamB && c.isAlive).length})',
-                                        style: TextStyle(color: ArenaTeam.teamB.color, fontWeight: FontWeight.bold),
+                                      Icon(ArenaTeam.teamB.icon, color: ArenaTeam.teamB.color, size: 16),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          '${ArenaTeam.teamB.label} (${isSetup ? _teamB.length : _activeCombatants.where((c) => c.team == ArenaTeam.teamB && c.isAlive).length})',
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(color: ArenaTeam.teamB.color, fontWeight: FontWeight.bold, fontSize: 12),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -965,32 +997,37 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       children: [
         // Team Header Pill
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           color: team.color.withAlpha(20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(team.icon, color: team.color, size: 18),
-                  const SizedBox(width: 6),
+                  Icon(team.icon, color: team.color, size: 16),
+                  const SizedBox(width: 4),
                   Text(
                     team.label,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: team.color,
-                      fontSize: 13,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
-              Text(
-                isSetup
-                    ? '${combatants.length} fighters • $totalHp total HP'
-                    : '$livingCount/${combatants.length} alive',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark ? Colors.white70 : Colors.black87,
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  isSetup
+                      ? '${combatants.length} fighters • ${totalHp}HP'
+                      : '$livingCount/${combatants.length} alive',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
                 ),
               ),
             ],

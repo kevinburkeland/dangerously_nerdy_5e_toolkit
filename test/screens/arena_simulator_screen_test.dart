@@ -158,5 +158,27 @@ void main() {
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
     });
+
+    testWidgets('renders cleanly without overflow on mobile phone screen (360x640)', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      // Mobile screen should show shortened title and toggle
+      expect(find.text('Monster Arena'), findsOneWidget);
+      expect(find.text('2014'), findsOneWidget);
+      expect(find.text('2024'), findsOneWidget);
+
+      // Start Battle to verify stage rendered without overflow on mobile
+      await tester.tap(find.text('Start Battle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pause'), findsOneWidget);
+      expect(find.text('Step'), findsOneWidget);
+    });
   });
 }
