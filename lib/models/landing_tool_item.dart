@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
+import '../screens/arena_simulator_screen.dart';
 import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/dpr_calculator_screen.dart';
@@ -155,6 +156,42 @@ class LandingToolRegistry {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const DprCalculatorScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'monster_arena',
+          title: 'Monster Fighting Arena',
+          category: 'Tools for Nerds',
+          badgeText: 'Pit Fight Simulator',
+          badgeColor: const Color(0xFFC084FC),
+          icon: Icons.sports_kabaddi,
+          accentColor: const Color(0xFFC084FC),
+          description:
+              'Pit X monsters against Y monsters in automated turn-by-turn 5e combat. Watch attacks, multiattacks, recharges, and dice rolls play out or skip to the end with Monte Carlo win odds.',
+          keywords: [
+            'arena',
+            'monster',
+            'fight',
+            'pit fight',
+            'combat',
+            'simulator',
+            'simulation',
+            'monte carlo',
+            'probability',
+            'odds',
+            'dps',
+            'vs',
+            'versus',
+            't-rex',
+            'dragon',
+            'theorycraft',
+            'nerd'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ArenaSimulatorScreen()),
             );
           },
         ),
