@@ -6,6 +6,10 @@ import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 
 void main() {
+  setUp(() {
+    MonsterItem.clearCaches();
+  });
+
   group('MonsterCodexLibrary', () {
     test('builds a non-empty deduplicated monster list from SRD presets', () {
       final monsters = MonsterCodexLibrary.allMonsters;
@@ -176,8 +180,24 @@ void main() {
         final activeAttacks = attacks.fold<int>(0, (sum, a) => sum + a.attacksPerRound);
         expect(activeAttacks, 2, reason: 'Brown Bear with 1 bite + 1 claws should have 2 active attacks per round');
       }
+
+      final roper = MonsterCodexLibrary.getMonsterByName('Roper');
+      expect(roper, isNotNull);
+      if (roper != null) {
+        final attacks = roper.statBlock2014.extractDprAttacks();
+        final biteAttack = attacks.firstWhere((a) => a.name.toLowerCase() == 'bite');
+        final tendrilAttack = attacks.firstWhere((a) => a.name.toLowerCase() == 'tendril');
+
+        expect(biteAttack.attacksPerRound, 1, reason: 'Roper makes exactly 1 bite attack in its multiattack routine');
+        expect(tendrilAttack.attacksPerRound, 4, reason: 'Roper makes 4 tendril attacks in its multiattack routine');
+
+        final roperDpr = roper.calculateBaselineDpr();
+        expect(roperDpr > 10 && roperDpr < 25, isTrue,
+            reason: 'Roper baseline DPR: $roperDpr should reflect 1 bite (4d8+4 = 22 avg dmg), not 4 bites!');
+      }
     });
   });
 }
+
 
 

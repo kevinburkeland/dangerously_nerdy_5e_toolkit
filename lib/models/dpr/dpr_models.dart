@@ -879,58 +879,94 @@ extension MinionStatBlockDprExt on MinionStatBlock {
   }
 
   int _extractAttackCountForName(String desc, String cleanName, String baseName) {
-    final patterns = [
-      (4, [
-        'four with its $cleanName',
-        'four with its $baseName',
-        'four $cleanName',
-        'four $baseName',
-        '4 $cleanName',
-        '4 $baseName',
-      ]),
-      (3, [
-        'three with its $cleanName',
-        'three with its $baseName',
-        'three with their $cleanName',
-        'three $cleanName',
-        'three $baseName',
-        '3 $cleanName',
-        '3 $baseName',
-      ]),
-      (2, [
-        'two with its $cleanName',
-        'two with its $baseName',
-        'two with their $cleanName',
-        'two with either $cleanName',
-        'two $cleanName',
-        'two $baseName',
-        '2 $cleanName',
-        '2 $baseName',
-      ]),
-      (1, [
-        'one with its $cleanName',
-        'one with its $baseName',
-        'one with their $cleanName',
-        'one $cleanName',
-        'one $baseName',
-        '1 $cleanName',
-        '1 $baseName',
-        'and its $cleanName',
-        'and its $baseName',
-        'and one $cleanName',
-        'and one $baseName',
-      ]),
-    ];
+    // Generate singular, plural, and base aliases
+    final aliases = <String>{
+      cleanName,
+      baseName,
+      if (!cleanName.endsWith('s')) '${cleanName}s',
+      if (cleanName.endsWith('s') && cleanName.length > 3)
+        cleanName.substring(0, cleanName.length - 1),
+    };
 
-    for (final (count, matchers) in patterns) {
-      for (final matcher in matchers) {
-        if (desc.contains(matcher)) {
-          return count;
-        }
+    // Special irregular plurals in D&D monsters
+    if (cleanName == 'staff' || baseName == 'staff') aliases.add('staves');
+    if (cleanName == 'hoof' || baseName == 'hoof') aliases.add('hooves');
+    if (cleanName == 'tooth' || baseName == 'tooth') aliases.add('teeth');
+
+    for (final name in aliases) {
+      final escaped = RegExp.escape(name);
+
+      // 1. Prefix count: "four attacks with its tendrils", "one attack with its bite", "two claws", "two longsword attacks"
+      final prefixRegex = RegExp(
+        r'\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\s+(?:melee\s+|ranged\s+|weapon\s+)?(?:attacks?\s+)?(?:with\s+(?:its|their|either|a)\s+)?' +
+            escaped +
+            r'\b',
+        caseSensitive: false,
+      );
+
+      final prefixMatch = prefixRegex.firstMatch(desc);
+      if (prefixMatch != null) {
+        final count = _parseNumberWord(prefixMatch.group(1));
+        if (count > 0) return count;
+      }
+
+      // 2. "and its bite" / "and one with its bite"
+      final andRegex = RegExp(
+        r'\band\s+(?:one\s+(?:with\s+(?:its|their)\s+)?|its\s+|their\s+|a\s+)' +
+            escaped +
+            r'\b',
+        caseSensitive: false,
+      );
+      if (andRegex.hasMatch(desc)) {
+        return 1;
+      }
+
+      // 3. Postfix count: "tendrils: 4" or "tendril (two attacks)"
+      final postfixRegex = RegExp(
+        escaped +
+            r'\b(?:\s+attacks?)?\s*[:(]?\s*(?:with\s+(?:its|their)\s+)?\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\b',
+        caseSensitive: false,
+      );
+      final postfixMatch = postfixRegex.firstMatch(desc);
+      if (postfixMatch != null) {
+        final count = _parseNumberWord(postfixMatch.group(1));
+        if (count > 0) return count;
       }
     }
 
     return 0;
+  }
+
+  int _parseNumberWord(String? s) {
+    if (s == null) return 0;
+    switch (s.toLowerCase().trim()) {
+      case '1':
+      case 'one':
+        return 1;
+      case '2':
+      case 'two':
+        return 2;
+      case '3':
+      case 'three':
+        return 3;
+      case '4':
+      case 'four':
+        return 4;
+      case '5':
+      case 'five':
+        return 5;
+      case '6':
+      case 'six':
+        return 6;
+      case '7':
+      case 'seven':
+        return 7;
+      case '8':
+      case 'eight':
+        return 8;
+      default:
+        return int.tryParse(s) ?? 0;
+    }
   }
 
   DprAttackAction? _parseCreatureActionToDpr(CreatureAction action) {
@@ -942,44 +978,78 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       if (parsed != null) bonus = parsed;
     }
 
-    final text = '${action.hitDamage ?? ""} ${action.description}';
-    final diceMatches = RegExp(r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?', caseSensitive: false)
-        .allMatches(text)
-        .toList();
-
-    int dCount = damageDiceCount;
-    int dSides = damageDiceSides;
-    int dBonus = damageBonus;
+    int dCount = 0;
+    int dSides = 0;
+    int dBonus = 0;
     String dType = damageType;
 
     int secDCount = 0;
     int secDSides = 0;
     String? secDType;
 
-    if (diceMatches.isNotEmpty) {
-      final m1 = diceMatches[0];
-      dCount = int.tryParse(m1.group(1) ?? '') ?? damageDiceCount;
-      dSides = int.tryParse(m1.group(2) ?? '') ?? damageDiceSides;
-      if (m1.group(4) != null) {
-        final sign = m1.group(3) == '-' ? -1 : 1;
-        dBonus = sign * (int.tryParse(m1.group(4)!) ?? 0);
+    // 1. Parse primary damage dice & bonus
+    final primarySource = action.hitDamage != null && action.hitDamage!.isNotEmpty
+        ? action.hitDamage!
+        : action.description;
+
+    final primaryMatch = RegExp(
+      r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?',
+      caseSensitive: false,
+    ).firstMatch(primarySource);
+
+    if (primaryMatch != null) {
+      dCount = int.tryParse(primaryMatch.group(1) ?? '') ?? 0;
+      dSides = int.tryParse(primaryMatch.group(2) ?? '') ?? 0;
+      if (primaryMatch.group(4) != null) {
+        final sign = primaryMatch.group(3) == '-' ? -1 : 1;
+        dBonus = sign * (int.tryParse(primaryMatch.group(4)!) ?? 0);
       } else {
         dBonus = 0;
       }
-
-      if (diceMatches.length > 1) {
-        final m2 = diceMatches[1];
-        secDCount = int.tryParse(m2.group(1) ?? '') ?? 0;
-        secDSides = int.tryParse(m2.group(2) ?? '') ?? 0;
+    } else {
+      final flatMatch = RegExp(r'Hit:\s*(\d+)', caseSensitive: false).firstMatch(action.description);
+      if (flatMatch != null) {
+        dBonus = int.tryParse(flatMatch.group(1) ?? '') ?? 0;
       }
     }
 
+    // 2. Parse primary damage type
     final typeMatch = RegExp(
       r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)\s+damage',
       caseSensitive: false,
-    ).firstMatch(text);
+    ).firstMatch(action.description);
     if (typeMatch != null) {
       dType = typeMatch.group(1)!.toLowerCase();
+    }
+
+    // 3. Parse secondary / rider damage dice (e.g. "plus 7 (2d6) fire damage" or "extra 1d8 radiant")
+    final secMatch = RegExp(
+      r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s*(?:\d+)?\s*\(?(\d+)\s*d\s*(\d+)\)?(?:\s*([+-]\s*\d+))?\s*(\w+)?\s*damage',
+      caseSensitive: false,
+    ).firstMatch(action.description);
+
+    if (secMatch != null) {
+      secDCount = int.tryParse(secMatch.group(1) ?? '') ?? 0;
+      secDSides = int.tryParse(secMatch.group(2) ?? '') ?? 0;
+      final rawSecType = secMatch.group(4)?.toLowerCase();
+      if (rawSecType != null &&
+          const [
+            'bludgeoning',
+            'piercing',
+            'slashing',
+            'fire',
+            'cold',
+            'lightning',
+            'thunder',
+            'acid',
+            'poison',
+            'necrotic',
+            'radiant',
+            'force',
+            'psychic'
+          ].contains(rawSecType)) {
+        secDType = rawSecType;
+      }
     }
 
     return DprAttackAction(

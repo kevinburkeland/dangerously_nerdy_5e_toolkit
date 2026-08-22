@@ -138,6 +138,11 @@ class MonsterItem {
   static final Map<String, String> _corpusCache = {};
   static final Map<String, double> _dprCache = {};
 
+  static void clearCaches() {
+    _corpusCache.clear();
+    _dprCache.clear();
+  }
+
   double calculateBaselineDpr([
     DmRulesEdition edition = DmRulesEdition.v2024,
     int targetAc = 15,
