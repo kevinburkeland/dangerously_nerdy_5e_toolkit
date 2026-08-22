@@ -195,9 +195,38 @@ void main() {
         expect(roperDpr > 10 && roperDpr < 25, isTrue,
             reason: 'Roper baseline DPR: $roperDpr should reflect 1 bite (4d8+4 = 22 avg dmg), not 4 bites!');
       }
+
+      final medusa = MonsterCodexLibrary.getMonsterByName('Medusa');
+      expect(medusa, isNotNull);
+      if (medusa != null) {
+        final attacks = medusa.statBlock2014.extractDprAttacks();
+        final snakeHair = attacks.firstWhere((a) => a.name.toLowerCase().contains('snake hair'));
+        final shortsword = attacks.firstWhere((a) => a.name.toLowerCase().contains('shortsword'));
+        final longbow = attacks.firstWhere((a) => a.name.toLowerCase().contains('longbow'));
+
+        final totalActiveAttacks = attacks.fold<int>(0, (sum, a) => sum + a.attacksPerRound);
+        expect(totalActiveAttacks, 3,
+            reason: 'Medusa makes exactly 3 attacks in any chosen turn routine, not 7 attacks!');
+        expect(snakeHair.attacksPerRound, 3,
+            reason: 'Medusa highest DPR routine is 3 snake hair attacks');
+        expect(shortsword.attacksPerRound, 0,
+            reason: 'Medusa alternative shortsword routine should be 0 by default to avoid doubling');
+        expect(longbow.attacksPerRound, 0,
+            reason: 'Medusa alternative longbow routine should be 0 by default to avoid doubling');
+      }
+
+      final oni = MonsterCodexLibrary.getMonsterByName('Oni');
+      expect(oni, isNotNull);
+      if (oni != null) {
+        final attacks = oni.statBlock2014.extractDprAttacks();
+        final totalActiveAttacks = attacks.fold<int>(0, (sum, a) => sum + a.attacksPerRound);
+        expect(totalActiveAttacks, 2,
+            reason: 'Oni makes exactly 2 attacks (either 2 claws or 2 glaive), not 4 attacks!');
+      }
     });
   });
 }
+
 
 
 

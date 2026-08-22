@@ -797,84 +797,128 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     if (multiattack == null) {
       // Without Multiattack, a creature has 1 action per round and makes 1 attack.
       // Set the primary (highest estimated damage) attack to 1, and alternative weapons to 0.
-      int bestIndex = 0;
-      double maxDmg = -1;
+      _assignSingleBestAttack(attacks, 1);
+      return;
+    }
+
+    final multiDesc = multiattack.description.toLowerCase();
+
+    // 1. Extract global attack count if stated (e.g. "makes three attacks", "makes two melee attacks")
+    int globalCount = 2; // Default 5e fallback
+    final globalMatch = RegExp(
+      r'makes\s+(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
+      caseSensitive: false,
+    ).firstMatch(multiDesc);
+    if (globalMatch != null) {
+      globalCount = _parseNumberWord(globalMatch.group(1));
+      if (globalCount <= 0) globalCount = 2;
+    }
+
+    // 2. Identify distinct option branches separated by " or ", " either ", ". Or ", "; or "
+    // (e.g. Medusa: "either three with its snake hair, or two with its shortsword..., or two with its longbow")
+    final branchSegments = _splitMultiattackBranches(multiDesc);
+
+    List<int>? bestBranchCounts;
+    double bestBranchDpr = -1.0;
+
+    for (final branch in branchSegments) {
+      final branchCounts = List<int>.filled(attacks.length, 0);
+      bool anyMatched = false;
 
       for (int i = 0; i < attacks.length; i++) {
-        final a = attacks[i];
-        final avgDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
-            a.damageBonus +
-            (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0);
-        if (avgDmg > maxDmg) {
-          maxDmg = avgDmg;
-          bestIndex = i;
+        final attack = attacks[i];
+        final nameLower = attack.name.toLowerCase();
+        final cleanName = nameLower.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+        final baseName = cleanName.endsWith('s') && cleanName.length > 3
+            ? cleanName.substring(0, cleanName.length - 1)
+            : cleanName;
+
+        int count = _extractAttackCountForName(branch, cleanName, baseName);
+
+        // If the branch mentions the weapon name without a specific number (e.g. "either with its claws or its glaive")
+        // and this branch only mentions this weapon, assign the globalCount.
+        if (count == 0 && _branchMentionsWeapon(branch, cleanName, baseName)) {
+          count = globalCount;
+        }
+
+        if (count > 0) {
+          branchCounts[i] = count;
+          anyMatched = true;
         }
       }
 
+      if (anyMatched) {
+        // Calculate estimated branch offensive DPR
+        double branchDpr = 0.0;
+        for (int i = 0; i < attacks.length; i++) {
+          if (branchCounts[i] > 0) {
+            final a = attacks[i];
+            final avgHitDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
+                a.damageBonus +
+                (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0) +
+                a.secondaryDamageBonus;
+            final hitProb = ((21 - (15 - a.attackBonus)).clamp(2, 20)) / 20.0;
+            branchDpr += (avgHitDmg * hitProb) * branchCounts[i];
+          }
+        }
+
+        if (branchDpr > bestBranchDpr) {
+          bestBranchDpr = branchDpr;
+          bestBranchCounts = branchCounts;
+        }
+      }
+    }
+
+    if (bestBranchCounts != null && bestBranchCounts.any((c) => c > 0)) {
       for (int i = 0; i < attacks.length; i++) {
-        attacks[i] = attacks[i].copyWith(attacksPerRound: (i == bestIndex) ? 1 : 0);
+        attacks[i] = attacks[i].copyWith(attacksPerRound: bestBranchCounts[i]);
       }
       return;
     }
 
-    // With Multiattack: Parse the routine text
-    final multiDesc = multiattack.description.toLowerCase();
-    bool specificMatchFound = false;
+    // 3. Fallback for generic Multiattack ("The knight makes two melee attacks.")
+    _assignSingleBestAttack(attacks, globalCount);
+  }
 
-    // Check for explicit per-weapon counts in the Multiattack description
+  List<String> _splitMultiattackBranches(String desc) {
+    final rawParts = desc.split(RegExp(
+      r'\.\s*(?:or\s+)?|;\s*(?:or\s+)?|,\s+or\s+|\bor\s+either\b|\beither\b|\bor\b',
+      caseSensitive: false,
+    ));
+    final branches = <String>[];
+    for (final p in rawParts) {
+      final trimmed = p.trim();
+      if (trimmed.isNotEmpty && trimmed != 'the' && trimmed != 'a') {
+        branches.add(trimmed);
+      }
+    }
+    return branches.isNotEmpty ? branches : [desc];
+  }
+
+  bool _branchMentionsWeapon(String branch, String cleanName, String baseName) {
+    final escaped = RegExp.escape(cleanName);
+    final baseEscaped = RegExp.escape(baseName);
+    return RegExp('\\b(?:$escaped|$baseEscaped)(?:s)?\\b', caseSensitive: false).hasMatch(branch);
+  }
+
+  void _assignSingleBestAttack(List<DprAttackAction> attacks, int count) {
+    int bestIndex = 0;
+    double maxDmg = -1;
+
     for (int i = 0; i < attacks.length; i++) {
-      final attack = attacks[i];
-      final nameLower = attack.name.toLowerCase();
-      final cleanName = nameLower.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
-      final baseName = cleanName.endsWith('s') && cleanName.length > 3
-          ? cleanName.substring(0, cleanName.length - 1)
-          : cleanName;
-
-      final count = _extractAttackCountForName(multiDesc, cleanName, baseName);
-      if (count > 0) {
-        attacks[i] = attack.copyWith(attacksPerRound: count);
-        specificMatchFound = true;
-      } else {
-        attacks[i] = attack.copyWith(attacksPerRound: 0);
+      final a = attacks[i];
+      final avgDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
+          a.damageBonus +
+          (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0) +
+          a.secondaryDamageBonus;
+      if (avgDmg > maxDmg) {
+        maxDmg = avgDmg;
+        bestIndex = i;
       }
     }
 
-    // If no specific weapon names matched, check generic Multiattack patterns
-    // (e.g. "The creature makes two melee attacks." or "The veteran makes three attacks.")
-    if (!specificMatchFound || attacks.every((a) => a.attacksPerRound == 0)) {
-      int totalAttacks = 2; // Default 5e multiattack count
-      if (multiDesc.contains('four attacks') ||
-          multiDesc.contains('four melee') ||
-          multiDesc.contains('4 attacks')) {
-        totalAttacks = 4;
-      } else if (multiDesc.contains('three attacks') ||
-          multiDesc.contains('three melee') ||
-          multiDesc.contains('3 attacks')) {
-        totalAttacks = 3;
-      } else if (multiDesc.contains('two attacks') ||
-          multiDesc.contains('two melee') ||
-          multiDesc.contains('2 attacks')) {
-        totalAttacks = 2;
-      }
-
-      // Assign the full multiattack count to the single best melee/primary attack, and 0 to alternatives
-      int bestIndex = 0;
-      double maxDmg = -1;
-
-      for (int i = 0; i < attacks.length; i++) {
-        final a = attacks[i];
-        final avgDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
-            a.damageBonus +
-            (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0);
-        if (avgDmg > maxDmg) {
-          maxDmg = avgDmg;
-          bestIndex = i;
-        }
-      }
-
-      for (int i = 0; i < attacks.length; i++) {
-        attacks[i] = attacks[i].copyWith(attacksPerRound: (i == bestIndex) ? totalAttacks : 0);
-      }
+    for (int i = 0; i < attacks.length; i++) {
+      attacks[i] = attacks[i].copyWith(attacksPerRound: (i == bestIndex) ? count : 0);
     }
   }
 
