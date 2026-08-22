@@ -1,21 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/arena_simulator_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
 
 void main() {
-  Widget buildTestableScreen() {
-    return MaterialApp(
-      theme: AppTheme.buildTheme(
-        brightness: Brightness.dark,
-        accent: FantasyAccent.paladinGold,
+  Widget buildTestableScreen({SettingsProvider? settingsProvider, DmRulesEdition? initialEdition}) {
+    final provider = settingsProvider ?? SettingsProvider(
+      initialSettings: const AppSettings(
+        rulesEdition: DmRulesEdition.v2024,
       ),
-      home: const ArenaSimulatorScreen(),
+      autoLoad: false,
+    );
+
+    return SettingsScope(
+      notifier: provider,
+      child: MaterialApp(
+        theme: AppTheme.buildTheme(
+          brightness: Brightness.dark,
+          accent: FantasyAccent.paladinGold,
+        ),
+        home: ArenaSimulatorScreen(initialEdition: initialEdition),
+      ),
     );
   }
 
   group('ArenaSimulatorScreen Widget Tests', () {
+    testWidgets('respects global rules edition from SettingsProvider (2014)', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final provider = SettingsProvider(
+        initialSettings: const AppSettings(
+          rulesEdition: DmRulesEdition.v2014,
+        ),
+        autoLoad: false,
+      );
+
+      await tester.pumpWidget(buildTestableScreen(settingsProvider: provider));
+      await tester.pumpAndSettle();
+
+      // Verify 2014 is active by default from global settings
+      expect(provider.settings.rulesEdition, DmRulesEdition.v2014);
+
+      // Tap 2024 toggle
+      await tester.tap(find.text('2024'));
+      await tester.pumpAndSettle();
+
+      // Global setting should have updated to 2024
+      expect(provider.settings.rulesEdition, DmRulesEdition.v2024);
+    });
     testWidgets('renders Arena screen with title, presets, and default fighters', (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;

@@ -1,3 +1,4 @@
+import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
 import 'arena_combatant.dart';
 
@@ -33,7 +34,9 @@ class ArenaPresetMatchup {
   });
 
   /// Resolves the preset members into [ArenaCombatant] instances.
-  ({List<ArenaCombatant> teamA, List<ArenaCombatant> teamB}) resolveFighters() {
+  ({List<ArenaCombatant> teamA, List<ArenaCombatant> teamB}) resolveFighters([
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  ]) {
     final listA = <ArenaCombatant>[];
     final listB = <ArenaCombatant>[];
 
@@ -48,7 +51,8 @@ class ArenaPresetMatchup {
               id: 'team_a_${monster.id}_$i',
               monster: monster,
               team: ArenaTeam.teamA,
-              customName: '${monster.name}$suffix',
+              customName: '${monster.getName(edition)}$suffix',
+              edition: edition,
             ),
           );
         }
@@ -66,7 +70,8 @@ class ArenaPresetMatchup {
               id: 'team_b_${monster.id}_$i',
               monster: monster,
               team: ArenaTeam.teamB,
-              customName: '${monster.name}$suffix',
+              customName: '${monster.getName(edition)}$suffix',
+              edition: edition,
             ),
           );
         }

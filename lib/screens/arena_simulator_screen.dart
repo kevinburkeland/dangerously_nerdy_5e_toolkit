@@ -6,6 +6,7 @@ import '../models/arena/arena_preset_matchups.dart';
 import '../models/arena/arena_simulation_models.dart';
 import '../models/dm_screen_data.dart';
 import '../models/monster_codex_data.dart';
+import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
 import '../services/rules/arena_combat_engine.dart';
 import '../widgets/arena/arena_clash_stage.dart';
@@ -18,7 +19,12 @@ import '../widgets/fx/critical_effect_overlay.dart';
 
 /// Monster Fighting Arena Screen under Tools for Nerds.
 class ArenaSimulatorScreen extends StatefulWidget {
-  const ArenaSimulatorScreen({super.key});
+  final DmRulesEdition? initialEdition;
+
+  const ArenaSimulatorScreen({
+    super.key,
+    this.initialEdition,
+  });
 
   @override
   State<ArenaSimulatorScreen> createState() => _ArenaSimulatorScreenState();
@@ -31,7 +37,8 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
   // Arena Setup State
   final List<ArenaCombatant> _teamA = [];
   final List<ArenaCombatant> _teamB = [];
-  DmRulesEdition _edition = DmRulesEdition.v2024;
+  DmRulesEdition? _localEditionOverride;
+  bool _hasLoadedInitialPreset = false;
   ArenaTargetingStrategy _strategy = ArenaTargetingStrategy.focusLowestHp;
   ArenaEnvironment _environment = ArenaEnvironment.colosseum;
 
@@ -53,7 +60,18 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPreset(ArenaPresetMatchup.defaultPresets.first);
+    if (widget.initialEdition != null) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasLoadedInitialPreset) {
+      _hasLoadedInitialPreset = true;
+      _loadPreset(ArenaPresetMatchup.defaultPresets.first, _resolveEdition(context));
+    }
   }
 
   @override
@@ -62,9 +80,46 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     super.dispose();
   }
 
-  void _loadPreset(ArenaPresetMatchup preset) {
+  DmRulesEdition _resolveEdition(BuildContext context) {
+    return _localEditionOverride ??
+        SettingsScope.maybeOf(context)?.settings.rulesEdition ??
+        DmRulesEdition.v2024;
+  }
+
+  void _onEditionChanged(BuildContext context, DmRulesEdition newEdition) {
+    final settingsProvider = SettingsScope.maybeOf(context);
+    final current = _resolveEdition(context);
+    if (current == newEdition) return;
+    HapticService.selectionTick(context);
+    setState(() {
+      _localEditionOverride = newEdition;
+      // Re-hydrate setup combatants with updated edition statblocks
+      for (int i = 0; i < _teamA.length; i++) {
+        _teamA[i] = ArenaCombatant.fromMonster(
+          id: _teamA[i].id,
+          monster: _teamA[i].monster,
+          team: _teamA[i].team,
+          customName: _teamA[i].displayName,
+          edition: newEdition,
+        );
+      }
+      for (int i = 0; i < _teamB.length; i++) {
+        _teamB[i] = ArenaCombatant.fromMonster(
+          id: _teamB[i].id,
+          monster: _teamB[i].monster,
+          team: _teamB[i].team,
+          customName: _teamB[i].displayName,
+          edition: newEdition,
+        );
+      }
+    });
+    settingsProvider?.setRulesEdition(newEdition);
+  }
+
+  void _loadPreset(ArenaPresetMatchup preset, [DmRulesEdition? ed]) {
     _playbackTimer?.cancel();
-    final resolved = preset.resolveFighters();
+    final targetEd = ed ?? _resolveEdition(context);
+    final resolved = preset.resolveFighters(targetEd);
     setState(() {
       _teamA
         ..clear()
@@ -80,7 +135,8 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     });
   }
 
-  void _addMonsterToTeam(MonsterItem monster, int count, ArenaTeam team) {
+  void _addMonsterToTeam(MonsterItem monster, int count, ArenaTeam team, [DmRulesEdition? ed]) {
+    final targetEd = ed ?? _resolveEdition(context);
     setState(() {
       final targetList = team == ArenaTeam.teamA ? _teamA : _teamB;
       final existingCount = targetList.where((c) => c.monster.id == monster.id).length;
@@ -88,8 +144,8 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       for (int i = 0; i < count; i++) {
         final totalIndex = existingCount + i + 1;
         final name = count > 1 || existingCount > 0
-            ? '${monster.getName(_edition)} #$totalIndex'
-            : monster.getName(_edition);
+            ? '${monster.getName(targetEd)} #$totalIndex'
+            : monster.getName(targetEd);
 
         targetList.add(
           ArenaCombatant.fromMonster(
@@ -97,7 +153,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
             monster: monster,
             team: team,
             customName: name,
-            edition: _edition,
+            edition: targetEd,
           ),
         );
       }
@@ -212,6 +268,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     }
 
     final target = _engine.selectTarget(nextAttacker, _activeCombatants, _strategy);
+    final edition = _resolveEdition(context);
 
     final step = _engine.executeTurn(
       stepIndex: _currentStepIndex++,
@@ -219,7 +276,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       attacker: nextAttacker,
       allCombatants: _activeCombatants,
       strategy: _strategy,
-      edition: _edition,
+      edition: edition,
       environment: _environment,
     );
 
@@ -248,12 +305,13 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
 
   void _skipToEnd() {
     _playbackTimer?.cancel();
+    final edition = _resolveEdition(context);
 
     final simResult = _engine.simulateMatch(
       initialTeamA: _teamA,
       initialTeamB: _teamB,
       strategy: _strategy,
-      edition: _edition,
+      edition: edition,
       environment: _environment,
     );
 
@@ -463,12 +521,13 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       return;
     }
 
+    final edition = _resolveEdition(context);
     ArenaMonteCarloDialog.show(
       context,
       teamA: _teamA,
       teamB: _teamB,
       strategy: _strategy,
-      edition: _edition,
+      edition: edition,
       environment: _environment,
     );
   }
@@ -605,6 +664,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final isWide = MediaQuery.of(context).size.width > 700;
     final isSetup = _status == ArenaSimulationStatus.setup;
+    final edition = _resolveEdition(context);
 
     return CriticalEffectOverlay(
       controller: _critController,
@@ -633,11 +693,9 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
               child: RulesEditionToggle(
-                currentEdition: _edition,
+                currentEdition: edition,
                 isDense: true,
-                onEditionChanged: (newEdition) {
-                  setState(() => _edition = newEdition);
-                },
+                onEditionChanged: (newEdition) => _onEditionChanged(context, newEdition),
               ),
             ),
 
@@ -646,7 +704,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
               icon: const Icon(Icons.bookmark_outline),
               tooltip: 'Load Pit Fight Preset',
               padding: EdgeInsets.zero,
-              onSelected: _loadPreset,
+              onSelected: (preset) => _loadPreset(preset, edition),
               itemBuilder: (context) => ArenaPresetMatchup.defaultPresets.map((preset) {
                 return PopupMenuItem(
                   value: preset,
@@ -685,7 +743,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                     activeDefender: _activeDefender,
                     isPlaying: _status == ArenaSimulationStatus.playing,
                     playbackSpeed: _playbackSpeed,
-                    edition: _edition,
+                    edition: edition,
                     environment: _environment,
                     onTogglePlay: _togglePlayPause,
                     onStepForward: _advanceSingleStep,
@@ -849,6 +907,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                               team: ArenaTeam.teamA,
                               combatants: isSetup ? _teamA : _activeCombatants.where((c) => c.team == ArenaTeam.teamA).toList(),
                               isSetup: isSetup,
+                              edition: edition,
                             ),
                           ),
                           const VerticalDivider(width: 1),
@@ -858,6 +917,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                               team: ArenaTeam.teamB,
                               combatants: isSetup ? _teamB : _activeCombatants.where((c) => c.team == ArenaTeam.teamB).toList(),
                               isSetup: isSetup,
+                              edition: edition,
                             ),
                           ),
                         ],
@@ -912,12 +972,14 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                                     team: ArenaTeam.teamA,
                                     combatants: isSetup ? _teamA : _activeCombatants.where((c) => c.team == ArenaTeam.teamA).toList(),
                                     isSetup: isSetup,
+                                    edition: edition,
                                   ),
                                   _buildTeamColumn(
                                     context,
                                     team: ArenaTeam.teamB,
                                     combatants: isSetup ? _teamB : _activeCombatants.where((c) => c.team == ArenaTeam.teamB).toList(),
                                     isSetup: isSetup,
+                                    edition: edition,
                                   ),
                                 ],
                               ),
@@ -987,6 +1049,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     required ArenaTeam team,
     required List<ArenaCombatant> combatants,
     required bool isSetup,
+    required DmRulesEdition edition,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -1066,7 +1129,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                       isCurrentTurn: isCurrentTurn,
                       isTargeted: isTargeted,
                       isSetupMode: isSetup,
-                      edition: _edition,
+                      edition: edition,
                       onRemove: () {
                         setState(() {
                           final list = team == ArenaTeam.teamA ? _teamA : _teamB;
@@ -1081,8 +1144,8 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                               id: '${team.name}_${fighter.monster.id}_${DateTime.now().microsecondsSinceEpoch}',
                               monster: fighter.monster,
                               team: team,
-                              customName: '${fighter.monster.getName(_edition)} #${list.length + 1}',
-                              edition: _edition,
+                              customName: '${fighter.monster.getName(edition)} #${list.length + 1}',
+                              edition: edition,
                             ),
                           );
                         });
@@ -1111,9 +1174,9 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                   ArenaMonsterPickerSheet.show(
                     context,
                     team: team,
-                    edition: _edition,
+                    edition: edition,
                     onMonstersSelected: (monster, count) {
-                      _addMonsterToTeam(monster, count, team);
+                      _addMonsterToTeam(monster, count, team, edition);
                     },
                   );
                 },
