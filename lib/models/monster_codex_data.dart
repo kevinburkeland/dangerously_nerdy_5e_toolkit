@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'dm_screen_data.dart';
+import 'dpr/dpr_models.dart';
 import 'monster_codex/bestiary/bestiary_cr_0_to_quarter.dart';
 import 'monster_codex/bestiary/bestiary_cr_five_to_eight.dart';
 import 'monster_codex/bestiary/bestiary_cr_half_to_one.dart';
@@ -7,6 +9,18 @@ import 'monster_codex/bestiary/bestiary_cr_two_to_four.dart';
 import 'monster_codex/srd_monster_2024_diffs.dart';
 import 'monster_codex/srd_monster_cr_bands.dart';
 import 'srd_summons/srd_summons_library.dart';
+import '../services/rules/dpr_calculator_engine.dart';
+
+enum MonsterSortMode {
+  crAscending('CR: Low to High', Icons.sort),
+  crDescending('CR: High to Low', Icons.sort),
+  dprDescending('DPR: High to Low', Icons.local_fire_department_outlined),
+  nameAscending('Name: A to Z', Icons.sort_by_alpha);
+
+  final String label;
+  final IconData icon;
+  const MonsterSortMode(this.label, this.icon);
+}
 
 enum MonsterCrBand {
   all('All CR'),
@@ -122,6 +136,35 @@ class MonsterItem {
   int? get xp => sourceStatBlock.xp;
 
   static final Map<String, String> _corpusCache = {};
+  static final Map<String, double> _dprCache = {};
+
+  double calculateBaselineDpr([
+    DmRulesEdition edition = DmRulesEdition.v2024,
+    int targetAc = 15,
+  ]) {
+    final cacheKey = '${id}_${edition.name}_$targetAc';
+    final cached = _dprCache[cacheKey];
+    if (cached != null) return cached;
+
+    final sb = getStatBlock(edition);
+    final attacks = sb.extractDprAttacks();
+    final adv = sb.hasPackTactics ? AdvantageType.advantage : AdvantageType.normal;
+
+    double total = 0.0;
+    for (final attack in attacks) {
+      if (attack.attacksPerRound > 0) {
+        final pt = DprCalculatorEngine.calculateSingleAttackDpr(
+          attack.copyWith(attacksPerRound: 1),
+          targetAc,
+          adv,
+        );
+        total += pt.dpr * attack.attacksPerRound;
+      }
+    }
+
+    _dprCache[cacheKey] = total;
+    return total;
+  }
 
   String _getCorpus([DmRulesEdition edition = DmRulesEdition.v2024]) {
     final cacheKey = '${id}_${edition.name}';

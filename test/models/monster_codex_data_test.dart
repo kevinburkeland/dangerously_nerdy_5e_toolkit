@@ -1,3 +1,4 @@
+import 'package:dangerously_nerdy_5e_toolkit/models/dpr/dpr_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex/srd_monster_cr_bands.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex/srd_monster_lists.dart';
@@ -132,5 +133,51 @@ void main() {
         isTrue,
       );
     });
+
+    test('calculates baseline DPR and sorts monsters logically by offensive output', () {
+      final wolf = MonsterCodexLibrary.getMonsterByName('Wolf');
+      final brownBear = MonsterCodexLibrary.getMonsterByName('Brown Bear');
+      final fireElemental = MonsterCodexLibrary.getMonsterByName('Fire Elemental');
+
+      expect(wolf, isNotNull);
+      expect(brownBear, isNotNull);
+      expect(fireElemental, isNotNull);
+
+      final wolfDpr = wolf!.calculateBaselineDpr();
+      final bearDpr = brownBear!.calculateBaselineDpr();
+      final fireDpr = fireElemental!.calculateBaselineDpr();
+
+      expect(wolfDpr > 0, isTrue);
+      expect(bearDpr > wolfDpr, isTrue, reason: 'Brown Bear multiattack should deal more DPR than single wolf bite');
+      expect(fireDpr > bearDpr, isTrue, reason: 'Fire Elemental multiattack should out-damage Brown Bear');
+
+      expect(MonsterSortMode.values.length, 4);
+      expect(MonsterSortMode.dprDescending.label, contains('DPR'));
+    });
+
+    test('extractDprAttacks does not double up attacks for creatures with alternative weapons or single actions', () {
+      final skeleton = MonsterCodexLibrary.getMonsterByName('Skeleton');
+      if (skeleton != null) {
+        final attacks = skeleton.statBlock2014.extractDprAttacks();
+        final activeAttacks = attacks.fold<int>(0, (sum, a) => sum + a.attacksPerRound);
+        expect(activeAttacks, 1, reason: 'Skeleton without multiattack should have exactly 1 active attack per round');
+      }
+
+      final knight = MonsterCodexLibrary.getMonsterByName('Knight');
+      if (knight != null) {
+        final attacks = knight.statBlock2014.extractDprAttacks();
+        final activeAttacks = attacks.fold<int>(0, (sum, a) => sum + a.attacksPerRound);
+        expect(activeAttacks, 2, reason: 'Knight with two melee attacks should have exactly 2 active attacks per round');
+      }
+
+      final brownBear = MonsterCodexLibrary.getMonsterByName('Brown Bear');
+      if (brownBear != null) {
+        final attacks = brownBear.statBlock2014.extractDprAttacks();
+        final activeAttacks = attacks.fold<int>(0, (sum, a) => sum + a.attacksPerRound);
+        expect(activeAttacks, 2, reason: 'Brown Bear with 1 bite + 1 claws should have 2 active attacks per round');
+      }
+    });
   });
 }
+
+

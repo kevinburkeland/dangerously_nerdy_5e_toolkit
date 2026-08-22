@@ -744,6 +744,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       }
     }
 
+    // Collect all valid attack actions
     for (final action in actions) {
       if (action == multiattackAction) continue;
 
@@ -752,11 +753,13 @@ extension MinionStatBlockDprExt on MinionStatBlock {
           (action.attackType != null && action.attackType!.isNotEmpty) ||
           action.description.toLowerCase().contains('to hit') ||
           action.description.toLowerCase().contains('weapon attack') ||
+          action.description.toLowerCase().contains('melee attack') ||
+          action.description.toLowerCase().contains('ranged attack') ||
           action.description.toLowerCase().contains('spell attack');
 
       if (!isAttack) continue;
 
-      final parsed = _parseCreatureActionToDpr(action, multiattackAction);
+      final parsed = _parseCreatureActionToDpr(action);
       if (parsed != null) {
         attacks.add(parsed);
       }
@@ -778,15 +781,159 @@ extension MinionStatBlockDprExt on MinionStatBlock {
           attacksPerRound: multiattackAction != null ? 2 : 1,
         ),
       );
+      return attacks;
     }
+
+    // Resolve attacksPerRound across all actions according to 5e rules & Multiattack
+    _resolveAttacksPerRound(attacks, multiattackAction);
 
     return attacks;
   }
 
-  DprAttackAction? _parseCreatureActionToDpr(
-    CreatureAction action,
+  void _resolveAttacksPerRound(
+    List<DprAttackAction> attacks,
     CreatureAction? multiattack,
   ) {
+    if (multiattack == null) {
+      // Without Multiattack, a creature has 1 action per round and makes 1 attack.
+      // Set the primary (highest estimated damage) attack to 1, and alternative weapons to 0.
+      int bestIndex = 0;
+      double maxDmg = -1;
+
+      for (int i = 0; i < attacks.length; i++) {
+        final a = attacks[i];
+        final avgDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
+            a.damageBonus +
+            (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0);
+        if (avgDmg > maxDmg) {
+          maxDmg = avgDmg;
+          bestIndex = i;
+        }
+      }
+
+      for (int i = 0; i < attacks.length; i++) {
+        attacks[i] = attacks[i].copyWith(attacksPerRound: (i == bestIndex) ? 1 : 0);
+      }
+      return;
+    }
+
+    // With Multiattack: Parse the routine text
+    final multiDesc = multiattack.description.toLowerCase();
+    bool specificMatchFound = false;
+
+    // Check for explicit per-weapon counts in the Multiattack description
+    for (int i = 0; i < attacks.length; i++) {
+      final attack = attacks[i];
+      final nameLower = attack.name.toLowerCase();
+      final cleanName = nameLower.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+      final baseName = cleanName.endsWith('s') && cleanName.length > 3
+          ? cleanName.substring(0, cleanName.length - 1)
+          : cleanName;
+
+      final count = _extractAttackCountForName(multiDesc, cleanName, baseName);
+      if (count > 0) {
+        attacks[i] = attack.copyWith(attacksPerRound: count);
+        specificMatchFound = true;
+      } else {
+        attacks[i] = attack.copyWith(attacksPerRound: 0);
+      }
+    }
+
+    // If no specific weapon names matched, check generic Multiattack patterns
+    // (e.g. "The creature makes two melee attacks." or "The veteran makes three attacks.")
+    if (!specificMatchFound || attacks.every((a) => a.attacksPerRound == 0)) {
+      int totalAttacks = 2; // Default 5e multiattack count
+      if (multiDesc.contains('four attacks') ||
+          multiDesc.contains('four melee') ||
+          multiDesc.contains('4 attacks')) {
+        totalAttacks = 4;
+      } else if (multiDesc.contains('three attacks') ||
+          multiDesc.contains('three melee') ||
+          multiDesc.contains('3 attacks')) {
+        totalAttacks = 3;
+      } else if (multiDesc.contains('two attacks') ||
+          multiDesc.contains('two melee') ||
+          multiDesc.contains('2 attacks')) {
+        totalAttacks = 2;
+      }
+
+      // Assign the full multiattack count to the single best melee/primary attack, and 0 to alternatives
+      int bestIndex = 0;
+      double maxDmg = -1;
+
+      for (int i = 0; i < attacks.length; i++) {
+        final a = attacks[i];
+        final avgDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
+            a.damageBonus +
+            (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0);
+        if (avgDmg > maxDmg) {
+          maxDmg = avgDmg;
+          bestIndex = i;
+        }
+      }
+
+      for (int i = 0; i < attacks.length; i++) {
+        attacks[i] = attacks[i].copyWith(attacksPerRound: (i == bestIndex) ? totalAttacks : 0);
+      }
+    }
+  }
+
+  int _extractAttackCountForName(String desc, String cleanName, String baseName) {
+    final patterns = [
+      (4, [
+        'four with its $cleanName',
+        'four with its $baseName',
+        'four $cleanName',
+        'four $baseName',
+        '4 $cleanName',
+        '4 $baseName',
+      ]),
+      (3, [
+        'three with its $cleanName',
+        'three with its $baseName',
+        'three with their $cleanName',
+        'three $cleanName',
+        'three $baseName',
+        '3 $cleanName',
+        '3 $baseName',
+      ]),
+      (2, [
+        'two with its $cleanName',
+        'two with its $baseName',
+        'two with their $cleanName',
+        'two with either $cleanName',
+        'two $cleanName',
+        'two $baseName',
+        '2 $cleanName',
+        '2 $baseName',
+      ]),
+      (1, [
+        'one with its $cleanName',
+        'one with its $baseName',
+        'one with their $cleanName',
+        'one $cleanName',
+        'one $baseName',
+        '1 $cleanName',
+        '1 $baseName',
+        'and its $cleanName',
+        'and its $baseName',
+        'and one $cleanName',
+        'and one $baseName',
+      ]),
+    ];
+
+    for (final (count, matchers) in patterns) {
+      for (final matcher in matchers) {
+        if (desc.contains(matcher)) {
+          return count;
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  DprAttackAction? _parseCreatureActionToDpr(CreatureAction action) {
     int bonus = action.attackBonus ?? attackBonus;
     final bonusMatch = RegExp(r'([+-]\s*\d+)\s+to\s+hit', caseSensitive: false)
         .firstMatch(action.description);
@@ -835,38 +982,6 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       dType = typeMatch.group(1)!.toLowerCase();
     }
 
-    int countPerRound = 1;
-    if (multiattack != null) {
-      final multiDesc = multiattack.description.toLowerCase();
-      final actionNameLower = action.name.toLowerCase();
-
-      if (multiDesc.contains('three $actionNameLower') ||
-          multiDesc.contains('3 $actionNameLower') ||
-          multiDesc.contains('three with its $actionNameLower') ||
-          multiDesc.contains('three with their $actionNameLower')) {
-        countPerRound = 3;
-      } else if (multiDesc.contains('two $actionNameLower') ||
-          multiDesc.contains('2 $actionNameLower') ||
-          multiDesc.contains('two with its $actionNameLower') ||
-          multiDesc.contains('two with their $actionNameLower') ||
-          multiDesc.contains('two with either $actionNameLower')) {
-        countPerRound = 2;
-      } else if (multiDesc.contains('four $actionNameLower') ||
-          multiDesc.contains('4 $actionNameLower')) {
-        countPerRound = 4;
-      } else if (multiDesc.contains('one with its $actionNameLower') ||
-          multiDesc.contains('one $actionNameLower')) {
-        countPerRound = 1;
-      } else if (multiDesc.contains('makes two attacks') ||
-          multiDesc.contains('makes two melee attacks') ||
-          multiDesc.contains('makes two weapon attacks')) {
-        countPerRound = 2;
-      } else if (multiDesc.contains('makes three attacks') ||
-          multiDesc.contains('makes three melee attacks')) {
-        countPerRound = 3;
-      }
-    }
-
     return DprAttackAction(
       id: '${id}_${action.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_')}',
       name: action.name,
@@ -878,7 +993,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       secondaryDiceCount: secDCount,
       secondaryDiceSides: secDSides,
       secondaryDamageType: secDType,
-      attacksPerRound: countPerRound,
+      attacksPerRound: 1, // Will be resolved by _resolveAttacksPerRound
     );
   }
 }

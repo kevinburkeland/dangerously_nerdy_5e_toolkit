@@ -71,13 +71,15 @@ class FilterBottomSheetFrame extends StatelessWidget {
           children: [
             Icon(icon, color: theme.colorScheme.primary, size: 22),
             const SizedBox(width: 8),
-            Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            const Spacer(),
             TextButton.icon(
               onPressed: onResetAll,
               icon: const Icon(Icons.refresh, size: 16),

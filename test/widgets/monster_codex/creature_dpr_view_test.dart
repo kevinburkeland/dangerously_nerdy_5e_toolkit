@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/monster_codex/creature_dpr_view.dart';
 
 void main() {

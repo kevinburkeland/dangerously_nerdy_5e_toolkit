@@ -51,6 +51,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
   String? _selectedType;
   String? _selectedSize;
   MonsterCrBand _selectedCrBand = MonsterCrBand.all;
+  MonsterSortMode _sortMode = MonsterSortMode.crAscending;
   bool _showOnlyPinned = false;
   bool _showOnlySpellSummons = false;
   bool _showOnlyMagicItems = false;
@@ -104,6 +105,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       _selectedType = null;
       _selectedSize = null;
       _selectedCrBand = MonsterCrBand.all;
+      _sortMode = MonsterSortMode.crAscending;
       _showOnlyPinned = false;
       _showOnlySpellSummons = false;
       _showOnlyMagicItems = false;
@@ -121,6 +123,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     if (_selectedType != null) count++;
     if (_selectedSize != null) count++;
     if (_selectedCrBand != MonsterCrBand.all) count++;
+    if (_sortMode != MonsterSortMode.crAscending) count++;
     if (_showOnlyPinned) count++;
     if (_showOnlySpellSummons) count++;
     if (_showOnlyMagicItems) count++;
@@ -136,6 +139,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
   void _openFilterSheet(BuildContext context) {
     MonsterFilterSheet.show(
       context,
+      selectedSortMode: _sortMode,
       selectedType: _selectedType,
       selectedSize: _selectedSize,
       selectedCrBand: _selectedCrBand,
@@ -148,6 +152,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       showOnlyResistances: _showOnlyResistances,
       showOnlyLegendary: _showOnlyLegendary,
       showOnly2024Diff: _showOnly2024Diff,
+      onSortModeChanged: (mode) => setState(() => _sortMode = mode),
       onTypeChanged: (type) => setState(() => _selectedType = type),
       onSizeChanged: (size) => setState(() => _selectedSize = size),
       onCrBandChanged: (band) => setState(() => _selectedCrBand = band),
@@ -667,14 +672,14 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
                           ),
                         if (_viewMode == MonsterCodexViewMode.allMonsters &&
                             pinnedMonstersInResults.isNotEmpty)
-                          ..._buildGroupedCrSlivers(
+                          ..._buildGroupedSlivers(
                             context,
                             otherMonstersInResults,
                             activeEdition,
                             pinnedIds,
                           )
                         else
-                          ..._buildGroupedCrSlivers(
+                          ..._buildGroupedSlivers(
                             context,
                             filteredMonsters,
                             activeEdition,
@@ -691,12 +696,31 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     );
   }
 
-  List<Widget> _buildGroupedCrSlivers(
+  List<Widget> _buildGroupedSlivers(
     BuildContext context,
     List<MonsterItem> monsters,
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
+    switch (_sortMode) {
+      case MonsterSortMode.crAscending:
+        return _buildGroupedCrSlivers(context, monsters, edition, pinnedIds, ascending: true);
+      case MonsterSortMode.crDescending:
+        return _buildGroupedCrSlivers(context, monsters, edition, pinnedIds, ascending: false);
+      case MonsterSortMode.dprDescending:
+        return _buildGroupedDprSlivers(context, monsters, edition, pinnedIds);
+      case MonsterSortMode.nameAscending:
+        return _buildGroupedAlphabeticalSlivers(context, monsters, edition, pinnedIds);
+    }
+  }
+
+  List<Widget> _buildGroupedCrSlivers(
+    BuildContext context,
+    List<MonsterItem> monsters,
+    DmRulesEdition edition,
+    Set<String> pinnedIds, {
+    bool ascending = true,
+  }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final slivers = <Widget>[];
@@ -708,7 +732,12 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
       crGroups.putIfAbsent(cr, () => []).add(monster);
     }
 
-    final sortedCrs = crGroups.keys.toList()..sort();
+    final sortedCrs = crGroups.keys.toList();
+    if (ascending) {
+      sortedCrs.sort();
+    } else {
+      sortedCrs.sort((a, b) => b.compareTo(a));
+    }
 
     for (int i = 0; i < sortedCrs.length; i++) {
       final cr = sortedCrs[i];
@@ -765,6 +794,183 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
 
       slivers.add(
           _buildSliverMonsterCards(context, crMonsters, edition, pinnedIds));
+    }
+
+    return slivers;
+  }
+
+  List<Widget> _buildGroupedDprSlivers(
+    BuildContext context,
+    List<MonsterItem> monsters,
+    DmRulesEdition edition,
+    Set<String> pinnedIds,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final slivers = <Widget>[];
+
+    final sorted = List<MonsterItem>.from(monsters)
+      ..sort((a, b) {
+        final dprA = a.calculateBaselineDpr(edition);
+        final dprB = b.calculateBaselineDpr(edition);
+        final cmp = dprB.compareTo(dprA);
+        if (cmp != 0) return cmp;
+        return a.getName(edition).compareTo(b.getName(edition));
+      });
+
+    final tiers = <({String title, Color color, List<MonsterItem> items})>[
+      (
+        title: 'Deadly Strike (40+ DPR)',
+        color: isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626),
+        items: sorted.where((m) => m.calculateBaselineDpr(edition) >= 40.0).toList(),
+      ),
+      (
+        title: 'Dangerous Strike (20 - 39.9 DPR)',
+        color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
+        items: sorted.where((m) {
+          final d = m.calculateBaselineDpr(edition);
+          return d >= 20.0 && d < 40.0;
+        }).toList(),
+      ),
+      (
+        title: 'Standard Strike (10 - 19.9 DPR)',
+        color: isDark ? const Color(0xFFA78BFA) : const Color(0xFF7C3AED),
+        items: sorted.where((m) {
+          final d = m.calculateBaselineDpr(edition);
+          return d >= 10.0 && d < 20.0;
+        }).toList(),
+      ),
+      (
+        title: 'Skirmishers & Minions (< 10 DPR)',
+        color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+        items: sorted.where((m) => m.calculateBaselineDpr(edition) < 10.0).toList(),
+      ),
+    ];
+
+    for (int i = 0; i < tiers.length; i++) {
+      final tier = tiers[i];
+      if (tier.items.isEmpty) continue;
+
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, slivers.isEmpty ? 8 : 20, 16, 10),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: tier.color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: tier.color.withValues(alpha: 0.4)),
+                  ),
+                  child: Icon(
+                    Icons.local_fire_department,
+                    color: tier.color,
+                    size: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  tier.title,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${tier.items.length} ${tier.items.length == 1 ? 'Monster' : 'Monsters'}',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      slivers.add(_buildSliverMonsterCards(context, tier.items, edition, pinnedIds));
+    }
+
+    return slivers;
+  }
+
+  List<Widget> _buildGroupedAlphabeticalSlivers(
+    BuildContext context,
+    List<MonsterItem> monsters,
+    DmRulesEdition edition,
+    Set<String> pinnedIds,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final slivers = <Widget>[];
+
+    final sorted = List<MonsterItem>.from(monsters)
+      ..sort((a, b) => a.getName(edition).compareTo(b.getName(edition)));
+
+    final letterGroups = <String, List<MonsterItem>>{};
+    for (final monster in sorted) {
+      final name = monster.getName(edition);
+      final letter = name.isNotEmpty ? name[0].toUpperCase() : '#';
+      letterGroups.putIfAbsent(letter, () => []).add(monster);
+    }
+
+    final letters = letterGroups.keys.toList()..sort();
+
+    for (int i = 0; i < letters.length; i++) {
+      final letter = letters[i];
+      final letterMonsters = letterGroups[letter]!;
+
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, i == 0 ? 8 : 20, 16, 10),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                      color: isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Letter $letter',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${letterMonsters.length} ${letterMonsters.length == 1 ? 'Monster' : 'Monsters'}',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      slivers.add(_buildSliverMonsterCards(context, letterMonsters, edition, pinnedIds));
     }
 
     return slivers;

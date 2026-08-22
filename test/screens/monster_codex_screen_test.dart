@@ -131,7 +131,7 @@ void main() {
       await tester.tap(filterButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Filter Monster Codex'), findsOneWidget);
+      expect(find.textContaining('Filter & Sort Monster Codex'), findsOneWidget);
       expect(find.text('Reset All'), findsOneWidget);
 
       // Tap Reset All
@@ -145,6 +145,50 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(MonsterCard), findsWidgets);
+    });
+
+    testWidgets('supports sorting by DPR and alphabetical order from filter sheet',
+        (tester) async {
+      await tester.pumpWidget(buildTestScreen());
+      await tester.pumpAndSettle();
+
+      // Open filter & sort sheet
+      final filterButton = find.byTooltip('Filter Bestiary');
+      await tester.tap(filterButton);
+      await tester.pumpAndSettle();
+
+      // Verify Sort Order options
+      expect(find.text('Sort Order'), findsOneWidget);
+      expect(find.text('DPR: High to Low'), findsOneWidget);
+      expect(find.text('Name: A to Z'), findsOneWidget);
+
+      // Select DPR: High to Low
+      await tester.tap(find.text('DPR: High to Low'));
+      await tester.pumpAndSettle();
+
+      // Apply
+      final applyButton = find.text('Apply Filters');
+      await tester.ensureVisible(applyButton);
+      await tester.tap(applyButton);
+      await tester.pumpAndSettle();
+
+      // Verify DPR tier header is visible
+      expect(find.textContaining('Strike'), findsWidgets);
+      expect(find.byType(MonsterCard), findsWidgets);
+
+      // Re-open and switch to Alphabetical
+      await tester.tap(filterButton);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Name: A to Z'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(applyButton);
+      await tester.tap(applyButton);
+      await tester.pumpAndSettle();
+
+      // Verify Letter header is visible
+      expect(find.textContaining('Letter'), findsWidgets);
     });
 
     testWidgets('switches to 2024 Diffs tab and opens MonsterComparisonDialog',
@@ -183,3 +227,4 @@ void main() {
     });
   });
 }
+

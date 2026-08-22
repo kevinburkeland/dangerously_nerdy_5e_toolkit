@@ -131,7 +131,7 @@ class MonsterCard extends StatelessWidget {
                 context,
                 icon: Icons.shield_outlined,
                 label: 'AC ${statBlock.ac}${statBlock.armorType != null ? ' (${statBlock.armorType})' : ''}',
-                color: theme.colorScheme.onSurfaceVariant,
+                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
               ),
               _buildStatChip(
                 context,
@@ -143,7 +143,14 @@ class MonsterCard extends StatelessWidget {
                 context,
                 icon: Icons.directions_run_outlined,
                 label: statBlock.speed,
-                color: theme.colorScheme.onSurfaceVariant,
+                color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D),
+              ),
+              _buildStatChip(
+                context,
+                icon: Icons.local_fire_department_outlined,
+                label: '~${monster.calculateBaselineDpr(edition).toStringAsFixed(1)} DPR',
+                color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
+                isFilled: true,
               ),
             ],
           ),
@@ -158,12 +165,12 @@ class MonsterCard extends StatelessWidget {
                 if (statBlock.hasLegendaryResistance)
                   _buildTraitPill(
                     statBlock.traits.firstWhere((t) => t.name.toLowerCase().contains('legendary resistance')).name,
-                    isDark ? const Color(0xFFFDE047) : const Color(0xFFD97706),
+                    isDark ? const Color(0xFFFDE047) : const Color(0xFFB45309),
                   ),
                 if (statBlock.legendaryActions.isNotEmpty || statBlock.hasLegendaryActions)
                   _buildTraitPill(
                     'Legendary Actions (${statBlock.legendaryActions.isNotEmpty ? statBlock.legendaryActions.length : 3})',
-                    isDark ? const Color(0xFFF472B6) : const Color(0xFFDB2777),
+                    isDark ? const Color(0xFFF472B6) : const Color(0xFFBE185D),
                   ),
                 ...statBlock.traits
                     .where((t) => !t.name.toLowerCase().contains('legendary resistance'))
@@ -174,7 +181,7 @@ class MonsterCard extends StatelessWidget {
                         isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),
                       ),
                     ),
-                ...statBlock.actions.take(3).map(
+                ...statBlock.actions.take(2).map(
                       (action) => _buildActionPill(
                         context,
                         action,
@@ -297,12 +304,15 @@ class MonsterCard extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: isFilled ? color : theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isFilled ? color : theme.colorScheme.onSurface.withValues(alpha: 0.85),
-              fontSize: 11,
-              fontWeight: isFilled ? FontWeight.bold : FontWeight.w600,
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isFilled ? color : theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                fontSize: 11,
+                fontWeight: isFilled ? FontWeight.bold : FontWeight.w600,
+              ),
             ),
           ),
         ],

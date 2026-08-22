@@ -4,8 +4,8 @@ import '../../services/haptic_service.dart';
 
 import '../common/filter_bottom_sheet_frame.dart';
 
-/// Modal bottom sheet or embedded panel allowing multi-dimensional filtering of the Spellbook.
-class SpellFilterSheet extends StatelessWidget {
+/// Modal bottom sheet allowing multi-dimensional filtering of the Spellbook.
+class SpellFilterSheet extends StatefulWidget {
   final int? selectedLevel;
   final SpellSchool? selectedSchool;
   final SpellClass? selectedClass;
@@ -84,29 +84,149 @@ class SpellFilterSheet extends StatelessWidget {
   }
 
   @override
+  State<SpellFilterSheet> createState() => _SpellFilterSheetState();
+}
+
+class _SpellFilterSheetState extends State<SpellFilterSheet> {
+  late int? _level;
+  late SpellSchool? _school;
+  late SpellClass? _class;
+  late bool _changedIn2024;
+  late bool _pinned;
+  late bool _ritual;
+  late bool _concentration;
+
+  @override
+  void initState() {
+    super.initState();
+    _level = widget.selectedLevel;
+    _school = widget.selectedSchool;
+    _class = widget.selectedClass;
+    _changedIn2024 = widget.showOnlyChangedIn2024;
+    _pinned = widget.showOnlyPinned;
+    _ritual = widget.showOnlyRitual;
+    _concentration = widget.showOnlyConcentration;
+  }
+
+  void _handleResetAll() {
+    HapticService.selectionTick(context);
+    setState(() {
+      _level = null;
+      _school = null;
+      _class = null;
+      _changedIn2024 = false;
+      _pinned = false;
+      _ritual = false;
+      _concentration = false;
+    });
+    widget.onResetAll();
+  }
+
+  Widget _buildAccessibleChip({
+    required BuildContext context,
+    required String label,
+    required bool isSelected,
+    required ValueChanged<bool> onSelected,
+    IconData? icon,
+    Color? customSelectedColor,
+    String? tooltip,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final primaryColor = isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary;
+    final activeColor = customSelectedColor ?? primaryColor;
+
+    final backgroundColor = isSelected
+        ? (isDark
+            ? activeColor.withValues(alpha: 0.28)
+            : activeColor.withValues(alpha: 0.16))
+        : (isDark
+            ? const Color(0xFF1E293B)
+            : const Color(0xFFF1F5F9));
+
+    final borderColor = isSelected
+        ? activeColor
+        : (isDark
+            ? const Color(0xFF475569)
+            : const Color(0xFF94A3B8));
+
+    final textColor = isSelected
+        ? (isDark
+            ? Colors.white
+            : (customSelectedColor != null
+                ? const Color(0xFF0F172A)
+                : theme.colorScheme.primary))
+        : (isDark
+            ? const Color(0xFFF1F5F9)
+            : const Color(0xFF0F172A));
+
+    final iconColor = isSelected
+        ? activeColor
+        : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569));
+
+    return Tooltip(
+      message: tooltip ?? label,
+      child: FilterChip(
+        avatar: icon != null
+            ? Icon(
+                icon,
+                size: 16,
+                color: iconColor,
+              )
+            : null,
+        label: Text(
+          label,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+            letterSpacing: 0.2,
+          ),
+        ),
+        selected: isSelected,
+        showCheckmark: false,
+        backgroundColor: backgroundColor,
+        selectedColor: backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: borderColor,
+            width: isSelected ? 1.6 : 1.0,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        onSelected: (selected) {
+          HapticService.selectionTick(context);
+          onSelected(selected);
+        },
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
-    final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
-    final concColor = isDark ? Colors.amberAccent : const Color(0xFFB45309);
-    final ritualColor = isDark ? Colors.cyanAccent : const Color(0xFF0E7490);
+    final pinColor = isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE);
+    final diffColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+    final concColor = isDark ? const Color(0xFFFDE047) : const Color(0xFFB45309);
+    final ritualColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF0E7490);
 
     return FilterBottomSheetFrame(
       icon: Icons.menu_book,
       title: 'Filter Spellbook',
-      onResetAll: () {
-        HapticService.selectionTick(context);
-        onResetAll();
-      },
+      onResetAll: _handleResetAll,
       children: [
-        // Quick Feature Toggles (2024 Diffs, Pinned, Ritual, Concentration)
+        // Quick Feature Toggles
         Text(
           'Quick Filters',
           style: TextStyle(
-            color: theme.colorScheme.primary,
+            color: isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary,
             fontSize: 13,
             fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 8),
@@ -114,44 +234,48 @@ class SpellFilterSheet extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            FilterChip(
-              avatar: Icon(Icons.bookmark, size: 14, color: pinColor),
-              label: const Text('My Pinned Spells'),
-              selected: showOnlyPinned,
-              selectedColor: pinColor.withValues(alpha: 0.25),
+            _buildAccessibleChip(
+              context: context,
+              label: 'My Pinned Spells',
+              icon: Icons.bookmark,
+              customSelectedColor: pinColor,
+              isSelected: _pinned,
               onSelected: (val) {
-                HapticService.selectionTick(context);
-                onPinnedToggled(val);
+                setState(() => _pinned = val);
+                widget.onPinnedToggled(val);
               },
             ),
-            FilterChip(
-              avatar: Icon(Icons.auto_awesome, size: 14, color: diffColor),
-              label: const Text('2024 Revised Only'),
-              selected: showOnlyChangedIn2024,
-              selectedColor: diffColor.withValues(alpha: 0.25),
+            _buildAccessibleChip(
+              context: context,
+              label: '2024 Revised Only',
+              icon: Icons.auto_awesome,
+              customSelectedColor: diffColor,
+              isSelected: _changedIn2024,
               onSelected: (val) {
-                HapticService.selectionTick(context);
-                onChangedIn2024Toggled(val);
+                setState(() => _changedIn2024 = val);
+                widget.onChangedIn2024Toggled(val);
               },
             ),
-            FilterChip(
-              avatar: Icon(Icons.psychology_outlined, size: 14, color: concColor),
-              label: const Text('Concentration'),
-              selected: showOnlyConcentration,
-              selectedColor: concColor.withValues(alpha: 0.25),
+            _buildAccessibleChip(
+              context: context,
+              label: 'Concentration',
+              icon: Icons.psychology_outlined,
+              customSelectedColor: concColor,
+              isSelected: _concentration,
               onSelected: (val) {
-                HapticService.selectionTick(context);
-                onConcentrationToggled(val);
+                setState(() => _concentration = val);
+                widget.onConcentrationToggled(val);
               },
             ),
-            FilterChip(
-              avatar: Icon(Icons.auto_stories, size: 14, color: ritualColor),
-              label: const Text('Ritual'),
-              selected: showOnlyRitual,
-              selectedColor: ritualColor.withValues(alpha: 0.25),
+            _buildAccessibleChip(
+              context: context,
+              label: 'Ritual',
+              icon: Icons.auto_stories,
+              customSelectedColor: ritualColor,
+              isSelected: _ritual,
               onSelected: (val) {
-                HapticService.selectionTick(context);
-                onRitualToggled(val);
+                setState(() => _ritual = val);
+                widget.onRitualToggled(val);
               },
             ),
           ],
@@ -162,9 +286,10 @@ class SpellFilterSheet extends StatelessWidget {
         Text(
           'Spell Level',
           style: TextStyle(
-            color: theme.colorScheme.primary,
+            color: isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary,
             fontSize: 13,
             fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 8),
@@ -172,32 +297,37 @@ class SpellFilterSheet extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: [
-            ChoiceChip(
-              label: const Text('All Levels'),
-              selected: selectedLevel == null,
+            _buildAccessibleChip(
+              context: context,
+              label: 'All Levels',
+              isSelected: _level == null,
               onSelected: (selected) {
                 if (selected) {
-                  HapticService.selectionTick(context);
-                  onLevelChanged(null);
+                  setState(() => _level = null);
+                  widget.onLevelChanged(null);
                 }
               },
             ),
-            ChoiceChip(
-              label: const Text('Cantrip (0)'),
-              selected: selectedLevel == 0,
+            _buildAccessibleChip(
+              context: context,
+              label: 'Cantrip (0)',
+              isSelected: _level == 0,
               onSelected: (selected) {
-                HapticService.selectionTick(context);
-                onLevelChanged(selected ? 0 : null);
+                final newLvl = selected ? 0 : null;
+                setState(() => _level = newLvl);
+                widget.onLevelChanged(newLvl);
               },
             ),
             ...List.generate(9, (index) {
               final lvl = index + 1;
-              return ChoiceChip(
-                label: Text('Level $lvl'),
-                selected: selectedLevel == lvl,
+              return _buildAccessibleChip(
+                context: context,
+                label: 'Level $lvl',
+                isSelected: _level == lvl,
                 onSelected: (selected) {
-                  HapticService.selectionTick(context);
-                  onLevelChanged(selected ? lvl : null);
+                  final newLvl = selected ? lvl : null;
+                  setState(() => _level = newLvl);
+                  widget.onLevelChanged(newLvl);
                 },
               );
             }),
@@ -209,9 +339,10 @@ class SpellFilterSheet extends StatelessWidget {
         Text(
           'Class List',
           style: TextStyle(
-            color: theme.colorScheme.primary,
+            color: isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary,
             fontSize: 13,
             fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 8),
@@ -219,24 +350,27 @@ class SpellFilterSheet extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: [
-            ChoiceChip(
-              label: const Text('All Classes'),
-              selected: selectedClass == null,
+            _buildAccessibleChip(
+              context: context,
+              label: 'All Classes',
+              isSelected: _class == null,
               onSelected: (selected) {
                 if (selected) {
-                  HapticService.selectionTick(context);
-                  onClassChanged(null);
+                  setState(() => _class = null);
+                  widget.onClassChanged(null);
                 }
               },
             ),
             ...SpellClass.values.map(
-              (cls) => ChoiceChip(
-                avatar: Icon(cls.icon, size: 14),
-                label: Text(cls.label),
-                selected: selectedClass == cls,
+              (cls) => _buildAccessibleChip(
+                context: context,
+                label: cls.label,
+                icon: cls.icon,
+                isSelected: _class == cls,
                 onSelected: (selected) {
-                  HapticService.selectionTick(context);
-                  onClassChanged(selected ? cls : null);
+                  final newCls = selected ? cls : null;
+                  setState(() => _class = newCls);
+                  widget.onClassChanged(newCls);
                 },
               ),
             ),
@@ -248,9 +382,10 @@ class SpellFilterSheet extends StatelessWidget {
         Text(
           'School of Magic',
           style: TextStyle(
-            color: theme.colorScheme.primary,
+            color: isDark ? const Color(0xFF38BDF8) : theme.colorScheme.primary,
             fontSize: 13,
             fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 8),
@@ -258,28 +393,30 @@ class SpellFilterSheet extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: [
-            ChoiceChip(
-              label: const Text('All Schools'),
-              selected: selectedSchool == null,
+            _buildAccessibleChip(
+              context: context,
+              label: 'All Schools',
+              isSelected: _school == null,
               onSelected: (selected) {
                 if (selected) {
-                  HapticService.selectionTick(context);
-                  onSchoolChanged(null);
+                  setState(() => _school = null);
+                  widget.onSchoolChanged(null);
                 }
               },
             ),
             ...SpellSchool.values.map(
               (school) {
-                final isDark = theme.brightness == Brightness.dark;
                 final schoolColor = school.getLegibleColor(isDark);
-                return ChoiceChip(
-                  avatar: Icon(school.icon, size: 14, color: schoolColor),
-                  label: Text(school.label),
-                  selected: selectedSchool == school,
-                  selectedColor: schoolColor.withValues(alpha: 0.25),
+                return _buildAccessibleChip(
+                  context: context,
+                  label: school.label,
+                  icon: school.icon,
+                  customSelectedColor: schoolColor,
+                  isSelected: _school == school,
                   onSelected: (selected) {
-                    HapticService.selectionTick(context);
-                    onSchoolChanged(selected ? school : null);
+                    final newSchool = selected ? school : null;
+                    setState(() => _school = newSchool);
+                    widget.onSchoolChanged(newSchool);
                   },
                 );
               },
