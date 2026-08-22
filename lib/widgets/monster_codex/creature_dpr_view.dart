@@ -179,6 +179,25 @@ class _CreatureDprViewState extends State<CreatureDprView> {
           if (sum > bestLegSum) bestLegSum = sum;
         }
       }
+      for (int i = 0; i < legOptions.length; i++) {
+        for (int j = 0; j < legOptions.length; j++) {
+          if (i == j) continue;
+          final la = legOptions[i];
+          final lb = legOptions[j];
+          final ptA = attackPoints[la.id];
+          final ptB = attackPoints[lb.id];
+          if (ptA != null && ptB != null) {
+            final costA = la.legendaryCost > 0 ? la.legendaryCost : 1;
+            final costB = lb.legendaryCost > 0 ? lb.legendaryCost : 1;
+            for (int countA = 0; countA * costA <= 3; countA++) {
+              final remaining = 3 - (countA * costA);
+              final countB = remaining ~/ costB;
+              final sum = (countA * ptA.dpr) + (countB * ptB.dpr);
+              if (sum > bestLegSum) bestLegSum = sum;
+            }
+          }
+        }
+      }
       legendaryDpr = bestLegSum;
     }
 

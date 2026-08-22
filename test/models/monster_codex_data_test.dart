@@ -247,9 +247,60 @@ void main() {
         expect(legAttacks.isNotEmpty, isTrue,
             reason: 'Adult Red Dragon has legendary actions extracted');
 
+        final legTail = legAttacks.firstWhere((a) => a.name.toLowerCase().contains('tail'));
+        expect(legTail.diceCount, equals(2));
+        expect(legTail.diceSides, equals(8));
+        expect(legTail.damageBonus, equals(8));
+        expect(legTail.attackBonus, equals(14),
+            reason: 'Tail Attack legendary action should inherit +14 to hit, 2d8 + 8 from regular Tail attack');
+
         final totalDpr = adultRed.calculateBaselineDpr();
         expect(totalDpr > 80 && totalDpr < 160, isTrue,
             reason: 'Adult Red Dragon total DPR ($totalDpr) includes turn routine + 3 legendary actions');
+      }
+
+      final vampire = MonsterCodexLibrary.getMonsterByName('Vampire');
+      expect(vampire, isNotNull);
+      if (vampire != null) {
+        final attacks = vampire.statBlock2014.extractDprAttacks();
+        final legUnarmed = attacks.firstWhere((a) => a.isLegendaryAction && a.name.toLowerCase().contains('unarmed strike'));
+        expect(legUnarmed.diceCount, equals(1));
+        expect(legUnarmed.diceSides, equals(8));
+        expect(legUnarmed.damageBonus, equals(4));
+        expect(legUnarmed.attackBonus, equals(9),
+            reason: 'Vampire Unarmed Strike legendary action should inherit 1d8 + 4 damage from regular Unarmed Strike');
+      }
+
+      final aboleth = MonsterCodexLibrary.getMonsterByName('Aboleth');
+      expect(aboleth, isNotNull);
+      if (aboleth != null) {
+        final attacks = aboleth.statBlock2014.extractDprAttacks();
+        final legTailSwipe = attacks.firstWhere((a) => a.isLegendaryAction && a.name.toLowerCase().contains('tail'));
+        expect(legTailSwipe.diceCount, equals(3));
+        expect(legTailSwipe.diceSides, equals(6));
+        expect(legTailSwipe.damageBonus, equals(5));
+        expect(legTailSwipe.attackBonus, equals(9),
+            reason: 'Aboleth Tail Swipe legendary action should inherit 3d6 + 5 damage from regular Tail attack');
+      }
+
+      final tarrasque = MonsterCodexLibrary.getMonsterByName('Tarrasque');
+      expect(tarrasque, isNotNull);
+      if (tarrasque != null) {
+        final attacks = tarrasque.statBlock2014.extractDprAttacks();
+        final turnAttacks = attacks.where((a) => !a.isLegendaryAction).toList();
+        final bite = turnAttacks.firstWhere((a) => a.name.toLowerCase() == 'bite');
+        final claw = turnAttacks.firstWhere((a) => a.name.toLowerCase() == 'claw');
+        final horns = turnAttacks.firstWhere((a) => a.name.toLowerCase() == 'horns');
+        final tail = turnAttacks.firstWhere((a) => a.name.toLowerCase() == 'tail');
+
+        expect(bite.attacksPerRound, equals(1),
+            reason: 'Tarrasque makes exactly 1 Bite attack in multiattack, not 5!');
+        expect(claw.attacksPerRound, equals(2),
+            reason: 'Tarrasque makes exactly 2 Claw attacks in multiattack');
+        expect(horns.attacksPerRound, equals(1),
+            reason: 'Tarrasque makes exactly 1 Horns attack in multiattack');
+        expect(tail.attacksPerRound, equals(1),
+            reason: 'Tarrasque makes exactly 1 Tail attack in multiattack');
       }
     });
   });

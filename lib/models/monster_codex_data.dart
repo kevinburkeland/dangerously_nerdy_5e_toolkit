@@ -216,6 +216,19 @@ class MonsterItem {
         final sum = option.dpr * uses;
         if (sum > bestLegSum) bestLegSum = sum;
       }
+      for (int i = 0; i < scoredLeg.length; i++) {
+        for (int j = 0; j < scoredLeg.length; j++) {
+          if (i == j) continue;
+          final a = scoredLeg[i];
+          final b = scoredLeg[j];
+          for (int countA = 0; countA * a.cost <= 3; countA++) {
+            final remaining = 3 - (countA * a.cost);
+            final countB = remaining ~/ b.cost;
+            final sum = (countA * a.dpr) + (countB * b.dpr);
+            if (sum > bestLegSum) bestLegSum = sum;
+          }
+        }
+      }
       legendaryDpr = bestLegSum;
     }
 

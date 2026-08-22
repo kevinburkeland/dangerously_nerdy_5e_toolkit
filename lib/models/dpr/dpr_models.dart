@@ -835,9 +835,13 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       }
     }
 
-    // Collect legendary actions
+    // Collect legendary actions (with regular attacks available for reference lookup)
     for (final legAction in legendaryActions) {
-      final parsed = _parseCreatureActionToDpr(legAction, isLegendary: true);
+      final parsed = _parseCreatureActionToDpr(
+        legAction,
+        isLegendary: true,
+        availableRegularAttacks: attacks,
+      );
       if (parsed != null) {
         attacks.add(parsed);
       }
@@ -879,14 +883,13 @@ extension MinionStatBlockDprExt on MinionStatBlock {
   ) {
     if (multiattack == null) {
       // Without Multiattack, a creature has 1 action per round and makes 1 attack.
-      // Set the primary (highest estimated damage) attack to 1, and alternative weapons to 0.
       _assignSingleBestAttack(attacks, 1);
       return;
     }
 
     final multiDesc = multiattack.description.toLowerCase();
 
-    // 1. Extract global attack count if stated (e.g. "makes three attacks", "makes two melee attacks")
+    // 1. Extract global attack count if stated (e.g. "makes three attacks", "makes five attacks")
     int globalCount = 2; // Default 5e fallback
     final globalMatch = RegExp(
       r'makes\s+(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
@@ -897,16 +900,24 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       if (globalCount <= 0) globalCount = 2;
     }
 
-    // 2. Identify distinct option branches separated by " or ", " either ", ". Or ", "; or "
-    final branchSegments = _splitMultiattackBranches(multiDesc);
+    // 2. Filter out non-attack replacement clauses (e.g. "It can use its Swallow instead of its bite.")
+    final cleanedDesc = multiDesc
+        .replaceAll(RegExp(r'it can (?:use|make) its swallow instead of its bite\.?', caseSensitive: false), '')
+        .replaceAll(RegExp(r'it can use its frightful presence\.?', caseSensitive: false), '')
+        .replaceAll(RegExp(r'it can replace one (?:of those )?attacks? with [^.]*\.?', caseSensitive: false), '')
+        .trim();
+
+    // 3. Identify distinct option branches separated by alternative keywords
+    final branchSegments = _splitMultiattackBranches(cleanedDesc);
 
     List<int>? bestBranchCounts;
     double bestBranchDpr = -1.0;
 
     for (final branch in branchSegments) {
       final branchCounts = List<int>.filled(attacks.length, 0);
-      bool anyMatched = false;
+      bool anyExplicitMatched = false;
 
+      // First pass: look for explicit numbers ("one with its bite", "two with its claws")
       for (int i = 0; i < attacks.length; i++) {
         final attack = attacks[i];
         final nameLower = attack.name.toLowerCase();
@@ -915,20 +926,41 @@ extension MinionStatBlockDprExt on MinionStatBlock {
             ? cleanName.substring(0, cleanName.length - 1)
             : cleanName;
 
-        int count = _extractAttackCountForName(branch, cleanName, baseName);
-
-        // If the branch mentions the weapon name without a specific number
-        if (count == 0 && _branchMentionsWeapon(branch, cleanName, baseName)) {
-          count = globalCount;
-        }
-
+        final count = _extractAttackCountForName(branch, cleanName, baseName);
         if (count > 0) {
           branchCounts[i] = count;
-          anyMatched = true;
+          anyExplicitMatched = true;
         }
       }
 
-      if (anyMatched) {
+      // Second pass: if NO explicit numbers found in the entire branch, check if a single weapon is mentioned
+      if (!anyExplicitMatched) {
+        int branchGlobal = globalCount;
+        final bMatch = RegExp(
+          r'(?:makes\s+)?(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
+          caseSensitive: false,
+        ).firstMatch(branch);
+        if (bMatch != null) {
+          final parsed = _parseNumberWord(bMatch.group(1));
+          if (parsed > 0) branchGlobal = parsed;
+        }
+
+        for (int i = 0; i < attacks.length; i++) {
+          final attack = attacks[i];
+          final nameLower = attack.name.toLowerCase();
+          final cleanName = nameLower.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+          final baseName = cleanName.endsWith('s') && cleanName.length > 3
+              ? cleanName.substring(0, cleanName.length - 1)
+              : cleanName;
+
+          if (_branchMentionsWeapon(branch, cleanName, baseName)) {
+            branchCounts[i] = branchGlobal;
+            break; // Assign to the mentioned weapon in this branch
+          }
+        }
+      }
+
+      if (branchCounts.any((c) => c > 0)) {
         // Calculate estimated branch offensive DPR
         double branchDpr = 0.0;
         for (int i = 0; i < attacks.length; i++) {
@@ -957,13 +989,13 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       return;
     }
 
-    // 3. Fallback for generic Multiattack ("The knight makes two melee attacks.")
+    // 4. Fallback for generic Multiattack ("The knight makes two melee attacks.")
     _assignSingleBestAttack(attacks, globalCount);
   }
 
   List<String> _splitMultiattackBranches(String desc) {
     final rawParts = desc.split(RegExp(
-      r'\.\s*(?:or\s+)?|;\s*(?:or\s+)?|,\s+or\s+|\bor\s+either\b|\beither\b|\bor\b',
+      r'--\s*or\s+|\b(?:either\s+)?with\s+its\s+[^,;]+?\s+or\s+(?:with\s+)?its\s+|,\s*or\s+(?:it\s+can\s+|makes\s+|with\s+)|\.\s+(?:or|alternatively)\s+|\bor\s+(?:two|three|four|five|six|\d+)\s+',
       caseSensitive: false,
     ));
     final branches = <String>[];
@@ -1092,6 +1124,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
   DprAttackAction? _parseCreatureActionToDpr(
     CreatureAction action, {
     bool isLegendary = false,
+    List<DprAttackAction> availableRegularAttacks = const [],
   }) {
     final descLower = action.description.toLowerCase();
     final nameLower = action.name.toLowerCase();
@@ -1224,6 +1257,69 @@ extension MinionStatBlockDprExt on MinionStatBlock {
             'psychic'
           ].contains(rawSecType)) {
         secDType = rawSecType;
+      }
+    }
+
+    // 4. If this is a Legendary Action that references an existing regular attack, inherit its damage stats!
+    if (isLegendary && availableRegularAttacks.isNotEmpty) {
+      final hasOwnDamage = dCount > 0 || dBonus > 0 || secDCount > 0 || delivery == DprActionDeliveryType.savingThrow;
+
+      if (!hasOwnDamage || descLower.contains('makes a ') || descLower.contains('makes one ') || descLower.contains('uses its ')) {
+        DprAttackAction? referencedAttack;
+
+        // Clean action name (e.g. "Tail Attack" -> "tail", "Bite (Costs 2 Actions)" -> "bite")
+        final cleanName = nameLower
+            .replaceAll(RegExp(r'\(costs\s*\d+\s*actions?\)', caseSensitive: false), '')
+            .replaceAll('attack', '')
+            .replaceAll('swipe', '')
+            .trim();
+
+        // Check if cleanName matches any regular attack
+        for (final reg in availableRegularAttacks) {
+          final regName = reg.name.toLowerCase();
+          if (cleanName.isNotEmpty && (regName == cleanName || regName.contains(cleanName) || cleanName.contains(regName))) {
+            referencedAttack = reg;
+            break;
+          }
+        }
+
+        // If not matched by name, check description for "makes one/a [X] attack" or "uses its [X]"
+        if (referencedAttack == null) {
+          final descRefMatch = RegExp(
+            r'(?:makes\s+(?:one|a|an)?\s+(?:melee\s+|ranged\s+|weapon\s+)?|uses\s+its\s+)([a-zA-Z\s]+?)(?:\s+attack|\.|\s+against)',
+            caseSensitive: false,
+          ).firstMatch(action.description);
+
+          if (descRefMatch != null) {
+            final targetWord = descRefMatch.group(1)!.toLowerCase().trim();
+            for (final reg in availableRegularAttacks) {
+              final regName = reg.name.toLowerCase();
+              if (regName == targetWord || regName.contains(targetWord) || targetWord.contains(regName)) {
+                referencedAttack = reg;
+                break;
+              }
+            }
+          }
+        }
+
+        // If "Attack" or "Weapon Attack", take the primary/highest damage regular attack
+        if (referencedAttack == null && (cleanName == 'attack' || cleanName == 'weapon' || descLower.contains('makes one weapon attack') || descLower.contains('makes one attack'))) {
+          referencedAttack = availableRegularAttacks.first;
+        }
+
+        if (referencedAttack != null) {
+          bonus = referencedAttack.attackBonus;
+          dCount = referencedAttack.diceCount;
+          dSides = referencedAttack.diceSides;
+          dBonus = referencedAttack.damageBonus;
+          dType = referencedAttack.damageType;
+          delivery = referencedAttack.deliveryType;
+          sAbility = referencedAttack.saveAbility;
+          sDc = referencedAttack.saveDc;
+          secDCount = referencedAttack.secondaryDiceCount;
+          secDSides = referencedAttack.secondaryDiceSides;
+          secDType = referencedAttack.secondaryDamageType;
+        }
       }
     }
 
