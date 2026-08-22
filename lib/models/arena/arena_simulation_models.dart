@@ -1,5 +1,41 @@
+import 'package:flutter/material.dart';
 import 'arena_action_result.dart';
 import 'arena_combatant.dart';
+
+/// Interactive environmental battlegrounds altering combat rules and mobility.
+enum ArenaEnvironment {
+  colosseum(
+    'Open Colosseum',
+    'Open-air arena with standard ground and unobstructed airspace.',
+    Icons.stadium_outlined,
+    Color(0xFFC084FC),
+  ),
+  cageMatch(
+    'Iron Cage Match',
+    'Enclosed iron cage with a 10-ft ceiling. Flight is disabled and aerial advantages are negated.',
+    Icons.grid_4x4,
+    Color(0xFF94A3B8),
+  ),
+  floodedAbyss(
+    'Flooded Abyss (Water Match)',
+    'Submerged aquatic arena. Swimmers gain advantage; non-swimmers suffer melee/ranged disadvantage and fire damage is halved.',
+    Icons.water,
+    Color(0xFF38BDF8),
+  ),
+  volcanicPit(
+    'Volcanic Caldera',
+    'Lava-surrounded pit. Fire-resistant creatures thrive while cold-vulnerable creatures suffer disadvantage.',
+    Icons.local_fire_department,
+    Color(0xFFF97316),
+  );
+
+  final String label;
+  final String description;
+  final IconData icon;
+  final Color themeColor;
+
+  const ArenaEnvironment(this.label, this.description, this.icon, this.themeColor);
+}
 
 /// Targeting strategy used by AI combatants in the Arena.
 enum ArenaTargetingStrategy {

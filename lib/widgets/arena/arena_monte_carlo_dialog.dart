@@ -10,6 +10,7 @@ class ArenaMonteCarloDialog extends StatefulWidget {
   final List<ArenaCombatant> teamB;
   final ArenaTargetingStrategy strategy;
   final DmRulesEdition edition;
+  final ArenaEnvironment environment;
   final int initialIterations;
 
   const ArenaMonteCarloDialog({
@@ -18,6 +19,7 @@ class ArenaMonteCarloDialog extends StatefulWidget {
     required this.teamB,
     required this.strategy,
     required this.edition,
+    this.environment = ArenaEnvironment.colosseum,
     this.initialIterations = 500,
   });
 
@@ -27,6 +29,7 @@ class ArenaMonteCarloDialog extends StatefulWidget {
     required List<ArenaCombatant> teamB,
     required ArenaTargetingStrategy strategy,
     required DmRulesEdition edition,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
     int initialIterations = 500,
   }) {
     return showDialog(
@@ -36,6 +39,7 @@ class ArenaMonteCarloDialog extends StatefulWidget {
         teamB: teamB,
         strategy: strategy,
         edition: edition,
+        environment: environment,
         initialIterations: initialIterations,
       ),
     );
@@ -69,6 +73,7 @@ class _ArenaMonteCarloDialogState extends State<ArenaMonteCarloDialog> {
         teamB: widget.teamB,
         strategy: widget.strategy,
         edition: widget.edition,
+        environment: widget.environment,
         iterations: _iterations,
       );
 

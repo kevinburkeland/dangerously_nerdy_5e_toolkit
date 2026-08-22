@@ -195,17 +195,23 @@ class _ArenaCombatLogViewState extends State<ArenaCombatLogView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      evt.isCrit
-                          ? Icons.star
-                          : (evt.isKillShot
-                              ? Icons.dangerous
-                              : (evt.isHit ? Icons.arrow_right : Icons.close)),
+                      evt.evadedWithEvasion
+                          ? Icons.bolt
+                          : (evt.isSavingThrow
+                              ? (evt.saved ? Icons.shield_outlined : (evt.isKillShot ? Icons.dangerous : Icons.whatshot))
+                              : (evt.isCrit
+                                  ? Icons.star
+                                  : (evt.isKillShot
+                                      ? Icons.dangerous
+                                      : (evt.isHit ? Icons.arrow_right : Icons.close)))),
                       size: 14,
-                      color: evt.isCrit
+                      color: evt.evadedWithEvasion || evt.isCrit
                           ? const Color(0xFFFFD700)
                           : (evt.isKillShot
                               ? Colors.redAccent
-                              : (evt.isHit ? const Color(0xFF10B981) : Colors.grey)),
+                              : (evt.isSavingThrow
+                                  ? (evt.saved ? Colors.blueAccent : Colors.deepOrangeAccent)
+                                  : (evt.isHit ? const Color(0xFF10B981) : Colors.grey))),
                     ),
                     const SizedBox(width: 4),
                     Expanded(

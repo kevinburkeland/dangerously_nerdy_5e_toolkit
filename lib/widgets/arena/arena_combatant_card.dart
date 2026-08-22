@@ -146,7 +146,10 @@ class ArenaCombatantCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 2),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 4,
+                        runSpacing: 2,
                         children: [
                           Text(
                             'CR ${sb.crDisplay} • AC ${combatant.ac}',
@@ -155,8 +158,7 @@ class ArenaCombatantCard extends StatelessWidget {
                               color: isDark ? Colors.white60 : Colors.black54,
                             ),
                           ),
-                          if (combatant.initiative > 0) ...[
-                            const SizedBox(width: 6),
+                          if (combatant.initiative > 0)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                               decoration: BoxDecoration(
@@ -172,7 +174,54 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          ],
+                          if (combatant.canFly(edition))
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.cyanAccent.withAlpha(25),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '🪽 Fly',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.cyanAccent,
+                                ),
+                              ),
+                            ),
+                          if (combatant.canSwim(edition))
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent.withAlpha(25),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '🏊 Swim',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blueAccent,
+                                ),
+                              ),
+                            ),
+                          if (combatant.hasEvasion(edition))
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.amberAccent.withAlpha(25),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                '⚡ Evasion',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.amberAccent,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ],

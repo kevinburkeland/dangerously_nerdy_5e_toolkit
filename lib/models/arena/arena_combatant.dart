@@ -159,4 +159,102 @@ class ArenaCombatant {
   MinionStatBlock getStatBlock([DmRulesEdition edition = DmRulesEdition.v2024]) {
     return monster.getStatBlock(edition);
   }
+
+  // --- Mobility & Evasion Capabilities ---
+
+  bool canFly([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final s = getStatBlock(edition).speed.toLowerCase();
+    return s.contains('fly') && !s.contains('fly 0');
+  }
+
+  bool canSwim([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final s = sb.speed.toLowerCase();
+    final traits = sb.traits.map((t) => '${t.name} ${t.description}').join(' ').toLowerCase();
+    return s.contains('swim') || traits.contains('amphibious') || traits.contains('water breathing');
+  }
+
+  bool canBurrow([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    return getStatBlock(edition).speed.toLowerCase().contains('burrow');
+  }
+
+  bool canClimb([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    return getStatBlock(edition).speed.toLowerCase().contains('climb');
+  }
+
+  bool hasEvasion([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final traits = sb.traits.map((t) => '${t.name} ${t.description}').join(' ').toLowerCase();
+    final acts = sb.actions.map((a) => '${a.name} ${a.description}').join(' ').toLowerCase();
+    return traits.contains('evasion') || acts.contains('evasion');
+  }
+
+  bool hasFlyby([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final traits = sb.traits.map((t) => '${t.name} ${t.description}').join(' ').toLowerCase();
+    return traits.contains('flyby');
+  }
+
+  bool hasNimbleEscape([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final traits = sb.traits.map((t) => '${t.name} ${t.description}').join(' ').toLowerCase();
+    return traits.contains('nimble escape');
+  }
+
+  /// Calculates saving throw modifier for a given ability (e.g. 'dex', 'str', 'con', 'wis', 'int', 'cha').
+  int getSavingThrowBonus(String ability, [DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final abLower = ability.toLowerCase().trim();
+
+    // Check explicit saving throw text like "Dex +5, Con +8"
+    final rawSaves = sb.savingThrows;
+    if (rawSaves != null && rawSaves.isNotEmpty) {
+      final pattern = RegExp(
+        '\\b(?:${RegExp.escape(abLower)}|${_expandAbilityName(abLower)})\\s*([+-]?\\s*\\d+)',
+        caseSensitive: false,
+      );
+      final match = pattern.firstMatch(rawSaves);
+      if (match != null) {
+        final parsed = int.tryParse(match.group(1)!.replaceAll(' ', ''));
+        if (parsed != null) return parsed;
+      }
+    }
+
+    // Fallback to raw ability modifier
+    switch (abLower) {
+      case 'str':
+        return sb.strMod;
+      case 'dex':
+        return sb.dexMod;
+      case 'con':
+        return sb.conMod;
+      case 'int':
+        return sb.intMod;
+      case 'wis':
+        return sb.wisMod;
+      case 'cha':
+        return sb.chaMod;
+      default:
+        return sb.dexMod;
+    }
+  }
+
+  static String _expandAbilityName(String ab) {
+    switch (ab.toLowerCase()) {
+      case 'str':
+        return 'strength';
+      case 'dex':
+        return 'dexterity';
+      case 'con':
+        return 'constitution';
+      case 'int':
+        return 'intelligence';
+      case 'wis':
+        return 'wisdom';
+      case 'cha':
+        return 'charisma';
+      default:
+        return ab;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/arena/arena_action_result.dart';
 import '../../models/arena/arena_combatant.dart';
+import '../../models/arena/arena_simulation_models.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../glyphs/dnd_glyph.dart';
@@ -14,6 +15,7 @@ class ArenaClashStage extends StatelessWidget {
   final bool isPlaying;
   final double playbackSpeed;
   final DmRulesEdition edition;
+  final ArenaEnvironment environment;
   final VoidCallback onTogglePlay;
   final VoidCallback onStepForward;
   final VoidCallback onSkipToEnd;
@@ -28,6 +30,7 @@ class ArenaClashStage extends StatelessWidget {
     required this.isPlaying,
     required this.playbackSpeed,
     required this.edition,
+    this.environment = ArenaEnvironment.colosseum,
     required this.onTogglePlay,
     required this.onStepForward,
     required this.onSkipToEnd,
@@ -50,14 +53,22 @@ class ArenaClashStage extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF13151F) : const Color(0xFFF8FAFC),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            environment.themeColor.withAlpha(isDark ? 35 : 20),
+            isDark ? const Color(0xFF13151F) : const Color(0xFFF8FAFC),
+          ],
+        ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? const Color(0xFF2A2E3D) : const Color(0xFFE2E8F0),
+          color: environment.themeColor.withAlpha(isDark ? 80 : 60),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black45 : Colors.black12,
+            color: environment.themeColor.withAlpha(isDark ? 25 : 15),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -80,7 +91,7 @@ class ArenaClashStage extends StatelessWidget {
                     Icon(
                       Icons.sports_kabaddi,
                       size: 18,
-                      color: isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE),
+                      color: isDark ? Colors.white70 : Colors.black54,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -90,25 +101,35 @@ class ArenaClashStage extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
-                        letterSpacing: 0.8,
-                        color: isDark ? const Color(0xFFC084FC) : const Color(0xFF7E22CE),
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                   ],
                 ),
-                if (currentStep?.specialEventSummary != null)
-                  Flexible(
-                    child: Text(
-                      currentStep!.specialEventSummary!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.amberAccent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                // Environment Indicator Chip
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: environment.themeColor.withAlpha(25),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: environment.themeColor.withAlpha(80), width: 1),
                   ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(environment.icon, size: 13, color: environment.themeColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        environment.label,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: environment.themeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -446,7 +467,21 @@ class ArenaClashStage extends StatelessWidget {
     Color fg;
     String label;
 
-    if (event.isCrit) {
+    if (event.evadedWithEvasion) {
+      bg = const Color(0xFFFFD700);
+      fg = Colors.black;
+      label = 'EVADED (0 DMG)';
+    } else if (event.isSavingThrow) {
+      if (event.saved) {
+        bg = const Color(0xFF3B82F6);
+        fg = Colors.white;
+        label = 'SAVED (HALF DMG)';
+      } else {
+        bg = const Color(0xFFEF4444);
+        fg = Colors.white;
+        label = 'FAILED SAVE (FULL DMG)';
+      }
+    } else if (event.isCrit) {
       bg = const Color(0xFFFFD700);
       fg = Colors.black;
       label = 'CRITICAL HIT';

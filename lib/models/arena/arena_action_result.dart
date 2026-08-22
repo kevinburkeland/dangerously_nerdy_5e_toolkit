@@ -18,6 +18,12 @@ class ArenaAttackEvent {
   final bool isFumble;
   final bool hadAdvantage;
   final bool hadDisadvantage;
+  final bool isAoe;
+  final bool isSavingThrow;
+  final int? saveDc;
+  final int? saveRoll;
+  final bool saved;
+  final bool evadedWithEvasion;
   final int damageDealt;
   final String damageType;
   final bool isKillShot;
@@ -42,6 +48,12 @@ class ArenaAttackEvent {
     this.isFumble = false,
     this.hadAdvantage = false,
     this.hadDisadvantage = false,
+    this.isAoe = false,
+    this.isSavingThrow = false,
+    this.saveDc,
+    this.saveRoll,
+    this.saved = false,
+    this.evadedWithEvasion = false,
     required this.damageDealt,
     required this.damageType,
     this.isKillShot = false,

@@ -15,12 +15,15 @@ void main() {
 
     setUp(() {
       engine = ArenaCombatEngine(rng: Random(42));
-      wolfMonster = MonsterCodexLibrary.getMonsterById('wolf') ??
-          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('wolf'));
-      trexMonster = MonsterCodexLibrary.getMonsterById('tyrannosaurus_rex') ??
+      wolfMonster = MonsterCodexLibrary.getMonsterByName('Wolf') ??
+          MonsterCodexLibrary.getMonsterById('srd_mon_wolf') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'wolf');
+      trexMonster = MonsterCodexLibrary.getMonsterByName('Tyrannosaurus Rex') ??
+          MonsterCodexLibrary.getMonsterById('srd_mon_tyrannosaurus_rex') ??
           MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('tyrannosaurus'));
-      dragonMonster = MonsterCodexLibrary.getMonsterById('young_red_dragon') ??
-          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('dragon'));
+      dragonMonster = MonsterCodexLibrary.getMonsterByName('Young Red Dragon') ??
+          MonsterCodexLibrary.getMonsterById('srd_mon_young_red_dragon') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'young red dragon');
     });
 
     test('rollInitiatives correctly assigns and sorts combatants by initiative', () {
@@ -162,6 +165,121 @@ void main() {
       expect(monteCarlo.teamAWins + monteCarlo.teamBWins + monteCarlo.draws, 50);
       expect(monteCarlo.teamAWinRate, greaterThan(80.0)); // T-Rex should overwhelmingly beat 1 regular wolf
       expect(monteCarlo.averageRounds, greaterThan(0));
+    });
+
+    test('AoE attacks hit multiple enemy combatants in the area', () {
+      final dragon = ArenaCombatant.fromMonster(
+        id: 'dragon',
+        monster: dragonMonster,
+        team: ArenaTeam.teamA,
+      );
+
+      final goblins = List.generate(
+        6,
+        (i) => ArenaCombatant.fromMonster(
+          id: 'wolf_$i',
+          monster: wolfMonster,
+          team: ArenaTeam.teamB,
+        ),
+      );
+
+      final allCombatants = [dragon, ...goblins];
+
+      // Dragon has Fire Breath ready on initial turn
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: dragon,
+        allCombatants: allCombatants,
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Breath weapon should hit multiple wolves
+      final breathEvents = step.attackEvents.where((e) => e.isAoe).toList();
+      expect(breathEvents.length, greaterThanOrEqualTo(2));
+      expect(breathEvents.length, lessThanOrEqualTo(6));
+      expect(breathEvents.every((e) => e.isSavingThrow), true);
+    });
+
+    test('Evasion reduces DEX save damage to 0 on success', () {
+      final dragon = ArenaCombatant.fromMonster(
+        id: 'dragon',
+        monster: dragonMonster,
+        team: ArenaTeam.teamA,
+      );
+
+      // Create an evasive combatant
+      final monkEvasive = ArenaCombatant(
+        id: 'monk_evasive',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+        displayName: 'Evasive Fighter',
+        maxHp: 50,
+        currentHp: 50,
+        ac: 16,
+        initiativeBonus: 4,
+      );
+
+      expect(monkEvasive.hasEvasion(), false);
+      expect(dragon.canFly(), true);
+      expect(monkEvasive.canFly(), false);
+    });
+
+    test('Cage match grounds flying combatants and disables aerial advantage', () {
+      final dragon = ArenaCombatant.fromMonster(
+        id: 'dragon',
+        monster: dragonMonster,
+        team: ArenaTeam.teamA,
+      );
+      final wolf = ArenaCombatant.fromMonster(
+        id: 'wolf',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      // In open colosseum, dragon attacks grounded wolf with flight advantage
+      // In cage match, flight is disabled
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: dragon,
+        allCombatants: [dragon, wolf],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+        environment: ArenaEnvironment.cageMatch,
+      );
+
+      expect(step.attackEvents.isNotEmpty, true);
+    });
+
+    test('Flooded abyss grants swimmers advantage and gives non-swimmers disadvantage', () {
+      final sharkMonster = MonsterCodexLibrary.getMonsterByName('Giant Shark') ??
+          MonsterCodexLibrary.getMonsterById('srd_mon_giant_shark') ??
+          wolfMonster;
+
+      final shark = ArenaCombatant.fromMonster(
+        id: 'shark',
+        monster: sharkMonster,
+        team: ArenaTeam.teamA,
+      );
+      final wolf = ArenaCombatant.fromMonster(
+        id: 'wolf',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      expect(shark.canSwim(), true);
+      expect(wolf.canSwim(), false);
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: shark,
+        allCombatants: [shark, wolf],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+        environment: ArenaEnvironment.floodedAbyss,
+      );
+
+      expect(step.attackEvents.first.hadAdvantage, true);
     });
 
     test('Preset matchups correctly resolve into combatants', () {

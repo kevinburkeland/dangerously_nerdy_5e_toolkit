@@ -32,6 +32,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
   final List<ArenaCombatant> _teamB = [];
   DmRulesEdition _edition = DmRulesEdition.v2024;
   ArenaTargetingStrategy _strategy = ArenaTargetingStrategy.focusLowestHp;
+  ArenaEnvironment _environment = ArenaEnvironment.colosseum;
 
   // Battle Simulation State
   ArenaSimulationStatus _status = ArenaSimulationStatus.setup;
@@ -218,6 +219,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       allCombatants: _activeCombatants,
       strategy: _strategy,
       edition: _edition,
+      environment: _environment,
     );
 
     // Particle FX & Haptic trigger if crit landed
@@ -251,6 +253,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       initialTeamB: _teamB,
       strategy: _strategy,
       edition: _edition,
+      environment: _environment,
     );
 
     setState(() {
@@ -465,6 +468,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
       teamB: _teamB,
       strategy: _strategy,
       edition: _edition,
+      environment: _environment,
     );
   }
 
@@ -481,6 +485,38 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
         appBar: AppBar(
           title: const Text('Monster Fighting Arena'),
           actions: [
+            // Environment Battleground Picker Menu
+            PopupMenuButton<ArenaEnvironment>(
+              icon: Icon(_environment.icon, color: _environment.themeColor),
+              tooltip: 'Arena Battleground: ${_environment.label}',
+              onSelected: (env) => setState(() => _environment = env),
+              itemBuilder: (context) => ArenaEnvironment.values.map((env) {
+                return PopupMenuItem(
+                  value: env,
+                  child: Row(
+                    children: [
+                      Icon(env.icon, color: env.themeColor, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(env.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                              env.description,
+                              style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+
             // Presets Menu Button
             PopupMenuButton<ArenaPresetMatchup>(
               icon: const Icon(Icons.bookmark_outline),
@@ -539,6 +575,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                     isPlaying: _status == ArenaSimulationStatus.playing,
                     playbackSpeed: _playbackSpeed,
                     edition: _edition,
+                    environment: _environment,
                     onTogglePlay: _togglePlayPause,
                     onStepForward: _advanceSingleStep,
                     onSkipToEnd: _skipToEnd,
@@ -547,13 +584,56 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                   ),
                 ),
 
-              // Targeting Strategy & Match Summary Strip (in Setup mode)
+              // Targeting Strategy & Battleground Strip (in Setup mode)
               if (isSetup)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Battleground Quick Pill
+                      PopupMenuButton<ArenaEnvironment>(
+                        tooltip: 'Change Arena Battleground',
+                        onSelected: (env) => setState(() => _environment = env),
+                        itemBuilder: (context) => ArenaEnvironment.values.map((env) {
+                          return PopupMenuItem(
+                            value: env,
+                            child: Row(
+                              children: [
+                                Icon(env.icon, color: env.themeColor, size: 18),
+                                const SizedBox(width: 8),
+                                Text(env.label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _environment.themeColor.withAlpha(20),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: _environment.themeColor.withAlpha(80)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(_environment.icon, size: 14, color: _environment.themeColor),
+                              const SizedBox(width: 4),
+                              Text(
+                                _environment.label,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: _environment.themeColor,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(Icons.arrow_drop_down, size: 16, color: _environment.themeColor),
+                            ],
+                          ),
+                        ),
+                      ),
+
                       // Targeting strategy dropdown
                       DropdownButton<ArenaTargetingStrategy>(
                         value: _strategy,

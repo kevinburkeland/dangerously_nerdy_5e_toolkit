@@ -79,6 +79,7 @@ class ArenaCombatEngine {
     required List<ArenaCombatant> allCombatants,
     required ArenaTargetingStrategy strategy,
     DmRulesEdition edition = DmRulesEdition.v2024,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
   }) {
     if (attacker.isDefeated) {
       return ArenaTurnStep(
@@ -113,19 +114,42 @@ class ArenaCombatEngine {
 
     // 3. Resolve each attack against targets
     for (final attack in actionsToExecute) {
-      // Find active target (if previous target was killed, re-acquire target)
-      final target = selectTarget(attacker, allCombatants, strategy);
-      if (target == null) break; // All enemies defeated!
+      final isAoE = attack.isAoe ||
+          attack.rechargeRoll != null ||
+          attack.deliveryType == DprActionDeliveryType.savingThrow ||
+          attack.name.toLowerCase().contains('breath') ||
+          attack.name.toLowerCase().contains('cone') ||
+          attack.name.toLowerCase().contains('burst');
 
-      final event = _resolveSingleAttack(
-        attacker: attacker,
-        defender: target,
-        attack: attack,
-        allCombatants: allCombatants,
-        edition: edition,
-      );
+      if (isAoE) {
+        // Multi-target Area of Effect resolution
+        final aoeEvents = _resolveAoeAttack(
+          attacker: attacker,
+          attack: attack,
+          allCombatants: allCombatants,
+          edition: edition,
+          environment: environment,
+        );
+        events.addAll(aoeEvents);
+        if (aoeEvents.isNotEmpty && aoeEvents.length > 1) {
+          specialSummary = '${attacker.displayName} unleashed ${attack.name} catching ${aoeEvents.length} enemies in the area!';
+        }
+      } else {
+        // Single target attack resolution
+        final target = selectTarget(attacker, allCombatants, strategy);
+        if (target == null) break; // All enemies defeated!
 
-      events.add(event);
+        final event = _resolveSingleAttack(
+          attacker: attacker,
+          defender: target,
+          attack: attack,
+          allCombatants: allCombatants,
+          edition: edition,
+          environment: environment,
+        );
+
+        events.add(event);
+      }
     }
 
     return ArenaTurnStep(
@@ -181,27 +205,241 @@ class ArenaCombatEngine {
     return result;
   }
 
-  /// Resolves an individual attack roll vs defender's AC.
+  /// Resolves an Area of Effect (AoE) attack hitting a dynamic number of opponents based on AoE size/shape.
+  List<ArenaAttackEvent> _resolveAoeAttack({
+    required ArenaCombatant attacker,
+    required DprAttackAction attack,
+    required List<ArenaCombatant> allCombatants,
+    required DmRulesEdition edition,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
+  }) {
+    final livingEnemies = allCombatants
+        .where((c) => c.team != attacker.team && c.isAlive)
+        .toList();
+
+    if (livingEnemies.isEmpty) return const [];
+
+    attacker.attacksMade++;
+
+    // Determine number of targets caught based on AoE footprint
+    final targetCount = _calculateAoeTargetCount(attack, livingEnemies.length);
+
+    // Pick random subset of living enemies to be caught in the blast
+    livingEnemies.shuffle(_rng);
+    final caughtDefenders = livingEnemies.take(targetCount).toList();
+
+    // Roll base damage once for the AoE
+    final rawDamage = _rollDice(attack.diceCount, attack.diceSides) + attack.damageBonus;
+    final saveAbility = attack.saveAbility ?? 'dex';
+    final saveDc = attack.saveDc ?? _computeSaveDc(attacker, edition);
+
+    final events = <ArenaAttackEvent>[];
+
+    for (final defender in caughtDefenders) {
+      final saveBonus = defender.getSavingThrowBonus(saveAbility, edition);
+      final d20 = _rollDie(20);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= saveDc;
+
+      final hasEvasion = defender.hasEvasion(edition) && saveAbility.toLowerCase() == 'dex';
+      bool evadedWithEvasion = false;
+      int effectiveDamage;
+
+      if (saved) {
+        if (hasEvasion) {
+          evadedWithEvasion = true;
+          effectiveDamage = 0;
+        } else {
+          effectiveDamage = (rawDamage / 2).floor();
+        }
+      } else {
+        if (hasEvasion) {
+          effectiveDamage = (rawDamage / 2).floor();
+        } else {
+          effectiveDamage = rawDamage;
+        }
+      }
+
+      // Apply resistances, immunities & environmental modifiers
+      effectiveDamage = _applyDefensiveModifiers(effectiveDamage, attack.damageType, defender, edition, environment);
+      attacker.totalDamageDealt += effectiveDamage;
+      defender.applyDamage(effectiveDamage);
+
+      bool isKillShot = false;
+      if (defender.isDefeated) {
+        isKillShot = true;
+        attacker.kills++;
+      }
+
+      String summary;
+      if (evadedWithEvasion) {
+        summary = 'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took 0 ${attack.damageType} damage via Evasion!';
+      } else if (saved) {
+        final fatal = isKillShot ? ' — SLAIN!' : '';
+        summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took half: $effectiveDamage ${attack.damageType} damage$fatal';
+      } else {
+        final fatal = isKillShot ? ' — SLAIN!' : '';
+        summary = 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took full: $effectiveDamage ${attack.damageType} damage$fatal';
+      }
+
+      events.add(
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: defender.id,
+          defenderName: defender.displayName,
+          defenderTeam: defender.team,
+          attackName: attack.name,
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: defender.ac,
+          isHit: !saved || effectiveDamage > 0,
+          isCrit: false,
+          isFumble: false,
+          isAoe: true,
+          isSavingThrow: true,
+          saveDc: saveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          evadedWithEvasion: evadedWithEvasion,
+          damageDealt: effectiveDamage,
+          damageType: attack.damageType,
+          isKillShot: isKillShot,
+          defenderRemainingHp: defender.currentHp,
+          defenderMaxHp: defender.maxHp,
+          summaryText: summary,
+        ),
+      );
+    }
+
+    if (events.any((e) => e.isHit)) attacker.hitsLanded++;
+
+    return events;
+  }
+
+  /// Calculates dynamic AoE target count based on AoE radius/cone/line size.
+  int _calculateAoeTargetCount(DprAttackAction attack, int totalEnemies) {
+    if (totalEnemies <= 1) return 1;
+
+    final nameLower = attack.name.toLowerCase();
+    final isBreath = nameLower.contains('breath');
+    int minTargets = 1;
+    int maxTargets = 2;
+
+    if (nameLower.contains('60') || nameLower.contains('90') || nameLower.contains('100')) {
+      // Large AoE (60ft cone, 100ft line)
+      minTargets = 3;
+      maxTargets = 6;
+    } else if (nameLower.contains('30') || isBreath || nameLower.contains('sphere') || nameLower.contains('cube')) {
+      // Medium AoE (30ft cone, breath weapon, 20ft sphere)
+      minTargets = 2;
+      maxTargets = 4;
+    } else if (nameLower.contains('15')) {
+      // Small AoE (15ft cone, 10ft radius)
+      minTargets = 1;
+      maxTargets = 3;
+    } else {
+      minTargets = 2;
+      maxTargets = 4;
+    }
+
+    final maxPossible = min(totalEnemies, maxTargets);
+    final minPossible = min(totalEnemies, minTargets);
+
+    if (maxPossible <= minPossible) return maxPossible;
+    return minPossible + _rng.nextInt(maxPossible - minPossible + 1);
+  }
+
+  /// Default DC calculation when not explicit (8 + proficiency + ability modifier).
+  int _computeSaveDc(ArenaCombatant attacker, DmRulesEdition edition) {
+    final cr = attacker.monster.challengeRating;
+    int pb = 2;
+    if (cr >= 5) pb = 3;
+    if (cr >= 9) pb = 4;
+    if (cr >= 13) pb = 5;
+    if (cr >= 17) pb = 6;
+    final sb = attacker.getStatBlock(edition);
+    final mod = max(sb.conMod, max(sb.strMod, sb.chaMod));
+    return 8 + pb + mod;
+  }
+
+  /// Resolves an individual single-target attack roll vs defender's AC,
+  /// factoring in aerial/grounded mobility, underwater rules, and cage constraints.
   ArenaAttackEvent _resolveSingleAttack({
     required ArenaCombatant attacker,
     required ArenaCombatant defender,
     required DprAttackAction attack,
     required List<ArenaCombatant> allCombatants,
     required DmRulesEdition edition,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
   }) {
     attacker.attacksMade++;
 
-    // Check advantage (e.g. Pack Tactics: if another living ally is active)
+    // Check Pack Tactics
     final hasPackTactics = attacker.getStatBlock(edition).hasPackTactics;
     final otherAllyPresent = allCombatants.any(
       (c) => c.team == attacker.team && c.id != attacker.id && c.isAlive,
     );
-    final hasAdvantage = hasPackTactics && otherAllyPresent;
+    final packTacticsAdvantage = hasPackTactics && otherAllyPresent;
+
+    // Environmental mobility checks
+    // 1. In a Cage Match, flight is completely grounded
+    final flightEnabled = environment != ArenaEnvironment.cageMatch;
+    final attackerFlies = flightEnabled && attacker.canFly(edition);
+    final defenderFlies = flightEnabled && defender.canFly(edition);
+
+    final isRangedAttack = attack.name.toLowerCase().contains('bow') ||
+        attack.name.toLowerCase().contains('ranged') ||
+        attack.name.toLowerCase().contains('javelin') ||
+        attack.name.toLowerCase().contains('ray') ||
+        attack.name.toLowerCase().contains('sling') ||
+        attack.name.toLowerCase().contains('dart') ||
+        attack.name.toLowerCase().contains('blast') ||
+        attack.name.toLowerCase().contains('bolt');
+
+    bool flightAdvantage = false;
+    bool flightDisadvantage = false;
+
+    if (attackerFlies && !defenderFlies && (isRangedAttack || attacker.hasFlyby(edition))) {
+      // Flying attacker strafing grounded enemy from safe range/flyby
+      flightAdvantage = true;
+    } else if (!attackerFlies && defenderFlies && !isRangedAttack) {
+      // Grounded attacker attempting to strike a flying creature with standard melee
+      flightDisadvantage = true;
+    }
+
+    // 2. In Flooded Abyss (Water Match), swimming speed rules apply
+    bool aquaticAdvantage = false;
+    bool aquaticDisadvantage = false;
+    if (environment == ArenaEnvironment.floodedAbyss) {
+      final attackerSwims = attacker.canSwim(edition);
+      final defenderSwims = defender.canSwim(edition);
+
+      if (attackerSwims && !defenderSwims) {
+        // Swimmer attacking clumsy non-swimmer in deep water
+        aquaticAdvantage = true;
+      } else if (!attackerSwims) {
+        // Non-swimmer flailing in water has disadvantage on attacks
+        aquaticDisadvantage = true;
+      }
+    }
+
+    final hasAdvantage = (packTacticsAdvantage || flightAdvantage || aquaticAdvantage) &&
+        !flightDisadvantage &&
+        !aquaticDisadvantage;
+    final hasDisadvantage = (flightDisadvantage || aquaticDisadvantage) &&
+        !packTacticsAdvantage &&
+        !flightAdvantage &&
+        !aquaticAdvantage;
 
     // Roll d20
     final d20A = _rollDie(20);
-    final d20B = hasAdvantage ? _rollDie(20) : null;
-    final naturalRoll = hasAdvantage ? max(d20A, d20B!) : d20A;
+    final d20B = (hasAdvantage || hasDisadvantage) ? _rollDie(20) : null;
+    int naturalRoll = d20A;
+    if (hasAdvantage && d20B != null) naturalRoll = max(d20A, d20B);
+    if (hasDisadvantage && d20B != null) naturalRoll = min(d20A, d20B);
 
     final isCrit = naturalRoll == 20;
     final isFumble = naturalRoll == 1;
@@ -225,8 +463,8 @@ class ArenaCombatEngine {
         rawDamage += _rollDice(secCount, attack.secondaryDiceSides);
       }
 
-      // Apply resistances & immunities
-      damageDealt = _applyDefensiveModifiers(rawDamage, attack.damageType, defender, edition);
+      // Apply resistances, immunities & environmental modifiers
+      damageDealt = _applyDefensiveModifiers(rawDamage, attack.damageType, defender, edition, environment);
       attacker.totalDamageDealt += damageDealt;
       defender.applyDamage(damageDealt);
 
@@ -247,6 +485,8 @@ class ArenaCombatEngine {
       isFumble: isFumble,
       damageDealt: damageDealt,
       isKillShot: isKillShot,
+      hadAdvantage: hasAdvantage,
+      hadDisadvantage: hasDisadvantage,
     );
 
     return ArenaAttackEvent(
@@ -265,6 +505,7 @@ class ArenaCombatEngine {
       isCrit: isCrit,
       isFumble: isFumble,
       hadAdvantage: hasAdvantage,
+      hadDisadvantage: hasDisadvantage,
       damageDealt: damageDealt,
       damageType: attack.damageType,
       isKillShot: isKillShot,
@@ -274,92 +515,96 @@ class ArenaCombatEngine {
     );
   }
 
-  /// Evaluates damage resistance, immunity, or vulnerability.
+  /// Evaluates damage resistance, immunity, or vulnerability along with environmental arena rules.
   int _applyDefensiveModifiers(
     int rawDamage,
     String damageType,
     ArenaCombatant defender,
-    DmRulesEdition edition,
-  ) {
-    if (rawDamage <= 0) return 0;
+    DmRulesEdition edition, [
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
+  ]) {
     final sb = defender.getStatBlock(edition);
-    final dt = damageType.toLowerCase().trim();
+    final dmgLower = damageType.toLowerCase().trim();
 
-    // Damage Immunity check
-    final immunities = sb.damageImmunities?.toLowerCase() ?? '';
-    if (immunities.contains(dt) && dt.isNotEmpty) {
+    // Flooded Abyss: Submerged creatures have natural resistance to fire damage
+    int workingDamage = rawDamage;
+    if (environment == ArenaEnvironment.floodedAbyss && dmgLower == 'fire') {
+      workingDamage = (workingDamage / 2).floor();
+    }
+
+    // Check Immunity (0 damage)
+    final immunities = (sb.damageImmunities ?? '').toLowerCase();
+    if (immunities.isNotEmpty && (immunities.contains(dmgLower) || immunities.contains('all'))) {
       return 0;
     }
 
-    // Damage Resistance check (half damage)
-    final resistances = sb.damageResistances?.toLowerCase() ?? '';
-    if (resistances.contains(dt) && dt.isNotEmpty) {
-      return (rawDamage / 2).floor();
+    // Check Vulnerability (Double damage)
+    final vulnerabilities = (sb.damageVulnerabilities ?? '').toLowerCase();
+    if (vulnerabilities.isNotEmpty && vulnerabilities.contains(dmgLower)) {
+      workingDamage = workingDamage * 2;
     }
 
-    // Damage Vulnerability check (double damage)
-    final vulnerabilities = sb.damageVulnerabilities?.toLowerCase() ?? '';
-    if (vulnerabilities.contains(dt) && dt.isNotEmpty) {
-      return rawDamage * 2;
+    // Check Resistance (Half damage)
+    final resistances = (sb.damageResistances ?? '').toLowerCase();
+    if (resistances.isNotEmpty && (resistances.contains(dmgLower) || resistances.contains('all'))) {
+      workingDamage = (workingDamage / 2).floor();
     }
 
-    return rawDamage;
+    return max(0, workingDamage);
   }
 
-  /// Simulates a complete battle from start to finish.
+  /// Simulates an entire battle to the end, returning all round steps and final result.
   ArenaSimulationResult simulateMatch({
     required List<ArenaCombatant> initialTeamA,
     required List<ArenaCombatant> initialTeamB,
     ArenaTargetingStrategy strategy = ArenaTargetingStrategy.focusLowestHp,
     DmRulesEdition edition = DmRulesEdition.v2024,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
     int maxRounds = 50,
   }) {
-    // Clone combatants so originals are not mutated
+    // Clone combatants to avoid mutating original presets
     final combatants = [
-      ...initialTeamA.map((c) => c.reset()),
-      ...initialTeamB.map((c) => c.reset()),
+      ...initialTeamA.map((c) => c.clone()),
+      ...initialTeamB.map((c) => c.clone()),
     ];
 
+    // Roll initiatives and sort turn order
     rollInitiatives(combatants);
 
     final steps = <ArenaTurnStep>[];
+    int stepIndex = 0;
     int currentRound = 1;
-    int stepCounter = 0;
 
     while (currentRound <= maxRounds) {
       bool anyActionThisRound = false;
 
       for (final combatant in combatants) {
-        if (!combatant.isAlive) continue;
+        if (combatant.isDefeated) continue;
 
-        // Check if opposing team is already fully defeated
-        final hasLivingEnemies = combatants.any(
-          (c) => c.team != combatant.team && c.isAlive,
-        );
-        if (!hasLivingEnemies) break;
+        // Check victory condition
+        final livingA = combatants.where((c) => c.team == ArenaTeam.teamA && c.isAlive).length;
+        final livingB = combatants.where((c) => c.team == ArenaTeam.teamB && c.isAlive).length;
+        if (livingA == 0 || livingB == 0) {
+          break;
+        }
 
         final step = executeTurn(
-          stepIndex: stepCounter++,
+          stepIndex: stepIndex++,
           roundNumber: currentRound,
           attacker: combatant,
           allCombatants: combatants,
           strategy: strategy,
           edition: edition,
+          environment: environment,
         );
 
         steps.add(step);
         anyActionThisRound = true;
-
-        // Check if victory condition reached right after this turn
-        final livingA = combatants.where((c) => c.team == ArenaTeam.teamA && c.isAlive).length;
-        final livingB = combatants.where((c) => c.team == ArenaTeam.teamB && c.isAlive).length;
-        if (livingA == 0 || livingB == 0) break;
       }
 
-      final livingTeamA = combatants.where((c) => c.team == ArenaTeam.teamA && c.isAlive).length;
-      final livingTeamB = combatants.where((c) => c.team == ArenaTeam.teamB && c.isAlive).length;
-
-      if (livingTeamA == 0 || livingTeamB == 0 || !anyActionThisRound) {
+      final livingA = combatants.where((c) => c.team == ArenaTeam.teamA && c.isAlive).length;
+      final livingB = combatants.where((c) => c.team == ArenaTeam.teamB && c.isAlive).length;
+      if (livingA == 0 || livingB == 0 || !anyActionThisRound) {
         break;
       }
 
@@ -419,6 +664,7 @@ class ArenaCombatEngine {
     required List<ArenaCombatant> teamB,
     ArenaTargetingStrategy strategy = ArenaTargetingStrategy.focusLowestHp,
     DmRulesEdition edition = DmRulesEdition.v2024,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
     int iterations = 500,
     int maxRounds = 50,
   }) {
@@ -444,6 +690,7 @@ class ArenaCombatEngine {
         initialTeamB: teamB,
         strategy: strategy,
         edition: edition,
+        environment: environment,
         maxRounds: maxRounds,
       );
 
@@ -521,18 +768,22 @@ class ArenaCombatEngine {
     required bool isFumble,
     required int damageDealt,
     required bool isKillShot,
+    bool hadAdvantage = false,
+    bool hadDisadvantage = false,
   }) {
+    final advTag = hadAdvantage ? ' (Adv)' : (hadDisadvantage ? ' (Disadv)' : '');
+
     if (isCrit) {
       final killSuffix = isKillShot ? ' — DEFENDING FIGHTER SLAIN!' : '';
-      return 'CRITICAL HIT! (Nat 20) vs AC ${defender.ac} for $damageDealt ${attack.damageType} damage$killSuffix';
+      return 'CRITICAL HIT!$advTag (Nat 20) vs AC ${defender.ac} for $damageDealt ${attack.damageType} damage$killSuffix';
     }
     if (isFumble) {
-      return 'CRITICAL FUMBLE! (Nat 1) missed AC ${defender.ac}.';
+      return 'CRITICAL FUMBLE!$advTag (Nat 1) missed AC ${defender.ac}.';
     }
     if (isHit) {
       final killSuffix = isKillShot ? ' — DEFENDING FIGHTER SLAIN!' : '';
-      return 'Hits (Roll $naturalRoll + ${attack.attackBonus} = $totalAttack vs AC ${defender.ac}) for $damageDealt ${attack.damageType} damage$killSuffix';
+      return 'Hits$advTag (Roll $naturalRoll + ${attack.attackBonus} = $totalAttack vs AC ${defender.ac}) for $damageDealt ${attack.damageType} damage$killSuffix';
     }
-    return 'Misses (Roll $naturalRoll + ${attack.attackBonus} = $totalAttack vs AC ${defender.ac}).';
+    return 'Misses$advTag (Roll $naturalRoll + ${attack.attackBonus} = $totalAttack vs AC ${defender.ac}).';
   }
 }

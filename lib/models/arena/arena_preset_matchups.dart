@@ -139,10 +139,22 @@ class ArenaPresetMatchup {
       ],
     ),
     ArenaPresetMatchup(
+      id: 'aquatic_abyss',
+      title: 'Deep Abyss Ambush',
+      subtitle: '1 Giant Shark (CR 5) vs 6 Bandit Mariners (CR 1/8)',
+      tag: 'Water Match',
+      teamA: [
+        ArenaPresetMember(monsterId: 'giant_shark', monsterName: 'Giant Shark', count: 1),
+      ],
+      teamB: [
+        ArenaPresetMember(monsterId: 'bandit', monsterName: 'Bandit', count: 6),
+      ],
+    ),
+    ArenaPresetMatchup(
       id: 'gladiator_arena',
       title: 'Colosseum Champion',
       subtitle: '1 Gladiator (CR 5) vs 2 Berserkers (CR 2)',
-      tag: 'Martial Grudge',
+      tag: 'Cage Match',
       teamA: [
         ArenaPresetMember(monsterId: 'gladiator', monsterName: 'Gladiator', count: 1),
       ],
