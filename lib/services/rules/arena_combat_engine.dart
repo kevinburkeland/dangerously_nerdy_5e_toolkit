@@ -191,18 +191,29 @@ class ArenaCombatEngine {
       return [rechargeAttack];
     }
 
-    // Standard turn multiattacks (excluding legendary action standalone triggers)
-    final standardAttacks = allAttacks.where((a) => !a.isLegendaryAction && a.rechargeRoll == null).toList();
-    if (standardAttacks.isEmpty) return allAttacks.take(1).toList();
+    // Standard turn attacks (excluding legendary action standalone triggers and recharge attacks)
+    // Only select attacks that are part of the monster's active multiattack routine (attacksPerRound > 0)
+    final activeAttacks = allAttacks
+        .where((a) => !a.isLegendaryAction && a.rechargeRoll == null && a.attacksPerRound > 0)
+        .toList();
 
-    final result = <DprAttackAction>[];
-    for (final atk in standardAttacks) {
-      final count = atk.attacksPerRound > 0 ? atk.attacksPerRound : 1;
-      for (int i = 0; i < count; i++) {
-        result.add(atk.copyWith(attacksPerRound: 1));
+    if (activeAttacks.isNotEmpty) {
+      final result = <DprAttackAction>[];
+      for (final atk in activeAttacks) {
+        for (int i = 0; i < atk.attacksPerRound; i++) {
+          result.add(atk.copyWith(attacksPerRound: 1));
+        }
       }
+      return result;
     }
-    return result;
+
+    // Fallback: If no attack has attacksPerRound > 0, pick the single best standard attack
+    final standardAttacks = allAttacks.where((a) => !a.isLegendaryAction && a.rechargeRoll == null).toList();
+    if (standardAttacks.isNotEmpty) {
+      return [standardAttacks.first.copyWith(attacksPerRound: 1)];
+    }
+
+    return allAttacks.take(1).map((a) => a.copyWith(attacksPerRound: 1)).toList();
   }
 
   /// Resolves an Area of Effect (AoE) attack hitting a dynamic number of opponents based on AoE size/shape.

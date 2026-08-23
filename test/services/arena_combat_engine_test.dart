@@ -282,6 +282,67 @@ void main() {
       expect(step.attackEvents.first.hadAdvantage, true);
     });
 
+    test('Monsters with both melee and ranged attacks do not execute both in one turn', () {
+      final goblinMonster = MonsterCodexLibrary.getMonsterByName('Goblin') ??
+          MonsterCodexLibrary.getMonsterById('srd_mon_goblin') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'goblin');
+
+      final goblin = ArenaCombatant.fromMonster(
+        id: 'goblin_1',
+        monster: goblinMonster,
+        team: ArenaTeam.teamA,
+      );
+      final wolf = ArenaCombatant.fromMonster(
+        id: 'wolf_1',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: goblin,
+        allCombatants: [goblin, wolf],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Goblin has Scimitar (melee) and Shortbow (ranged), but no Multiattack.
+      // It should make exactly 1 attack per turn, not 2.
+      expect(step.attackEvents.length, 1,
+          reason: 'Goblin has 1 action per round and must make only 1 attack, not both melee and ranged');
+    });
+
+    test('Monsters with multiattack options respect action economy and do not execute all branches', () {
+      final medusaMonster = MonsterCodexLibrary.getMonsterByName('Medusa') ??
+          MonsterCodexLibrary.getMonsterById('srd_mon_medusa') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'medusa');
+
+      final medusa = ArenaCombatant.fromMonster(
+        id: 'medusa_1',
+        monster: medusaMonster,
+        team: ArenaTeam.teamA,
+      );
+      final trex = ArenaCombatant.fromMonster(
+        id: 'trex_1',
+        monster: trexMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: medusa,
+        allCombatants: [medusa, trex],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Medusa has Snake Hair, Shortsword, and Longbow.
+      // Her Multiattack allows 3 melee attacks (snake hair/shortsword) or 3 longbow attacks.
+      // She should make exactly 3 attacks, not 5 (3 snake hair + 1 shortsword + 1 longbow).
+      expect(step.attackEvents.length, 3,
+          reason: 'Medusa must make exactly 3 attacks in her multiattack routine, not execute every weapon');
+    });
+
     test('Preset matchups correctly resolve into combatants', () {
       for (final preset in ArenaPresetMatchup.defaultPresets) {
         final resolved = preset.resolveFighters();
@@ -293,3 +354,4 @@ void main() {
     });
   });
 }
+

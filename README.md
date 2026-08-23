@@ -8,47 +8,28 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-403%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-405%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
-A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **dedicated player & DM tools**, including a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, a comprehensive **5e Spellbook Companion**, a **Monster Codex & Bestiary Browser**, a **Magic Item Compendium**, advanced **DPR Calculator & Graph Visualizers**, an interactive **Monster Fighting Arena ("Tools for Nerds")** with Monte Carlo simulations, simultaneous batch attack rolling for summoning spells and magic items, custom dice pool builders with JSON preset import/export, real-time multiplayer dice rooms, interactive 3D polyhedral dice physics, and a cryptographically secure random number generator.
+A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **core tabletop apps and compendiums**, including a **Core Polyhedral Dice Roller** with interactive 3D physics and **Real-Time Multiplayer Dice Rooms**, a comprehensive **5e Spellbook Companion**, a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, a **Monster Codex & Bestiary Browser**, a **Magic Item Compendium**, advanced **DPR Calculators & Bezier Graph Visualizers**, an interactive **Monster Fighting Arena ("Tools for Nerds")** with Monte Carlo simulations, simultaneous **Batch Attack Rolling** for summoning spells and magic items, a **Techno-Rune Glyph Studio**, custom dice pool builders with JSON preset import/export, and a cryptographically secure random number generator.
 
 ---
 
 ## ✨ Key Features & Suite of Tools
 
-### ⚔️ 1. Monster Fighting Arena & Monte Carlo Simulator (Tools for Nerds)
-* **Turn-by-Turn Combat Simulation**: Pit custom teams of monsters against each other (e.g. *1 Young Red Dragon vs 4 Knights*, *1 Giant Shark vs 6 Mariners*, or *1 T-Rex vs 8 Wolves*) and watch every attack, save, crit, fumble, and killshot play out in real time.
-* **Full 5e Combat Rules Engine**:
-  - **Dynamic Initiative & Multiattacks**: Automatic D20 initiative sorting, multiattack routines, and natural 20 critical hit damage doubling.
-  - **D6 Recharge Mechanics**: Evaluates recharge abilities (e.g., Dragon Fire Breath recharge on 5–6) at the start of each turn.
-  - **Dynamic AoE Target Scaling**: Breath weapons, cones, lines, and spheres hit a dynamic number of targets based on AoE footprint, prompting individual saving throws vs Save DC.
-  - **Mobility & Evasion Rules**: Accounts for flight, swim, climb, burrow, Flyby, Pack Tactics, and the **5e Evasion trait** (0 damage on DEX save success, half on failure).
-  - **Damage Resistances & Immunities**: Enforces resistances, vulnerabilities, and damage immunities.
-* **🏟️ Environmental Battlegrounds**:
-  - **Open Colosseum**: Standard open-air battlefield with full flight and standard rules.
-  - **Iron Cage Match**: 10-ft enclosed ceiling that **grounds flying creatures** and disables aerial advantage.
-  - **Flooded Abyss (Water Match)**: Submerged battlefield where **creatures with swim speed gain Advantage**, non-swimmers suffer Disadvantage, and fire damage is halved.
-  - **Volcanic Caldera**: Extreme heat and molten terrain.
-* **🎲 High-Speed Monte Carlo Simulation**: Run **500x or 1,000x automated match iterations** in milliseconds to compute exact empirical win rates %, average round durations, surviving fighter counts, remaining HP %, and identify Match MVPs.
-* **⚡ Interactive Playback Controls**: Advance turns step-by-step, toggle auto-playback with adjustable speed (0.5x to 4x), or press **"Skip to End"** to instantly resolve the battle and view final statistics.
+### 🎲 1. Core Dice Roller & 3D Polyhedral Physics
+* **Multi-Dice Pools**: Roll any combination of standard polyhedral RPG dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, `d1000`, etc.).
+* **Optimized 3D Polyhedral Visualizer**: Real-time 3D rendered dice rolling with realistic angular momentum, winning-face illumination, natural 20 critical burst particle effects, and screen shake. Powered by allocation-free rasterization loops and cached typography painters for 60/120Hz smoothness.
+* **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
+* **Expandable Roll History**: Visual breakdown showing individual die results, dropped rolls, natural 20 / natural 1 highlights, formulas, and expandable roll detail feeds.
+* **JSON Presets**: Save custom dice formulas (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.
+* **Haptic Feedback**: Multi-level tactile vibration triggers (Off, Light Ticks, Heavy Combat Rumble) for dice clicks, roll animations, and critical successes.
 
-### 🤓 2. DPR Calculator & Multi-Mode Graph Visualizer (Tools for Nerds)
-* **Interactive Animated Bezier Canvas**: Real-time damage per round (DPR) curve renderer with smooth Bezier interpolation, pulsing radar nodes, and touch/mouse scrubbing across target AC 8–25.
-* **Dual 2014 RAW vs 2024 Revised Rules**: Toggle between 2014 feats (GWM -5/+10, GWF reroll 1s/2s) and 2024 rules (GWM +PB damage, GWF floor 3), or unlock **"Anything Goes"** mode to mix cross-edition feats and masteries.
-* **GWM / Sharpshooter Break-Even Analysis**: Automatic calculation of the exact crossover armor class (AC) where power attack feats outperform normal strikes, highlighted by a golden beacon and diamond marker.
-* **Multi-Curve Situational Triangle**:
-  - **Baseline Strike (Cyan)**
-  - **GWM / Power Attack (Amber)**
-  - **Advantage & Elven Accuracy (Emerald Green)**
-  - **Disadvantage Curve (Coral Crimson)**
-* **3 Interactive Graph View Modes**:
-  1. **DPR vs AC**: Primary damage output comparison across enemy armor tiers.
-  2. **Accuracy %**: Hit Chance %, Advantage Hit %, Disadvantage Hit %, and Crit Rate % on a 0%–100% bounded accuracy scale.
-  3. **Damage on Hit Breakdown**: Regular Hit Damage, Critical Hit Damage, and Miss / Graze Damage output per attack.
-* **2024 Weapon Masteries**: Full offensive modeling for **Graze** (guaranteed ability mod damage on miss), **Vex** (chained advantage on hit), **Nick** (extra light weapon attack without bonus action), and **Topple**.
-* **Cantrip & Spell Weapon Presets**: 20+ built-in damage actions including *Eldritch Blast* (with **Agonizing Blast** +Mod toggle), *Fire Bolt*, *Toll the Dead*, *Booming Blade*, *Green-Flame Blade*, *Shillelagh*, *Magic Stone*, and upcastable *Shadow Blade*.
-* **Racial & Feat Perks**: Support for **Halfling Luck / Lucky** (rerolls natural 1s), Champion Fighter (19–20 Crit), Half-Orc / Barbarian (Extra Crit Dice), Sneak Attack once-per-turn probability math, and Dueling / Thrown Weapon fighting styles (+2 flat damage).
+### 🌐 2. Live Multiplayer Dice Rooms
+* **Real-Time Synchronization**: Connect to shared dice rooms powered by Firebase Firestore for live party transparency.
+* **6-Character Room Codes**: Simple 6-character alphanumeric room codes (`ROOM-XXXXXX`) with input sanitization and random code generation.
+* **Live Connection Status**: Visual status banner indicating active room connection, participant display names, and real-time roll event feeds.
+* **Ephemeral Architecture**: Stream-only roll broadcasts designed for privacy and minimal latency without permanent data harvesting.
 
 ### 📜 3. 5e Spellbook Companion & Rules Engine (2014 RAW vs 2024 Revised)
 * **Modular Official SRD Spell Catalog**: Built-in support for official SRD spells across all tiers (Cantrips through 9th Level) with side-by-side 2014 & 2024 revision data.
@@ -65,39 +46,64 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **Personal Spellbook Pinning**: Bookmark key spells for rapid in-combat access with dedicated filter tabs and search.
 * **Dynamic School Glyphs**: Vector-drawn procedural D&D school glyphs with custom action rings (Action, Bonus Action, Reaction, Concentration, Ritual).
 
-### 🐉 4. Monster Codex & Bestiary Browser (2014 vs 2024)
-* **Comprehensive SRD Bestiary**: 320+ official monsters across all Challenge Ratings (CR 0 to CR 30), Creature Types, and Sizes.
-* **2014 vs 2024 Monster Statblock Diffs**: Side-by-side comparison tool highlighting stat, trait, and multiattack changes in the revised ruleset.
-* **Integrated Multiattack & Quick-Roll Engine**: Execute monster attacks, saving throw DCs, and damage rolls directly inside the statblock view.
-* **My Bestiary Pinning**: Pin frequently encountered monsters for rapid encounter access.
-
-### 🧰 5. Magic Item Compendium
-* **Categorized Magic Items**: Comprehensive SRD 5.1 item library organized across Armor, Weapons, Potions, Rings, Rods, Scrolls, Staffs, Wands, and Wondrous Items.
-* **Attunement & Rarity Filters**: Instant search and filtering by Common, Uncommon, Rare, Very Rare, Legendary, and Artifact rarities.
-* **Direct Summon Launchers**: Integrated shortcuts to summon companions (e.g. *Bags of Tricks*, *Horn of Valhalla*, *Figurines of Wondrous Power*).
-
-### 🛡️ 6. DM's Screen & Dual Rulebook Engine (2014 RAW vs 2024 Revised)
+### 🛡️ 4. DM's Screen & Dual Rulebook Engine (2014 RAW vs 2024 Revised)
 * **2014 vs 2024 Rules Switch**: Seamlessly toggle between 2014 5e RAW rules and the 2024 Revised rules across all combat mechanics, conditions, environment hazards, DCs, resting, and spell limits.
 * **Side-by-Side Edition Comparison**: Interactive comparison dialogs and "2024 Diff" badges highlighting every major rule revision (e.g., -2 Exhaustion per level, Unarmed Strike Save DCs, Bonus Action potions, and Disadvantage Initiative for surprise).
 * **Virtualized Rule Grids**: Fluid sliver-based layout that lazily renders rule cards on demand for optimal mobile and desktop performance.
 * **Rule Pinning & Search**: Pin frequently referenced rules to the top of your screen, with instant real-time keyword search and category filtering.
 * **Quick DM Roller**: Instant d20, d100, d12, d8, and d6 roller bar directly inside the DM screen.
 
-### 🎲 7. Core Dice Roller & 3D Polyhedral Physics
-* **Multi-Dice Pools**: Roll any combination of standard polyhedral RPG dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, `d1000`, etc.).
-* **Optimized 3D Polyhedral Visualizer**: Real-time 3D rendered dice rolling with realistic angular momentum, winning-face illumination, natural 20 critical burst particle effects, and screen shake. Powered by allocation-free rasterization loops and cached typography painters for 60/120Hz smoothness.
-* **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
-* **Expandable Roll History**: Visual breakdown showing individual die results, dropped rolls, natural 20 / natural 1 highlights, formulas, and expandable roll detail feeds.
-* **JSON Presets**: Save custom dice formulas (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.
-* **Haptic Feedback**: Multi-level tactile vibration triggers (Off, Light Ticks, Heavy Combat Rumble) for dice clicks, roll animations, and critical successes.
+### 🐉 5. Monster Codex & Bestiary Browser (2014 vs 2024)
+* **Comprehensive SRD Bestiary**: 320+ official monsters across all Challenge Ratings (CR 0 to CR 30), Creature Types, and Sizes.
+* **2014 vs 2024 Monster Statblock Diffs**: Side-by-side comparison tool highlighting stat, trait, and multiattack changes in the revised ruleset.
+* **Integrated Multiattack & Quick-Roll Engine**: Execute monster attacks, saving throw DCs, and damage rolls directly inside the statblock view.
+* **My Bestiary Pinning**: Pin frequently encountered monsters for rapid encounter access.
 
-### 🌐 8. Live Multiplayer Dice Rooms
-* **Real-Time Synchronization**: Connect to shared dice rooms powered by Firebase Firestore for live party transparency.
-* **6-Character Room Codes**: Simple 6-character alphanumeric room codes (`ROOM-XXXXXX`) with input sanitization and random code generation.
-* **Live Connection Status**: Visual status banner indicating active room connection, participant display names, and real-time roll event feeds.
-* **Ephemeral Architecture**: Stream-only roll broadcasts designed for privacy and minimal latency without permanent data harvesting.
+### 🧰 6. Magic Item Compendium & Reliquary
+* **Categorized Magic Items**: Comprehensive SRD 5.1 item library organized across Armor, Weapons, Potions, Rings, Rods, Scrolls, Staffs, Wands, and Wondrous Items.
+* **Attunement & Rarity Filters**: Instant search and filtering by Common, Uncommon, Rare, Very Rare, Legendary, and Artifact rarities.
+* **Direct Summon Launchers**: Integrated shortcuts to summon companions (e.g. *Bags of Tricks*, *Horn of Valhalla*, *Figurines of Wondrous Power*).
+* **Personal Reliquary**: Bookmark favorite and attuned magic items for quick access during adventures.
 
-### 🔮 9. Spell Minion Companions (6 Tools)
+---
+
+### ⚔️ 7. Monster Fighting Arena & Monte Carlo Simulator (Tools for Nerds)
+* **Turn-by-Turn Combat Simulation**: Pit custom teams of monsters against each other (e.g. *1 Young Red Dragon vs 4 Knights*, *1 Giant Shark vs 6 Mariners*, or *1 T-Rex vs 8 Wolves*) and watch every attack, save, crit, fumble, and killshot play out in real time.
+* **Strict 5e Action Economy Resolution**:
+  - **Accurate Action & Multiattack Sequencing**: Strict enforcement of action economy where monsters with melee and ranged options make only their permitted actions/multiattack routines per round rather than firing all weapon profiles simultaneously.
+  - **Dynamic Initiative & Natural Crits**: Automatic D20 initiative sorting, tie-breaking by DEX mod and max HP, and natural 20 critical hit damage doubling.
+  - **D6 Recharge Mechanics**: Evaluates recharge abilities (e.g., Dragon Fire Breath recharge on 5–6) at the start of each turn, consuming recharge readiness upon use.
+  - **Dynamic AoE Target Scaling**: Breath weapons, cones, lines, and spheres hit a dynamic number of targets based on AoE footprint, prompting individual saving throws vs Save DC.
+  - **Mobility & Evasion Rules**: Accounts for flight, swim, climb, burrow, Flyby, Pack Tactics, and the **5e Evasion trait** (0 damage on DEX save success, half on failure).
+  - **Damage Resistances & Immunities**: Enforces resistances, vulnerabilities, and damage immunities.
+* **🏟️ Environmental Battlegrounds**:
+  - **Open Colosseum**: Standard open-air battlefield with full flight and standard rules.
+  - **Iron Cage Match**: 10-ft enclosed ceiling that **grounds flying creatures** and disables aerial advantage.
+  - **Flooded Abyss (Water Match)**: Submerged battlefield where **creatures with swim speed gain Advantage**, non-swimmers suffer Disadvantage, and fire damage is halved.
+  - **Volcanic Caldera**: Extreme heat and molten terrain.
+* **🎲 High-Speed Monte Carlo Simulation**: Run **500x or 1,000x automated match iterations** in milliseconds to compute exact empirical win rates %, average round durations, surviving fighter counts, remaining HP %, and identify Match MVPs.
+* **⚡ Interactive Playback Controls**: Advance turns step-by-step, toggle auto-playback with adjustable speed (0.5x to 4x), or press **"Skip to End"** to instantly resolve the battle and view final statistics.
+
+### 🤓 8. DPR Calculator & Multi-Mode Graph Visualizer (Tools for Nerds)
+* **Interactive Animated Bezier Canvas**: Real-time damage per round (DPR) curve renderer with smooth Bezier interpolation, pulsing radar nodes, and touch/mouse scrubbing across target AC 8–25.
+* **Dual 2014 RAW vs 2024 Revised Rules**: Toggle between 2014 feats (GWM -5/+10, GWF reroll 1s/2s) and 2024 rules (GWM +PB damage, GWF floor 3), or unlock **"Anything Goes"** mode to mix cross-edition feats and masteries.
+* **GWM / Sharpshooter Break-Even Analysis**: Automatic calculation of the exact crossover armor class (AC) where power attack feats outperform normal strikes, highlighted by a golden beacon and diamond marker.
+* **Multi-Curve Situational Triangle**:
+  - **Baseline Strike (Cyan)**
+  - **GWM / Power Attack (Amber)**
+  - **Advantage & Elven Accuracy (Emerald Green)**
+  - **Disadvantage Curve (Coral Crimson)**
+* **3 Interactive Graph View Modes**:
+  1. **DPR vs AC**: Primary damage output comparison across enemy armor tiers.
+  2. **Accuracy %**: Hit Chance %, Advantage Hit %, Disadvantage Hit %, and Crit Rate % on a 0%–100% bounded accuracy scale.
+  3. **Damage on Hit Breakdown**: Regular Hit Damage, Critical Hit Damage, and Miss / Graze Damage output per attack.
+* **2024 Weapon Masteries**: Full offensive modeling for **Graze** (guaranteed ability mod damage on miss), **Vex** (chained advantage on hit), **Nick** (extra light weapon attack without bonus action), and **Topple**.
+* **Cantrip & Spell Weapon Presets**: 20+ built-in damage actions including *Eldritch Blast* (with **Agonizing Blast** +Mod toggle), *Fire Bolt*, *Toll the Dead*, *Booming Blade*, *Green-Flame Blade*, *Shillelagh*, *Magic Stone*, and upcastable *Shadow Blade*.
+* **Racial & Feat Perks**: Support for **Halfling Luck / Lucky** (rerolls natural 1s), Champion Fighter (19–20 Crit), Half-Orc / Barbarian (Extra Crit Dice), Sneak Attack once-per-turn probability math, and Dueling / Thrown Weapon fighting styles (+2 flat damage).
+
+---
+
+### 🔮 9. Spell Minion Companions (6 Dedicated Tools)
 * **⚔️ Animate Objects Companion**: Enforces RAW point budgets (10 pts at 5th level up to 18 pts at 9th level) across Tiny, Small, Medium, Large, and Huge animated objects.
 * **🐾 Conjure Animals Squad Manager**: Summons 8 Wolves (CR 1/4) at 3rd level up to 32 beasts at 9th level with built-in **Pack Tactics** advantage detection.
 * **💀 Animate Dead Squad Tracker**: Manages Skeleton archers and Zombie frontline HP, tracking upcast limits from 1 to 13 undead.
@@ -105,7 +111,7 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **🌋 Conjure Elementals Companion**: Manages Air, Earth, Fire, and Water Elementals (CR 5+) and swarms of Mephits/Gargoyles.
 * **🦗 Giant Insect Squad Tracker**: Transforms ordinary insects into Giant Centipedes (10), Giant Wasps (5), or Giant Spiders (3).
 
-### 📯 10. Magic Item Rollers & Minions (5 Tools)
+### 📯 10. Magic Item Rollers & Minions (5 Dedicated Tools)
 * **👜 Gray Bag of Tricks**: Roll d8 on the Gray Bag table (Weasel, Giant Rat, Badger, Boar, Panther, Giant Badger, Dire Wolf, or Giant Elk).
 * **👜 Rust Bag of Tricks**: Roll d8 on the Rust Bag table (Rat, Owl, Mastiff, Goat, Giant Goat, Giant Boar, Lion, or Brown Bear).
 * **👜 Tan Bag of Tricks**: Roll d8 on the Tan Bag table (Jackal, Ape, Baboon, Axe Beak, Black Bear, Giant Weasel, Giant Hyena, or Tiger).
@@ -117,10 +123,12 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **Live Squad HP Tracker**: Visual progress bars per minion, custom creature naming, temporary HP tracking, squad initiative rolling, quick +/- HP adjustments, direct HP input, and damage resistance markers.
 * **Mass Damage & Group Healing**: AoE damage and healing modal to apply group HP changes across all minions or selected squads with full/half damage saving throw calculations.
 
-### 📖 12. Tactical Reference & Rules Engine
-* **Action Economy Guide**: Interactive breakdown of Actions, Bonus Actions, Reactions, Movement, and Free Object Interactions.
-* **5e Condition Reference**: Instant lookup for all 15 SRD conditions (Blinded, Charmed, Frightened, Grappled, Paralyzed, Poisoned, Prone, Restrained, Stunned, etc.) with tactical effects.
-* **Integrated SRD 5.1 & 5.2 Rulebook**: Interactive reference tables, stat cards, upcasting rules, and RAW tactical tips per tool.
+---
+
+### 🎨 12. D&D Techno-Rune Glyph Studio & Style Guide Codex
+* **Interactive Custom Glyph Builder**: Select core glyph icons, choose outer and inner frame geometry (Hexagonal, Circular, Octagonal, Diamond), configure particle effects, and pick damage type rings.
+* **Full Style Guide Codex**: Comprehensive design tokens covering typography, surface elevations, fantasy color palettes, and procedural vector glyphs.
+* **Spellbook Schematics & Minion Matrix**: Visual reference cards with dynamic action cost rings (Action, Bonus Action, Reaction, Concentration, Ritual) and creature stat badges.
 
 ### 🎨 13. Theme Engine & User Preferences
 * **Theme Modes**: System, Dark Mode (default), and Light Mode.
@@ -171,6 +179,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── dice_roller_screen.dart # Dice roller, 3D physics, presets, & multiplayer rooms
 │   │   ├── dm_reference_screen.dart # DM's screen with 2014 vs 2024 rules comparison
 │   │   ├── dpr_calculator_screen.dart # DPR calculator, multi-curve graph, & character builder
+│   │   ├── glyph_showcase_screen.dart # Techno-Rune Glyph Studio, Codex & Style Guide
 │   │   ├── item_compendium_screen.dart # Magic item compendium & rarity filters
 │   │   ├── landing_screen.dart     # Categorized dashboard with dedicated tool cards
 │   │   ├── minion_tool_screen.dart # Parametric dedicated minion tool screen
@@ -193,14 +202,16 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                      # Visual design system
 │   │   └── app_theme.dart          # Dynamic theme data & color schemes
 │   ├── utils/                      # Utilities & helpers
+│   │   ├── dice_formatters.dart    # Dice notation formatters & tokenizers
 │   │   ├── pwa_helper.dart         # PWA installation prompt helper (cross-platform stub/web)
 │   │   └── secure_random.dart      # Cryptographically secure RNG generator
 │   └── widgets/                    # Modular UI components
 │       ├── app_logo.dart           # Pure Flutter vector tech+fantasy d20 logo & interactive spin
 │       ├── arena/                  # Arena clash stage, combatant cards, combat log, & Monte Carlo modal
 │       ├── batch_attack/           # Batch attack results summary
-│       ├── dice_roller/            # 3D dice visualizer, pool builders, roll history, & presets
+│       ├── common/                 # Shared widgets & search headers
 │       ├── dialogs/                # Modals for presets, batch attacks, legal notices, statblocks, & rules
+│       ├── dice_roller/            # 3D dice visualizer, pool builders, roll history, & presets
 │       ├── dm_reference/           # Dual-rulebook comparison cards, edition toggles, & diff badges
 │       ├── dpr/                    # Animated Bezier canvas chart with multi-curve & mode support
 │       ├── fx/                     # Critical hit visual effects & overlays
@@ -211,10 +222,11 @@ dangerously_nerdy_5e_toolkit/
 │       ├── minions/                # Active session header, object cards, & squad builder
 │       ├── monster_codex/          # Monster cards, comparison dialogs, and roll modals
 │       ├── room_banner_widget.dart # Live room connection status banner
+│       ├── spell_reference.dart    # Spell reference cards & stat components
 │       └── spellbook/              # Spell cards, quick-roll dialogs, compare modals, filter sheets
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with cache-busting timestamp
-├── test/                           # Unit, widget, accessibility, & resilience test suites (403 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (405 tests)
 ├── web/                            # Web platform manifest, strict CSP, & service worker
 ├── firestore.rules                 # Strict security rules for Firestore shared rooms
 ├── firestore.indexes.json          # Firestore indexes configuration
@@ -258,7 +270,6 @@ flutter run -d linux
 ```
 
 #### Mobile (Android / iOS)
-Connect your device or start an emulator, then:
 ```bash
 flutter run
 ```
@@ -267,7 +278,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, and resilience test suite (403 tests with 100% pass rate):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, and resilience test suite (405 tests with 100% pass rate):
 ```bash
 flutter test
 ```
