@@ -135,6 +135,74 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     });
   }
 
+  void _clearAllCreatures() {
+    if (_teamA.isEmpty && _teamB.isEmpty) return;
+
+    final backupA = List<ArenaCombatant>.from(_teamA);
+    final backupB = List<ArenaCombatant>.from(_teamB);
+
+    HapticService.mediumImpact(context);
+    _playbackTimer?.cancel();
+
+    setState(() {
+      _teamA.clear();
+      _teamB.clear();
+      _status = ArenaSimulationStatus.setup;
+      _activeCombatants.clear();
+      _turnHistory.clear();
+      _currentStep = null;
+      _activeAttacker = null;
+      _activeDefender = null;
+    });
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Cleared all arena creatures'),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'UNDO',
+          textColor: const Color(0xFFC084FC),
+          onPressed: () {
+            setState(() {
+              _teamA.addAll(backupA);
+              _teamB.addAll(backupB);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  void _clearTeam(ArenaTeam team) {
+    final targetList = team == ArenaTeam.teamA ? _teamA : _teamB;
+    if (targetList.isEmpty) return;
+
+    final backup = List<ArenaCombatant>.from(targetList);
+    HapticService.lightImpact(context);
+
+    setState(() {
+      targetList.clear();
+    });
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Cleared all creatures from ${team.label}'),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'UNDO',
+          textColor: team.color,
+          onPressed: () {
+            setState(() {
+              targetList.addAll(backup);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   void _addMonsterToTeam(MonsterItem monster, int count, ArenaTeam team, [DmRulesEdition? ed]) {
     final targetEd = ed ?? _resolveEdition(context);
     setState(() {
@@ -699,6 +767,16 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
               ),
             ),
 
+            // Clear All Creatures Button
+            if (_teamA.isNotEmpty || _teamB.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.delete_sweep_outlined),
+                tooltip: 'Clear All Creatures',
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                onPressed: _clearAllCreatures,
+              ),
+
             // Presets Menu Button
             PopupMenuButton<ArenaPresetMatchup>(
               icon: const Icon(Icons.bookmark_outline),
@@ -1081,16 +1159,36 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                 ],
               ),
               const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  isSetup
-                      ? '${combatants.length} fighters • ${totalHp}HP'
-                      : '$livingCount/${combatants.length} alive',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? Colors.white70 : Colors.black87,
-                  ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        isSetup
+                            ? '${combatants.length} fighters • ${totalHp}HP'
+                            : '$livingCount/${combatants.length} alive',
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                    ),
+                    if (isSetup && combatants.isNotEmpty) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: Icon(Icons.delete_sweep_outlined, size: 16, color: team.color.withAlpha(200)),
+                        tooltip: 'Clear ${team.label}',
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _clearTeam(team),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],

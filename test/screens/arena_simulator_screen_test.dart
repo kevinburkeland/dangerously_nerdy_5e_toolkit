@@ -218,5 +218,64 @@ void main() {
       expect(find.text('Pause'), findsOneWidget);
       expect(find.text('Step'), findsOneWidget);
     });
+
+    testWidgets('Clear All Creatures removes all monsters from both teams with undo option', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      // Initially has monsters from default preset
+      expect(find.text('Tyrannosaurus Rex'), findsWidgets);
+
+      // Tap Clear All button in AppBar
+      final clearAllBtn = find.byTooltip('Clear All Creatures');
+      expect(clearAllBtn, findsOneWidget);
+      await tester.tap(clearAllBtn);
+      await tester.pumpAndSettle();
+
+      // Both teams should now be empty
+      expect(find.text('No monsters in Team Crimson'), findsOneWidget);
+      expect(find.text('No monsters in Team Cobalt'), findsOneWidget);
+      expect(find.text('Cleared all arena creatures'), findsOneWidget);
+
+      // Tap UNDO
+      await tester.tap(find.text('UNDO'));
+      await tester.pumpAndSettle();
+
+      // Monsters should be restored
+      expect(find.text('Tyrannosaurus Rex'), findsWidgets);
+    });
+
+    testWidgets('Clear Team removes creatures from one team with undo option', (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildTestableScreen());
+      await tester.pumpAndSettle();
+
+      // Tap Clear Team Crimson button
+      final clearCrimsonBtn = find.byTooltip('Clear Team Crimson');
+      expect(clearCrimsonBtn, findsOneWidget);
+      await tester.tap(clearCrimsonBtn);
+      await tester.pumpAndSettle();
+
+      // Team Crimson is empty, Team Cobalt still has monsters
+      expect(find.text('No monsters in Team Crimson'), findsOneWidget);
+      expect(find.text('No monsters in Team Cobalt'), findsNothing);
+      expect(find.text('Cleared all creatures from Team Crimson'), findsOneWidget);
+
+      // Tap UNDO
+      await tester.tap(find.text('UNDO'));
+      await tester.pumpAndSettle();
+
+      // Team Crimson is restored
+      expect(find.text('No monsters in Team Crimson'), findsNothing);
+    });
   });
 }
