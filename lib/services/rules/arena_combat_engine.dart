@@ -2512,7 +2512,9 @@ class ArenaCombatEngine {
     attacker.attacksMade++;
 
     // Parse AoE shape and dimensions and resolve targets via AoeResolver
-    final parsedShape = AoeResolver.parseShapeAndSize(attack.name);
+    final sb = attacker.getStatBlock(edition);
+    final matchingAction = sb.actions.where((a) => a.name.toLowerCase() == attack.name.toLowerCase()).firstOrNull;
+    final parsedShape = AoeResolver.parseShapeAndSize(attack.name, matchingAction?.description);
     final caughtDefenders = AoeResolver.selectTargets(
       livingEnemies: livingEnemies,
       shape: parsedShape.shape,
