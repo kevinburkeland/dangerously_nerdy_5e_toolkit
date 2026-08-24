@@ -824,6 +824,107 @@ void main() {
       expect(failedSpellcasters, isEmpty, reason: 'All monsters with spellcasting traits should have non-empty parsed spells or slots');
       expect(spellcasterMonsters.length, greaterThanOrEqualTo(10));
     });
+
+    test('Legendary Resistance parses correctly on high-CR boss monsters', () {
+      final redDragon = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'ancient red dragon');
+      final dragonCombatant = ArenaCombatant.fromMonster(
+        id: 'red_dragon',
+        monster: redDragon,
+        team: ArenaTeam.teamA,
+      );
+
+      expect(dragonCombatant.maxLegendaryResistances, 3);
+      expect(dragonCombatant.legendaryResistancesRemaining, 3);
+      expect(dragonCombatant.hasLegendaryResistances, true);
+
+      final lichMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'lich');
+      final lichCombatant = ArenaCombatant.fromMonster(
+        id: 'lich_1',
+        monster: lichMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      expect(lichCombatant.maxLegendaryResistances, 3);
+      expect(lichCombatant.legendaryResistancesRemaining, 3);
+      expect(lichCombatant.hasLegendaryResistances, true);
+    });
+
+    test('Legendary Resistance automatically converts failed saves to successes and decrements remaining charges', () {
+      final engine = ArenaCombatEngine(rng: Random(42));
+      final lichMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'lich');
+      final wolfMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'wolf');
+
+      final caster = ArenaCombatant.fromMonster(
+        id: 'caster_disintegrate',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      caster.knownSpellIds.add('spell_disintegrate');
+      caster.maxSpellSlots[6] = 2;
+      caster.currentSpellSlots[6] = 2;
+
+      // Boss defender with 3 Legendary Resistances
+      final bossDefender = ArenaCombatant.fromMonster(
+        id: 'boss_lich',
+        monster: lichMonster,
+        team: ArenaTeam.teamB,
+      );
+      bossDefender.currentHp = 10; // Low HP to trigger killshot / high priority
+
+      expect(bossDefender.legendaryResistancesRemaining, 3);
+
+      final turnResult = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: caster,
+        allCombatants: [caster, bossDefender],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // The boss should have used a legendary resistance if the save was failed
+      final attackEvent = turnResult.attackEvents.firstWhere((e) => e.attackName.contains('Disintegrate'));
+      expect(attackEvent.isSavingThrow, true);
+      if (attackEvent.saved && attackEvent.summaryText.contains('LEGENDARY RESISTANCE')) {
+        expect(bossDefender.legendaryResistancesRemaining, 2);
+        expect(bossDefender.isAlive, true);
+      }
+    });
+
+    test('Depleted Legendary Resistances (0 remaining) do not prevent failed saves', () {
+      final engine = ArenaCombatEngine(rng: Random(42));
+      final lichMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'lich');
+      final wolfMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'wolf');
+
+      final caster = ArenaCombatant.fromMonster(
+        id: 'caster_hold',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      caster.knownSpellIds.add('spell_hold_monster');
+      caster.maxSpellSlots[5] = 1;
+      caster.currentSpellSlots[5] = 1;
+
+      final bossDefender = ArenaCombatant.fromMonster(
+        id: 'boss_lich',
+        monster: lichMonster,
+        team: ArenaTeam.teamB,
+      );
+      // Deplete all legendary resistances
+      bossDefender.legendaryResistancesRemaining = 0;
+
+      expect(bossDefender.useLegendaryResistance(), false);
+      expect(bossDefender.legendaryResistancesRemaining, 0);
+
+      final turnResult = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: caster,
+        allCombatants: [caster, bossDefender],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      expect(turnResult.attackEvents.isNotEmpty, true);
+    });
   });
 }
 

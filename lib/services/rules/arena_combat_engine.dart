@@ -514,7 +514,8 @@ class ArenaCombatEngine {
         final d20 = _rollDie(20);
         final saveBonus = target.getSavingThrowBonus('dex', edition);
         final totalSave = d20 + saveBonus;
-        final saved = totalSave >= attacker.spellSaveDc;
+        final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+        final saved = saveRes.saved;
 
         int damageDealt = 0;
         bool isKillShot = false;
@@ -535,7 +536,7 @@ class ArenaCombatEngine {
 
         String summary;
         if (saved) {
-          summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — avoided Disintegrate entirely!';
+          summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} — avoided Disintegrate entirely!';
         } else {
           final fatal = isKillShot ? ' — DISINTEGRATED TO ASH!' : '';
           summary = 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full $damageDealt force damage$fatal';
@@ -591,7 +592,8 @@ class ArenaCombatEngine {
         final d20 = _rollDie(20);
         final saveBonus = target.getSavingThrowBonus('con', edition);
         final totalSave = d20 + saveBonus;
-        final saved = totalSave >= attacker.spellSaveDc;
+        final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+        final saved = saveRes.saved;
 
         final rawDmg = _rollDice(7, 8) + 30;
         int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
@@ -608,7 +610,7 @@ class ArenaCombatEngine {
 
         final fatal = isKillShot ? ' — SMITTEN WITH NECROTIC DEATH!' : '';
         String summary = saved
-            ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+            ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $damageDealt necrotic damage$fatal'
             : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
 
         if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -660,7 +662,8 @@ class ArenaCombatEngine {
         final d20 = _rollDie(20);
         final saveBonus = target.getSavingThrowBonus('con', edition);
         final totalSave = d20 + saveBonus;
-        final saved = totalSave >= attacker.spellSaveDc;
+        final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+        final saved = saveRes.saved;
 
         final rawDmg = _rollDice(8 + (slotLvl - 4), 8);
         int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
@@ -677,7 +680,7 @@ class ArenaCombatEngine {
 
         final fatal = isKillShot ? ' — WITHERED & SLAIN!' : '';
         String summary = saved
-            ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+            ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $damageDealt necrotic damage$fatal'
             : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
 
         if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -781,7 +784,8 @@ class ArenaCombatEngine {
           final saveBonus = defender.getSavingThrowBonus(candidate.saveAbility, edition);
           final d20 = _rollDie(20);
           final totalSave = d20 + saveBonus;
-          final saved = totalSave >= attacker.spellSaveDc;
+          final saveRes = _evaluateSaveWithLegendaryResistance(defender: defender, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+          final saved = saveRes.saved;
 
           final hasEvasion = defender.hasEvasion(edition) && candidate.saveAbility.toLowerCase() == 'dex';
           bool evadedWithEvasion = false;
@@ -819,7 +823,7 @@ class ArenaCombatEngine {
             summary = 'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took 0 ${candidate.damageType} damage via Evasion!';
           } else if (saved) {
             final fatal = isKillShot ? ' — SLAIN!' : '';
-            summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $effectiveDamage ${candidate.damageType} damage$fatal';
+            summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $effectiveDamage ${candidate.damageType} damage$fatal';
           } else {
             final fatal = isKillShot ? ' — SLAIN!' : '';
             summary = 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $effectiveDamage ${candidate.damageType} damage$fatal';
@@ -890,11 +894,12 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('wis', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       String note;
       if (saved) {
-        note = '${target.displayName} resisted Hold Monster (Wis save $totalSave vs DC ${attacker.spellSaveDc})';
+        note = '${target.displayName} resisted Hold Monster (Wis save $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote}';
       } else {
         final condRes = target.applyCondition(ArenaCondition.paralyzed, _rollDie, edition);
         note = '${target.displayName} failed Wis save ($totalSave vs DC ${attacker.spellSaveDc}) and is PARALYZED by Hold Monster!';
@@ -943,10 +948,11 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('cha', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       final note = saved
-          ? '${target.displayName} resisted Banishment (Cha save $totalSave vs DC ${attacker.spellSaveDc})'
+          ? '${target.displayName} resisted Banishment (Cha save $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote}'
           : '${target.displayName} failed Cha save ($totalSave vs DC ${attacker.spellSaveDc}) and is BANISHED to a demiplane!';
 
       return (
@@ -989,7 +995,8 @@ class ArenaCombatEngine {
         final d20 = _rollDie(20);
         final saveBonus = enemy.getSavingThrowBonus('wis', edition);
         final totalSave = d20 + saveBonus;
-        final saved = totalSave >= attacker.spellSaveDc;
+        final saveRes = _evaluateSaveWithLegendaryResistance(defender: enemy, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+        final saved = saveRes.saved;
 
         if (!saved) {
           enemy.temporaryAcBonus -= 2;
@@ -1018,7 +1025,7 @@ class ArenaCombatEngine {
             defenderRemainingHp: enemy.currentHp,
             defenderMaxHp: enemy.maxHp,
             summaryText: saved
-                ? '${enemy.displayName} resisted Slow (Wis save $totalSave vs DC ${attacker.spellSaveDc})'
+                ? '${enemy.displayName} resisted Slow (Wis save $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote}'
                 : '${enemy.displayName} failed Wis save ($totalSave vs DC ${attacker.spellSaveDc}) — SLOWED (-2 AC)!',
           ),
         );
@@ -1037,7 +1044,8 @@ class ArenaCombatEngine {
         final d20 = _rollDie(20);
         final saveBonus = enemy.getSavingThrowBonus('dex', edition);
         final totalSave = d20 + saveBonus;
-        final saved = totalSave >= attacker.spellSaveDc;
+        final saveRes = _evaluateSaveWithLegendaryResistance(defender: enemy, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+        final saved = saveRes.saved;
 
         events.add(
           ArenaAttackEvent(
@@ -1115,7 +1123,8 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('con', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       final rawDmg = _rollDice(7, 8) + 30;
       int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
@@ -1132,7 +1141,7 @@ class ArenaCombatEngine {
 
       final fatal = isKillShot ? ' — WITHERED & SLAIN BY FINGER OF DEATH!' : '';
       String summary = saved
-          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $damageDealt necrotic damage$fatal'
           : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -1179,7 +1188,8 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('con', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       final rawDmg = _rollDice(14, 6);
       int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
@@ -1196,7 +1206,7 @@ class ArenaCombatEngine {
 
       final fatal = isKillShot ? ' — DESTROYED BY DISEASE!' : '';
       String summary = saved
-          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $damageDealt necrotic damage$fatal'
           : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -1243,7 +1253,8 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('dex', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -1264,7 +1275,7 @@ class ArenaCombatEngine {
 
       final fatal = isKillShot ? ' — DISINTEGRATED TO ASH!' : '';
       String summary = saved
-          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — avoided Disintegrate entirely!'
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} — avoided Disintegrate entirely!'
           : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full $damageDealt force damage$fatal';
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -1311,7 +1322,8 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('con', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       final rawDmg = _rollDice(8 + (slotLvl - 4), 8);
       int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
@@ -1328,7 +1340,7 @@ class ArenaCombatEngine {
 
       final fatal = isKillShot ? ' — WITHERED & SLAIN!' : '';
       String summary = saved
-          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $damageDealt necrotic damage$fatal'
           : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -1847,7 +1859,8 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus(saveAbility, edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       final hasEvasion = target.hasEvasion(edition) && saveAbility == 'dex';
       bool evadedWithEvasion = false;
@@ -1887,7 +1900,7 @@ class ArenaCombatEngine {
       String summary = evadedWithEvasion
           ? 'EVADED! $spellName dealt 0 $dmgType damage via Evasion!'
           : (saved
-              ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt $dmgType damage$fatal'
+              ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} took half: $damageDealt $dmgType damage$fatal'
               : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt $dmgType damage$fatal');
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -2135,7 +2148,8 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('wis', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -2156,7 +2170,7 @@ class ArenaCombatEngine {
 
       final fatal = isKillShot ? ' — KILLED BY DOLEFUL BELL!' : '';
       String summary = saved
-          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — took 0 necrotic damage'
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} — took 0 necrotic damage'
           : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took $damageDealt necrotic damage$fatal';
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -2292,7 +2306,8 @@ class ArenaCombatEngine {
       final d20 = _rollDie(20);
       final saveBonus = target.getSavingThrowBonus('dex', edition);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= attacker.spellSaveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: totalSave, saveDc: attacker.spellSaveDc);
+      final saved = saveRes.saved;
 
       int damageDealt = 0;
       bool isKillShot = false;
@@ -2312,7 +2327,7 @@ class ArenaCombatEngine {
 
       final fatal = isKillShot ? ' — PURGED & SLAIN!' : '';
       String summary = saved
-          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — took 0 radiant damage'
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc})${saveRes.summaryNote} — took 0 radiant damage'
           : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took $damageDealt radiant damage$fatal';
 
       if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
@@ -2355,6 +2370,27 @@ class ArenaCombatEngine {
   }
 
   // --- Tactical Helper Methods ---
+
+  /// Evaluates saving throw success and checks whether the defender chooses to expend
+  /// a Legendary Resistance charge to convert a failed save into a success.
+  ({bool saved, bool usedLegendaryResistance, String summaryNote}) _evaluateSaveWithLegendaryResistance({
+    required ArenaCombatant defender,
+    required int saveRoll,
+    required int saveDc,
+  }) {
+    bool saved = saveRoll >= saveDc;
+    bool usedLegendary = false;
+    String note = '';
+
+    if (!saved && defender.useLegendaryResistance()) {
+      saved = true;
+      usedLegendary = true;
+      final remaining = defender.legendaryResistancesRemaining;
+      note = ' [LEGENDARY RESISTANCE! ${defender.displayName} chose to succeed ($remaining left)]';
+    }
+
+    return (saved: saved, usedLegendaryResistance: usedLegendary, summaryNote: note);
+  }
 
   int? _deductLowestSlot(ArenaCombatant combatant, int minLevel) {
     for (int lvl = minLevel; lvl <= 9; lvl++) {
@@ -2496,7 +2532,8 @@ class ArenaCombatEngine {
       final saveBonus = defender.getSavingThrowBonus(saveAbility, edition);
       final d20 = _rollDie(20);
       final totalSave = d20 + saveBonus;
-      final saved = totalSave >= saveDc;
+      final saveRes = _evaluateSaveWithLegendaryResistance(defender: defender, saveRoll: totalSave, saveDc: saveDc);
+      final saved = saveRes.saved;
 
       final hasEvasion = defender.hasEvasion(edition) && saveAbility.toLowerCase() == 'dex';
       bool evadedWithEvasion = false;
@@ -2535,7 +2572,7 @@ class ArenaCombatEngine {
         summary = 'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took 0 ${attack.damageType} damage via Evasion!';
       } else if (saved) {
         final fatal = isKillShot ? ' — SLAIN!' : '';
-        summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took half: $effectiveDamage ${attack.damageType} damage$fatal';
+        summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc)${saveRes.summaryNote} took half: $effectiveDamage ${attack.damageType} damage$fatal';
       } else {
         final fatal = isKillShot ? ' — SLAIN!' : '';
         summary = 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took full: $effectiveDamage ${attack.damageType} damage$fatal';
@@ -2871,7 +2908,8 @@ class ArenaCombatEngine {
           final saveBonus = enemy.getSavingThrowBonus('con', edition);
           final totalSave = d20 + saveBonus;
           final dc = legendary.spellSaveDc > 10 ? legendary.spellSaveDc : 18;
-          final saved = totalSave >= dc;
+          final saveRes = _evaluateSaveWithLegendaryResistance(defender: enemy, saveRoll: totalSave, saveDc: dc);
+          final saved = saveRes.saved;
 
           final rawDmg = _rollDice(6, 6);
           int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
@@ -2888,7 +2926,7 @@ class ArenaCombatEngine {
 
           final fatal = isKillShot ? ' — DESTROYED BY DISRUPT LIFE!' : '';
           final summary = saved
-              ? '[Legendary Action (3 Actions)] Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $dc) took half: $damageDealt necrotic damage$fatal'
+              ? '[Legendary Action (3 Actions)] Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $dc)${saveRes.summaryNote} took half: $damageDealt necrotic damage$fatal'
               : '[Legendary Action (3 Actions)] Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $dc) took full: $damageDealt necrotic damage$fatal';
 
           events.add(
@@ -2960,11 +2998,12 @@ class ArenaCombatEngine {
               final conBonus = target.getSavingThrowBonus('con', edition);
               final saveTotal = saveD20 + conBonus;
               final dc = legendary.spellSaveDc > 10 ? legendary.spellSaveDc : 18;
-              if (saveTotal < dc) {
+              final saveRes = _evaluateSaveWithLegendaryResistance(defender: target, saveRoll: saveTotal, saveDc: dc);
+              if (!saveRes.saved) {
                 target.applyCondition(ArenaCondition.paralyzed, _rollDie, edition, durationRounds: 10, source: 'Paralyzing Touch');
                 paralyzeMsg = ' — FAILED Con Save ($saveTotal vs DC $dc) and is PARALYZED!';
               } else {
-                paralyzeMsg = ' — Saved against paralysis ($saveTotal vs DC $dc).';
+                paralyzeMsg = ' — Saved against paralysis ($saveTotal vs DC $dc)${saveRes.summaryNote}.';
               }
             }
           }

@@ -66,9 +66,11 @@ class ArenaCombatant {
   bool castBonusActionSpellThisTurn;
   int temporaryAcBonus;
 
-  // Legendary Action State
+  // Legendary Action & Resistance State
   final int maxLegendaryActions;
   int legendaryActionsRemaining;
+  final int maxLegendaryResistances;
+  int legendaryResistancesRemaining;
 
   // Tracked combat stats
   int totalDamageDealt;
@@ -107,6 +109,8 @@ class ArenaCombatant {
     this.temporaryAcBonus = 0,
     this.maxLegendaryActions = 0,
     int? legendaryActionsRemaining,
+    this.maxLegendaryResistances = 0,
+    int? legendaryResistancesRemaining,
     this.totalDamageDealt = 0,
     this.totalDamageTaken = 0,
     this.kills = 0,
@@ -128,7 +132,8 @@ class ArenaCombatant {
             ? Map<int, int>.from(currentSpellSlots)
             : (maxSpellSlots != null ? Map<int, int>.from(maxSpellSlots) : {}),
         knownSpellIds = knownSpellIds != null ? List<String>.from(knownSpellIds) : [],
-        legendaryActionsRemaining = legendaryActionsRemaining ?? maxLegendaryActions;
+        legendaryActionsRemaining = legendaryActionsRemaining ?? maxLegendaryActions,
+        legendaryResistancesRemaining = legendaryResistancesRemaining ?? maxLegendaryResistances;
 
   /// Effective AC accounting for active reaction bonuses (e.g. Shield spell +5 AC).
   int get effectiveAc => ac + temporaryAcBonus;
@@ -137,10 +142,22 @@ class ArenaCombatant {
   bool get hasAvailableSlots => currentSpellSlots.values.any((v) => v > 0);
   bool hasSpell(String spellId) => knownSpellIds.contains(spellId);
 
-  // Legendary Action Helpers
+  // Legendary Action & Resistance Helpers
   bool get hasLegendaryActions => maxLegendaryActions > 0;
   void resetLegendaryActions() {
     legendaryActionsRemaining = maxLegendaryActions;
+  }
+
+  bool get hasLegendaryResistances => maxLegendaryResistances > 0;
+  bool useLegendaryResistance() {
+    if (legendaryResistancesRemaining > 0) {
+      legendaryResistancesRemaining--;
+      return true;
+    }
+    return false;
+  }
+  void resetLegendaryResistances() {
+    legendaryResistancesRemaining = maxLegendaryResistances;
   }
 
   // Condition Status Helpers
@@ -184,6 +201,7 @@ class ArenaCombatant {
     final hoverCapability = flySpeed.contains('hover') || traitsText.contains('hover');
     final parsedReach = _parseMonsterMeleeReach(sb);
     final parsedLegendaryActions = _parseMonsterLegendaryActions(sb);
+    final parsedLegendaryResistances = _parseMonsterLegendaryResistances(sb);
 
     return ArenaCombatant(
       id: id,
@@ -210,6 +228,7 @@ class ArenaCombatant {
       castBonusActionSpellThisTurn: false,
       temporaryAcBonus: 0,
       maxLegendaryActions: parsedLegendaryActions,
+      maxLegendaryResistances: parsedLegendaryResistances,
     );
   }
 
@@ -394,6 +413,8 @@ class ArenaCombatant {
       temporaryAcBonus: 0,
       maxLegendaryActions: maxLegendaryActions,
       legendaryActionsRemaining: maxLegendaryActions,
+      maxLegendaryResistances: maxLegendaryResistances,
+      legendaryResistancesRemaining: maxLegendaryResistances,
       totalDamageDealt: 0,
       totalDamageTaken: 0,
       kills: 0,
@@ -434,6 +455,8 @@ class ArenaCombatant {
       temporaryAcBonus: temporaryAcBonus,
       maxLegendaryActions: maxLegendaryActions,
       legendaryActionsRemaining: legendaryActionsRemaining,
+      maxLegendaryResistances: maxLegendaryResistances,
+      legendaryResistancesRemaining: legendaryResistancesRemaining,
       totalDamageDealt: totalDamageDealt,
       totalDamageTaken: totalDamageTaken,
       kills: kills,
@@ -598,6 +621,20 @@ class ArenaCombatant {
     if (sb.legendaryActions.isNotEmpty) return 3;
     final corpus = _buildMonsterCorpus(sb);
     if (corpus.contains('legendary action')) return 3;
+    return 0;
+  }
+
+  static int _parseMonsterLegendaryResistances(MinionStatBlock sb) {
+    for (final t in sb.traits) {
+      if (t.name.toLowerCase().contains('legendary resistance')) {
+        final match = RegExp(r'\((\d+)/day\)', caseSensitive: false).firstMatch(t.name);
+        if (match != null) {
+          final count = int.tryParse(match.group(1) ?? '');
+          if (count != null) return count;
+        }
+        return 3;
+      }
+    }
     return 0;
   }
 
