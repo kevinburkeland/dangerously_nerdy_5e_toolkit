@@ -4,8 +4,10 @@ import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/dpr/dpr_models.dart';
+import '../../models/spellbook_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../utils/secure_random.dart';
+import 'aoe_resolver.dart';
 
 /// Comprehensive 5e Combat Resolution & Simulation Engine for the Monster Fighting Arena.
 class ArenaCombatEngine {
@@ -36,42 +38,75 @@ class ArenaCombatEngine {
     return combatants;
   }
 
-  /// Selects the best target for an attacker based on chosen [ArenaTargetingStrategy].
+  /// Evaluates whether an attacker can physically reach/engage a target given reach, altitude, and flight.
+  bool _canReachTarget(ArenaCombatant attacker, ArenaCombatant defender, [DprAttackAction? attack]) {
+    if (!defender.isAirborne || defender.altitudeInFeet <= 0) {
+      return true; // Target is grounded, always reachable
+    }
+
+    if (attacker.isAirborne) {
+      return true; // Both in flight at aerial combat elevation
+    }
+
+    // Attacker is grounded, defender is airborne at altitudeInFeet (e.g. 20 ft)
+    if (attack != null) {
+      switch (attack.attackType) {
+        case AttackType.rangedWeapon:
+        case AttackType.rangedSpell:
+          return true;
+        case AttackType.meleeReach:
+          return attacker.meleeReachInFeet >= defender.altitudeInFeet || attack.reachInFeet >= defender.altitudeInFeet;
+        case AttackType.meleeStandard:
+          return attacker.meleeReachInFeet >= defender.altitudeInFeet;
+      }
+    }
+
+    return attacker.meleeReachInFeet >= defender.altitudeInFeet;
+  }
+
+  /// Selects the best target for an attacker based on chosen [ArenaTargetingStrategy] and reach validation.
   ArenaCombatant? selectTarget(
     ArenaCombatant attacker,
     List<ArenaCombatant> allCombatants,
-    ArenaTargetingStrategy strategy,
-  ) {
+    ArenaTargetingStrategy strategy, [
+    DprAttackAction? attack,
+  ]) {
     final livingEnemies = allCombatants
         .where((c) => c.team != attacker.team && c.isAlive)
         .toList();
 
     if (livingEnemies.isEmpty) return null;
 
+    // Filter by reach validation if attack is specified
+    final reachableEnemies = attack != null
+        ? livingEnemies.where((e) => _canReachTarget(attacker, e, attack)).toList()
+        : livingEnemies;
+    final candidates = reachableEnemies.isNotEmpty ? reachableEnemies : livingEnemies;
+
     switch (strategy) {
       case ArenaTargetingStrategy.focusLowestHp:
-        livingEnemies.sort((a, b) {
+        candidates.sort((a, b) {
           if (a.currentHp != b.currentHp) return a.currentHp.compareTo(b.currentHp);
           return a.ac.compareTo(b.ac);
         });
-        return livingEnemies.first;
+        return candidates.first;
 
       case ArenaTargetingStrategy.randomEnemy:
-        return livingEnemies[_rng.nextInt(livingEnemies.length)];
+        return candidates[_rng.nextInt(candidates.length)];
 
       case ArenaTargetingStrategy.highestThreat:
-        livingEnemies.sort((a, b) {
+        candidates.sort((a, b) {
           final crA = a.monster.challengeRating;
           final crB = b.monster.challengeRating;
           if (crA != crB) return crB.compareTo(crA);
           return b.maxHp.compareTo(a.maxHp);
         });
-        return livingEnemies.first;
+        return candidates.first;
     }
   }
 
   /// Executes a single combatant's turn, including recharge rolls, target selection,
-  /// multiattack sequencing, roll resolution, and damage application.
+  /// tactical spellcasting, multiattack sequencing, roll resolution, and damage application.
   ArenaTurnStep executeTurn({
     required int stepIndex,
     required int roundNumber,
@@ -92,6 +127,11 @@ class ArenaCombatEngine {
       );
     }
 
+    // Reset per-turn flags at the start of combatant's turn
+    attacker.usedReactionThisRound = false;
+    attacker.castBonusActionSpellThisTurn = false;
+    attacker.temporaryAcBonus = 0;
+
     final events = <ArenaAttackEvent>[];
     String? specialSummary;
 
@@ -109,10 +149,41 @@ class ArenaCombatEngine {
       }
     }
 
-    // 2. Select actions to execute this turn
+    // 2. Tactical AI Spellcasting Evaluator (Priority tree prior to physical attacks)
+    if (attacker.isSpellcaster) {
+      final spellResult = _evaluateTacticalSpellcasting(
+        attacker: attacker,
+        allCombatants: allCombatants,
+        strategy: strategy,
+        edition: edition,
+        environment: environment,
+      );
+
+      if (spellResult != null && (spellResult.events.isNotEmpty || spellResult.specialSummary != null)) {
+        events.addAll(spellResult.events);
+        if (spellResult.specialSummary != null) {
+          specialSummary = specialSummary != null
+              ? '$specialSummary\n${spellResult.specialSummary}'
+              : spellResult.specialSummary;
+        }
+
+        // If an Action spell (or cantrip) was cast, it consumed the combatant's Action
+        if (events.isNotEmpty) {
+          return ArenaTurnStep(
+            stepIndex: stepIndex,
+            roundNumber: roundNumber,
+            activeCombatant: attacker,
+            attackEvents: events,
+            specialEventSummary: specialSummary,
+            combatantHpSnapshot: {for (final c in allCombatants) c.id: c.currentHp},
+          );
+        }
+      }
+    }
+
+    // 3. Physical Attack Routine (Fallback if no offensive spell was cast)
     final actionsToExecute = _selectAttacksForTurn(attacker, attacks, sb);
 
-    // 3. Resolve each attack against targets
     for (final attack in actionsToExecute) {
       final isAoE = attack.isAoe ||
           attack.rechargeRoll != null ||
@@ -122,22 +193,46 @@ class ArenaCombatEngine {
           attack.name.toLowerCase().contains('burst');
 
       if (isAoE) {
-        // Multi-target Area of Effect resolution
+        // Multi-target Area of Effect resolution using DMG p.249 Theater-of-the-Mind
         final aoeEvents = _resolveAoeAttack(
           attacker: attacker,
           attack: attack,
           allCombatants: allCombatants,
+          strategy: strategy,
           edition: edition,
           environment: environment,
         );
         events.addAll(aoeEvents);
         if (aoeEvents.isNotEmpty && aoeEvents.length > 1) {
-          specialSummary = '${attacker.displayName} unleashed ${attack.name} catching ${aoeEvents.length} enemies in the area!';
+          final aoeNote = '${attacker.displayName} unleashed ${attack.name} catching ${aoeEvents.length} enemies in the area!';
+          specialSummary = specialSummary != null ? '$specialSummary\n$aoeNote' : aoeNote;
         }
       } else {
-        // Single target attack resolution
-        final target = selectTarget(attacker, allCombatants, strategy);
+        // Single target attack resolution with reach and aerial flight validation
+        final target = selectTarget(attacker, allCombatants, strategy, attack);
         if (target == null) break; // All enemies defeated!
+
+        // Reach Validation: If grounded attacker with standard melee cannot reach airborne target
+        if (target.isAirborne && !attacker.isAirborne && attack.attackType == AttackType.meleeStandard && attacker.meleeReachInFeet < target.altitudeInFeet) {
+          // Check for fallback ranged attack
+          final rangedFallback = attacks.where((a) => a.attackType == AttackType.rangedWeapon || a.attackType == AttackType.rangedSpell).firstOrNull;
+          if (rangedFallback != null) {
+            final event = _resolveSingleAttack(
+              attacker: attacker,
+              defender: target,
+              attack: rangedFallback,
+              allCombatants: allCombatants,
+              edition: edition,
+              environment: environment,
+            );
+            events.add(event);
+          } else {
+            // Grounded attacker unable to reach airborne target
+            final passNote = '${attacker.displayName} cannot reach airborne ${target.displayName} (${target.altitudeInFeet} ft. altitude) with melee reach (${attacker.meleeReachInFeet} ft.) and takes the Dodge action.';
+            specialSummary = specialSummary != null ? '$specialSummary\n$passNote' : passNote;
+          }
+          continue;
+        }
 
         final event = _resolveSingleAttack(
           attacker: attacker,
@@ -160,6 +255,1621 @@ class ArenaCombatEngine {
       specialEventSummary: specialSummary,
       combatantHpSnapshot: {for (final c in allCombatants) c.id: c.currentHp},
     );
+  }
+
+  // ============================================================================
+  // TACTICAL AI SPELLCASTING EVALUATION
+  // ============================================================================
+
+  ({List<ArenaAttackEvent> events, String? specialSummary})? _evaluateTacticalSpellcasting({
+    required ArenaCombatant attacker,
+    required List<ArenaCombatant> allCombatants,
+    required ArenaTargetingStrategy strategy,
+    required DmRulesEdition edition,
+    required ArenaEnvironment environment,
+  }) {
+    final livingEnemies = allCombatants
+        .where((c) => c.team != attacker.team && c.isAlive)
+        .toList();
+    if (livingEnemies.isEmpty) return null;
+
+    final livingAllies = allCombatants
+        .where((c) => c.team == attacker.team && c.isAlive)
+        .toList();
+
+    final events = <ArenaAttackEvent>[];
+    String? bonusSummary;
+
+    // --- Bonus Action Spells ---
+    // 1. Healing Word (spell_healing_word)
+    if (attacker.hasSpell('spell_healing_word') && _hasSlotFor(attacker, 1)) {
+      final injuredAllies = livingAllies.where((a) => a.currentHp < a.maxHp * 0.6).toList();
+      if (injuredAllies.isNotEmpty) {
+        injuredAllies.sort((a, b) => a.hpPercent.compareTo(b.hpPercent));
+        final healTarget = injuredAllies.first;
+        final slotLvl = _deductLowestSlot(attacker, 1)!;
+        attacker.castBonusActionSpellThisTurn = true;
+
+        final healAmount = _rollDice(slotLvl, 4) + attacker.spellAttackBonus;
+        final actualHealed = min(healTarget.maxHp - healTarget.currentHp, healAmount);
+        healTarget.currentHp += actualHealed;
+        bonusSummary = '${attacker.displayName} cast Healing Word (Slot $slotLvl) on ${healTarget.displayName}, restoring $actualHealed HP!';
+      }
+    }
+    // 2. Misty Step (spell_misty_step)
+    else if (attacker.hasSpell('spell_misty_step') && _hasSlotFor(attacker, 2) && !attacker.castBonusActionSpellThisTurn) {
+      if (attacker.hpPercent < 0.5) {
+        final slotLvl = _deductLowestSlot(attacker, 2)!;
+        attacker.castBonusActionSpellThisTurn = true;
+        bonusSummary = '${attacker.displayName} cast Misty Step (Slot $slotLvl) to teleport to safety!';
+      }
+    }
+
+    // --- Main Action Spells ---
+    // 5e Action Economy: If a Bonus Action spell was cast, strictly Cantrips only for the main action!
+    if (attacker.castBonusActionSpellThisTurn) {
+      final cantripEvents = _evaluateCantrips(
+        attacker: attacker,
+        allCombatants: allCombatants,
+        strategy: strategy,
+        edition: edition,
+        environment: environment,
+      );
+      if (cantripEvents != null && cantripEvents.isNotEmpty) {
+        events.addAll(cantripEvents);
+        return (events: events, specialSummary: bonusSummary);
+      }
+      return bonusSummary != null ? (events: const [], specialSummary: bonusSummary) : null;
+    }
+
+    // Priority 1: Kill-Shot / Execution
+    final killShotEvents = _evaluateKillShot(
+      attacker: attacker,
+      livingEnemies: livingEnemies,
+      edition: edition,
+      environment: environment,
+    );
+    if (killShotEvents != null && killShotEvents.isNotEmpty) {
+      events.addAll(killShotEvents);
+      return (events: events, specialSummary: bonusSummary);
+    }
+
+    // Priority 2: AoE Clustering (>= 2 living enemies)
+    if (livingEnemies.length >= 2) {
+      final aoeEvents = _evaluateAoeSpells(
+        attacker: attacker,
+        livingEnemies: livingEnemies,
+        allCombatants: allCombatants,
+        strategy: strategy,
+        edition: edition,
+        environment: environment,
+      );
+      if (aoeEvents != null && aoeEvents.isNotEmpty) {
+        events.addAll(aoeEvents);
+        return (events: events, specialSummary: bonusSummary);
+      }
+    }
+
+    // Priority 3: Concentration Buff / Control (if not currently concentrating)
+    if (attacker.activeConcentrationSpellId == null) {
+      final controlResult = _evaluateConcentrationControl(
+        attacker: attacker,
+        livingEnemies: livingEnemies,
+        livingAllies: livingAllies,
+        edition: edition,
+        environment: environment,
+      );
+      if (controlResult != null) {
+        events.addAll(controlResult.events);
+        final summary = [
+          if (bonusSummary != null) bonusSummary,
+          if (controlResult.summary != null) controlResult.summary,
+        ].join('\n');
+        return (events: events, specialSummary: summary.isNotEmpty ? summary : null);
+      }
+    }
+
+    // Priority 4: Single-Target Burst
+    final burstEvents = _evaluateSingleTargetBurst(
+      attacker: attacker,
+      livingEnemies: livingEnemies,
+      allCombatants: allCombatants,
+      strategy: strategy,
+      edition: edition,
+      environment: environment,
+    );
+    if (burstEvents != null && burstEvents.isNotEmpty) {
+      events.addAll(burstEvents);
+      return (events: events, specialSummary: bonusSummary);
+    }
+
+    // Priority 5: Cantrip Fallback
+    final cantripEvents = _evaluateCantrips(
+      attacker: attacker,
+      allCombatants: allCombatants,
+      strategy: strategy,
+      edition: edition,
+      environment: environment,
+    );
+    if (cantripEvents != null && cantripEvents.isNotEmpty) {
+      events.addAll(cantripEvents);
+      return (events: events, specialSummary: bonusSummary);
+    }
+
+    return bonusSummary != null ? (events: const [], specialSummary: bonusSummary) : null;
+  }
+
+  /// Priority 1: Kill-Shot Execution Spells
+  List<ArenaAttackEvent>? _evaluateKillShot({
+    required ArenaCombatant attacker,
+    required List<ArenaCombatant> livingEnemies,
+    required DmRulesEdition edition,
+    required ArenaEnvironment environment,
+  }) {
+    // 1. Power Word Kill (spell_power_word_kill) - Instantly slays target <= 100 HP
+    if (attacker.hasSpell('spell_power_word_kill') && _hasSlotFor(attacker, 9)) {
+      final killable = livingEnemies.where((e) => e.currentHp <= 100).toList();
+      if (killable.isNotEmpty) {
+        killable.sort((a, b) => b.maxHp.compareTo(a.maxHp));
+        final target = killable.first;
+        _deductHighestSlot(attacker, 9);
+
+        attacker.attacksMade++;
+        attacker.hitsLanded++;
+        attacker.kills++;
+        final dmg = target.currentHp;
+        target.applyDamage(dmg);
+        attacker.totalDamageDealt += dmg;
+
+        return [
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Power Word Kill',
+            d20Roll: 20,
+            attackBonus: attacker.spellAttackBonus,
+            totalAttack: 20 + attacker.spellAttackBonus,
+            targetAc: target.effectiveAc,
+            isHit: true,
+            isCrit: false,
+            isFumble: false,
+            damageDealt: dmg,
+            damageType: 'force',
+            isKillShot: true,
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: 'EXECUTION! ${attacker.displayName} uttered Power Word Kill — ${target.displayName} is instantly slain (took $dmg force damage)!',
+          ),
+        ];
+      }
+    }
+
+    // 2. Disintegrate (spell_disintegrate) - High force execution against low/moderate HP foes
+    if (attacker.hasSpell('spell_disintegrate') && _hasSlotFor(attacker, 6)) {
+      final lowHpFoes = livingEnemies.where((e) => e.currentHp <= 75).toList();
+      if (lowHpFoes.isNotEmpty) {
+        lowHpFoes.sort((a, b) => a.currentHp.compareTo(b.currentHp));
+        final target = lowHpFoes.first;
+        final slotLvl = _deductHighestSlot(attacker, 6)!;
+
+        attacker.attacksMade++;
+        final d20 = _rollDie(20);
+        final saveBonus = target.getSavingThrowBonus('dex', edition);
+        final totalSave = d20 + saveBonus;
+        final saved = totalSave >= attacker.spellSaveDc;
+
+        int damageDealt = 0;
+        bool isKillShot = false;
+
+        if (!saved) {
+          attacker.hitsLanded++;
+          final extraDice = (slotLvl - 6) * 3;
+          final rawDmg = _rollDice(10 + extraDice, 6) + 40;
+          damageDealt = _applyDefensiveModifiers(rawDmg, 'force', target, edition, environment);
+          attacker.totalDamageDealt += damageDealt;
+          target.applyDamage(damageDealt);
+
+          if (target.isDefeated) {
+            isKillShot = true;
+            attacker.kills++;
+          }
+        }
+
+        String summary;
+        if (saved) {
+          summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — avoided Disintegrate entirely!';
+        } else {
+          final fatal = isKillShot ? ' — DISINTEGRATED TO ASH!' : '';
+          summary = 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full $damageDealt force damage$fatal';
+        }
+
+        // Concentration check on target
+        if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+          final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+          if (conRes.broken) {
+            final lostName = _getSpellDisplayName(conRes.lostSpellId);
+            summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+          }
+        }
+
+        return [
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Disintegrate (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: saveBonus,
+            totalAttack: totalSave,
+            targetAc: target.effectiveAc,
+            isHit: !saved,
+            isSavingThrow: true,
+            saveDc: attacker.spellSaveDc,
+            saveRoll: totalSave,
+            saved: saved,
+            damageDealt: damageDealt,
+            damageType: 'force',
+            isKillShot: isKillShot,
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: summary,
+          ),
+        ];
+      }
+    }
+
+    // 3. Blight (spell_blight) - Targeted necrotic execution
+    if (attacker.hasSpell('spell_blight') && _hasSlotFor(attacker, 4)) {
+      final lowHpFoes = livingEnemies.where((e) => e.currentHp <= 40).toList();
+      if (lowHpFoes.isNotEmpty) {
+        lowHpFoes.sort((a, b) => a.currentHp.compareTo(b.currentHp));
+        final target = lowHpFoes.first;
+        final slotLvl = _deductHighestSlot(attacker, 4)!;
+
+        attacker.attacksMade++;
+        final d20 = _rollDie(20);
+        final saveBonus = target.getSavingThrowBonus('con', edition);
+        final totalSave = d20 + saveBonus;
+        final saved = totalSave >= attacker.spellSaveDc;
+
+        final rawDmg = _rollDice(8 + (slotLvl - 4), 8);
+        int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
+        damageDealt = _applyDefensiveModifiers(damageDealt, 'necrotic', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+        if (damageDealt > 0) attacker.hitsLanded++;
+
+        bool isKillShot = false;
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+
+        final fatal = isKillShot ? ' — WITHERED & SLAIN!' : '';
+        String summary = saved
+            ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+            : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
+
+        if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+          final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+          if (conRes.broken) {
+            final lostName = _getSpellDisplayName(conRes.lostSpellId);
+            summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+          }
+        }
+
+        return [
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Blight (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: saveBonus,
+            totalAttack: totalSave,
+            targetAc: target.effectiveAc,
+            isHit: damageDealt > 0,
+            isSavingThrow: true,
+            saveDc: attacker.spellSaveDc,
+            saveRoll: totalSave,
+            saved: saved,
+            damageDealt: damageDealt,
+            damageType: 'necrotic',
+            isKillShot: isKillShot,
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: summary,
+          ),
+        ];
+      }
+    }
+
+    return null;
+  }
+
+  /// Priority 2: AoE Clustering Evaluation (DMG p.249 Theater-of-the-Mind with Box-Muller Gaussian clustering)
+  List<ArenaAttackEvent>? _evaluateAoeSpells({
+    required ArenaCombatant attacker,
+    required List<ArenaCombatant> livingEnemies,
+    required List<ArenaCombatant> allCombatants,
+    required ArenaTargetingStrategy strategy,
+    required DmRulesEdition edition,
+    required ArenaEnvironment environment,
+  }) {
+    // Check known AoE spells from highest to lowest spell level with DMG p.249 shapes & sizes
+    final aoeCandidates = <({
+      String id,
+      String name,
+      int minLevel,
+      String saveAbility,
+      String damageType,
+      AoeShape shape,
+      double sizeInFeet,
+      int Function(int slot) diceCount,
+      int diceSides,
+      int staticBonus
+    })>[
+      (id: 'spell_meteor_swarm', name: 'Meteor Swarm', minLevel: 9, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.sphere, sizeInFeet: 40.0, diceCount: (_) => 40, diceSides: 6, staticBonus: 0),
+      (id: 'spell_sunburst', name: 'Sunburst', minLevel: 8, saveAbility: 'con', damageType: 'radiant', shape: AoeShape.sphere, sizeInFeet: 60.0, diceCount: (_) => 12, diceSides: 6, staticBonus: 0),
+      (id: 'spell_delayed_blast_fireball', name: 'Delayed Blast Fireball', minLevel: 7, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.sphere, sizeInFeet: 20.0, diceCount: (s) => 12 + (s - 7), diceSides: 6, staticBonus: 0),
+      (id: 'spell_fire_storm', name: 'Fire Storm', minLevel: 7, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.cube, sizeInFeet: 100.0, diceCount: (_) => 7, diceSides: 10, staticBonus: 0),
+      (id: 'spell_chain_lightning', name: 'Chain Lightning', minLevel: 6, saveAbility: 'dex', damageType: 'lightning', shape: AoeShape.line, sizeInFeet: 120.0, diceCount: (s) => 10 + (s - 6), diceSides: 8, staticBonus: 0),
+      (id: 'spell_circle_of_death', name: 'Circle of Death', minLevel: 6, saveAbility: 'con', damageType: 'necrotic', shape: AoeShape.sphere, sizeInFeet: 60.0, diceCount: (s) => 8 + (s - 6) * 2, diceSides: 6, staticBonus: 0),
+      (id: 'spell_cone_of_cold', name: 'Cone of Cold', minLevel: 5, saveAbility: 'con', damageType: 'cold', shape: AoeShape.cone, sizeInFeet: 60.0, diceCount: (s) => 8 + (s - 5), diceSides: 8, staticBonus: 0),
+      (id: 'spell_flame_strike', name: 'Flame Strike', minLevel: 5, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.cylinder, sizeInFeet: 10.0, diceCount: (s) => 8 + (s - 5) * 2, diceSides: 6, staticBonus: 0),
+      (id: 'spell_ice_storm', name: 'Ice Storm', minLevel: 4, saveAbility: 'dex', damageType: 'cold', shape: AoeShape.cylinder, sizeInFeet: 20.0, diceCount: (s) => 6 + (s - 4), diceSides: 6, staticBonus: 0),
+      (id: 'spell_fireball', name: 'Fireball', minLevel: 3, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.sphere, sizeInFeet: 20.0, diceCount: (s) => 8 + (s - 3), diceSides: 6, staticBonus: 0),
+      (id: 'spell_lightning_bolt', name: 'Lightning Bolt', minLevel: 3, saveAbility: 'dex', damageType: 'lightning', shape: AoeShape.line, sizeInFeet: 100.0, diceCount: (s) => 8 + (s - 3), diceSides: 6, staticBonus: 0),
+      (id: 'spell_shatter', name: 'Shatter', minLevel: 2, saveAbility: 'con', damageType: 'thunder', shape: AoeShape.sphere, sizeInFeet: 10.0, diceCount: (s) => 3 + (s - 2), diceSides: 8, staticBonus: 0),
+      (id: 'spell_burning_hands', name: 'Burning Hands', minLevel: 1, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.cone, sizeInFeet: 15.0, diceCount: (s) => 3 + (s - 1), diceSides: 6, staticBonus: 0),
+      (id: 'spell_thunderwave', name: 'Thunderwave', minLevel: 1, saveAbility: 'con', damageType: 'thunder', shape: AoeShape.cube, sizeInFeet: 15.0, diceCount: (s) => 2 + (s - 1), diceSides: 8, staticBonus: 0),
+    ];
+
+    for (final candidate in aoeCandidates) {
+      if (attacker.hasSpell(candidate.id) && _hasSlotFor(attacker, candidate.minLevel)) {
+        final slotLvl = _deductHighestSlot(attacker, candidate.minLevel)!;
+        attacker.attacksMade++;
+
+        // Resolve targets using DMG p.249 AoeResolver with natural Box-Muller Gaussian variance
+        final caughtTargets = AoeResolver.selectTargets(
+          livingEnemies: livingEnemies,
+          shape: candidate.shape,
+          sizeInFeet: candidate.sizeInFeet,
+          rng: _rng,
+          strategy: strategy,
+        );
+
+        final numDice = candidate.diceCount(slotLvl);
+        final rawDamage = _rollDice(numDice, candidate.diceSides) + candidate.staticBonus;
+        final events = <ArenaAttackEvent>[];
+
+        for (final defender in caughtTargets) {
+          final saveBonus = defender.getSavingThrowBonus(candidate.saveAbility, edition);
+          final d20 = _rollDie(20);
+          final totalSave = d20 + saveBonus;
+          final saved = totalSave >= attacker.spellSaveDc;
+
+          final hasEvasion = defender.hasEvasion(edition) && candidate.saveAbility.toLowerCase() == 'dex';
+          bool evadedWithEvasion = false;
+          int effectiveDamage;
+
+          if (saved) {
+            if (hasEvasion) {
+              evadedWithEvasion = true;
+              effectiveDamage = 0;
+            } else {
+              effectiveDamage = (rawDamage / 2).floor();
+            }
+          } else {
+            if (hasEvasion) {
+              effectiveDamage = (rawDamage / 2).floor();
+            } else {
+              effectiveDamage = rawDamage;
+            }
+          }
+
+          effectiveDamage = _applyDefensiveModifiers(effectiveDamage, candidate.damageType, defender, edition, environment);
+          attacker.totalDamageDealt += effectiveDamage;
+          defender.applyDamage(effectiveDamage);
+          if (effectiveDamage > 0) attacker.hitsLanded++;
+
+          bool isKillShot = false;
+          if (defender.isDefeated) {
+            isKillShot = true;
+            attacker.kills++;
+            defender.applyCondition(ArenaCondition.unconscious, _rollDie, edition);
+          }
+
+          String summary;
+          if (evadedWithEvasion) {
+            summary = 'EVADED! (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took 0 ${candidate.damageType} damage via Evasion!';
+          } else if (saved) {
+            final fatal = isKillShot ? ' — SLAIN!' : '';
+            summary = 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $effectiveDamage ${candidate.damageType} damage$fatal';
+          } else {
+            final fatal = isKillShot ? ' — SLAIN!' : '';
+            summary = 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $effectiveDamage ${candidate.damageType} damage$fatal';
+          }
+
+          if (effectiveDamage > 0 && defender.activeConcentrationSpellId != null) {
+            final conRes = defender.checkConcentration(effectiveDamage, _rollDie, edition);
+            if (conRes.broken) {
+              final lostName = _getSpellDisplayName(conRes.lostSpellId);
+              summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+            }
+          }
+
+          events.add(
+            ArenaAttackEvent(
+              attackerId: attacker.id,
+              attackerName: attacker.displayName,
+              attackerTeam: attacker.team,
+              defenderId: defender.id,
+              defenderName: defender.displayName,
+              defenderTeam: defender.team,
+              attackName: '${candidate.name} (Slot $slotLvl)',
+              d20Roll: d20,
+              attackBonus: saveBonus,
+              totalAttack: totalSave,
+              targetAc: defender.effectiveAc,
+              isHit: !saved || effectiveDamage > 0,
+              isCrit: false,
+              isFumble: false,
+              isAoe: true,
+              isSavingThrow: true,
+              saveDc: attacker.spellSaveDc,
+              saveRoll: totalSave,
+              saved: saved,
+              evadedWithEvasion: evadedWithEvasion,
+              damageDealt: effectiveDamage,
+              damageType: candidate.damageType,
+              isKillShot: isKillShot,
+              defenderRemainingHp: defender.currentHp,
+              defenderMaxHp: defender.maxHp,
+              summaryText: summary,
+            ),
+          );
+        }
+
+        return events;
+      }
+    }
+
+    return null;
+  }
+
+  /// Priority 3: Concentration Buff & Crowd Control Evaluation
+  ({List<ArenaAttackEvent> events, String? summary})? _evaluateConcentrationControl({
+    required ArenaCombatant attacker,
+    required List<ArenaCombatant> livingEnemies,
+    required List<ArenaCombatant> livingAllies,
+    required DmRulesEdition edition,
+    required ArenaEnvironment environment,
+  }) {
+    // 1. Hold Monster (spell_hold_monster, Level 5)
+    if (attacker.hasSpell('spell_hold_monster') && _hasSlotFor(attacker, 5)) {
+      livingEnemies.sort((a, b) => b.monster.challengeRating.compareTo(a.monster.challengeRating));
+      final target = livingEnemies.first;
+      final slotLvl = _deductHighestSlot(attacker, 5)!;
+      attacker.activeConcentrationSpellId = 'spell_hold_monster';
+
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('wis', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      String note;
+      if (saved) {
+        note = '${target.displayName} resisted Hold Monster (Wis save $totalSave vs DC ${attacker.spellSaveDc})';
+      } else {
+        final condRes = target.applyCondition(ArenaCondition.paralyzed, _rollDie, edition);
+        note = '${target.displayName} failed Wis save ($totalSave vs DC ${attacker.spellSaveDc}) and is PARALYZED by Hold Monster!';
+        if (condRes.fell && condRes.log != null) {
+          note += ' [${condRes.log}]';
+        }
+      }
+
+      return (
+        events: [
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Hold Monster (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: saveBonus,
+            totalAttack: totalSave,
+            targetAc: target.effectiveAc,
+            isHit: !saved,
+            isSavingThrow: true,
+            saveDc: attacker.spellSaveDc,
+            saveRoll: totalSave,
+            saved: saved,
+            damageDealt: 0,
+            damageType: 'psychic',
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: note,
+          ),
+        ],
+        summary: '${attacker.displayName} is now concentrating on Hold Monster.',
+      );
+    }
+
+    // 2. Banishment (spell_banishment, Level 4)
+    if (attacker.hasSpell('spell_banishment') && _hasSlotFor(attacker, 4)) {
+      livingEnemies.sort((a, b) => b.monster.challengeRating.compareTo(a.monster.challengeRating));
+      final target = livingEnemies.first;
+      final slotLvl = _deductHighestSlot(attacker, 4)!;
+      attacker.activeConcentrationSpellId = 'spell_banishment';
+
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('cha', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      final note = saved
+          ? '${target.displayName} resisted Banishment (Cha save $totalSave vs DC ${attacker.spellSaveDc})'
+          : '${target.displayName} failed Cha save ($totalSave vs DC ${attacker.spellSaveDc}) and is BANISHED to a demiplane!';
+
+      return (
+        events: [
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Banishment (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: saveBonus,
+            totalAttack: totalSave,
+            targetAc: target.effectiveAc,
+            isHit: !saved,
+            isSavingThrow: true,
+            saveDc: attacker.spellSaveDc,
+            saveRoll: totalSave,
+            saved: saved,
+            damageDealt: 0,
+            damageType: 'abjuration',
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: note,
+          ),
+        ],
+        summary: '${attacker.displayName} is now concentrating on Banishment.',
+      );
+    }
+
+    // 3. Slow (spell_slow, Level 3)
+    if (attacker.hasSpell('spell_slow') && _hasSlotFor(attacker, 3)) {
+      final slotLvl = _deductHighestSlot(attacker, 3)!;
+      attacker.activeConcentrationSpellId = 'spell_slow';
+      final events = <ArenaAttackEvent>[];
+
+      for (final enemy in livingEnemies.take(6)) {
+        final d20 = _rollDie(20);
+        final saveBonus = enemy.getSavingThrowBonus('wis', edition);
+        final totalSave = d20 + saveBonus;
+        final saved = totalSave >= attacker.spellSaveDc;
+
+        if (!saved) {
+          enemy.temporaryAcBonus -= 2;
+        }
+
+        events.add(
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: enemy.id,
+            defenderName: enemy.displayName,
+            defenderTeam: enemy.team,
+            attackName: 'Slow (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: saveBonus,
+            totalAttack: totalSave,
+            targetAc: enemy.effectiveAc,
+            isHit: !saved,
+            isSavingThrow: true,
+            saveDc: attacker.spellSaveDc,
+            saveRoll: totalSave,
+            saved: saved,
+            damageDealt: 0,
+            damageType: 'transmutation',
+            defenderRemainingHp: enemy.currentHp,
+            defenderMaxHp: enemy.maxHp,
+            summaryText: saved
+                ? '${enemy.displayName} resisted Slow (Wis save $totalSave vs DC ${attacker.spellSaveDc})'
+                : '${enemy.displayName} failed Wis save ($totalSave vs DC ${attacker.spellSaveDc}) — SLOWED (-2 AC)!',
+          ),
+        );
+      }
+
+      return (events: events, summary: '${attacker.displayName} is concentrating on Slow.');
+    }
+
+    // 4. Faerie Fire (spell_faerie_fire, Level 1)
+    if (attacker.hasSpell('spell_faerie_fire') && _hasSlotFor(attacker, 1)) {
+      final slotLvl = _deductLowestSlot(attacker, 1)!;
+      attacker.activeConcentrationSpellId = 'spell_faerie_fire';
+      final events = <ArenaAttackEvent>[];
+
+      for (final enemy in livingEnemies.take(4)) {
+        final d20 = _rollDie(20);
+        final saveBonus = enemy.getSavingThrowBonus('dex', edition);
+        final totalSave = d20 + saveBonus;
+        final saved = totalSave >= attacker.spellSaveDc;
+
+        events.add(
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: enemy.id,
+            defenderName: enemy.displayName,
+            defenderTeam: enemy.team,
+            attackName: 'Faerie Fire (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: saveBonus,
+            totalAttack: totalSave,
+            targetAc: enemy.effectiveAc,
+            isHit: !saved,
+            isSavingThrow: true,
+            saveDc: attacker.spellSaveDc,
+            saveRoll: totalSave,
+            saved: saved,
+            damageDealt: 0,
+            damageType: 'evocation',
+            defenderRemainingHp: enemy.currentHp,
+            defenderMaxHp: enemy.maxHp,
+            summaryText: saved
+                ? '${enemy.displayName} avoided Faerie Fire (Dex save $totalSave vs DC ${attacker.spellSaveDc})'
+                : '${enemy.displayName} is illuminated in colorful light (attacks gain advantage)!',
+          ),
+        );
+      }
+
+      return (events: events, summary: '${attacker.displayName} is concentrating on Faerie Fire.');
+    }
+
+    // 5. Shield of Faith (spell_shield_of_faith, Level 1)
+    if (attacker.hasSpell('spell_shield_of_faith') && _hasSlotFor(attacker, 1)) {
+      final slotLvl = _deductLowestSlot(attacker, 1)!;
+      attacker.activeConcentrationSpellId = 'spell_shield_of_faith';
+      attacker.temporaryAcBonus += 2;
+      return (
+        events: const [],
+        summary: '${attacker.displayName} cast Shield of Faith (Slot $slotLvl) on themselves (+2 AC, concentrating)!',
+      );
+    }
+
+    // 6. Bless (spell_bless, Level 1)
+    if (attacker.hasSpell('spell_bless') && _hasSlotFor(attacker, 1)) {
+      final slotLvl = _deductLowestSlot(attacker, 1)!;
+      attacker.activeConcentrationSpellId = 'spell_bless';
+      return (
+        events: const [],
+        summary: '${attacker.displayName} cast Bless (Slot $slotLvl) boosting allies with divine favor!',
+      );
+    }
+
+    return null;
+  }
+
+  /// Priority 4: Single-Target Burst Spells
+  List<ArenaAttackEvent>? _evaluateSingleTargetBurst({
+    required ArenaCombatant attacker,
+    required List<ArenaCombatant> livingEnemies,
+    required List<ArenaCombatant> allCombatants,
+    required ArenaTargetingStrategy strategy,
+    required DmRulesEdition edition,
+    required ArenaEnvironment environment,
+  }) {
+    final target = selectTarget(attacker, allCombatants, strategy);
+    if (target == null) return null;
+
+    // 1. Harm (spell_harm, Level 6)
+    if (attacker.hasSpell('spell_harm') && _hasSlotFor(attacker, 6)) {
+      final slotLvl = _deductHighestSlot(attacker, 6)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('con', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      final rawDmg = _rollDice(14, 6);
+      int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
+      damageDealt = _applyDefensiveModifiers(damageDealt, 'necrotic', target, edition, environment);
+      attacker.totalDamageDealt += damageDealt;
+      target.applyDamage(damageDealt);
+      if (damageDealt > 0) attacker.hitsLanded++;
+
+      bool isKillShot = false;
+      if (target.isDefeated) {
+        isKillShot = true;
+        attacker.kills++;
+      }
+
+      final fatal = isKillShot ? ' — DESTROYED BY DISEASE!' : '';
+      String summary = saved
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+          : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Harm (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: target.effectiveAc,
+          isHit: damageDealt > 0,
+          isSavingThrow: true,
+          saveDc: attacker.spellSaveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          damageDealt: damageDealt,
+          damageType: 'necrotic',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 2. Scorching Ray (spell_scorching_ray, Level 2)
+    if (attacker.hasSpell('spell_scorching_ray') && _hasSlotFor(attacker, 2)) {
+      final slotLvl = _deductHighestSlot(attacker, 2)!;
+      final rayCount = 3 + (slotLvl - 2);
+      final events = <ArenaAttackEvent>[];
+
+      for (int i = 0; i < rayCount; i++) {
+        if (target.isDefeated) break;
+        attacker.attacksMade++;
+
+        final d20 = _rollDie(20);
+        final isCrit = d20 == 20;
+        final isFumble = d20 == 1;
+        final totalAttack = d20 + attacker.spellAttackBonus;
+        bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+        bool shielded = false;
+        // Shield reaction check
+        if (isHit && !isCrit && !target.usedReactionThisRound &&
+            target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+          if (totalAttack < target.effectiveAc + 5) {
+            _deductLowestSlot(target, 1);
+            target.usedReactionThisRound = true;
+            target.temporaryAcBonus += 5;
+            shielded = true;
+            isHit = false;
+          }
+        }
+
+        int damageDealt = 0;
+        bool isKillShot = false;
+
+        if (isHit) {
+          attacker.hitsLanded++;
+          if (isCrit) attacker.critsLanded++;
+
+          final dice = isCrit ? 4 : 2;
+          final rawDmg = _rollDice(dice, 6);
+          damageDealt = _applyDefensiveModifiers(rawDmg, 'fire', target, edition, environment);
+          attacker.totalDamageDealt += damageDealt;
+          target.applyDamage(damageDealt);
+
+          if (target.isDefeated) {
+            isKillShot = true;
+            attacker.kills++;
+          }
+        }
+
+        String summary;
+        if (shielded) {
+          summary = 'PARRIED BY SHIELD! ${target.displayName} cast Shield (+5 AC) deflecting Scorching Ray # ${i + 1} ($d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc})!';
+        } else if (isCrit) {
+          final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+          summary = 'CRITICAL HIT! (Nat 20) Scorching Ray # ${i + 1} dealt $damageDealt fire damage$fatal';
+        } else if (isHit) {
+          final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+          summary = 'Hits (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt fire damage$fatal';
+        } else {
+          summary = 'Misses (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}).';
+        }
+
+        if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+          final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+          if (conRes.broken) {
+            final lostName = _getSpellDisplayName(conRes.lostSpellId);
+            summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+          }
+        }
+
+        events.add(
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Scorching Ray # ${i + 1} (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: attacker.spellAttackBonus,
+            totalAttack: totalAttack,
+            targetAc: target.effectiveAc,
+            isHit: isHit,
+            isCrit: isCrit,
+            isFumble: isFumble,
+            damageDealt: damageDealt,
+            damageType: 'fire',
+            isKillShot: isKillShot,
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: summary,
+          ),
+        );
+      }
+
+      return events;
+    }
+
+    // 3. Magic Missile (spell_magic_missile, Level 1)
+    if (attacker.hasSpell('spell_magic_missile') && _hasSlotFor(attacker, 1)) {
+      final slotLvl = _deductHighestSlot(attacker, 1)!;
+      final dartCount = 3 + (slotLvl - 1);
+      attacker.attacksMade++;
+      attacker.hitsLanded++;
+
+      // In 5e RAW Shield negates Magic Missile entirely
+      if (!target.usedReactionThisRound && target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+        _deductLowestSlot(target, 1);
+        target.usedReactionThisRound = true;
+        target.temporaryAcBonus += 5;
+
+        return [
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Magic Missile (Slot $slotLvl)',
+            d20Roll: 20,
+            attackBonus: attacker.spellAttackBonus,
+            totalAttack: 20,
+            targetAc: target.effectiveAc,
+            isHit: false,
+            damageDealt: 0,
+            damageType: 'force',
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: 'SHIELD INTERCEPT! ${target.displayName} cast Shield as a reaction, completely neutralizing all $dartCount Magic Missile darts!',
+          ),
+        ];
+      }
+
+      final rawDmg = _rollDice(dartCount, 4) + dartCount;
+      final damageDealt = _applyDefensiveModifiers(rawDmg, 'force', target, edition, environment);
+      attacker.totalDamageDealt += damageDealt;
+      target.applyDamage(damageDealt);
+
+      bool isKillShot = false;
+      if (target.isDefeated) {
+        isKillShot = true;
+        attacker.kills++;
+      }
+
+      final fatal = isKillShot ? ' — STRUCK DOWN BY FORCE DARTS!' : '';
+      String summary = '$dartCount Magic Missiles automatically struck ${target.displayName} for $damageDealt force damage$fatal';
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Magic Missile (Slot $slotLvl)',
+          d20Roll: 20,
+          attackBonus: attacker.spellAttackBonus,
+          totalAttack: 20,
+          targetAc: target.effectiveAc,
+          isHit: true,
+          damageDealt: damageDealt,
+          damageType: 'force',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 4. Guiding Bolt (spell_guiding_bolt, Level 1)
+    if (attacker.hasSpell('spell_guiding_bolt') && _hasSlotFor(attacker, 1)) {
+      final slotLvl = _deductHighestSlot(attacker, 1)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final isCrit = d20 == 20;
+      final isFumble = d20 == 1;
+      final totalAttack = d20 + attacker.spellAttackBonus;
+      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+      bool shielded = false;
+      if (isHit && !isCrit && !target.usedReactionThisRound &&
+          target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+        if (totalAttack < target.effectiveAc + 5) {
+          _deductLowestSlot(target, 1);
+          target.usedReactionThisRound = true;
+          target.temporaryAcBonus += 5;
+          shielded = true;
+          isHit = false;
+        }
+      }
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (isHit) {
+        attacker.hitsLanded++;
+        if (isCrit) attacker.critsLanded++;
+
+        final dice = isCrit ? (4 + (slotLvl - 1)) * 2 : (4 + (slotLvl - 1));
+        final rawDmg = _rollDice(dice, 6);
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'radiant', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      }
+
+      String summary;
+      if (shielded) {
+        summary = 'PARRIED BY SHIELD! ${target.displayName} cast Shield deflecting Guiding Bolt ($d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc})!';
+      } else if (isCrit) {
+        final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+        summary = 'CRITICAL HIT! (Nat 20) Guiding Bolt dealt $damageDealt radiant damage$fatal';
+      } else if (isHit) {
+        final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+        summary = 'Hits (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt radiant damage$fatal';
+      } else {
+        summary = 'Misses (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}).';
+      }
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Guiding Bolt (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: attacker.spellAttackBonus,
+          totalAttack: totalAttack,
+          targetAc: target.effectiveAc,
+          isHit: isHit,
+          isCrit: isCrit,
+          isFumble: isFumble,
+          damageDealt: damageDealt,
+          damageType: 'radiant',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 5. Inflict Wounds (spell_inflict_wounds, Level 1)
+    if (attacker.hasSpell('spell_inflict_wounds') && _hasSlotFor(attacker, 1)) {
+      final slotLvl = _deductHighestSlot(attacker, 1)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final isCrit = d20 == 20;
+      final isFumble = d20 == 1;
+      final totalAttack = d20 + attacker.spellAttackBonus;
+      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+      bool shielded = false;
+      if (isHit && !isCrit && !target.usedReactionThisRound &&
+          target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+        if (totalAttack < target.effectiveAc + 5) {
+          _deductLowestSlot(target, 1);
+          target.usedReactionThisRound = true;
+          target.temporaryAcBonus += 5;
+          shielded = true;
+          isHit = false;
+        }
+      }
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (isHit) {
+        attacker.hitsLanded++;
+        if (isCrit) attacker.critsLanded++;
+
+        final dice = isCrit ? (3 + (slotLvl - 1)) * 2 : (3 + (slotLvl - 1));
+        final rawDmg = _rollDice(dice, 10);
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'necrotic', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      }
+
+      String summary;
+      if (shielded) {
+        summary = 'PARRIED BY SHIELD! ${target.displayName} cast Shield deflecting Inflict Wounds ($d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc})!';
+      } else if (isCrit) {
+        final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+        summary = 'CRITICAL HIT! (Nat 20) Inflict Wounds dealt $damageDealt necrotic damage$fatal';
+      } else if (isHit) {
+        final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+        summary = 'Hits (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt necrotic damage$fatal';
+      } else {
+        summary = 'Misses (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}).';
+      }
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Inflict Wounds (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: attacker.spellAttackBonus,
+          totalAttack: totalAttack,
+          targetAc: target.effectiveAc,
+          isHit: isHit,
+          isCrit: isCrit,
+          isFumble: isFumble,
+          damageDealt: damageDealt,
+          damageType: 'necrotic',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    return null;
+  }
+
+  /// Priority 5: Cantrip Fallback Evaluation
+  List<ArenaAttackEvent>? _evaluateCantrips({
+    required ArenaCombatant attacker,
+    required List<ArenaCombatant> allCombatants,
+    required ArenaTargetingStrategy strategy,
+    required DmRulesEdition edition,
+    required ArenaEnvironment environment,
+  }) {
+    final target = selectTarget(attacker, allCombatants, strategy);
+    if (target == null) return null;
+
+    final multiplier = _getCantripDiceMultiplier(attacker);
+
+    // 1. Eldritch Blast (spell_eldritch_blast) - multiple beams
+    if (attacker.hasSpell('spell_eldritch_blast')) {
+      final events = <ArenaAttackEvent>[];
+      for (int i = 0; i < multiplier; i++) {
+        if (target.isDefeated) break;
+        attacker.attacksMade++;
+
+        final d20 = _rollDie(20);
+        final isCrit = d20 == 20;
+        final isFumble = d20 == 1;
+        final totalAttack = d20 + attacker.spellAttackBonus;
+        bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+        bool shielded = false;
+        if (isHit && !isCrit && !target.usedReactionThisRound &&
+            target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+          if (totalAttack < target.effectiveAc + 5) {
+            _deductLowestSlot(target, 1);
+            target.usedReactionThisRound = true;
+            target.temporaryAcBonus += 5;
+            shielded = true;
+            isHit = false;
+          }
+        }
+
+        int damageDealt = 0;
+        bool isKillShot = false;
+
+        if (isHit) {
+          attacker.hitsLanded++;
+          if (isCrit) attacker.critsLanded++;
+
+          final dice = isCrit ? 2 : 1;
+          final rawDmg = _rollDice(dice, 10);
+          damageDealt = _applyDefensiveModifiers(rawDmg, 'force', target, edition, environment);
+          attacker.totalDamageDealt += damageDealt;
+          target.applyDamage(damageDealt);
+
+          if (target.isDefeated) {
+            isKillShot = true;
+            attacker.kills++;
+          }
+        }
+
+        String summary;
+        if (shielded) {
+          summary = 'PARRIED BY SHIELD! ${target.displayName} deflected Eldritch Blast Beam # ${i + 1} ($d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc})!';
+        } else if (isCrit) {
+          final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+          summary = 'CRITICAL HIT! (Nat 20) Eldritch Blast Beam # ${i + 1} dealt $damageDealt force damage$fatal';
+        } else if (isHit) {
+          final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+          summary = 'Hits (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt force damage$fatal';
+        } else {
+          summary = 'Misses (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}).';
+        }
+
+        if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+          final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+          if (conRes.broken) {
+            final lostName = _getSpellDisplayName(conRes.lostSpellId);
+            summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+          }
+        }
+
+        events.add(
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Eldritch Blast (Beam ${i + 1})',
+            d20Roll: d20,
+            attackBonus: attacker.spellAttackBonus,
+            totalAttack: totalAttack,
+            targetAc: target.effectiveAc,
+            isHit: isHit,
+            isCrit: isCrit,
+            isFumble: isFumble,
+            damageDealt: damageDealt,
+            damageType: 'force',
+            isKillShot: isKillShot,
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: summary,
+          ),
+        );
+      }
+      return events;
+    }
+
+    // 2. Fire Bolt (spell_fire_bolt)
+    if (attacker.hasSpell('spell_fire_bolt')) {
+      attacker.attacksMade++;
+      final d20 = _rollDie(20);
+      final isCrit = d20 == 20;
+      final isFumble = d20 == 1;
+      final totalAttack = d20 + attacker.spellAttackBonus;
+      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+      bool shielded = false;
+      if (isHit && !isCrit && !target.usedReactionThisRound &&
+          target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+        if (totalAttack < target.effectiveAc + 5) {
+          _deductLowestSlot(target, 1);
+          target.usedReactionThisRound = true;
+          target.temporaryAcBonus += 5;
+          shielded = true;
+          isHit = false;
+        }
+      }
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (isHit) {
+        attacker.hitsLanded++;
+        if (isCrit) attacker.critsLanded++;
+
+        final dice = isCrit ? multiplier * 2 : multiplier;
+        final rawDmg = _rollDice(dice, 10);
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'fire', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      }
+
+      String summary;
+      if (shielded) {
+        summary = 'PARRIED BY SHIELD! ${target.displayName} cast Shield deflecting Fire Bolt ($d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc})!';
+      } else if (isCrit) {
+        final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+        summary = 'CRITICAL HIT! (Nat 20) Fire Bolt dealt $damageDealt fire damage$fatal';
+      } else if (isHit) {
+        final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+        summary = 'Hits (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt fire damage$fatal';
+      } else {
+        summary = 'Misses (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}).';
+      }
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Fire Bolt',
+          d20Roll: d20,
+          attackBonus: attacker.spellAttackBonus,
+          totalAttack: totalAttack,
+          targetAc: target.effectiveAc,
+          isHit: isHit,
+          isCrit: isCrit,
+          isFumble: isFumble,
+          damageDealt: damageDealt,
+          damageType: 'fire',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 3. Toll the Dead (spell_toll_the_dead)
+    if (attacker.hasSpell('spell_toll_the_dead')) {
+      attacker.attacksMade++;
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('wis', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (!saved) {
+        attacker.hitsLanded++;
+        final sides = (target.currentHp < target.maxHp) ? 12 : 8;
+        final rawDmg = _rollDice(multiplier, sides);
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'necrotic', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      }
+
+      final fatal = isKillShot ? ' — KILLED BY DOLEFUL BELL!' : '';
+      String summary = saved
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — took 0 necrotic damage'
+          : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took $damageDealt necrotic damage$fatal';
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Toll the Dead',
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: target.effectiveAc,
+          isHit: !saved,
+          isSavingThrow: true,
+          saveDc: attacker.spellSaveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          damageDealt: damageDealt,
+          damageType: 'necrotic',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 4. Ray of Frost (spell_ray_of_frost)
+    if (attacker.hasSpell('spell_ray_of_frost')) {
+      attacker.attacksMade++;
+      final d20 = _rollDie(20);
+      final isCrit = d20 == 20;
+      final isFumble = d20 == 1;
+      final totalAttack = d20 + attacker.spellAttackBonus;
+      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+      bool shielded = false;
+      if (isHit && !isCrit && !target.usedReactionThisRound &&
+          target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+        if (totalAttack < target.effectiveAc + 5) {
+          _deductLowestSlot(target, 1);
+          target.usedReactionThisRound = true;
+          target.temporaryAcBonus += 5;
+          shielded = true;
+          isHit = false;
+        }
+      }
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (isHit) {
+        attacker.hitsLanded++;
+        if (isCrit) attacker.critsLanded++;
+
+        final dice = isCrit ? multiplier * 2 : multiplier;
+        final rawDmg = _rollDice(dice, 8);
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'cold', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      }
+
+      String summary;
+      if (shielded) {
+        summary = 'PARRIED BY SHIELD! ${target.displayName} deflected Ray of Frost ($d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc})!';
+      } else if (isCrit) {
+        final fatal = isKillShot ? ' — FROZEN & SLAIN!' : '';
+        summary = 'CRITICAL HIT! (Nat 20) Ray of Frost dealt $damageDealt cold damage$fatal';
+      } else if (isHit) {
+        final fatal = isKillShot ? ' — FROZEN & SLAIN!' : '';
+        summary = 'Hits (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt cold damage$fatal';
+      } else {
+        summary = 'Misses (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}).';
+      }
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Ray of Frost',
+          d20Roll: d20,
+          attackBonus: attacker.spellAttackBonus,
+          totalAttack: totalAttack,
+          targetAc: target.effectiveAc,
+          isHit: isHit,
+          isCrit: isCrit,
+          isFumble: isFumble,
+          damageDealt: damageDealt,
+          damageType: 'cold',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 5. Sacred Flame (spell_sacred_flame)
+    if (attacker.hasSpell('spell_sacred_flame')) {
+      attacker.attacksMade++;
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('dex', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (!saved) {
+        attacker.hitsLanded++;
+        final rawDmg = _rollDice(multiplier, 8);
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'radiant', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      }
+
+      final fatal = isKillShot ? ' — PURGED & SLAIN!' : '';
+      String summary = saved
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — took 0 radiant damage'
+          : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took $damageDealt radiant damage$fatal';
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Sacred Flame',
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: target.effectiveAc,
+          isHit: !saved,
+          isSavingThrow: true,
+          saveDc: attacker.spellSaveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          damageDealt: damageDealt,
+          damageType: 'radiant',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    return null;
+  }
+
+  // --- Tactical Helper Methods ---
+
+  int? _deductLowestSlot(ArenaCombatant combatant, int minLevel) {
+    for (int lvl = minLevel; lvl <= 9; lvl++) {
+      final count = combatant.currentSpellSlots[lvl] ?? 0;
+      if (count > 0) {
+        combatant.currentSpellSlots[lvl] = count - 1;
+        return lvl;
+      }
+    }
+    return null;
+  }
+
+  int? _deductHighestSlot(ArenaCombatant combatant, int minLevel) {
+    for (int lvl = 9; lvl >= minLevel; lvl--) {
+      final count = combatant.currentSpellSlots[lvl] ?? 0;
+      if (count > 0) {
+        combatant.currentSpellSlots[lvl] = count - 1;
+        return lvl;
+      }
+    }
+    return null;
+  }
+
+  bool _hasSlotFor(ArenaCombatant combatant, int minLevel) {
+    for (int lvl = minLevel; lvl <= 9; lvl++) {
+      if ((combatant.currentSpellSlots[lvl] ?? 0) > 0) return true;
+    }
+    return false;
+  }
+
+  int _getCantripDiceMultiplier(ArenaCombatant caster) {
+    final cr = caster.monster.challengeRating;
+    if (cr >= 17) return 4;
+    if (cr >= 11) return 3;
+    if (cr >= 5) return 2;
+    return 1;
+  }
+
+  String _getSpellDisplayName(String? spellId) {
+    if (spellId == null) return 'Spell';
+    final spell = SpellbookLibrary.getSpellById(spellId);
+    if (spell != null) return spell.name;
+    return spellId
+        .replaceAll('spell_', '')
+        .split('_')
+        .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+        .join(' ');
   }
 
   /// Determines which attacks the monster uses during their action turn.
@@ -216,12 +1926,13 @@ class ArenaCombatEngine {
     return allAttacks.take(1).map((a) => a.copyWith(attacksPerRound: 1)).toList();
   }
 
-  /// Resolves an Area of Effect (AoE) attack hitting a dynamic number of opponents based on AoE size/shape.
+  /// Resolves an Area of Effect (AoE) attack hitting a dynamic number of opponents based on DMG p.249 Theater-of-the-Mind.
   List<ArenaAttackEvent> _resolveAoeAttack({
     required ArenaCombatant attacker,
     required DprAttackAction attack,
     required List<ArenaCombatant> allCombatants,
-    required DmRulesEdition edition,
+    ArenaTargetingStrategy strategy = ArenaTargetingStrategy.focusLowestHp,
+    DmRulesEdition edition = DmRulesEdition.v2024,
     ArenaEnvironment environment = ArenaEnvironment.colosseum,
   }) {
     final livingEnemies = allCombatants
@@ -232,12 +1943,15 @@ class ArenaCombatEngine {
 
     attacker.attacksMade++;
 
-    // Determine number of targets caught based on AoE footprint
-    final targetCount = _calculateAoeTargetCount(attack, livingEnemies.length);
-
-    // Pick random subset of living enemies to be caught in the blast
-    livingEnemies.shuffle(_rng);
-    final caughtDefenders = livingEnemies.take(targetCount).toList();
+    // Parse AoE shape and dimensions and resolve targets via AoeResolver
+    final parsedShape = AoeResolver.parseShapeAndSize(attack.name);
+    final caughtDefenders = AoeResolver.selectTargets(
+      livingEnemies: livingEnemies,
+      shape: parsedShape.shape,
+      sizeInFeet: parsedShape.sizeInFeet,
+      rng: _rng,
+      strategy: strategy,
+    );
 
     // Roll base damage once for the AoE
     final rawDamage = _rollDice(attack.diceCount, attack.diceSides) + attack.damageBonus;
@@ -265,6 +1979,7 @@ class ArenaCombatEngine {
         }
       } else {
         if (hasEvasion) {
+          evadedWithEvasion = true;
           effectiveDamage = (rawDamage / 2).floor();
         } else {
           effectiveDamage = rawDamage;
@@ -280,6 +1995,7 @@ class ArenaCombatEngine {
       if (defender.isDefeated) {
         isKillShot = true;
         attacker.kills++;
+        defender.applyCondition(ArenaCondition.unconscious, _rollDie, edition);
       }
 
       String summary;
@@ -291,6 +2007,15 @@ class ArenaCombatEngine {
       } else {
         final fatal = isKillShot ? ' — SLAIN!' : '';
         summary = 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $saveDc) took full: $effectiveDamage ${attack.damageType} damage$fatal';
+      }
+
+      // Concentration Check Pipeline for AoE attacks
+      if (effectiveDamage > 0 && defender.activeConcentrationSpellId != null) {
+        final conRes = defender.checkConcentration(effectiveDamage, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
       }
 
       events.add(
@@ -305,7 +2030,7 @@ class ArenaCombatEngine {
           d20Roll: d20,
           attackBonus: saveBonus,
           totalAttack: totalSave,
-          targetAc: defender.ac,
+          targetAc: defender.effectiveAc,
           isHit: !saved || effectiveDamage > 0,
           isCrit: false,
           isFumble: false,
@@ -330,39 +2055,6 @@ class ArenaCombatEngine {
     return events;
   }
 
-  /// Calculates dynamic AoE target count based on AoE radius/cone/line size.
-  int _calculateAoeTargetCount(DprAttackAction attack, int totalEnemies) {
-    if (totalEnemies <= 1) return 1;
-
-    final nameLower = attack.name.toLowerCase();
-    final isBreath = nameLower.contains('breath');
-    int minTargets = 1;
-    int maxTargets = 2;
-
-    if (nameLower.contains('60') || nameLower.contains('90') || nameLower.contains('100')) {
-      // Large AoE (60ft cone, 100ft line)
-      minTargets = 3;
-      maxTargets = 6;
-    } else if (nameLower.contains('30') || isBreath || nameLower.contains('sphere') || nameLower.contains('cube')) {
-      // Medium AoE (30ft cone, breath weapon, 20ft sphere)
-      minTargets = 2;
-      maxTargets = 4;
-    } else if (nameLower.contains('15')) {
-      // Small AoE (15ft cone, 10ft radius)
-      minTargets = 1;
-      maxTargets = 3;
-    } else {
-      minTargets = 2;
-      maxTargets = 4;
-    }
-
-    final maxPossible = min(totalEnemies, maxTargets);
-    final minPossible = min(totalEnemies, minTargets);
-
-    if (maxPossible <= minPossible) return maxPossible;
-    return minPossible + _rng.nextInt(maxPossible - minPossible + 1);
-  }
-
   /// Default DC calculation when not explicit (8 + proficiency + ability modifier).
   int _computeSaveDc(ArenaCombatant attacker, DmRulesEdition edition) {
     final cr = attacker.monster.challengeRating;
@@ -377,7 +2069,8 @@ class ArenaCombatEngine {
   }
 
   /// Resolves an individual single-target attack roll vs defender's AC,
-  /// factoring in aerial/grounded mobility, underwater rules, and cage constraints.
+  /// factoring in aerial/grounded mobility, underwater rules, cage constraints,
+  /// Shield reactions, conditions, and concentration checks.
   ArenaAttackEvent _resolveSingleAttack({
     required ArenaCombatant attacker,
     required ArenaCombatant defender,
@@ -395,20 +2088,12 @@ class ArenaCombatEngine {
     );
     final packTacticsAdvantage = hasPackTactics && otherAllyPresent;
 
-    // Environmental mobility checks
-    // 1. In a Cage Match, flight is completely grounded
+    // Environmental & Aerial mobility checks
     final flightEnabled = environment != ArenaEnvironment.cageMatch;
-    final attackerFlies = flightEnabled && attacker.canFly(edition);
-    final defenderFlies = flightEnabled && defender.canFly(edition);
+    final attackerFlies = flightEnabled && attacker.isAirborne;
+    final defenderFlies = flightEnabled && defender.isAirborne;
 
-    final isRangedAttack = attack.name.toLowerCase().contains('bow') ||
-        attack.name.toLowerCase().contains('ranged') ||
-        attack.name.toLowerCase().contains('javelin') ||
-        attack.name.toLowerCase().contains('ray') ||
-        attack.name.toLowerCase().contains('sling') ||
-        attack.name.toLowerCase().contains('dart') ||
-        attack.name.toLowerCase().contains('blast') ||
-        attack.name.toLowerCase().contains('bolt');
+    final isRangedAttack = attack.attackType == AttackType.rangedWeapon || attack.attackType == AttackType.rangedSpell;
 
     bool flightAdvantage = false;
     bool flightDisadvantage = false;
@@ -421,7 +2106,7 @@ class ArenaCombatEngine {
       flightDisadvantage = true;
     }
 
-    // 2. In Flooded Abyss (Water Match), swimming speed rules apply
+    // Flooded Abyss (Water Match), swimming speed rules
     bool aquaticAdvantage = false;
     bool aquaticDisadvantage = false;
     if (environment == ArenaEnvironment.floodedAbyss) {
@@ -429,21 +2114,41 @@ class ArenaCombatEngine {
       final defenderSwims = defender.canSwim(edition);
 
       if (attackerSwims && !defenderSwims) {
-        // Swimmer attacking clumsy non-swimmer in deep water
         aquaticAdvantage = true;
       } else if (!attackerSwims) {
-        // Non-swimmer flailing in water has disadvantage on attacks
         aquaticDisadvantage = true;
       }
     }
 
-    final hasAdvantage = (packTacticsAdvantage || flightAdvantage || aquaticAdvantage) &&
+    // Condition advantages & disadvantages
+    bool conditionAdvantage = false;
+    bool conditionDisadvantage = false;
+
+    if (defender.isParalyzed || defender.isStunned || defender.isUnconscious || defender.hasCondition(ArenaCondition.restrained)) {
+      conditionAdvantage = true;
+    }
+
+    if (defender.isProne) {
+      if (attack.attackType == AttackType.meleeStandard || attack.attackType == AttackType.meleeReach) {
+        conditionAdvantage = true;
+      } else {
+        conditionDisadvantage = true;
+      }
+    }
+
+    if (attacker.isProne || attacker.hasCondition(ArenaCondition.restrained) || attacker.hasCondition(ArenaCondition.blinded) || attacker.hasCondition(ArenaCondition.poisoned)) {
+      conditionDisadvantage = true;
+    }
+
+    final hasAdvantage = (packTacticsAdvantage || flightAdvantage || aquaticAdvantage || conditionAdvantage) &&
         !flightDisadvantage &&
-        !aquaticDisadvantage;
-    final hasDisadvantage = (flightDisadvantage || aquaticDisadvantage) &&
+        !aquaticDisadvantage &&
+        !conditionDisadvantage;
+    final hasDisadvantage = (flightDisadvantage || aquaticDisadvantage || conditionDisadvantage) &&
         !packTacticsAdvantage &&
         !flightAdvantage &&
-        !aquaticAdvantage;
+        !aquaticAdvantage &&
+        !conditionAdvantage;
 
     // Roll d20
     final d20A = _rollDie(20);
@@ -452,13 +2157,26 @@ class ArenaCombatEngine {
     if (hasAdvantage && d20B != null) naturalRoll = max(d20A, d20B);
     if (hasDisadvantage && d20B != null) naturalRoll = min(d20A, d20B);
 
-    final isCrit = naturalRoll == 20;
     final isFumble = naturalRoll == 1;
     final totalAttack = naturalRoll + attack.attackBonus;
-    final isHit = isCrit || (!isFumble && totalAttack >= defender.ac);
+    bool isHit = (naturalRoll == 20) || (!isFumble && totalAttack >= defender.effectiveAc);
+    final isCrit = (naturalRoll == 20) || (isHit && (defender.isParalyzed || defender.isUnconscious) && attack.attackType == AttackType.meleeStandard);
 
     int damageDealt = 0;
     bool isKillShot = false;
+    bool shielded = false;
+
+    // Defensive Reaction Hook: Shield (spell_shield)
+    if (isHit && !isCrit && !defender.usedReactionThisRound &&
+        defender.hasSpell('spell_shield') && defender.hasAvailableSlots) {
+      if (totalAttack < defender.effectiveAc + 5) {
+        _deductLowestSlot(defender, 1);
+        defender.usedReactionThisRound = true;
+        defender.temporaryAcBonus += 5;
+        shielded = true;
+        isHit = false;
+      }
+    }
 
     if (isHit) {
       attacker.hitsLanded++;
@@ -482,23 +2200,39 @@ class ArenaCombatEngine {
       if (defender.isDefeated) {
         isKillShot = true;
         attacker.kills++;
+        defender.applyCondition(ArenaCondition.unconscious, _rollDie, edition);
       }
     }
 
-    final summary = _formatAttackSummary(
-      attacker: attacker,
-      defender: defender,
-      attack: attack,
-      naturalRoll: naturalRoll,
-      totalAttack: totalAttack,
-      isHit: isHit,
-      isCrit: isCrit,
-      isFumble: isFumble,
-      damageDealt: damageDealt,
-      isKillShot: isKillShot,
-      hadAdvantage: hasAdvantage,
-      hadDisadvantage: hasDisadvantage,
-    );
+    String summary;
+    if (shielded) {
+      final advTag = hasAdvantage ? ' (Adv)' : (hasDisadvantage ? ' (Disadv)' : '');
+      summary = 'PARRIED BY SHIELD!$advTag ${defender.displayName} cast Shield (+5 AC) turning attack ($naturalRoll + ${attack.attackBonus} = $totalAttack vs AC ${defender.effectiveAc}) into a miss!';
+    } else {
+      summary = _formatAttackSummary(
+        attacker: attacker,
+        defender: defender,
+        attack: attack,
+        naturalRoll: naturalRoll,
+        totalAttack: totalAttack,
+        isHit: isHit,
+        isCrit: isCrit,
+        isFumble: isFumble,
+        damageDealt: damageDealt,
+        isKillShot: isKillShot,
+        hadAdvantage: hasAdvantage,
+        hadDisadvantage: hasDisadvantage,
+      );
+    }
+
+    // Concentration Check Pipeline for single target attack
+    if (damageDealt > 0 && defender.activeConcentrationSpellId != null) {
+      final conRes = defender.checkConcentration(damageDealt, _rollDie, edition);
+      if (conRes.broken) {
+        final lostName = _getSpellDisplayName(conRes.lostSpellId);
+        summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+      }
+    }
 
     return ArenaAttackEvent(
       attackerId: attacker.id,
@@ -511,7 +2245,7 @@ class ArenaCombatEngine {
       d20Roll: naturalRoll,
       attackBonus: attack.attackBonus,
       totalAttack: totalAttack,
-      targetAc: defender.ac,
+      targetAc: defender.effectiveAc,
       isHit: isHit,
       isCrit: isCrit,
       isFumble: isFumble,

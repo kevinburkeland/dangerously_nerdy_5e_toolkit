@@ -222,6 +222,39 @@ class ArenaCombatantCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                          if (combatant.activeConcentrationSpellId != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.purpleAccent.withAlpha(35),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.purpleAccent, width: 0.8),
+                              ),
+                              child: const Text(
+                                '🔮 Conc',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.purpleAccent,
+                                ),
+                              ),
+                            ),
+                          if (combatant.isSpellcaster && combatant.maxSpellSlots.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.indigoAccent.withAlpha(25),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '✨ Slots ${combatant.currentSpellSlots.values.fold(0, (a, b) => a + b)}/${combatant.maxSpellSlots.values.fold(0, (a, b) => a + b)}',
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigoAccent,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ],

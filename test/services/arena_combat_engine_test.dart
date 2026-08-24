@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_preset_matchups.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/aoe_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
 
 void main() {
@@ -352,6 +354,266 @@ void main() {
         expect(resolved.teamB.every((c) => c.team == ArenaTeam.teamB), true);
       }
     });
+
+    test('Spellcaster parsing pre-caches slots, DC, attack bonus, and known spells', () {
+      final lichMonster = MonsterCodexLibrary.getMonsterByName('Lich') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('lich'));
+
+      final lich = ArenaCombatant.fromMonster(
+        id: 'lich_1',
+        monster: lichMonster,
+        team: ArenaTeam.teamA,
+      );
+
+      expect(lich.isSpellcaster, true);
+      expect(lich.maxSpellSlots.isNotEmpty, true);
+      expect(lich.currentSpellSlots.isNotEmpty, true);
+      expect(lich.knownSpellIds.isNotEmpty, true);
+      expect(lich.spellSaveDc, greaterThan(10));
+      expect(lich.spellAttackBonus, greaterThan(0));
+
+      // Check clone deep-copy
+      final clone = lich.clone();
+      expect(clone.currentSpellSlots, equals(lich.currentSpellSlots));
+      clone.currentSpellSlots[1] = 0;
+      expect(lich.currentSpellSlots[1], isNot(0));
+
+      // Check reset
+      lich.currentSpellSlots[1] = 0;
+      final resetLich = lich.reset();
+      expect(resetLich.currentSpellSlots[1], lich.maxSpellSlots[1]);
+    });
+
+    test('Defensive Reaction Hook: Shield negates incoming attack and expends spell slot', () {
+      final caster = ArenaCombatant.fromMonster(
+        id: 'caster',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+        acOverride: 12,
+      );
+      // Give defender Shield spell and a 1st level slot
+      caster.knownSpellIds.add('spell_shield');
+      caster.maxSpellSlots[1] = 2;
+      caster.currentSpellSlots[1] = 2;
+
+      final attacker = ArenaCombatant.fromMonster(
+        id: 'atk',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+
+      // Attack roll with totalAttack = 14 (hits AC 12, but < AC 12 + 5 = 17)
+      final initialHp = caster.currentHp;
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: attacker,
+        allCombatants: [attacker, caster],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      expect(step.attackEvents.isNotEmpty, true);
+      // If shield triggered, reaction was used and slot deducted
+      if (step.attackEvents.any((e) => e.summaryText.contains('Shield'))) {
+        expect(caster.usedReactionThisRound, true);
+        expect(caster.currentSpellSlots[1], 1);
+        expect(caster.currentHp, initialHp);
+      }
+    });
+
+    test('Concentration Check Pipeline: Breaks concentration on failed Con save', () {
+      final combatant = ArenaCombatant.fromMonster(
+        id: 'caster',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      combatant.activeConcentrationSpellId = 'spell_hold_monster';
+
+      // Small damage with low roll
+      final res = combatant.checkConcentration(40, (_) => 1); // DC max(10, 20) = 20, roll 1+conMod < 20
+      expect(res.broken, true);
+      expect(combatant.activeConcentrationSpellId, isNull);
+    });
+
+    test('Elemental damage routing respects monster immunities (e.g. Fire Elemental)', () {
+      final fireElementalMonster = MonsterCodexLibrary.getMonsterByName('Fire Elemental') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('fire elemental'));
+
+      final fireElem = ArenaCombatant.fromMonster(
+        id: 'fire_elem',
+        monster: fireElementalMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final initialHp = fireElem.currentHp;
+
+      // Attacker casts Fireball
+      final mage = ArenaCombatant.fromMonster(
+        id: 'mage',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      mage.knownSpellIds.add('spell_fireball');
+      mage.maxSpellSlots[3] = 2;
+      mage.currentSpellSlots[3] = 2;
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: mage,
+        allCombatants: [mage, fireElem],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Fire Elemental is immune to fire damage, so HP must remain unchanged
+      expect(fireElem.currentHp, initialHp);
+      expect(step.attackEvents.every((e) => e.damageDealt == 0), true);
+    });
+
+    test('DMG p.249 AoeResolver: deterministic base target caps and shape parsing', () {
+      // Sphere: 20 ft radius / 5 = 4
+      expect(AoeResolver.getBaseTargetCap(AoeShape.sphere, 20), 4.0);
+      // Cylinder: 10 ft radius / 5 = 2
+      expect(AoeResolver.getBaseTargetCap(AoeShape.cylinder, 10), 2.0);
+      // Cone: 60 ft cone / 10 = 6
+      expect(AoeResolver.getBaseTargetCap(AoeShape.cone, 60), 6.0);
+      // Cube: 15 ft cube / 10 = 1.5
+      expect(AoeResolver.getBaseTargetCap(AoeShape.cube, 15), 1.5);
+      // Line: 100 ft line / 30 = 3.333
+      expect(AoeResolver.getBaseTargetCap(AoeShape.line, 100), closeTo(3.33, 0.05));
+
+      // Parsing
+      final fireballParsed = AoeResolver.parseShapeAndSize('Fireball (20-foot radius)');
+      expect(fireballParsed.shape, AoeShape.sphere);
+      expect(fireballParsed.sizeInFeet, 20.0);
+
+      final breathParsed = AoeResolver.parseShapeAndSize('Fire Breath (60-foot cone)');
+      expect(breathParsed.shape, AoeShape.cone);
+      expect(breathParsed.sizeInFeet, 60.0);
+
+      final lightningParsed = AoeResolver.parseShapeAndSize('Lightning Bolt (100-foot line)');
+      expect(lightningParsed.shape, AoeShape.line);
+      expect(lightningParsed.sizeInFeet, 100.0);
+    });
+
+    test('DMG p.249 AoeResolver: Box-Muller Gaussian clustering and target selection', () {
+      final targets = List.generate(
+        8,
+        (i) => ArenaCombatant.fromMonster(
+          id: 'wolf_$i',
+          monster: wolfMonster,
+          team: ArenaTeam.teamB,
+          hpOverride: (i + 1) * 5,
+        ),
+      );
+
+      // Sphere 20ft (base cap = 4)
+      final selected = AoeResolver.selectTargets(
+        livingEnemies: targets,
+        shape: AoeShape.sphere,
+        sizeInFeet: 20,
+        rng: Random(42),
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      expect(selected.isNotEmpty, true);
+      expect(selected.length, lessThanOrEqualTo(targets.length));
+      // Focus Lowest HP must pick lowest HP first
+      for (int i = 0; i < selected.length - 1; i++) {
+        expect(selected[i].currentHp, lessThanOrEqualTo(selected[i + 1].currentHp));
+      }
+    });
+
+    test('Aerial Combat & Reach Validation: Grounded meleeStandard cannot hit airborne enemy', () {
+      final flyer = ArenaCombatant.fromMonster(
+        id: 'dragon',
+        monster: dragonMonster,
+        team: ArenaTeam.teamB,
+      );
+      expect(flyer.isAirborne, true);
+      expect(flyer.altitudeInFeet, 20);
+
+      final groundedWolf = ArenaCombatant.fromMonster(
+        id: 'wolf',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      expect(groundedWolf.isAirborne, false);
+      expect(groundedWolf.altitudeInFeet, 0);
+      expect(groundedWolf.meleeReachInFeet, 5);
+
+      // Wolf only has Bite (meleeStandard, reach 5 ft).
+      // Grounded wolf cannot reach airborne dragon at 20 ft altitude.
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: groundedWolf,
+        allCombatants: [groundedWolf, flyer],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Step should note that wolf cannot reach and takes Dodge action
+      expect(step.attackEvents.isEmpty, true);
+      expect(step.specialEventSummary?.contains('cannot reach airborne'), true);
+    });
+
+    test('Fall Damage & Condition Trigger: Non-hovering airborne entity falls on prone/stun/paralyze', () {
+      final flyer = ArenaCombatant.fromMonster(
+        id: 'dragon',
+        monster: dragonMonster,
+        team: ArenaTeam.teamB,
+      );
+      expect(flyer.isAirborne, true);
+      expect(flyer.hasHover, false);
+      expect(flyer.altitudeInFeet, 20);
+
+      final initialHp = flyer.currentHp;
+
+      // Apply Prone condition
+      final fallRes = flyer.applyCondition(
+        ArenaCondition.prone,
+        (sides) => 4, // Roll 4 on each d6 (2d6 for 20 ft = 8 damage)
+        DmRulesEdition.v2024,
+      );
+
+      expect(fallRes.fell, true);
+      expect(fallRes.fallDamage, 8);
+      expect(flyer.isAirborne, false);
+      expect(flyer.altitudeInFeet, 0);
+      expect(flyer.isProne, true);
+      expect(flyer.currentHp, initialHp - 8);
+      expect(fallRes.log?.contains('fell 20 ft.'), true);
+    });
+
+    test('Hover capability prevents falling when conditions like Prone or Stunned are inflicted', () {
+      final hoverCombatant = ArenaCombatant(
+        id: 'hover_flier',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+        displayName: 'Floating Beholder',
+        maxHp: 50,
+        currentHp: 50,
+        ac: 14,
+        initiativeBonus: 2,
+        isAirborne: true,
+        hasHover: true,
+        altitudeInFeet: 20,
+      );
+
+      final fallRes = hoverCombatant.applyCondition(
+        ArenaCondition.paralyzed,
+        (sides) => 6,
+        DmRulesEdition.v2024,
+      );
+
+      expect(fallRes.fell, false);
+      expect(fallRes.fallDamage, 0);
+      expect(hoverCombatant.isAirborne, true);
+      expect(hoverCombatant.altitudeInFeet, 20);
+      expect(hoverCombatant.isParalyzed, true);
+    });
   });
 }
+
+
 

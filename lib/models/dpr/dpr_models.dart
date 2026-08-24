@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../arena/arena_combatant.dart';
 import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
 import '../srd_summons/minion_stat_block.dart';
@@ -306,6 +307,8 @@ class DprAttackAction {
   // Attack Count & Action Economy
   final int attacksPerRound;
   final bool isBonusActionAttack;
+  final int reachInFeet;
+  final AttackType? attackTypeOverride;
 
   const DprAttackAction({
     required this.id,
@@ -346,7 +349,31 @@ class DprAttackAction {
     this.attackBuffFlat = 0,
     this.attacksPerRound = 1,
     this.isBonusActionAttack = false,
+    this.reachInFeet = 5,
+    this.attackTypeOverride,
   });
+
+  /// Evaluates the 5e AttackType classification (meleeStandard, meleeReach, rangedWeapon, rangedSpell).
+  AttackType get attackType {
+    if (attackTypeOverride != null) return attackTypeOverride!;
+    final nameLower = name.toLowerCase();
+    final isRanged = nameLower.contains('bow') ||
+        nameLower.contains('ranged') ||
+        nameLower.contains('javelin') ||
+        nameLower.contains('sling') ||
+        nameLower.contains('dart') ||
+        nameLower.contains('crossbow');
+    final isSpell = nameLower.contains('ray') ||
+        nameLower.contains('bolt') ||
+        nameLower.contains('blast') ||
+        nameLower.contains('missile') ||
+        deliveryType == DprActionDeliveryType.savingThrow;
+
+    if (isSpell) return AttackType.rangedSpell;
+    if (isRanged) return AttackType.rangedWeapon;
+    if (reachInFeet >= 10) return AttackType.meleeReach;
+    return AttackType.meleeStandard;
+  }
 
   DprAttackAction copyWith({
     String? id,
@@ -387,6 +414,8 @@ class DprAttackAction {
     int? attackBuffFlat,
     int? attacksPerRound,
     bool? isBonusActionAttack,
+    int? reachInFeet,
+    AttackType? attackTypeOverride,
   }) {
     return DprAttackAction(
       id: id ?? this.id,
@@ -427,6 +456,8 @@ class DprAttackAction {
       attackBuffFlat: attackBuffFlat ?? this.attackBuffFlat,
       attacksPerRound: attacksPerRound ?? this.attacksPerRound,
       isBonusActionAttack: isBonusActionAttack ?? this.isBonusActionAttack,
+      reachInFeet: reachInFeet ?? this.reachInFeet,
+      attackTypeOverride: attackTypeOverride ?? this.attackTypeOverride,
     );
   }
 
@@ -1323,6 +1354,9 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       }
     }
 
+    final reachMatch = RegExp(r'reach\s*(\d+)\s*ft', caseSensitive: false).firstMatch(action.description);
+    final actionReach = reachMatch != null ? (int.tryParse(reachMatch.group(1) ?? '') ?? 5) : 5;
+
     return DprAttackAction(
       id: '${id}_${isLegendary ? "leg_" : ""}${action.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_')}',
       name: action.name,
@@ -1344,6 +1378,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       secondaryDiceSides: secDSides,
       secondaryDamageType: secDType,
       attacksPerRound: 1,
+      reachInFeet: actionReach,
     );
   }
 }
