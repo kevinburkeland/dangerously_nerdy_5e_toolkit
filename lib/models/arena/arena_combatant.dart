@@ -4,6 +4,8 @@ import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
 import '../spellbook_data.dart';
 import '../srd_summons/minion_stat_block.dart';
+import 'arena_condition.dart';
+export 'arena_condition.dart';
 
 /// Which team the combatant belongs to in the Arena.
 enum ArenaTeam {
@@ -30,22 +32,6 @@ enum AttackType {
   const AttackType(this.defaultReach, this.label);
 }
 
-/// Core 5e Conditions affecting combat status, advantage, and aerial stability.
-enum ArenaCondition {
-  prone('Prone'),
-  stunned('Stunned'),
-  paralyzed('Paralyzed'),
-  restrained('Restrained'),
-  unconscious('Unconscious'),
-  incapacitated('Incapacitated'),
-  blinded('Blinded'),
-  charmed('Charmed'),
-  frightened('Frightened'),
-  poisoned('Poisoned');
-
-  final String label;
-  const ArenaCondition(this.label);
-}
 
 /// Represents a single active instance of a monster in the Arena.
 class ArenaCombatant {
@@ -67,6 +53,7 @@ class ArenaCombatant {
   int altitudeInFeet;
   int meleeReachInFeet;
   final Set<ArenaCondition> conditions;
+  final List<ActiveCondition> activeConditions;
 
   // Spellcasting State & Pre-Cached Attributes
   Map<int, int> currentSpellSlots;
@@ -78,6 +65,10 @@ class ArenaCombatant {
   bool usedReactionThisRound;
   bool castBonusActionSpellThisTurn;
   int temporaryAcBonus;
+
+  // Legendary Action State
+  final int maxLegendaryActions;
+  int legendaryActionsRemaining;
 
   // Tracked combat stats
   int totalDamageDealt;
@@ -104,6 +95,7 @@ class ArenaCombatant {
     this.altitudeInFeet = 0,
     this.meleeReachInFeet = 5,
     Set<ArenaCondition>? conditions,
+    List<ActiveCondition>? activeConditions,
     Map<int, int>? currentSpellSlots,
     Map<int, int>? maxSpellSlots,
     List<String>? knownSpellIds,
@@ -113,18 +105,30 @@ class ArenaCombatant {
     this.usedReactionThisRound = false,
     this.castBonusActionSpellThisTurn = false,
     this.temporaryAcBonus = 0,
+    this.maxLegendaryActions = 0,
+    int? legendaryActionsRemaining,
     this.totalDamageDealt = 0,
     this.totalDamageTaken = 0,
     this.kills = 0,
     this.attacksMade = 0,
     this.hitsLanded = 0,
     this.critsLanded = 0,
-  })  : conditions = conditions != null ? Set<ArenaCondition>.from(conditions) : {},
+  })  : conditions = conditions != null
+            ? Set<ArenaCondition>.from(conditions)
+            : (activeConditions != null
+                ? activeConditions.map((a) => a.condition).toSet()
+                : {}),
+        activeConditions = activeConditions != null
+            ? List<ActiveCondition>.from(activeConditions)
+            : (conditions != null
+                ? conditions.map((c) => ActiveCondition(condition: c)).toList()
+                : []),
         maxSpellSlots = maxSpellSlots != null ? Map<int, int>.from(maxSpellSlots) : {},
         currentSpellSlots = currentSpellSlots != null
             ? Map<int, int>.from(currentSpellSlots)
             : (maxSpellSlots != null ? Map<int, int>.from(maxSpellSlots) : {}),
-        knownSpellIds = knownSpellIds != null ? List<String>.from(knownSpellIds) : [];
+        knownSpellIds = knownSpellIds != null ? List<String>.from(knownSpellIds) : [],
+        legendaryActionsRemaining = legendaryActionsRemaining ?? maxLegendaryActions;
 
   /// Effective AC accounting for active reaction bonuses (e.g. Shield spell +5 AC).
   int get effectiveAc => ac + temporaryAcBonus;
@@ -132,6 +136,12 @@ class ArenaCombatant {
   bool get isSpellcaster => knownSpellIds.isNotEmpty || maxSpellSlots.isNotEmpty;
   bool get hasAvailableSlots => currentSpellSlots.values.any((v) => v > 0);
   bool hasSpell(String spellId) => knownSpellIds.contains(spellId);
+
+  // Legendary Action Helpers
+  bool get hasLegendaryActions => maxLegendaryActions > 0;
+  void resetLegendaryActions() {
+    legendaryActionsRemaining = maxLegendaryActions;
+  }
 
   // Condition Status Helpers
   bool get isProne => conditions.contains(ArenaCondition.prone);
@@ -173,6 +183,7 @@ class ArenaCombatant {
     final canFlyMonster = flySpeed.contains('fly') && !flySpeed.contains('fly 0');
     final hoverCapability = flySpeed.contains('hover') || traitsText.contains('hover');
     final parsedReach = _parseMonsterMeleeReach(sb);
+    final parsedLegendaryActions = _parseMonsterLegendaryActions(sb);
 
     return ArenaCombatant(
       id: id,
@@ -198,6 +209,7 @@ class ArenaCombatant {
       usedReactionThisRound: false,
       castBonusActionSpellThisTurn: false,
       temporaryAcBonus: 0,
+      maxLegendaryActions: parsedLegendaryActions,
     );
   }
 
@@ -205,14 +217,55 @@ class ArenaCombatant {
   bool get isDefeated => currentHp <= 0;
   double get hpPercent => maxHp > 0 ? (currentHp / maxHp).clamp(0.0, 1.0) : 0.0;
 
+  /// Applies an [ActiveCondition] with optional duration and source effect tracking.
+  ({int fallDamage, bool fell, String? log}) applyActiveCondition(
+    ActiveCondition activeCondition, {
+    int Function(int sides)? diceRoller,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  }) {
+    conditions.add(activeCondition.condition);
+    final idx = activeConditions.indexWhere((a) => a.condition == activeCondition.condition);
+    if (idx >= 0) {
+      activeConditions[idx] = activeCondition;
+    } else {
+      activeConditions.add(activeCondition);
+    }
+    return _handleDisruptiveCondition(
+      activeCondition.condition,
+      diceRoller ?? (s) => (s / 2).ceil(),
+      edition,
+    );
+  }
+
   /// Applies a 5e condition and executes falling mechanics if airborne without hover.
   ({int fallDamage, bool fell, String? log}) applyCondition(
     ArenaCondition condition,
     int Function(int sides) diceRoller,
+    DmRulesEdition edition, {
+    int? durationRounds,
+    String? source,
+  }) {
+    conditions.add(condition);
+    final idx = activeConditions.indexWhere((a) => a.condition == condition);
+    final active = ActiveCondition(
+      condition: condition,
+      durationRounds: durationRounds,
+      source: source,
+    );
+    if (idx >= 0) {
+      activeConditions[idx] = active;
+    } else {
+      activeConditions.add(active);
+    }
+
+    return _handleDisruptiveCondition(condition, diceRoller, edition);
+  }
+
+  ({int fallDamage, bool fell, String? log}) _handleDisruptiveCondition(
+    ArenaCondition condition,
+    int Function(int sides) diceRoller,
     DmRulesEdition edition,
   ) {
-    conditions.add(condition);
-
     final isDisruptive = condition == ArenaCondition.prone ||
         condition == ArenaCondition.stunned ||
         condition == ArenaCondition.paralyzed ||
@@ -231,6 +284,9 @@ class ArenaCombatant {
         isAirborne = false;
         altitudeInFeet = 0;
         conditions.add(ArenaCondition.prone);
+        if (!activeConditions.any((a) => a.condition == ArenaCondition.prone)) {
+          activeConditions.add(const ActiveCondition(condition: ArenaCondition.prone));
+        }
         applyDamage(rawFallDamage);
 
         return (
@@ -252,9 +308,59 @@ class ArenaCombatant {
 
   void removeCondition(ArenaCondition condition) {
     conditions.remove(condition);
+    activeConditions.removeWhere((a) => a.condition == condition);
   }
 
   bool hasCondition(ArenaCondition condition) => conditions.contains(condition);
+
+  /// Toggles a condition on or off. Returns true if condition is now active, false if removed.
+  bool toggleCondition(
+    ArenaCondition condition, {
+    int? durationRounds,
+    String? source,
+    int Function(int sides)? diceRoller,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  }) {
+    if (hasCondition(condition)) {
+      removeCondition(condition);
+      return false;
+    } else {
+      applyActiveCondition(
+        ActiveCondition(
+          condition: condition,
+          durationRounds: durationRounds,
+          source: source,
+        ),
+        diceRoller: diceRoller,
+        edition: edition,
+      );
+      return true;
+    }
+  }
+
+  /// Decrements condition durations at the end of turn, removing any expired conditions.
+  List<ArenaCondition> tickTurnConditions() {
+    final expired = <ArenaCondition>[];
+    for (int i = activeConditions.length - 1; i >= 0; i--) {
+      final active = activeConditions[i];
+      if (active.hasFiniteDuration) {
+        final updated = active.tickTurn();
+        if (updated.isExpired) {
+          expired.add(active.condition);
+          activeConditions.removeAt(i);
+          conditions.remove(active.condition);
+        } else {
+          activeConditions[i] = updated;
+        }
+      }
+    }
+    return expired;
+  }
+
+  void clearConditions() {
+    conditions.clear();
+    activeConditions.clear();
+  }
 
   /// Clones combatant with fresh max HP, reset spell slots, and reset combat counters.
   ArenaCombatant reset() {
@@ -276,6 +382,7 @@ class ArenaCombatant {
       altitudeInFeet: canFlyMonster ? 20 : 0,
       meleeReachInFeet: meleeReachInFeet,
       conditions: {},
+      activeConditions: [],
       maxSpellSlots: Map<int, int>.from(maxSpellSlots),
       currentSpellSlots: Map<int, int>.from(maxSpellSlots),
       knownSpellIds: List<String>.from(knownSpellIds),
@@ -285,6 +392,8 @@ class ArenaCombatant {
       usedReactionThisRound: false,
       castBonusActionSpellThisTurn: false,
       temporaryAcBonus: 0,
+      maxLegendaryActions: maxLegendaryActions,
+      legendaryActionsRemaining: maxLegendaryActions,
       totalDamageDealt: 0,
       totalDamageTaken: 0,
       kills: 0,
@@ -313,6 +422,7 @@ class ArenaCombatant {
       altitudeInFeet: altitudeInFeet,
       meleeReachInFeet: meleeReachInFeet,
       conditions: Set<ArenaCondition>.from(conditions),
+      activeConditions: List<ActiveCondition>.from(activeConditions),
       maxSpellSlots: Map<int, int>.from(maxSpellSlots),
       currentSpellSlots: Map<int, int>.from(currentSpellSlots),
       knownSpellIds: List<String>.from(knownSpellIds),
@@ -322,6 +432,8 @@ class ArenaCombatant {
       usedReactionThisRound: usedReactionThisRound,
       castBonusActionSpellThisTurn: castBonusActionSpellThisTurn,
       temporaryAcBonus: temporaryAcBonus,
+      maxLegendaryActions: maxLegendaryActions,
+      legendaryActionsRemaining: legendaryActionsRemaining,
       totalDamageDealt: totalDamageDealt,
       totalDamageTaken: totalDamageTaken,
       kills: kills,
@@ -357,7 +469,8 @@ class ArenaCombatant {
 
   static Map<int, int> _parseMonsterSpellSlots(MinionStatBlock sb) {
     final slots = <int, int>{};
-    final corpus = _buildMonsterCorpus(sb);
+    final corpus = _buildMonsterSpellCorpus(sb);
+    if (corpus.isEmpty) return slots;
 
     // 1. Check explicit slot regex, e.g. "1st level (4 slots)" or "3rd-level (3 slots)"
     final slotPattern = RegExp(
@@ -402,7 +515,8 @@ class ArenaCombatant {
 
   static List<String> _parseMonsterKnownSpellIds(MinionStatBlock sb) {
     final known = <String>{};
-    final corpus = _buildMonsterCorpus(sb);
+    final corpus = _buildMonsterSpellCorpus(sb);
+    if (corpus.isEmpty) return const [];
 
     for (final spell in SpellbookLibrary.allSpells) {
       if (_containsSpellWord(corpus, spell.name)) {
@@ -411,6 +525,27 @@ class ArenaCombatant {
     }
 
     return known.toList();
+  }
+
+  static String _buildMonsterSpellCorpus(MinionStatBlock sb) {
+    final buffer = StringBuffer();
+    for (final t in sb.traits) {
+      final nameLower = t.name.toLowerCase();
+      if (nameLower.contains('spell') ||
+          nameLower.contains('magic') ||
+          nameLower.contains('casting') ||
+          nameLower.contains('pact') ||
+          nameLower.contains('innate')) {
+        buffer.writeln('${t.name}: ${t.description}');
+      }
+    }
+    for (final a in sb.actions) {
+      final nameLower = a.name.toLowerCase();
+      if (nameLower.contains('spell') || nameLower.contains('cast')) {
+        buffer.writeln('${a.name}: ${a.description}');
+      }
+    }
+    return buffer.toString().toLowerCase().replaceAll('_', ' ').replaceAll('*', ' ');
   }
 
   static int _parseMonsterSpellSaveDc(MinionStatBlock sb, double cr) {
@@ -459,6 +594,13 @@ class ArenaCombatant {
     return maxReach;
   }
 
+  static int _parseMonsterLegendaryActions(MinionStatBlock sb) {
+    if (sb.legendaryActions.isNotEmpty) return 3;
+    final corpus = _buildMonsterCorpus(sb);
+    if (corpus.contains('legendary action')) return 3;
+    return 0;
+  }
+
   static String _buildMonsterCorpus(MinionStatBlock sb) {
     final buffer = StringBuffer();
     for (final t in sb.traits) {
@@ -473,13 +615,14 @@ class ArenaCombatant {
     if (sb.specialTrait != null) {
       buffer.writeln(sb.specialTrait);
     }
-    return buffer.toString().toLowerCase();
+    return buffer.toString().toLowerCase().replaceAll('_', ' ').replaceAll('*', ' ');
   }
 
   static bool _containsSpellWord(String corpus, String spellName) {
     final lowerName = spellName.toLowerCase();
+    final cleanCorpus = corpus.replaceAll('_', ' ').replaceAll('*', ' ');
     final pattern = RegExp('\\b${RegExp.escape(lowerName)}\\b', caseSensitive: false);
-    return pattern.hasMatch(corpus);
+    return pattern.hasMatch(cleanCorpus);
   }
 
   /// Applies damage with temporary HP buffering.

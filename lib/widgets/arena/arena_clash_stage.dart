@@ -3,8 +3,8 @@ import '../../models/arena/arena_action_result.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/srd_summons/minion_stat_block.dart';
-import '../glyphs/dnd_glyph.dart';
+import 'arena_combatant_token.dart';
+
 
 /// Central dynamic clash arena visualizer displaying current turn combat actions,
 /// dice roll animations, hit/crit banners, and playback control buttons.
@@ -372,68 +372,44 @@ class ArenaClashStage extends StatelessWidget {
     }
 
     final teamColor = combatant.team.color;
-    final sb = combatant.getStatBlock(edition);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Stack(
           clipBehavior: Clip.none,
+          alignment: Alignment.center,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isAttacking ? const Color(0xFFFFD700) : teamColor,
-                  width: 2.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isAttacking
-                        ? const Color(0xFFFFD700).withAlpha(100)
-                        : teamColor.withAlpha(60),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: DndGlyph.monster(
-                  creatureType: sb.glyphCreatureType,
-                  crTier: sb.glyphCrTier,
-                  actionRings: sb.glyphActionRings,
-                  glyphColor: teamColor,
-                  size: 42,
-                  isDarkMode: isDark,
-                ),
-              ),
+            ArenaCombatantToken(
+              combatant: combatant,
+              size: 54,
+              isCurrentTurn: isAttacking,
+              edition: edition,
+              showConditionChips: true,
             ),
             Positioned(
-              bottom: -6,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: isAttacking ? const Color(0xFFFFD700) : teamColor,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    roleLabel,
-                    style: const TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
+              top: -6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: isAttacking ? const Color(0xFFFFD700) : teamColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  roleLabel,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 95),
+          constraints: const BoxConstraints(maxWidth: 100),
           child: Text(
             combatant.displayName,
             maxLines: 1,

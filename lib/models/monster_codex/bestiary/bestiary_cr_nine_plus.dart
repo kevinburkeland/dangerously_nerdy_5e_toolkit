@@ -348,7 +348,19 @@ class BestiaryCrNinePlus {
           ),
           CreatureTrait(
             name: 'Spellcasting',
-            description: 'The lich is an 18th-level spellcaster (spell save DC 20, +12 to hit with spell attacks). Known spells include power word kill, finger of death, disintegrate, chain lightning, globe of invulnerability, and counterspell.',
+            description:
+                'The lich is an 18th-level spellcaster (spell save DC 20, +12 to hit with spell attacks). '
+                'The lich has the following wizard spells prepared:\n'
+                'Cantrips (at will): mage hand, prestidigitation, ray of frost\n'
+                '1st level (4 slots): detect magic, magic missile, shield, thunderwave\n'
+                '2nd level (3 slots): acid arrow, detect thoughts, invisibility, mirror image\n'
+                '3rd level (3 slots): animate dead, counterspell, dispel magic, fireball\n'
+                '4th level (3 slots): blight, dimension door\n'
+                '5th level (3 slots): cloudkill, scrying\n'
+                '6th level (1 slot): disintegrate, globe of invulnerability\n'
+                '7th level (1 slot): finger of death, plane shift\n'
+                '8th level (1 slot): dominate monster, power word stun\n'
+                '9th level (1 slot): power word kill',
           ),
         ],
         actions: [

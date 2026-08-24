@@ -867,6 +867,19 @@ class _LandingScreenState extends State<LandingScreen> {
             isDarkMode: isDark,
           );
           break;
+        case 'monster_arena':
+          glyphWidget = DndGlyph.monster(
+            creatureType: CreatureType.monstrosity,
+            crTier: 4,
+            glyphColor: item.accentColor,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.legendary, damageType: DamageAccent.slashing, label: 'Pit Fight Simulator'),
+              ActionTraitRing(ringType: ActionRingType.recharge, label: 'Monte Carlo Win Odds'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
         case 'item_compendium':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,

@@ -19,6 +19,12 @@ google-services.json
 GoogleService-Info.plist
 lib/firebase_options.dart
 
+# Deployment & Private Scripts with Distribution / Bucket IDs
+*deploy*.sh
+*deploy.sh
+5enerdydeploy.sh
+scripts/*deploy*.sh
+
 # Firebase CLI Logs & Emulators
 firebase-debug.log
 firebase-debug.*.log

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/srd_summons/minion_stat_block.dart';
-import '../glyphs/dnd_glyph.dart';
+import 'arena_combatant_token.dart';
+import 'arena_condition_chip.dart';
+import 'arena_condition_toggle_dialog.dart';
 
 /// Interactive fighter card in the Arena team roster.
 class ArenaCombatantCard extends StatelessWidget {
@@ -13,6 +14,7 @@ class ArenaCombatantCard extends StatelessWidget {
   final DmRulesEdition edition;
   final VoidCallback? onRemove;
   final VoidCallback? onDuplicate;
+  final VoidCallback? onConditionsChanged;
 
   const ArenaCombatantCard({
     super.key,
@@ -23,7 +25,9 @@ class ArenaCombatantCard extends StatelessWidget {
     this.edition = DmRulesEdition.v2024,
     this.onRemove,
     this.onDuplicate,
+    this.onConditionsChanged,
   });
+
 
   Color _getHpColor(double percent) {
     if (percent <= 0) return Colors.grey;
@@ -88,19 +92,18 @@ class ArenaCombatantCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Row 1: Glyph, Name, CR, Actions/Controls
+            // Row 1: Token Avatar, Name, CR, Conditions, Actions/Controls
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Opacity(
-                  opacity: isDefeated ? 0.4 : 1.0,
-                  child: DndGlyph.monster(
-                    creatureType: sb.glyphCreatureType,
-                    crTier: sb.glyphCrTier,
-                    actionRings: sb.glyphActionRings,
-                    glyphColor: isDefeated ? Colors.grey : teamColor,
-                    size: 30,
-                    isDarkMode: isDark,
-                  ),
+                ArenaCombatantToken(
+                  combatant: combatant,
+                  size: 36,
+                  isCurrentTurn: isCurrentTurn,
+                  isTargeted: isTargeted,
+                  edition: edition,
+                  showConditionChips: false,
+                  onConditionsChanged: onConditionsChanged,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -257,6 +260,27 @@ class ArenaCombatantCard extends StatelessWidget {
                             ),
                         ],
                       ),
+
+                      // Dynamic Status Condition Chips Row
+                      if (combatant.activeConditions.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        ArenaConditionChipsBar(
+                          conditions: combatant.activeConditions,
+                          isDense: true,
+                          maxVisible: 3,
+                          onRemoveCondition: (c) {
+                            combatant.removeCondition(c);
+                            onConditionsChanged?.call();
+                          },
+                          onManageConditions: () {
+                            ArenaConditionToggleDialog.show(
+                              context,
+                              combatant: combatant,
+                              onUpdated: onConditionsChanged,
+                            );
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -275,8 +299,33 @@ class ArenaCombatantCard extends StatelessWidget {
                     tooltip: 'Remove',
                     onPressed: onRemove,
                   ),
-                ] else if (isDefeated) ...[
-                  const Icon(Icons.sentiment_very_dissatisfied, color: Colors.grey, size: 20),
+                ] else ...[
+                  IconButton(
+                    icon: Icon(
+                      combatant.conditions.isNotEmpty
+                          ? Icons.medical_information
+                          : Icons.medical_information_outlined,
+                      size: 16,
+                      color: combatant.conditions.isNotEmpty
+                          ? Colors.amberAccent
+                          : (isDark ? Colors.white38 : Colors.black38),
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                    tooltip: 'Status Conditions (${combatant.conditions.length})',
+                    onPressed: () {
+                      ArenaConditionToggleDialog.show(
+                        context,
+                        combatant: combatant,
+                        onUpdated: onConditionsChanged,
+                      );
+                    },
+                  ),
+                  if (isDefeated)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 2),
+                      child: Icon(Icons.sentiment_very_dissatisfied, color: Colors.grey, size: 18),
+                    ),
                 ],
               ],
             ),

@@ -1130,6 +1130,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
                       isTargeted: isTargeted,
                       isSetupMode: isSetup,
                       edition: edition,
+                      onConditionsChanged: () => setState(() {}),
                       onRemove: () {
                         setState(() {
                           final list = team == ArenaTeam.teamA ? _teamA : _teamB;

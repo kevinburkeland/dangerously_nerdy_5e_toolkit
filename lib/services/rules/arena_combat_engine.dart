@@ -131,6 +131,7 @@ class ArenaCombatEngine {
     attacker.usedReactionThisRound = false;
     attacker.castBonusActionSpellThisTurn = false;
     attacker.temporaryAcBonus = 0;
+    attacker.resetLegendaryActions();
 
     final events = <ArenaAttackEvent>[];
     String? specialSummary;
@@ -169,6 +170,24 @@ class ArenaCombatEngine {
 
         // If an Action spell (or cantrip) was cast, it consumed the combatant's Action
         if (events.isNotEmpty) {
+          final expired = attacker.tickTurnConditions();
+          if (expired.isNotEmpty) {
+            final expireMsg = '${attacker.displayName} is no longer ${expired.map((c) => c.label).join(", ")}.';
+            specialSummary = specialSummary != null ? '$specialSummary\n$expireMsg' : expireMsg;
+          }
+
+          // Off-turn Legendary Actions of opposing living legendary creatures
+          final legEvents = executeOffTurnLegendaryActions(
+            turnCombatant: attacker,
+            allCombatants: allCombatants,
+            strategy: strategy,
+            edition: edition,
+            environment: environment,
+          );
+          if (legEvents.isNotEmpty) {
+            events.addAll(legEvents);
+          }
+
           return ArenaTurnStep(
             stepIndex: stepIndex,
             roundNumber: roundNumber,
@@ -247,6 +266,25 @@ class ArenaCombatEngine {
       }
     }
 
+    // 4. End-of-turn condition duration ticking
+    final expired = attacker.tickTurnConditions();
+    if (expired.isNotEmpty) {
+      final expireMsg = '${attacker.displayName} is no longer ${expired.map((c) => c.label).join(", ")}.';
+      specialSummary = specialSummary != null ? '$specialSummary\n$expireMsg' : expireMsg;
+    }
+
+    // 5. Off-turn Legendary Actions of opposing living legendary creatures
+    final legEvents = executeOffTurnLegendaryActions(
+      turnCombatant: attacker,
+      allCombatants: allCombatants,
+      strategy: strategy,
+      edition: edition,
+      environment: environment,
+    );
+    if (legEvents.isNotEmpty) {
+      events.addAll(legEvents);
+    }
+
     return ArenaTurnStep(
       stepIndex: stepIndex,
       roundNumber: roundNumber,
@@ -322,7 +360,23 @@ class ArenaCombatEngine {
       return bonusSummary != null ? (events: const [], specialSummary: bonusSummary) : null;
     }
 
-    // Priority 1: Kill-Shot / Execution
+    // Priority 1A: Large AoE Clustering (>= 3 living enemies)
+    if (livingEnemies.length >= 3) {
+      final aoeEvents = _evaluateAoeSpells(
+        attacker: attacker,
+        livingEnemies: livingEnemies,
+        allCombatants: allCombatants,
+        strategy: strategy,
+        edition: edition,
+        environment: environment,
+      );
+      if (aoeEvents != null && aoeEvents.isNotEmpty) {
+        events.addAll(aoeEvents);
+        return (events: events, specialSummary: bonusSummary);
+      }
+    }
+
+    // Priority 1B: Kill-Shot / Execution
     final killShotEvents = _evaluateKillShot(
       attacker: attacker,
       livingEnemies: livingEnemies,
@@ -334,7 +388,7 @@ class ArenaCombatEngine {
       return (events: events, specialSummary: bonusSummary);
     }
 
-    // Priority 2: AoE Clustering (>= 2 living enemies)
+    // Priority 2: AoE Clustering (2 living enemies)
     if (livingEnemies.length >= 2) {
       final aoeEvents = _evaluateAoeSpells(
         attacker: attacker,
@@ -525,7 +579,76 @@ class ArenaCombatEngine {
       }
     }
 
-    // 3. Blight (spell_blight) - Targeted necrotic execution
+    // 3. Finger of Death (spell_finger_of_death) - High 7th level necrotic execution
+    if (attacker.hasSpell('spell_finger_of_death') && _hasSlotFor(attacker, 7)) {
+      final lowHpFoes = livingEnemies.where((e) => e.currentHp <= 65).toList();
+      if (lowHpFoes.isNotEmpty) {
+        lowHpFoes.sort((a, b) => a.currentHp.compareTo(b.currentHp));
+        final target = lowHpFoes.first;
+        final slotLvl = _deductHighestSlot(attacker, 7)!;
+
+        attacker.attacksMade++;
+        final d20 = _rollDie(20);
+        final saveBonus = target.getSavingThrowBonus('con', edition);
+        final totalSave = d20 + saveBonus;
+        final saved = totalSave >= attacker.spellSaveDc;
+
+        final rawDmg = _rollDice(7, 8) + 30;
+        int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
+        damageDealt = _applyDefensiveModifiers(damageDealt, 'necrotic', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+        if (damageDealt > 0) attacker.hitsLanded++;
+
+        bool isKillShot = false;
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+
+        final fatal = isKillShot ? ' — SMITTEN WITH NECROTIC DEATH!' : '';
+        String summary = saved
+            ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+            : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
+
+        if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+          final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+          if (conRes.broken) {
+            final lostName = _getSpellDisplayName(conRes.lostSpellId);
+            summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+          }
+        }
+
+        return [
+          ArenaAttackEvent(
+            attackerId: attacker.id,
+            attackerName: attacker.displayName,
+            attackerTeam: attacker.team,
+            defenderId: target.id,
+            defenderName: target.displayName,
+            defenderTeam: target.team,
+            attackName: 'Finger of Death (Slot $slotLvl)',
+            d20Roll: d20,
+            attackBonus: saveBonus,
+            totalAttack: totalSave,
+            targetAc: target.effectiveAc,
+            isHit: damageDealt > 0,
+            isSavingThrow: true,
+            saveDc: attacker.spellSaveDc,
+            saveRoll: totalSave,
+            saved: saved,
+            damageDealt: damageDealt,
+            damageType: 'necrotic',
+            isKillShot: isKillShot,
+            defenderRemainingHp: target.currentHp,
+            defenderMaxHp: target.maxHp,
+            summaryText: summary,
+          ),
+        ];
+      }
+    }
+
+    // 4. Blight (spell_blight) - Targeted necrotic execution
     if (attacker.hasSpell('spell_blight') && _hasSlotFor(attacker, 4)) {
       final lowHpFoes = livingEnemies.where((e) => e.currentHp <= 40).toList();
       if (lowHpFoes.isNotEmpty) {
@@ -626,6 +749,7 @@ class ArenaCombatEngine {
       (id: 'spell_chain_lightning', name: 'Chain Lightning', minLevel: 6, saveAbility: 'dex', damageType: 'lightning', shape: AoeShape.line, sizeInFeet: 120.0, diceCount: (s) => 10 + (s - 6), diceSides: 8, staticBonus: 0),
       (id: 'spell_circle_of_death', name: 'Circle of Death', minLevel: 6, saveAbility: 'con', damageType: 'necrotic', shape: AoeShape.sphere, sizeInFeet: 60.0, diceCount: (s) => 8 + (s - 6) * 2, diceSides: 6, staticBonus: 0),
       (id: 'spell_cone_of_cold', name: 'Cone of Cold', minLevel: 5, saveAbility: 'con', damageType: 'cold', shape: AoeShape.cone, sizeInFeet: 60.0, diceCount: (s) => 8 + (s - 5), diceSides: 8, staticBonus: 0),
+      (id: 'spell_cloudkill', name: 'Cloudkill', minLevel: 5, saveAbility: 'con', damageType: 'poison', shape: AoeShape.sphere, sizeInFeet: 20.0, diceCount: (s) => 5 + (s - 5), diceSides: 8, staticBonus: 0),
       (id: 'spell_flame_strike', name: 'Flame Strike', minLevel: 5, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.cylinder, sizeInFeet: 10.0, diceCount: (s) => 8 + (s - 5) * 2, diceSides: 6, staticBonus: 0),
       (id: 'spell_ice_storm', name: 'Ice Storm', minLevel: 4, saveAbility: 'dex', damageType: 'cold', shape: AoeShape.cylinder, sizeInFeet: 20.0, diceCount: (s) => 6 + (s - 4), diceSides: 6, staticBonus: 0),
       (id: 'spell_fireball', name: 'Fireball', minLevel: 3, saveAbility: 'dex', damageType: 'fire', shape: AoeShape.sphere, sizeInFeet: 20.0, diceCount: (s) => 8 + (s - 3), diceSides: 6, staticBonus: 0),
@@ -983,7 +1107,71 @@ class ArenaCombatEngine {
     final target = selectTarget(attacker, allCombatants, strategy);
     if (target == null) return null;
 
-    // 1. Harm (spell_harm, Level 6)
+    // 1. Finger of Death (spell_finger_of_death, Level 7)
+    if (attacker.hasSpell('spell_finger_of_death') && _hasSlotFor(attacker, 7)) {
+      final slotLvl = _deductHighestSlot(attacker, 7)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('con', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      final rawDmg = _rollDice(7, 8) + 30;
+      int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
+      damageDealt = _applyDefensiveModifiers(damageDealt, 'necrotic', target, edition, environment);
+      attacker.totalDamageDealt += damageDealt;
+      target.applyDamage(damageDealt);
+      if (damageDealt > 0) attacker.hitsLanded++;
+
+      bool isKillShot = false;
+      if (target.isDefeated) {
+        isKillShot = true;
+        attacker.kills++;
+      }
+
+      final fatal = isKillShot ? ' — WITHERED & SLAIN BY FINGER OF DEATH!' : '';
+      String summary = saved
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+          : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Finger of Death (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: target.effectiveAc,
+          isHit: damageDealt > 0,
+          isSavingThrow: true,
+          saveDc: attacker.spellSaveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          damageDealt: damageDealt,
+          damageType: 'necrotic',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 2. Harm (spell_harm, Level 6)
     if (attacker.hasSpell('spell_harm') && _hasSlotFor(attacker, 6)) {
       final slotLvl = _deductHighestSlot(attacker, 6)!;
       attacker.attacksMade++;
@@ -1047,7 +1235,139 @@ class ArenaCombatEngine {
       ];
     }
 
-    // 2. Scorching Ray (spell_scorching_ray, Level 2)
+    // 3. Disintegrate (spell_disintegrate, Level 6)
+    if (attacker.hasSpell('spell_disintegrate') && _hasSlotFor(attacker, 6)) {
+      final slotLvl = _deductHighestSlot(attacker, 6)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('dex', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (!saved) {
+        attacker.hitsLanded++;
+        final extraDice = (slotLvl - 6) * 3;
+        final rawDmg = _rollDice(10 + extraDice, 6) + 40;
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'force', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      }
+
+      final fatal = isKillShot ? ' — DISINTEGRATED TO ASH!' : '';
+      String summary = saved
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) — avoided Disintegrate entirely!'
+          : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full $damageDealt force damage$fatal';
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Disintegrate (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: target.effectiveAc,
+          isHit: !saved,
+          isSavingThrow: true,
+          saveDc: attacker.spellSaveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          damageDealt: damageDealt,
+          damageType: 'force',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 4. Blight (spell_blight, Level 4)
+    if (attacker.hasSpell('spell_blight') && _hasSlotFor(attacker, 4)) {
+      final slotLvl = _deductHighestSlot(attacker, 4)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus('con', edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      final rawDmg = _rollDice(8 + (slotLvl - 4), 8);
+      int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
+      damageDealt = _applyDefensiveModifiers(damageDealt, 'necrotic', target, edition, environment);
+      attacker.totalDamageDealt += damageDealt;
+      target.applyDamage(damageDealt);
+      if (damageDealt > 0) attacker.hitsLanded++;
+
+      bool isKillShot = false;
+      if (target.isDefeated) {
+        isKillShot = true;
+        attacker.kills++;
+      }
+
+      final fatal = isKillShot ? ' — WITHERED & SLAIN!' : '';
+      String summary = saved
+          ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt necrotic damage$fatal'
+          : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt necrotic damage$fatal';
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Blight (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: target.effectiveAc,
+          isHit: damageDealt > 0,
+          isSavingThrow: true,
+          saveDc: attacker.spellSaveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          damageDealt: damageDealt,
+          damageType: 'necrotic',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 5. Scorching Ray (spell_scorching_ray, Level 2)
     if (attacker.hasSpell('spell_scorching_ray') && _hasSlotFor(attacker, 2)) {
       final slotLvl = _deductHighestSlot(attacker, 2)!;
       final rayCount = 3 + (slotLvl - 2);
@@ -1405,6 +1725,208 @@ class ArenaCombatEngine {
       ];
     }
 
+    // 6. Acid Arrow (spell_acid_arrow / spell_melfs_acid_arrow, Level 2)
+    if ((attacker.hasSpell('spell_acid_arrow') || attacker.hasSpell('spell_melfs_acid_arrow')) &&
+        _hasSlotFor(attacker, 2)) {
+      final slotLvl = _deductHighestSlot(attacker, 2)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final isCrit = d20 == 20;
+      final isFumble = d20 == 1;
+      final totalAttack = d20 + attacker.spellAttackBonus;
+      bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+      bool shielded = false;
+      if (isHit &&
+          !isCrit &&
+          !target.usedReactionThisRound &&
+          target.hasSpell('spell_shield') &&
+          target.hasAvailableSlots) {
+        if (totalAttack < target.effectiveAc + 5) {
+          _deductLowestSlot(target, 1);
+          target.usedReactionThisRound = true;
+          target.temporaryAcBonus += 5;
+          shielded = true;
+          isHit = false;
+        }
+      }
+
+      int damageDealt = 0;
+      bool isKillShot = false;
+
+      if (isHit) {
+        attacker.hitsLanded++;
+        if (isCrit) attacker.critsLanded++;
+
+        final baseDice = 4 + (slotLvl - 2);
+        final dice = isCrit ? (baseDice * 2) : baseDice;
+        // 4d4 initial acid (+ 2d4 secondary)
+        final rawDmg = _rollDice(dice, 4) + _rollDice(2, 4);
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'acid', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+
+        if (target.isDefeated) {
+          isKillShot = true;
+          attacker.kills++;
+        }
+      } else if (!shielded) {
+        // Miss: takes half the initial 4d4 acid damage
+        final rawDmg = (_rollDice(4, 4) / 2).floor();
+        damageDealt = _applyDefensiveModifiers(rawDmg, 'acid', target, edition, environment);
+        attacker.totalDamageDealt += damageDealt;
+        target.applyDamage(damageDealt);
+        if (damageDealt > 0) attacker.hitsLanded++;
+      }
+
+      String summary;
+      if (shielded) {
+        summary = 'PARRIED BY SHIELD! ${target.displayName} cast Shield deflecting Acid Arrow ($d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc})!';
+      } else if (isCrit) {
+        final fatal = isKillShot ? ' — DEFENDER CORRODED & SLAIN!' : '';
+        summary = 'CRITICAL HIT! (Nat 20) Acid Arrow splashed for $damageDealt acid damage$fatal';
+      } else if (isHit) {
+        final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+        summary = 'Hits (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt acid damage$fatal';
+      } else {
+        summary = 'Misses (Roll $d20 + ${attacker.spellAttackBonus} = $totalAttack vs AC ${target.effectiveAc}) — splash dealt $damageDealt acid damage.';
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: 'Acid Arrow (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: attacker.spellAttackBonus,
+          totalAttack: totalAttack,
+          targetAc: target.effectiveAc,
+          isHit: isHit || damageDealt > 0,
+          isCrit: isCrit,
+          isFumble: isFumble,
+          damageDealt: damageDealt,
+          damageType: 'acid',
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
+    // 7. Leveled AoE Fallback in Single Target (Fireball / Lightning Bolt / Cone of Cold / Cloudkill)
+    // If no single-target leveled spell is available, direct an available 3rd+ slot at the single target!
+    if ((attacker.hasSpell('spell_fireball') ||
+            attacker.hasSpell('spell_lightning_bolt') ||
+            attacker.hasSpell('spell_cone_of_cold') ||
+            attacker.hasSpell('spell_cloudkill') ||
+            attacker.hasSpell('spell_shatter')) &&
+        _hasSlotFor(attacker, 2)) {
+      final isFireball = attacker.hasSpell('spell_fireball') && _hasSlotFor(attacker, 3);
+      final isLightning = attacker.hasSpell('spell_lightning_bolt') && _hasSlotFor(attacker, 3);
+      final isConeOfCold = attacker.hasSpell('spell_cone_of_cold') && _hasSlotFor(attacker, 5);
+      final isCloudkill = attacker.hasSpell('spell_cloudkill') && _hasSlotFor(attacker, 5);
+
+      final spellName = isConeOfCold
+          ? 'Cone of Cold'
+          : (isCloudkill
+              ? 'Cloudkill'
+              : (isFireball ? 'Fireball' : (isLightning ? 'Lightning Bolt' : 'Shatter')));
+      final minLvl = isConeOfCold || isCloudkill ? 5 : (isFireball || isLightning ? 3 : 2);
+      final saveAbility = isConeOfCold || isCloudkill ? 'con' : (isFireball || isLightning ? 'dex' : 'con');
+      final dmgType = isConeOfCold ? 'cold' : (isCloudkill ? 'poison' : (isFireball ? 'fire' : (isLightning ? 'lightning' : 'thunder')));
+
+      final slotLvl = _deductHighestSlot(attacker, minLvl)!;
+      attacker.attacksMade++;
+
+      final d20 = _rollDie(20);
+      final saveBonus = target.getSavingThrowBonus(saveAbility, edition);
+      final totalSave = d20 + saveBonus;
+      final saved = totalSave >= attacker.spellSaveDc;
+
+      final hasEvasion = target.hasEvasion(edition) && saveAbility == 'dex';
+      bool evadedWithEvasion = false;
+
+      final numDice = minLvl == 5 ? 8 + (slotLvl - 5) : (minLvl == 3 ? 8 + (slotLvl - 3) : 3 + (slotLvl - 2));
+      final diceSides = minLvl == 5 ? 8 : (minLvl == 3 ? 6 : 8);
+      final rawDmg = _rollDice(numDice, diceSides);
+
+      int damageDealt;
+      if (saved) {
+        if (hasEvasion) {
+          evadedWithEvasion = true;
+          damageDealt = 0;
+        } else {
+          damageDealt = (rawDmg / 2).floor();
+        }
+      } else {
+        if (hasEvasion) {
+          damageDealt = (rawDmg / 2).floor();
+        } else {
+          damageDealt = rawDmg;
+        }
+      }
+
+      damageDealt = _applyDefensiveModifiers(damageDealt, dmgType, target, edition, environment);
+      attacker.totalDamageDealt += damageDealt;
+      target.applyDamage(damageDealt);
+      if (damageDealt > 0) attacker.hitsLanded++;
+
+      bool isKillShot = false;
+      if (target.isDefeated) {
+        isKillShot = true;
+        attacker.kills++;
+      }
+
+      final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+      String summary = evadedWithEvasion
+          ? 'EVADED! $spellName dealt 0 $dmgType damage via Evasion!'
+          : (saved
+              ? 'Saved (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took half: $damageDealt $dmgType damage$fatal'
+              : 'Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC ${attacker.spellSaveDc}) took full: $damageDealt $dmgType damage$fatal');
+
+      if (damageDealt > 0 && target.activeConcentrationSpellId != null) {
+        final conRes = target.checkConcentration(damageDealt, _rollDie, edition);
+        if (conRes.broken) {
+          final lostName = _getSpellDisplayName(conRes.lostSpellId);
+          summary += ' [Concentration on $lostName broken! (CON save ${conRes.saveRoll} vs DC ${conRes.dc})]';
+        }
+      }
+
+      return [
+        ArenaAttackEvent(
+          attackerId: attacker.id,
+          attackerName: attacker.displayName,
+          attackerTeam: attacker.team,
+          defenderId: target.id,
+          defenderName: target.displayName,
+          defenderTeam: target.team,
+          attackName: '$spellName (Slot $slotLvl)',
+          d20Roll: d20,
+          attackBonus: saveBonus,
+          totalAttack: totalSave,
+          targetAc: target.effectiveAc,
+          isHit: damageDealt > 0 || !saved,
+          isSavingThrow: true,
+          saveDc: attacker.spellSaveDc,
+          saveRoll: totalSave,
+          saved: saved,
+          evadedWithEvasion: evadedWithEvasion,
+          damageDealt: damageDealt,
+          damageType: dmgType,
+          isKillShot: isKillShot,
+          defenderRemainingHp: target.currentHp,
+          defenderMaxHp: target.maxHp,
+          summaryText: summary,
+        ),
+      ];
+    }
+
     return null;
   }
 
@@ -1435,8 +1957,11 @@ class ArenaCombatEngine {
         bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
 
         bool shielded = false;
-        if (isHit && !isCrit && !target.usedReactionThisRound &&
-            target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+        if (isHit &&
+            !isCrit &&
+            !target.usedReactionThisRound &&
+            target.hasSpell('spell_shield') &&
+            target.hasAvailableSlots) {
           if (totalAttack < target.effectiveAc + 5) {
             _deductLowestSlot(target, 1);
             target.usedReactionThisRound = true;
@@ -1524,8 +2049,11 @@ class ArenaCombatEngine {
       bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
 
       bool shielded = false;
-      if (isHit && !isCrit && !target.usedReactionThisRound &&
-          target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+      if (isHit &&
+          !isCrit &&
+          !target.usedReactionThisRound &&
+          target.hasSpell('spell_shield') &&
+          target.hasAvailableSlots) {
         if (totalAttack < target.effectiveAc + 5) {
           _deductLowestSlot(target, 1);
           target.usedReactionThisRound = true;
@@ -1667,8 +2195,9 @@ class ArenaCombatEngine {
       ];
     }
 
-    // 4. Ray of Frost (spell_ray_of_frost)
-    if (attacker.hasSpell('spell_ray_of_frost')) {
+    // 4. Ray of Frost (spell_ray_of_frost) or generic spellcaster Ray of Frost
+    if (attacker.hasSpell('spell_ray_of_frost') ||
+        (attacker.isSpellcaster && !attacker.hasSpell('spell_sacred_flame'))) {
       attacker.attacksMade++;
       final d20 = _rollDie(20);
       final isCrit = d20 == 20;
@@ -1677,8 +2206,11 @@ class ArenaCombatEngine {
       bool isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
 
       bool shielded = false;
-      if (isHit && !isCrit && !target.usedReactionThisRound &&
-          target.hasSpell('spell_shield') && target.hasAvailableSlots) {
+      if (isHit &&
+          !isCrit &&
+          !target.usedReactionThisRound &&
+          target.hasSpell('spell_shield') &&
+          target.hasAvailableSlots) {
         if (totalAttack < target.effectiveAc + 5) {
           _deductLowestSlot(target, 1);
           target.usedReactionThisRound = true;
@@ -2296,6 +2828,272 @@ class ArenaCombatEngine {
     }
 
     return max(0, workingDamage);
+  }
+
+  /// Evaluates and executes off-turn Legendary Actions for living opposing legendary combatants
+  /// at the end of another creature's turn.
+  List<ArenaAttackEvent> executeOffTurnLegendaryActions({
+    required ArenaCombatant turnCombatant,
+    required List<ArenaCombatant> allCombatants,
+    required ArenaTargetingStrategy strategy,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
+  }) {
+    final opposingLegendaries = allCombatants.where((c) =>
+        c.team != turnCombatant.team &&
+        c.isAlive &&
+        !c.isIncapacitated &&
+        c.hasLegendaryActions &&
+        c.legendaryActionsRemaining > 0).toList();
+
+    if (opposingLegendaries.isEmpty) return const [];
+
+    final events = <ArenaAttackEvent>[];
+
+    for (final legendary in opposingLegendaries) {
+      final livingEnemies = allCombatants
+          .where((c) => c.team != legendary.team && c.isAlive)
+          .toList();
+      if (livingEnemies.isEmpty) break;
+
+      final sb = legendary.getStatBlock(edition);
+      final legActions = sb.legendaryActions;
+
+      // 1. Disrupt Life (Costs 3 Actions)
+      final hasDisruptLife = legActions.any((a) => a.name.toLowerCase().contains('disrupt life')) ||
+          sb.traits.any((t) => t.description.toLowerCase().contains('disrupt life'));
+      if (hasDisruptLife && legendary.legendaryActionsRemaining >= 3 && livingEnemies.length >= 2) {
+        legendary.legendaryActionsRemaining -= 3;
+        legendary.attacksMade++;
+
+        for (final enemy in livingEnemies) {
+          final d20 = _rollDie(20);
+          final saveBonus = enemy.getSavingThrowBonus('con', edition);
+          final totalSave = d20 + saveBonus;
+          final dc = legendary.spellSaveDc > 10 ? legendary.spellSaveDc : 18;
+          final saved = totalSave >= dc;
+
+          final rawDmg = _rollDice(6, 6);
+          int damageDealt = saved ? (rawDmg / 2).floor() : rawDmg;
+          damageDealt = _applyDefensiveModifiers(damageDealt, 'necrotic', enemy, edition, environment);
+          legendary.totalDamageDealt += damageDealt;
+          enemy.applyDamage(damageDealt);
+          if (damageDealt > 0) legendary.hitsLanded++;
+
+          bool isKillShot = false;
+          if (enemy.isDefeated) {
+            isKillShot = true;
+            legendary.kills++;
+          }
+
+          final fatal = isKillShot ? ' — DESTROYED BY DISRUPT LIFE!' : '';
+          final summary = saved
+              ? '[Legendary Action (3 Actions)] Saved (Rolled $d20 + $saveBonus = $totalSave vs DC $dc) took half: $damageDealt necrotic damage$fatal'
+              : '[Legendary Action (3 Actions)] Failed Save (Rolled $d20 + $saveBonus = $totalSave vs DC $dc) took full: $damageDealt necrotic damage$fatal';
+
+          events.add(
+            ArenaAttackEvent(
+              attackerId: legendary.id,
+              attackerName: legendary.displayName,
+              attackerTeam: legendary.team,
+              defenderId: enemy.id,
+              defenderName: enemy.displayName,
+              defenderTeam: enemy.team,
+              attackName: 'Legendary Action: Disrupt Life (3 Actions)',
+              d20Roll: d20,
+              attackBonus: saveBonus,
+              totalAttack: totalSave,
+              targetAc: enemy.effectiveAc,
+              isHit: damageDealt > 0 || !saved,
+              isAoe: true,
+              isSavingThrow: true,
+              saveDc: dc,
+              saveRoll: totalSave,
+              saved: saved,
+              damageDealt: damageDealt,
+              damageType: 'necrotic',
+              isKillShot: isKillShot,
+              defenderRemainingHp: enemy.currentHp,
+              defenderMaxHp: enemy.maxHp,
+              summaryText: summary,
+            ),
+          );
+        }
+        continue;
+      }
+
+      // 2. Paralyzing Touch (Costs 2 Actions)
+      final hasParalyzingTouch = legActions.any((a) => a.name.toLowerCase().contains('paralyzing touch'));
+      if (hasParalyzingTouch && legendary.legendaryActionsRemaining >= 2) {
+        final target = selectTarget(legendary, allCombatants, strategy);
+        if (target != null) {
+          legendary.legendaryActionsRemaining -= 2;
+          legendary.attacksMade++;
+
+          final d20 = _rollDie(20);
+          final isCrit = d20 == 20;
+          final isFumble = d20 == 1;
+          final atkBonus = legendary.spellAttackBonus > 0 ? legendary.spellAttackBonus : sb.attackBonus;
+          final totalAttack = d20 + atkBonus;
+          final isHit = isCrit || (!isFumble && totalAttack >= target.effectiveAc);
+
+          int damageDealt = 0;
+          bool isKillShot = false;
+          String paralyzeMsg = '';
+
+          if (isHit) {
+            legendary.hitsLanded++;
+            if (isCrit) legendary.critsLanded++;
+
+            final dice = isCrit ? 6 : 3;
+            final rawDmg = _rollDice(dice, 6);
+            damageDealt = _applyDefensiveModifiers(rawDmg, 'cold', target, edition, environment);
+            legendary.totalDamageDealt += damageDealt;
+            target.applyDamage(damageDealt);
+
+            if (target.isDefeated) {
+              isKillShot = true;
+              legendary.kills++;
+            } else {
+              // Con save vs paralysis
+              final saveD20 = _rollDie(20);
+              final conBonus = target.getSavingThrowBonus('con', edition);
+              final saveTotal = saveD20 + conBonus;
+              final dc = legendary.spellSaveDc > 10 ? legendary.spellSaveDc : 18;
+              if (saveTotal < dc) {
+                target.applyCondition(ArenaCondition.paralyzed, _rollDie, edition, durationRounds: 10, source: 'Paralyzing Touch');
+                paralyzeMsg = ' — FAILED Con Save ($saveTotal vs DC $dc) and is PARALYZED!';
+              } else {
+                paralyzeMsg = ' — Saved against paralysis ($saveTotal vs DC $dc).';
+              }
+            }
+          }
+
+          final fatal = isKillShot ? ' — DEFENDER SLAIN!' : '';
+          final summary = isHit
+              ? '[Legendary Action (2 Actions)] Hits (Roll $d20 + $atkBonus = $totalAttack vs AC ${target.effectiveAc}) for $damageDealt cold damage$fatal$paralyzeMsg'
+              : '[Legendary Action (2 Actions)] Misses (Roll $d20 + $atkBonus = $totalAttack vs AC ${target.effectiveAc}).';
+
+          events.add(
+            ArenaAttackEvent(
+              attackerId: legendary.id,
+              attackerName: legendary.displayName,
+              attackerTeam: legendary.team,
+              defenderId: target.id,
+              defenderName: target.displayName,
+              defenderTeam: target.team,
+              attackName: 'Legendary Action: Paralyzing Touch (2 Actions)',
+              d20Roll: d20,
+              attackBonus: atkBonus,
+              totalAttack: totalAttack,
+              targetAc: target.effectiveAc,
+              isHit: isHit,
+              isCrit: isCrit,
+              isFumble: isFumble,
+              damageDealt: damageDealt,
+              damageType: 'cold',
+              isKillShot: isKillShot,
+              defenderRemainingHp: target.currentHp,
+              defenderMaxHp: target.maxHp,
+              summaryText: summary,
+            ),
+          );
+          continue;
+        }
+      }
+
+      // 3. Cantrip (Costs 1 Action)
+      final hasCantrip = legActions.any((a) => a.name.toLowerCase().contains('cantrip')) || legendary.isSpellcaster;
+      if (hasCantrip && legendary.legendaryActionsRemaining >= 1) {
+        final cantripEvents = _evaluateCantrips(
+          attacker: legendary,
+          allCombatants: allCombatants,
+          strategy: strategy,
+          edition: edition,
+          environment: environment,
+        );
+        if (cantripEvents != null && cantripEvents.isNotEmpty) {
+          legendary.legendaryActionsRemaining -= 1;
+          for (final ev in cantripEvents) {
+            events.add(
+              ArenaAttackEvent(
+                attackerId: ev.attackerId,
+                attackerName: ev.attackerName,
+                attackerTeam: ev.attackerTeam,
+                defenderId: ev.defenderId,
+                defenderName: ev.defenderName,
+                defenderTeam: ev.defenderTeam,
+                attackName: '[Legendary Action] ${ev.attackName}',
+                d20Roll: ev.d20Roll,
+                attackBonus: ev.attackBonus,
+                totalAttack: ev.totalAttack,
+                targetAc: ev.targetAc,
+                isHit: ev.isHit,
+                isCrit: ev.isCrit,
+                isFumble: ev.isFumble,
+                isAoe: ev.isAoe,
+                isSavingThrow: ev.isSavingThrow,
+                saveDc: ev.saveDc,
+                saveRoll: ev.saveRoll,
+                saved: ev.saved,
+                evadedWithEvasion: ev.evadedWithEvasion,
+                damageDealt: ev.damageDealt,
+                damageType: ev.damageType,
+                isKillShot: ev.isKillShot,
+                defenderRemainingHp: ev.defenderRemainingHp,
+                defenderMaxHp: ev.defenderMaxHp,
+                summaryText: '[Legendary Action (1 Action)] ${ev.summaryText}',
+              ),
+            );
+          }
+          continue;
+        }
+      }
+
+      // 4. Fallback: Standard Legendary Attack Action (Tail Attack, Wing Attack, Claw/Bite)
+      final dprAttacks = sb.extractDprAttacks().where((a) => a.isLegendaryAction || legActions.any((la) => la.name.toLowerCase().contains(a.name.toLowerCase()))).toList();
+      if (dprAttacks.isNotEmpty && legendary.legendaryActionsRemaining >= 1) {
+        final attack = dprAttacks.first;
+        final target = selectTarget(legendary, allCombatants, strategy, attack);
+        if (target != null) {
+          legendary.legendaryActionsRemaining -= 1;
+          final event = _resolveSingleAttack(
+            attacker: legendary,
+            defender: target,
+            attack: attack,
+            allCombatants: allCombatants,
+            edition: edition,
+            environment: environment,
+          );
+          events.add(
+            ArenaAttackEvent(
+              attackerId: event.attackerId,
+              attackerName: event.attackerName,
+              attackerTeam: event.attackerTeam,
+              defenderId: event.defenderId,
+              defenderName: event.defenderName,
+              defenderTeam: event.defenderTeam,
+              attackName: '[Legendary Action] ${event.attackName}',
+              d20Roll: event.d20Roll,
+              attackBonus: event.attackBonus,
+              totalAttack: event.totalAttack,
+              targetAc: event.targetAc,
+              isHit: event.isHit,
+              isCrit: event.isCrit,
+              isFumble: event.isFumble,
+              damageDealt: event.damageDealt,
+              damageType: event.damageType,
+              isKillShot: event.isKillShot,
+              defenderRemainingHp: event.defenderRemainingHp,
+              defenderMaxHp: event.defenderMaxHp,
+              summaryText: '[Legendary Action] ${event.summaryText}',
+            ),
+          );
+        }
+      }
+    }
+
+    return events;
   }
 
   /// Simulates an entire battle to the end, returning all round steps and final result.

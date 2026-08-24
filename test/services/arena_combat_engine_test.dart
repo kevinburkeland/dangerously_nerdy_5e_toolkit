@@ -612,6 +612,218 @@ void main() {
       expect(hoverCombatant.altitudeInFeet, 20);
       expect(hoverCombatant.isParalyzed, true);
     });
+
+    test('High-Tier Optimization: Lich vs 4 Gladiators completes in under 5 rounds on average with active 1st-5th slot utilization and legendary actions', () {
+      final lichMonster = MonsterCodexLibrary.getMonsterByName('Lich') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('lich'));
+      final gladiatorMonster = MonsterCodexLibrary.getMonsterByName('Gladiator') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('gladiator'));
+
+      final lich = ArenaCombatant.fromMonster(
+        id: 'lich_boss',
+        monster: lichMonster,
+        team: ArenaTeam.teamA,
+      );
+
+      final gladiators = List.generate(
+        4,
+        (i) => ArenaCombatant.fromMonster(
+          id: 'gladiator_$i',
+          monster: gladiatorMonster,
+          team: ArenaTeam.teamB,
+          customName: 'Gladiator #${i + 1}',
+        ),
+      );
+
+      expect(lich.isSpellcaster, true);
+      expect(lich.hasLegendaryActions, true);
+      expect(lich.knownSpellIds.contains('spell_fireball'), true);
+      expect(lich.knownSpellIds.contains('spell_blight'), true);
+      expect(lich.knownSpellIds.contains('spell_finger_of_death'), true);
+
+      // Run Monte Carlo simulation of 100 battles
+      final mcResult = engine.runMonteCarlo(
+        teamA: [lich],
+        teamB: gladiators,
+        iterations: 100,
+      );
+
+      // Total battle duration should be well under 5 rounds on average (was 30+ rounds previously!)
+      expect(mcResult.averageRounds, lessThanOrEqualTo(5.0), reason: 'Average battle duration should be <= 5 rounds');
+      expect(mcResult.teamAWinRate, greaterThan(75.0), reason: 'Lich (CR 21) should decisively defeat 4 Gladiators (CR 5)');
+
+      // Verify a single match step history
+      final singleMatch = engine.simulateMatch(
+        initialTeamA: [lich],
+        initialTeamB: gladiators,
+      );
+
+      expect(singleMatch.totalRounds, lessThanOrEqualTo(5));
+
+      // Verify spellcasting and legendary actions took place in steps
+      final allEvents = singleMatch.steps.expand((s) => s.attackEvents).toList();
+      final hasLegendaryEvent = allEvents.any((e) => e.attackName.toLowerCase().contains('legendary'));
+      expect(hasLegendaryEvent, true, reason: 'Lich should execute off-turn legendary actions');
+
+      final spellEvents = allEvents.where((e) =>
+          e.attackName.contains('Disintegrate') ||
+          e.attackName.contains('Fireball') ||
+          e.attackName.contains('Blight') ||
+          e.attackName.contains('Finger of Death') ||
+          e.attackName.contains('Cloudkill') ||
+          e.attackName.contains('Power Word Kill') ||
+          e.attackName.contains('Ray of Frost')).toList();
+
+      expect(spellEvents.isNotEmpty, true, reason: 'Lich should actively cast leveled offensive spells and cantrips');
+    });
+
+    test('Off-turn Legendary Actions trigger and consume legendary actions pool', () {
+      final lichMonster = MonsterCodexLibrary.getMonsterByName('Lich') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('lich'));
+
+      final lich = ArenaCombatant.fromMonster(
+        id: 'lich_test',
+        monster: lichMonster,
+        team: ArenaTeam.teamA,
+      );
+
+      final gladiator = ArenaCombatant.fromMonster(
+        id: 'glad_test',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      expect(lich.hasLegendaryActions, true);
+      expect(lich.legendaryActionsRemaining, 3);
+
+      // Opponent takes turn
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: gladiator,
+        allCombatants: [lich, gladiator],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Legendary actions should have been triggered off-turn
+      final legEvents = step.attackEvents.where((e) => e.attackName.contains('Legendary')).toList();
+      expect(legEvents.isNotEmpty, true);
+      expect(lich.legendaryActionsRemaining, lessThan(3));
+    });
+
+    test('Spellcaster upcasts Fireball and Blight into higher slots when base slot is empty', () {
+      final caster = ArenaCombatant.fromMonster(
+        id: 'mage',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      caster.knownSpellIds.addAll(['spell_fireball', 'spell_blight']);
+      // Empty 3rd and 4th level slots, but grant 5th level slots
+      caster.maxSpellSlots[3] = 0;
+      caster.currentSpellSlots[3] = 0;
+      caster.maxSpellSlots[4] = 0;
+      caster.currentSpellSlots[4] = 0;
+      caster.maxSpellSlots[5] = 2;
+      caster.currentSpellSlots[5] = 2;
+
+      final gladiatorMonster = MonsterCodexLibrary.getMonsterByName('Gladiator') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('gladiator'));
+
+      final enemies = List.generate(
+        3,
+        (i) => ArenaCombatant.fromMonster(
+          id: 'foe_$i',
+          monster: gladiatorMonster,
+          team: ArenaTeam.teamB,
+        ),
+      );
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: caster,
+        allCombatants: [caster, ...enemies],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Should have upcast Fireball into slot 5
+      expect(caster.currentSpellSlots[5], 1);
+      expect(step.attackEvents.any((e) => e.attackName.contains('Fireball (Slot 5)')), true);
+    });
+
+    test('Concentration on defensive spell does not block instantaneous leveled damage spells', () {
+      final caster = ArenaCombatant.fromMonster(
+        id: 'caster',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      caster.knownSpellIds.addAll(['spell_globe_of_invulnerability', 'spell_fireball', 'spell_finger_of_death']);
+      caster.maxSpellSlots[7] = 2;
+      caster.currentSpellSlots[7] = 2;
+      caster.maxSpellSlots[3] = 2;
+      caster.currentSpellSlots[3] = 2;
+
+      // Simulate active concentration
+      caster.activeConcentrationSpellId = 'spell_globe_of_invulnerability';
+
+      final enemy = ArenaCombatant.fromMonster(
+        id: 'enemy_single',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: caster,
+        allCombatants: [caster, enemy],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      // Should still cast Finger of Death or Fireball without breaking or being locked
+      expect(caster.activeConcentrationSpellId, 'spell_globe_of_invulnerability');
+      expect(step.attackEvents.any((e) => e.attackName.contains('Finger of Death') || e.attackName.contains('Fireball')), true);
+    });
+
+    test('Audit all Monster Codex spellcasters: verify spell slots, known spells, and DC/attack bonuses', () {
+      final spellcasterMonsters = <String>[];
+      final failedSpellcasters = <String>[];
+
+      for (final monster in MonsterCodexLibrary.allMonsters) {
+        final sb = monster.getStatBlock(DmRulesEdition.v2024);
+        final corpus = sb.traits.map((t) => '${t.name}: ${t.description}').join('\n').toLowerCase();
+
+        final mentionsSpellcasting = corpus.contains('spellcaster') ||
+            corpus.contains('spellcasting') ||
+            corpus.contains('innate spell') ||
+            corpus.contains('pact magic');
+
+        if (mentionsSpellcasting) {
+          final combatant = ArenaCombatant.fromMonster(
+            id: 'audit_${monster.id}',
+            monster: monster,
+            team: ArenaTeam.teamA,
+          );
+
+          spellcasterMonsters.add('${monster.name} (CR ${monster.challengeRating}) -> Slots: ${combatant.maxSpellSlots}, Known Spells: ${combatant.knownSpellIds.length}');
+
+          if (!combatant.isSpellcaster || (combatant.maxSpellSlots.isEmpty && combatant.knownSpellIds.isEmpty)) {
+            failedSpellcasters.add('${monster.name} (${monster.id}) failed to parse spell slots or known spells');
+          }
+        }
+      }
+
+      // Print all audited spellcasters
+      // ignore: avoid_print
+      print('=== AUDITED ${spellcasterMonsters.length} SPELLCASTERS IN MONSTER CODEX ===');
+      for (final sc in spellcasterMonsters) {
+        // ignore: avoid_print
+        print(sc);
+      }
+
+      expect(failedSpellcasters, isEmpty, reason: 'All monsters with spellcasting traits should have non-empty parsed spells or slots');
+      expect(spellcasterMonsters.length, greaterThanOrEqualTo(10));
+    });
   });
 }
 
