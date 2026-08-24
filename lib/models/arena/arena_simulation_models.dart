@@ -17,13 +17,13 @@ enum ArenaEnvironment {
   ),
   cageMatch(
     'Iron Cage Match',
-    'Enclosed iron cage with a 10-ft ceiling. Flight is grounded and aerial advantages are disabled.',
+    'Enclosed iron cage with a 10-ft ceiling. Flight is grounded, close-quarters melee is prioritized, and ranged attacks suffer disadvantage.',
     Icons.grid_4x4,
     Color(0xFF94A3B8),
     [
       '🚫 Flight Grounded',
-      '⚔️ Normal Melee Reach',
-      '🛡️ No Aerial Strafing',
+      '⚔️ Close-Quarters Melee Focused',
+      '🎯 Close Combat Ranged Disadvantage',
     ],
   ),
   floodedAbyss(

@@ -201,7 +201,7 @@ class ArenaCombatEngine {
     }
 
     // 3. Physical Attack Routine (Fallback if no offensive spell was cast)
-    final actionsToExecute = _selectAttacksForTurn(attacker, attacks, sb);
+    final actionsToExecute = _selectAttacksForTurn(attacker, attacks, sb, environment: environment);
 
     for (final attack in actionsToExecute) {
       final isAoE = attack.isAoe ||
@@ -2444,8 +2444,9 @@ class ArenaCombatEngine {
   List<DprAttackAction> _selectAttacksForTurn(
     ArenaCombatant attacker,
     List<DprAttackAction> allAttacks,
-    MinionStatBlock sb,
-  ) {
+    MinionStatBlock sb, {
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
+  }) {
     if (allAttacks.isEmpty) {
       // Fallback to basic stat block attacks if DPR extraction was empty
       return [
@@ -2462,8 +2463,24 @@ class ArenaCombatEngine {
       ];
     }
 
+    // Cage Match Environmental Filter:
+    // In an enclosed 10-ft Iron Cage Match, combatants are locked in point-blank melee.
+    // If the monster has melee weapon options (e.g. Scimitar vs Shortbow), prioritize melee attacks.
+    var candidateAttacks = allAttacks;
+    if (environment == ArenaEnvironment.cageMatch) {
+      final meleeOptions = allAttacks
+          .where((a) =>
+              a.attackType == AttackType.meleeStandard ||
+              a.attackType == AttackType.meleeReach ||
+              (a.attackType != AttackType.rangedWeapon && a.attackType != AttackType.rangedSpell))
+          .toList();
+      if (meleeOptions.isNotEmpty) {
+        candidateAttacks = meleeOptions;
+      }
+    }
+
     // Check if recharge attack is ready and available
-    final rechargeAttack = allAttacks.where((a) => a.rechargeRoll != null).firstOrNull;
+    final rechargeAttack = candidateAttacks.where((a) => a.rechargeRoll != null).firstOrNull;
     if (rechargeAttack != null && attacker.isRechargeReady) {
       attacker.isRechargeReady = false;
       return [rechargeAttack];
@@ -2471,7 +2488,7 @@ class ArenaCombatEngine {
 
     // Standard turn attacks (excluding legendary action standalone triggers and recharge attacks)
     // Only select attacks that are part of the monster's active multiattack routine (attacksPerRound > 0)
-    final activeAttacks = allAttacks
+    final activeAttacks = candidateAttacks
         .where((a) => !a.isLegendaryAction && a.rechargeRoll == null && a.attacksPerRound > 0)
         .toList();
 
@@ -2486,12 +2503,12 @@ class ArenaCombatEngine {
     }
 
     // Fallback: If no attack has attacksPerRound > 0, pick the single best standard attack
-    final standardAttacks = allAttacks.where((a) => !a.isLegendaryAction && a.rechargeRoll == null).toList();
+    final standardAttacks = candidateAttacks.where((a) => !a.isLegendaryAction && a.rechargeRoll == null).toList();
     if (standardAttacks.isNotEmpty) {
       return [standardAttacks.first.copyWith(attacksPerRound: 1)];
     }
 
-    return allAttacks.take(1).map((a) => a.copyWith(attacksPerRound: 1)).toList();
+    return candidateAttacks.take(1).map((a) => a.copyWith(attacksPerRound: 1)).toList();
   }
 
   /// Resolves an Area of Effect (AoE) attack hitting a dynamic number of opponents based on DMG p.249 Theater-of-the-Mind.
@@ -2695,6 +2712,12 @@ class ArenaCombatEngine {
     bool conditionAdvantage = false;
     bool conditionDisadvantage = false;
 
+    // Cage Match (10-ft enclosed cage) close-quarters disadvantage for ranged attacks
+    bool cageMatchDisadvantage = false;
+    if (environment == ArenaEnvironment.cageMatch && isRangedAttack) {
+      cageMatchDisadvantage = true;
+    }
+
     if (defender.isParalyzed || defender.isStunned || defender.isUnconscious || defender.hasCondition(ArenaCondition.restrained)) {
       conditionAdvantage = true;
     }
@@ -2714,8 +2737,9 @@ class ArenaCombatEngine {
     final hasAdvantage = (packTacticsAdvantage || flightAdvantage || aquaticAdvantage || conditionAdvantage) &&
         !flightDisadvantage &&
         !aquaticDisadvantage &&
-        !conditionDisadvantage;
-    final hasDisadvantage = (flightDisadvantage || aquaticDisadvantage || conditionDisadvantage) &&
+        !conditionDisadvantage &&
+        !cageMatchDisadvantage;
+    final hasDisadvantage = (flightDisadvantage || aquaticDisadvantage || conditionDisadvantage || cageMatchDisadvantage) &&
         !packTacticsAdvantage &&
         !flightAdvantage &&
         !aquaticAdvantage &&

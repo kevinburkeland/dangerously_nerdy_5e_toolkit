@@ -925,6 +925,38 @@ void main() {
 
       expect(turnResult.attackEvents.isNotEmpty, true);
     });
+
+    test('Cage Match Arena: Goblin prioritizes Scimitar (melee) over Shortbow (ranged)', () {
+      final engine = ArenaCombatEngine(rng: Random(42));
+      final goblinMonster = MonsterCodexLibrary.getMonsterByName('Goblin') ??
+          MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'goblin');
+
+      final goblin = ArenaCombatant.fromMonster(
+        id: 'goblin_1',
+        monster: goblinMonster,
+        team: ArenaTeam.teamA,
+      );
+      final wolf = ArenaCombatant.fromMonster(
+        id: 'wolf_1',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final turnResult = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: goblin,
+        allCombatants: [goblin, wolf],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+        environment: ArenaEnvironment.cageMatch,
+      );
+
+      expect(turnResult.attackEvents.length, 1);
+      final attack = turnResult.attackEvents.first;
+      expect(attack.attackName.toLowerCase().contains('scimitar'), true,
+          reason: 'In Cage Match, Goblin should choose melee Scimitar instead of ranged Shortbow');
+      expect(attack.attackName.toLowerCase().contains('shortbow'), false);
+    });
   });
 }
 
