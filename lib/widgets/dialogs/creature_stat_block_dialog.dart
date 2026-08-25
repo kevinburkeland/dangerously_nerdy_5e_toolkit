@@ -8,17 +8,20 @@ import '../monster_codex/creature_dpr_view.dart';
 class CreatureStatBlockDialog extends StatefulWidget {
   final MinionStatBlock statBlock;
   final VoidCallback? onAddToSquad;
+  final String? addToSquadLabel;
 
   const CreatureStatBlockDialog({
     super.key,
     required this.statBlock,
     this.onAddToSquad,
+    this.addToSquadLabel,
   });
 
   static Future<void> show(
     BuildContext context, {
     required MinionStatBlock statBlock,
     VoidCallback? onAddToSquad,
+    String? addToSquadLabel,
   }) {
     HapticService.selectionTick(context);
     return showDialog<void>(
@@ -26,6 +29,7 @@ class CreatureStatBlockDialog extends StatefulWidget {
       builder: (ctx) => CreatureStatBlockDialog(
         statBlock: statBlock,
         onAddToSquad: onAddToSquad,
+        addToSquadLabel: addToSquadLabel,
       ),
     );
   }
@@ -492,7 +496,7 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('ADD TO SQUAD'),
+                        label: Text(widget.addToSquadLabel ?? 'ADD TO SQUAD'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: sb.accentColor,
                           foregroundColor: Colors.white,

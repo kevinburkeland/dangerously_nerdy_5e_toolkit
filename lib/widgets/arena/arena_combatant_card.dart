@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/dm_screen_data.dart';
+import '../dialogs/creature_stat_block_dialog.dart';
 import 'arena_combatant_token.dart';
 import 'arena_condition_chip.dart';
 import 'arena_condition_toggle_dialog.dart';
@@ -104,6 +105,12 @@ class ArenaCombatantCard extends StatelessWidget {
                   edition: edition,
                   showConditionChips: false,
                   onConditionsChanged: onConditionsChanged,
+                  onTap: () {
+                    CreatureStatBlockDialog.show(
+                      context,
+                      statBlock: sb,
+                    );
+                  },
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -286,6 +293,22 @@ class ArenaCombatantCard extends StatelessWidget {
                 ),
                 if (isSetupMode) ...[
                   IconButton(
+                    icon: Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                    tooltip: '${combatant.displayName} Codex Card',
+                    onPressed: () {
+                      CreatureStatBlockDialog.show(
+                        context,
+                        statBlock: sb,
+                      );
+                    },
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.copy, size: 16),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
@@ -300,6 +323,22 @@ class ArenaCombatantCard extends StatelessWidget {
                     onPressed: onRemove,
                   ),
                 ] else ...[
+                  IconButton(
+                    icon: Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                    tooltip: '${combatant.displayName} Codex Card',
+                    onPressed: () {
+                      CreatureStatBlockDialog.show(
+                        context,
+                        statBlock: sb,
+                      );
+                    },
+                  ),
                   IconButton(
                     icon: Icon(
                       combatant.conditions.isNotEmpty

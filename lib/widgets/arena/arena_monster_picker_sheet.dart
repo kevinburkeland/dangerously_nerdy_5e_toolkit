@@ -3,6 +3,7 @@ import '../../models/arena/arena_combatant.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../dialogs/creature_stat_block_dialog.dart';
 import '../glyphs/dnd_glyph.dart';
 
 /// Modal bottom sheet allowing users to search, filter, and add monsters to an Arena team.
@@ -333,43 +334,87 @@ class _ArenaMonsterPickerSheetState extends State<ArenaMonsterPickerSheet> {
                       final monster = monsters[index];
                       final sb = monster.getStatBlock(widget.edition);
 
-                      return ListTile(
-                        leading: DndGlyph.monster(
-                          creatureType: sb.glyphCreatureType,
-                          crTier: sb.glyphCrTier,
-                          actionRings: sb.glyphActionRings,
-                          glyphColor: teamColor,
-                          size: 38,
-                          isDarkMode: isDark,
-                        ),
-                        title: Text(
-                          monster.getName(widget.edition),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        subtitle: Text(
-                          'CR ${sb.crDisplay} • HP ${sb.maxHp} • AC ${sb.ac} • ${sb.typeDisplay}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.white60 : Colors.black54,
+                      final monsterName = monster.getName(widget.edition);
+
+                      return Material(
+                        color: Colors.transparent,
+                        child: ListTile(
+                          leading: DndGlyph.monster(
+                            creatureType: sb.glyphCreatureType,
+                            crTier: sb.glyphCrTier,
+                            actionRings: sb.glyphActionRings,
+                            glyphColor: teamColor,
+                            size: 38,
+                            isDarkMode: isDark,
                           ),
-                        ),
-                        trailing: ElevatedButton.icon(
-                          icon: const Icon(Icons.add, size: 16),
-                          label: Text(_selectedCount > 1 ? 'Add ($_selectedCount)' : 'Add'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: teamColor.withAlpha(35),
-                            foregroundColor: teamColor,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: BorderSide(color: teamColor.withAlpha(120)),
+                          title: Text(
+                            monsterName,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            'CR ${sb.crDisplay} • HP ${sb.maxHp} • AC ${sb.ac} • ${sb.typeDisplay}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white60 : Colors.black54,
                             ),
                           ),
-                          onPressed: () {
-                            widget.onMonstersSelected(monster, _selectedCount);
-                            Navigator.pop(context);
+                          onTap: () {
+                            CreatureStatBlockDialog.show(
+                              context,
+                              statBlock: sb,
+                              addToSquadLabel: 'ADD TO ${widget.team.label.toUpperCase()}',
+                              onAddToSquad: () {
+                                widget.onMonstersSelected(monster, _selectedCount);
+                                Navigator.pop(context);
+                              },
+                            );
                           },
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                  color: teamColor.withAlpha(isDark ? 220 : 200),
+                                ),
+                                tooltip: '$monsterName Codex Card',
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                onPressed: () {
+                                  CreatureStatBlockDialog.show(
+                                    context,
+                                    statBlock: sb,
+                                    addToSquadLabel: 'ADD TO ${widget.team.label.toUpperCase()}',
+                                    onAddToSquad: () {
+                                      widget.onMonstersSelected(monster, _selectedCount);
+                                      Navigator.pop(context);
+                                    },
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 4),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.add, size: 16),
+                                label: Text(_selectedCount > 1 ? 'Add ($_selectedCount)' : 'Add'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: teamColor.withAlpha(35),
+                                  foregroundColor: teamColor,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    side: BorderSide(color: teamColor.withAlpha(120)),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  widget.onMonstersSelected(monster, _selectedCount);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },

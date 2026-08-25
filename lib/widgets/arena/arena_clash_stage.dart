@@ -3,6 +3,7 @@ import '../../models/arena/arena_action_result.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
 import '../../models/dm_screen_data.dart';
+import '../dialogs/creature_stat_block_dialog.dart';
 import 'arena_combatant_token.dart';
 
 
@@ -386,6 +387,12 @@ class ArenaClashStage extends StatelessWidget {
               isCurrentTurn: isAttacking,
               edition: edition,
               showConditionChips: true,
+              onTap: () {
+                CreatureStatBlockDialog.show(
+                  context,
+                  statBlock: combatant.getStatBlock(edition),
+                );
+              },
             ),
             Positioned(
               top: -6,
@@ -408,18 +415,41 @@ class ArenaClashStage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 100),
-          child: Text(
-            combatant.displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 86),
+              child: Text(
+                combatant.displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 2),
+            InkWell(
+              onTap: () {
+                CreatureStatBlockDialog.show(
+                  context,
+                  statBlock: combatant.getStatBlock(edition),
+                );
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Icon(
+                  Icons.info_outline,
+                  size: 13,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+            ),
+          ],
         ),
         Text(
           'HP ${combatant.currentHp}/${combatant.maxHp}',
