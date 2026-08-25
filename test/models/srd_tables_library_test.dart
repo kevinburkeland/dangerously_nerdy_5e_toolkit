@@ -41,7 +41,7 @@ void main() {
     });
 
     test('Trinkets table has complete 100 entries with no gaps', () {
-      final table = SrdLootTables.trinketsTable;
+      const table = SrdLootTables.trinketsTable;
       expect(table.entries.length, 100);
       for (int i = 1; i <= 100; i++) {
         final matches = table.entries.where((e) => e.matchesRoll(i));
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('Wild Magic Surge table covers all rolls 1 through 100', () {
-      final table = SrdMagicTables.wildMagicSurge;
+      const table = SrdMagicTables.wildMagicSurge;
       for (int i = 1; i <= 100; i++) {
         final matches = table.entries.where((e) => e.matchesRoll(i));
         expect(matches.length, 1, reason: 'Roll $i should match a wild magic surge outcome');

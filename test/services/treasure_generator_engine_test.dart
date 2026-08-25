@@ -49,14 +49,14 @@ void main() {
     });
 
     test('calculateShares with includeLiquidatedGemsAndArt computes accurate gold appraisal', () {
-      final drop = TreasureDropResult(
+      const drop = TreasureDropResult(
         tierLabel: 'CR 5–10',
         isHoard: true,
         gp: 1000,
-        gemstones: const [
+        gemstones: [
           GemArtItem(name: 'Diamond', gpValue: 5000, category: '5000 gp Gem', count: 1),
         ],
-        artObjects: const [
+        artObjects: [
           GemArtItem(name: 'Gold Chalice', gpValue: 250, category: '250 gp Art', count: 2),
         ],
         d100Roll: 50,

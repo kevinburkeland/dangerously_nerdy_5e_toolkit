@@ -173,8 +173,6 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
   }
 
   Widget _buildResultCard(BuildContext context, TreasureDropResult drop, bool isDark) {
-    final theme = Theme.of(context);
-
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF13151F) : Colors.white,
@@ -405,7 +403,7 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
                                 onPressed: () {
-                                  final item = (itemId != null ? MagicItemLibrary.findById(itemId) : null) ??
+                                  final item = MagicItemLibrary.findById(itemId) ??
                                       MagicItemLibrary.findByName(itemName);
 
                                   if (item != null) {
@@ -502,11 +500,11 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.group, color: Colors.cyanAccent, size: 20),
-                  const SizedBox(width: 8),
-                  const Text(
+                  Icon(Icons.group, color: Colors.cyanAccent, size: 20),
+                  SizedBox(width: 8),
+                  Text(
                     'Party Share Calculator',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
@@ -588,7 +586,7 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'EACH PLAYER RECEIVES:',
                   style: TextStyle(
                     fontSize: 10,

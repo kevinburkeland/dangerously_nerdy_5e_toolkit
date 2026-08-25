@@ -261,8 +261,8 @@ class _QuickRollerCardState extends State<QuickRollerCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.psychology, color: accentColor, size: 20),
               SizedBox(width: 8),
               Text(
