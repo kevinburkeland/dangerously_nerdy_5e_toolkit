@@ -17,8 +17,8 @@ void main() {
       expect(duplicates, isEmpty, reason: 'Duplicate item IDs found: $duplicates');
     });
 
-    test('verifies all 10 item categories are populated with substantial depth', () {
-      expect(ItemCategory.values.length, equals(10));
+    test('verifies all 13 item categories are populated with substantial depth', () {
+      expect(ItemCategory.values.length, equals(13));
       for (final cat in ItemCategory.values) {
         final itemsInCat = MagicItemLibrary.getByCategory(cat);
         expect(itemsInCat, isNotEmpty, reason: 'Category ${cat.name} should have items');
@@ -32,6 +32,22 @@ void main() {
           expect(item.tags, isNotEmpty);
         }
       }
+    });
+
+    test('verifies SRD loot items (gemstones, art objects, trinkets) are in the Item Codex', () {
+      final diamond = MagicItemLibrary.findById('gem_diamond');
+      expect(diamond, isNotNull);
+      expect(diamond!.category, equals(ItemCategory.gemstone));
+      expect(diamond.cost, equals('5000 GP'));
+
+      final goldChain = MagicItemLibrary.findById('art_fine_gold_chain_with_fire_opal_pendant');
+      expect(goldChain, isNotNull);
+      expect(goldChain!.category, equals(ItemCategory.artObject));
+      expect(goldChain.cost, equals('2500 GP'));
+
+      final trinket01 = MagicItemLibrary.findById('trinket_01');
+      expect(trinket01, isNotNull);
+      expect(trinket01!.category, equals(ItemCategory.trinket));
     });
 
     test('verifies nonmagical items and specific armor/weapon types exist', () {

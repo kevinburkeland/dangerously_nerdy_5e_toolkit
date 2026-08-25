@@ -180,7 +180,13 @@ enum ItemCategory {
   wondrousItem('Wondrous Item', Color(0xFFEC4899), Color(0xFFFDF2F8),
       Color(0xFF831843), GlyphFrameShape.crest),
   adventuringGear('Adventuring Gear', Color(0xFF64748B), Color(0xFFF8FAFC),
-      Color(0xFF0F172A), GlyphFrameShape.heavyHex);
+      Color(0xFF0F172A), GlyphFrameShape.heavyHex),
+  gemstone('Gemstone', Color(0xFF06B6D4), Color(0xFFECFEFF),
+      Color(0xFF164E63), GlyphFrameShape.diamond),
+  artObject('Art Object', Color(0xFFC084FC), Color(0xFFFAF5FF),
+      Color(0xFF581C87), GlyphFrameShape.crest),
+  trinket('Trinket', Color(0xFF10B981), Color(0xFFECFDF5),
+      Color(0xFF064E3B), GlyphFrameShape.circle);
 
   final String displayName;
   final Color primaryColor;
@@ -209,6 +215,9 @@ enum ItemCategory {
         ItemCategory.wand => const Color(0xFFBE123C),
         ItemCategory.wondrousItem => const Color(0xFFBE185D),
         ItemCategory.adventuringGear => const Color(0xFF475569),
+        ItemCategory.gemstone => const Color(0xFF0891B2),
+        ItemCategory.artObject => const Color(0xFF9333EA),
+        ItemCategory.trinket => const Color(0xFF059669),
       };
     }
     return switch (this) {
@@ -222,6 +231,9 @@ enum ItemCategory {
       ItemCategory.wand => const Color(0xFFFB7185),
       ItemCategory.wondrousItem => const Color(0xFFF472B6),
       ItemCategory.adventuringGear => const Color(0xFF94A3B8),
+      ItemCategory.gemstone => const Color(0xFF22D3EE),
+      ItemCategory.artObject => const Color(0xFFC084FC),
+      ItemCategory.trinket => const Color(0xFF34D399),
     };
   }
 
@@ -238,6 +250,9 @@ enum ItemCategory {
         ItemCategory.wand => Icons.auto_fix_normal_outlined,
         ItemCategory.wondrousItem => Icons.diamond_outlined,
         ItemCategory.adventuringGear => Icons.backpack_outlined,
+        ItemCategory.gemstone => Icons.diamond_outlined,
+        ItemCategory.artObject => Icons.palette_outlined,
+        ItemCategory.trinket => Icons.stars_outlined,
       };
 }
 

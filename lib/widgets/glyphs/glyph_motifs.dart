@@ -1089,6 +1089,70 @@ class GlyphMotifs {
           primaryLine,
         );
         break;
+
+      case ItemCategory.gemstone:
+        // FACETED GEMSTONE & REFRACTIVE MATRIX
+        final gemPath = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy - 2.0 * scale)
+          ..lineTo(center.dx - 2.2 * scale, center.dy - 5.0 * scale)
+          ..lineTo(center.dx + 2.2 * scale, center.dy - 5.0 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 2.0 * scale)
+          ..lineTo(center.dx, center.dy + 5.5 * scale)
+          ..close();
+        canvas.drawPath(gemPath, primaryLine);
+
+        // Internal facet lines
+        canvas.drawLine(
+          Offset(center.dx - 4.5 * scale, center.dy - 2.0 * scale),
+          Offset(center.dx + 4.5 * scale, center.dy - 2.0 * scale),
+          fineLine,
+        );
+        canvas.drawLine(
+          Offset(center.dx - 2.2 * scale, center.dy - 5.0 * scale),
+          Offset(center.dx, center.dy + 5.5 * scale),
+          fineLine,
+        );
+        canvas.drawLine(
+          Offset(center.dx + 2.2 * scale, center.dy - 5.0 * scale),
+          Offset(center.dx, center.dy + 5.5 * scale),
+          fineLine,
+        );
+        canvas.drawCircle(center, 1.2 * scale, nodeFill);
+        break;
+
+      case ItemCategory.artObject:
+        // ARTISAN FILIGREE CHALICE & CROWN RELIC
+        final chalice = Path()
+          ..moveTo(center.dx - 4.0 * scale, center.dy - 4.5 * scale)
+          ..lineTo(center.dx + 4.0 * scale, center.dy - 4.5 * scale)
+          ..lineTo(center.dx + 3.0 * scale, center.dy)
+          ..quadraticBezierTo(center.dx, center.dy + 3.0 * scale, center.dx, center.dy + 3.0 * scale)
+          ..lineTo(center.dx, center.dy + 5.0 * scale)
+          ..lineTo(center.dx - 3.0 * scale, center.dy + 5.0 * scale)
+          ..lineTo(center.dx + 3.0 * scale, center.dy + 5.0 * scale)
+          ..moveTo(center.dx, center.dy + 3.0 * scale)
+          ..quadraticBezierTo(center.dx, center.dy + 3.0 * scale, center.dx - 3.0 * scale, center.dy)
+          ..close();
+        canvas.drawPath(chalice, primaryLine);
+        canvas.drawCircle(center - Offset(0, 2.0 * scale), 1.0 * scale, nodeFill);
+        break;
+
+      case ItemCategory.trinket:
+        // CURIOSITY CLOCKWORK & MYSTERY KEYHOLE
+        canvas.drawCircle(center, 4.5 * scale, primaryLine);
+        canvas.drawCircle(center, 2.0 * scale, fineLine);
+        canvas.drawLine(
+          center - Offset(0, 5.5 * scale),
+          center + Offset(0, 5.5 * scale),
+          fineLine,
+        );
+        canvas.drawLine(
+          center - Offset(5.5 * scale, 0),
+          center + Offset(5.5 * scale, 0),
+          fineLine,
+        );
+        canvas.drawCircle(center, 0.9 * scale, nodeFill);
+        break;
     }
 
     canvas.restore();

@@ -194,7 +194,7 @@ class _ItemFilterSheetState extends State<ItemFilterSheet> {
 
     return FilterBottomSheetFrame(
       icon: Icons.tune,
-      title: 'Filter Magic Items',
+      title: 'Filter Items & Loot',
       onResetAll: _handleResetAll,
       children: [
         // Quick Toggles Section

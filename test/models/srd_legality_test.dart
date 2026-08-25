@@ -120,7 +120,7 @@ void main() {
     });
 
     test('Magic Item Library and Crafting Rules contain no WotC Product Identity terms', () {
-      const items = MagicItemLibrary.allItems;
+      final items = MagicItemLibrary.allItems;
       expect(items, isNotEmpty);
 
       for (final item in items) {

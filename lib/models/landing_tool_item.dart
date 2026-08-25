@@ -9,6 +9,7 @@ import '../screens/item_compendium_screen.dart';
 import '../screens/minion_tool_screen.dart';
 import '../screens/monster_codex_screen.dart';
 import '../screens/spellbook_screen.dart';
+import '../screens/table_index_screen.dart';
 import '../services/haptic_service.dart';
 
 /// Data class representing a launcher tool or companion card on the Landing Screen.
@@ -305,17 +306,28 @@ class LandingToolRegistry {
         ),
         LandingToolItem(
           id: 'item_compendium',
-          title: 'Magic Item Compendium',
+          title: 'Item Codex',
           category: 'Core Utilities',
-          badgeText: 'SRD Items',
+          badgeText: 'SRD Magic & Loot',
           badgeColor: Colors.tealAccent,
           icon: Icons.auto_fix_high,
           accentColor: Colors.tealAccent,
           description:
-              'Browse SRD magic items by category and rarity, filter by attunement, view full glyph visuals, and bookmark favorites to your personal Reliquary.',
+              'Browse SRD magic items, gemstones, art objects, trinkets, and adventuring gear by category and rarity, filter by attunement, view glyphs, and bookmark favorites to your Reliquary.',
           keywords: [
-            'magic',
             'item',
+            'items',
+            'codex',
+            'magic',
+            'compendium',
+            'loot',
+            'gem',
+            'gems',
+            'gemstones',
+            'art',
+            'art objects',
+            'trinket',
+            'trinkets',
             'weapon',
             'armor',
             'potion',
@@ -338,6 +350,51 @@ class LandingToolRegistry {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ItemCompendiumScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'table_index',
+          title: 'Table Index',
+          category: 'Core Utilities',
+          badgeText: 'SRD Rollables & Loot',
+          badgeColor: const Color(0xFFF59E0B),
+          icon: Icons.table_chart,
+          accentColor: const Color(0xFFF59E0B),
+          description:
+              'Browse and roll on all 5e SRD tables: Treasure Hoards, Magic Item Tables A-I, Gemstones, Art Objects, 100 Trinkets, Wild Magic Surge, Madness, and Party Share Calculator.',
+          keywords: [
+            'table',
+            'tables',
+            'index',
+            'loot',
+            'treasure',
+            'hoard',
+            'party share',
+            'share',
+            'coins',
+            'gems',
+            'gemstones',
+            'art',
+            'trinket',
+            'trinkets',
+            'wild magic',
+            'surge',
+            'madness',
+            'confusion',
+            'reincarnate',
+            'magic items',
+            'roller',
+            'oracle',
+            'generator',
+            'gold',
+            'appraisal',
+            'srd'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TableIndexScreen()),
             );
           },
         ),

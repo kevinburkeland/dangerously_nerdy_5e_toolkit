@@ -999,5 +999,32 @@ class GlyphGalleryData {
       summary:
           'A set of lock picks, tension wrenches, small mirror, narrow file, and pliers in a folding leather case.',
     ),
+
+    // GEMSTONES
+    GlyphItemEntry(
+      name: 'Diamond (5,000 GP)',
+      category: ItemCategory.gemstone,
+      rarity: ItemRarity.veryRare,
+      summary:
+          'A brilliant flawless diamond utilized for resurrection spells and royal treasury reserves.',
+    ),
+
+    // ART OBJECTS
+    GlyphItemEntry(
+      name: 'Jeweled Gold Crown (7,500 GP)',
+      category: ItemCategory.artObject,
+      rarity: ItemRarity.legendary,
+      summary:
+          'An ancient imperial diadem encrusted with rubies, sapphires, and platinum filigree.',
+    ),
+
+    // TRINKETS
+    GlyphItemEntry(
+      name: 'Mummified Goblin Hand',
+      category: ItemCategory.trinket,
+      rarity: ItemRarity.common,
+      summary:
+          'A curious desiccated goblin hand wearing a rusted iron band, rolled from the 100 SRD Trinkets.',
+    ),
   ];
 }

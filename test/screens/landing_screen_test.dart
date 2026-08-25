@@ -110,10 +110,10 @@ void main() {
     expect(find.textContaining('spells'), findsOneWidget);
   });
 
-  testWidgets('Tapping Magic Items Compendium navigates to Magic Items screen', (WidgetTester tester) async {
+  testWidgets('Tapping Item Codex navigates to Item Codex screen', (WidgetTester tester) async {
     await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
-    final itemsCard = find.text('Magic Item Compendium');
+    final itemsCard = find.text('Item Codex');
     expect(itemsCard, findsOneWidget);
 
     await tester.ensureVisible(itemsCard);
@@ -123,7 +123,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ItemCompendiumScreen), findsOneWidget);
-    expect(find.text('Magic Item Compendium'), findsOneWidget);
+    expect(find.text('Item Codex'), findsOneWidget);
     expect(find.textContaining('items'), findsWidgets);
   });
 

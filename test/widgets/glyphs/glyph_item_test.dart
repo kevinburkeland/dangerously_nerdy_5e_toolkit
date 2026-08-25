@@ -6,8 +6,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/glyph_gallery_data.dart';
 
 void main() {
   group('5e Item Glyph System Tests', () {
-    test('All 10 ItemCategories and 7 ItemRarities have valid colors and frame shapes', () {
-      expect(ItemCategory.values.length, equals(10));
+    test('All 13 ItemCategories and 7 ItemRarities have valid colors and frame shapes', () {
+      expect(ItemCategory.values.length, equals(13));
       expect(ItemRarity.values.length, equals(7));
 
       for (final cat in ItemCategory.values) {
@@ -56,7 +56,7 @@ void main() {
       expect(ring.getEffectiveColor(Colors.white, isDarkMode: false), isNotNull);
     });
 
-    test('GlyphGalleryData.allItems contains items for all 10 categories', () {
+    test('GlyphGalleryData.allItems contains items for all 13 categories', () {
       expect(GlyphGalleryData.allItems.isNotEmpty, isTrue);
       final categoriesFound =
           GlyphGalleryData.allItems.map((i) => i.category).toSet();
@@ -66,7 +66,7 @@ void main() {
       }
     });
 
-    testWidgets('DndGlyph.item renders correctly across all 10 item categories',
+    testWidgets('DndGlyph.item renders correctly across all 13 item categories',
         (WidgetTester tester) async {
       for (final cat in ItemCategory.values) {
         await tester.pumpWidget(

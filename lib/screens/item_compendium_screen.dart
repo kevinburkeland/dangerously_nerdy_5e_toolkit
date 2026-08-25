@@ -155,7 +155,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
         DmRulesEdition.v2024;
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final pinnedIds = _getPinnedIds(context);
-    const allItems = MagicItemLibrary.allItems;
+    final allItems = MagicItemLibrary.allItems;
     final diffCount = allItems.where((i) => i.isChangedIn2024).length;
     final activeFilterCount = _getActiveFilterCount();
 
@@ -200,7 +200,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
               child: Semantics(
                 header: true,
                 child: Text(
-                  'Magic Item Compendium',
+                  'Item Codex',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -230,7 +230,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.help_outline),
-            tooltip: 'About Magic Item Compendium',
+            tooltip: 'About Item Codex',
             onPressed: () {
               showDialog<void>(
                 context: context,
@@ -239,11 +239,11 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
                     children: [
                       Icon(Icons.auto_fix_high),
                       SizedBox(width: 8),
-                      Text('Magic Item Compendium'),
+                      Text('Item Codex'),
                     ],
                   ),
                   content: const Text(
-                    'Browse, filter, and inspect magic items from the 5e SRD 5.1 & 5.2.\n\n'
+                    'Browse, filter, and inspect magic items, gemstones, art objects, trinkets, and adventuring gear from the 5e SRD.\n\n'
                     '• Switch between 2014 RAW and 2024 Revised rules editions.\n'
                     '• Check the 2024 Diffs tab to compare side-by-side rule changes.\n'
                     '• Bookmark items to your Personal Reliquary with the bookmark icon.\n'
@@ -277,9 +277,9 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
                 _searchController.clear();
                 setState(() => _searchQuery = '');
               },
-              hintText: 'Search magic items, traits, rarity, element...',
+              hintText: 'Search items, loot, gems, art, rarity, element...',
               activeFilterCount: activeFilterCount,
-              filterTooltip: 'Filter Magic Items',
+              filterTooltip: 'Filter Items & Loot',
               onFilterTap: () => _openFilterSheet(context),
             ),
 

@@ -35,7 +35,7 @@ void main() {
       await tester.pumpWidget(buildTestScreen());
       await tester.pumpAndSettle();
 
-      expect(find.text('Magic Item Compendium'), findsOneWidget);
+      expect(find.text('Item Codex'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.textContaining('All Items'), findsOneWidget);
       expect(find.textContaining('Personal Reliquary'), findsOneWidget);
@@ -188,12 +188,12 @@ void main() {
       await tester.pumpWidget(buildTestScreen());
       await tester.pumpAndSettle();
 
-      final filterButton = find.byTooltip('Filter Magic Items');
+      final filterButton = find.byTooltip('Filter Items & Loot');
       expect(filterButton, findsOneWidget);
       await tester.tap(filterButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('Filter Magic Items'), findsOneWidget);
+      expect(find.text('Filter Items & Loot'), findsOneWidget);
       expect(find.text('Reset All'), findsOneWidget);
 
       // Tap Reset All
