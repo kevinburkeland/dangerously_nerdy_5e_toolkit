@@ -8,7 +8,7 @@ ROOT_DIR="$( cd "$SCRIPT_DIR/.." &> /dev/null && pwd )"
 cd "$ROOT_DIR"
 
 echo "Building Flutter Web application from $ROOT_DIR..."
-flutter build web
+flutter build web --no-tree-shake-icons
 
 BUILD_TIMESTAMP=$(date +%s)
 echo "Injecting dynamic build version ($BUILD_TIMESTAMP) into service workers..."

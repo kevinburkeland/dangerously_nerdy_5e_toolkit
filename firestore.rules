@@ -2,34 +2,75 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Rooms collection (Party Rooms, Shared Vaults, and Dice Rooms)
+
+    // Helper: Validates 5e coin dictionary structure and non-negative balances
+    function isValidCoinMap(data) {
+      return data.keys().hasOnly(['pp', 'gp', 'ep', 'sp', 'cp'])
+        && (!('pp' in data) || (data.pp is int && data.pp >= 0))
+        && (!('gp' in data) || (data.gp is int && data.gp >= 0))
+        && (!('ep' in data) || (data.ep is int && data.ep >= 0))
+        && (!('sp' in data) || (data.sp is int && data.sp >= 0))
+        && (!('cp' in data) || (data.cp is int && data.cp >= 0));
+    }
+
     match /rooms/{roomCode} {
-      // Allow reading rooms
       allow read: if true;
 
-      // Allow creating a new room document
-      allow create: if request.resource.data.keys().hasAny(['campaignName', 'code', 'roomCode']);
+      // Creation: accommodates both full campaigns (with hostKeyHash) and quick dice rooms
+      allow create: if (request.resource.data.roomCode == roomCode || request.resource.data.code == roomCode)
+                   && request.resource.data.campaignName is string
+                   && request.resource.data.campaignName.size() > 0
+                   && request.resource.data.campaignName.size() <= 80
+                   && (!('hostKeyHash' in request.resource.data) || 
+                       (request.resource.data.hostKeyHash is string && 
+                        (request.resource.data.hostKeyHash.size() == 0 || request.resource.data.hostKeyHash.size() == 64)));
 
-      // Allow updating room metadata, party purse, and player roster
-      allow update: if true;
+      // Updates: prevent hijacking hostKeyHash, changing roomCode, or corrupting purses/roster
+      allow update: if (request.resource.data.roomCode == resource.data.roomCode || request.resource.data.code == resource.data.code)
+                   && (!('hostKeyHash' in resource.data) || request.resource.data.hostKeyHash == resource.data.hostKeyHash)
+                   && (!('partyPurse' in request.resource.data) || isValidCoinMap(request.resource.data.partyPurse))
+                   && (!('memberPurses' in request.resource.data) || request.resource.data.memberPurses is map)
+                   && (!('characterRoster' in request.resource.data) || request.resource.data.characterRoster is list);
 
-      // Prevent hard deletion of entire rooms from client devices
       allow delete: if false;
 
-      // Subcollection for loot items in the party vault
+      // --- Subcollection: Loot Vault ---
       match /loot/{lootId} {
-        allow read, write: if true;
+        allow read: if true;
+
+        allow create: if request.resource.data.id == lootId
+                     && request.resource.data.name is string
+                     && request.resource.data.name.size() > 0
+                     && request.resource.data.name.size() <= 100
+                     && request.resource.data.gpValue is number
+                     && request.resource.data.gpValue >= 0;
+
+        // Updates: cannot alter item ID; soft-deletes (isArchived) permitted
+        allow update: if request.resource.data.id == resource.data.id
+                     && request.resource.data.gpValue is number
+                     && request.resource.data.gpValue >= 0;
+
+        // Prevent hard deletes from client devices; must use isArchived flag
+        allow delete: if false;
       }
 
-      // Subcollection for immutable audit events
+      // --- Subcollection: Audit Events ---
       match /events/{eventId} {
-        allow read, create: if true;
-        allow update, delete: if false; // Append-only audit log
+        allow read: if true;
+        allow create: if request.resource.data.roomCode == roomCode
+                     && request.resource.data.type is string
+                     && request.resource.data.playerName is string
+                     && request.resource.data.details is string;
+        allow update, delete: if false; // Append-only audit trail
       }
 
-      // Subcollection for shared live dice rolls
+      // --- Subcollection: Shared Dice Rolls ---
       match /rolls/{rollId} {
-        allow read, write: if true;
+        allow read: if true;
+        allow create: if request.resource.data.roomCode == roomCode
+                     && request.resource.data.playerName is string
+                     && request.resource.data.total is int;
+        allow update, delete: if false; // Rolls cannot be edited or deleted once cast
       }
     }
   }

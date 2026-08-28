@@ -5,6 +5,9 @@ const RESOURCES_TO_CACHE = [
   'index.html',
   'manifest.json',
   'favicon.png',
+  'assets/FontManifest.json',
+  'assets/AssetManifest.bin.json',
+  'assets/fonts/MaterialIcons-Regular.otf',
   'pwa_icons/Icon-192.png',
   'pwa_icons/Icon-512.png',
   'pwa_icons/Icon-maskable-192.png',
@@ -58,8 +61,8 @@ self.addEventListener('message', (event) => {
 });
 
 // Fetch Strategy:
-// 1. Navigation & App Logic (HTML, JS, manifest) -> Network-First (always fresh, cache fallback when offline)
-// 2. Static Assets (Images, Icons, Fonts) -> Stale-While-Revalidate
+// 1. Navigation, App Logic, Fonts & Manifests (HTML, JS, WASM, JSON, BIN, OTF, TTF, WOFF) -> Network-First (always fresh, cache fallback when offline)
+// 2. Static Media (Images, Favicons) -> Stale-While-Revalidate
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -69,12 +72,18 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   const isNavigation = event.request.mode === 'navigate';
-  const isCodeAsset = url.pathname.endsWith('.js') || 
-                      url.pathname.endsWith('.html') || 
-                      url.pathname.endsWith('manifest.json') ||
-                      url.pathname.endsWith('.wasm');
+  const isCodeOrFontAsset = url.pathname.endsWith('.js') || 
+                            url.pathname.endsWith('.mjs') ||
+                            url.pathname.endsWith('.html') || 
+                            url.pathname.endsWith('.wasm') ||
+                            url.pathname.endsWith('.json') ||
+                            url.pathname.endsWith('.bin') ||
+                            url.pathname.endsWith('.otf') ||
+                            url.pathname.endsWith('.ttf') ||
+                            url.pathname.endsWith('.woff') ||
+                            url.pathname.endsWith('.woff2');
 
-  if (isNavigation || isCodeAsset) {
+  if (isNavigation || isCodeOrFontAsset) {
     // Network-First strategy
     event.respondWith(
       fetch(event.request)
