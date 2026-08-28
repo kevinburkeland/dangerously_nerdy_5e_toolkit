@@ -8,16 +8,44 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-405%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-521%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
-A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **core tabletop apps and compendiums**, including a **Core Polyhedral Dice Roller** with interactive 3D physics and **Real-Time Multiplayer Dice Rooms**, a comprehensive **5e Spellbook Companion**, a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, a **Monster Codex & Bestiary Browser**, a **Magic Item Compendium**, advanced **DPR Calculators & Bezier Graph Visualizers**, an interactive **Monster Fighting Arena ("Tools for Nerds")** with Monte Carlo simulations, simultaneous **Batch Attack Rolling** for summoning spells and magic items, a **Techno-Rune Glyph Studio**, custom dice pool builders with JSON preset import/export, and a cryptographically secure random number generator.
+A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Features a suite of **core tabletop apps, campaign tools, and compendiums**, including a **Shared Party Vault & Campaign Hub**, a **Core Polyhedral Dice Roller** with interactive 3D physics and **Real-Time Multiplayer Dice Rooms**, a comprehensive **5e Spellbook Companion**, a dual-rulebook **DM's Screen with 2014 RAW vs 2024 Revised rules toggle**, a **Monster Codex & Bestiary Browser**, a **Magic Item Compendium**, advanced **DPR Calculators & Bezier Graph Visualizers**, an interactive **Monster Fighting Arena ("Tools for Nerds")** with Monte Carlo simulations, simultaneous **Batch Attack Rolling** for summoning spells and magic items, a **Techno-Rune Glyph Studio**, custom dice pool builders with JSON preset import/export, and a cryptographically secure random number generator.
 
 ---
 
 ## ✨ Key Features & Suite of Tools
 
-### 🎲 1. Core Dice Roller & 3D Polyhedral Physics
+### 🏰 1. Shared Party Vault, Campaign Rooms & Multi-Tier Sync
+* **Multi-Campaign Hub**: Host or join persistent campaign rooms with 6-character alphanumeric room codes (`ROOM-XXXXXX`).
+* **Passwordless DM Host Key Authority**: Cryptographic private host keys generated on room creation and stored securely in local device storage, providing Game Masters with administrative control (item restoration, conflict resolution) without requiring user accounts or third-party sign-ins.
+* **Shared Party Vault & Magic Item Stash**:
+  - Centralized inventory for weapons, armor, potions, rings, wands, and wondrous items.
+  - **1-Tap Item Claiming & Attunement**: Players can claim items to their character personas and manage their 3-item attunement limit in real time.
+  - **Soft Deletions & Trash Restoration**: Items deleted by players move to the **Vault Trash** and can be restored exclusively by the Campaign Host.
+* **Personal Character Gold Stores & Party Reserve**:
+  - Dedicated coin purses for each character in the active roster (`CP`, `SP`, `EP`, `GP`, `PP`).
+  - **Shared Party Reserve**: Centralized treasury for shared party funds.
+  - **Two-Way Coin Transfers**: Effortlessly transfer gold and currency between individual character purses and the shared party reserve.
+  - **Auto-Sweep on Character Retirement**: Deleting a character automatically sweeps their remaining currency into the Party Reserve to prevent lost party wealth.
+* **Treasure Hoard & Loot Roller Dispersal**:
+  - 1-tap dispersal of generated treasure hoards to all active party members.
+  - Optional **"A share for the party reserve"** checkbox to split loot evenly among $N$ characters plus the reserve fund.
+  - Automatic liquidation of gems and art objects into GP shares with coin remainders cleanly deposited into the party reserve.
+* **Active Character Personas & Roster Manager**:
+  - Create and manage custom character personas (e.g. *"Gandalf (Wizard)"*, *"Frodo (Rogue)"*).
+  - Quick-switch active session identities from the top status banner to attribute claims, rolls, and coin transactions accurately.
+* **Multi-Tier Conflict & Race Resolution Engine**:
+  - **Tier 1 (Additive Merging)**: Delta coin mutations via atomic `FieldValue.increment` and independent subcollection document writes.
+  - **Tier 2 (Deterministic Last-Write-Wins Claims)**: Automatic claim race resolution if two disconnected players claim the same item offline; losing clients unbind smoothly and receive real-time notification toasts.
+  - **Tier 3 (Host Diff & Structural Fork Dialog)**: Interactive visual diff modal (`LootConflictResolutionDialog`) allowing Game Masters to compare divergent Cloud vs Local versions side-by-side and choose *Use Cloud*, *Overwrite with Local*, or *Keep Both (Duplicate Item)*.
+  - **Purse Overdraft Clamping**: Prevents negative coin balances by clamping overdrawn spends to zero and logging high-priority warning alerts.
+* **Append-Only Audit Stream**: Live event log capturing coin deposits, withdrawals, loot additions, claims, attunements, and restorations.
+
+---
+
+### 🎲 2. Core Dice Roller & 3D Polyhedral Physics
 * **Multi-Dice Pools**: Roll any combination of standard polyhedral RPG dice (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) plus custom N-sided dice (`d3`, `d7`, `d30`, `d1000`, etc.).
 * **Optimized 3D Polyhedral Visualizer**: Real-time 3D rendered dice rolling with realistic angular momentum, winning-face illumination, natural 20 critical burst particle effects, and screen shake. Powered by allocation-free rasterization loops and cached typography painters for 60/120Hz smoothness.
 * **Roll Modes & Modifiers**: Apply flat positive/negative modifiers and toggle Advantage or Disadvantage.
@@ -25,13 +53,15 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **JSON Presets**: Save custom dice formulas (e.g., "Fireball 8d6", "Rogue Sneak Attack") and export/import JSON presets across devices.
 * **Haptic Feedback**: Multi-level tactile vibration triggers (Off, Light Ticks, Heavy Combat Rumble) for dice clicks, roll animations, and critical successes.
 
-### 🌐 2. Live Multiplayer Dice Rooms
+### 🌐 3. Live Multiplayer Dice Rooms
 * **Real-Time Synchronization**: Connect to shared dice rooms powered by Firebase Firestore for live party transparency.
 * **6-Character Room Codes**: Simple 6-character alphanumeric room codes (`ROOM-XXXXXX`) with input sanitization and random code generation.
 * **Live Connection Status**: Visual status banner indicating active room connection, participant display names, and real-time roll event feeds.
 * **Ephemeral Architecture**: Stream-only roll broadcasts designed for privacy and minimal latency without permanent data harvesting.
 
-### 📜 3. 5e Spellbook Companion & Rules Engine (2014 RAW vs 2024 Revised)
+---
+
+### 📜 4. 5e Spellbook Companion & Rules Engine (2014 RAW vs 2024 Revised)
 * **Modular Official SRD Spell Catalog**: Built-in support for official SRD spells across all tiers (Cantrips through 9th Level) with side-by-side 2014 & 2024 revision data.
 * **Virtualized Viewport Architecture**: Full `CustomScrollView` and responsive `SliverList.builder` virtualization for fluid 60/120fps scrolling and instant search filtering across 100+ spells.
 * **Pre-Computed Search Indexing**: Zero-allocation search caching for instant keystroke query matching across spell descriptions, tags, classes, and damage types.
@@ -46,20 +76,26 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **Personal Spellbook Pinning**: Bookmark key spells for rapid in-combat access with dedicated filter tabs and search.
 * **Dynamic School Glyphs**: Vector-drawn procedural D&D school glyphs with custom action rings (Action, Bonus Action, Reaction, Concentration, Ritual).
 
-### 🛡️ 4. DM's Screen & Dual Rulebook Engine (2014 RAW vs 2024 Revised)
+---
+
+### 🛡️ 5. DM's Screen & Dual Rulebook Engine (2014 RAW vs 2024 Revised)
 * **2014 vs 2024 Rules Switch**: Seamlessly toggle between 2014 5e RAW rules and the 2024 Revised rules across all combat mechanics, conditions, environment hazards, DCs, resting, and spell limits.
 * **Side-by-Side Edition Comparison**: Interactive comparison dialogs and "2024 Diff" badges highlighting every major rule revision (e.g., -2 Exhaustion per level, Unarmed Strike Save DCs, Bonus Action potions, and Disadvantage Initiative for surprise).
 * **Virtualized Rule Grids**: Fluid sliver-based layout that lazily renders rule cards on demand for optimal mobile and desktop performance.
 * **Rule Pinning & Search**: Pin frequently referenced rules to the top of your screen, with instant real-time keyword search and category filtering.
 * **Quick DM Roller**: Instant d20, d100, d12, d8, and d6 roller bar directly inside the DM screen.
 
-### 🐉 5. Monster Codex & Bestiary Browser (2014 vs 2024)
+---
+
+### 🐉 6. Monster Codex & Bestiary Browser (2014 vs 2024)
 * **Comprehensive SRD Bestiary**: 320+ official monsters across all Challenge Ratings (CR 0 to CR 30), Creature Types, and Sizes.
 * **2014 vs 2024 Monster Statblock Diffs**: Side-by-side comparison tool highlighting stat, trait, and multiattack changes in the revised ruleset.
 * **Integrated Multiattack & Quick-Roll Engine**: Execute monster attacks, saving throw DCs, and damage rolls directly inside the statblock view.
 * **My Bestiary Pinning**: Pin frequently encountered monsters for rapid encounter access.
 
-### 🧰 6. Magic Item Compendium & Reliquary
+---
+
+### 🧰 7. Magic Item Compendium & Reliquary
 * **Categorized Magic Items**: Comprehensive SRD 5.1 item library organized across Armor, Weapons, Potions, Rings, Rods, Scrolls, Staffs, Wands, and Wondrous Items.
 * **Attunement & Rarity Filters**: Instant search and filtering by Common, Uncommon, Rare, Very Rare, Legendary, and Artifact rarities.
 * **Direct Summon Launchers**: Integrated shortcuts to summon companions (e.g. *Bags of Tricks*, *Horn of Valhalla*, *Figurines of Wondrous Power*).
@@ -67,7 +103,7 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 
 ---
 
-### ⚔️ 7. Monster Fighting Arena & Monte Carlo Simulator (Tools for Nerds)
+### ⚔️ 8. Monster Fighting Arena & Monte Carlo Simulator (Tools for Nerds)
 * **Turn-by-Turn Combat Simulation**: Pit custom teams of monsters against each other (e.g. *1 Young Red Dragon vs 4 Knights*, *1 Giant Shark vs 6 Mariners*, or *1 T-Rex vs 8 Wolves*) and watch every attack, save, crit, fumble, and killshot play out in real time.
 * **Strict 5e Action Economy Resolution**:
   - **Accurate Action & Multiattack Sequencing**: Strict enforcement of action economy where monsters with melee and ranged options make only their permitted actions/multiattack routines per round rather than firing all weapon profiles simultaneously.
@@ -84,7 +120,9 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **🎲 High-Speed Monte Carlo Simulation**: Run **500x or 1,000x automated match iterations** in milliseconds to compute exact empirical win rates %, average round durations, surviving fighter counts, remaining HP %, and identify Match MVPs.
 * **⚡ Interactive Playback Controls**: Advance turns step-by-step, toggle auto-playback with adjustable speed (0.5x to 4x), or press **"Skip to End"** to instantly resolve the battle and view final statistics.
 
-### 🤓 8. DPR Calculator & Multi-Mode Graph Visualizer (Tools for Nerds)
+---
+
+### 🤓 9. DPR Calculator & Multi-Mode Graph Visualizer (Tools for Nerds)
 * **Interactive Animated Bezier Canvas**: Real-time damage per round (DPR) curve renderer with smooth Bezier interpolation, pulsing radar nodes, and touch/mouse scrubbing across target AC 8–25.
 * **Dual 2014 RAW vs 2024 Revised Rules**: Toggle between 2014 feats (GWM -5/+10, GWF reroll 1s/2s) and 2024 rules (GWM +PB damage, GWF floor 3), or unlock **"Anything Goes"** mode to mix cross-edition feats and masteries.
 * **GWM / Sharpshooter Break-Even Analysis**: Automatic calculation of the exact crossover armor class (AC) where power attack feats outperform normal strikes, highlighted by a golden beacon and diamond marker.
@@ -103,7 +141,7 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 
 ---
 
-### 🔮 9. Spell Minion Companions (6 Dedicated Tools)
+### 🔮 10. Spell Minion Companions (6 Dedicated Tools)
 * **⚔️ Animate Objects Companion**: Enforces RAW point budgets (10 pts at 5th level up to 18 pts at 9th level) across Tiny, Small, Medium, Large, and Huge animated objects.
 * **🐾 Conjure Animals Squad Manager**: Summons 8 Wolves (CR 1/4) at 3rd level up to 32 beasts at 9th level with built-in **Pack Tactics** advantage detection.
 * **💀 Animate Dead Squad Tracker**: Manages Skeleton archers and Zombie frontline HP, tracking upcast limits from 1 to 13 undead.
@@ -111,26 +149,32 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **🌋 Conjure Elementals Companion**: Manages Air, Earth, Fire, and Water Elementals (CR 5+) and swarms of Mephits/Gargoyles.
 * **🦗 Giant Insect Squad Tracker**: Transforms ordinary insects into Giant Centipedes (10), Giant Wasps (5), or Giant Spiders (3).
 
-### 📯 10. Magic Item Rollers & Minions (5 Dedicated Tools)
+---
+
+### 📯 11. Magic Item Rollers & Minions (5 Dedicated Tools)
 * **👜 Gray Bag of Tricks**: Roll d8 on the Gray Bag table (Weasel, Giant Rat, Badger, Boar, Panther, Giant Badger, Dire Wolf, or Giant Elk).
 * **👜 Rust Bag of Tricks**: Roll d8 on the Rust Bag table (Rat, Owl, Mastiff, Goat, Giant Goat, Giant Boar, Lion, or Brown Bear).
 * **👜 Tan Bag of Tricks**: Roll d8 on the Tan Bag table (Jackal, Ape, Baboon, Axe Beak, Black Bear, Giant Weasel, Giant Hyena, or Tiger).
 * **📯 Horn of Valhalla Roller**: Roll variant Berserker squads for Silver (2d4+2), Brass (3d4+3), Bronze (4d4+4), and Iron (5d4+5) horns.
 * **🗿 Figurines of Wondrous Power**: Animates Bronze Griffon, Onyx Dog (with Pack Tactics), and Marble Elephant statblocks with batch rolling.
 
-### ⚔️ 11. Instant Batch Attack Roller & HP Tracker
+---
+
+### ⚔️ 12. Instant Batch Attack Roller & HP Tracker
 * **Batch Attack Engine**: Roll attack and damage for up to 50 minions simultaneously against target AC with Advantage, Disadvantage, Normal rolling, and RAW Critical Hit doubling.
 * **Live Squad HP Tracker**: Visual progress bars per minion, custom creature naming, temporary HP tracking, squad initiative rolling, quick +/- HP adjustments, direct HP input, and damage resistance markers.
 * **Mass Damage & Group Healing**: AoE damage and healing modal to apply group HP changes across all minions or selected squads with full/half damage saving throw calculations.
 
 ---
 
-### 🎨 12. D&D Techno-Rune Glyph Studio & Style Guide Codex
+### 🎨 13. D&D Techno-Rune Glyph Studio & Style Guide Codex
 * **Interactive Custom Glyph Builder**: Select core glyph icons, choose outer and inner frame geometry (Hexagonal, Circular, Octagonal, Diamond), configure particle effects, and pick damage type rings.
 * **Full Style Guide Codex**: Comprehensive design tokens covering typography, surface elevations, fantasy color palettes, and procedural vector glyphs.
 * **Spellbook Schematics & Minion Matrix**: Visual reference cards with dynamic action cost rings (Action, Bonus Action, Reaction, Concentration, Ritual) and creature stat badges.
 
-### 🎨 13. Theme Engine & User Preferences
+---
+
+### 🎨 14. Theme Engine & User Preferences
 * **Theme Modes**: System, Dark Mode (default), and Light Mode.
 * **OLED Pitch Black**: Pure `#000000` background for AMOLED battery savings.
 * **Fantasy Accent Palettes**: Choose between 9 rich RPG themes: `Paladin Gold`, `Eldritch Purple`, `Ranger Emerald`, `Necrotic Slate`, `Dragonfire Crimson`, `Arcane Sapphire`, `Bardic Rose`, `Abyssal Teal`, and `Celestial Amber`.
@@ -138,13 +182,17 @@ A modern, high-performance Flutter application designed for 5th Edition (5e) tab
 * **Pure Flutter Vector Branding**: 100% vector-rendered tech+fantasy d20 logo (`AppLogo`) with `DN` center crest, curved `DANGEROUSLY NERDY` telemetry ring, and interactive hover/tap momentum spin physics.
 * **Preferences Persistence**: Automatically saves user settings locally via `SharedPreferences`.
 
-### 🔒 14. Cryptographically Secure RNG & Production Security
+---
+
+### 🔒 15. Cryptographically Secure RNG & Production Security
 * Built using Dart's native `Random.secure()` (`lib/utils/secure_random.dart`) to ensure completely unbiased, cryptographically secure random distribution.
-* **Strict Content Security Policy (CSP)** and Firebase security rules ensure robust client-side isolation and safe multi-user interactions.
+* **Strict Content Security Policy (CSP)** and production-hardened Firebase Firestore rules ensure robust client-side isolation and safe multi-user interactions.
 * **Data Minimization**: Zero PII collection, no account registration required, and complete user data sovereignty.
 
-### 📱 15. Progressive Web App (PWA) & Cross-Platform
-* Fully responsive web application with offline PWA Service Worker caching and native app installation prompt on desktop and mobile web.
+---
+
+### 📱 16. Progressive Web App (PWA) & Cross-Platform
+* Fully responsive web application with offline PWA Service Worker caching (Network-First asset delivery) and native app installation prompt on desktop and mobile web.
 * Ready for deployment across Web, Android, iOS, and Linux desktop.
 
 ---
@@ -167,6 +215,12 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── landing_tool_item.dart  # Launcher tool definitions & categories
 │   │   ├── magic_item.dart         # Magic item compendium models
 │   │   ├── monster_codex_data.dart # Monster codex, statblocks, & 2014/2024 diffs
+│   │   ├── party/                  # Campaign rooms, shared vault items, purses, & memberships
+│   │   │   ├── campaign_membership.dart # Local role & hostKey persistence
+│   │   │   ├── party_audit_event.dart   # Append-only audit stream events
+│   │   │   ├── party_loot_item.dart     # Shared vault items with claims & attunement
+│   │   │   ├── party_purse.dart         # 5-tier coin dictionary (cp, sp, ep, gp, pp)
+│   │   │   └── party_session_state.dart # Campaign root document state
 │   │   ├── room_roll.dart          # Live room multiplayer roll event
 │   │   ├── spell_session.dart      # Spell session state, upcasting, & batch roller
 │   │   ├── spellbook_data.dart     # SpellItem, editions, schools, and library indexing
@@ -184,6 +238,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── landing_screen.dart     # Categorized dashboard with dedicated tool cards
 │   │   ├── minion_tool_screen.dart # Parametric dedicated minion tool screen
 │   │   ├── monster_codex_screen.dart # Monster codex & 2014/2024 diff browser
+│   │   ├── party_room_screen.dart  # Shared Campaign Vault, Coin Store, & Audit Log
 │   │   ├── settings_screen.dart    # Theme, accent color, haptics, & 3D dice preferences
 │   │   └── spellbook_screen.dart   # 5e Spellbook companion & rules reference screen
 │   ├── services/                   # Data services & external integrations
@@ -192,6 +247,9 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── dice_room_service.dart  # Firebase Firestore real-time room sync
 │   │   ├── haptic_service.dart     # Multi-platform tactile haptic feedback
 │   │   ├── logging_service.dart    # Structured application logging
+│   │   ├── party/                  # Party & Campaign Vault services
+│   │   │   ├── campaign_registry_service.dart # Local multi-campaign membership storage
+│   │   │   └── party_room_service.dart        # Multi-tier conflict resolution & vault sync
 │   │   ├── preset_service.dart     # SharedPreferences & JSON import/export
 │   │   └── rules/                  # 5e RAW rules, combat & spellcasting engines
 │   │       ├── arena_combat_engine.dart # Monster arena battle simulator & Monte Carlo engine
@@ -202,6 +260,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                      # Visual design system
 │   │   └── app_theme.dart          # Dynamic theme data & color schemes
 │   ├── utils/                      # Utilities & helpers
+│   │   ├── crypto_utils.dart       # SHA-256 hostKey passkey hashing
 │   │   ├── dice_formatters.dart    # Dice notation formatters & tokenizers
 │   │   ├── pwa_helper.dart         # PWA installation prompt helper (cross-platform stub/web)
 │   │   └── secure_random.dart      # Cryptographically secure RNG generator
@@ -221,14 +280,21 @@ dangerously_nerdy_5e_toolkit/
 │       ├── meters/                 # Animated resource meters & HP bars
 │       ├── minions/                # Active session header, object cards, & squad builder
 │       ├── monster_codex/          # Monster cards, comparison dialogs, and roll modals
+│       ├── party/                  # Campaign dialogs, loot conflict diff modal, & coin dispersers
+│       │   ├── coin_transaction_dialog.dart       # Deposit / withdraw / transfer modal
+│       │   ├── loot_conflict_resolution_dialog.dart # Visual Cloud vs Local Host Diff modal
+│       │   ├── party_coin_dispersal_dialog.dart    # Gold & liquidated gem split calculator
+│       │   ├── party_roster_dialog.dart            # Character management & session switcher
+│       │   ├── party_share_dialog.dart             # Party coin split calculator
+│       │   └── vault_item_dialog.dart              # Custom loot item creation modal
 │       ├── room_banner_widget.dart # Live room connection status banner
 │       ├── spell_reference.dart    # Spell reference cards & stat components
 │       └── spellbook/              # Spell cards, quick-roll dialogs, compare modals, filter sheets
 ├── scripts/
-│   └── build_web.sh                # PWA web build script with cache-busting timestamp
-├── test/                           # Unit, widget, accessibility, & resilience test suites (405 tests)
-├── web/                            # Web platform manifest, strict CSP, & service worker
-├── firestore.rules                 # Strict security rules for Firestore shared rooms
+│   └── build_web.sh                # PWA web build script with full icon font packaging & cache-busting
+├── test/                           # Unit, widget, accessibility, & resilience test suites (521 tests)
+├── web/                            # Web platform manifest, strict CSP, & network-first service worker
+├── firestore.rules                 # Production-hardened security rules for Firestore campaigns
 ├── firestore.indexes.json          # Firestore indexes configuration
 ├── LEGAL_ATTRIBUTION_MODAL.md      # SRD 5.1 & 5.2 Creative Commons attribution & IP safeguards
 ├── PRIVACY_POLICY.md               # Data minimization & privacy policy
@@ -278,7 +344,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, and resilience test suite (405 tests with 100% pass rate):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, conflict resolution, and resilience test suite (**521 tests with 100% pass rate**):
 ```bash
 flutter test
 ```
@@ -294,7 +360,7 @@ flutter analyze
 
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
-- Implementation of batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, and cryptographically secure RNG utilities.
+- Implementation of multi-tier conflict resolution, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, and cryptographically secure RNG utilities.
 - Writing comprehensive unit and widget tests.
 - UI styling, 3D dice physics, responsive layout refinements, and documentation.
 
