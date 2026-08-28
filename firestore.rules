@@ -2,105 +2,36 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // =========================================================================
-    // DANGEROUSTNERDY 5E TOOLKIT - FIRESTORE SECURITY RULES
-    // =========================================================================
-    // Real-Time Shared Dice Rooms & Roll Broadcast Feed Security Rules
-    // Enforces:
-    // 1. Strict Schema Validation & Data Types
-    // 2. Payload Clamping (List & String Length Bounds)
-    // 3. Immutability (Append-only logs; updates & deletes forbidden)
-    // 4. Rate Limiting & Timestamp Integrity
-    // =========================================================================
+    function isValidAppCheck() {
+      return request.auth != null || request.app != null;
+    }
 
     match /rooms/{roomCode} {
-      // Room Metadata document (Optional room state / configuration)
-      allow read: if true;
-      allow create, update: if isValidRoomCode(roomCode)
-                            && request.resource.data.keys().hasAll(['code', 'createdAt'])
-                            && request.resource.data.code == roomCode
-                            && request.resource.data.code is string
-                            && request.resource.data.code.size() <= 30
-                            && request.resource.data.createdAt is timestamp;
-      allow delete: if false;
+      allow read: if isValidAppCheck() && resource != null;
+      // Allow create if room doesn't exist and expiresAt <= 30 days
+      allow create: if isValidAppCheck()
+        && request.resource.data.keys().hasAll(['campaignName', 'partyPurse', 'hostKeyHash', 'version', 'expiresAt'])
+        && request.resource.data.expiresAt <= request.time + duration.value(30, 'd');
+      // Allow updates only if version is monotonically increasing
+      allow update: if isValidAppCheck()
+        && resource != null
+        && request.resource.data.version > resource.data.version
+        && request.resource.data.expiresAt <= request.time + duration.value(30, 'd');
 
-      // Subcollection: Real-time broadcast rolls feed
-      match /rolls/{rollId} {
-        // Public room read access for subscribed clients
-        allow read: if true;
-
-        // Strict validation for broadcasting new dice rolls
-        allow create: if isValidRoomCode(roomCode)
-                      && isValidRollPayload(roomCode, rollId);
-
-        // Immutable Audit Log: Rolls cannot be altered or deleted once written
-        allow update, delete: if false;
+      match /loot/{lootId} {
+        allow read: if isValidAppCheck();
+        allow write: if isValidAppCheck();
       }
-    }
 
-    // =========================================================================
-    // HELPER FUNCTIONS & VALIDATION EXPRESSIONS
-    // =========================================================================
+      match /events/{eventId} {
+        allow read: if isValidAppCheck();
+        allow create: if isValidAppCheck();
+        allow update, delete: if false; // Append-only audit log
+      }
 
-    /// Validates basic room code length and characters
-    function isValidRoomCode(code) {
-      return code is string 
-          && code.size() >= 4 
-          && code.size() <= 30
-          && code.matches('^[a-zA-Z0-9_-]{4,30}$');
-    }
-
-    /// Comprehensive payload schema and bounds validator for incoming rolls
-    function isValidRollPayload(roomCode, rollId) {
-      let data = request.resource.data;
-
-      // 1. Required Fields Check
-      let hasRequiredFields = data.keys().hasAll([
-        'id', 
-        'roomCode', 
-        'playerName', 
-        'timestamp', 
-        'formulaString', 
-        'total', 
-        'individualRolls', 
-        'isCrit', 
-        'isFumble'
-      ]);
-
-      // 2. Sender & Room Binding Validation (Prevents cross-room spoofing)
-      let isBoundToRoom = data.roomCode == roomCode && data.id == rollId;
-
-      // 3. String Size & Type Bounds
-      let isValidStrings = data.id is string && data.id.size() > 0 && data.id.size() <= 100
-                        && data.playerName is string && data.playerName.trim().size() > 0 && data.playerName.size() <= 50
-                        && data.formulaString is string && data.formulaString.size() <= 150;
-
-      // 4. Numeric Value & Clamping Bounds
-      let isValidNumbers = data.total is number 
-                        && data.total >= -10000 
-                        && data.total <= 100000;
-
-      // 5. Payload Array Bounds (Prevents buffer overflow & heavy payload spam)
-      let isValidRollArrays = data.individualRolls is list 
-                           && data.individualRolls.size() <= 100
-                           && (!('droppedRolls' in data) || data.droppedRolls == null || (data.droppedRolls is list && data.droppedRolls.size() <= 20));
-
-      // 6. Boolean Flags Validation
-      let isValidBooleans = data.isCrit is bool && data.isFumble is bool;
-
-      // 7. Timestamp & Rate Limiting Guard
-      // Enforces client timestamp cannot be in the future beyond clock skew tolerance (5 min)
-      let isValidTimestamp = data.timestamp is timestamp
-                          && data.timestamp <= request.time + duration.value(5, 'm');
-
-      return hasRequiredFields
-          && isBoundToRoom
-          && isValidStrings
-          && isValidNumbers
-          && isValidRollArrays
-          && isValidBooleans
-          && isValidTimestamp;
+      match /rolls/{rollId} {
+        allow read, write: if isValidAppCheck();
+      }
     }
   }
 }

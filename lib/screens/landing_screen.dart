@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/dm_screen_data.dart';
 import '../models/landing_tool_item.dart';
+import '../models/party/campaign_membership.dart';
 import '../models/spellbook_data.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
+import '../services/party/campaign_registry_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
@@ -11,6 +13,7 @@ import '../widgets/interactive/pressable_card.dart';
 import '../widgets/dialogs/legal_dialogs.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
+import '../widgets/party/campaign_dialogs.dart';
 import '../widgets/room_banner_widget.dart';
 import 'dice_roller_screen.dart';
 import 'dm_reference_screen.dart';
@@ -18,6 +21,7 @@ import 'dpr_calculator_screen.dart';
 import 'glyph_showcase_screen.dart';
 import 'item_compendium_screen.dart';
 import 'monster_codex_screen.dart';
+import 'party_room_screen.dart';
 import 'settings_screen.dart';
 import 'spellbook_screen.dart';
 
@@ -229,6 +233,8 @@ class _LandingScreenState extends State<LandingScreen> {
                     ),
                   ),
 
+                  const SizedBox(height: 16),
+                  _buildCampaignHubSection(context, isDark),
                   const SizedBox(height: 16),
                   RoomBannerWidget(),
                   const SizedBox(height: 16),
@@ -1085,5 +1091,243 @@ class _LandingScreenState extends State<LandingScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildCampaignHubSection(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final registry = CampaignRegistryService();
+
+    return ValueListenableBuilder<List<CampaignMembership>>(
+      valueListenable: registry.membershipsNotifier,
+      builder: (context, memberships, _) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF191D2B) : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.25),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.shield_moon_outlined, color: colorScheme.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'ACTIVE CAMPAIGNS & PARTY ROOMS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        letterSpacing: 1.1,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                    ),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Create New Campaign', style: TextStyle(fontSize: 12)),
+                    onPressed: () => CreateCampaignDialog.show(
+                      context,
+                      onCreated: (code) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => PartyRoomScreen(roomCode: code)),
+                        );
+                      },
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      minimumSize: Size.zero,
+                    ),
+                    icon: const Icon(Icons.login, size: 16),
+                    label: const Text('Join Campaign', style: TextStyle(fontSize: 12)),
+                    onPressed: () => JoinCampaignDialog.show(
+                      context,
+                      onJoined: (code) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => PartyRoomScreen(roomCode: code)),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (memberships.isEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.hub_outlined, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5), size: 28),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'No Active Campaigns Connected',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Create a campaign room to track party loot, coins, and dice rolls, or join with a room code from your DM.',
+                              style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 110,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: memberships.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final m = memberships[index];
+                      return _buildCampaignCard(context, m, isDark);
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCampaignCard(BuildContext context, CampaignMembership m, bool isDark) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    Color badgeColor = Colors.blue;
+    String badgeText = 'Player';
+    if (m.role == CampaignRole.host) {
+      badgeColor = Colors.amber.shade700;
+      badgeText = 'DM';
+    } else if (m.role == CampaignRole.coDm) {
+      badgeColor = Colors.orange;
+      badgeText = 'Co-DM';
+    }
+
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+      ),
+      color: isDark ? const Color(0xFF222738) : Colors.white,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          HapticService.selectionTick(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PartyRoomScreen(roomCode: m.roomCode),
+            ),
+          );
+        },
+        child: Container(
+          width: 220,
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: badgeColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Flexible(
+                    child: Text(
+                      m.roomCode,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                        color: colorScheme.primary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                m.campaignName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              Row(
+                children: [
+                  Icon(Icons.schedule, size: 12, color: colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      _formatLastPlayed(m.lastPlayed),
+                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatLastPlayed(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/magic_items/magic_item_library.dart';
+import '../../models/party/campaign_membership.dart';
+import '../../models/party/party_loot_item.dart';
 import '../../models/tables/rollable_table.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
+import '../../services/party/campaign_registry_service.dart';
+import '../../services/party/party_room_service.dart';
 import '../../services/rules/treasure_generator_engine.dart';
 import '../item_compendium/item_detail_dialog.dart';
+import '../party/campaign_dialogs.dart';
 
 /// Interactive UI view for generating Individual Monster Loot and Treasure Hoards
 /// with Party Share Calculations and Thematic Gemstone / Art Liquidation.
@@ -58,6 +63,156 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  Future<void> _depositToCampaignVault() async {
+    if (_currentDrop == null) return;
+    final drop = _currentDrop!;
+    final registry = CampaignRegistryService();
+    final partyService = PartyRoomService();
+    final memberships = registry.memberships;
+
+    if (memberships.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No campaign rooms found. Create or join a campaign room first!'),
+          action: SnackBarAction(
+            label: 'Create',
+            onPressed: () => CreateCampaignDialog.show(context),
+          ),
+        ),
+      );
+      return;
+    }
+
+    CampaignMembership target;
+    if (memberships.length == 1) {
+      target = memberships.first;
+    } else {
+      final chosen = await showDialog<CampaignMembership>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.shield_moon_outlined, color: Colors.amber),
+                SizedBox(width: 8),
+                Text('Select Campaign Vault', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: memberships.length,
+                itemBuilder: (ctx, idx) {
+                  final m = memberships[idx];
+                  return ListTile(
+                    leading: const Icon(Icons.shield_outlined),
+                    title: Text(m.campaignName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${m.roomCode} (${m.role.label})'),
+                    onTap: () => Navigator.pop(ctx, m),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ],
+          );
+        },
+      );
+      if (chosen == null) return;
+      if (!mounted) return;
+      target = chosen;
+    }
+
+    HapticService.mediumImpact(context);
+    final playerName = target.characterId ?? 'DM';
+
+    // Deposit coins
+    if (drop.cp > 0 || drop.sp > 0 || drop.ep > 0 || drop.gp > 0 || drop.pp > 0) {
+      await partyService.depositCoins(
+        roomCode: target.roomCode,
+        playerName: playerName,
+        cp: drop.cp,
+        sp: drop.sp,
+        ep: drop.ep,
+        gp: drop.gp,
+        pp: drop.pp,
+        note: 'Treasure Drop (${drop.tierLabel})',
+      );
+    }
+
+    // Deposit Gems
+    for (final gem in drop.gemstones) {
+      final item = PartyLootItem(
+        id: 'gem_${DateTime.now().millisecondsSinceEpoch}_${gem.name.replaceAll(RegExp(r'\W+'), '_')}',
+        name: gem.name,
+        category: 'gem',
+        count: gem.count,
+        gpValue: gem.gpValue.toDouble(),
+        sourceTableOrMonster: 'Treasure Drop (${drop.tierLabel})',
+        createdAt: DateTime.now(),
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      );
+      await partyService.addLootItem(
+        roomCode: target.roomCode,
+        playerName: playerName,
+        item: item,
+      );
+    }
+
+    // Deposit Art
+    for (final art in drop.artObjects) {
+      final item = PartyLootItem(
+        id: 'art_${DateTime.now().millisecondsSinceEpoch}_${art.name.replaceAll(RegExp(r'\W+'), '_')}',
+        name: art.name,
+        category: 'art',
+        count: art.count,
+        gpValue: art.gpValue.toDouble(),
+        sourceTableOrMonster: 'Treasure Drop (${drop.tierLabel})',
+        createdAt: DateTime.now(),
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      );
+      await partyService.addLootItem(
+        roomCode: target.roomCode,
+        playerName: playerName,
+        item: item,
+      );
+    }
+
+    // Deposit Magic Items
+    for (int i = 0; i < drop.magicItemNames.length; i++) {
+      final name = drop.magicItemNames[i];
+      final item = PartyLootItem(
+        id: 'magic_${DateTime.now().millisecondsSinceEpoch}_$i',
+        name: name,
+        category: 'magicItem',
+        count: 1,
+        gpValue: 0.0,
+        requiresAttunement: name.toLowerCase().contains('attunement') || name.toLowerCase().contains('ring') || name.toLowerCase().contains('cloak'),
+        sourceTableOrMonster: 'Treasure Drop (${drop.tierLabel})',
+        createdAt: DateTime.now(),
+        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      );
+      await partyService.addLootItem(
+        roomCode: target.roomCode,
+        playerName: playerName,
+        item: item,
+      );
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deposited treasure into "${target.campaignName}" (${target.roomCode})!'),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
@@ -224,6 +379,12 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.shield_moon_outlined, size: 18, color: Color(0xFFF59E0B)),
+                  tooltip: 'Deposit into Campaign Vault',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _depositToCampaignVault,
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy, size: 18),

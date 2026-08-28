@@ -8,9 +8,12 @@ import '../screens/glyph_showcase_screen.dart';
 import '../screens/item_compendium_screen.dart';
 import '../screens/minion_tool_screen.dart';
 import '../screens/monster_codex_screen.dart';
+import '../screens/party_room_screen.dart';
 import '../screens/spellbook_screen.dart';
 import '../screens/table_index_screen.dart';
 import '../services/haptic_service.dart';
+import '../services/party/campaign_registry_service.dart';
+import '../widgets/party/campaign_dialogs.dart';
 
 /// Data class representing a launcher tool or companion card on the Landing Screen.
 class LandingToolItem {
@@ -96,6 +99,54 @@ class LandingToolRegistry {
 
   static List<LandingToolItem> get defaultTools => [
         // Core Utilities
+        LandingToolItem(
+          id: 'party_room_vault',
+          title: 'Party Room & Shared Vault',
+          category: 'Core Utilities',
+          badgeText: 'Party Hub',
+          badgeColor: Colors.amberAccent,
+          icon: Icons.shield_moon,
+          accentColor: Colors.amberAccent,
+          description:
+              'Multi-campaign shared loot tracker, high-contrast party purse, share calculator, and live dice broadcast room.',
+          keywords: [
+            'party',
+            'room',
+            'vault',
+            'loot',
+            'campaign',
+            'gold',
+            'purse',
+            'coins',
+            'dice',
+            'hoard',
+            'tracker',
+            'dm'
+          ],
+          onLaunch: (context) {
+            final active = CampaignRegistryService().activeCampaign;
+            if (active != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PartyRoomScreen(roomCode: active.roomCode),
+                ),
+              );
+            } else {
+              JoinCampaignDialog.show(
+                context,
+                onJoined: (code) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PartyRoomScreen(roomCode: code),
+                    ),
+                  );
+                },
+              );
+            }
+          },
+        ),
         LandingToolItem(
           id: 'dice_roller',
           title: 'Dice Roller & Party Rooms',
