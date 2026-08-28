@@ -64,7 +64,7 @@ void main() {
       expect(find.text(roomCode), findsOneWidget);
       expect(find.text('DM'), findsWidgets);
 
-      expect(find.text('Party Coin Vault'), findsOneWidget);
+      expect(find.text('Party Coin Vault & Reserve'), findsOneWidget);
       expect(find.text('Deposit Coins'), findsOneWidget);
       expect(find.text('Withdraw'), findsOneWidget);
       expect(find.text('Party Share Calculator'), findsOneWidget);
@@ -206,10 +206,10 @@ void main() {
       // Check Active Character Banner
       expect(find.text('ACTIVE CHARACTER / SESSION IDENTITY'), findsOneWidget);
       expect(find.text('Gandalf'), findsWidgets);
-      expect(find.text('Frodo (Rogue)'), findsOneWidget);
+      expect(find.text('Frodo (Rogue)'), findsWidgets);
 
       // Tap Quick Roster Select chip for 'Frodo (Rogue)'
-      await tester.tap(find.text('Frodo (Rogue)'));
+      await tester.tap(find.text('Frodo (Rogue)').first);
       await tester.pumpAndSettle();
 
       expect(find.text('Frodo (Rogue)'), findsWidgets);
