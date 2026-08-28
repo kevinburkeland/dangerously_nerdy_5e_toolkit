@@ -634,11 +634,10 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     ColorScheme colorScheme,
     bool isDark,
   ) {
-    final allMembers = <String>{
-      if (session != null) ...session.characterRoster,
-      if (session != null) ...session.activePlayers,
-      if (session != null) ...session.memberPurses.keys,
-    }.where((s) => s.trim().isNotEmpty).toList();
+    final roster = session?.characterRoster.where((s) => s.trim().isNotEmpty).toList() ?? [];
+    final allMembers = roster.isNotEmpty
+        ? roster
+        : [_playerName].where((s) => s.trim().isNotEmpty).toList();
 
     if (allMembers.isEmpty) return const SizedBox.shrink();
 

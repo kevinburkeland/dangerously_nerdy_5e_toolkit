@@ -658,30 +658,42 @@ class PartyRoomService {
     var current = _localRooms[clean];
     if (current != null) {
       final updatedRoster = List<String>.from(current.characterRoster)..remove(trimmed);
-      _localRooms[clean] = current.copyWith(
+      final updatedPurses = Map<String, PartyPurse>.from(current.memberPurses);
+      var updatedPartyPurse = current.partyPurse;
+
+      // Transfer any remaining personal coins of the deleted character into the party reserve
+      final deletedPurse = updatedPurses.remove(trimmed);
+      if (deletedPurse != null && !deletedPurse.isEmpty) {
+        updatedPartyPurse = updatedPartyPurse.add(deletedPurse);
+      }
+
+      final updatedSession = current.copyWith(
         characterRoster: updatedRoster,
+        memberPurses: updatedPurses,
+        partyPurse: updatedPartyPurse,
         lastUpdated: DateTime.now(),
       );
+      _localRooms[clean] = updatedSession;
       _emitSession(clean);
-    }
 
-    await logEvent(
-      roomCode: clean,
-      type: 'rosterUpdate',
-      playerName: playerName,
-      details: '$playerName removed "$trimmed" from the party roster',
-    );
+      final transferredSuffix = (deletedPurse != null && !deletedPurse.isEmpty)
+          ? ' (transferred ~${deletedPurse.totalGpEquivalent.toStringAsFixed(1)} GP to Party Reserve)'
+          : '';
+      await logEvent(
+        roomCode: clean,
+        type: 'rosterUpdate',
+        playerName: playerName,
+        details: '$playerName removed "$trimmed" from the party roster$transferredSuffix',
+      );
 
-    // Firestore update
-    if (isFirebaseAvailable) {
-      try {
-        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.update({
-          'characterRoster': FieldValue.arrayRemove([trimmed]),
-          'lastUpdated': DateTime.now().toIso8601String(),
-        });
-      } catch (e, st) {
-        LoggingService().logNonFatal(e, st, reason: 'Firestore removeCharacterFromRoster failed for $clean');
+      // Firestore update
+      if (isFirebaseAvailable) {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore removeCharacterFromRoster failed for $clean');
+        }
       }
     }
   }
@@ -698,30 +710,42 @@ class PartyRoomService {
     // In-memory update
     var current = _localRooms[clean];
     if (current != null) {
-      _localRooms[clean] = current.copyWith(
+      final updatedPurses = Map<String, PartyPurse>.from(current.memberPurses);
+      var updatedPartyPurse = current.partyPurse;
+
+      // Clean up purses of any characters no longer in roster
+      final removedKeys = updatedPurses.keys.where((k) => !cleanedRoster.contains(k)).toList();
+      for (final removedKey in removedKeys) {
+        final deletedPurse = updatedPurses.remove(removedKey);
+        if (deletedPurse != null && !deletedPurse.isEmpty) {
+          updatedPartyPurse = updatedPartyPurse.add(deletedPurse);
+        }
+      }
+
+      final updatedSession = current.copyWith(
         characterRoster: cleanedRoster,
+        memberPurses: updatedPurses,
+        partyPurse: updatedPartyPurse,
         lastUpdated: DateTime.now(),
       );
+      _localRooms[clean] = updatedSession;
       _emitSession(clean);
-    }
 
-    await logEvent(
-      roomCode: clean,
-      type: 'rosterUpdate',
-      playerName: playerName,
-      details: '$playerName updated the party roster (${cleanedRoster.length} members)',
-    );
+      await logEvent(
+        roomCode: clean,
+        type: 'rosterUpdate',
+        playerName: playerName,
+        details: '$playerName updated the party roster (${cleanedRoster.length} members)',
+      );
 
-    // Firestore update
-    if (isFirebaseAvailable) {
-      try {
-        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.update({
-          'characterRoster': cleanedRoster,
-          'lastUpdated': DateTime.now().toIso8601String(),
-        });
-      } catch (e, st) {
-        LoggingService().logNonFatal(e, st, reason: 'Firestore updateCharacterRoster failed for $clean');
+      // Firestore update
+      if (isFirebaseAvailable) {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore updateCharacterRoster failed for $clean');
+        }
       }
     }
   }

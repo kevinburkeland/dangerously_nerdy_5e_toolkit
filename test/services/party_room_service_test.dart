@@ -434,5 +434,57 @@ void main() {
       expect(live!.getMemberPurse('Gimli').gp, equals(75));
       expect(live.partyPurse.gp, equals(25));
     });
+
+    test('Deleting a character from roster purges member purse and transfers coins to Reserve', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Roster Deletion Campaign',
+        playerName: 'DM',
+      );
+
+      // Add Boromir and Frodo to roster
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Boromir',
+        playerName: 'DM',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Frodo',
+        playerName: 'DM',
+      );
+
+      // Give Boromir 50 GP and Frodo 10 GP
+      await partyService.updateMemberPurse(
+        roomCode: session.roomCode,
+        characterName: 'Boromir',
+        newPurse: const PartyPurse(gp: 50),
+        performedBy: 'DM',
+      );
+      await partyService.updateMemberPurse(
+        roomCode: session.roomCode,
+        characterName: 'Frodo',
+        newPurse: const PartyPurse(gp: 10),
+        performedBy: 'DM',
+      );
+
+      var live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.characterRoster, contains('Boromir'));
+      expect(live.getMemberPurse('Boromir').gp, equals(50));
+      expect(live.partyPurse.gp, equals(0));
+
+      // Remove Boromir from roster
+      await partyService.removeCharacterFromRoster(
+        roomCode: session.roomCode,
+        characterName: 'Boromir',
+        playerName: 'DM',
+      );
+
+      live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.characterRoster.contains('Boromir'), isFalse);
+      expect(live.memberPurses.containsKey('Boromir'), isFalse);
+      // Boromir's 50 GP transferred to party reserve
+      expect(live.partyPurse.gp, equals(50));
+      expect(live.getMemberPurse('Frodo').gp, equals(10));
+    });
   });
 }

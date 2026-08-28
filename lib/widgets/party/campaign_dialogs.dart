@@ -1231,10 +1231,9 @@ class AssignLootDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allCandidates = <String>{
-      currentActiveName,
-      ...roster,
-      ...activePlayers,
-    }.where((s) => s.trim().isNotEmpty).toList();
+      if (currentActiveName.trim().isNotEmpty) currentActiveName.trim(),
+      ...roster.map((s) => s.trim()).where((s) => s.isNotEmpty),
+    }.toList();
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -1366,10 +1365,11 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
       if (mounted && session != null) {
         setState(() {
           _sessionState = session;
-          final allCandidates = <String>{
-            ...session.characterRoster,
-            ...session.activePlayers,
-          }.where((s) => s.trim().isNotEmpty).toSet();
+          final roster = session.characterRoster.where((s) => s.trim().isNotEmpty).toSet();
+          final currentMemberChar = _registry.getMembership(_selectedRoomCode)?.characterId;
+          final allCandidates = roster.isNotEmpty
+              ? roster
+              : (currentMemberChar != null && currentMemberChar.isNotEmpty ? {currentMemberChar} : <String>{});
 
           if (_selectedRecipients.isEmpty) {
             _selectedRecipients.addAll(allCandidates);
@@ -1439,10 +1439,11 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
     final colorScheme = theme.colorScheme;
     final memberships = _registry.memberships;
 
-    final candidates = <String>{
-      if (_sessionState != null) ..._sessionState!.characterRoster,
-      if (_sessionState != null) ..._sessionState!.activePlayers,
-    }.where((s) => s.trim().isNotEmpty).toList();
+    final roster = _sessionState?.characterRoster.where((s) => s.trim().isNotEmpty).toList() ?? [];
+    final currentMemberChar = _registry.getMembership(_selectedRoomCode)?.characterId;
+    final candidates = roster.isNotEmpty
+        ? roster
+        : (currentMemberChar != null && currentMemberChar.isNotEmpty ? [currentMemberChar] : <String>[]);
 
     final shareCount = _selectedRecipients.length + (_includePartyReserve ? 1 : 0);
 
