@@ -123,6 +123,8 @@ void main() {
       final skipBtn = find.text('Skip to End');
       expect(skipBtn, findsOneWidget);
       await tester.tap(skipBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
       await tester.pumpAndSettle();
 
       // Victory dialog should appear
@@ -148,6 +150,10 @@ void main() {
       final mcBtn = find.text('Monte Carlo Odds');
       expect(mcBtn, findsOneWidget);
       await tester.tap(mcBtn);
+      await tester.pump();
+      await tester.runAsync(() async {
+        await Future.delayed(const Duration(milliseconds: 600));
+      });
       await tester.pumpAndSettle();
 
       expect(find.text('Monte Carlo Win Probabilities'), findsOneWidget);

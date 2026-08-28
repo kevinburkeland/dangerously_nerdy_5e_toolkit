@@ -9,16 +9,15 @@ import 'firebase_options.dart';
 import 'models/app_settings.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
-import 'services/logging_service.dart';
-import 'services/persistence/debounced_storage_service.dart';
-import 'services/persistence/storage_migration_service.dart';
+import 'services/app_services.dart';
 import 'theme/app_theme.dart';
 
 void main() {
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    final logger = LoggingService();
+    final services = AppServices.instance;
+    final logger = services.logger;
 
     FlutterError.onError = (FlutterErrorDetails details) {
       FlutterError.presentError(details);
@@ -42,7 +41,7 @@ void main() {
     SharedPreferences? prefs;
     try {
       prefs = await SharedPreferences.getInstance();
-      await StorageMigrationService().runMigrations(prefs);
+      await services.migrationService.runMigrations(prefs);
     } catch (e, stackTrace) {
       logger.logNonFatal(
         e,
@@ -96,7 +95,7 @@ void main() {
       ),
     );
   }, (Object error, StackTrace stack) {
-    LoggingService().logFatal(error, stack, reason: 'runZonedGuarded uncaught zone exception');
+    AppServices.instance.logger.logFatal(error, stack, reason: 'runZonedGuarded uncaught zone exception');
   });
 }
 
@@ -126,7 +125,7 @@ class _DangerouslyNerdy5eToolkitAppState extends State<DangerouslyNerdy5eToolkit
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       // Immediately flush all debounced disk writes to avoid data loss on background kill
-      DebouncedStorageService().flushAll();
+      AppServices.instance.debouncedStorage.flushAll();
     }
   }
 

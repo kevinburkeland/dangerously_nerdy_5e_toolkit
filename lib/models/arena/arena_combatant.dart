@@ -488,6 +488,34 @@ class ArenaCombatant {
     return (broken: false, saveRoll: totalSave, dc: dc, lostSpellId: activeConcentrationSpellId);
   }
 
+  // --- Hoisted Static Regular Expressions ---
+  static final RegExp _slotPattern = RegExp(
+    r'(\d+)(?:st|nd|rd|th)[ -]level\s*\((\d+)\s*slots?\)',
+    caseSensitive: false,
+  );
+  static final RegExp _casterLvlPattern = RegExp(
+    r'(\d+)(?:st|nd|rd|th)-level spellcaster',
+    caseSensitive: false,
+  );
+  static final RegExp _spellSaveDcPattern = RegExp(
+    r'spell save DC\s*(\d+)',
+    caseSensitive: false,
+  );
+  static final RegExp _spellAttackPattern = RegExp(
+    r'([+-]?\d+)\s+to hit with spell attacks',
+    caseSensitive: false,
+  );
+  static final RegExp _reachPattern = RegExp(
+    r'reach\s*(\d+)\s*ft',
+    caseSensitive: false,
+  );
+  static final RegExp _rechargeDayPattern = RegExp(
+    r'\((\d+)/day\)',
+    caseSensitive: false,
+  );
+  static final Map<String, RegExp> _spellWordPatterns = {};
+  static final Map<String, RegExp> _abilitySavePatterns = {};
+
   // --- Static Pre-Parsing Helpers ---
 
   static Map<int, int> _parseMonsterSpellSlots(MinionStatBlock sb) {
@@ -496,11 +524,7 @@ class ArenaCombatant {
     if (corpus.isEmpty) return slots;
 
     // 1. Check explicit slot regex, e.g. "1st level (4 slots)" or "3rd-level (3 slots)"
-    final slotPattern = RegExp(
-      r'(\d+)(?:st|nd|rd|th)[ -]level\s*\((\d+)\s*slots?\)',
-      caseSensitive: false,
-    );
-    for (final match in slotPattern.allMatches(corpus)) {
+    for (final match in _slotPattern.allMatches(corpus)) {
       final lvl = int.tryParse(match.group(1) ?? '');
       final count = int.tryParse(match.group(2) ?? '');
       if (lvl != null && count != null && lvl >= 1 && lvl <= 9) {
@@ -510,10 +534,7 @@ class ArenaCombatant {
 
     // 2. Fallback to caster level progression if slots weren't explicitly enumerated
     if (slots.isEmpty) {
-      final casterLvlMatch = RegExp(
-        r'(\d+)(?:st|nd|rd|th)-level spellcaster',
-        caseSensitive: false,
-      ).firstMatch(corpus);
+      final casterLvlMatch = _casterLvlPattern.firstMatch(corpus);
       if (casterLvlMatch != null) {
         final casterLevel = int.tryParse(casterLvlMatch.group(1) ?? '') ?? 1;
         final matrix = MulticlassSlotMatrix.getSpellSlots(casterLevel);
@@ -573,7 +594,7 @@ class ArenaCombatant {
 
   static int _parseMonsterSpellSaveDc(MinionStatBlock sb, double cr) {
     final corpus = _buildMonsterCorpus(sb);
-    final match = RegExp(r'spell save DC\s*(\d+)', caseSensitive: false).firstMatch(corpus);
+    final match = _spellSaveDcPattern.firstMatch(corpus);
     if (match != null) {
       final val = int.tryParse(match.group(1) ?? '');
       if (val != null) return val;
@@ -586,7 +607,7 @@ class ArenaCombatant {
 
   static int _parseMonsterSpellAttackBonus(MinionStatBlock sb, double cr) {
     final corpus = _buildMonsterCorpus(sb);
-    final match = RegExp(r'([+-]?\d+)\s+to hit with spell attacks', caseSensitive: false).firstMatch(corpus);
+    final match = _spellAttackPattern.firstMatch(corpus);
     if (match != null) {
       final val = int.tryParse(match.group(1)!.replaceAll('+', ''));
       if (val != null) return val;
@@ -608,7 +629,7 @@ class ArenaCombatant {
   static int _parseMonsterMeleeReach(MinionStatBlock sb) {
     int maxReach = 5;
     for (final a in sb.actions) {
-      final match = RegExp(r'reach\s*(\d+)\s*ft', caseSensitive: false).firstMatch(a.description);
+      final match = _reachPattern.firstMatch(a.description);
       if (match != null) {
         final r = int.tryParse(match.group(1) ?? '') ?? 5;
         if (r > maxReach) maxReach = r;
@@ -627,7 +648,7 @@ class ArenaCombatant {
   static int _parseMonsterLegendaryResistances(MinionStatBlock sb) {
     for (final t in sb.traits) {
       if (t.name.toLowerCase().contains('legendary resistance')) {
-        final match = RegExp(r'\((\d+)/day\)', caseSensitive: false).firstMatch(t.name);
+        final match = _rechargeDayPattern.firstMatch(t.name);
         if (match != null) {
           final count = int.tryParse(match.group(1) ?? '');
           if (count != null) return count;
@@ -658,7 +679,10 @@ class ArenaCombatant {
   static bool _containsSpellWord(String corpus, String spellName) {
     final lowerName = spellName.toLowerCase();
     final cleanCorpus = corpus.replaceAll('_', ' ').replaceAll('*', ' ');
-    final pattern = RegExp('\\b${RegExp.escape(lowerName)}\\b', caseSensitive: false);
+    final pattern = _spellWordPatterns.putIfAbsent(
+      lowerName,
+      () => RegExp('\\b${RegExp.escape(lowerName)}\\b', caseSensitive: false),
+    );
     return pattern.hasMatch(cleanCorpus);
   }
 
@@ -734,9 +758,12 @@ class ArenaCombatant {
     // Check explicit saving throw text like "Dex +5, Con +8"
     final rawSaves = sb.savingThrows;
     if (rawSaves != null && rawSaves.isNotEmpty) {
-      final pattern = RegExp(
-        '\\b(?:${RegExp.escape(abLower)}|${_expandAbilityName(abLower)})\\s*([+-]?\\s*\\d+)',
-        caseSensitive: false,
+      final pattern = _abilitySavePatterns.putIfAbsent(
+        abLower,
+        () => RegExp(
+          '\\b(?:${RegExp.escape(abLower)}|${_expandAbilityName(abLower)})\\s*([+-]?\\s*\\d+)',
+          caseSensitive: false,
+        ),
       );
       final match = pattern.firstMatch(rawSaves);
       if (match != null) {

@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/logging_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/debounced_storage_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/storage_migration_service.dart';
@@ -158,4 +160,33 @@ void main() {
       expect(restoreResult.errorMessage, isNotNull);
     });
   });
+
+  group('AppServices Dependency Injection Container Tests', () {
+    tearDown(() {
+      AppServices.reset();
+    });
+
+    test('AppServices provides default singletons and supports overrides', () {
+      final defaultServices = AppServices.instance;
+      expect(defaultServices.logger, isNotNull);
+      expect(defaultServices.debouncedStorage, isNotNull);
+      expect(defaultServices.migrationService, isNotNull);
+      expect(defaultServices.dprPersistence, isNotNull);
+      expect(defaultServices.presetService, isNotNull);
+
+      final customLogger = LoggingService();
+      final customDebouncer = DebouncedStorageService.custom(logger: customLogger);
+      AppServices.registerOverrides(
+        logger: customLogger,
+        debouncedStorage: customDebouncer,
+      );
+
+      expect(AppServices.instance.logger, same(customLogger));
+      expect(AppServices.instance.debouncedStorage, same(customDebouncer));
+
+      AppServices.reset();
+      expect(AppServices.instance.logger, isNotNull);
+    });
+  });
 }
+

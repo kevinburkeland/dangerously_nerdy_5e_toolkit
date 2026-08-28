@@ -182,9 +182,11 @@ class CantripScalingEngine {
     return 1;
   }
 
+  static final RegExp _cantripFormulaPattern = RegExp(r'^(\d+)d(\d+)(.*)$');
+
   /// Adjusts dice count in a formula like "1d10" or "1d6" based on total character level.
   static String scaleCantripFormula(String baseFormula, int totalCharacterLevel) {
-    final match = RegExp(r'^(\d+)d(\d+)(.*)$').firstMatch(baseFormula.trim());
+    final match = _cantripFormulaPattern.firstMatch(baseFormula.trim());
     if (match == null) return baseFormula;
 
     final baseCount = int.parse(match.group(1)!);
@@ -244,6 +246,9 @@ class SpellRollResult {
 class SpellRollEngine {
   SpellRollEngine._();
 
+  static final RegExp _diceFormulaPattern = RegExp(r'(\d+)d(\d+)');
+  static final RegExp _staticModPattern = RegExp(r'([+-])(\d+)$');
+
   /// Evaluates and rolls a spell formula (e.g. "8d6", "2d8 + mod", "1d4 + 4")
   /// using the cryptographically secure RNG and resolves ability modifiers.
   static SpellRollResult roll({
@@ -251,7 +256,7 @@ class SpellRollEngine {
     int abilityModifier = 0,
   }) {
     final clean = formula.replaceAll(' ', '');
-    final match = RegExp(r'(\d+)d(\d+)').firstMatch(clean);
+    final match = _diceFormulaPattern.firstMatch(clean);
 
     if (match == null) {
       // Fallback for static numbers or unsupported custom formulas
@@ -276,7 +281,7 @@ class SpellRollEngine {
     } else if (clean.contains('-mod')) {
       finalModifier = -abilityModifier;
     } else {
-      final staticMatch = RegExp(r'([+-])(\d+)$').firstMatch(clean);
+      final staticMatch = _staticModPattern.firstMatch(clean);
       if (staticMatch != null) {
         final sign = staticMatch.group(1);
         final val = int.tryParse(staticMatch.group(2) ?? '0') ?? 0;

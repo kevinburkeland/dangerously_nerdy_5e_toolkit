@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import '../../models/arena/arena_action_result.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
@@ -3349,6 +3350,79 @@ class ArenaCombatEngine {
     );
   }
 
+  /// Background isolate runner for Monte Carlo simulation.
+  static ArenaMonteCarloResult _isolateMonteCarloRunner(_ArenaMonteCarloPayload payload) {
+    final engine = ArenaCombatEngine(rng: payload.seed != null ? Random(payload.seed) : Random());
+    return engine.runMonteCarlo(
+      teamA: payload.teamA,
+      teamB: payload.teamB,
+      strategy: payload.strategy,
+      edition: payload.edition,
+      environment: payload.environment,
+      iterations: payload.iterations,
+      maxRounds: payload.maxRounds,
+    );
+  }
+
+  /// Background isolate runner for full single match simulation.
+  static ArenaSimulationResult _isolateMatchRunner(_ArenaMatchSimulationPayload payload) {
+    final engine = ArenaCombatEngine(rng: payload.seed != null ? Random(payload.seed) : Random());
+    return engine.simulateMatch(
+      initialTeamA: payload.teamA,
+      initialTeamB: payload.teamB,
+      strategy: payload.strategy,
+      edition: payload.edition,
+      environment: payload.environment,
+      maxRounds: payload.maxRounds,
+    );
+  }
+
+  /// High-speed Monte Carlo simulation running [iterations] times offloaded to a background isolate.
+  Future<ArenaMonteCarloResult> runMonteCarloAsync({
+    required List<ArenaCombatant> teamA,
+    required List<ArenaCombatant> teamB,
+    ArenaTargetingStrategy strategy = ArenaTargetingStrategy.focusLowestHp,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
+    int iterations = 500,
+    int maxRounds = 50,
+    int? seed,
+  }) {
+    final payload = _ArenaMonteCarloPayload(
+      teamA: teamA.map((c) => c.clone()).toList(),
+      teamB: teamB.map((c) => c.clone()).toList(),
+      strategy: strategy,
+      edition: edition,
+      environment: environment,
+      iterations: iterations,
+      maxRounds: maxRounds,
+      seed: seed,
+    );
+    return compute(_isolateMonteCarloRunner, payload);
+  }
+
+  /// Simulates a complete pit fight match to completion offloaded to a background isolate.
+  Future<ArenaSimulationResult> simulateMatchAsync({
+    required List<ArenaCombatant> initialTeamA,
+    required List<ArenaCombatant> initialTeamB,
+    ArenaTargetingStrategy strategy = ArenaTargetingStrategy.focusLowestHp,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+    ArenaEnvironment environment = ArenaEnvironment.colosseum,
+    int maxRounds = 50,
+    int? seed,
+  }) {
+    final payload = _ArenaMatchSimulationPayload(
+      teamA: initialTeamA.map((c) => c.clone()).toList(),
+      teamB: initialTeamB.map((c) => c.clone()).toList(),
+      strategy: strategy,
+      edition: edition,
+      environment: environment,
+      maxRounds: maxRounds,
+      seed: seed,
+    );
+    return compute(_isolateMatchRunner, payload);
+  }
+
   // --- Internal Dice Helpers ---
 
   int _rollDie(int sides) {
@@ -3395,3 +3469,48 @@ class ArenaCombatEngine {
     return 'Misses$advTag (Roll $naturalRoll + ${attack.attackBonus} = $totalAttack vs AC ${defender.ac}).';
   }
 }
+
+/// Isolate transport payload for Monte Carlo simulations.
+class _ArenaMonteCarloPayload {
+  final List<ArenaCombatant> teamA;
+  final List<ArenaCombatant> teamB;
+  final ArenaTargetingStrategy strategy;
+  final DmRulesEdition edition;
+  final ArenaEnvironment environment;
+  final int iterations;
+  final int maxRounds;
+  final int? seed;
+
+  const _ArenaMonteCarloPayload({
+    required this.teamA,
+    required this.teamB,
+    required this.strategy,
+    required this.edition,
+    required this.environment,
+    required this.iterations,
+    required this.maxRounds,
+    this.seed,
+  });
+}
+
+/// Isolate transport payload for full match simulations.
+class _ArenaMatchSimulationPayload {
+  final List<ArenaCombatant> teamA;
+  final List<ArenaCombatant> teamB;
+  final ArenaTargetingStrategy strategy;
+  final DmRulesEdition edition;
+  final ArenaEnvironment environment;
+  final int maxRounds;
+  final int? seed;
+
+  const _ArenaMatchSimulationPayload({
+    required this.teamA,
+    required this.teamB,
+    required this.strategy,
+    required this.edition,
+    required this.environment,
+    required this.maxRounds,
+    this.seed,
+  });
+}
+

@@ -957,6 +957,63 @@ void main() {
           reason: 'In Cage Match, Goblin should choose melee Scimitar instead of ranged Shortbow');
       expect(attack.attackName.toLowerCase().contains('shortbow'), false);
     });
+
+    test('runMonteCarloAsync executes simulation across background isolate cleanly', () async {
+      final engine = ArenaCombatEngine(rng: Random(42));
+      final goblinMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'goblin');
+      final wolfMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'wolf');
+
+      final goblin = ArenaCombatant.fromMonster(
+        id: 'goblin_mc',
+        monster: goblinMonster,
+        team: ArenaTeam.teamA,
+      );
+      final wolf = ArenaCombatant.fromMonster(
+        id: 'wolf_mc',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final result = await engine.runMonteCarloAsync(
+        teamA: [goblin],
+        teamB: [wolf],
+        iterations: 20,
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+        environment: ArenaEnvironment.colosseum,
+        edition: DmRulesEdition.v2024,
+      );
+
+      expect(result.iterations, 20);
+      expect(result.teamAWins + result.teamBWins + result.draws, 20);
+    });
+
+    test('simulateMatchAsync executes complete match in background isolate', () async {
+      final engine = ArenaCombatEngine(rng: Random(42));
+      final goblinMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'goblin');
+      final wolfMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'wolf');
+
+      final goblin = ArenaCombatant.fromMonster(
+        id: 'goblin_sim',
+        monster: goblinMonster,
+        team: ArenaTeam.teamA,
+      );
+      final wolf = ArenaCombatant.fromMonster(
+        id: 'wolf_sim',
+        monster: wolfMonster,
+        team: ArenaTeam.teamB,
+      );
+
+      final result = await engine.simulateMatchAsync(
+        initialTeamA: [goblin],
+        initialTeamB: [wolf],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+        environment: ArenaEnvironment.colosseum,
+        edition: DmRulesEdition.v2024,
+      );
+
+      expect(result.totalRounds, greaterThanOrEqualTo(1));
+      expect(result.steps.isNotEmpty, true);
+    });
   });
 }
 

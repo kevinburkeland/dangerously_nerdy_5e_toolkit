@@ -70,21 +70,24 @@ class CustomPreset {
         (d) => d.name == dtStr,
         orElse: () => DieType.d6,
       );
+      final count = ((map['count'] as num?)?.toInt() ?? 1).clamp(1, 100);
+      final customSides = ((map['customSides'] as num?)?.toInt() ?? 6).clamp(2, 1000);
       parsedEntries = [
         DiceEntry(
           dieType: dt,
-          count: (map['count'] as num?)?.toInt() ?? 1,
-          customSides: (map['customSides'] as num?)?.toInt() ?? 6,
+          count: count,
+          customSides: customSides,
         )
       ];
     }
 
     final rawRollMode = map['rollMode']?.toString() ?? 'normal';
+    final mod = ((map['modifier'] as num?)?.toInt() ?? 0).clamp(-999, 999);
     return CustomPreset(
       id: map['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
       name: map['name']?.toString() ?? 'Custom Preset',
       diceEntries: parsedEntries,
-      modifier: (map['modifier'] as num?)?.toInt() ?? 0,
+      modifier: mod,
       rollMode: RollMode.values.firstWhere(
         (m) => m.name == rawRollMode,
         orElse: () => RollMode.normal,

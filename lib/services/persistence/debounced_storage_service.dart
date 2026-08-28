@@ -11,9 +11,16 @@ typedef AsyncWriteTask = Future<void> Function();
 /// by batching disk writes until an idle window expires.
 class DebouncedStorageService {
   static final DebouncedStorageService _instance = DebouncedStorageService._internal();
-  factory DebouncedStorageService() => _instance;
-  DebouncedStorageService._internal();
+  factory DebouncedStorageService({LoggingService? logger}) {
+    if (logger != null) {
+      return DebouncedStorageService.custom(logger: logger);
+    }
+    return _instance;
+  }
+  DebouncedStorageService._internal() : _logger = LoggingService();
+  DebouncedStorageService.custom({LoggingService? logger}) : _logger = logger ?? LoggingService();
 
+  final LoggingService _logger;
   final Map<String, Timer> _debounceTimers = {};
   final Map<String, AsyncWriteTask> _pendingTasks = {};
 
@@ -42,7 +49,7 @@ class DebouncedStorageService {
       try {
         await task();
       } catch (e, stackTrace) {
-        LoggingService().logNonFatal(
+        _logger.logNonFatal(
           e,
           stackTrace,
           reason: 'Failed to execute debounced write task: $taskKey',

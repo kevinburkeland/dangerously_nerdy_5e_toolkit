@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import '../../models/dpr/dpr_models.dart';
 
 /// Pure 5e probabilistic mathematical calculation engine for DPR, Accuracy, and Break-Even Analysis.
@@ -420,4 +421,85 @@ class DprCalculatorEngine {
       recommendation: rec,
     );
   }
+
+  // --- Isolate Runners & Async Interfaces ---
+
+  static DprCurveData _isolateCurveRunner(_DprCurvePayload payload) {
+    return generateCurve(
+      payload.profile,
+      advantageOverride: payload.advantageOverride,
+      minAc: payload.minAc,
+      maxAc: payload.maxAc,
+    );
+  }
+
+  static DprBreakEvenAnalysis _isolateBreakEvenRunner(_DprBreakEvenPayload payload) {
+    return calculateGwmBreakEven(
+      payload.profile,
+      advantage: payload.advantage,
+      minAc: payload.minAc,
+      maxAc: payload.maxAc,
+    );
+  }
+
+  /// Offloads DPR curve computation across ACs to a background isolate.
+  static Future<DprCurveData> generateCurveAsync(
+    DprCombatantProfile profile, {
+    AdvantageType? advantageOverride,
+    int minAc = 5,
+    int maxAc = 30,
+  }) {
+    final payload = _DprCurvePayload(
+      profile: profile,
+      advantageOverride: advantageOverride,
+      minAc: minAc,
+      maxAc: maxAc,
+    );
+    return compute(_isolateCurveRunner, payload);
+  }
+
+  /// Offloads Great Weapon Master break-even analysis to a background isolate.
+  static Future<DprBreakEvenAnalysis> calculateGwmBreakEvenAsync(
+    DprCombatantProfile baselineProfile, {
+    AdvantageType? advantage,
+    int minAc = 5,
+    int maxAc = 30,
+  }) {
+    final payload = _DprBreakEvenPayload(
+      profile: baselineProfile,
+      advantage: advantage,
+      minAc: minAc,
+      maxAc: maxAc,
+    );
+    return compute(_isolateBreakEvenRunner, payload);
+  }
 }
+
+class _DprCurvePayload {
+  final DprCombatantProfile profile;
+  final AdvantageType? advantageOverride;
+  final int minAc;
+  final int maxAc;
+
+  const _DprCurvePayload({
+    required this.profile,
+    this.advantageOverride,
+    required this.minAc,
+    required this.maxAc,
+  });
+}
+
+class _DprBreakEvenPayload {
+  final DprCombatantProfile profile;
+  final AdvantageType? advantage;
+  final int minAc;
+  final int maxAc;
+
+  const _DprBreakEvenPayload({
+    required this.profile,
+    this.advantage,
+    required this.minAc,
+    required this.maxAc,
+  });
+}
+

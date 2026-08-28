@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/dm_screen_data.dart';
 import '../models/dpr/dpr_models.dart';
 import '../providers/settings_provider.dart';
+import '../services/app_services.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/dpr_persistence_service.dart';
 import '../services/rules/dpr_calculator_engine.dart';
@@ -50,7 +51,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   }
 
   Future<void> _restorePersistedDraft() async {
-    final draft = await DprPersistenceService().loadActiveDraft();
+    final draft = await AppServices.instance.dprPersistence.loadActiveDraft();
     if (draft != null && mounted) {
       setState(() {
         _profile = draft.profile;
@@ -62,7 +63,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
   }
 
   void _autoSaveDraft() {
-    DprPersistenceService().saveActiveDraftDebounced(
+    AppServices.instance.dprPersistence.saveActiveDraftDebounced(
       DprActiveDraftState(
         profile: _profile,
         selectedAc: _selectedAc,

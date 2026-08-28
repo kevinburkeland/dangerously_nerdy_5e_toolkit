@@ -42,16 +42,24 @@ extension DprAttackActionSerialization on DprAttackAction {
       'attackBuffFlat': attackBuffFlat,
       'attacksPerRound': attacksPerRound,
       'isBonusActionAttack': isBonusActionAttack,
+      'reachInFeet': reachInFeet,
     };
   }
 
   static DprAttackAction fromMap(Map<String, dynamic> map) {
+    final dCount = ((map['diceCount'] as num?)?.toInt() ?? 1).clamp(0, 100);
+    final dSides = ((map['diceSides'] as num?)?.toInt() ?? 8).clamp(0, 100);
+    final secDCount = ((map['secondaryDiceCount'] as num?)?.toInt() ?? 0).clamp(0, 100);
+    final secDSides = ((map['secondaryDiceSides'] as num?)?.toInt() ?? 0).clamp(0, 100);
+    final critThresh = ((map['critThreshold'] as num?)?.toInt() ?? 20).clamp(1, 20);
+    final apr = ((map['attacksPerRound'] as num?)?.toInt() ?? 1).clamp(0, 50);
+
     return DprAttackAction(
       id: map['id']?.toString() ?? 'att_${DateTime.now().microsecondsSinceEpoch}',
       name: map['name']?.toString() ?? 'Attack Action',
       attackBonus: (map['attackBonus'] as num?)?.toInt() ?? 5,
-      diceCount: (map['diceCount'] as num?)?.toInt() ?? 1,
-      diceSides: (map['diceSides'] as num?)?.toInt() ?? 8,
+      diceCount: dCount,
+      diceSides: dSides,
       damageBonus: (map['damageBonus'] as num?)?.toInt() ?? 3,
       damageType: map['damageType']?.toString() ?? 'slashing',
       deliveryType: DprActionDeliveryType.values.firstWhere(
@@ -62,12 +70,12 @@ extension DprAttackActionSerialization on DprAttackAction {
       saveDc: (map['saveDc'] as num?)?.toInt(),
       halfDamageOnSave: map['halfDamageOnSave'] as bool? ?? true,
       isAoe: map['isAoe'] as bool? ?? false,
-      targetCount: (map['targetCount'] as num?)?.toInt() ?? 1,
+      targetCount: ((map['targetCount'] as num?)?.toInt() ?? 1).clamp(1, 100),
       rechargeRoll: (map['rechargeRoll'] as num?)?.toInt(),
       isLegendaryAction: map['isLegendaryAction'] as bool? ?? false,
-      legendaryCost: (map['legendaryCost'] as num?)?.toInt() ?? 1,
-      secondaryDiceCount: (map['secondaryDiceCount'] as num?)?.toInt() ?? 0,
-      secondaryDiceSides: (map['secondaryDiceSides'] as num?)?.toInt() ?? 0,
+      legendaryCost: ((map['legendaryCost'] as num?)?.toInt() ?? 1).clamp(1, 10),
+      secondaryDiceCount: secDCount,
+      secondaryDiceSides: secDSides,
       secondaryDamageBonus: (map['secondaryDamageBonus'] as num?)?.toInt() ?? 0,
       secondaryDamageType: map['secondaryDamageType']?.toString(),
       gwmMode: GwmMode.values.firstWhere(
@@ -90,13 +98,14 @@ extension DprAttackActionSerialization on DprAttackAction {
         orElse: () => WeaponMastery.none,
       ),
       abilityModForGraze: (map['abilityModForGraze'] as num?)?.toInt() ?? 0,
-      critThreshold: (map['critThreshold'] as num?)?.toInt() ?? 20,
-      extraCritDiceCount: (map['extraCritDiceCount'] as num?)?.toInt() ?? 0,
-      extraCritDiceSides: (map['extraCritDiceSides'] as num?)?.toInt() ?? 0,
-      attackBuffDiceSides: (map['attackBuffDiceSides'] as num?)?.toInt() ?? 0,
+      critThreshold: critThresh,
+      extraCritDiceCount: ((map['extraCritDiceCount'] as num?)?.toInt() ?? 0).clamp(0, 100),
+      extraCritDiceSides: ((map['extraCritDiceSides'] as num?)?.toInt() ?? 0).clamp(0, 100),
+      attackBuffDiceSides: ((map['attackBuffDiceSides'] as num?)?.toInt() ?? 0).clamp(0, 100),
       attackBuffFlat: (map['attackBuffFlat'] as num?)?.toInt() ?? 0,
-      attacksPerRound: (map['attacksPerRound'] as num?)?.toInt() ?? 1,
+      attacksPerRound: apr,
       isBonusActionAttack: map['isBonusActionAttack'] as bool? ?? false,
+      reachInFeet: ((map['reachInFeet'] as num?)?.toInt() ?? 5).clamp(5, 500),
     );
   }
 }
@@ -128,19 +137,25 @@ extension DprCombatantProfileSerialization on DprCombatantProfile {
           .toList();
     }
 
+    final level = ((map['level'] as num?)?.toInt() ?? 5).clamp(1, 30);
+    final abilityScore = ((map['abilityScore'] as num?)?.toInt() ?? 18).clamp(1, 30);
+    final profBonus = ((map['proficiencyBonus'] as num?)?.toInt() ?? 3).clamp(1, 10);
+    final sneakCount = ((map['sneakAttackDiceCount'] as num?)?.toInt() ?? 0).clamp(0, 50);
+    final sneakSides = ((map['sneakAttackDiceSides'] as num?)?.toInt() ?? 6).clamp(0, 100);
+
     return DprCombatantProfile(
       id: map['id']?.toString() ?? 'custom',
       name: map['name']?.toString() ?? 'Custom Hero',
       description: map['description']?.toString() ?? '',
-      level: (map['level'] as num?)?.toInt() ?? 5,
-      abilityScore: (map['abilityScore'] as num?)?.toInt() ?? 18,
-      proficiencyBonus: (map['proficiencyBonus'] as num?)?.toInt() ?? 3,
+      level: level,
+      abilityScore: abilityScore,
+      proficiencyBonus: profBonus,
       defaultAdvantage: AdvantageType.values.firstWhere(
         (e) => e.name == map['defaultAdvantage'],
         orElse: () => AdvantageType.normal,
       ),
-      sneakAttackDiceCount: (map['sneakAttackDiceCount'] as num?)?.toInt() ?? 0,
-      sneakAttackDiceSides: (map['sneakAttackDiceSides'] as num?)?.toInt() ?? 6,
+      sneakAttackDiceCount: sneakCount,
+      sneakAttackDiceSides: sneakSides,
       hasHalflingLuck: map['hasHalflingLuck'] as bool? ?? false,
       attacks: parsedAttacks.isNotEmpty ? parsedAttacks : const [
         DprAttackAction(
@@ -161,3 +176,4 @@ extension DprCombatantProfileSerialization on DprCombatantProfile {
   static DprCombatantProfile fromJson(String source) =>
       fromMap(json.decode(source) as Map<String, dynamic>);
 }
+

@@ -708,8 +708,7 @@ class DprCombatantProfile {
   }
 
   static _ParsedDamage _parseDamageFormula(String text) {
-    final diceRegex = RegExp(r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?(?:\s+([a-zA-Z]+))?');
-    final match = diceRegex.firstMatch(text);
+    final match = _damageFormulaRegex.firstMatch(text);
     if (match != null) {
       final count = int.tryParse(match.group(1) ?? '1') ?? 1;
       final sides = int.tryParse(match.group(2) ?? '6') ?? 6;
@@ -827,6 +826,54 @@ class DprMonsterAcPreset {
   ];
 }
 
+// --- Hoisted Regular Expression Constants for DPR Parsers ---
+final RegExp _damageFormulaRegex = RegExp(r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?(?:\s+([a-zA-Z]+))?');
+final RegExp _globalAttackCountRegex = RegExp(
+  r'makes\s+(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
+  caseSensitive: false,
+);
+final RegExp _swallowClauseRegex = RegExp(r'it can (?:use|make) its swallow instead of its bite\.?', caseSensitive: false);
+final RegExp _frightfulClauseRegex = RegExp(r'it can use its frightful presence\.?', caseSensitive: false);
+final RegExp _replaceClauseRegex = RegExp(r'it can replace one (?:of those )?attacks? with [^.]*\.?', caseSensitive: false);
+final RegExp _parenthesesRemovalRegex = RegExp(r'\s*\([^)]*\)');
+final RegExp _branchAttackCountRegex = RegExp(
+  r'(?:makes\s+)?(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
+  caseSensitive: false,
+);
+final RegExp _multiattackSplitRegex = RegExp(
+  r'--\s*or\s+|\b(?:either\s+)?with\s+its\s+[^,;]+?\s+or\s+(?:with\s+)?its\s+|,\s*or\s+(?:it\s+can\s+|makes\s+|with\s+)|\.\s+(?:or|alternatively)\s+|\bor\s+(?:two|three|four|five|six|\d+)\s+',
+  caseSensitive: false,
+);
+final RegExp _saveDcPattern = RegExp(
+  r'DC\s*(\d+)\s*(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)?',
+  caseSensitive: false,
+);
+final RegExp _bonusToHitPattern = RegExp(r'([+-]\s*\d+)\s+to\s+hit', caseSensitive: false);
+final RegExp _primaryDicePattern = RegExp(
+  r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?',
+  caseSensitive: false,
+);
+final RegExp _flatHitPattern = RegExp(r'Hit:\s*(\d+)|taking\s*(\d+)', caseSensitive: false);
+final RegExp _damageTypePattern = RegExp(
+  r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)\s+damage',
+  caseSensitive: false,
+);
+final RegExp _secondaryDicePattern = RegExp(
+  r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s*(?:\d+)?\s*\(?(\d+)\s*d\s*(\d+)\)?(?:\s*([+-]\s*\d+))?\s*(\w+)?\s*damage',
+  caseSensitive: false,
+);
+final RegExp _legendaryCostPattern = RegExp(r'\(costs\s*\d+\s*actions?\)', caseSensitive: false);
+final RegExp _descRefPattern = RegExp(
+  r'(?:makes\s+(?:one|a|an)?\s+(?:melee\s+|ranged\s+|weapon\s+)?|uses\s+its\s+)([a-zA-Z\s]+?)(?:\s+attack|\.|\s+against)',
+  caseSensitive: false,
+);
+final RegExp _reachPattern = RegExp(r'reach\s*(\d+)\s*ft', caseSensitive: false);
+final RegExp _sanitizeIdPattern = RegExp(r'[^a-z0-9_]');
+final Map<String, RegExp> _aliasPrefixCache = {};
+final Map<String, RegExp> _aliasAndCache = {};
+final Map<String, RegExp> _aliasPostfixCache = {};
+final Map<String, RegExp> _branchMentionsCache = {};
+
 /// Extension on MinionStatBlock providing DPR conversion, attack extraction, and routine calculations.
 extension MinionStatBlockDprExt on MinionStatBlock {
   /// Extracts structured DprAttackAction objects from this monster's stat block, actions, and legendary actions.
@@ -922,10 +969,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
 
     // 1. Extract global attack count if stated (e.g. "makes three attacks", "makes five attacks")
     int globalCount = 2; // Default 5e fallback
-    final globalMatch = RegExp(
-      r'makes\s+(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
-      caseSensitive: false,
-    ).firstMatch(multiDesc);
+    final globalMatch = _globalAttackCountRegex.firstMatch(multiDesc);
     if (globalMatch != null) {
       globalCount = _parseNumberWord(globalMatch.group(1));
       if (globalCount <= 0) globalCount = 2;
@@ -933,9 +977,9 @@ extension MinionStatBlockDprExt on MinionStatBlock {
 
     // 2. Filter out non-attack replacement clauses (e.g. "It can use its Swallow instead of its bite.")
     final cleanedDesc = multiDesc
-        .replaceAll(RegExp(r'it can (?:use|make) its swallow instead of its bite\.?', caseSensitive: false), '')
-        .replaceAll(RegExp(r'it can use its frightful presence\.?', caseSensitive: false), '')
-        .replaceAll(RegExp(r'it can replace one (?:of those )?attacks? with [^.]*\.?', caseSensitive: false), '')
+        .replaceAll(_swallowClauseRegex, '')
+        .replaceAll(_frightfulClauseRegex, '')
+        .replaceAll(_replaceClauseRegex, '')
         .trim();
 
     // 3. Identify distinct option branches separated by alternative keywords
@@ -952,7 +996,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       for (int i = 0; i < attacks.length; i++) {
         final attack = attacks[i];
         final nameLower = attack.name.toLowerCase();
-        final cleanName = nameLower.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+        final cleanName = nameLower.replaceAll(_parenthesesRemovalRegex, '').trim();
         final baseName = cleanName.endsWith('s') && cleanName.length > 3
             ? cleanName.substring(0, cleanName.length - 1)
             : cleanName;
@@ -967,10 +1011,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       // Second pass: if NO explicit numbers found in the entire branch, check if a single weapon is mentioned
       if (!anyExplicitMatched) {
         int branchGlobal = globalCount;
-        final bMatch = RegExp(
-          r'(?:makes\s+)?(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
-          caseSensitive: false,
-        ).firstMatch(branch);
+        final bMatch = _branchAttackCountRegex.firstMatch(branch);
         if (bMatch != null) {
           final parsed = _parseNumberWord(bMatch.group(1));
           if (parsed > 0) branchGlobal = parsed;
@@ -979,7 +1020,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         for (int i = 0; i < attacks.length; i++) {
           final attack = attacks[i];
           final nameLower = attack.name.toLowerCase();
-          final cleanName = nameLower.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+          final cleanName = nameLower.replaceAll(_parenthesesRemovalRegex, '').trim();
           final baseName = cleanName.endsWith('s') && cleanName.length > 3
               ? cleanName.substring(0, cleanName.length - 1)
               : cleanName;
@@ -1025,10 +1066,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
   }
 
   List<String> _splitMultiattackBranches(String desc) {
-    final rawParts = desc.split(RegExp(
-      r'--\s*or\s+|\b(?:either\s+)?with\s+its\s+[^,;]+?\s+or\s+(?:with\s+)?its\s+|,\s*or\s+(?:it\s+can\s+|makes\s+|with\s+)|\.\s+(?:or|alternatively)\s+|\bor\s+(?:two|three|four|five|six|\d+)\s+',
-      caseSensitive: false,
-    ));
+    final rawParts = desc.split(_multiattackSplitRegex);
     final branches = <String>[];
     for (final p in rawParts) {
       final trimmed = p.trim();
@@ -1040,9 +1078,13 @@ extension MinionStatBlockDprExt on MinionStatBlock {
   }
 
   bool _branchMentionsWeapon(String branch, String cleanName, String baseName) {
-    final escaped = RegExp.escape(cleanName);
-    final baseEscaped = RegExp.escape(baseName);
-    return RegExp('\\b(?:$escaped|$baseEscaped)(?:s)?\\b', caseSensitive: false).hasMatch(branch);
+    final key = '$cleanName|$baseName';
+    final pattern = _branchMentionsCache.putIfAbsent(key, () {
+      final escaped = RegExp.escape(cleanName);
+      final baseEscaped = RegExp.escape(baseName);
+      return RegExp('\\b(?:$escaped|$baseEscaped)(?:s)?\\b', caseSensitive: false);
+    });
+    return pattern.hasMatch(branch);
   }
 
   void _assignSingleBestAttack(List<DprAttackAction> attacks, int count) {
@@ -1080,13 +1122,14 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     if (cleanName == 'tooth' || baseName == 'tooth') aliases.add('teeth');
 
     for (final name in aliases) {
-      final escaped = RegExp.escape(name);
-
-      final prefixRegex = RegExp(
-        r'\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\s+(?:melee\s+|ranged\s+|weapon\s+)?(?:attacks?\s+)?(?:with\s+(?:its|their|either|a)\s+)?' +
-            escaped +
-            r'\b',
-        caseSensitive: false,
+      final prefixRegex = _aliasPrefixCache.putIfAbsent(
+        name,
+        () => RegExp(
+          r'\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\s+(?:melee\s+|ranged\s+|weapon\s+)?(?:attacks?\s+)?(?:with\s+(?:its|their|either|a)\s+)?' +
+              RegExp.escape(name) +
+              r'\b',
+          caseSensitive: false,
+        ),
       );
 
       final prefixMatch = prefixRegex.firstMatch(desc);
@@ -1095,20 +1138,26 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         if (count > 0) return count;
       }
 
-      final andRegex = RegExp(
-        r'\band\s+(?:one\s+(?:with\s+(?:its|their)\s+)?|its\s+|their\s+|a\s+)' +
-            escaped +
-            r'\b',
-        caseSensitive: false,
+      final andRegex = _aliasAndCache.putIfAbsent(
+        name,
+        () => RegExp(
+          r'\band\s+(?:one\s+(?:with\s+(?:its|their)\s+)?|its\s+|their\s+|a\s+)' +
+              RegExp.escape(name) +
+              r'\b',
+          caseSensitive: false,
+        ),
       );
       if (andRegex.hasMatch(desc)) {
         return 1;
       }
 
-      final postfixRegex = RegExp(
-        escaped +
-            r'\b(?:\s+attacks?)?\s*[:(]?\s*(?:with\s+(?:its|their)\s+)?\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\b',
-        caseSensitive: false,
+      final postfixRegex = _aliasPostfixCache.putIfAbsent(
+        name,
+        () => RegExp(
+          RegExp.escape(name) +
+              r'\b(?:\s+attacks?)?\s*[:(]?\s*(?:with\s+(?:its|their)\s+)?\b(one|two|three|four|five|six|seven|eight|1|2|3|4|5|6|7|8)\b',
+          caseSensitive: false,
+        ),
       );
       final postfixMatch = postfixRegex.firstMatch(desc);
       if (postfixMatch != null) {
@@ -1181,10 +1230,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     String? sAbility;
     DprActionDeliveryType delivery = DprActionDeliveryType.attackRoll;
 
-    final saveMatch = RegExp(
-      r'DC\s*(\d+)\s*(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)?',
-      caseSensitive: false,
-    ).firstMatch(action.description);
+    final saveMatch = _saveDcPattern.firstMatch(action.description);
     if (saveMatch != null) {
       sDc = int.tryParse(saveMatch.group(1) ?? '');
       final abRaw = saveMatch.group(2)?.toLowerCase();
@@ -1194,8 +1240,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     }
 
     int bonus = action.attackBonus ?? attackBonus;
-    final bonusMatch = RegExp(r'([+-]\s*\d+)\s+to\s+hit', caseSensitive: false)
-        .firstMatch(action.description);
+    final bonusMatch = _bonusToHitPattern.firstMatch(action.description);
     if (bonusMatch != null) {
       final parsed = int.tryParse(bonusMatch.group(1)!.replaceAll(' ', ''));
       if (parsed != null) bonus = parsed;
@@ -1229,10 +1274,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         ? action.hitDamage!
         : action.description;
 
-    final primaryMatch = RegExp(
-      r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?',
-      caseSensitive: false,
-    ).firstMatch(primarySource);
+    final primaryMatch = _primaryDicePattern.firstMatch(primarySource);
 
     if (primaryMatch != null) {
       dCount = int.tryParse(primaryMatch.group(1) ?? '') ?? 0;
@@ -1244,8 +1286,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
         dBonus = 0;
       }
     } else {
-      final flatMatch = RegExp(r'Hit:\s*(\d+)|taking\s*(\d+)', caseSensitive: false)
-          .firstMatch(action.description);
+      final flatMatch = _flatHitPattern.firstMatch(action.description);
       if (flatMatch != null) {
         final numStr = flatMatch.group(1) ?? flatMatch.group(2);
         dBonus = int.tryParse(numStr ?? '') ?? 0;
@@ -1253,19 +1294,13 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     }
 
     // 2. Parse primary damage type
-    final typeMatch = RegExp(
-      r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)\s+damage',
-      caseSensitive: false,
-    ).firstMatch(action.description);
+    final typeMatch = _damageTypePattern.firstMatch(action.description);
     if (typeMatch != null) {
       dType = typeMatch.group(1)!.toLowerCase();
     }
 
     // 3. Parse secondary / rider damage dice
-    final secMatch = RegExp(
-      r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s*(?:\d+)?\s*\(?(\d+)\s*d\s*(\d+)\)?(?:\s*([+-]\s*\d+))?\s*(\w+)?\s*damage',
-      caseSensitive: false,
-    ).firstMatch(action.description);
+    final secMatch = _secondaryDicePattern.firstMatch(action.description);
 
     if (secMatch != null) {
       secDCount = int.tryParse(secMatch.group(1) ?? '') ?? 0;
@@ -1300,7 +1335,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
 
         // Clean action name (e.g. "Tail Attack" -> "tail", "Bite (Costs 2 Actions)" -> "bite")
         final cleanName = nameLower
-            .replaceAll(RegExp(r'\(costs\s*\d+\s*actions?\)', caseSensitive: false), '')
+            .replaceAll(_legendaryCostPattern, '')
             .replaceAll('attack', '')
             .replaceAll('swipe', '')
             .trim();
@@ -1316,10 +1351,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
 
         // If not matched by name, check description for "makes one/a [X] attack" or "uses its [X]"
         if (referencedAttack == null) {
-          final descRefMatch = RegExp(
-            r'(?:makes\s+(?:one|a|an)?\s+(?:melee\s+|ranged\s+|weapon\s+)?|uses\s+its\s+)([a-zA-Z\s]+?)(?:\s+attack|\.|\s+against)',
-            caseSensitive: false,
-          ).firstMatch(action.description);
+          final descRefMatch = _descRefPattern.firstMatch(action.description);
 
           if (descRefMatch != null) {
             final targetWord = descRefMatch.group(1)!.toLowerCase().trim();
@@ -1354,11 +1386,11 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       }
     }
 
-    final reachMatch = RegExp(r'reach\s*(\d+)\s*ft', caseSensitive: false).firstMatch(action.description);
+    final reachMatch = _reachPattern.firstMatch(action.description);
     final actionReach = reachMatch != null ? (int.tryParse(reachMatch.group(1) ?? '') ?? 5) : 5;
 
     return DprAttackAction(
-      id: '${id}_${isLegendary ? "leg_" : ""}${action.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_')}',
+      id: '${id}_${isLegendary ? "leg_" : ""}${action.name.toLowerCase().replaceAll(_sanitizeIdPattern, '_')}',
       name: action.name,
       attackBonus: bonus,
       diceCount: dCount,

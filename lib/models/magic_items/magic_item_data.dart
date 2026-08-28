@@ -910,6 +910,48 @@ class MagicItem {
     return edition == DmRulesEdition.v2014 ? rules2014 : rules2024;
   }
 
+  static final Map<String, String> _corpusCache = {};
+
+  static void clearCacheForTesting() {
+    _corpusCache.clear();
+  }
+
+  String _getCorpus(DmRulesEdition edition) {
+    final cacheKey = '${id}_${edition.name}';
+    final cached = _corpusCache[cacheKey];
+    if (cached != null) return cached;
+
+    final effectiveName = getName(edition);
+    final effectiveRules = getRules(edition);
+    final priceStr = getEffectivePrice(edition);
+    final crafting = getCraftingDetails(edition);
+
+    final buffer = StringBuffer()
+      ..write('$effectiveName ')
+      ..write('${category.displayName} ')
+      ..write('${rarity.displayName} ')
+      ..write('$priceStr ')
+      ..write('${crafting.primaryTool} ')
+      ..write('${crafting.bastionFacility} ')
+      ..write('${crafting.alternativeTools.join(" ")} ')
+      ..write('${damageAccent?.displayName ?? ""} ')
+      ..write('${effectiveRules.summary} ')
+      ..write('${effectiveRules.description} ')
+      ..write('${diffSummary ?? ""} ')
+      ..write('${tags.join(" ")} ');
+
+    for (final r in actionRings) {
+      buffer
+        ..write('${r.ringType.displayName} ')
+        ..write('${r.damageLegend} ')
+        ..write('${r.label ?? ""} ');
+    }
+
+    final corpus = buffer.toString().toLowerCase();
+    _corpusCache[cacheKey] = corpus;
+    return corpus;
+  }
+
   /// Checks if this item matches search and filter criteria.
   bool matches(
     String query, {
@@ -928,27 +970,7 @@ class MagicItem {
 
     if (query.isEmpty) return true;
     final q = query.toLowerCase();
-    final effectiveName = getName(edition).toLowerCase();
-    final effectiveRules = getRules(edition);
-    final priceStr = getEffectivePrice(edition).toLowerCase();
-    final crafting = getCraftingDetails(edition);
-
-    return effectiveName.contains(q) ||
-        category.displayName.toLowerCase().contains(q) ||
-        rarity.displayName.toLowerCase().contains(q) ||
-        priceStr.contains(q) ||
-        crafting.primaryTool.toLowerCase().contains(q) ||
-        crafting.bastionFacility.toLowerCase().contains(q) ||
-        crafting.alternativeTools.any((t) => t.toLowerCase().contains(q)) ||
-        (damageAccent?.displayName.toLowerCase().contains(q) ?? false) ||
-        effectiveRules.summary.toLowerCase().contains(q) ||
-        effectiveRules.description.toLowerCase().contains(q) ||
-        (diffSummary?.toLowerCase().contains(q) ?? false) ||
-        tags.any((t) => t.toLowerCase().contains(q)) ||
-        actionRings.any((r) =>
-            r.ringType.displayName.toLowerCase().contains(q) ||
-            r.damageLegend.toLowerCase().contains(q) ||
-            (r.label?.toLowerCase().contains(q) ?? false));
+    return _getCorpus(edition).contains(q);
   }
 }
 

@@ -365,27 +365,35 @@ class AnimatedObjectInstance {
   }
 
   factory AnimatedObjectInstance.fromMap(Map<String, dynamic> map) {
+    final maxHp = ((map['maxHp'] as num?)?.toInt() ?? 10).clamp(1, 9999);
+    final curHp = ((map['currentHp'] as num?)?.toInt() ?? maxHp).clamp(0, maxHp);
+    final tempHp = ((map['tempHp'] as num?)?.toInt() ?? 0).clamp(0, 9999);
+    final customDCount = (map['customDamageDiceCount'] as num?)?.toInt().clamp(0, 50);
+    final customDSides = (map['customDamageDiceSides'] as num?)?.toInt().clamp(0, 100);
+    final secDCount = ((map['secondaryDamageDiceCount'] as num?)?.toInt() ?? 0).clamp(0, 50);
+    final secDSides = ((map['secondaryDamageDiceSides'] as num?)?.toInt() ?? 0).clamp(0, 100);
+
     return AnimatedObjectInstance(
-      id: map['id'] as String? ?? '',
-      name: map['name'] as String? ?? 'Summon',
-      size: ObjectSize.fromString(map['size'] as String? ?? 'medium'),
-      currentHp: map['currentHp'] as int? ?? 10,
-      maxHp: map['maxHp'] as int? ?? 10,
-      tempHp: map['tempHp'] as int? ?? 0,
-      damageType: map['damageType'] as String? ?? 'Bludgeoning',
+      id: map['id']?.toString() ?? '',
+      name: map['name']?.toString() ?? 'Summon',
+      size: ObjectSize.fromString(map['size']?.toString() ?? 'medium'),
+      currentHp: curHp,
+      maxHp: maxHp,
+      tempHp: tempHp,
+      damageType: map['damageType']?.toString() ?? 'Bludgeoning',
       isSilvered: map['isSilvered'] as bool? ?? false,
-      customAc: map['customAc'] as int?,
-      customAttackBonus: map['customAttackBonus'] as int?,
-      customDamageDiceCount: map['customDamageDiceCount'] as int?,
-      customDamageDiceSides: map['customDamageDiceSides'] as int?,
-      customDamageBonus: map['customDamageBonus'] as int?,
-      secondaryDamageDiceCount: map['secondaryDamageDiceCount'] as int? ?? 0,
-      secondaryDamageDiceSides: map['secondaryDamageDiceSides'] as int? ?? 0,
-      secondaryDamageType: map['secondaryDamageType'] as String?,
+      customAc: (map['customAc'] as num?)?.toInt(),
+      customAttackBonus: (map['customAttackBonus'] as num?)?.toInt(),
+      customDamageDiceCount: customDCount,
+      customDamageDiceSides: customDSides,
+      customDamageBonus: (map['customDamageBonus'] as num?)?.toInt(),
+      secondaryDamageDiceCount: secDCount,
+      secondaryDamageDiceSides: secDSides,
+      secondaryDamageType: map['secondaryDamageType']?.toString(),
       hasPackTactics: map['hasPackTactics'] as bool? ?? false,
-      specialTrait: map['specialTrait'] as String?,
+      specialTrait: map['specialTrait']?.toString(),
       customAccentColor: map['customAccentColor'] != null
-          ? Color(map['customAccentColor'] as int)
+          ? Color((map['customAccentColor'] as num).toInt())
           : null,
     );
   }

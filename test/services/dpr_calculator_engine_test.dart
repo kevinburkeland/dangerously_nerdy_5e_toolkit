@@ -425,6 +425,56 @@ void main() {
       expect(cr30.typicalAc, equals(25));
       expect(cr30.examples, contains('Tarrasque'));
     });
+
+    test('generateCurveAsync runs in background isolate and returns valid points', () async {
+      const profile = DprCombatantProfile(
+        id: 'hero_test',
+        name: 'Hero',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        attacks: [
+          DprAttackAction(
+            id: 'longsword',
+            name: 'Longsword',
+            attackBonus: 7,
+            diceCount: 1,
+            diceSides: 8,
+            damageBonus: 4,
+            damageType: 'slashing',
+          ),
+        ],
+      );
+
+      final curve = await DprCalculatorEngine.generateCurveAsync(profile, minAc: 10, maxAc: 20);
+      expect(curve.points.length, 11);
+      expect(curve.pointAt(10)?.dpr, greaterThan(curve.pointAt(20)?.dpr ?? 0));
+    });
+
+    test('calculateGwmBreakEvenAsync runs in background isolate', () async {
+      const profile = DprCombatantProfile(
+        id: 'gwm_hero',
+        name: 'GWM Hero',
+        level: 5,
+        abilityScore: 18,
+        proficiencyBonus: 3,
+        attacks: [
+          DprAttackAction(
+            id: 'greatsword',
+            name: 'Greatsword',
+            attackBonus: 7,
+            diceCount: 2,
+            diceSides: 6,
+            damageBonus: 4,
+            damageType: 'slashing',
+          ),
+        ],
+      );
+
+      final result = await DprCalculatorEngine.calculateGwmBreakEvenAsync(profile, minAc: 10, maxAc: 20);
+      expect(result.baselineCurve.points.length, 11);
+      expect(result.powerAttackCurve.points.length, 11);
+    });
   });
 }
 

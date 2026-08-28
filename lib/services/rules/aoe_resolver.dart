@@ -104,6 +104,8 @@ class AoeResolver {
     return candidates.take(targetCount).toList();
   }
 
+  static final RegExp _dimPattern = RegExp(r'(\d+)\s*(?:-|\s*)?(?:foot|ft\.?|feet)\b', caseSensitive: false);
+
   /// Helper to parse AoE shape and dimensions from action names and descriptions.
   static ({AoeShape shape, double sizeInFeet}) parseShapeAndSize(
     String name, [
@@ -112,8 +114,7 @@ class AoeResolver {
     final combined = '${name.toLowerCase()} ${description?.toLowerCase() ?? ''}';
 
     // 1. Check for explicit dimensions like "60-foot cone", "20-ft. radius", "100-foot line"
-    final dimMatch = RegExp(r'(\d+)\s*(?:-|\s*)?(?:foot|ft\.?|feet)\b', caseSensitive: false)
-        .firstMatch(combined);
+    final dimMatch = _dimPattern.firstMatch(combined);
 
     double? explicitSize;
     if (dimMatch != null) {

@@ -13,18 +13,27 @@ class StorageMigrationService {
   static const String _kSchemaVersionKey = 'app_storage_schema_version';
 
   static final StorageMigrationService _instance = StorageMigrationService._internal();
-  factory StorageMigrationService() => _instance;
-  StorageMigrationService._internal();
+  factory StorageMigrationService({LoggingService? logger}) {
+    if (logger != null) {
+      return StorageMigrationService.custom(logger: logger);
+    }
+    return _instance;
+  }
+  StorageMigrationService._internal() : _logger = LoggingService();
+  StorageMigrationService.custom({LoggingService? logger}) : _logger = logger ?? LoggingService();
+
+  final LoggingService _logger;
 
   /// Runs all pending migrations sequentially upon startup.
-  Future<void> runMigrations(SharedPreferences prefs) async {
+  Future<void> runMigrations(SharedPreferences prefs, {LoggingService? logger}) async {
+    final log = logger ?? _logger;
     final int storedVersion = prefs.getInt(_kSchemaVersionKey) ?? 1;
 
     if (storedVersion >= currentSchemaVersion) {
       return;
     }
 
-    LoggingService().logInfo(
+    log.logInfo(
       'Running storage migrations from v$storedVersion to v$currentSchemaVersion',
     );
 
@@ -36,11 +45,11 @@ class StorageMigrationService {
       // if (storedVersion < 3) { await _migrateV2ToV3(prefs); }
 
       await prefs.setInt(_kSchemaVersionKey, currentSchemaVersion);
-      LoggingService().logInfo(
+      log.logInfo(
         'Storage successfully migrated to schema v$currentSchemaVersion',
       );
     } catch (e, stackTrace) {
-      LoggingService().logFatal(
+      log.logFatal(
         e,
         stackTrace,
         reason: 'Critical failure during storage schema migration from v$storedVersion',

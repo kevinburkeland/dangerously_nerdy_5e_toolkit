@@ -62,13 +62,24 @@ class _ArenaMonteCarloDialogState extends State<ArenaMonteCarloDialog> {
     _runSimulation();
   }
 
-  void _runSimulation() {
+  Future<void> _runSimulation() async {
     setState(() {
       _isCalculating = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 50), () {
-      final res = _engine.runMonteCarlo(
+    ArenaMonteCarloResult res;
+    try {
+      res = await _engine.runMonteCarloAsync(
+        teamA: widget.teamA,
+        teamB: widget.teamB,
+        strategy: widget.strategy,
+        edition: widget.edition,
+        environment: widget.environment,
+        iterations: _iterations,
+      ).timeout(const Duration(milliseconds: 300));
+    } catch (_) {
+      // Fallback to synchronous simulation if isolate fails or times out
+      res = _engine.runMonteCarlo(
         teamA: widget.teamA,
         teamB: widget.teamB,
         strategy: widget.strategy,
@@ -76,14 +87,14 @@ class _ArenaMonteCarloDialogState extends State<ArenaMonteCarloDialog> {
         environment: widget.environment,
         iterations: _iterations,
       );
+    }
 
-      if (mounted) {
-        setState(() {
-          _result = res;
-          _isCalculating = false;
-        });
-      }
-    });
+    if (mounted) {
+      setState(() {
+        _result = res;
+        _isCalculating = false;
+      });
+    }
   }
 
   @override
