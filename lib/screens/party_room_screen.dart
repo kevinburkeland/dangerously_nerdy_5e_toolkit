@@ -67,6 +67,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
         _diceService.playerName ??
         'Adventurer';
 
+    _diceService.joinRoom(_roomCode, _playerName);
     _registry.updateLastPlayed(_roomCode);
   }
 
@@ -179,6 +180,20 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                   return const SizedBox.shrink();
                 },
               ),
+              // Party Roster & Character Management Button
+              IconButton(
+                icon: const Icon(Icons.groups, color: Colors.blueAccent),
+                tooltip: 'Party Roster & Characters',
+                onPressed: () => ManagePartyRosterDialog.show(
+                  context,
+                  roomCode: _roomCode,
+                  currentName: _playerName,
+                  initialRoster: session?.characterRoster ?? const [],
+                  onActiveCharacterChanged: (newName) {
+                    setState(() => _playerName = newName);
+                  },
+                ),
+              ),
               // DM Passkey Export Button
               if (_isDmOrCoDm && _currentMembership != null)
                 IconButton(
@@ -189,7 +204,23 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (val) {
-                  if (val == 'addLoot') {
+                  if (val == 'switchChar') {
+                    SwitchActiveCharacterDialog.show(
+                      context,
+                      roomCode: _roomCode,
+                      currentName: _playerName,
+                      roster: session?.characterRoster ?? const [],
+                      onCharacterSelected: (name) => setState(() => _playerName = name),
+                    );
+                  } else if (val == 'roster') {
+                    ManagePartyRosterDialog.show(
+                      context,
+                      roomCode: _roomCode,
+                      currentName: _playerName,
+                      initialRoster: session?.characterRoster ?? const [],
+                      onActiveCharacterChanged: (name) => setState(() => _playerName = name),
+                    );
+                  } else if (val == 'addLoot') {
                     AddLootItemDialog.show(context, roomCode: _roomCode, playerName: _playerName);
                   } else if (val == 'diceRoller') {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => const DiceRollerScreen()));
@@ -198,6 +229,26 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                   }
                 },
                 itemBuilder: (ctx) => [
+                  const PopupMenuItem(
+                    value: 'switchChar',
+                    child: Row(
+                      children: [
+                        Icon(Icons.badge_outlined, size: 18, color: Colors.blueAccent),
+                        SizedBox(width: 8),
+                        Text('Switch Active Character'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'roster',
+                    child: Row(
+                      children: [
+                        Icon(Icons.groups_outlined, size: 18, color: Colors.indigoAccent),
+                        SizedBox(width: 8),
+                        Text('Party Character Roster'),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'addLoot',
                     child: Row(
@@ -245,7 +296,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
           body: TabBarView(
             controller: _tabController,
             children: [
-              _buildVaultTab(session?.partyPurse ?? const PartyPurse(), tabletop, isDark),
+              _buildVaultTab(session, tabletop, isDark),
               _buildDiceFeedTab(tabletop, isDark),
               _buildHistoryAndTrashTab(tabletop, isDark),
             ],
@@ -268,7 +319,11 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   // TAB 1: PARTY VAULT & COIN PURSE
   // =========================================================================
 
-  Widget _buildVaultTab(PartyPurse purse, TabletopColors tabletop, bool isDark) {
+  Widget _buildVaultTab(PartySessionState? session, TabletopColors tabletop, bool isDark) {
+    final purse = session?.partyPurse ?? const PartyPurse();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return StreamBuilder<List<PartyLootItem>>(
       stream: _partyService.streamLoot(_roomCode),
       builder: (context, lootSnap) {
@@ -301,8 +356,16 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           children: [
-            // 1. COIN PURSE HERO CARD
-            _buildCoinPurseCard(purse, split, tabletop, isDark),
+            // 0. ACTIVE CHARACTER & ROSTER BANNER
+            _buildActiveCharacterBanner(session, colorScheme, isDark),
+            const SizedBox(height: 14),
+
+            // 1. COIN PURSE HERO CARD (SHARED PARTY VAULT / RESERVE)
+            _buildCoinPurseCard(purse, split, session, tabletop, isDark, gemsAndArtTotal),
+            const SizedBox(height: 14),
+
+            // 1.5 INDIVIDUAL PARTY MEMBER GOLD STORES
+            _buildMemberPursesCard(session, tabletop, colorScheme, isDark),
             const SizedBox(height: 14),
 
             // 2. CATEGORY FILTER CHIPS
@@ -356,12 +419,378 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                 ),
               )
             else
-              ...filteredItems.map((item) => _buildLootItemCard(item, tabletop, isDark)),
+              ...filteredItems.map((item) => _buildLootItemCard(item, session, tabletop, isDark)),
 
             const SizedBox(height: 70), // Bottom padding for FAB
           ],
         );
       },
+    );
+  }
+
+  Widget _buildActiveCharacterBanner(PartySessionState? session, ColorScheme colorScheme, bool isDark) {
+    final roster = session?.characterRoster ?? const [];
+    final myPurse = session?.getMemberPurse(_playerName) ?? const PartyPurse();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF222738) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
+                child: Icon(Icons.person, size: 18, color: colorScheme.primary),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ACTIVE CHARACTER / SESSION IDENTITY',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.8,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _playerName,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                ),
+                icon: const Icon(Icons.swap_horiz, size: 16),
+                label: const Text('Switch', style: TextStyle(fontSize: 12)),
+                onPressed: () => SwitchActiveCharacterDialog.show(
+                  context,
+                  roomCode: _roomCode,
+                  currentName: _playerName,
+                  roster: roster,
+                  onCharacterSelected: (name) {
+                    _diceService.joinRoom(_roomCode, name);
+                    setState(() => _playerName = name);
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.groups_outlined, size: 20),
+                tooltip: 'Party Roster',
+                onPressed: () => ManagePartyRosterDialog.show(
+                  context,
+                  roomCode: _roomCode,
+                  currentName: _playerName,
+                  initialRoster: roster,
+                  onActiveCharacterChanged: (name) {
+                    _diceService.joinRoom(_roomCode, name);
+                    setState(() => _playerName = name);
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          // Personal Pouch summary for active character
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: isDark ? 0.12 : 0.06),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.account_balance_wallet_outlined, size: 16, color: Color(0xFFF59E0B)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Your Store: ~${myPurse.totalGpEquivalent.toStringAsFixed(1)} GP (${myPurse.pp} PP, ${myPurse.gp} GP, ${myPurse.ep} EP, ${myPurse.sp} SP, ${myPurse.cp} CP)',
+                    style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                InkWell(
+                  onTap: () => MemberCoinTransactionDialog.show(
+                    context,
+                    roomCode: _roomCode,
+                    characterName: _playerName,
+                    performedBy: _playerName,
+                    isDeposit: true,
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Text('+Add', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green)),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: () => MemberCoinTransactionDialog.show(
+                    context,
+                    roomCode: _roomCode,
+                    characterName: _playerName,
+                    performedBy: _playerName,
+                    isDeposit: false,
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Text('-Spend', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.orange)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if (roster.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.shield_outlined, size: 14, color: colorScheme.onSurfaceVariant),
+                const SizedBox(width: 4),
+                Text(
+                  'Quick Roster Select (${roster.length}):',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ...roster.map((rName) {
+                    final isCurrent = rName == _playerName;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ChoiceChip(
+                        avatar: Icon(
+                          isCurrent ? Icons.check_circle : Icons.person_outline,
+                          size: 14,
+                          color: isCurrent ? Colors.white : colorScheme.primary,
+                        ),
+                        label: Text(rName, style: const TextStyle(fontSize: 11.5)),
+                        selected: isCurrent,
+                        selectedColor: colorScheme.primary,
+                        onSelected: (selected) {
+                          if (!isCurrent) {
+                            _partyService.setActiveCharacter(
+                              roomCode: _roomCode,
+                              characterName: rName,
+                            );
+                            _diceService.joinRoom(_roomCode, rName);
+                            setState(() => _playerName = rName);
+                          }
+                        },
+                      ),
+                    );
+                  }),
+                  ActionChip(
+                    avatar: const Icon(Icons.add, size: 14),
+                    label: const Text('Add Member', style: TextStyle(fontSize: 11.5)),
+                    onPressed: () => ManagePartyRosterDialog.show(
+                      context,
+                      roomCode: _roomCode,
+                      currentName: _playerName,
+                      initialRoster: roster,
+                      onActiveCharacterChanged: (name) {
+                        _diceService.joinRoom(_roomCode, name);
+                        setState(() => _playerName = name);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemberPursesCard(
+    PartySessionState? session,
+    TabletopColors tabletop,
+    ColorScheme colorScheme,
+    bool isDark,
+  ) {
+    final allMembers = <String>{
+      if (session != null) ...session.characterRoster,
+      if (session != null) ...session.activePlayers,
+      if (session != null) ...session.memberPurses.keys,
+    }.where((s) => s.trim().isNotEmpty).toList();
+
+    if (allMembers.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: isDark ? const Color(0xFF1E2230) : const Color(0xFFF8FAFC),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.people_alt_outlined, color: Colors.amber, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Character Gold Stores (${allMembers.length})',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                  icon: const Icon(Icons.currency_exchange, size: 14),
+                  label: const Text('Disperse...', style: TextStyle(fontSize: 11)),
+                  onPressed: () {
+                    final purse = session?.partyPurse ?? const PartyPurse();
+                    DisperseLootDialog.show(
+                      context,
+                      initialRoomCode: _roomCode,
+                      purse: purse,
+                      sourceTitle: 'Vault Funds',
+                    );
+                  },
+                ),
+              ],
+            ),
+            const Divider(height: 14),
+            ...allMembers.map((member) {
+              final purse = session?.getMemberPurse(member) ?? const PartyPurse();
+              final isMe = member == _playerName;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isMe
+                      ? colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.08)
+                      : (isDark ? const Color(0xFF131622) : Colors.white),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isMe
+                        ? colorScheme.primary.withValues(alpha: 0.4)
+                        : (isDark ? const Color(0xFF2A2E3D) : const Color(0xFFE2E8F0)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 13,
+                      backgroundColor: isMe ? colorScheme.primary : Colors.grey.shade700,
+                      child: const Icon(Icons.person, size: 14, color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                member + (isMe ? ' (You)' : ''),
+                                style: TextStyle(
+                                  fontWeight: isMe ? FontWeight.bold : FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '~${purse.totalGpEquivalent.toStringAsFixed(1)} GP',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFF59E0B),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${purse.pp} PP, ${purse.gp} GP, ${purse.ep} EP, ${purse.sp} SP, ${purse.cp} CP',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, size: 18),
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (ctx) => [
+                        const PopupMenuItem(value: 'deposit', child: Text('Deposit Coins')),
+                        const PopupMenuItem(value: 'withdraw', child: Text('Withdraw Coins')),
+                        const PopupMenuItem(value: 'transfer_to_reserve', child: Text('Transfer to Party Reserve')),
+                        const PopupMenuItem(value: 'withdraw_from_reserve', child: Text('Withdraw from Party Reserve')),
+                      ],
+                      onSelected: (action) {
+                        if (action == 'deposit') {
+                          MemberCoinTransactionDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            isDeposit: true,
+                          );
+                        } else if (action == 'withdraw') {
+                          MemberCoinTransactionDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            isDeposit: false,
+                          );
+                        } else if (action == 'transfer_to_reserve') {
+                          TransferCoinDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            toReserve: true,
+                          );
+                        } else if (action == 'withdraw_from_reserve') {
+                          TransferCoinDialog.show(
+                            context,
+                            roomCode: _roomCode,
+                            characterName: member,
+                            performedBy: _playerName,
+                            toReserve: false,
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 
@@ -377,9 +806,11 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   Widget _buildCoinPurseCard(
     PartyPurse purse,
     PartyPurseSplit split,
+    PartySessionState? session,
     TabletopColors tabletop,
-    bool isDark,
-  ) {
+    bool isDark, [
+    double gemsAndArtTotal = 0.0,
+  ]) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -397,7 +828,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                 const Icon(Icons.monetization_on, color: Color(0xFFF59E0B), size: 24),
                 const SizedBox(width: 8),
                 Text(
-                  'Party Coin Vault',
+                  'Party Coin Vault & Reserve',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
@@ -463,6 +894,29 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                 ),
               ],
             ),
+
+            // Disperse Vault Funds Button
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFF59E0B),
+                  side: BorderSide(color: const Color(0xFFF59E0B).withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                icon: const Icon(Icons.currency_exchange, size: 16),
+                label: const Text('Disperse Vault Funds to Party...', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                onPressed: () => DisperseLootDialog.show(
+                  context,
+                  initialRoomCode: _roomCode,
+                  purse: purse,
+                  liquidatedGemsAndArtGp: gemsAndArtTotal,
+                  sourceTitle: 'Party Vault Funds',
+                ),
+              ),
+            ),
+
             const Divider(height: 24),
 
             // Live Party Share Calculator
@@ -483,6 +937,15 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                 ),
               ],
             ),
+            if (session?.characterRoster.isNotEmpty == true && session!.characterRoster.length != _partySplitCount)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: ActionChip(
+                  avatar: const Icon(Icons.groups, size: 14),
+                  label: Text('Set to Roster (${session.characterRoster.length} Players)', style: const TextStyle(fontSize: 11)),
+                  onPressed: () => setState(() => _partySplitCount = session.characterRoster.length),
+                ),
+              ),
             const SizedBox(height: 6),
             CheckboxListTile(
               value: _includeLiquidatedInSplit,
@@ -548,8 +1011,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildLootItemCard(PartyLootItem item, TabletopColors tabletop, bool isDark) {
-    final theme = Theme.of(context);
+  Widget _buildLootItemCard(PartyLootItem item, PartySessionState? session, TabletopColors tabletop, bool isDark) {
     final isClaimedByMe = item.claimedByPlayer == _playerName;
 
     Color categoryColor = Colors.blueGrey;
@@ -583,46 +1045,65 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                     color: categoryColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(categoryIcon, color: categoryColor, size: 20),
+                  child: Icon(categoryIcon, color: categoryColor, size: 22),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Flexible(
+                          Expanded(
                             child: Text(
-                              item.count > 1 ? '${item.count}x ${item.name}' : item.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+                              item.count > 1 ? '${item.name} (x${item.count})' : item.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                             ),
                           ),
+                          if (item.totalGpValue > 0)
+                            Text(
+                              '${item.totalGpValue.toStringAsFixed(0)} GP',
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFF59E0B)),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            item.categoryLabel,
+                            style: TextStyle(fontSize: 12, color: categoryColor, fontWeight: FontWeight.bold),
+                          ),
                           if (item.requiresAttunement) ...[
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                               decoration: BoxDecoration(
-                                color: Colors.purple.shade700,
+                                color: Colors.purple.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text('Attunement', style: TextStyle(color: Colors.white, fontSize: 9)),
+                              child: const Text(
+                                'Requires Attunement',
+                                style: TextStyle(fontSize: 10.5, color: Colors.purple, fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${item.gpValue} GP each (${item.totalGpValue} GP total)',
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
-                      ),
+                      if (item.sourceTableOrMonster != null && item.sourceTableOrMonster!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          item.sourceTableOrMonster!,
+                          style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                      ],
                     ],
                   ),
                 ),
-                // Soft-Delete (Trash) Button
+                // Delete / Archive item button
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
-                  tooltip: 'Move to Trash',
+                  icon: const Icon(Icons.delete_outline, size: 18, color: Colors.grey),
+                  tooltip: 'Move to Vault Trash',
                   onPressed: () => _partyService.archiveLootItem(
                     roomCode: _roomCode,
                     lootId: item.id,
@@ -674,7 +1155,35 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                       playerName: _playerName,
                     ),
                   ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.assignment_ind_outlined, size: 18),
+                  tooltip: 'Assign to Character...',
+                  onPressed: () async {
+                    final chosen = await AssignLootDialog.show(
+                      context,
+                      itemName: item.name,
+                      currentActiveName: _playerName,
+                      roster: session?.characterRoster ?? const [],
+                      activePlayers: session?.activePlayers ?? const [],
+                    );
+                    if (chosen == null) return;
+                    if (chosen == '__unclaim__') {
+                      await _partyService.claimLootItem(
+                        roomCode: _roomCode,
+                        lootId: item.id,
+                        playerName: null,
+                      );
+                    } else {
+                      await _partyService.claimLootItem(
+                        roomCode: _roomCode,
+                        lootId: item.id,
+                        playerName: chosen,
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(width: 4),
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

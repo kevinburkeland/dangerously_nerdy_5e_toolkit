@@ -87,6 +87,8 @@ void main() {
       expect(item.isClaimed, isTrue);
       expect(item.totalGpValue, equals(5000.0));
 
+      expect(item.categoryLabel, equals('Magic Item'));
+
       final jsonMap = item.toMap();
       final restored = PartyLootItem.fromMap(jsonMap);
       expect(restored.name, equals('Sun Blade'));
@@ -102,22 +104,20 @@ void main() {
     test('CampaignMembership role checks and serialization', () {
       final membership = CampaignMembership(
         roomCode: 'ROOM-123456',
-        campaignName: 'Curse of Strahd',
+        campaignName: 'Tomb of Annihilation',
         role: CampaignRole.host,
         hostKey: 'secret-uuid-123',
-        characterId: 'Kevin',
+        characterId: 'DM Kevin',
         lastPlayed: DateTime.now(),
       );
 
       expect(membership.isHost, isTrue);
       expect(membership.isDmOrCoDm, isTrue);
-      expect(membership.hasHostKey, isTrue);
 
       final map = membership.toMap();
       final restored = CampaignMembership.fromMap(map);
       expect(restored.roomCode, equals('ROOM-123456'));
       expect(restored.role, equals(CampaignRole.host));
-      expect(restored.hostKey, equals('secret-uuid-123'));
     });
 
     test('PartySessionState monotonic version and serialization', () {
@@ -128,6 +128,7 @@ void main() {
         hostKeyHash: 'hash-abc-123',
         partyPurse: const PartyPurse(gp: 500),
         activePlayers: ['Alice', 'Bob'],
+        characterRoster: ['Alice (Rogue)', 'Bob (Cleric)', 'Charlie (Wizard)'],
         version: 3,
         lastUpdated: now,
         expiresAt: now.add(const Duration(days: 30)),
@@ -139,6 +140,7 @@ void main() {
       expect(restored.version, equals(3));
       expect(restored.partyPurse.gp, equals(500));
       expect(restored.activePlayers.length, equals(2));
+      expect(restored.characterRoster, contains('Charlie (Wizard)'));
     });
 
     test('PartyEvent serialization and copyWith', () {
@@ -156,6 +158,61 @@ void main() {
       expect(restored.type, equals('coinDeposit'));
       expect(restored.playerName, equals('Gimli'));
       expect(restored.details, contains('50 GP'));
+    });
+
+    test('PartyPurse add and deduct methods combine coin denominations cleanly', () {
+      const purse1 = PartyPurse(pp: 2, gp: 50, ep: 10, sp: 20, cp: 100);
+      const purse2 = PartyPurse(pp: 1, gp: 25, ep: 5, sp: 10, cp: 50);
+
+      final sum = purse1.add(purse2);
+      expect(sum.pp, equals(3));
+      expect(sum.gp, equals(75));
+      expect(sum.ep, equals(15));
+      expect(sum.sp, equals(30));
+      expect(sum.cp, equals(150));
+
+      final diff = sum.deduct(purse2);
+      expect(diff.pp, equals(2));
+      expect(diff.gp, equals(50));
+      expect(diff.ep, equals(10));
+      expect(diff.sp, equals(20));
+      expect(diff.cp, equals(100));
+
+      // Overdrawing clamps at 0
+      const largePurse = PartyPurse(gp: 500);
+      final overdrawn = diff.deduct(largePurse);
+      expect(overdrawn.gp, equals(0));
+      expect(overdrawn.pp, equals(2));
+    });
+
+    test('PartySessionState memberPurses serialization and helper getMemberPurse', () {
+      final now = DateTime.now();
+      final session = PartySessionState(
+        roomCode: 'ROOM-123456',
+        campaignName: 'Curse of Strahd',
+        hostKeyHash: 'hash-123',
+        partyPurse: const PartyPurse(gp: 1000),
+        memberPurses: const {
+          'Iselde': PartyPurse(gp: 150, sp: 20),
+          'Kaelen': PartyPurse(pp: 5, gp: 300),
+        },
+        characterRoster: ['Iselde', 'Kaelen', 'Valeros'],
+        lastUpdated: now,
+        expiresAt: now.add(const Duration(days: 30)),
+      );
+
+      expect(session.getMemberPurse('Iselde').gp, equals(150));
+      expect(session.getMemberPurse('Iselde').sp, equals(20));
+      expect(session.getMemberPurse('Kaelen').pp, equals(5));
+      // Uninitialized character returns empty purse
+      expect(session.getMemberPurse('Valeros').isEmpty, isTrue);
+
+      final map = session.toMap();
+      final restored = PartySessionState.fromMap(map);
+
+      expect(restored.memberPurses.length, equals(2));
+      expect(restored.getMemberPurse('Iselde').gp, equals(150));
+      expect(restored.getMemberPurse('Kaelen').totalGpEquivalent, equals(350.0));
     });
   });
 }

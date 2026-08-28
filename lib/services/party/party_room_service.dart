@@ -150,7 +150,7 @@ class PartyRoomService {
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(roomCode);
-        await docRef.set(session.toMap());
+        await docRef.set(session.toMap(), SetOptions(merge: true));
       } catch (e, stackTrace) {
         LoggingService().logNonFatal(
           e,
@@ -188,42 +188,62 @@ class PartyRoomService {
     required String roomCode,
     required String playerName,
   }) async {
-    final cleanCode = roomCode.trim().toUpperCase();
+    final cleanCode = roomCode.trim().toUpperCase().replaceAll(' ', '');
     final cleanPlayer = playerName.trim().isEmpty ? 'Adventurer' : playerName.trim();
 
     if (cleanCode.isEmpty) {
       throw CampaignNotFoundException('Please enter a valid room code.');
     }
 
+    // Support both prefixed (ROOM-A1B2C3) and raw 6-character (A1B2C3) formats interchangeably
+    final codeCandidates = <String>{
+      cleanCode,
+      if (cleanCode.startsWith('ROOM-')) cleanCode.replaceFirst('ROOM-', '') else 'ROOM-$cleanCode',
+      if (cleanCode.startsWith('ROOM_')) cleanCode.replaceFirst('ROOM_', '') else 'ROOM_$cleanCode',
+    }.toList();
+
     PartySessionState? cloudSession;
+    String matchedCode = cleanCode;
 
     if (isFirebaseAvailable) {
-      try {
-        final docRef = FirebaseFirestore.instance.collection('rooms').doc(cleanCode);
-        final snapshot = await docRef.get();
-        if (snapshot.exists && snapshot.data() != null) {
-          cloudSession = PartySessionState.fromMap(snapshot.data()!);
+      for (final code in codeCandidates) {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('rooms').doc(code);
+          final snapshot = await docRef.get();
+          if (snapshot.exists && snapshot.data() != null) {
+            cloudSession = PartySessionState.fromMap(snapshot.data()!);
+            matchedCode = code;
+            break;
+          }
+        } catch (e, stackTrace) {
+          LoggingService().logNonFatal(
+            e,
+            stackTrace,
+            reason: 'Firestore check failed for room $code; fallback to local check',
+          );
         }
-      } catch (e, stackTrace) {
-        LoggingService().logNonFatal(
-          e,
-          stackTrace,
-          reason: 'Firestore check failed for room $cleanCode; fallback to local check',
-        );
       }
-    } else {
-      // In-memory lookup for testing/offline
-      cloudSession = _localRooms[cleanCode];
+    }
+
+    // In-memory lookup for testing/offline
+    if (cloudSession == null) {
+      for (final code in codeCandidates) {
+        if (_localRooms.containsKey(code)) {
+          cloudSession = _localRooms[code];
+          matchedCode = code;
+          break;
+        }
+      }
     }
 
     // Case 1: Room exists in Cloud / In-Memory
     if (cloudSession != null) {
-      final existingMembership = _registry.getMembership(cleanCode);
+      final existingMembership = _registry.getMembership(matchedCode);
       final role = existingMembership?.role ?? CampaignRole.player;
       final hostKey = existingMembership?.hostKey;
 
       final membership = CampaignMembership(
-        roomCode: cleanCode,
+        roomCode: matchedCode,
         campaignName: cloudSession.campaignName,
         role: role,
         hostKey: hostKey,
@@ -241,12 +261,12 @@ class PartyRoomService {
           version: cloudSession.version + 1,
           lastUpdated: DateTime.now(),
         );
-        _localRooms[cleanCode] = updatedSession;
+        _localRooms[matchedCode] = updatedSession;
         if (isFirebaseAvailable) {
           try {
             await FirebaseFirestore.instance
                 .collection('rooms')
-                .doc(cleanCode)
+                .doc(matchedCode)
                 .update({
               'activePlayers': FieldValue.arrayUnion([cleanPlayer]),
               'version': FieldValue.increment(1),
@@ -259,25 +279,27 @@ class PartyRoomService {
         cloudSession = updatedSession;
       }
 
-      _localRooms[cleanCode] = cloudSession;
-      _emitSession(cleanCode);
-      _diceRoomService.joinRoom(cleanCode, cleanPlayer);
+      _localRooms[matchedCode] = cloudSession;
+      _emitSession(matchedCode);
+      _diceRoomService.joinRoom(matchedCode, cleanPlayer);
 
       // Flush any pending outbox items
-      unawaited(flushOutbox(cleanCode));
+      unawaited(flushOutbox(matchedCode));
 
       return cloudSession;
     }
 
     // Case 2: Room not found in Cloud, BUT exists locally with a valid hostKey (Dormant TTL expired)
-    final localRecord = _registry.getMembership(cleanCode);
-    if (localRecord != null && localRecord.hasHostKey) {
-      return await rehydrateCampaign(
-        roomCode: cleanCode,
-        hostKey: localRecord.hostKey!,
-        playerName: cleanPlayer,
-        campaignName: localRecord.campaignName,
-      );
+    for (final code in codeCandidates) {
+      final localRecord = _registry.getMembership(code);
+      if (localRecord != null && localRecord.hasHostKey) {
+        return await rehydrateCampaign(
+          roomCode: code,
+          hostKey: localRecord.hostKey!,
+          playerName: cleanPlayer,
+          campaignName: localRecord.campaignName,
+        );
+      }
     }
 
     // Case 3: Does NOT exist anywhere -> Reject without creating documents
@@ -321,7 +343,7 @@ class PartyRoomService {
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(cleanCode);
-        await docRef.set(rehydrated.toMap());
+        await docRef.set(rehydrated.toMap(), SetOptions(merge: true));
 
         // Also re-publish local loot items if any exist
         final lootMap = _localLoot[cleanCode] ?? {};
@@ -489,6 +511,222 @@ class PartyRoomService {
   }
 
   // =========================================================================
+  // 3.5 CHARACTER ROSTER & ACTIVE PLAYER SESSIONS
+  // =========================================================================
+
+  /// Assigns an active character/player name to the current local session and room
+  Future<void> setActiveCharacter({
+    required String roomCode,
+    required String characterName,
+    bool updateRegistryDefault = true,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final trimmedName = characterName.trim();
+    if (trimmedName.isEmpty) return;
+
+    // Update local membership in registry
+    if (updateRegistryDefault) {
+      final membership = _registry.getMembership(clean);
+      if (membership != null) {
+        await _registry.saveMembership(membership.copyWith(
+          characterId: trimmedName,
+          lastPlayed: DateTime.now(),
+        ));
+      }
+    }
+
+    // In-memory session state update
+    var current = _localRooms[clean];
+    if (current == null) {
+      final membership = _registry.getMembership(clean);
+      current = PartySessionState(
+        roomCode: clean,
+        campaignName: membership?.campaignName ?? 'Party Campaign',
+        hostKeyHash: '',
+        partyPurse: const PartyPurse(),
+        activePlayers: [trimmedName],
+        characterRoster: [trimmedName],
+        version: 1,
+        lastUpdated: DateTime.now(),
+        expiresAt: DateTime.now().add(defaultLootExpiration),
+      );
+      _localRooms[clean] = current;
+      _emitSession(clean);
+    } else {
+      final updatedPlayers = List<String>.from(current.activePlayers);
+      if (!updatedPlayers.contains(trimmedName)) {
+        updatedPlayers.add(trimmedName);
+      }
+      _localRooms[clean] = current.copyWith(
+        activePlayers: updatedPlayers,
+        lastUpdated: DateTime.now(),
+      );
+      _emitSession(clean);
+    }
+
+    await logEvent(
+      roomCode: clean,
+      type: 'playerJoin',
+      playerName: trimmedName,
+      details: '$trimmedName is now active in the campaign session',
+    );
+
+    // Firestore update
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.update({
+          'activePlayers': FieldValue.arrayUnion([trimmedName]),
+          'lastUpdated': DateTime.now().toIso8601String(),
+        });
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore setActiveCharacter failed for $clean');
+      }
+    }
+  }
+
+  /// Adds a player/character name to the shared campaign roster
+  Future<void> addCharacterToRoster({
+    required String roomCode,
+    required String characterName,
+    required String playerName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final trimmed = characterName.trim();
+    if (trimmed.isEmpty) return;
+
+    // In-memory update
+    var current = _localRooms[clean];
+    if (current == null) {
+      final membership = _registry.getMembership(clean);
+      current = PartySessionState(
+        roomCode: clean,
+        campaignName: membership?.campaignName ?? 'Party Campaign',
+        hostKeyHash: '',
+        partyPurse: const PartyPurse(),
+        activePlayers: [playerName],
+        characterRoster: [trimmed],
+        version: 1,
+        lastUpdated: DateTime.now(),
+        expiresAt: DateTime.now().add(defaultLootExpiration),
+      );
+      _localRooms[clean] = current;
+      _emitSession(clean);
+    } else {
+      final updatedRoster = List<String>.from(current.characterRoster);
+      if (!updatedRoster.contains(trimmed)) {
+        updatedRoster.add(trimmed);
+      }
+      _localRooms[clean] = current.copyWith(
+        characterRoster: updatedRoster,
+        lastUpdated: DateTime.now(),
+      );
+      _emitSession(clean);
+    }
+
+    await logEvent(
+      roomCode: clean,
+      type: 'rosterUpdate',
+      playerName: playerName,
+      details: '$playerName added "$trimmed" to the party roster',
+    );
+
+    // Firestore update
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.update({
+          'characterRoster': FieldValue.arrayUnion([trimmed]),
+          'lastUpdated': DateTime.now().toIso8601String(),
+        });
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore addCharacterToRoster failed for $clean');
+      }
+    }
+  }
+
+  /// Removes a player/character name from the shared campaign roster
+  Future<void> removeCharacterFromRoster({
+    required String roomCode,
+    required String characterName,
+    required String playerName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final trimmed = characterName.trim();
+
+    // In-memory update
+    var current = _localRooms[clean];
+    if (current != null) {
+      final updatedRoster = List<String>.from(current.characterRoster)..remove(trimmed);
+      _localRooms[clean] = current.copyWith(
+        characterRoster: updatedRoster,
+        lastUpdated: DateTime.now(),
+      );
+      _emitSession(clean);
+    }
+
+    await logEvent(
+      roomCode: clean,
+      type: 'rosterUpdate',
+      playerName: playerName,
+      details: '$playerName removed "$trimmed" from the party roster',
+    );
+
+    // Firestore update
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.update({
+          'characterRoster': FieldValue.arrayRemove([trimmed]),
+          'lastUpdated': DateTime.now().toIso8601String(),
+        });
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore removeCharacterFromRoster failed for $clean');
+      }
+    }
+  }
+
+  /// Updates the complete campaign character roster
+  Future<void> updateCharacterRoster({
+    required String roomCode,
+    required List<String> roster,
+    required String playerName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final cleanedRoster = roster.map((s) => s.trim()).where((s) => s.isNotEmpty).toSet().toList();
+
+    // In-memory update
+    var current = _localRooms[clean];
+    if (current != null) {
+      _localRooms[clean] = current.copyWith(
+        characterRoster: cleanedRoster,
+        lastUpdated: DateTime.now(),
+      );
+      _emitSession(clean);
+    }
+
+    await logEvent(
+      roomCode: clean,
+      type: 'rosterUpdate',
+      playerName: playerName,
+      details: '$playerName updated the party roster (${cleanedRoster.length} members)',
+    );
+
+    // Firestore update
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.update({
+          'characterRoster': cleanedRoster,
+          'lastUpdated': DateTime.now().toIso8601String(),
+        });
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore updateCharacterRoster failed for $clean');
+      }
+    }
+  }
+
+  // =========================================================================
   // 4. ATOMIC COIN OPERATIONS & MERGING
   // =========================================================================
 
@@ -644,6 +882,281 @@ class PartyRoomService {
           payload: {'cp': -cp, 'sp': -sp, 'ep': -ep, 'gp': -gp, 'pp': -pp},
           timestamp: DateTime.now(),
         ));
+      }
+    }
+  }
+
+  /// Disperses coins/valuables among selected party member stores, with an optional share for the party reserve.
+  Future<void> disperseCoinsToParty({
+    required String roomCode,
+    required PartyPurse purseToDisperse,
+    required List<String> recipientCharacters,
+    required String performedBy,
+    bool includePartyReserve = true,
+    double liquidatedGemsAndArtGp = 0.0,
+    bool includeLiquidatedInSplit = false,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final recipients = recipientCharacters.map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    if (recipients.isEmpty && !includePartyReserve) return;
+
+    final shareCount = recipients.length + (includePartyReserve ? 1 : 0);
+    if (shareCount <= 0) return;
+
+    var current = _localRooms[clean];
+    if (current == null) {
+      final membership = _registry.getMembership(clean);
+      current = PartySessionState(
+        roomCode: clean,
+        campaignName: membership?.campaignName ?? 'Party Campaign',
+        hostKeyHash: '',
+        partyPurse: const PartyPurse(),
+        activePlayers: [performedBy],
+        version: 1,
+        lastUpdated: DateTime.now(),
+        expiresAt: DateTime.now().add(defaultLootExpiration),
+      );
+    }
+
+    final Map<String, PartyPurse> updatedMemberPurses = Map.from(current.memberPurses);
+    PartyPurse updatedPartyPurse = current.partyPurse;
+
+    if (includeLiquidatedInSplit && liquidatedGemsAndArtGp > 0) {
+      // Liquidate coins + gems/art into GP equivalent split
+      final totalGp = purseToDisperse.totalGpEquivalent + liquidatedGemsAndArtGp;
+      final perShareGp = (totalGp / shareCount).floor();
+      final remainderGp = (totalGp - (perShareGp * shareCount)).round();
+
+      for (final recipient in recipients) {
+        final prev = updatedMemberPurses[recipient] ?? const PartyPurse();
+        updatedMemberPurses[recipient] = prev.depositCoins(gp: perShareGp);
+      }
+
+      if (includePartyReserve) {
+        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: perShareGp + remainderGp);
+      } else if (remainderGp > 0) {
+        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: remainderGp);
+      }
+    } else {
+      // Even denomination split across PP, GP, EP, SP, CP
+      final ppPerShare = purseToDisperse.pp ~/ shareCount;
+      final gpPerShare = purseToDisperse.gp ~/ shareCount;
+      final epPerShare = purseToDisperse.ep ~/ shareCount;
+      final spPerShare = purseToDisperse.sp ~/ shareCount;
+      final cpPerShare = purseToDisperse.cp ~/ shareCount;
+
+      final ppRem = purseToDisperse.pp % shareCount;
+      final gpRem = purseToDisperse.gp % shareCount;
+      final epRem = purseToDisperse.ep % shareCount;
+      final spRem = purseToDisperse.sp % shareCount;
+      final cpRem = purseToDisperse.cp % shareCount;
+
+      for (final recipient in recipients) {
+        final prev = updatedMemberPurses[recipient] ?? const PartyPurse();
+        updatedMemberPurses[recipient] = prev.depositCoins(
+          pp: ppPerShare,
+          gp: gpPerShare,
+          ep: epPerShare,
+          sp: spPerShare,
+          cp: cpPerShare,
+        );
+      }
+
+      if (includePartyReserve) {
+        updatedPartyPurse = updatedPartyPurse.depositCoins(
+          pp: ppPerShare + ppRem,
+          gp: gpPerShare + gpRem,
+          ep: epPerShare + epRem,
+          sp: spPerShare + spRem,
+          cp: cpPerShare + cpRem,
+        );
+      } else {
+        // Remainder always goes to party reserve so nothing is lost
+        updatedPartyPurse = updatedPartyPurse.depositCoins(
+          pp: ppRem,
+          gp: gpRem,
+          ep: epRem,
+          sp: spRem,
+          cp: cpRem,
+        );
+      }
+    }
+
+    final updatedSession = current.copyWith(
+      partyPurse: updatedPartyPurse,
+      memberPurses: updatedMemberPurses,
+      version: current.version + 1,
+      lastUpdated: DateTime.now(),
+    );
+
+    _localRooms[clean] = updatedSession;
+    _emitSession(clean);
+
+    final totalGpVal = purseToDisperse.totalGpEquivalent + (includeLiquidatedInSplit ? liquidatedGemsAndArtGp : 0);
+    final reserveSuffix = includePartyReserve ? ' (+ 1 share to Party Reserve)' : '';
+    final desc = '$performedBy dispersed ~${totalGpVal.toStringAsFixed(1)} GP across ${recipients.length} characters$reserveSuffix';
+
+    await logEvent(
+      roomCode: clean,
+      type: 'lootDispersal',
+      playerName: performedBy,
+      details: desc,
+    );
+
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore disperseCoinsToParty failed for $clean');
+      }
+    }
+  }
+
+  /// Direct deposit/withdraw/update to an individual character's personal coin purse
+  Future<void> updateMemberPurse({
+    required String roomCode,
+    required String characterName,
+    required PartyPurse newPurse,
+    required String performedBy,
+    String? note,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final trimmedName = characterName.trim();
+    if (trimmedName.isEmpty) return;
+
+    var current = _localRooms[clean];
+    if (current != null) {
+      final updatedMap = Map<String, PartyPurse>.from(current.memberPurses);
+      updatedMap[trimmedName] = newPurse;
+      final updatedSession = current.copyWith(
+        memberPurses: updatedMap,
+        version: current.version + 1,
+        lastUpdated: DateTime.now(),
+      );
+      _localRooms[clean] = updatedSession;
+      _emitSession(clean);
+
+      final noteSuffix = note != null ? ' ($note)' : '';
+      await logEvent(
+        roomCode: clean,
+        type: 'memberPurseUpdate',
+        playerName: performedBy,
+        details: '$performedBy updated personal purse for $trimmedName (~${newPurse.totalGpEquivalent.toStringAsFixed(1)} GP)$noteSuffix',
+      );
+
+      if (isFirebaseAvailable) {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore updateMemberPurse failed for $clean');
+        }
+      }
+    }
+  }
+
+  /// Transfers coins from personal member store into the shared Party Reserve
+  Future<void> transferMemberToReserve({
+    required String roomCode,
+    required String characterName,
+    required String performedBy,
+    int cp = 0,
+    int sp = 0,
+    int ep = 0,
+    int gp = 0,
+    int pp = 0,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final trimmedName = characterName.trim();
+    if (trimmedName.isEmpty) return;
+
+    var current = _localRooms[clean];
+    if (current != null) {
+      final currentMemberPurse = current.getMemberPurse(trimmedName);
+      final updatedMemberPurse = currentMemberPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+      final updatedPartyPurse = current.partyPurse.depositCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+
+      final updatedMap = Map<String, PartyPurse>.from(current.memberPurses);
+      updatedMap[trimmedName] = updatedMemberPurse;
+
+      final updatedSession = current.copyWith(
+        partyPurse: updatedPartyPurse,
+        memberPurses: updatedMap,
+        version: current.version + 1,
+        lastUpdated: DateTime.now(),
+      );
+      _localRooms[clean] = updatedSession;
+      _emitSession(clean);
+
+      final desc = '$performedBy transferred coins from $trimmedName to Party Reserve ($gp GP, $sp SP, $cp CP)';
+      await logEvent(
+        roomCode: clean,
+        type: 'coinTransfer',
+        playerName: performedBy,
+        details: desc,
+      );
+
+      if (isFirebaseAvailable) {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore transferMemberToReserve failed for $clean');
+        }
+      }
+    }
+  }
+
+  /// Transfers coins from the shared Party Reserve into a personal member store
+  Future<void> transferReserveToMember({
+    required String roomCode,
+    required String characterName,
+    required String performedBy,
+    int cp = 0,
+    int sp = 0,
+    int ep = 0,
+    int gp = 0,
+    int pp = 0,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final trimmedName = characterName.trim();
+    if (trimmedName.isEmpty) return;
+
+    var current = _localRooms[clean];
+    if (current != null) {
+      final currentPartyPurse = current.partyPurse;
+      final updatedPartyPurse = currentPartyPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+      final currentMemberPurse = current.getMemberPurse(trimmedName);
+      final updatedMemberPurse = currentMemberPurse.depositCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+
+      final updatedMap = Map<String, PartyPurse>.from(current.memberPurses);
+      updatedMap[trimmedName] = updatedMemberPurse;
+
+      final updatedSession = current.copyWith(
+        partyPurse: updatedPartyPurse,
+        memberPurses: updatedMap,
+        version: current.version + 1,
+        lastUpdated: DateTime.now(),
+      );
+      _localRooms[clean] = updatedSession;
+      _emitSession(clean);
+
+      final desc = '$performedBy withdrew coins from Party Reserve to $trimmedName ($gp GP, $sp SP, $cp CP)';
+      await logEvent(
+        roomCode: clean,
+        type: 'coinTransfer',
+        playerName: performedBy,
+        details: desc,
+      );
+
+      if (isFirebaseAvailable) {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore transferReserveToMember failed for $clean');
+        }
       }
     }
   }

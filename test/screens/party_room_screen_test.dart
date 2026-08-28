@@ -62,7 +62,7 @@ void main() {
 
       expect(find.text('Dragonlance Chronicles'), findsOneWidget);
       expect(find.text(roomCode), findsOneWidget);
-      expect(find.text('DM'), findsOneWidget);
+      expect(find.text('DM'), findsWidgets);
 
       expect(find.text('Party Coin Vault'), findsOneWidget);
       expect(find.text('Deposit Coins'), findsOneWidget);
@@ -168,6 +168,74 @@ void main() {
 
       expect(find.text('Event Audit Log'), findsOneWidget);
       expect(find.text('Vault Trash & Restore'), findsOneWidget);
+    });
+
+    testWidgets('Active Character Banner, Switch Dialog, and Roster Manager', (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      const roomCode = 'ROOM-ROSTER01';
+      final membership = CampaignMembership(
+        roomCode: roomCode,
+        campaignName: 'Fellowship Campaign',
+        role: CampaignRole.host,
+        hostKey: 'host-secret',
+        characterId: 'Gandalf',
+        lastPlayed: DateTime.now(),
+      );
+      await registry.saveMembership(membership);
+
+      await partyService.addCharacterToRoster(
+        roomCode: roomCode,
+        characterName: 'Gandalf',
+        playerName: 'DM',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: roomCode,
+        characterName: 'Frodo (Rogue)',
+        playerName: 'DM',
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest(roomCode, partyService, registry, initialPlayerName: 'Gandalf'));
+      await tester.pumpAndSettle();
+
+      // Check Active Character Banner
+      expect(find.text('ACTIVE CHARACTER / SESSION IDENTITY'), findsOneWidget);
+      expect(find.text('Gandalf'), findsWidgets);
+      expect(find.text('Frodo (Rogue)'), findsOneWidget);
+
+      // Tap Quick Roster Select chip for 'Frodo (Rogue)'
+      await tester.tap(find.text('Frodo (Rogue)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Frodo (Rogue)'), findsWidgets);
+
+      // Open Switch Dialog
+      await tester.tap(find.text('Switch'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select Active Character'), findsOneWidget);
+      expect(find.text('Character / Player Name'), findsOneWidget);
+      expect(find.text('Confirm Identity'), findsOneWidget);
+
+      // Cancel dialog
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      // Open Party Roster Dialog via AppBar icon
+      await tester.tap(find.byTooltip('Party Roster & Characters'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Party Character Roster'), findsOneWidget);
+      expect(find.text('Add Character / Player'), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
+
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
     });
   });
 }

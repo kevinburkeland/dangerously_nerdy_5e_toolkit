@@ -38,6 +38,28 @@ class PartyPurse {
     );
   }
 
+  /// Adds another purse's coins to this purse
+  PartyPurse add(PartyPurse other) {
+    return PartyPurse(
+      cp: cp + other.cp,
+      sp: sp + other.sp,
+      ep: ep + other.ep,
+      gp: gp + other.gp,
+      pp: pp + other.pp,
+    );
+  }
+
+  /// Deducts another purse's coins, clamped at zero
+  PartyPurse deduct(PartyPurse other) {
+    return PartyPurse(
+      cp: (cp - other.cp).clamp(0, 999999999),
+      sp: (sp - other.sp).clamp(0, 999999999),
+      ep: (ep - other.ep).clamp(0, 999999999),
+      gp: (gp - other.gp).clamp(0, 999999999),
+      pp: (pp - other.pp).clamp(0, 999999999),
+    );
+  }
+
   /// Deposits coin increments (never reducing below 0)
   PartyPurse depositCoins({
     int cp = 0,

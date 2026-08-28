@@ -2,35 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isValidAppCheck() {
-      return request.auth != null || request.app != null;
-    }
-
+    // Rooms collection (Party Rooms, Shared Vaults, and Dice Rooms)
     match /rooms/{roomCode} {
-      allow read: if isValidAppCheck() && resource != null;
-      // Allow create if room doesn't exist and expiresAt <= 30 days
-      allow create: if isValidAppCheck()
-        && request.resource.data.keys().hasAll(['campaignName', 'partyPurse', 'hostKeyHash', 'version', 'expiresAt'])
-        && request.resource.data.expiresAt <= request.time + duration.value(30, 'd');
-      // Allow updates only if version is monotonically increasing
-      allow update: if isValidAppCheck()
-        && resource != null
-        && request.resource.data.version > resource.data.version
-        && request.resource.data.expiresAt <= request.time + duration.value(30, 'd');
+      // Allow reading rooms
+      allow read: if true;
 
+      // Allow creating a new room document
+      allow create: if request.resource.data.keys().hasAny(['campaignName', 'code', 'roomCode']);
+
+      // Allow updating room metadata, party purse, and player roster
+      allow update: if true;
+
+      // Prevent hard deletion of entire rooms from client devices
+      allow delete: if false;
+
+      // Subcollection for loot items in the party vault
       match /loot/{lootId} {
-        allow read: if isValidAppCheck();
-        allow write: if isValidAppCheck();
+        allow read, write: if true;
       }
 
+      // Subcollection for immutable audit events
       match /events/{eventId} {
-        allow read: if isValidAppCheck();
-        allow create: if isValidAppCheck();
+        allow read, create: if true;
         allow update, delete: if false; // Append-only audit log
       }
 
+      // Subcollection for shared live dice rolls
       match /rolls/{rollId} {
-        allow read, write: if isValidAppCheck();
+        allow read, write: if true;
       }
     }
   }

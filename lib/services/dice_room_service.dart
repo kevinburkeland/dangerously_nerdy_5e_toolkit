@@ -85,6 +85,43 @@ class DiceRoomService {
 
       // Async write to persistent storage
       _persistSession(cleanCode, cleanName, remember);
+
+      // Immediately touch/initialize room document in Firestore so campaign features & other players connect instantly
+      if (isFirebaseAvailable) {
+        _touchRoomInFirestore(cleanCode, cleanName);
+      }
+    }
+  }
+
+  Future<void> _touchRoomInFirestore(String roomCode, String playerName) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('rooms').doc(roomCode);
+      final snapshot = await docRef.get();
+      final now = DateTime.now();
+      if (snapshot.exists && snapshot.data() != null) {
+        // Document already exists (e.g. campaign created with DM's custom campaignName) -> preserve campaignName!
+        await docRef.update({
+          'activePlayers': FieldValue.arrayUnion([playerName]),
+          'lastUpdated': now.toIso8601String(),
+        });
+      } else {
+        // Only set default fallback name if document does NOT exist yet
+        await docRef.set({
+          'roomCode': roomCode,
+          'code': roomCode,
+          'campaignName': 'Dice Room $roomCode',
+          'activePlayers': [playerName],
+          'lastUpdated': now.toIso8601String(),
+          'createdAt': now.toIso8601String(),
+          'expiresAt': now.add(const Duration(days: 30)).toIso8601String(),
+        });
+      }
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to touch room $roomCode in Firestore on join',
+      );
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_loot_item.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
@@ -63,6 +64,15 @@ void main() {
       final playerMembership = registry.getMembership(created.roomCode);
       expect(playerMembership, isNotNull);
       expect(playerMembership!.characterId, equals('Van Richten'));
+
+      // 3. Player joins using raw 6-character code without 'ROOM-' prefix
+      final rawCode = created.roomCode.replaceFirst('ROOM-', '');
+      final joinedRaw = await partyService.joinCampaign(
+        roomCode: rawCode.toLowerCase(),
+        playerName: 'Ezmerelda',
+      );
+      expect(joinedRaw.roomCode, equals(created.roomCode));
+      expect(joinedRaw.activePlayers, contains('Ezmerelda'));
     });
 
     test('Explicit Join Campaign rejects non-existent room without creating ghost document', () async {
@@ -266,6 +276,163 @@ void main() {
       expect(events.isNotEmpty, isTrue);
       expect(events.any((e) => e.type == 'coinDeposit'), isTrue);
       expect(events.any((e) => e.type == 'roomCreate'), isTrue);
+    });
+
+    test('Character Roster and Active Session Identity management', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Roster Test Campaign',
+        playerName: 'DM Kevin',
+      );
+
+      // Add characters to campaign roster
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Thorin (Fighter)',
+        playerName: 'DM Kevin',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Elrond (Wizard)',
+        playerName: 'DM Kevin',
+      );
+
+      var liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession?.characterRoster, contains('Thorin (Fighter)'));
+      expect(liveSession?.characterRoster, contains('Elrond (Wizard)'));
+
+      // Switch active character
+      await partyService.setActiveCharacter(
+        roomCode: session.roomCode,
+        characterName: 'Thorin (Fighter)',
+      );
+
+      liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession?.activePlayers, contains('Thorin (Fighter)'));
+
+      // Verify membership characterId updated
+      final membership = registry.getMembership(session.roomCode);
+      expect(membership?.characterId, equals('Thorin (Fighter)'));
+
+      // Remove character from roster
+      await partyService.removeCharacterFromRoster(
+        roomCode: session.roomCode,
+        characterName: 'Elrond (Wizard)',
+        playerName: 'Thorin (Fighter)',
+      );
+
+      liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession?.characterRoster.contains('Elrond (Wizard)'), isFalse);
+    });
+
+    test('Disperse Coins to Party with Share for Party Reserve and Remainders', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Treasure Dispersal Campaign',
+        playerName: 'DM Kevin',
+      );
+
+      final recipients = ['Thorin', 'Elrond', 'Gimli'];
+
+      // Disperse 100 GP, 10 PP, 11 SP across 3 characters + 1 reserve (4 shares)
+      // 10 PP / 4 = 2 PP each, 2 PP remainder -> Reserve gets 2+2 = 4 PP
+      // 100 GP / 4 = 25 GP each, 0 remainder -> Reserve gets 25 GP
+      // 11 SP / 4 = 2 SP each, 3 SP remainder -> Reserve gets 2+3 = 5 SP
+      const purseToDisperse = PartyPurse(
+        pp: 10,
+        gp: 100,
+        sp: 11,
+      );
+
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: purseToDisperse,
+        recipientCharacters: recipients,
+        performedBy: 'DM Kevin',
+        includePartyReserve: true,
+      );
+
+      final liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession, isNotNull);
+
+      // Check characters
+      for (final char in recipients) {
+        final charPurse = liveSession!.getMemberPurse(char);
+        expect(charPurse.pp, equals(2));
+        expect(charPurse.gp, equals(25));
+        expect(charPurse.sp, equals(2));
+      }
+
+      // Check Party Reserve
+      expect(liveSession!.partyPurse.pp, equals(4)); // 2 share + 2 rem
+      expect(liveSession.partyPurse.gp, equals(25)); // 25 share + 0 rem
+      expect(liveSession.partyPurse.sp, equals(5));  // 2 share + 3 rem
+    });
+
+    test('Disperse Coins with liquidated gems/art objects evenly into GP stores', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Liquidated Loot Campaign',
+        playerName: 'DM',
+      );
+
+      final recipients = ['Legolas', 'Aragorn'];
+      // 100 GP in coins + 300 GP in liquidated gems = 400 GP total
+      // 2 players + 1 reserve = 3 shares: 400 / 3 = 133 GP each, 1 GP remainder
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: const PartyPurse(gp: 100),
+        liquidatedGemsAndArtGp: 300.0,
+        includeLiquidatedInSplit: true,
+        recipientCharacters: recipients,
+        performedBy: 'DM',
+        includePartyReserve: true,
+      );
+
+      final liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession!.getMemberPurse('Legolas').gp, equals(133));
+      expect(liveSession.getMemberPurse('Aragorn').gp, equals(133));
+      expect(liveSession.partyPurse.gp, equals(134)); // 133 share + 1 remainder
+    });
+
+    test('Transfer between Member Store and Party Reserve', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Vault Transfer Campaign',
+        playerName: 'DM',
+      );
+
+      // Give Gimli 100 GP initially
+      await partyService.updateMemberPurse(
+        roomCode: session.roomCode,
+        characterName: 'Gimli',
+        newPurse: const PartyPurse(gp: 100),
+        performedBy: 'Gimli',
+      );
+
+      var live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.getMemberPurse('Gimli').gp, equals(100));
+      expect(live.partyPurse.gp, equals(0));
+
+      // Transfer 40 GP from Gimli to Party Reserve
+      await partyService.transferMemberToReserve(
+        roomCode: session.roomCode,
+        characterName: 'Gimli',
+        performedBy: 'Gimli',
+        gp: 40,
+      );
+
+      live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.getMemberPurse('Gimli').gp, equals(60));
+      expect(live.partyPurse.gp, equals(40));
+
+      // Withdraw 15 GP from Party Reserve back to Gimli
+      await partyService.transferReserveToMember(
+        roomCode: session.roomCode,
+        characterName: 'Gimli',
+        performedBy: 'Gimli',
+        gp: 15,
+      );
+
+      live = await partyService.streamSession(session.roomCode).first;
+      expect(live!.getMemberPurse('Gimli').gp, equals(75));
+      expect(live.partyPurse.gp, equals(25));
     });
   });
 }

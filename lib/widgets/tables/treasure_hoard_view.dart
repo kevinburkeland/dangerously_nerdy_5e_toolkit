@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_loot_item.dart';
+import '../../models/party/party_purse.dart';
 import '../../models/tables/rollable_table.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
@@ -46,6 +47,28 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
     setState(() {
       _currentDrop = _engine.generateIndividualTreasure(_selectedTier);
     });
+  }
+
+  Future<void> _disperseCoinsToParty() async {
+    if (_currentDrop == null) return;
+    final drop = _currentDrop!;
+    final purse = PartyPurse(
+      cp: drop.cp,
+      sp: drop.sp,
+      ep: drop.ep,
+      gp: drop.gp,
+      pp: drop.pp,
+    );
+
+    final totalGemsAndArtGp = drop.gemstones.fold<double>(0.0, (sum, g) => sum + g.totalGp) +
+        drop.artObjects.fold<double>(0.0, (sum, a) => sum + a.totalGp);
+
+    await DisperseLootDialog.show(
+      context,
+      purse: purse,
+      liquidatedGemsAndArtGp: totalGemsAndArtGp,
+      sourceTitle: drop.isHoard ? 'Treasure Hoard (${drop.tierLabel})' : 'Monster Loot (${drop.tierLabel})',
+    );
   }
 
   void _copySummaryToClipboard() {
@@ -379,6 +402,12 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.currency_exchange, size: 18, color: Color(0xFFF59E0B)),
+                  tooltip: 'Disperse to Party Member Stores...',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _disperseCoinsToParty,
                 ),
                 IconButton(
                   icon: const Icon(Icons.shield_moon_outlined, size: 18, color: Color(0xFFF59E0B)),
@@ -798,6 +827,21 @@ class _TreasureHoardViewState extends State<TreasureHoardView> {
                     ),
                   ),
                 ],
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.currency_exchange, size: 16),
+                    label: const Text('Disperse Coins to Characters...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5)),
+                    onPressed: _disperseCoinsToParty,
+                  ),
+                ),
               ],
             ),
           ),

@@ -7,7 +7,9 @@ class PartySessionState {
   final String campaignName;
   final String hostKeyHash;
   final PartyPurse partyPurse;
+  final Map<String, PartyPurse> memberPurses;
   final List<String> activePlayers;
+  final List<String> characterRoster;
   final int version;
   final DateTime lastUpdated;
   final DateTime expiresAt;
@@ -17,18 +19,27 @@ class PartySessionState {
     required this.campaignName,
     required this.hostKeyHash,
     this.partyPurse = const PartyPurse(),
+    this.memberPurses = const {},
     this.activePlayers = const [],
+    this.characterRoster = const [],
     this.version = 1,
     required this.lastUpdated,
     required this.expiresAt,
   });
+
+  /// Helper to retrieve or initialize a character's personal coin store
+  PartyPurse getMemberPurse(String characterName) {
+    return memberPurses[characterName] ?? const PartyPurse();
+  }
 
   PartySessionState copyWith({
     String? roomCode,
     String? campaignName,
     String? hostKeyHash,
     PartyPurse? partyPurse,
+    Map<String, PartyPurse>? memberPurses,
     List<String>? activePlayers,
+    List<String>? characterRoster,
     int? version,
     DateTime? lastUpdated,
     DateTime? expiresAt,
@@ -38,7 +49,9 @@ class PartySessionState {
       campaignName: campaignName ?? this.campaignName,
       hostKeyHash: hostKeyHash ?? this.hostKeyHash,
       partyPurse: partyPurse ?? this.partyPurse,
+      memberPurses: memberPurses ?? this.memberPurses,
       activePlayers: activePlayers ?? this.activePlayers,
+      characterRoster: characterRoster ?? this.characterRoster,
       version: version ?? this.version,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       expiresAt: expiresAt ?? this.expiresAt,
@@ -52,7 +65,9 @@ class PartySessionState {
       'campaignName': campaignName,
       'hostKeyHash': hostKeyHash,
       'partyPurse': partyPurse.toMap(),
+      'memberPurses': memberPurses.map((k, v) => MapEntry(k, v.toMap())),
       'activePlayers': activePlayers,
+      'characterRoster': characterRoster,
       'version': version,
       'lastUpdated': lastUpdated.toIso8601String(),
       'expiresAt': expiresAt.toIso8601String(),
@@ -66,9 +81,24 @@ class PartySessionState {
         ? PartyPurse.fromMap(rawPurse)
         : (rawPurse is Map ? PartyPurse.fromMap(Map<String, dynamic>.from(rawPurse)) : const PartyPurse());
 
+    final rawMemberPurses = map['memberPurses'];
+    final Map<String, PartyPurse> memberPurses = {};
+    if (rawMemberPurses is Map) {
+      rawMemberPurses.forEach((k, v) {
+        if (v is Map) {
+          memberPurses[k.toString()] = PartyPurse.fromMap(Map<String, dynamic>.from(v));
+        }
+      });
+    }
+
     final rawPlayers = map['activePlayers'];
     final players = rawPlayers is List
         ? rawPlayers.map((e) => e.toString()).toList()
+        : <String>[];
+
+    final rawRoster = map['characterRoster'];
+    final roster = rawRoster is List
+        ? rawRoster.map((e) => e.toString()).toList()
         : <String>[];
 
     return PartySessionState(
@@ -76,7 +106,9 @@ class PartySessionState {
       campaignName: map['campaignName'] as String? ?? 'Untitled Campaign',
       hostKeyHash: map['hostKeyHash'] as String? ?? '',
       partyPurse: purse,
+      memberPurses: memberPurses,
       activePlayers: players,
+      characterRoster: roster,
       version: (map['version'] as num?)?.toInt() ?? 1,
       lastUpdated: map['lastUpdated'] != null
           ? DateTime.tryParse(map['lastUpdated'] as String) ?? DateTime.now()

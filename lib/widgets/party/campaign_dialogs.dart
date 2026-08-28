@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_loot_item.dart';
+import '../../models/party/party_purse.dart';
+import '../../models/party/party_session_state.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../utils/crypto_utils.dart';
@@ -826,6 +828,1272 @@ class _CoinTransactionDialogState extends State<CoinTransactionDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         ElevatedButton(onPressed: _submit, child: Text(isDeposit ? 'Deposit' : 'Withdraw')),
       ],
+    );
+  }
+}
+
+// ===========================================================================
+// 7. SWITCH ACTIVE CHARACTER / PLAYER IDENTITY DIALOG
+// ===========================================================================
+
+class SwitchActiveCharacterDialog extends StatefulWidget {
+  final String roomCode;
+  final String currentName;
+  final List<String> roster;
+  final ValueChanged<String>? onCharacterSelected;
+
+  const SwitchActiveCharacterDialog({
+    super.key,
+    required this.roomCode,
+    required this.currentName,
+    this.roster = const [],
+    this.onCharacterSelected,
+  });
+
+  static Future<String?> show(
+    BuildContext context, {
+    required String roomCode,
+    required String currentName,
+    List<String> roster = const [],
+    ValueChanged<String>? onCharacterSelected,
+  }) {
+    return showDialog<String>(
+      context: context,
+      builder: (_) => SwitchActiveCharacterDialog(
+        roomCode: roomCode,
+        currentName: currentName,
+        roster: roster,
+        onCharacterSelected: onCharacterSelected,
+      ),
+    );
+  }
+
+  @override
+  State<SwitchActiveCharacterDialog> createState() => _SwitchActiveCharacterDialogState();
+}
+
+class _SwitchActiveCharacterDialogState extends State<SwitchActiveCharacterDialog> {
+  late final TextEditingController _nameController;
+  final PartyRoomService _partyService = PartyRoomService();
+  bool _addToRoster = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.currentName);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectName(String name) async {
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) return;
+
+    await _partyService.setActiveCharacter(
+      roomCode: widget.roomCode,
+      characterName: cleanName,
+    );
+
+    if (_addToRoster && !widget.roster.contains(cleanName)) {
+      await _partyService.addCharacterToRoster(
+        roomCode: widget.roomCode,
+        characterName: cleanName,
+        playerName: cleanName,
+      );
+    }
+
+    widget.onCharacterSelected?.call(cleanName);
+    if (mounted) Navigator.pop(context, cleanName);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Row(
+        children: [
+          Icon(Icons.badge, color: Colors.blueAccent),
+          SizedBox(width: 10),
+          Text('Select Active Character', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Set your active player or character identity for this campaign session.',
+              style: TextStyle(fontSize: 12.5, color: colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Character / Player Name',
+                hintText: 'e.g. Thorin Oakenshield (Fighter)',
+                prefixIcon: const Icon(Icons.person),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onSubmitted: _selectName,
+            ),
+            if (widget.roster.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(
+                'Or Pick from Campaign Roster:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: widget.roster.map((rName) {
+                  final isCurrent = rName == widget.currentName;
+                  return ActionChip(
+                    avatar: Icon(Icons.shield, size: 14, color: isCurrent ? Colors.white : null),
+                    label: Text(rName),
+                    backgroundColor: isCurrent ? colorScheme.primary : null,
+                    labelStyle: TextStyle(
+                      color: isCurrent ? colorScheme.onPrimary : null,
+                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    onPressed: () {
+                      _nameController.text = rName;
+                      _selectName(rName);
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+            const SizedBox(height: 10),
+            CheckboxListTile(
+              value: _addToRoster,
+              onChanged: (val) => setState(() => _addToRoster = val ?? true),
+              title: const Text('Save to campaign party roster', style: TextStyle(fontSize: 12)),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: () => _selectName(_nameController.text),
+          child: const Text('Confirm Identity'),
+        ),
+      ],
+    );
+  }
+}
+
+// ===========================================================================
+// 8. MANAGE PARTY ROSTER DIALOG
+// ===========================================================================
+
+class ManagePartyRosterDialog extends StatefulWidget {
+  final String roomCode;
+  final String currentName;
+  final List<String> initialRoster;
+  final ValueChanged<String>? onActiveCharacterChanged;
+
+  const ManagePartyRosterDialog({
+    super.key,
+    required this.roomCode,
+    required this.currentName,
+    required this.initialRoster,
+    this.onActiveCharacterChanged,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    required String roomCode,
+    required String currentName,
+    required List<String> initialRoster,
+    ValueChanged<String>? onActiveCharacterChanged,
+  }) {
+    return showDialog(
+      context: context,
+      builder: (_) => ManagePartyRosterDialog(
+        roomCode: roomCode,
+        currentName: currentName,
+        initialRoster: initialRoster,
+        onActiveCharacterChanged: onActiveCharacterChanged,
+      ),
+    );
+  }
+
+  @override
+  State<ManagePartyRosterDialog> createState() => _ManagePartyRosterDialogState();
+}
+
+class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
+  final PartyRoomService _partyService = PartyRoomService();
+  final TextEditingController _addController = TextEditingController();
+  late List<String> _roster;
+
+  @override
+  void initState() {
+    super.initState();
+    _roster = List<String>.from(widget.initialRoster);
+  }
+
+  @override
+  void dispose() {
+    _addController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addCharacter() async {
+    final text = _addController.text.trim();
+    if (text.isEmpty || _roster.contains(text)) return;
+    setState(() => _roster.add(text));
+    _addController.clear();
+
+    await _partyService.addCharacterToRoster(
+      roomCode: widget.roomCode,
+      characterName: text,
+      playerName: widget.currentName,
+    );
+  }
+
+  Future<void> _removeCharacter(String name) async {
+    setState(() => _roster.remove(name));
+    await _partyService.removeCharacterFromRoster(
+      roomCode: widget.roomCode,
+      characterName: name,
+      playerName: widget.currentName,
+    );
+  }
+
+  Future<void> _playAs(String name) async {
+    await _partyService.setActiveCharacter(
+      roomCode: widget.roomCode,
+      characterName: name,
+    );
+    widget.onActiveCharacterChanged?.call(name);
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Row(
+        children: [
+          Icon(Icons.groups, color: Colors.indigoAccent),
+          SizedBox(width: 10),
+          Text('Party Character Roster', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        ],
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _addController,
+                    decoration: const InputDecoration(
+                      labelText: 'Add Character / Player',
+                      hintText: 'e.g. Legolas (Ranger)',
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _addCharacter(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: _addCharacter,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add'),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_roster.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    'No characters in roster yet. Add your party members above!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 280),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _roster.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, idx) {
+                    final name = _roster[idx];
+                    final isCurrent = name == widget.currentName;
+
+                    return ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        isCurrent ? Icons.person_pin : Icons.shield_outlined,
+                        color: isCurrent ? Colors.green : colorScheme.primary,
+                      ),
+                      title: Text(
+                        name,
+                        style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal),
+                      ),
+                      subtitle: isCurrent ? const Text('Active Session Character', style: TextStyle(fontSize: 11, color: Colors.green)) : null,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isCurrent)
+                            TextButton(
+                              onPressed: () => _playAs(name),
+                              child: const Text('Play As', style: TextStyle(fontSize: 12)),
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 16, color: Colors.grey),
+                            tooltip: 'Remove from Roster',
+                            onPressed: () => _removeCharacter(name),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+      ],
+    );
+  }
+}
+
+// ===========================================================================
+// 9. ASSIGN LOOT ITEM DIALOG
+// ===========================================================================
+
+class AssignLootDialog extends StatelessWidget {
+  final String itemName;
+  final String currentActiveName;
+  final List<String> roster;
+  final List<String> activePlayers;
+
+  const AssignLootDialog({
+    super.key,
+    required this.itemName,
+    required this.currentActiveName,
+    this.roster = const [],
+    this.activePlayers = const [],
+  });
+
+  static Future<String?> show(
+    BuildContext context, {
+    required String itemName,
+    required String currentActiveName,
+    List<String> roster = const [],
+    List<String> activePlayers = const [],
+  }) {
+    return showDialog<String>(
+      context: context,
+      builder: (_) => AssignLootDialog(
+        itemName: itemName,
+        currentActiveName: currentActiveName,
+        roster: roster,
+        activePlayers: activePlayers,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allCandidates = <String>{
+      currentActiveName,
+      ...roster,
+      ...activePlayers,
+    }.where((s) => s.trim().isNotEmpty).toList();
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          const Icon(Icons.assignment_ind, color: Colors.amber),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Assign "$itemName"',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select who will claim this item into their character inventory:',
+              style: TextStyle(fontSize: 12.5),
+            ),
+            const SizedBox(height: 10),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 260),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: allCandidates.length,
+                itemBuilder: (context, idx) {
+                  final name = allCandidates[idx];
+                  final isMe = name == currentActiveName;
+
+                  return ListTile(
+                    dense: true,
+                    leading: Icon(isMe ? Icons.star : Icons.person_outline, color: isMe ? Colors.amber : Colors.blue),
+                    title: Text(
+                      name + (isMe ? ' (You)' : ''),
+                      style: TextStyle(fontWeight: isMe ? FontWeight.bold : FontWeight.normal),
+                    ),
+                    onTap: () => Navigator.pop(context, name),
+                  );
+                },
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.archive_outlined, color: Colors.grey),
+              title: const Text('Return to Vault (Unclaim / Shared)'),
+              onTap: () => Navigator.pop(context, '__unclaim__'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+      ],
+    );
+  }
+}
+
+/// Dialog to Disperse Rolled or Vault Coins/Valuables among Party Member Stores
+class DisperseLootDialog extends StatefulWidget {
+  final String? initialRoomCode;
+  final PartyPurse purse;
+  final double liquidatedGemsAndArtGp;
+  final String? sourceTitle;
+
+  const DisperseLootDialog({
+    super.key,
+    this.initialRoomCode,
+    required this.purse,
+    this.liquidatedGemsAndArtGp = 0.0,
+    this.sourceTitle,
+  });
+
+  static Future<bool?> show(
+    BuildContext context, {
+    String? initialRoomCode,
+    required PartyPurse purse,
+    double liquidatedGemsAndArtGp = 0.0,
+    String? sourceTitle,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (_) => DisperseLootDialog(
+        initialRoomCode: initialRoomCode,
+        purse: purse,
+        liquidatedGemsAndArtGp: liquidatedGemsAndArtGp,
+        sourceTitle: sourceTitle,
+      ),
+    );
+  }
+
+  @override
+  State<DisperseLootDialog> createState() => _DisperseLootDialogState();
+}
+
+class _DisperseLootDialogState extends State<DisperseLootDialog> {
+  final PartyRoomService _partyService = PartyRoomService();
+  final CampaignRegistryService _registry = CampaignRegistryService();
+
+  late String _selectedRoomCode;
+  bool _includePartyReserve = true;
+  late bool _includeLiquidated;
+  final Set<String> _selectedRecipients = {};
+  bool _isLoading = false;
+  PartySessionState? _sessionState;
+
+  @override
+  void initState() {
+    super.initState();
+    _includeLiquidated = widget.liquidatedGemsAndArtGp > 0;
+    final memberships = _registry.memberships;
+    _selectedRoomCode = widget.initialRoomCode ??
+        _registry.activeCampaign?.roomCode ??
+        (memberships.isNotEmpty ? memberships.first.roomCode : '');
+
+    _loadSessionAndRecipients();
+  }
+
+  void _loadSessionAndRecipients() {
+    if (_selectedRoomCode.isEmpty) return;
+    _partyService.streamSession(_selectedRoomCode).first.then((session) {
+      if (mounted && session != null) {
+        setState(() {
+          _sessionState = session;
+          final allCandidates = <String>{
+            ...session.characterRoster,
+            ...session.activePlayers,
+          }.where((s) => s.trim().isNotEmpty).toSet();
+
+          if (_selectedRecipients.isEmpty) {
+            _selectedRecipients.addAll(allCandidates);
+          }
+        });
+      }
+    });
+  }
+
+  Future<void> _submitDispersal() async {
+    if (_selectedRoomCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a campaign room first.')),
+      );
+      return;
+    }
+
+    if (_selectedRecipients.isEmpty && !_includePartyReserve) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least one party member or include the party reserve.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    HapticService.mediumImpact(context);
+
+    try {
+      final membership = _registry.getMembership(_selectedRoomCode);
+      final performedBy = membership?.characterId ?? 'DM';
+
+      await _partyService.disperseCoinsToParty(
+        roomCode: _selectedRoomCode,
+        purseToDisperse: widget.purse,
+        recipientCharacters: _selectedRecipients.toList(),
+        performedBy: performedBy,
+        includePartyReserve: _includePartyReserve,
+        liquidatedGemsAndArtGp: widget.liquidatedGemsAndArtGp,
+        includeLiquidatedInSplit: _includeLiquidated,
+      );
+
+      if (mounted) {
+        Navigator.pop(context, true);
+        final reserveSuffix = _includePartyReserve ? ' (+ Party Reserve)' : '';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Coins dispersed to ${_selectedRecipients.length} character stores$reserveSuffix!',
+            ),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to disperse coins: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final memberships = _registry.memberships;
+
+    final candidates = <String>{
+      if (_sessionState != null) ..._sessionState!.characterRoster,
+      if (_sessionState != null) ..._sessionState!.activePlayers,
+    }.where((s) => s.trim().isNotEmpty).toList();
+
+    final shareCount = _selectedRecipients.length + (_includePartyReserve ? 1 : 0);
+
+    // Calculate preview numbers
+    String perShareText = '';
+    String reserveText = '';
+
+    if (shareCount > 0) {
+      if (_includeLiquidated && widget.liquidatedGemsAndArtGp > 0) {
+        final totalGp = widget.purse.totalGpEquivalent + widget.liquidatedGemsAndArtGp;
+        final perShareGp = (totalGp / shareCount).floor();
+        final remGp = (totalGp - (perShareGp * shareCount)).round();
+        perShareText = '~$perShareGp GP';
+        reserveText = _includePartyReserve ? '~${perShareGp + remGp} GP' : (remGp > 0 ? '~$remGp GP (Remainder)' : '0 GP');
+      } else {
+        final ppPer = widget.purse.pp ~/ shareCount;
+        final gpPer = widget.purse.gp ~/ shareCount;
+        final epPer = widget.purse.ep ~/ shareCount;
+        final spPer = widget.purse.sp ~/ shareCount;
+        final cpPer = widget.purse.cp ~/ shareCount;
+
+        final parts = <String>[];
+        if (ppPer > 0) parts.add('$ppPer PP');
+        if (gpPer > 0) parts.add('$gpPer GP');
+        if (epPer > 0) parts.add('$epPer EP');
+        if (spPer > 0) parts.add('$spPer SP');
+        if (cpPer > 0) parts.add('$cpPer CP');
+        perShareText = parts.isEmpty ? '0 GP' : parts.join(', ');
+
+        final ppRem = widget.purse.pp % shareCount;
+        final gpRem = widget.purse.gp % shareCount;
+        final epRem = widget.purse.ep % shareCount;
+        final spRem = widget.purse.sp % shareCount;
+        final cpRem = widget.purse.cp % shareCount;
+
+        final resParts = <String>[];
+        if (_includePartyReserve) {
+          if (ppPer + ppRem > 0) resParts.add('${ppPer + ppRem} PP');
+          if (gpPer + gpRem > 0) resParts.add('${gpPer + gpRem} GP');
+          if (epPer + epRem > 0) resParts.add('${epPer + epRem} EP');
+          if (spPer + spRem > 0) resParts.add('${spPer + spRem} SP');
+          if (cpPer + cpRem > 0) resParts.add('${cpPer + cpRem} CP');
+        } else {
+          if (ppRem > 0) resParts.add('$ppRem PP');
+          if (gpRem > 0) resParts.add('$gpRem GP');
+          if (epRem > 0) resParts.add('$epRem EP');
+          if (spRem > 0) resParts.add('$spRem SP');
+          if (cpRem > 0) resParts.add('$cpRem CP');
+        }
+        reserveText = resParts.isEmpty ? '0 GP' : resParts.join(', ');
+      }
+    }
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          const Icon(Icons.currency_exchange, color: Colors.amber, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              widget.sourceTitle != null ? 'Disperse ${widget.sourceTitle}' : 'Disperse Loot to Party',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Campaign selector if multiple
+            if (memberships.length > 1) ...[
+              const Text('Destination Campaign:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedRoomCode.isNotEmpty ? _selectedRoomCode : memberships.first.roomCode,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                items: memberships.map((m) {
+                  return DropdownMenuItem(
+                    value: m.roomCode,
+                    child: Text('${m.campaignName} (${m.roomCode})', style: const TextStyle(fontSize: 13)),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedRoomCode = val);
+                    _loadSessionAndRecipients();
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Total Loot Amount Banner
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total to Disperse:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text(
+                    '~${(widget.purse.totalGpEquivalent + (_includeLiquidated ? widget.liquidatedGemsAndArtGp : 0)).toStringAsFixed(1)} GP',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 15),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Checkbox: Share for Party Reserve
+            CheckboxListTile(
+              value: _includePartyReserve,
+              onChanged: (val) => setState(() => _includePartyReserve = val ?? true),
+              title: const Text('A share for the Party Reserve', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              subtitle: const Text('Deposits 1 equal share + any coin remainders into the shared Vault', style: TextStyle(fontSize: 11)),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+
+            // Checkbox: Liquidate Gems & Art
+            if (widget.liquidatedGemsAndArtGp > 0) ...[
+              CheckboxListTile(
+                value: _includeLiquidated,
+                onChanged: (val) => setState(() => _includeLiquidated = val ?? false),
+                title: Text('Liquidate gems & art (+${widget.liquidatedGemsAndArtGp.toStringAsFixed(0)} GP)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                subtitle: const Text('Converts art and gemstone values directly into gold split', style: TextStyle(fontSize: 11)),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ],
+
+            const Divider(height: 18),
+
+            // Recipients Section Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Party Member Recipients (${_selectedRecipients.length}):',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      if (_selectedRecipients.length == candidates.length) {
+                        _selectedRecipients.clear();
+                      } else {
+                        _selectedRecipients.addAll(candidates);
+                      }
+                    });
+                  },
+                  child: Text(
+                    _selectedRecipients.length == candidates.length ? 'Deselect All' : 'Select All',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+
+            // Checklist of characters
+            if (candidates.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'No characters found on campaign roster. Go to campaign to define party members.',
+                  style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: colorScheme.onSurfaceVariant),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 180),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: candidates.length,
+                  itemBuilder: (context, idx) {
+                    final name = candidates[idx];
+                    final isChecked = _selectedRecipients.contains(name);
+
+                    return CheckboxListTile(
+                      value: isChecked,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            _selectedRecipients.add(name);
+                          } else {
+                            _selectedRecipients.remove(name);
+                          }
+                        });
+                      },
+                      title: Text(name, style: const TextStyle(fontSize: 12.5)),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      dense: true,
+                    );
+                  },
+                ),
+              ),
+
+            const SizedBox(height: 10),
+
+            // Live Calculation Breakdown
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Split into $shareCount shares (${_selectedRecipients.length} members + ${_includePartyReserve ? 1 : 0} reserve):',
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Each Character Gets:', style: TextStyle(fontSize: 12)),
+                      Text(perShareText, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Party Reserve Gets:', style: TextStyle(fontSize: 12)),
+                      Text(reserveText, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber.shade700,
+            foregroundColor: Colors.white,
+          ),
+          onPressed: _isLoading ? null : _submitDispersal,
+          icon: _isLoading
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.check, size: 18),
+          label: Text('Disperse ($shareCount Shares)'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dialog for Personal Member Purse Deposit/Withdraw
+class MemberCoinTransactionDialog extends StatefulWidget {
+  final String roomCode;
+  final String characterName;
+  final String performedBy;
+  final bool isDeposit;
+
+  const MemberCoinTransactionDialog({
+    super.key,
+    required this.roomCode,
+    required this.characterName,
+    required this.performedBy,
+    required this.isDeposit,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    required String roomCode,
+    required String characterName,
+    required String performedBy,
+    required bool isDeposit,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => MemberCoinTransactionDialog(
+        roomCode: roomCode,
+        characterName: characterName,
+        performedBy: performedBy,
+        isDeposit: isDeposit,
+      ),
+    );
+  }
+
+  @override
+  State<MemberCoinTransactionDialog> createState() => _MemberCoinTransactionDialogState();
+}
+
+class _MemberCoinTransactionDialogState extends State<MemberCoinTransactionDialog> {
+  final _cpController = TextEditingController(text: '0');
+  final _spController = TextEditingController(text: '0');
+  final _epController = TextEditingController(text: '0');
+  final _gpController = TextEditingController(text: '0');
+  final _ppController = TextEditingController(text: '0');
+  final _noteController = TextEditingController();
+  final PartyRoomService _partyService = PartyRoomService();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _cpController.dispose();
+    _spController.dispose();
+    _epController.dispose();
+    _gpController.dispose();
+    _ppController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final cp = int.tryParse(_cpController.text.trim()) ?? 0;
+    final sp = int.tryParse(_spController.text.trim()) ?? 0;
+    final ep = int.tryParse(_epController.text.trim()) ?? 0;
+    final gp = int.tryParse(_gpController.text.trim()) ?? 0;
+    final pp = int.tryParse(_ppController.text.trim()) ?? 0;
+    final note = _noteController.text.trim();
+
+    if (cp == 0 && sp == 0 && ep == 0 && gp == 0 && pp == 0) {
+      Navigator.pop(context);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    HapticService.mediumImpact(context);
+
+    try {
+      final session = await _partyService.streamSession(widget.roomCode).first;
+      final currentPurse = session?.getMemberPurse(widget.characterName) ?? const PartyPurse();
+
+      final newPurse = widget.isDeposit
+          ? currentPurse.depositCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp)
+          : currentPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+
+      await _partyService.updateMemberPurse(
+        roomCode: widget.roomCode,
+        characterName: widget.characterName,
+        newPurse: newPurse,
+        performedBy: widget.performedBy,
+        note: note.isNotEmpty ? note : (widget.isDeposit ? 'Deposit' : 'Withdrawal'),
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.isDeposit
+                  ? 'Deposited coins to ${widget.characterName}\'s store'
+                  : 'Withdrew coins from ${widget.characterName}\'s store',
+            ),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Transaction failed: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDeposit = widget.isDeposit;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(isDeposit ? Icons.add_circle : Icons.remove_circle, color: isDeposit ? Colors.green : Colors.amber),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '${isDeposit ? "Deposit to" : "Withdraw from"} ${widget.characterName}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(child: _buildField('Platinum (PP)', _ppController)),
+                const SizedBox(width: 8),
+                Expanded(child: _buildField('Gold (GP)', _gpController)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: _buildField('Electrum (EP)', _epController)),
+                const SizedBox(width: 8),
+                Expanded(child: _buildField('Silver (SP)', _spController)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildField('Copper (CP)', _cpController),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _noteController,
+              decoration: InputDecoration(
+                labelText: 'Reason / Note (Optional)',
+                hintText: 'e.g. Bought potions, Tavern bill',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                isDense: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: _isLoading ? null : () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isDeposit ? Colors.green.shade700 : Colors.amber.shade800,
+            foregroundColor: Colors.white,
+          ),
+          onPressed: _isLoading ? null : _submit,
+          child: Text(isDeposit ? 'Deposit Coins' : 'Withdraw Coins'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        isDense: true,
+      ),
+    );
+  }
+}
+
+/// Dialog to Transfer Coins between Personal Store and Party Reserve
+class TransferCoinDialog extends StatefulWidget {
+  final String roomCode;
+  final String characterName;
+  final String performedBy;
+  final bool toReserve;
+
+  const TransferCoinDialog({
+    super.key,
+    required this.roomCode,
+    required this.characterName,
+    required this.performedBy,
+    required this.toReserve,
+  });
+
+  static Future<void> show(
+    BuildContext context, {
+    required String roomCode,
+    required String characterName,
+    required String performedBy,
+    required bool toReserve,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => TransferCoinDialog(
+        roomCode: roomCode,
+        characterName: characterName,
+        performedBy: performedBy,
+        toReserve: toReserve,
+      ),
+    );
+  }
+
+  @override
+  State<TransferCoinDialog> createState() => _TransferCoinDialogState();
+}
+
+class _TransferCoinDialogState extends State<TransferCoinDialog> {
+  final _cpController = TextEditingController(text: '0');
+  final _spController = TextEditingController(text: '0');
+  final _epController = TextEditingController(text: '0');
+  final _gpController = TextEditingController(text: '0');
+  final _ppController = TextEditingController(text: '0');
+  final PartyRoomService _partyService = PartyRoomService();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _cpController.dispose();
+    _spController.dispose();
+    _epController.dispose();
+    _gpController.dispose();
+    _ppController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final cp = int.tryParse(_cpController.text.trim()) ?? 0;
+    final sp = int.tryParse(_spController.text.trim()) ?? 0;
+    final ep = int.tryParse(_epController.text.trim()) ?? 0;
+    final gp = int.tryParse(_gpController.text.trim()) ?? 0;
+    final pp = int.tryParse(_ppController.text.trim()) ?? 0;
+
+    if (cp == 0 && sp == 0 && ep == 0 && gp == 0 && pp == 0) {
+      Navigator.pop(context);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    HapticService.mediumImpact(context);
+
+    try {
+      if (widget.toReserve) {
+        await _partyService.transferMemberToReserve(
+          roomCode: widget.roomCode,
+          characterName: widget.characterName,
+          performedBy: widget.performedBy,
+          cp: cp,
+          sp: sp,
+          ep: ep,
+          gp: gp,
+          pp: pp,
+        );
+      } else {
+        await _partyService.transferReserveToMember(
+          roomCode: widget.roomCode,
+          characterName: widget.characterName,
+          performedBy: widget.performedBy,
+          cp: cp,
+          sp: sp,
+          ep: ep,
+          gp: gp,
+          pp: pp,
+        );
+      }
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.toReserve
+                  ? 'Transferred coins from ${widget.characterName} to Party Reserve'
+                  : 'Transferred coins from Party Reserve to ${widget.characterName}',
+            ),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Transfer failed: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          const Icon(Icons.sync_alt, color: Colors.blueAccent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              widget.toReserve ? 'Transfer to Party Reserve' : 'Withdraw from Party Reserve',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.toReserve
+                  ? 'Move personal coins from ${widget.characterName} into the shared party vault.'
+                  : 'Move funds from the shared party reserve into ${widget.characterName}\'s pouch.',
+              style: const TextStyle(fontSize: 12.5),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _buildField('Platinum (PP)', _ppController)),
+                const SizedBox(width: 8),
+                Expanded(child: _buildField('Gold (GP)', _gpController)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: _buildField('Electrum (EP)', _epController)),
+                const SizedBox(width: 8),
+                Expanded(child: _buildField('Silver (SP)', _spController)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildField('Copper (CP)', _cpController),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: _isLoading ? null : () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blueAccent.shade700,
+            foregroundColor: Colors.white,
+          ),
+          onPressed: _isLoading ? null : _submit,
+          child: const Text('Confirm Transfer'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        isDense: true,
+      ),
     );
   }
 }
