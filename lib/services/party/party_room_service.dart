@@ -27,6 +27,38 @@ class UnauthorizedHostActionException implements Exception {
   String toString() => message;
 }
 
+class ClaimConflictEvent {
+  final String roomCode;
+  final String lootId;
+  final String itemName;
+  final String winnerPlayer;
+  final String attemptedPlayer;
+
+  const ClaimConflictEvent({
+    required this.roomCode,
+    required this.lootId,
+    required this.itemName,
+    required this.winnerPlayer,
+    required this.attemptedPlayer,
+  });
+}
+
+class PurseOverdraftEvent {
+  final String roomCode;
+  final String denomination;
+  final int requestedDeduct;
+  final int previousBalance;
+  final String playerName;
+
+  const PurseOverdraftEvent({
+    required this.roomCode,
+    required this.denomination,
+    required this.requestedDeduct,
+    required this.previousBalance,
+    required this.playerName,
+  });
+}
+
 /// Outbox item for queuing offline sync operations
 class PartyOutboxAction {
   final String id;
@@ -98,6 +130,12 @@ class PartyRoomService {
   final Map<String, StreamController<PartySessionState?>> _sessionControllers = {};
   final Map<String, StreamController<List<PartyLootItem>>> _lootControllers = {};
   final Map<String, StreamController<List<PartyEvent>>> _eventControllers = {};
+
+  final StreamController<ClaimConflictEvent> _claimConflictController = StreamController<ClaimConflictEvent>.broadcast();
+  Stream<ClaimConflictEvent> get claimConflictStream => _claimConflictController.stream;
+
+  final StreamController<PurseOverdraftEvent> _overdraftController = StreamController<PurseOverdraftEvent>.broadcast();
+  Stream<PurseOverdraftEvent> get overdraftStream => _overdraftController.stream;
 
   // Offline Outbox Queue (roomCode -> list of actions)
   final Map<String, List<PartyOutboxAction>> _outbox = {};
@@ -860,6 +898,60 @@ class PartyRoomService {
         expiresAt: DateTime.now().add(defaultLootExpiration),
       );
     }
+
+    // Detect overdrafts
+    final overdrafts = <String>[];
+    if (pp > current.partyPurse.pp) {
+      overdrafts.add('PP (tried -$pp, had ${current.partyPurse.pp})');
+      _overdraftController.add(PurseOverdraftEvent(
+        roomCode: clean,
+        denomination: 'PP',
+        requestedDeduct: pp,
+        previousBalance: current.partyPurse.pp,
+        playerName: playerName,
+      ));
+    }
+    if (gp > current.partyPurse.gp) {
+      overdrafts.add('GP (tried -$gp, had ${current.partyPurse.gp})');
+      _overdraftController.add(PurseOverdraftEvent(
+        roomCode: clean,
+        denomination: 'GP',
+        requestedDeduct: gp,
+        previousBalance: current.partyPurse.gp,
+        playerName: playerName,
+      ));
+    }
+    if (ep > current.partyPurse.ep) {
+      overdrafts.add('EP (tried -$ep, had ${current.partyPurse.ep})');
+      _overdraftController.add(PurseOverdraftEvent(
+        roomCode: clean,
+        denomination: 'EP',
+        requestedDeduct: ep,
+        previousBalance: current.partyPurse.ep,
+        playerName: playerName,
+      ));
+    }
+    if (sp > current.partyPurse.sp) {
+      overdrafts.add('SP (tried -$sp, had ${current.partyPurse.sp})');
+      _overdraftController.add(PurseOverdraftEvent(
+        roomCode: clean,
+        denomination: 'SP',
+        requestedDeduct: sp,
+        previousBalance: current.partyPurse.sp,
+        playerName: playerName,
+      ));
+    }
+    if (cp > current.partyPurse.cp) {
+      overdrafts.add('CP (tried -$cp, had ${current.partyPurse.cp})');
+      _overdraftController.add(PurseOverdraftEvent(
+        roomCode: clean,
+        denomination: 'CP',
+        requestedDeduct: cp,
+        previousBalance: current.partyPurse.cp,
+        playerName: playerName,
+      ));
+    }
+
     final updatedPurse = current.partyPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
     _localRooms[clean] = current.copyWith(
       partyPurse: updatedPurse,
@@ -883,6 +975,15 @@ class PartyRoomService {
       playerName: playerName,
       details: '$playerName withdrew $desc',
     );
+
+    if (overdrafts.isNotEmpty) {
+      await logEvent(
+        roomCode: clean,
+        type: 'purseOverdraftWarning',
+        playerName: playerName,
+        details: 'Purse overdraft: ${overdrafts.join(', ')} clamped to 0 after spend by $playerName',
+      );
+    }
 
     // Firestore atomic decrement
     if (isFirebaseAvailable) {
@@ -1231,7 +1332,7 @@ class PartyRoomService {
     }
   }
 
-  /// Claims or unclaims a loot item
+  /// Claims or unclaims a loot item with deterministic Last-Write-Wins claim race fallback
   Future<void> claimLootItem({
     required String roomCode,
     required String lootId,
@@ -1261,14 +1362,231 @@ class PartyRoomService {
 
     if (isFirebaseAvailable) {
       try {
-        await FirebaseFirestore.instance
+        final docRef = FirebaseFirestore.instance
             .collection('rooms')
             .doc(clean)
             .collection('loot')
-            .doc(lootId)
-            .update({'claimedByPlayer': playerName});
+            .doc(lootId);
+
+        await FirebaseFirestore.instance.runTransaction((tx) async {
+          final snap = await tx.get(docRef);
+          if (snap.exists) {
+            final remoteData = snap.data();
+            final remoteClaim = remoteData?['claimedByPlayer'] as String?;
+
+            // If someone else already claimed it online while this client was attempting to claim:
+            if (playerName != null &&
+                playerName.isNotEmpty &&
+                remoteClaim != null &&
+                remoteClaim.isNotEmpty &&
+                remoteClaim != playerName) {
+              // Unbind local claim and revert to remote winner
+              final remoteWinner = remoteClaim;
+              final restored = existing?.copyWith(claimedByPlayer: remoteWinner) ??
+                  PartyLootItem.fromMap(remoteData!);
+              lootMap?[lootId] = restored;
+              _emitLoot(clean);
+
+              final itemName = existing?.name ?? (remoteData?['name'] as String? ?? 'Item');
+              await logEvent(
+                roomCode: clean,
+                type: 'claimConflict',
+                playerName: playerName,
+                details: 'Claim conflict on "$itemName": assigned to $remoteWinner (first to server)',
+              );
+
+              _claimConflictController.add(ClaimConflictEvent(
+                roomCode: clean,
+                lootId: lootId,
+                itemName: itemName,
+                winnerPlayer: remoteWinner,
+                attemptedPlayer: playerName,
+              ));
+              return; // Exit transaction without overwriting winner
+            }
+          }
+
+          tx.update(docRef, {'claimedByPlayer': playerName});
+        });
       } catch (e, st) {
-        LoggingService().logNonFatal(e, st, reason: 'Firestore claimLootItem failed');
+        LoggingService().logNonFatal(e, st, reason: 'Firestore claimLootItem failed; queuing outbox');
+        _queueOutbox(PartyOutboxAction(
+          id: 'outbox_claim_${lootId}_${DateTime.now().millisecondsSinceEpoch}',
+          roomCode: clean,
+          actionType: 'claimLoot',
+          payload: {'lootId': lootId, 'claimedByPlayer': playerName},
+          timestamp: DateTime.now(),
+        ));
+      }
+    }
+  }
+
+  /// Manually flags an item conflict for testing or offline conflict detection
+  void flagItemConflict(String roomCode, String lootId, Map<String, dynamic> remotePayload) {
+    final clean = roomCode.trim().toUpperCase();
+    final lootMap = _localLoot[clean];
+    final existing = lootMap?[lootId];
+    if (existing != null) {
+      lootMap![lootId] = existing.copyWith(
+        hasConflict: true,
+        conflictPayload: remotePayload,
+      );
+      _emitLoot(clean);
+    }
+  }
+
+  /// Discards local offline edits and accepts the remote/cloud version
+  Future<void> resolveConflictWithCloud({
+    required String roomCode,
+    required String lootId,
+    required String hostKey,
+    required String playerName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+
+    // Verify host authorization
+    final session = _localRooms[clean];
+    final expectedHash = session?.hostKeyHash;
+    if (expectedHash != null && expectedHash.isNotEmpty) {
+      final actualHash = CryptoUtils.sha256Hex(hostKey);
+      if (actualHash != expectedHash) {
+        throw UnauthorizedHostActionException();
+      }
+    }
+
+    final lootMap = _localLoot[clean];
+    final existing = lootMap?[lootId];
+    if (existing != null && existing.conflictPayload != null) {
+      final cloudItem = PartyLootItem.fromMap(existing.conflictPayload!).copyWith(
+        clearConflict: true,
+      );
+      lootMap![lootId] = cloudItem;
+      _emitLoot(clean);
+
+      await logEvent(
+        roomCode: clean,
+        type: 'conflictResolution',
+        playerName: playerName,
+        details: 'DM $playerName resolved conflict: accepted Cloud Version for "${cloudItem.name}".',
+      );
+
+      if (isFirebaseAvailable) {
+        try {
+          await FirebaseFirestore.instance
+              .collection('rooms')
+              .doc(clean)
+              .collection('loot')
+              .doc(lootId)
+              .set(cloudItem.toMap());
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore resolveConflictWithCloud failed');
+        }
+      }
+    }
+  }
+
+  /// Overwrites the cloud version with local offline edits
+  Future<void> resolveConflictWithLocal({
+    required String roomCode,
+    required String lootId,
+    required String hostKey,
+    required String playerName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+
+    // Verify host authorization
+    final session = _localRooms[clean];
+    final expectedHash = session?.hostKeyHash;
+    if (expectedHash != null && expectedHash.isNotEmpty) {
+      final actualHash = CryptoUtils.sha256Hex(hostKey);
+      if (actualHash != expectedHash) {
+        throw UnauthorizedHostActionException();
+      }
+    }
+
+    final lootMap = _localLoot[clean];
+    final existing = lootMap?[lootId];
+    if (existing != null) {
+      final resolved = existing.copyWith(clearConflict: true);
+      lootMap![lootId] = resolved;
+      _emitLoot(clean);
+
+      await logEvent(
+        roomCode: clean,
+        type: 'conflictResolution',
+        playerName: playerName,
+        details: 'DM $playerName resolved conflict: overwrote cloud with Local Version of "${resolved.name}".',
+      );
+
+      if (isFirebaseAvailable) {
+        try {
+          await FirebaseFirestore.instance
+              .collection('rooms')
+              .doc(clean)
+              .collection('loot')
+              .doc(lootId)
+              .set(resolved.toMap());
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore resolveConflictWithLocal failed');
+        }
+      }
+    }
+  }
+
+  /// Keeps both versions: accepts cloud item and clones local edits as a new item with (Copy)
+  Future<void> resolveConflictKeepBoth({
+    required String roomCode,
+    required String lootId,
+    required String hostKey,
+    required String playerName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+
+    // Verify host authorization
+    final session = _localRooms[clean];
+    final expectedHash = session?.hostKeyHash;
+    if (expectedHash != null && expectedHash.isNotEmpty) {
+      final actualHash = CryptoUtils.sha256Hex(hostKey);
+      if (actualHash != expectedHash) {
+        throw UnauthorizedHostActionException();
+      }
+    }
+
+    final lootMap = _localLoot[clean];
+    final existing = lootMap?[lootId];
+    if (existing != null) {
+      final cloudItem = existing.conflictPayload != null
+          ? PartyLootItem.fromMap(existing.conflictPayload!).copyWith(clearConflict: true)
+          : existing.copyWith(clearConflict: true);
+
+      final copyId = '${lootId}_copy_${DateTime.now().millisecondsSinceEpoch}';
+      final localCopy = existing.copyWith(
+        id: copyId,
+        name: '${existing.name} (Copy)',
+        clearConflict: true,
+      );
+
+      lootMap![lootId] = cloudItem;
+      lootMap[copyId] = localCopy;
+      _emitLoot(clean);
+
+      await logEvent(
+        roomCode: clean,
+        type: 'conflictResolution',
+        playerName: playerName,
+        details: 'DM $playerName resolved conflict: kept both "${cloudItem.name}" and "${localCopy.name}".',
+      );
+
+      if (isFirebaseAvailable) {
+        try {
+          final batch = FirebaseFirestore.instance.batch();
+          final roomDoc = FirebaseFirestore.instance.collection('rooms').doc(clean);
+          batch.set(roomDoc.collection('loot').doc(lootId), cloudItem.toMap());
+          batch.set(roomDoc.collection('loot').doc(copyId), localCopy.toMap());
+          await batch.commit();
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Firestore resolveConflictKeepBoth failed');
+        }
       }
     }
   }
@@ -1483,6 +1801,9 @@ class PartyRoomService {
       if (action.actionType == 'addLoot') {
         final lootDoc = docRef.collection('loot').doc(action.payload['id'] as String);
         batch.set(lootDoc, action.payload);
+      } else if (action.actionType == 'claimLoot') {
+        final lootDoc = docRef.collection('loot').doc(action.payload['lootId'] as String);
+        batch.update(lootDoc, {'claimedByPlayer': action.payload['claimedByPlayer']});
       } else if (action.actionType == 'coinDeposit' || action.actionType == 'coinWithdraw') {
         final cp = (action.payload['cp'] as num?)?.toInt() ?? 0;
         final sp = (action.payload['sp'] as num?)?.toInt() ?? 0;

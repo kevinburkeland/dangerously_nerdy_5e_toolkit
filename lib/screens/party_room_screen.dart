@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/party/campaign_membership.dart';
@@ -12,6 +13,7 @@ import '../services/party/campaign_registry_service.dart';
 import '../services/party/party_room_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/party/campaign_dialogs.dart';
+import '../widgets/party/loot_conflict_resolution_dialog.dart';
 import 'dice_roller_screen.dart';
 
 /// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,
@@ -47,6 +49,9 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   late String _roomCode;
   late String _playerName;
 
+  StreamSubscription<ClaimConflictEvent>? _claimConflictSub;
+  StreamSubscription<PurseOverdraftEvent>? _overdraftSub;
+
   // Filter state for vault items
   String _selectedCategoryFilter = 'all'; // 'all', 'magicItem', 'gem_art', 'gear', 'claimed', 'unclaimed'
   int _partySplitCount = 4;
@@ -69,10 +74,44 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
 
     _diceService.joinRoom(_roomCode, _playerName);
     _registry.updateLastPlayed(_roomCode);
+
+    _claimConflictSub = _partyService.claimConflictStream.listen((event) {
+      if (mounted && event.roomCode == _roomCode) {
+        if (event.attemptedPlayer == _playerName) {
+          HapticService.heavyImpact(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '⚡ "${event.itemName}" was already claimed by ${event.winnerPlayer} (first to server)',
+              ),
+              backgroundColor: Colors.deepOrange.shade800,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    });
+
+    _overdraftSub = _partyService.overdraftStream.listen((event) {
+      if (mounted && event.roomCode == _roomCode && _isDmOrCoDm) {
+        HapticService.mediumImpact(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '⚠️ Purse Overdraft: ${event.denomination} balance clamped to 0 after spend by ${event.playerName}.',
+            ),
+            backgroundColor: Colors.amber.shade900,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _claimConflictSub?.cancel();
+    _overdraftSub?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -1094,6 +1133,45 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                         Text(
                           item.sourceTableOrMonster!,
                           style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                      if (item.hasConflict) ...[
+                        const SizedBox(height: 6),
+                        InkWell(
+                          onTap: () {
+                            final hostKey = _currentMembership?.hostKey ?? '';
+                            LootConflictResolutionDialog.show(
+                              context,
+                              roomCode: _roomCode,
+                              item: item,
+                              hostKey: hostKey,
+                              playerName: _playerName,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.amber.withValues(alpha: 0.65)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.sync_problem, size: 14, color: Colors.amber),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Sync Conflict (Tap to Resolve)',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ],
