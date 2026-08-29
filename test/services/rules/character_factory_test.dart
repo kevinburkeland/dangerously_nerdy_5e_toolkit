@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 
@@ -45,15 +44,15 @@ void main() {
     });
 
     test('creates 2014 ruleset Level 1 Fighter with Racial ASI and starting equipment', () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Thorin Stonehelm',
         ruleset: RulesetVersion.v2014,
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'mountain-dwarf',
           displayName: 'Mountain Dwarf',
         ),
-        backgroundRef: const EntityReference(
+        backgroundRef: EntityReference(
           refType: EntityType.background,
           slug: 'soldier',
           displayName: 'Soldier',
@@ -61,12 +60,12 @@ void main() {
         startingClassSlug: 'fighter',
         startingClassDisplayName: 'Fighter',
         startingClassHitDie: 'd10',
-        baseScores: const AbilityScores.standardArray(), // STR 15, DEX 14, CON 13, INT 12, WIS 10, CHA 8
-        bonusScores: const AbilityScores(
+        baseScores: AbilityScores.standardArray(), // STR 15, DEX 14, CON 13, INT 12, WIS 10, CHA 8
+        bonusScores: AbilityScores(
           strength: 2, // 2014 Mountain Dwarf +2 STR
           constitution: 2, // +2 CON
         ),
-        startingEquipment: const [
+        startingEquipment: [
           StartingEquipmentItemRequest(
             itemRef: EntityReference(
               refType: EntityType.equipment,
@@ -88,7 +87,7 @@ void main() {
             defaultSlot: EquipmentSlot.mainHand,
           ),
         ],
-        startingPurse: const PartyPurse(gp: 10),
+        startingPurse: PartyPurse(gp: 10),
       );
 
       final character = CharacterFactory.createLevel1Character(request);
@@ -104,15 +103,15 @@ void main() {
     });
 
     test('creates 2024 ruleset Level 1 Wizard with Origin Feat and Background ASI', () {
-      final request = CharacterCreationRequest(
+      const request = CharacterCreationRequest(
         characterName: 'Eldrin the Wise',
         ruleset: RulesetVersion.v2024,
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'high-elf',
           displayName: 'High Elf',
         ),
-        backgroundRef: const EntityReference(
+        backgroundRef: EntityReference(
           refType: EntityType.background,
           slug: 'sage',
           displayName: 'Sage',
@@ -120,7 +119,7 @@ void main() {
         startingClassSlug: 'wizard',
         startingClassDisplayName: 'Wizard',
         startingClassHitDie: 'd6',
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 8,
           dexterity: 14,
           constitution: 13,
@@ -128,25 +127,25 @@ void main() {
           wisdom: 12,
           charisma: 10,
         ),
-        bonusScores: const AbilityScores(
+        bonusScores: AbilityScores(
           intelligence: 2, // 2024 Background +2 INT
           constitution: 1, // +1 CON -> 14 (+2 mod)
         ),
-        originFeats: const [
+        originFeats: [
           EntityReference(
             refType: EntityType.feat,
             slug: 'magic-initiate-cleric',
             displayName: 'Magic Initiate (Cleric)',
           ),
         ],
-        cantrips: const [
+        cantrips: [
           EntityReference(
             refType: EntityType.spell,
             slug: 'fire-bolt',
             displayName: 'Fire Bolt',
           ),
         ],
-        spellsKnown: const [
+        spellsKnown: [
           EntityReference(
             refType: EntityType.spell,
             slug: 'mage-armor',

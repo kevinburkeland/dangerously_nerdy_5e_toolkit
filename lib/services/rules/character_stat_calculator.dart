@@ -6,7 +6,6 @@ import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../repository/reference_resolver.dart';
 import 'dnd_5e_rules_engine.dart';
-import 'spellcasting_rules_engine.dart';
 
 /// Computed Attack Profile for equipped weapons and unarmed strikes
 @immutable
