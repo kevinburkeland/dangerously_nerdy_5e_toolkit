@@ -114,19 +114,13 @@ class SpellItem {
     return getRules(edition).schoolOverride ?? school;
   }
 
-  String get levelLabel {
-    if (level == 0) return 'Cantrip';
-    switch (level) {
-      case 1:
-        return '1st Level';
-      case 2:
-        return '2nd Level';
-      case 3:
-        return '3rd Level';
-      default:
-        return '${level}th Level';
-    }
-  }
+  String get levelLabel => switch (level) {
+        0 => 'Cantrip',
+        1 => '1st Level',
+        2 => '2nd Level',
+        3 => '3rd Level',
+        _ => '${level}th Level',
+      };
 
   String get fullTypeLabel => '$levelLabel ${school.label}';
 

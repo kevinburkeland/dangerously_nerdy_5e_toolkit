@@ -900,7 +900,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'character_builder':
           glyphWidget = DndGlyph.classFeature(
             classType: DndClassType.fighter,
@@ -912,7 +911,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'dpr_calculator':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.weapon,
@@ -925,7 +923,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'party_room':
           glyphWidget = DndGlyph.species(
             speciesType: SpeciesType.human,
@@ -936,7 +933,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'homebrew_studio':
           glyphWidget = DndGlyph.genericUi(
             uiType: GenericUiGlyphType.d100,
@@ -944,7 +940,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'dm_screen':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.armor,
@@ -956,7 +951,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'srd_spellbook':
           glyphWidget = DndGlyph.spell(
             school: SpellSchool.evocation,
@@ -969,7 +963,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'monster_codex':
           glyphWidget = DndGlyph.monster(
             creatureType: CreatureType.dragon,
@@ -981,7 +974,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'monster_arena':
           glyphWidget = DndGlyph.monster(
             creatureType: CreatureType.monstrosity,
@@ -994,7 +986,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'item_compendium':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
@@ -1009,7 +1000,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'glyph_studio':
           glyphWidget = DndGlyph.spell(
             school: SpellSchool.divination,
@@ -1021,7 +1011,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'gray_bag':
         case 'rust_bag':
         case 'tan_bag':
@@ -1032,7 +1021,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'horn_of_valhalla_silver':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
@@ -1042,7 +1030,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'horn_of_valhalla_brass':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
@@ -1052,7 +1039,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'horn_of_valhalla_bronze':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
@@ -1062,7 +1048,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'horn_of_valhalla_iron':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
@@ -1072,7 +1057,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
         case 'figurines_of_wondrous_power':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.wondrousItem,
@@ -1081,7 +1065,6 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
-          break;
       }
     }
 

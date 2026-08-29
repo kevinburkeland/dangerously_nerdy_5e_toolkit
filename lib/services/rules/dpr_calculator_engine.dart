@@ -11,28 +11,13 @@ class DprCalculatorEngine {
     if (sides <= 0) return 0.0;
     final s = sides.toDouble();
 
-    switch (gwf) {
-      case GwfVersion.none:
-        return (s + 1.0) / 2.0;
-
-      case GwfVersion.v2014Reroll:
-        // Formula: (sides + 3)/2 - 2/sides
-        // For d6: (9/2) - (2/6) = 4.5 - 0.3333 = 4.1667 (2d6 = 8.3333)
-        // For d8: (11/2) - (2/8) = 5.5 - 0.25 = 5.25
-        // For d10: (13/2) - (2/10) = 6.5 - 0.20 = 6.30
-        // For d12: (15/2) - (2/12) = 7.5 - 0.1667 = 7.3333
-        return ((s + 3.0) / 2.0) - (2.0 / s);
-
-      case GwfVersion.v2024Floor3:
-        // Rolls of 1 and 2 are treated as 3.
-        // Sum = 3 + 3 + (3 + 4 + ... + sides) = 6 + (sides^2 + sides - 6)/2 = (sides^2 + sides + 6)/2
-        // Average = (sides + 1)/2 + 3/sides
-        // For d6: 3.5 + 3/6 = 4.0 (2d6 = 8.0)
-        // For d8: 4.5 + 3/8 = 4.875
-        // For d10: 5.5 + 3/10 = 5.8
-        // For d12: 6.5 + 3/12 = 6.75
-        return ((s + 1.0) / 2.0) + (3.0 / s);
-    }
+    return switch (gwf) {
+      GwfVersion.none => (s + 1.0) / 2.0,
+      // Formula: (sides + 3)/2 - 2/sides
+      GwfVersion.v2014Reroll => ((s + 3.0) / 2.0) - (2.0 / s),
+      // Rolls of 1 and 2 are treated as 3: Average = (sides + 1)/2 + 3/sides
+      GwfVersion.v2024Floor3 => ((s + 1.0) / 2.0) + (3.0 / s),
+    };
   }
 
   /// Calculates the effective attack bonus including flat buffs and expected buff dice (like Bless).
@@ -63,16 +48,12 @@ class DprCalculatorEngine {
     }
     final clampedBase = baseSingleHitP.clamp(0.05, 0.9975);
 
-    switch (advantage) {
-      case AdvantageType.normal:
-        return clampedBase;
-      case AdvantageType.advantage:
-        return 1.0 - math.pow(1.0 - clampedBase, 2).toDouble();
-      case AdvantageType.disadvantage:
-        return math.pow(clampedBase, 2).toDouble();
-      case AdvantageType.elvenAccuracy:
-        return 1.0 - math.pow(1.0 - clampedBase, 3).toDouble();
-    }
+    return switch (advantage) {
+      AdvantageType.normal => clampedBase,
+      AdvantageType.advantage => 1.0 - math.pow(1.0 - clampedBase, 2).toDouble(),
+      AdvantageType.disadvantage => math.pow(clampedBase, 2).toDouble(),
+      AdvantageType.elvenAccuracy => 1.0 - math.pow(1.0 - clampedBase, 3).toDouble(),
+    };
   }
 
   /// Calculates critical hit probability.
@@ -88,16 +69,12 @@ class DprCalculatorEngine {
       baseCritP += 0.05 * baseCritP;
     }
 
-    switch (advantage) {
-      case AdvantageType.normal:
-        return baseCritP;
-      case AdvantageType.advantage:
-        return 1.0 - math.pow(1.0 - baseCritP, 2).toDouble();
-      case AdvantageType.disadvantage:
-        return math.pow(baseCritP, 2).toDouble();
-      case AdvantageType.elvenAccuracy:
-        return 1.0 - math.pow(1.0 - baseCritP, 3).toDouble();
-    }
+    return switch (advantage) {
+      AdvantageType.normal => baseCritP,
+      AdvantageType.advantage => 1.0 - math.pow(1.0 - baseCritP, 2).toDouble(),
+      AdvantageType.disadvantage => math.pow(baseCritP, 2).toDouble(),
+      AdvantageType.elvenAccuracy => 1.0 - math.pow(1.0 - baseCritP, 3).toDouble(),
+    };
   }
 
   /// Calculates saving throw failure probability for spells (Save-for-Half or Save-for-None).

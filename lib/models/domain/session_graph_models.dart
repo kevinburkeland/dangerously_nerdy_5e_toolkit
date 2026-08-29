@@ -8,18 +8,12 @@ enum SessionRefType {
   npc,
   lootContainer;
 
-  String get displayName {
-    switch (this) {
-      case SessionRefType.character:
-        return 'Player Character';
-      case SessionRefType.monster:
-        return 'Monster';
-      case SessionRefType.npc:
-        return 'NPC';
-      case SessionRefType.lootContainer:
-        return 'Loot Container';
-    }
-  }
+  String get displayName => switch (this) {
+        SessionRefType.character => 'Player Character',
+        SessionRefType.monster => 'Monster',
+        SessionRefType.npc => 'NPC',
+        SessionRefType.lootContainer => 'Loot Container',
+      };
 }
 
 /// Contextual pointer linking characters, monsters, or objects to a room or graph node

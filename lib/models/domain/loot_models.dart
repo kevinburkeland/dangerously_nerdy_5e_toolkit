@@ -10,20 +10,13 @@ enum LootContainerType {
   roomPool,
   cache;
 
-  String get displayName {
-    switch (this) {
-      case LootContainerType.chest:
-        return 'Chest';
-      case LootContainerType.corpse:
-        return 'Lootable Remains';
-      case LootContainerType.merchant:
-        return 'Merchant Inventory';
-      case LootContainerType.roomPool:
-        return 'Room Loot Pool';
-      case LootContainerType.cache:
-        return 'Hidden Cache';
-    }
-  }
+  String get displayName => switch (this) {
+        LootContainerType.chest => 'Chest',
+        LootContainerType.corpse => 'Lootable Remains',
+        LootContainerType.merchant => 'Merchant Inventory',
+        LootContainerType.roomPool => 'Room Loot Pool',
+        LootContainerType.cache => 'Hidden Cache',
+      };
 }
 
 /// Standalone Loot Container, Merchant Inventory, or Room-Level Loot Pool

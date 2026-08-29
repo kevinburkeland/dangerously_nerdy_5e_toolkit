@@ -45,20 +45,13 @@ class PartyLootItem {
   bool get isClaimed => claimedByPlayer != null && claimedByPlayer!.trim().isNotEmpty;
   double get totalGpValue => gpValue * count;
 
-  String get categoryLabel {
-    switch (category) {
-      case 'magicItem':
-        return 'Magic Item';
-      case 'gem':
-        return 'Gemstone';
-      case 'art':
-        return 'Art Object';
-      case 'currency':
-        return 'Currency / Ingot';
-      default:
-        return 'Adventuring Gear';
-    }
-  }
+  String get categoryLabel => switch (category) {
+        'magicItem' => 'Magic Item',
+        'gem' => 'Gemstone',
+        'art' => 'Art Object',
+        'currency' => 'Currency / Ingot',
+        _ => 'Adventuring Gear',
+      };
 
   PartyLootItem copyWith({
     String? id,

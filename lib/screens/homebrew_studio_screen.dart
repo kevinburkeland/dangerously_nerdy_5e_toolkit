@@ -335,16 +335,12 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
           switch (_tabController.index) {
             case 0:
               _createOrEditSpell();
-              break;
             case 1:
               _createOrEditMonster();
-              break;
             case 2:
               _createOrEditItem();
-              break;
             default:
               _openImportDialog();
-              break;
           }
         },
         icon: Icon(_tabController.index <= 2 ? Icons.add : Icons.download),

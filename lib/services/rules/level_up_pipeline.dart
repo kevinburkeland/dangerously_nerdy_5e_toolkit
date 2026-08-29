@@ -247,22 +247,16 @@ class LevelUpPipeline {
           switch (ability) {
             case AbilityType.strength:
               newBonusScores = newBonusScores.copyWith(strength: newBonusScores.strength + bonus);
-              break;
             case AbilityType.dexterity:
               newBonusScores = newBonusScores.copyWith(dexterity: newBonusScores.dexterity + bonus);
-              break;
             case AbilityType.constitution:
               newBonusScores = newBonusScores.copyWith(constitution: newBonusScores.constitution + bonus);
-              break;
             case AbilityType.intelligence:
               newBonusScores = newBonusScores.copyWith(intelligence: newBonusScores.intelligence + bonus);
-              break;
             case AbilityType.wisdom:
               newBonusScores = newBonusScores.copyWith(wisdom: newBonusScores.wisdom + bonus);
-              break;
             case AbilityType.charisma:
               newBonusScores = newBonusScores.copyWith(charisma: newBonusScores.charisma + bonus);
-              break;
           }
         });
       }

@@ -249,28 +249,20 @@ class _Simulated3DDie {
     switch (dieType) {
       case DieType.d4:
         mesh = PolyhedronMesh.createD4(radius: dieRadius);
-        break;
       case DieType.d6:
         mesh = PolyhedronMesh.createD6(radius: dieRadius);
-        break;
       case DieType.d8:
         mesh = PolyhedronMesh.createD8(radius: dieRadius);
-        break;
       case DieType.d10:
         mesh = PolyhedronMesh.createD10(radius: dieRadius);
-        break;
       case DieType.d100:
         mesh = PolyhedronMesh.createD100(radius: isSingle ? 80.0 : (totalCount <= 3 ? 62.0 : 48.0));
-        break;
       case DieType.d12:
         mesh = PolyhedronMesh.createD12(radius: dieRadius);
-        break;
       case DieType.d20:
         mesh = PolyhedronMesh.createD20(radius: dieRadius);
-        break;
       case DieType.custom:
         mesh = PolyhedronMesh.createSphere(radius: dieRadius);
-        break;
     }
 
     // Precise centering based on total number of rolled dice

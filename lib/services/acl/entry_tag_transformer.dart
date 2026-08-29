@@ -70,7 +70,6 @@ class EntryTagTransformer {
         case 'inset':
           if (type == 'inset') buffer.writeln('> ');
           _parseNode(node['entries'], buffer, math, refs, depth + 1, defaultRuleset);
-          break;
 
         case 'list':
           final items = node['items'] as List? ?? [];
@@ -78,11 +77,9 @@ class EntryTagTransformer {
             buffer.write('- ');
             _parseNode(item, buffer, math, refs, depth, defaultRuleset);
           }
-          break;
 
         case 'table':
           _renderTable(node, buffer, math, refs, defaultRuleset);
-          break;
 
         default:
           if (node.containsKey('entries')) {

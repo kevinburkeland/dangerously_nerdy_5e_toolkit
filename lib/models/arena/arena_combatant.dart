@@ -773,40 +773,24 @@ class ArenaCombatant {
     }
 
     // Fallback to raw ability modifier
-    switch (abLower) {
-      case 'str':
-        return sb.strMod;
-      case 'dex':
-        return sb.dexMod;
-      case 'con':
-        return sb.conMod;
-      case 'int':
-        return sb.intMod;
-      case 'wis':
-        return sb.wisMod;
-      case 'cha':
-        return sb.chaMod;
-      default:
-        return sb.dexMod;
-    }
+    return switch (abLower) {
+      'str' => sb.strMod,
+      'dex' => sb.dexMod,
+      'con' => sb.conMod,
+      'int' => sb.intMod,
+      'wis' => sb.wisMod,
+      'cha' => sb.chaMod,
+      _ => sb.dexMod,
+    };
   }
 
-  static String _expandAbilityName(String ab) {
-    switch (ab.toLowerCase()) {
-      case 'str':
-        return 'strength';
-      case 'dex':
-        return 'dexterity';
-      case 'con':
-        return 'constitution';
-      case 'int':
-        return 'intelligence';
-      case 'wis':
-        return 'wisdom';
-      case 'cha':
-        return 'charisma';
-      default:
-        return ab;
-    }
-  }
+  static String _expandAbilityName(String ab) => switch (ab.toLowerCase()) {
+        'str' => 'strength',
+        'dex' => 'dexterity',
+        'con' => 'constitution',
+        'int' => 'intelligence',
+        'wis' => 'wisdom',
+        'cha' => 'charisma',
+        _ => ab,
+      };
 }

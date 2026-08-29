@@ -439,24 +439,13 @@ class CharacterStatCalculator {
     return false;
   }
 
-  static AbilityType? _inferCastingAbility(String classSlug) {
-    switch (classSlug.toLowerCase()) {
-      case 'wizard':
-      case 'artificer':
-        return AbilityType.intelligence;
-      case 'cleric':
-      case 'druid':
-      case 'ranger':
-        return AbilityType.wisdom;
-      case 'bard':
-      case 'paladin':
-      case 'sorcerer':
-      case 'warlock':
-        return AbilityType.charisma;
-      default:
-        return null;
-    }
-  }
+  static AbilityType? _inferCastingAbility(String classSlug) =>
+      switch (classSlug.toLowerCase()) {
+        'wizard' || 'artificer' => AbilityType.intelligence,
+        'cleric' || 'druid' || 'ranger' => AbilityType.wisdom,
+        'bard' || 'paladin' || 'sorcerer' || 'warlock' => AbilityType.charisma,
+        _ => null,
+      };
 
   static SpellSlotPool _computeMulticlassSpellSlots(List<ClassLevelProgression> classes) {
     double totalEffectiveLevel = 0.0;
@@ -471,17 +460,13 @@ class CharacterStatCalculator {
         case 'bard':
         case 'sorcerer':
           totalEffectiveLevel += cls.level;
-          break;
         case 'paladin':
         case 'ranger':
           totalEffectiveLevel += (cls.level / 2).floor();
-          break;
         case 'artificer':
           totalEffectiveLevel += (cls.level / 2).ceil();
-          break;
         case 'warlock':
           warlockLevel += cls.level;
-          break;
       }
     }
 

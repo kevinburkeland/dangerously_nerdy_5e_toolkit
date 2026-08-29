@@ -564,7 +564,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.28, h * 0.75);
         path.close();
         path.fillType = PathFillType.evenOdd;
-        break;
 
       case 'A':
         path.moveTo(w * 0.5, 0);
@@ -580,7 +579,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.38, h * 0.48);
         path.close();
         path.fillType = PathFillType.evenOdd;
-        break;
 
       case 'N':
         path.moveTo(0, 0);
@@ -594,7 +592,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.28, h);
         path.lineTo(0, h);
         path.close();
-        break;
 
       case 'G':
         path.moveTo(w, h * 0.25);
@@ -618,7 +615,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.78, h * 0.28);
         path.lineTo(w, h * 0.25);
         path.close();
-        break;
 
       case 'E':
         path.moveTo(0, 0);
@@ -634,7 +630,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w, h);
         path.lineTo(0, h);
         path.close();
-        break;
 
       case 'R':
         path.moveTo(0, 0);
@@ -657,7 +652,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.26, h * 0.45);
         path.close();
         path.fillType = PathFillType.evenOdd;
-        break;
 
       case 'O':
         path.moveTo(w * 0.25, 0);
@@ -679,7 +673,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.26, h * 0.3);
         path.close();
         path.fillType = PathFillType.evenOdd;
-        break;
 
       case 'U':
         path.moveTo(0, 0);
@@ -695,7 +688,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.25, h);
         path.lineTo(0, h * 0.75);
         path.close();
-        break;
 
       case 'S':
         path.moveTo(w * 0.85, 0);
@@ -715,7 +707,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w, h * 0.22);
         path.lineTo(w, h * 0.15);
         path.close();
-        break;
 
       case 'L':
         path.moveTo(0, 0);
@@ -725,7 +716,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w, h);
         path.lineTo(0, h);
         path.close();
-        break;
 
       case 'Y':
         path.moveTo(0, 0);
@@ -738,7 +728,6 @@ class D20TechPainter extends CustomPainter {
         path.lineTo(w * 0.36, h);
         path.lineTo(w * 0.36, h * 0.55);
         path.close();
-        break;
     }
 
     canvas.drawPath(path, paint);

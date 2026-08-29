@@ -14,22 +14,14 @@ enum AbilityType {
   wisdom,
   charisma;
 
-  String get shortName {
-    switch (this) {
-      case AbilityType.strength:
-        return 'STR';
-      case AbilityType.dexterity:
-        return 'DEX';
-      case AbilityType.constitution:
-        return 'CON';
-      case AbilityType.intelligence:
-        return 'INT';
-      case AbilityType.wisdom:
-        return 'WIS';
-      case AbilityType.charisma:
-        return 'CHA';
-    }
-  }
+  String get shortName => switch (this) {
+        AbilityType.strength => 'STR',
+        AbilityType.dexterity => 'DEX',
+        AbilityType.constitution => 'CON',
+        AbilityType.intelligence => 'INT',
+        AbilityType.wisdom => 'WIS',
+        AbilityType.charisma => 'CHA',
+      };
 }
 
 /// Immutable collection of the 6 core 5e Ability Scores
@@ -59,22 +51,14 @@ class AbilityScores {
         wisdom = 10,
         charisma = 8;
 
-  int getScore(AbilityType ability) {
-    switch (ability) {
-      case AbilityType.strength:
-        return strength;
-      case AbilityType.dexterity:
-        return dexterity;
-      case AbilityType.constitution:
-        return constitution;
-      case AbilityType.intelligence:
-        return intelligence;
-      case AbilityType.wisdom:
-        return wisdom;
-      case AbilityType.charisma:
-        return charisma;
-    }
-  }
+  int getScore(AbilityType ability) => switch (ability) {
+        AbilityType.strength => strength,
+        AbilityType.dexterity => dexterity,
+        AbilityType.constitution => constitution,
+        AbilityType.intelligence => intelligence,
+        AbilityType.wisdom => wisdom,
+        AbilityType.charisma => charisma,
+      };
 
   int getModifier(AbilityType ability) => getScore(ability).dndModifier;
 
@@ -170,74 +154,47 @@ enum SkillType {
   stealth,
   survival;
 
-  AbilityType get defaultAbility {
-    switch (this) {
-      case SkillType.athletics:
-        return AbilityType.strength;
-      case SkillType.acrobatics:
-      case SkillType.sleightOfHand:
-      case SkillType.stealth:
-        return AbilityType.dexterity;
-      case SkillType.arcana:
-      case SkillType.history:
-      case SkillType.investigation:
-      case SkillType.nature:
-      case SkillType.religion:
-        return AbilityType.intelligence;
-      case SkillType.animalHandling:
-      case SkillType.insight:
-      case SkillType.medicine:
-      case SkillType.perception:
-      case SkillType.survival:
-        return AbilityType.wisdom;
-      case SkillType.deception:
-      case SkillType.intimidation:
-      case SkillType.performance:
-      case SkillType.persuasion:
-        return AbilityType.charisma;
-    }
-  }
+  AbilityType get defaultAbility => switch (this) {
+        SkillType.athletics => AbilityType.strength,
+        SkillType.acrobatics ||
+        SkillType.sleightOfHand ||
+        SkillType.stealth => AbilityType.dexterity,
+        SkillType.arcana ||
+        SkillType.history ||
+        SkillType.investigation ||
+        SkillType.nature ||
+        SkillType.religion => AbilityType.intelligence,
+        SkillType.animalHandling ||
+        SkillType.insight ||
+        SkillType.medicine ||
+        SkillType.perception ||
+        SkillType.survival => AbilityType.wisdom,
+        SkillType.deception ||
+        SkillType.intimidation ||
+        SkillType.performance ||
+        SkillType.persuasion => AbilityType.charisma,
+      };
 
-  String get displayName {
-    switch (this) {
-      case SkillType.acrobatics:
-        return 'Acrobatics';
-      case SkillType.animalHandling:
-        return 'Animal Handling';
-      case SkillType.arcana:
-        return 'Arcana';
-      case SkillType.athletics:
-        return 'Athletics';
-      case SkillType.deception:
-        return 'Deception';
-      case SkillType.history:
-        return 'History';
-      case SkillType.insight:
-        return 'Insight';
-      case SkillType.intimidation:
-        return 'Intimidation';
-      case SkillType.investigation:
-        return 'Investigation';
-      case SkillType.medicine:
-        return 'Medicine';
-      case SkillType.nature:
-        return 'Nature';
-      case SkillType.perception:
-        return 'Perception';
-      case SkillType.performance:
-        return 'Performance';
-      case SkillType.persuasion:
-        return 'Persuasion';
-      case SkillType.religion:
-        return 'Religion';
-      case SkillType.sleightOfHand:
-        return 'Sleight of Hand';
-      case SkillType.stealth:
-        return 'Stealth';
-      case SkillType.survival:
-        return 'Survival';
-    }
-  }
+  String get displayName => switch (this) {
+        SkillType.acrobatics => 'Acrobatics',
+        SkillType.animalHandling => 'Animal Handling',
+        SkillType.arcana => 'Arcana',
+        SkillType.athletics => 'Athletics',
+        SkillType.deception => 'Deception',
+        SkillType.history => 'History',
+        SkillType.insight => 'Insight',
+        SkillType.intimidation => 'Intimidation',
+        SkillType.investigation => 'Investigation',
+        SkillType.medicine => 'Medicine',
+        SkillType.nature => 'Nature',
+        SkillType.perception => 'Perception',
+        SkillType.performance => 'Performance',
+        SkillType.persuasion => 'Persuasion',
+        SkillType.religion => 'Religion',
+        SkillType.sleightOfHand => 'Sleight of Hand',
+        SkillType.stealth => 'Stealth',
+        SkillType.survival => 'Survival',
+      };
 }
 
 /// Skill Proficiency Levels
@@ -265,32 +222,19 @@ enum EquipmentSlot {
   boots,
   wondrous;
 
-  String get displayName {
-    switch (this) {
-      case EquipmentSlot.head:
-        return 'Head';
-      case EquipmentSlot.cloak:
-        return 'Cloak';
-      case EquipmentSlot.armor:
-        return 'Armor';
-      case EquipmentSlot.shield:
-        return 'Shield';
-      case EquipmentSlot.mainHand:
-        return 'Main Hand';
-      case EquipmentSlot.offHand:
-        return 'Off Hand';
-      case EquipmentSlot.twoHand:
-        return 'Two-Handed';
-      case EquipmentSlot.ring1:
-        return 'Ring 1';
-      case EquipmentSlot.ring2:
-        return 'Ring 2';
-      case EquipmentSlot.boots:
-        return 'Boots';
-      case EquipmentSlot.wondrous:
-        return 'Wondrous';
-    }
-  }
+  String get displayName => switch (this) {
+        EquipmentSlot.head => 'Head',
+        EquipmentSlot.cloak => 'Cloak',
+        EquipmentSlot.armor => 'Armor',
+        EquipmentSlot.shield => 'Shield',
+        EquipmentSlot.mainHand => 'Main Hand',
+        EquipmentSlot.offHand => 'Off Hand',
+        EquipmentSlot.twoHand => 'Two-Handed',
+        EquipmentSlot.ring1 => 'Ring 1',
+        EquipmentSlot.ring2 => 'Ring 2',
+        EquipmentSlot.boots => 'Boots',
+        EquipmentSlot.wondrous => 'Wondrous',
+      };
 }
 
 /// Individual item instance in a character or container inventory

@@ -200,18 +200,13 @@ class AnimatedObjectInstance {
     if (byName != null) return byName;
 
     // Fallback to synthetic Animate Object stat block matching size
-    switch (size) {
-      case ObjectSize.tiny:
-        return SrdSummonsLibrary.tinyObject;
-      case ObjectSize.small:
-        return SrdSummonsLibrary.smallObject;
-      case ObjectSize.medium:
-        return SrdSummonsLibrary.mediumObject;
-      case ObjectSize.large:
-        return SrdSummonsLibrary.largeObject;
-      case ObjectSize.huge:
-        return SrdSummonsLibrary.hugeObject;
-    }
+    return switch (size) {
+      ObjectSize.tiny => SrdSummonsLibrary.tinyObject,
+      ObjectSize.small => SrdSummonsLibrary.smallObject,
+      ObjectSize.medium => SrdSummonsLibrary.mediumObject,
+      ObjectSize.large => SrdSummonsLibrary.largeObject,
+      ObjectSize.huge => SrdSummonsLibrary.hugeObject,
+    };
   }
 
   /// Factory constructor to generate an instance from an SRD MinionStatBlock.

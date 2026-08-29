@@ -51,15 +51,14 @@ class ArenaCombatEngine {
 
     // Attacker is grounded, defender is airborne at altitudeInFeet (e.g. 20 ft)
     if (attack != null) {
-      switch (attack.attackType) {
-        case AttackType.rangedWeapon:
-        case AttackType.rangedSpell:
-          return true;
-        case AttackType.meleeReach:
-          return attacker.meleeReachInFeet >= defender.altitudeInFeet || attack.reachInFeet >= defender.altitudeInFeet;
-        case AttackType.meleeStandard:
-          return attacker.meleeReachInFeet >= defender.altitudeInFeet;
-      }
+      return switch (attack.attackType) {
+        AttackType.rangedWeapon || AttackType.rangedSpell => true,
+        AttackType.meleeReach =>
+          attacker.meleeReachInFeet >= defender.altitudeInFeet ||
+              attack.reachInFeet >= defender.altitudeInFeet,
+        AttackType.meleeStandard =>
+          attacker.meleeReachInFeet >= defender.altitudeInFeet,
+      };
     }
 
     return attacker.meleeReachInFeet >= defender.altitudeInFeet;

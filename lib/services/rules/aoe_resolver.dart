@@ -85,7 +85,6 @@ class AoeResolver {
           if (a.currentHp != b.currentHp) return a.currentHp.compareTo(b.currentHp);
           return a.ac.compareTo(b.ac);
         });
-        break;
 
       case ArenaTargetingStrategy.highestThreat:
         candidates.sort((a, b) {
@@ -94,11 +93,9 @@ class AoeResolver {
           if (crA != crB) return crB.compareTo(crA);
           return b.maxHp.compareTo(a.maxHp);
         });
-        break;
 
       case ArenaTargetingStrategy.randomEnemy:
         candidates.shuffle(rng);
-        break;
     }
 
     return candidates.take(targetCount).toList();

@@ -90,33 +90,21 @@ class SpellSession {
 
   int getMaxAllowedCount(String statBlockId) {
     if (activePreset.id == 'create_undead') {
-      switch (statBlockId) {
-        case 'undead_ghoul':
-          return 3 + (spellLevel - 6).clamp(0, 3); // 3 (6th), 4 (7th), 5 (8th), 6 (9th)
-        case 'undead_ghast':
-        case 'undead_wight':
-          if (spellLevel < 7) return 0;
-          return 2 + (spellLevel - 7).clamp(0, 2); // 2 (7th), 3 (8th), 4 (9th)
-        case 'undead_mummy':
-          if (spellLevel < 8) return 0;
-          return 2 + (spellLevel - 8).clamp(0, 1); // 2 (8th), 3 (9th)
-        default:
-          return 0;
-      }
+      return switch (statBlockId) {
+        'undead_ghoul' => 3 + (spellLevel - 6).clamp(0, 3), // 3 (6th), 4 (7th), 5 (8th), 6 (9th)
+        'undead_ghast' || 'undead_wight' => spellLevel < 7 ? 0 : 2 + (spellLevel - 7).clamp(0, 2), // 2 (7th), 3 (8th), 4 (9th)
+        'undead_mummy' => spellLevel < 8 ? 0 : 2 + (spellLevel - 8).clamp(0, 1), // 2 (8th), 3 (9th)
+        _ => 0,
+      };
     }
     if (activePreset.id == 'giant_insect') {
-      switch (statBlockId) {
-        case 'insect_centipede':
-          return 10;
-        case 'insect_wasp':
-          return 5;
-        case 'beast_giant_spider':
-          return 3;
-        case 'insect_scorpion':
-          return 1;
-        default:
-          return 1;
-      }
+      return switch (statBlockId) {
+        'insect_centipede' => 10,
+        'insect_wasp' => 5,
+        'beast_giant_spider' => 3,
+        'insect_scorpion' => 1,
+        _ => 1,
+      };
     }
     return maxPoints;
   }

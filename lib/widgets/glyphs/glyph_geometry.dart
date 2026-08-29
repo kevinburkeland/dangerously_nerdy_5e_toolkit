@@ -20,7 +20,6 @@ class GlyphGeometry {
       case GlyphFrameShape.circle:
         // Abjuration: Circle Shield
         path.addOval(Rect.fromCircle(center: center, radius: 10.0 * scale));
-        break;
 
       case GlyphFrameShape.hexagon:
         // Conjuration: Hexagonal Planar Gate
@@ -36,7 +35,6 @@ class GlyphGeometry {
           }
         }
         path.close();
-        break;
 
       case GlyphFrameShape.eye:
         // Divination: Horizontal Eye / Diamond Enclosure
@@ -58,7 +56,6 @@ class GlyphGeometry {
             center.dx - rx,
             center.dy);
         path.close();
-        break;
 
       case GlyphFrameShape.softRhombus:
         // Enchantment: Soft Rhombus (Rounded Diamond)
@@ -78,7 +75,6 @@ class GlyphGeometry {
         path.quadraticBezierTo(
             center.dx, center.dy - r, center.dx, center.dy - r);
         path.close();
-        break;
 
       case GlyphFrameShape.diamond:
         // Evocation: Sharp Diamond
@@ -88,7 +84,6 @@ class GlyphGeometry {
         path.lineTo(center.dx, center.dy + r);
         path.lineTo(center.dx - r, center.dy);
         path.close();
-        break;
 
       case GlyphFrameShape.overlappingCircle:
         // Illusion: Overlapping Mirage Circles (Vesica Piscis Outer Silhouette)
@@ -100,7 +95,6 @@ class GlyphGeometry {
           ..addOval(Rect.fromCircle(center: center + Offset(d, 0), radius: r));
         path.addPath(Path.combine(PathOperation.union, leftPath, rightPath),
             Offset.zero);
-        break;
 
       case GlyphFrameShape.invertedTriangle:
         // Necromancy: Inverted Triangle (Point Down)
@@ -109,7 +103,6 @@ class GlyphGeometry {
         path.lineTo(center.dx + r * 0.95, center.dy - r * 0.75);
         path.lineTo(center.dx, center.dy + r);
         path.close();
-        break;
 
       case GlyphFrameShape.upwardTriangle:
         // Transmutation: Upward Triangle (Point Up)
@@ -118,7 +111,6 @@ class GlyphGeometry {
         path.lineTo(center.dx + r * 0.95, center.dy + r * 0.75);
         path.lineTo(center.dx - r * 0.95, center.dy + r * 0.75);
         path.close();
-        break;
 
       case GlyphFrameShape.octagon:
         // Aberration: Octagonal Eldritch Containment
@@ -134,7 +126,6 @@ class GlyphGeometry {
           }
         }
         path.close();
-        break;
 
       case GlyphFrameShape.softShield:
         // Beast: Soft Rounded Shield
@@ -159,7 +150,6 @@ class GlyphGeometry {
           center.dy + r * 0.1,
         );
         path.close();
-        break;
 
       case GlyphFrameShape.crest:
         // Celestial: Winged Crest Shield
@@ -171,7 +161,6 @@ class GlyphGeometry {
         path.lineTo(center.dx - r * 0.75, center.dy + r * 0.35);
         path.lineTo(center.dx - r * 0.95, center.dy - r * 0.5);
         path.close();
-        break;
 
       case GlyphFrameShape.heavyHex:
         // Construct: Heavy Hex Shield
@@ -187,7 +176,6 @@ class GlyphGeometry {
           }
         }
         path.close();
-        break;
 
       case GlyphFrameShape.sharpDiamondShield:
         // Dragon: Sharp Diamond Shield
@@ -197,7 +185,6 @@ class GlyphGeometry {
         path.lineTo(center.dx, center.dy + r);
         path.lineTo(center.dx - r * 0.9, center.dy - r * 0.2);
         path.close();
-        break;
 
       case GlyphFrameShape.rhombus:
         // Elemental: Rhombus
@@ -207,13 +194,11 @@ class GlyphGeometry {
         path.lineTo(center.dx - r * 0.3, center.dy + r);
         path.lineTo(center.dx - r, center.dy - r * 0.3);
         path.close();
-        break;
 
       case GlyphFrameShape.filigreeOval:
         // Fey: Sylvan Filigree Oval
         path.addOval(Rect.fromCenter(
             center: center, width: 16.5 * scale, height: 20.5 * scale));
-        break;
 
       case GlyphFrameShape.pointedShield:
         // Fiend: Inverted Pointed Shield
@@ -224,7 +209,6 @@ class GlyphGeometry {
         path.lineTo(center.dx, center.dy + r * 1.05);
         path.lineTo(center.dx - r * 0.75, center.dy + r * 0.2);
         path.close();
-        break;
 
       case GlyphFrameShape.heavySquare:
         // Giant: Heavy Square with Beveled Corners
@@ -232,7 +216,6 @@ class GlyphGeometry {
         path.addRRect(RRect.fromRectAndRadius(
             Rect.fromCenter(center: center, width: r * 2.0, height: r * 2.0),
             Radius.circular(2.2 * scale)));
-        break;
 
       case GlyphFrameShape.heaterShield:
         // Humanoid: Classic Heater Shield
@@ -257,7 +240,6 @@ class GlyphGeometry {
           center.dy,
         );
         path.close();
-        break;
 
       case GlyphFrameShape.jaggedCrest:
         // Monstrosity: Jagged Spiky Crest
@@ -271,7 +253,6 @@ class GlyphGeometry {
         path.lineTo(center.dx - r * 0.95, center.dy - r * 0.2);
         path.lineTo(center.dx - r * 0.6, center.dy - r * 0.7);
         path.close();
-        break;
 
       case GlyphFrameShape.blob:
         // Ooze: Amorphous Liquid Blob
@@ -301,7 +282,6 @@ class GlyphGeometry {
             center.dx,
             center.dy - r * 0.9);
         path.close();
-        break;
 
       case GlyphFrameShape.teardrop:
         // Plant: Leaf Teardrop
@@ -324,7 +304,6 @@ class GlyphGeometry {
           center.dy - r,
         );
         path.close();
-        break;
 
       case GlyphFrameShape.tombstone:
         // Undead: Tombstone Arch
@@ -337,7 +316,6 @@ class GlyphGeometry {
         );
         path.lineTo(center.dx + r * 0.85, center.dy + r * 0.95);
         path.close();
-        break;
     }
 
     return path;
@@ -703,7 +681,6 @@ class GlyphGeometry {
             canvas.drawCircle(p2, 0.9 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.ranged:
         // Circular Crosshair Reticle Ring with 4-Axis Targeting Ticks
@@ -721,7 +698,6 @@ class GlyphGeometry {
             canvas.drawCircle(p2, 0.8 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.recharge:
         // Segmented Hexagonal Pulse Ring with Discharge Gaps
@@ -742,7 +718,6 @@ class GlyphGeometry {
             canvas.drawCircle(pMid, 0.9 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.reaction:
         // Shielded Square Ring with Corner Deflection Brackets
@@ -766,7 +741,6 @@ class GlyphGeometry {
             canvas.drawCircle(pt, 1.0 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.control:
         // Tri-node restraint lattice ring for control and disable effects.
@@ -792,7 +766,6 @@ class GlyphGeometry {
           triangle.close();
           canvas.drawPath(triangle, finePaint);
         }
-        break;
 
       case ActionRingType.sustain:
         // Harmonic cradle ring for healing, barriers, and regeneration.
@@ -812,7 +785,6 @@ class GlyphGeometry {
           canvas.drawCircle(nodeB, 0.9 * scale, nodeFill);
           canvas.drawCircle(apex, 0.9 * scale, nodeFill);
         }
-        break;
 
       case ActionRingType.legendary:
         // Spiked Starburst Crown Ring with Radiating Apex Rays
@@ -830,7 +802,6 @@ class GlyphGeometry {
         }
         star.close();
         canvas.drawPath(star, mainPaint);
-        break;
 
       case ActionRingType.concentration:
         // Dual-Harmonic Orbital Satellite Pulse Ring (Intersecting Harmonic Orbit Tracks with Telemetry Nodes)
@@ -862,7 +833,6 @@ class GlyphGeometry {
           canvas.drawLine(satSouth - Offset(1.2 * scale, 0),
               satSouth + Offset(1.2 * scale, 0), finePaint);
         }
-        break;
 
       case ActionRingType.attunement:
         // Sacred Tether Ring with Intersecting Attunement Knot Nodes
@@ -892,7 +862,6 @@ class GlyphGeometry {
           diamond.close();
           canvas.drawPath(diamond, finePaint);
         }
-        break;
 
       case ActionRingType.bonusAction:
         // Triple-Spark Triangulation Ring with Quick-Action Apex Rays
@@ -909,7 +878,6 @@ class GlyphGeometry {
             canvas.drawCircle(pOuter, 1.0 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.resource:
         // Segmented Rest & Recharge Resource Matrix Ring
@@ -926,7 +894,6 @@ class GlyphGeometry {
             canvas.drawCircle(p, 0.85 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.passive:
         // Continuous Harmonic Double Ring with Steady Resonance
@@ -939,7 +906,6 @@ class GlyphGeometry {
             canvas.drawCircle(pt, 0.65 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.speed:
         // Velocity Motion Vector Arc Ring with Forward Chevrons
@@ -962,7 +928,6 @@ class GlyphGeometry {
             canvas.drawCircle(p2, 0.75 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.sense:
         // Sensory Sonar Radar Sweep Ring with Crosshair Coordinates
@@ -979,7 +944,6 @@ class GlyphGeometry {
             canvas.drawCircle(p2, 0.8 * scale, nodeFill);
           }
         }
-        break;
 
       case ActionRingType.hitDie:
         // Polyhedral Hit Die Ring with Faceted Coordinate Geometry
@@ -1003,7 +967,6 @@ class GlyphGeometry {
             canvas.drawCircle(pt, 0.9 * scale, nodeFill);
           }
         }
-        break;
     }
   }
 
@@ -1043,7 +1006,6 @@ class GlyphGeometry {
             badgeCenter + Offset(1.6 * scale, 1.6 * scale), iconPaint);
         canvas.drawLine(badgeCenter - Offset(-1.6 * scale, 1.6 * scale),
             badgeCenter + Offset(-1.6 * scale, 1.6 * scale), iconPaint);
-        break;
       case ActionBadge.ranged:
         final bow = Path()
           ..arcTo(Rect.fromCircle(center: badgeCenter, radius: 1.8 * scale),
@@ -1051,7 +1013,6 @@ class GlyphGeometry {
         canvas.drawPath(bow, iconPaint);
         canvas.drawLine(badgeCenter - Offset(1.8 * scale, 0),
             badgeCenter + Offset(1.8 * scale, 0), iconPaint);
-        break;
       case ActionBadge.recharge:
         final bolt = Path()
           ..moveTo(badgeCenter.dx, badgeCenter.dy - 1.8 * scale)
@@ -1066,7 +1027,6 @@ class GlyphGeometry {
             Paint()
               ..color = Colors.white
               ..style = PaintingStyle.fill);
-        break;
       case ActionBadge.legendary:
         final crown = Path()
           ..moveTo(badgeCenter.dx - 1.8 * scale, badgeCenter.dy + 1.2 * scale)
@@ -1082,7 +1042,6 @@ class GlyphGeometry {
             Paint()
               ..color = Colors.white
               ..style = PaintingStyle.fill);
-        break;
       case ActionBadge.lair:
         canvas.drawRect(
             Rect.fromCenter(
@@ -1094,7 +1053,6 @@ class GlyphGeometry {
             Paint()
               ..color = Colors.white
               ..style = PaintingStyle.fill);
-        break;
     }
   }
 }

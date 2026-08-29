@@ -99,7 +99,6 @@ class GlyphMotifs {
         canvas.drawCircle(center, 1.6 * scale, nodeHollow);
         canvas.drawCircle(center, 1.6 * scale, primaryLine);
         canvas.drawCircle(center, 0.7 * scale, nodeFill);
-        break;
 
       case SpellSchool.conjuration:
         // PLANAR GATE / SUMMONING VECTOR MATRIX
@@ -133,7 +132,6 @@ class GlyphMotifs {
         canvas.drawCircle(center, 1.8 * scale, nodeHollow);
         canvas.drawCircle(center, 1.8 * scale, primaryLine);
         canvas.drawCircle(center, 0.8 * scale, nodeFill);
-        break;
 
       case SpellSchool.divination:
         // OCULAR RETICLE / ALL-SEEING RADIAL SCANNER
@@ -166,7 +164,6 @@ class GlyphMotifs {
         canvas.drawCircle(
             center + Offset(7.5 * scale, 0), 1.0 * scale, nodeFill);
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case SpellSchool.enchantment:
         // HARMONIC RESONANCE & CROWN FREQUENCY RUNE
@@ -200,7 +197,6 @@ class GlyphMotifs {
             center + Offset(5.5 * scale, -3.5 * scale), 1.1 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(0, 1.5 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case SpellSchool.evocation:
         // HIGH-ENERGY PLASMA STARBURST & DIRECTED DISCHARGE
@@ -229,7 +225,6 @@ class GlyphMotifs {
 
         // Central ignition core
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
 
       case SpellSchool.illusion:
         // PHASE-SHIFTED INTERFERENCE MATRIX / MIRAGE RINGS
@@ -254,7 +249,6 @@ class GlyphMotifs {
             center - Offset(0, 4.0 * scale), 0.9 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(0, 4.0 * scale), 0.9 * scale, nodeFill);
-        break;
 
       case SpellSchool.necromancy:
         // ENTROPY TRIAD / SOUL DRAIN SIPHON RUNE
@@ -291,7 +285,6 @@ class GlyphMotifs {
           canvas.drawCircle(p1, 1.2 * scale, nodeFill);
         }
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
 
       case SpellSchool.transmutation:
         // CHRONO-VECTOR HOURGLASS & METAMORPHIC FLUX LATTICE
@@ -325,7 +318,6 @@ class GlyphMotifs {
             center - Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
-        break;
     }
 
     canvas.restore();
@@ -400,7 +392,6 @@ class GlyphMotifs {
           canvas.drawCircle(end, 1.0 * scale, nodeFill);
         }
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case CreatureType.beast:
         // KINETIC TRIAD CLAW & BIO-VECTOR CHEVRONS
@@ -425,7 +416,6 @@ class GlyphMotifs {
             center - Offset(0, 6.0 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(4.5 * scale, -5.5 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case CreatureType.celestial:
         // RADIANT SERAPH WINGS & TRANSCENDENT HALO VECTOR
@@ -454,7 +444,6 @@ class GlyphMotifs {
             center - Offset(7.0 * scale, 2.0 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(7.0 * scale, -2.0 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case CreatureType.construct:
         // COG SCHEMATIC & STRUCTURAL BLUEPRINT
@@ -481,7 +470,6 @@ class GlyphMotifs {
                 center: center, width: 3.2 * scale, height: 3.2 * scale),
             fineLine);
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case CreatureType.dragon:
         // WYRM CREST CHEVRON & INFERNAL HORN VECTORS
@@ -505,7 +493,6 @@ class GlyphMotifs {
         canvas.drawCircle(
             center + Offset(6.8 * scale, -7.5 * scale), 1.1 * scale, nodeFill);
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
 
       case CreatureType.elemental:
         // PRISMATIC CYCLONE VORTEX
@@ -531,7 +518,6 @@ class GlyphMotifs {
         canvas.drawCircle(
             center - Offset(4.0 * scale, 3.0 * scale), 0.9 * scale, nodeFill);
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
 
       case CreatureType.fey:
         // SYLVAN LUNAR CRESCENT & BUTTERFLY VECTOR
@@ -559,7 +545,6 @@ class GlyphMotifs {
             center + Offset(6.0 * scale, -4.5 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(6.0 * scale, 4.5 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case CreatureType.fiend:
         // ABYSSAL POINTED HORNS & TRIDENT LATTICE
@@ -588,7 +573,6 @@ class GlyphMotifs {
             center + Offset(6.0 * scale, -6.0 * scale), 1.1 * scale, nodeFill);
         canvas.drawCircle(
             center - Offset(0, 7.0 * scale), 1.2 * scale, nodeFill);
-        break;
 
       case CreatureType.giant:
         // TECTONIC MOUNTAIN & MONOLITH VECTOR BLOCKS
@@ -608,7 +592,6 @@ class GlyphMotifs {
 
         canvas.drawCircle(
             center - Offset(0, 5.5 * scale), 1.3 * scale, nodeFill);
-        break;
 
       case CreatureType.humanoid:
         // CHIVALRIC VISOR RETICLE & CROSSED SWORD BARS
@@ -628,7 +611,6 @@ class GlyphMotifs {
             center + Offset(3.5 * scale, 0), primaryLine);
         canvas.drawLine(center, center + Offset(0, 3.5 * scale), primaryLine);
         canvas.drawCircle(center, 1.0 * scale, nodeFill);
-        break;
 
       case CreatureType.monstrosity:
         // SERRATED LACERATION & APEX JAWS
@@ -652,7 +634,6 @@ class GlyphMotifs {
             center - Offset(5.5 * scale, 6.0 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(5.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case CreatureType.ooze:
         // CELLULAR AMORPHOUS NODES & TENSION RINGS
@@ -670,7 +651,6 @@ class GlyphMotifs {
             center - Offset(1.8 * scale, 1.8 * scale), 1.2 * scale, nodeFill);
         canvas.drawCircle(
             center + Offset(2.8 * scale, 2.5 * scale), 0.9 * scale, nodeFill);
-        break;
 
       case CreatureType.plant:
         // PHYTOGENIC BOTANICAL MATRIX & NODAL BRANCHES
@@ -693,7 +673,6 @@ class GlyphMotifs {
             center - Offset(4.5 * scale, 4.0 * scale), 1.1 * scale, nodeFill);
         canvas.drawCircle(
             center - Offset(0, 6.5 * scale), 1.2 * scale, nodeFill);
-        break;
 
       case CreatureType.undead:
         // SEPULCHRAL CROSS & ENERGY DECAY LINES
@@ -717,7 +696,6 @@ class GlyphMotifs {
         canvas.drawCircle(
             center + Offset(5.0 * scale, -2.0 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
     }
 
     canvas.restore();
@@ -806,7 +784,6 @@ class GlyphMotifs {
         canvas.drawCircle(center - Offset(5.5 * scale, -5.5 * scale), 1.1 * scale, nodeFill);
         canvas.drawCircle(center, 1.5 * scale, nodeHollow);
         canvas.drawCircle(center, 1.5 * scale, primaryLine);
-        break;
 
       case ItemCategory.armor:
         // INTERLOCKING CHEVRON CARAPACE PLATES
@@ -837,7 +814,6 @@ class GlyphMotifs {
         canvas.drawCircle(center - Offset(3.5 * scale, 4.0 * scale), 0.9 * scale, nodeFill);
         canvas.drawCircle(center + Offset(3.5 * scale, -4.0 * scale), 0.9 * scale, nodeFill);
         canvas.drawCircle(center + Offset(0, 1.8 * scale), 1.1 * scale, nodeFill);
-        break;
 
       case ItemCategory.potion:
         // ALCHEMICAL CRUCIBLE FLASK & CATALYTIC NODES
@@ -871,7 +847,6 @@ class GlyphMotifs {
         canvas.drawCircle(center + Offset(0, 3.2 * scale), 1.2 * scale, nodeFill);
         canvas.drawCircle(center - Offset(1.8 * scale, -2.0 * scale), 0.9 * scale, nodeFill);
         canvas.drawCircle(center + Offset(2.0 * scale, 1.5 * scale), 0.8 * scale, nodeFill);
-        break;
 
       case ItemCategory.ring:
         // CONCENTRIC TORUS & GEMSTONE SETTING
@@ -893,7 +868,6 @@ class GlyphMotifs {
         canvas.drawCircle(center + Offset(0, 5.5 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(center - Offset(5.5 * scale, 0), 1.0 * scale, nodeFill);
         canvas.drawCircle(center + Offset(5.5 * scale, 0), 1.0 * scale, nodeFill);
-        break;
 
       case ItemCategory.rod:
         // SOVEREIGN FOCUS PILLAR & FLANGES
@@ -923,7 +897,6 @@ class GlyphMotifs {
         canvas.drawCircle(center + Offset(0, 6.5 * scale), 1.3 * scale, nodeFill);
         canvas.drawCircle(center, 1.4 * scale, nodeHollow);
         canvas.drawCircle(center, 1.4 * scale, primaryLine);
-        break;
 
       case ItemCategory.scroll:
         // DUAL SCROLL CYLINDERS & INSCRIBED CIPHER LATTICE
@@ -957,7 +930,6 @@ class GlyphMotifs {
 
         // Seal node
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case ItemCategory.staff:
         // PRISMATIC FOCUS SPIRE & HELICAL RINGS
@@ -985,7 +957,6 @@ class GlyphMotifs {
         // Focus nodes
         canvas.drawCircle(center - Offset(0, 4.0 * scale), 1.2 * scale, nodeFill);
         canvas.drawCircle(center + Offset(0, 7.0 * scale), 1.1 * scale, nodeFill);
-        break;
 
       case ItemCategory.wand:
         // TAPERED CONDUCTOR NEEDLE & EMITTER TIP
@@ -1020,7 +991,6 @@ class GlyphMotifs {
 
         canvas.drawCircle(center + Offset(5.5 * scale, -5.5 * scale), 1.2 * scale, nodeFill);
         canvas.drawCircle(center - Offset(4.5 * scale, -6.0 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case ItemCategory.wondrousItem:
         // 8-POINT ASTRAL STAR RELIC & COMPASS NEXUS
@@ -1051,7 +1021,6 @@ class GlyphMotifs {
         canvas.drawCircle(center, 1.4 * scale, nodeHollow);
         canvas.drawCircle(center, 1.4 * scale, primaryLine);
         canvas.drawCircle(center, 0.7 * scale, nodeFill);
-        break;
 
       case ItemCategory.adventuringGear:
         // EXPEDITION GEAR PACK & HARNESS SCHEMATIC
@@ -1088,7 +1057,6 @@ class GlyphMotifs {
           Offset(center.dx + 4.0 * scale, center.dy - 4.0 * scale),
           primaryLine,
         );
-        break;
 
       case ItemCategory.gemstone:
         // FACETED GEMSTONE & REFRACTIVE MATRIX
@@ -1118,7 +1086,6 @@ class GlyphMotifs {
           fineLine,
         );
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case ItemCategory.artObject:
         // ARTISAN FILIGREE CHALICE & CROWN RELIC
@@ -1135,7 +1102,6 @@ class GlyphMotifs {
           ..close();
         canvas.drawPath(chalice, primaryLine);
         canvas.drawCircle(center - Offset(0, 2.0 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case ItemCategory.trinket:
         // CURIOSITY CLOCKWORK & MYSTERY KEYHOLE
@@ -1152,7 +1118,6 @@ class GlyphMotifs {
           fineLine,
         );
         canvas.drawCircle(center, 0.9 * scale, nodeFill);
-        break;
     }
 
     canvas.restore();
@@ -1253,7 +1218,6 @@ class GlyphMotifs {
         canvas.drawPath(axeA, primaryLine);
         canvas.drawPath(axeB, primaryLine);
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
 
       case DndClassType.bard:
         // HARMONIC LYRE & SINE SOUNDWAVE RESONANCE
@@ -1268,7 +1232,6 @@ class GlyphMotifs {
         canvas.drawLine(Offset(center.dx + 2.0 * scale, center.dy - 3.0 * scale), Offset(center.dx + 2.0 * scale, center.dy + 3.5 * scale), fineLine);
         canvas.drawCircle(center - Offset(4.5 * scale, 4.0 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(center + Offset(4.5 * scale, -4.0 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case DndClassType.cleric:
         // SACRED SOLAR CROSS & DIVINE HALO RADIANCE
@@ -1285,7 +1248,6 @@ class GlyphMotifs {
           );
         }
         canvas.drawCircle(center - Offset(0, 1.8 * scale), 1.2 * scale, nodeFill);
-        break;
 
       case DndClassType.druid:
         // SACRED OAK LEAF & PRIMAL SPIRAL RUNES
@@ -1299,7 +1261,6 @@ class GlyphMotifs {
         canvas.drawLine(center - Offset(0, 2.0 * scale), center + Offset(2.5 * scale, -0.5 * scale), fineLine);
         canvas.drawLine(center + Offset(0, 1.0 * scale), center - Offset(2.5 * scale, -2.5 * scale), fineLine);
         canvas.drawCircle(center, 1.1 * scale, nodeFill);
-        break;
 
       case DndClassType.fighter:
         // CROSSED LONGSWORDS & VANGUARD RETICLE
@@ -1317,7 +1278,6 @@ class GlyphMotifs {
           primaryLine,
         );
         canvas.drawCircle(center, 1.3 * scale, nodeFill);
-        break;
 
       case DndClassType.monk:
         // CHAKRA FOCAL CIRCLES & INNER KI VECTOR
@@ -1331,7 +1291,6 @@ class GlyphMotifs {
         canvas.drawPath(chi, primaryLine);
         canvas.drawCircle(center - Offset(0, 2.4 * scale), 1.0 * scale, nodeFill);
         canvas.drawCircle(center + Offset(0, 2.4 * scale), 1.0 * scale, nodeHollow);
-        break;
 
       case DndClassType.paladin:
         // RADIANT SMITE SHIELD & SACRED SWORD
@@ -1347,7 +1306,6 @@ class GlyphMotifs {
         canvas.drawLine(center - Offset(0, 3.5 * scale), center + Offset(0, 3.5 * scale), primaryLine);
         canvas.drawLine(center - Offset(2.0 * scale, 1.5 * scale), center + Offset(2.0 * scale, -1.5 * scale), fineLine);
         canvas.drawCircle(center - Offset(0, 1.5 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case DndClassType.ranger:
         // HUNTER'S BOW & RADIAL TRACKING RETICLE
@@ -1360,7 +1318,6 @@ class GlyphMotifs {
         canvas.drawLine(center - Offset(4.0 * scale, 0), center + Offset(5.0 * scale, 0), primaryLine);
         canvas.drawLine(center + Offset(3.5 * scale, -1.5 * scale), center + Offset(5.0 * scale, 0), primaryLine);
         canvas.drawLine(center + Offset(3.5 * scale, 1.5 * scale), center + Offset(5.0 * scale, 0), primaryLine);
-        break;
 
       case DndClassType.rogue:
         // SHADOW STILETTO & PRECISION SNEAK ATTACK RETICLE
@@ -1375,7 +1332,6 @@ class GlyphMotifs {
         // Stealth diamond ticks
         canvas.drawCircle(center - Offset(4.5 * scale, 0), 0.8 * scale, nodeFill);
         canvas.drawCircle(center + Offset(4.5 * scale, 0), 0.8 * scale, nodeFill);
-        break;
 
       case DndClassType.sorcerer:
         // WILD MAGIC CHAOS VORTEX & INNER DRAGON SPARK
@@ -1394,7 +1350,6 @@ class GlyphMotifs {
         vortex.close();
         canvas.drawPath(vortex, primaryLine);
         canvas.drawCircle(center, 1.6 * scale, nodeFill);
-        break;
 
       case DndClassType.warlock:
         // ELDRITCH EYE & PATRON CONTRACT OCCULT PENTACLE
@@ -1408,7 +1363,6 @@ class GlyphMotifs {
         // Vertical occult lock lines
         canvas.drawLine(center - Offset(0, 5.0 * scale), center - Offset(0, 3.5 * scale), fineLine);
         canvas.drawLine(center + Offset(0, 3.5 * scale), center + Offset(0, 5.0 * scale), fineLine);
-        break;
 
       case DndClassType.wizard:
         // ARCANE PENTACLE & RUNIC SCRIBE SPIRE
@@ -1427,7 +1381,6 @@ class GlyphMotifs {
         canvas.drawCircle(center, 1.5 * scale, nodeHollow);
         canvas.drawCircle(center, 1.5 * scale, fineLine);
         canvas.drawCircle(center, 0.7 * scale, nodeFill);
-        break;
 
       case DndClassType.artificer:
         // INTERLOCKING CLOCKWORK GEAR & CALIPER RUNES
@@ -1448,7 +1401,6 @@ class GlyphMotifs {
         canvas.drawCircle(center, 2.0 * scale, nodeHollow);
         canvas.drawCircle(center, 2.0 * scale, fineLine);
         canvas.drawCircle(center, 0.8 * scale, nodeFill);
-        break;
     }
 
     canvas.restore();
@@ -1649,7 +1601,6 @@ class GlyphMotifs {
           canvas.drawCircle(Offset(center.dx + len * cos(a), center.dy + len * sin(a)), 0.8 * scale, nodeFill);
         }
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
 
       case SpeciesType.elf:
         // CRESCENT MOON & SYLVAN STARLIGHT FILIGREE
@@ -1666,7 +1617,6 @@ class GlyphMotifs {
           ..close();
         canvas.drawPath(star, fineLine);
         canvas.drawCircle(center, 1.0 * scale, nodeFill);
-        break;
 
       case SpeciesType.dwarf:
         // MOUNTAIN ANVIL & GEOMETRIC STONE-RUNE
@@ -1681,7 +1631,6 @@ class GlyphMotifs {
         canvas.drawPath(anvil, primaryLine);
         canvas.drawLine(center - Offset(3.5 * scale, -3.5 * scale), center + Offset(3.5 * scale, 3.5 * scale), primaryLine);
         canvas.drawCircle(center - Offset(0, 1.5 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case SpeciesType.halfling:
         // 4-PETAL HEARTH RUNESTONE & BRAVE CHEVRON
@@ -1691,7 +1640,6 @@ class GlyphMotifs {
           canvas.drawCircle(p, 1.6 * scale, fineLine);
         }
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case SpeciesType.dragonborn:
         // DRACONIC SCALES & BREATH WEAPON DIAMOND
@@ -1705,7 +1653,6 @@ class GlyphMotifs {
         canvas.drawLine(center - Offset(0, 5.0 * scale), center + Offset(0, 5.0 * scale), fineLine);
         canvas.drawLine(center - Offset(3.5 * scale, 0), center + Offset(3.5 * scale, 0), fineLine);
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case SpeciesType.gnome:
         // CLOCKWORK ESCAPEMENT GEAR & LENS
@@ -1720,7 +1667,6 @@ class GlyphMotifs {
         }
         canvas.drawCircle(center, 1.8 * scale, fineLine);
         canvas.drawCircle(center, 0.8 * scale, nodeFill);
-        break;
 
       case SpeciesType.tiefling:
         // INFERNAL HORNS & BRIMSTONE CHEVRON
@@ -1733,7 +1679,6 @@ class GlyphMotifs {
         canvas.drawPath(hornA, primaryLine);
         canvas.drawPath(hornB, primaryLine);
         canvas.drawCircle(center + Offset(0, 2.0 * scale), 1.4 * scale, nodeFill);
-        break;
 
       case SpeciesType.orc:
         // RELENTLESS TUSKS & BATTLE SKULL CREST
@@ -1749,7 +1694,6 @@ class GlyphMotifs {
         canvas.drawPath(tuskB, primaryLine);
         canvas.drawLine(center - Offset(4.0 * scale, 3.0 * scale), center + Offset(4.0 * scale, -3.0 * scale), fineLine);
         canvas.drawCircle(center - Offset(0, 2.0 * scale), 1.2 * scale, nodeFill);
-        break;
 
       case SpeciesType.goliath:
         // MEGALITHIC STONE MONOLITH & PEAK CHEVRON
@@ -1762,7 +1706,6 @@ class GlyphMotifs {
         canvas.drawLine(center - Offset(0, 5.0 * scale), center + Offset(0, 4.0 * scale), fineLine);
         canvas.drawLine(center - Offset(2.5 * scale, 1.0 * scale), center + Offset(2.5 * scale, 1.0 * scale), fineLine);
         canvas.drawCircle(center, 1.2 * scale, nodeFill);
-        break;
 
       case SpeciesType.aasimar:
         // CELESTIAL RADIANT WINGS & HALO
@@ -1776,7 +1719,6 @@ class GlyphMotifs {
         canvas.drawPath(wingA, primaryLine);
         canvas.drawPath(wingB, primaryLine);
         canvas.drawCircle(center + Offset(0, 1.5 * scale), 1.1 * scale, nodeFill);
-        break;
     }
 
     canvas.restore();
@@ -1843,7 +1785,6 @@ class GlyphMotifs {
         canvas.drawLine(pBL, pC, fineLine);
         canvas.drawLine(pBR, pC, fineLine);
         canvas.drawCircle(pC, 0.9 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.d6:
         // ISOMETRIC 3D CUBE
@@ -1860,7 +1801,6 @@ class GlyphMotifs {
         canvas.drawLine(center, Offset(center.dx + 4.5 * scale, center.dy + 2.8 * scale), fineLine);
         canvas.drawLine(center, Offset(center.dx - 4.5 * scale, center.dy + 2.8 * scale), fineLine);
         canvas.drawCircle(center, 1.0 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.d8:
         // WIREFRAME OCTAHEDRON DIAMOND
@@ -1875,7 +1815,6 @@ class GlyphMotifs {
         canvas.drawLine(Offset(center.dx, center.dy - 5.5 * scale), center, fineLine);
         canvas.drawLine(Offset(center.dx, center.dy + 5.5 * scale), center, fineLine);
         canvas.drawCircle(center, 1.1 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.d10:
         // WIREFRAME TRAPEZOHEDRON KITE
@@ -1891,7 +1830,6 @@ class GlyphMotifs {
         canvas.drawLine(Offset(center.dx + 4.5 * scale, center.dy - 1.0 * scale), center, fineLine);
         canvas.drawLine(Offset(center.dx - 4.5 * scale, center.dy - 1.0 * scale), center, fineLine);
         canvas.drawCircle(center, 1.1 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.d12:
         // WIREFRAME DODECAHEDRON
@@ -1910,7 +1848,6 @@ class GlyphMotifs {
         canvas.drawPath(d12Path, primaryLine);
         canvas.drawCircle(center, 2.0 * scale, fineLine);
         canvas.drawCircle(center, 0.9 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.d20:
         // WIREFRAME ICOSAHEDRON
@@ -1940,14 +1877,12 @@ class GlyphMotifs {
         innerTri.close();
         canvas.drawPath(innerTri, fineLine);
         canvas.drawCircle(center, 1.1 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.d100:
         // DUAL PERCENTILE MATRIX
         canvas.drawCircle(center - Offset(2.2 * scale, 0), 3.2 * scale, primaryLine);
         canvas.drawCircle(center + Offset(2.2 * scale, 0), 3.2 * scale, fineLine);
         canvas.drawCircle(center, 1.0 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.advantage:
         // DUAL UPWARD CHEVRONS
@@ -1962,7 +1897,6 @@ class GlyphMotifs {
         canvas.drawPath(c1, fineLine);
         canvas.drawPath(c2, primaryLine);
         canvas.drawCircle(center - Offset(0, 5.0 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.disadvantage:
         // DUAL DOWNWARD CHEVRONS
@@ -1977,7 +1911,6 @@ class GlyphMotifs {
         canvas.drawPath(c1, fineLine);
         canvas.drawPath(c2, primaryLine);
         canvas.drawCircle(center + Offset(0, 5.0 * scale), 1.0 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.concentrating:
         // DUAL HARMONIC ORBITAL SATELLITE LOOPS & APEX BEACON NODES
@@ -2008,7 +1941,6 @@ class GlyphMotifs {
             satNorth + Offset(1.4 * scale, 0), fineLine);
         canvas.drawLine(satSouth - Offset(1.4 * scale, 0),
             satSouth + Offset(1.4 * scale, 0), fineLine);
-        break;
 
       case GenericUiGlyphType.deathSave:
         // CARDIAC TELEMETRY PULSE LINE
@@ -2022,7 +1954,6 @@ class GlyphMotifs {
         canvas.drawPath(pulse, primaryLine);
         canvas.drawCircle(center - Offset(1.2 * scale, 4.5 * scale), 0.9 * scale, nodeFill);
         canvas.drawCircle(center + Offset(0.8 * scale, -4.5 * scale), 0.9 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.actionEconomyAction:
         // PRIMARY ACTION DIAMOND NODE
@@ -2034,7 +1965,6 @@ class GlyphMotifs {
           ..close();
         canvas.drawPath(d, primaryLine);
         canvas.drawCircle(center, 2.0 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.actionEconomyBonus:
         // TRIPLE SPARK QUICK ACTION NODE
@@ -2052,7 +1982,6 @@ class GlyphMotifs {
           );
         }
         canvas.drawCircle(center, 1.4 * scale, nodeFill);
-        break;
 
       case GenericUiGlyphType.actionEconomyReaction:
         // DEFLECTION BRACKET SHIELD
@@ -2063,7 +1992,6 @@ class GlyphMotifs {
         canvas.drawPath(bracket, primaryLine);
         canvas.drawLine(center + Offset(4.0 * scale, -4.0 * scale), center + Offset(4.0 * scale, 4.0 * scale), fineLine);
         canvas.drawCircle(center + Offset(2.0 * scale, 0), 1.2 * scale, nodeFill);
-        break;
     }
 
     canvas.restore();

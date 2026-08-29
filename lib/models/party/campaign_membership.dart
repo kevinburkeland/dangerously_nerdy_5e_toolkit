@@ -8,20 +8,11 @@ enum CampaignRole {
   final String label;
   const CampaignRole(this.label);
 
-  static CampaignRole fromString(String? val) {
-    switch (val?.toLowerCase()) {
-      case 'host':
-      case 'dm':
-        return CampaignRole.host;
-      case 'codm':
-      case 'co_dm':
-      case 'co-dm':
-        return CampaignRole.coDm;
-      case 'player':
-      default:
-        return CampaignRole.player;
-    }
-  }
+  static CampaignRole fromString(String? val) => switch (val?.toLowerCase()) {
+        'host' || 'dm' => CampaignRole.host,
+        'codm' || 'co_dm' || 'co-dm' => CampaignRole.coDm,
+        _ => CampaignRole.player,
+      };
 }
 
 class CampaignMembership {

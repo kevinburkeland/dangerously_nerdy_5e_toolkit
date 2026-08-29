@@ -80,23 +80,18 @@ class _ArenaMonsterPickerSheetState extends State<ArenaMonsterPickerSheet> {
       case MonsterCrBand.cr0ToQuarter:
         minCr = 0;
         maxCr = 0.25;
-        break;
       case MonsterCrBand.crHalfToOne:
         minCr = 0.5;
         maxCr = 1.0;
-        break;
       case MonsterCrBand.crTwoToFour:
         minCr = 2.0;
         maxCr = 4.0;
-        break;
       case MonsterCrBand.crFiveToEight:
         minCr = 5.0;
         maxCr = 8.0;
-        break;
       case MonsterCrBand.crNinePlus:
         minCr = 9.0;
         maxCr = double.infinity;
-        break;
       case MonsterCrBand.all:
         break;
     }
