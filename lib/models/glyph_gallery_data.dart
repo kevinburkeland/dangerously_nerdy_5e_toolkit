@@ -264,26 +264,56 @@ class GlyphFeatEntry implements GlyphRenderable {
       };
 }
 
-/// Data model representing a species entry in the Glyph Gallery.
+/// Data model representing a species / race entry in the Glyph Gallery.
 class GlyphSpeciesEntry implements GlyphRenderable {
   final String name;
   final SpeciesType speciesType;
-  final String size;
-  final int speed;
-  final String traits;
-  @override
-  final List<ActionTraitRing> actionRings;
-  final String summary;
+  final String? sizeOverride;
+  final int? speedOverride;
+  final String? traitsOverride;
+  final List<ActionTraitRing>? actionRings2014;
+  final List<ActionTraitRing>? actionRings2024;
+  final String? summary2014;
+  final String? summary2024;
 
   const GlyphSpeciesEntry({
     required this.name,
     required this.speciesType,
-    required this.size,
-    required this.speed,
-    required this.traits,
-    required this.actionRings,
-    required this.summary,
+    this.sizeOverride,
+    this.speedOverride,
+    this.traitsOverride,
+    this.actionRings2014,
+    this.actionRings2024,
+    this.summary2014,
+    this.summary2024,
   });
+
+  String getSize([DmRulesEdition edition = DmRulesEdition.v2024]) =>
+      sizeOverride ?? speciesType.getSize(edition);
+
+  int getSpeed([DmRulesEdition edition = DmRulesEdition.v2024]) =>
+      speedOverride ?? speciesType.getSpeed(edition);
+
+  String getTraits([DmRulesEdition edition = DmRulesEdition.v2024]) =>
+      traitsOverride ?? speciesType.getTraits(edition);
+
+  String getSummary([DmRulesEdition edition = DmRulesEdition.v2024]) =>
+      (edition == DmRulesEdition.v2014 ? summary2014 : summary2024) ??
+      summary2024 ??
+      summary2014 ??
+      '';
+
+  List<ActionTraitRing> getActionRings(
+          [DmRulesEdition edition = DmRulesEdition.v2024]) =>
+      (edition == DmRulesEdition.v2014 ? actionRings2014 : actionRings2024) ??
+      actionRings2024 ??
+      actionRings2014 ??
+      const [];
+
+  String get size => getSize();
+  int get speed => getSpeed();
+  String get traits => getTraits();
+  String get summary => getSummary();
 
   @override
   String get glyphId => 'species_${speciesType.name}';
@@ -293,6 +323,9 @@ class GlyphSpeciesEntry implements GlyphRenderable {
 
   @override
   GlyphCategory get glyphCategory => GlyphCategory.species;
+
+  @override
+  List<ActionTraitRing> get actionRings => getActionRings();
 
   @override
   DamageAccent? get primaryAccent => null;
@@ -1730,10 +1763,17 @@ class GlyphGalleryData {
     GlyphSpeciesEntry(
       name: 'Human',
       speciesType: SpeciesType.human,
-      size: 'Medium',
-      speed: 30,
-      traits: 'Resourceful Inspiration, Skillful, Versatile',
-      actionRings: [
+      actionRings2014: [
+        ActionTraitRing(
+          ringType: ActionRingType.speed,
+          label: '30 ft Base Movement Speed',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: '+1 to All Ability Scores',
+        ),
+      ],
+      actionRings2024: [
         ActionTraitRing(
           ringType: ActionRingType.speed,
           label: '30 ft Base Speed',
@@ -1743,35 +1783,43 @@ class GlyphGalleryData {
           label: 'Origin Feat & Heroic Inspiration',
         ),
       ],
-      summary:
-          'Versatile and ambitious, humans innovate and adapt swiftly to any challenge, gaining bonus feats and heroic inspiration.',
+      summary2014:
+          'Versatile and ambitious, 2014 humans gain +1 to all ability scores (or a bonus feat and skill if utilizing Variant Human rules).',
+      summary2024:
+          'Resourceful and adaptable, 2024 humans gain Heroic Inspiration each long rest, an extra skill proficiency, and a free Origin Feat.',
     ),
     GlyphSpeciesEntry(
       name: 'Elf',
       speciesType: SpeciesType.elf,
-      size: 'Medium',
-      speed: 30,
-      traits: 'Darkvision (60 ft), Keen Senses, Fey Ancestry, Trance',
-      actionRings: [
+      actionRings2014: [
         ActionTraitRing(
           ringType: ActionRingType.sense,
           label: 'Darkvision (60 ft)',
         ),
         ActionTraitRing(
           ringType: ActionRingType.passive,
-          label: 'Fey Ancestry & Trance Meditation',
+          label: 'Fey Ancestry & Trance (4 Hours)',
         ),
       ],
-      summary:
-          'A magical people of otherworldly grace, possessing keen senses, deep connection to the Feywild, and resistance to charms and sleep.',
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Fey Ancestry & Elven Lineage',
+        ),
+      ],
+      summary2014:
+          'Magical beings of grace possessing 60 ft darkvision, Keen Senses, Fey Ancestry (advantage vs charms, immune to magical sleep), and 4-hour Trance.',
+      summary2024:
+          'Otherworldly beings possessing 60 ft darkvision, Fey Ancestry, and specialized Elven Lineages (Drow, High Elf, or Wood Elf).',
     ),
     GlyphSpeciesEntry(
       name: 'Dwarf',
       speciesType: SpeciesType.dwarf,
-      size: 'Medium',
-      speed: 30,
-      traits: 'Darkvision (60 ft), Dwarven Resilience, Dwarven Toughness',
-      actionRings: [
+      actionRings2014: [
         ActionTraitRing(
           ringType: ActionRingType.sense,
           label: 'Darkvision (60 ft)',
@@ -1779,19 +1827,33 @@ class GlyphGalleryData {
         ActionTraitRing(
           ringType: ActionRingType.reaction,
           damageType: DamageAccent.poison,
-          label: 'Poison Resistance & +1 HP/Level',
+          label: 'Poison Resistance & Stonecunning',
         ),
       ],
-      summary:
-          'Bold and hardy, dwarves are skilled warriors, miners, and stonecraft artisans with innate resilience against poisons.',
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (120 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          damageType: DamageAccent.poison,
+          label: 'Poison Resistance & +1 HP/Level',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Stonecunning (Tremorsense 60 ft)',
+        ),
+      ],
+      summary2014:
+          'Hardy subterranean artisans with 25 ft base speed (unhindered by heavy armor), 60 ft darkvision, Dwarven Resilience against poison, and Stonecunning.',
+      summary2024:
+          'Hardy subterranean folk with 30 ft base speed, 120 ft darkvision, Dwarven Toughness (+1 HP/level), and Stonecunning Tremorsense on stone surfaces.',
     ),
     GlyphSpeciesEntry(
       name: 'Halfling',
       speciesType: SpeciesType.halfling,
-      size: 'Small',
-      speed: 30,
-      traits: 'Lucky, Brave, Halfling Nimbleness, Naturally Stealthy',
-      actionRings: [
+      actionRings2014: [
         ActionTraitRing(
           ringType: ActionRingType.passive,
           label: 'Lucky (Reroll d20 1s)',
@@ -1801,56 +1863,96 @@ class GlyphGalleryData {
           label: 'Brave (Advantage vs Frightened)',
         ),
       ],
-      summary:
-          'Diminutive survivors who survive by luck and stealth, rerolling natural 1s on attack rolls, ability checks, and saving throws.',
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Luck (Reroll d20 1s)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Brave (Advantage vs Frightened)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Naturally Stealthy',
+        ),
+      ],
+      summary2014:
+          'Diminutive, cheerful wanderers with 25 ft speed, rerolling natural 1s on d20 rolls via Lucky, Brave advantage vs frightened, and Halfling Nimbleness.',
+      summary2024:
+          'Diminutive, agile survivors with 30 ft speed, rerolling natural 1s via Luck, Brave advantage vs frightened, and moving through larger creatures.',
     ),
     GlyphSpeciesEntry(
       name: 'Dragonborn',
       speciesType: SpeciesType.dragonborn,
-      size: 'Medium',
-      speed: 30,
-      traits: 'Breath Weapon, Damage Resistance, Darkvision (60 ft)',
-      actionRings: [
+      actionRings2014: [
         ActionTraitRing(
           ringType: ActionRingType.recharge,
           damageType: DamageAccent.fire,
-          label: 'Draconic Breath Weapon (Line / Cone)',
+          label: 'Draconic Breath Weapon (Action)',
         ),
         ActionTraitRing(
           ringType: ActionRingType.passive,
           damageType: DamageAccent.fire,
-          label: 'Draconic Ancestral Resistance',
+          label: 'Draconic Damage Resistance',
         ),
       ],
-      summary:
-          'Born of dragons, dragonborn wield the raw elemental breath weapon and damage resistance of their draconic ancestry.',
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.recharge,
+          damageType: DamageAccent.fire,
+          label: 'Draconic Breath Weapon (Attack Action)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Draconic Flight (Lv 5+)',
+        ),
+      ],
+      summary2014:
+          'Noble draconic humanoids wielding a full-action elemental Breath Weapon and damage resistance matching their draconic ancestry.',
+      summary2024:
+          'Draconic heroes whose Breath Weapon replaces one attack in an Attack action, gaining 60 ft darkvision and spectral Draconic Flight at level 5.',
     ),
     GlyphSpeciesEntry(
       name: 'Gnome',
       speciesType: SpeciesType.gnome,
-      size: 'Small',
-      speed: 30,
-      traits: 'Darkvision (60 ft), Gnomish Cunning',
-      actionRings: [
+      actionRings2014: [
         ActionTraitRing(
           ringType: ActionRingType.sense,
           label: 'Darkvision (60 ft)',
         ),
         ActionTraitRing(
           ringType: ActionRingType.reaction,
-          label: 'Gnomish Cunning (Advantage on Int/Wis/Cha Saves)',
+          label: 'Gnome Cunning (Advantage vs Magic Saves)',
         ),
       ],
-      summary:
-          'Clever inventors and illusionists whose mental defenses effortlessly deflect magical assault via Gnomish Cunning.',
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Gnomish Cunning (Int/Wis/Cha Saves)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Gnomish Lineage (Forest / Rock)',
+        ),
+      ],
+      summary2014:
+          'Diminutive, inventive explorers with 25 ft base speed, 60 ft darkvision, and Gnome Cunning granting advantage on Int/Wis/Cha saves against magic.',
+      summary2024:
+          'Curious inventors with 30 ft base speed, 60 ft darkvision, Gnomish Cunning on Int/Wis/Cha saves, and Forest/Rock lineage magic.',
     ),
     GlyphSpeciesEntry(
       name: 'Tiefling',
       speciesType: SpeciesType.tiefling,
-      size: 'Medium',
-      speed: 30,
-      traits: 'Darkvision (60 ft), Hellish Resistance, Otherworldly Presence',
-      actionRings: [
+      actionRings2014: [
         ActionTraitRing(
           ringType: ActionRingType.sense,
           label: 'Darkvision (60 ft)',
@@ -1858,38 +1960,75 @@ class GlyphGalleryData {
         ActionTraitRing(
           ringType: ActionRingType.passive,
           damageType: DamageAccent.fire,
-          label: 'Fire Resistance & Thaumaturgy',
+          label: 'Hellish Resistance (Fire) & Infernal Legacy',
         ),
       ],
-      summary:
-          'Carrying the bloodline of the Lower Planes, tieflings wield infernal resistance to fire and innate thaumaturgical cantrips.',
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          damageType: DamageAccent.fire,
+          label: 'Fiendish Legacy (Abyssal / Chthonic / Infernal)',
+        ),
+      ],
+      summary2014:
+          'Infused with infernal essence, tieflings have 60 ft darkvision, Hellish Resistance to fire damage, and innate Infernal Legacy spells.',
+      summary2024:
+          'Heirs to fiendish planes (Abyssal, Chthonic, or Infernal), tieflings wield 60 ft darkvision, plane-specific damage resistance, and legacy spells.',
     ),
     GlyphSpeciesEntry(
       name: 'Orc',
       speciesType: SpeciesType.orc,
-      size: 'Medium',
-      speed: 30,
-      traits: 'Darkvision (120 ft), Relentless Endurance, Adrenaline Rush',
-      actionRings: [
+      actionRings2014: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Relentless Endurance (Drop to 1 HP)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Savage Attacks (Extra Critical Die)',
+        ),
+      ],
+      actionRings2024: [
         ActionTraitRing(
           ringType: ActionRingType.sense,
           label: 'Superior Darkvision (120 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Adrenaline Rush (Dash + Temp HP)',
         ),
         ActionTraitRing(
           ringType: ActionRingType.reaction,
           label: 'Relentless Endurance (Drop to 1 HP)',
         ),
       ],
-      summary:
-          'Unstoppable juggernauts endowed with 120-foot darkvision and the power to drop to 1 hit point instead of 0 when reduced to zero.',
+      summary2014:
+          'Fierce warriors endowed with 60 ft darkvision, Menacing proficiency, Relentless Endurance (1 HP instead of 0 once/long rest), and Savage Attacks.',
+      summary2024:
+          'Unyielding survivors possessing 120 ft darkvision, Adrenaline Rush (bonus action Dash + temporary HP), and Relentless Endurance.',
     ),
     GlyphSpeciesEntry(
       name: 'Goliath',
       speciesType: SpeciesType.goliath,
-      size: 'Medium',
-      speed: 35,
-      traits: 'Giant Ancestry, Large Form, Powerful Build, Stone\'s Endurance',
-      actionRings: [
+      actionRings2014: [
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Stone\'s Endurance (Reduce 1d12 + Con Damage)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Powerful Build & Mountain Born',
+        ),
+      ],
+      actionRings2024: [
         ActionTraitRing(
           ringType: ActionRingType.speed,
           label: '35 ft Base Movement Speed',
@@ -1898,30 +2037,47 @@ class GlyphGalleryData {
           ringType: ActionRingType.reaction,
           label: 'Stone\'s Endurance (Reduce 1d12 + Con Damage)',
         ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Large Form (Bonus Action, Lv 5+)',
+        ),
       ],
-      summary:
-          'Towering champions carrying the blood of mountain giants, swift-footed and capable of shrugging off lethal blows with Stone\'s Endurance.',
+      summary2014:
+          'Mountain-dwelling champions with 30 ft speed, Natural Athlete, Stone\'s Endurance (reduce damage by 1d12+Con), Powerful Build, and cold resistance.',
+      summary2024:
+          'Giant-blooded champions with 35 ft base speed, Giant Ancestry benefits, Powerful Build, and the ability to grow Large at level 5.',
     ),
     GlyphSpeciesEntry(
       name: 'Aasimar',
       speciesType: SpeciesType.aasimar,
-      size: 'Medium',
-      speed: 30,
-      traits: 'Darkvision (60 ft), Celestial Resistance, Healing Hands, Celestial Revelation',
-      actionRings: [
+      actionRings2014: [
         ActionTraitRing(
           ringType: ActionRingType.sustain,
           damageType: DamageAccent.radiant,
-          label: 'Healing Hands (D6s = Prof Bonus)',
+          label: 'Healing Hands (Action, HP = Level)',
         ),
         ActionTraitRing(
           ringType: ActionRingType.bonusAction,
           damageType: DamageAccent.radiant,
-          label: 'Celestial Revelation (Radiant Wings)',
+          label: 'Celestial Revelation (Action)',
         ),
       ],
-      summary:
-          'Blessed with celestial heritage from Mount Celestia, aasimar unfurl radiant wings to heal comrades and smite fiends.',
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.sustain,
+          damageType: DamageAccent.radiant,
+          label: 'Healing Hands (Bonus Action, D6s = Prof)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          damageType: DamageAccent.radiant,
+          label: 'Celestial Revelation (Bonus Action Wings)',
+        ),
+      ],
+      summary2014:
+          'Mortals carrying celestial spark with 60 ft darkvision, Celestial Resistance to radiant and necrotic, Healing Hands, and Celestial Revelation.',
+      summary2024:
+          'Celestial vessels wielding 60 ft darkvision, necrotic/radiant resistance, bonus action Healing Hands (d6s = Proficiency Bonus), and bonus action Revelation.',
     ),
   ];
 

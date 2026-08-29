@@ -833,19 +833,34 @@ class GlyphGeometry {
         break;
 
       case ActionRingType.concentration:
-        // Dual-Harmonic Orbital Wireframe Loop Ring
-        canvas.drawCircle(center, r, mainPaint);
-        canvas.drawCircle(center, r - 1.2 * scale, finePaint);
+        // Dual-Harmonic Orbital Satellite Pulse Ring (Intersecting Harmonic Orbit Tracks with Telemetry Nodes)
+        final outerOrbit =
+            Rect.fromCenter(center: center, width: r * 2.1, height: r * 1.45);
+        final innerOrbit =
+            Rect.fromCenter(center: center, width: r * 1.45, height: r * 2.1);
+        canvas.drawOval(outerOrbit, mainPaint);
+        canvas.drawOval(innerOrbit, finePaint);
         if (!isGlow) {
-          for (int i = 0; i < 6; i++) {
-            final a = (i * 60.0) * pi / 180.0;
-            final p1 = Offset(center.dx + (r - 1.2 * scale) * cos(a),
-                center.dy + (r - 1.2 * scale) * sin(a));
-            final p2 = Offset(
-                center.dx + r * cos(a + 0.2), center.dy + r * sin(a + 0.2));
-            canvas.drawLine(p1, p2, finePaint);
-            canvas.drawCircle(p2, 0.7 * scale, nodeFill);
-          }
+          // 4 Orbital satellite nodes at the apsides with telemetry tangent pulse ticks
+          final satEast = Offset(center.dx + r * 1.05, center.dy);
+          final satWest = Offset(center.dx - r * 1.05, center.dy);
+          final satNorth = Offset(center.dx, center.dy - r * 1.05);
+          final satSouth = Offset(center.dx, center.dy + r * 1.05);
+
+          canvas.drawCircle(satEast, 1.1 * scale, nodeFill);
+          canvas.drawCircle(satWest, 1.1 * scale, nodeFill);
+          canvas.drawCircle(satNorth, 0.9 * scale, nodeFill);
+          canvas.drawCircle(satSouth, 0.9 * scale, nodeFill);
+
+          // Tangent pulse micro-ticks
+          canvas.drawLine(satEast - Offset(0, 1.2 * scale),
+              satEast + Offset(0, 1.2 * scale), finePaint);
+          canvas.drawLine(satWest - Offset(0, 1.2 * scale),
+              satWest + Offset(0, 1.2 * scale), finePaint);
+          canvas.drawLine(satNorth - Offset(1.2 * scale, 0),
+              satNorth + Offset(1.2 * scale, 0), finePaint);
+          canvas.drawLine(satSouth - Offset(1.2 * scale, 0),
+              satSouth + Offset(1.2 * scale, 0), finePaint);
         }
         break;
 

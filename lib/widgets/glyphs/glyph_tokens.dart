@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 
 /// Semantic spell schools conforming to the Style Guide & 5e SRD.
 enum SpellSchool {
@@ -463,34 +464,91 @@ enum FeatTriggerType {
   const FeatTriggerType(this.displayName);
 }
 
-/// 10 Core D&D 5e Species / Races.
+/// 10 Core D&D Species / Races across 2014 and 2024 rules editions.
 enum SpeciesType {
-  human('Human', 'Medium', 30, 'Versatile / Resourceful', Color(0xFF94A3B8), GlyphFrameShape.circle),
-  elf('Elf', 'Medium', 30, 'Darkvision (60 ft), Keen Senses', Color(0xFF34D399), GlyphFrameShape.filigreeOval),
-  dwarf('Dwarf', 'Medium', 30, 'Darkvision (60 ft), Dwarven Resilience', Color(0xFFF59E0B), GlyphFrameShape.heavyHex),
-  halfling('Halfling', 'Small', 30, 'Lucky, Brave, Halfling Nimbleness', Color(0xFF22C55E), GlyphFrameShape.softShield),
-  dragonborn('Dragonborn', 'Medium', 30, 'Breath Weapon, Damage Resistance', Color(0xFFEF4444), GlyphFrameShape.sharpDiamondShield),
-  gnome('Gnome', 'Small', 30, 'Darkvision (60 ft), Gnomish Cunning', Color(0xFF06B6D4), GlyphFrameShape.hexagon),
-  tiefling('Tiefling', 'Medium', 30, 'Darkvision (60 ft), Hellish Resistance', Color(0xFFF43F5E), GlyphFrameShape.pointedShield),
-  orc('Orc', 'Medium', 30, 'Darkvision (120 ft), Relentless Endurance', Color(0xFF84CC16), GlyphFrameShape.jaggedCrest),
-  goliath('Goliath', 'Medium', 35, 'Giant Ancestry, Stone\'s Endurance', Color(0xFF64748B), GlyphFrameShape.heavySquare),
-  aasimar('Aasimar', 'Medium', 30, 'Darkvision (60 ft), Celestial Revelation', Color(0xFFFBBF24), GlyphFrameShape.crest);
+  human('Human', Color(0xFF94A3B8), GlyphFrameShape.circle),
+  elf('Elf', Color(0xFF10B981), GlyphFrameShape.filigreeOval),
+  dwarf('Dwarf', Color(0xFFF59E0B), GlyphFrameShape.heavyHex),
+  halfling('Halfling', Color(0xFF22C55E), GlyphFrameShape.softShield),
+  dragonborn('Dragonborn', Color(0xFFEF4444), GlyphFrameShape.sharpDiamondShield),
+  gnome('Gnome', Color(0xFF06B6D4), GlyphFrameShape.hexagon),
+  tiefling('Tiefling', Color(0xFFF43F5E), GlyphFrameShape.pointedShield),
+  orc('Orc', Color(0xFF84CC16), GlyphFrameShape.jaggedCrest),
+  goliath('Goliath', Color(0xFF64748B), GlyphFrameShape.heavySquare),
+  aasimar('Aasimar', Color(0xFFFBBF24), GlyphFrameShape.crest);
 
   final String displayName;
-  final String size;
-  final int speed;
-  final String traits;
   final Color primaryColor;
   final GlyphFrameShape frameShape;
 
   const SpeciesType(
     this.displayName,
-    this.size,
-    this.speed,
-    this.traits,
     this.primaryColor,
     this.frameShape,
   );
+
+  String get size => getSize(DmRulesEdition.v2024);
+  int get speed => getSpeed(DmRulesEdition.v2024);
+  String get traits => getTraits(DmRulesEdition.v2024);
+
+  int getSpeed([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    if (edition == DmRulesEdition.v2014) {
+      return switch (this) {
+        SpeciesType.dwarf => 25,
+        SpeciesType.halfling => 25,
+        SpeciesType.gnome => 25,
+        SpeciesType.goliath => 30,
+        _ => 30,
+      };
+    }
+    return switch (this) {
+      SpeciesType.goliath => 35,
+      _ => 30,
+    };
+  }
+
+  String getSize([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    if (edition == DmRulesEdition.v2014) {
+      return switch (this) {
+        SpeciesType.halfling || SpeciesType.gnome => 'Small',
+        _ => 'Medium',
+      };
+    }
+    return switch (this) {
+      SpeciesType.human || SpeciesType.tiefling || SpeciesType.aasimar => 'Medium or Small',
+      SpeciesType.halfling || SpeciesType.gnome => 'Small',
+      _ => 'Medium',
+    };
+  }
+
+  String getTraits([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    if (edition == DmRulesEdition.v2014) {
+      return switch (this) {
+        SpeciesType.human => '+1 to All Ability Scores (or Feat + Skill for Variant)',
+        SpeciesType.elf => 'Darkvision (60 ft), Keen Senses, Fey Ancestry, Trance, Elf Weapon Training',
+        SpeciesType.dwarf => 'Speed 25 ft (Armor Unhindered), Darkvision (60 ft), Dwarven Resilience, Stonecunning',
+        SpeciesType.halfling => 'Speed 25 ft, Lucky (Reroll 1s), Brave, Halfling Nimbleness, Naturally Stealthy',
+        SpeciesType.dragonborn => 'Draconic Ancestry, Breath Weapon (Action), Damage Resistance',
+        SpeciesType.gnome => 'Speed 25 ft, Darkvision (60 ft), Gnome Cunning (Advantage vs Magic)',
+        SpeciesType.tiefling => 'Darkvision (60 ft), Hellish Resistance (Fire), Infernal Legacy',
+        SpeciesType.orc => 'Darkvision (60 ft), Relentless Endurance, Savage Attacks, Menacing',
+        SpeciesType.goliath => 'Natural Athlete, Stone\'s Endurance (1d12+Con), Powerful Build, Mountain Born',
+        SpeciesType.aasimar => 'Darkvision (60 ft), Celestial Resistance (Necrotic/Radiant), Healing Hands, Light Bearer',
+      };
+    }
+    return switch (this) {
+      SpeciesType.human => 'Resourceful (Heroic Inspiration), Skillful, Versatile (Origin Feat)',
+      SpeciesType.elf => 'Darkvision (60 ft), Keen Senses, Fey Ancestry, Trance, Elven Lineage',
+      SpeciesType.dwarf => 'Darkvision (120 ft), Dwarven Resilience, Dwarven Toughness (+1 HP/level), Stonecunning (Tremorsense 60 ft)',
+      SpeciesType.halfling => 'Brave, Halfling Nimbleness, Luck, Naturally Stealthy',
+      SpeciesType.dragonborn => 'Breath Weapon (Replaces Attack), Damage Resistance, Darkvision (60 ft), Flight (Lv 5)',
+      SpeciesType.gnome => 'Darkvision (60 ft), Gnomish Cunning (Mental Saves), Gnomish Lineage (Forest/Rock)',
+      SpeciesType.tiefling => 'Darkvision (60 ft), Fiendish Legacy (Abyssal/Chthonic/Infernal), Otherworldly Presence',
+      SpeciesType.orc => 'Darkvision (120 ft), Adrenaline Rush (Dash + Temp HP), Relentless Endurance',
+      SpeciesType.goliath => 'Giant Ancestry, Large Form (Bonus Action, Lv 5), Powerful Build, Stone\'s Endurance',
+      SpeciesType.aasimar => 'Darkvision (60 ft), Celestial Resistance, Healing Hands (Bonus Action D6s), Celestial Revelation',
+    };
+  }
 
   Color getLegibleColor(bool isDarkMode) {
     if (!isDarkMode) {

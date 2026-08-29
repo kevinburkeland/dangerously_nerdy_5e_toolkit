@@ -1,8 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/dm_screen_data.dart';
 import '../models/glyph_gallery_data.dart';
 import '../models/srd_summons/srd_summons_library.dart';
+import '../providers/settings_provider.dart';
+import '../services/haptic_service.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
 
@@ -19,6 +23,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Rules Edition State
+  DmRulesEdition? _localEditionOverride;
 
   // Gallery Filters
   SpellSchool? _selectedSchool;
@@ -74,8 +81,26 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
     super.dispose();
   }
 
+  void _onEditionChanged(BuildContext context, DmRulesEdition newEdition) {
+    final settingsProvider = SettingsScope.maybeOf(context);
+    final current = _localEditionOverride ??
+        settingsProvider?.settings.rulesEdition ??
+        DmRulesEdition.v2024;
+    if (current == newEdition) return;
+    HapticService.selectionTick(context);
+    setState(() {
+      _localEditionOverride = newEdition;
+    });
+    settingsProvider?.setRulesEdition(newEdition);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final settingsProvider = SettingsScope.maybeOf(context);
+    final edition = _localEditionOverride ??
+        settingsProvider?.settings.rulesEdition ??
+        DmRulesEdition.v2024;
+
     final isDark =
         _overrideDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
 
@@ -93,6 +118,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
             ],
           ),
           actions: [
+            RulesEditionToggle(
+              currentEdition: edition,
+              onEditionChanged: (newEdition) =>
+                  _onEditionChanged(context, newEdition),
+            ),
+            const SizedBox(width: 4),
             IconButton(
               tooltip:
                   isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme',
@@ -103,42 +134,48 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                 });
               },
             ),
+            const SizedBox(width: 8),
           ],
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
-            tabs: const [
-              Tab(icon: Icon(Icons.memory), text: 'Spellbook Schematics'),
-              Tab(icon: Icon(Icons.hub), text: 'Minion & Summon Matrix'),
-              Tab(icon: Icon(Icons.shield_outlined), text: 'Magic Items'),
-              Tab(icon: Icon(Icons.stars_outlined), text: 'Feats & Boons'),
-              Tab(icon: Icon(Icons.shield), text: 'Classes & Hit Dice'),
-              Tab(icon: Icon(Icons.groups_outlined), text: 'Species & Heritages'),
-              Tab(icon: Icon(Icons.widgets_outlined), text: 'Generic UI & Dice'),
-              Tab(icon: Icon(Icons.build_circle), text: 'Custom Glyph Studio'),
-              Tab(icon: Icon(Icons.architecture), text: 'Full Style Guide Codex'),
+            tabs: [
+              const Tab(icon: Icon(Icons.memory), text: 'Spellbook Schematics'),
+              const Tab(icon: Icon(Icons.hub), text: 'Minion & Summon Matrix'),
+              const Tab(icon: Icon(Icons.shield_outlined), text: 'Magic Items'),
+              const Tab(icon: Icon(Icons.stars_outlined), text: 'Feats & Boons'),
+              const Tab(icon: Icon(Icons.shield), text: 'Classes & Hit Dice'),
+              Tab(
+                icon: const Icon(Icons.groups_outlined),
+                text: edition == DmRulesEdition.v2014
+                    ? 'Races & Heritages'
+                    : 'Species & Heritages',
+              ),
+              const Tab(icon: Icon(Icons.widgets_outlined), text: 'Generic UI & Dice'),
+              const Tab(icon: Icon(Icons.build_circle), text: 'Custom Glyph Studio'),
+              const Tab(icon: Icon(Icons.architecture), text: 'Full Style Guide Codex'),
             ],
           ),
         ),
         body: Column(
           children: [
             if (_tabController.index < 7)
-              _buildSearchAndFilters(isDark),
+              _buildSearchAndFilters(isDark, edition),
             const Divider(height: 1),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildSpellsGallery(isDark),
-                  _buildCreaturesGallery(isDark),
-                  _buildItemsGallery(isDark),
-                  _buildFeatsGallery(isDark),
-                  _buildClassesGallery(isDark),
-                  _buildSpeciesGallery(isDark),
-                  _buildGenericUiGallery(isDark),
-                  _buildCustomBuilder(isDark),
-                  _buildFullStyleGuide(isDark),
+                  _buildSpellsGallery(isDark, edition),
+                  _buildCreaturesGallery(isDark, edition),
+                  _buildItemsGallery(isDark, edition),
+                  _buildFeatsGallery(isDark, edition),
+                  _buildClassesGallery(isDark, edition),
+                  _buildSpeciesGallery(isDark, edition),
+                  _buildGenericUiGallery(isDark, edition),
+                  _buildCustomBuilder(isDark, edition),
+                  _buildFullStyleGuide(isDark, edition),
                 ],
               ),
             ),
@@ -148,7 +185,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
     );
   }
 
-  Widget _buildSearchAndFilters(bool isDark) {
+  Widget _buildSearchAndFilters(bool isDark, DmRulesEdition edition) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       color: isDark ? const Color(0xFF030712) : const Color(0xFFF1F5F9),
@@ -372,7 +409,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                   child: Row(
                     children: [
                       FilterChip(
-                        label: const Text('All Species'),
+                        label: Text(edition == DmRulesEdition.v2014
+                            ? 'All Races'
+                            : 'All Species'),
                         selected: _selectedSpeciesType == null,
                         onSelected: (_) =>
                             setState(() => _selectedSpeciesType = null),
@@ -437,7 +476,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 1. SPELLS GALLERY
   // ---------------------------------------------------------------------------
 
-  Widget _buildSpellsGallery(bool isDark) {
+  Widget _buildSpellsGallery(bool isDark, DmRulesEdition edition) {
     var spells = GlyphGalleryData.allSpells.where((s) {
       if (_selectedSchool != null && s.school != _selectedSchool) return false;
       if (_searchQuery.isNotEmpty) {
@@ -625,7 +664,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 2. CREATURES & MINIONS GALLERY
   // ---------------------------------------------------------------------------
 
-  Widget _buildCreaturesGallery(bool isDark) {
+  Widget _buildCreaturesGallery(bool isDark, DmRulesEdition edition) {
     var creatures = GlyphGalleryData.allCreatures.where((c) {
       if (_selectedCreatureType != null && c.type != _selectedCreatureType) {
         return false;
@@ -816,7 +855,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 3. MAGIC ITEMS GALLERY
   // ---------------------------------------------------------------------------
 
-  Widget _buildItemsGallery(bool isDark) {
+  Widget _buildItemsGallery(bool isDark, DmRulesEdition edition) {
     var items = GlyphGalleryData.allItems.where((i) {
       if (_selectedItemCategory != null && i.category != _selectedItemCategory) {
         return false;
@@ -852,16 +891,16 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   }
 
   Widget _buildItemCard(GlyphItemEntry item, bool isDark) {
-    final rarityColor = item.rarity.getLegibleColor(isDark);
     final catColor = item.category.getLegibleColor(isDark);
+    final rarityColor = item.rarity.getLegibleColor(isDark);
 
     return Card(
       elevation: 4,
       color: isDark ? const Color(0xFF090D16) : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side:
-            BorderSide(color: rarityColor.withValues(alpha: 0.55), width: 1.5),
+        side: BorderSide(
+            color: rarityColor.withValues(alpha: 0.65), width: 1.5),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -994,7 +1033,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 4. FEATS GALLERY
   // ---------------------------------------------------------------------------
 
-  Widget _buildFeatsGallery(bool isDark) {
+  Widget _buildFeatsGallery(bool isDark, DmRulesEdition edition) {
     var feats = GlyphGalleryData.allFeats.where((f) {
       if (_selectedFeatCategory != null &&
           f.featCategory != _selectedFeatCategory) {
@@ -1157,7 +1196,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 5. CHARACTER CLASSES GALLERY
   // ---------------------------------------------------------------------------
 
-  Widget _buildClassesGallery(bool isDark) {
+  Widget _buildClassesGallery(bool isDark, DmRulesEdition edition) {
     var classes = GlyphGalleryData.allClasses.where((c) {
       if (_selectedClassType != null && c.classType != _selectedClassType) {
         return false;
@@ -1312,25 +1351,29 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   }
 
   // ---------------------------------------------------------------------------
-  // 6. SPECIES GALLERY
+  // 6. SPECIES / RACES GALLERY
   // ---------------------------------------------------------------------------
 
-  Widget _buildSpeciesGallery(bool isDark) {
+  Widget _buildSpeciesGallery(bool isDark, DmRulesEdition edition) {
     var species = GlyphGalleryData.allSpecies.where((s) {
       if (_selectedSpeciesType != null && s.speciesType != _selectedSpeciesType) {
         return false;
       }
       if (_searchQuery.isNotEmpty) {
         final match = s.name.toLowerCase().contains(_searchQuery) ||
-            s.traits.toLowerCase().contains(_searchQuery) ||
-            s.summary.toLowerCase().contains(_searchQuery);
+            s.getTraits(edition).toLowerCase().contains(_searchQuery) ||
+            s.getSummary(edition).toLowerCase().contains(_searchQuery);
         if (!match) return false;
       }
       return true;
     }).toList();
 
     if (species.isEmpty) {
-      return _buildEmptyState('No species matching current filters.', isDark);
+      return _buildEmptyState(
+          edition == DmRulesEdition.v2014
+              ? 'No races matching current filters.'
+              : 'No species matching current filters.',
+          isDark);
     }
 
     return GridView.builder(
@@ -1342,12 +1385,18 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
         mainAxisSpacing: 14,
       ),
       itemCount: species.length,
-      itemBuilder: (context, idx) => _buildSpeciesCard(species[idx], isDark),
+      itemBuilder: (context, idx) =>
+          _buildSpeciesCard(species[idx], isDark, edition),
     );
   }
 
-  Widget _buildSpeciesCard(GlyphSpeciesEntry species, bool isDark) {
+  Widget _buildSpeciesCard(
+      GlyphSpeciesEntry species, bool isDark, DmRulesEdition edition) {
     final speciesColor = species.speciesType.getLegibleColor(isDark);
+    final spSpeed = species.getSpeed(edition);
+    final spSize = species.getSize(edition);
+    final spSummary = species.getSummary(edition);
+    final spRings = species.getActionRings(edition);
 
     return Card(
       elevation: 4,
@@ -1359,7 +1408,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _showSpeciesDetails(species, isDark),
+        onTap: () => _showSpeciesDetails(species, isDark, edition),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -1367,7 +1416,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
             children: [
               DndGlyph.species(
                 speciesType: species.speciesType,
-                actionRings: species.actionRings,
+                actionRings: spRings,
                 size: _glyphDisplaySize,
                 isDarkMode: isDark,
               ),
@@ -1401,7 +1450,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                                     color: speciesColor.withValues(alpha: 0.6)),
                               ),
                               child: Text(
-                                '[${species.speed} FT]',
+                                '[$spSpeed FT • ${edition.label}]',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontFamily: 'monospace',
@@ -1414,7 +1463,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          'SIZE: ${species.size.toUpperCase()} // ${species.speciesType.frameShape.name.toUpperCase()}',
+                          'SIZE: ${spSize.toUpperCase()} // ${species.speciesType.frameShape.name.toUpperCase()}',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -1424,7 +1473,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                       ],
                     ),
                     Text(
-                      species.summary,
+                      spSummary,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1434,7 +1483,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: species.actionRings.map((r) {
+                        children: spRings.map((r) {
                           final ringColor = r.getEffectiveColor(speciesColor);
                           return Container(
                             margin: const EdgeInsets.only(right: 6),
@@ -1472,7 +1521,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 7. GENERIC UI & POLYHEDRALS GALLERY
   // ---------------------------------------------------------------------------
 
-  Widget _buildGenericUiGallery(bool isDark) {
+  Widget _buildGenericUiGallery(bool isDark, DmRulesEdition edition) {
     var entries = GlyphGalleryData.allGenericUi.where((g) {
       if (_selectedGenericGroup != null && g.group != _selectedGenericGroup) {
         return false;
@@ -1602,7 +1651,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 8. CUSTOM GLYPH STUDIO & BUILDER
   // ---------------------------------------------------------------------------
 
-  Widget _buildCustomBuilder(bool isDark) {
+  Widget _buildCustomBuilder(bool isDark, DmRulesEdition edition) {
     final effectiveShape = _builderShapeOverride ??
         (_builderMode == 0
             ? _builderSchool.frameShape
@@ -1755,7 +1804,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                       2 => '${_builderItemCategory.displayName} • ${_builderItemRarity.displayName}${_builderItemRequiresAttunement ? " (Attunement)" : ""}',
                       3 => '${_builderFeatCategory.displayName} • $_builderFeatId',
                       4 => '${_builderClassType.displayName} • d${_builderClassType.hitDieSides} Hit Die',
-                      5 => '${_builderSpeciesType.displayName} • ${_builderSpeciesType.size}, ${_builderSpeciesType.speed} ft',
+                      5 => '${_builderSpeciesType.displayName} • ${_builderSpeciesType.getSize(edition)}, ${_builderSpeciesType.getSpeed(edition)} ft',
                       _ => _builderGenericUiType.displayName,
                     },
                     style: TextStyle(
@@ -1941,7 +1990,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                     ),
                     // Species Preset Loader
                     _buildPresetDropdown<GlyphSpeciesEntry>(
-                      label: '👥 Read Species / Race...',
+                      label: edition == DmRulesEdition.v2014
+                          ? '👥 Read Race (2014 SRD)...'
+                          : '👥 Read Species (2024 SRD)...',
                       isDark: isDark,
                       items: GlyphGalleryData.allSpecies
                           .map((spec) => DropdownMenuItem(
@@ -1956,7 +2007,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                             _builderMode = 5;
                             _builderSpeciesType = spec.speciesType;
                             _builderShapeOverride = null;
-                            _builderRings = List.from(spec.actionRings);
+                            _builderRings = List.from(spec.getActionRings(edition));
                           });
                         }
                       },
@@ -1972,18 +2023,26 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, icon: Icon(Icons.memory), label: Text('Spell')),
-                ButtonSegment(value: 1, icon: Icon(Icons.pets), label: Text('Creature')),
-                ButtonSegment(value: 2, icon: Icon(Icons.shield_outlined), label: Text('Item')),
-                ButtonSegment(value: 3, icon: Icon(Icons.stars_outlined), label: Text('Feat')),
-                ButtonSegment(value: 4, icon: Icon(Icons.shield), label: Text('Class')),
-                ButtonSegment(value: 5, icon: Icon(Icons.groups_outlined), label: Text('Species')),
-                ButtonSegment(value: 6, icon: Icon(Icons.widgets_outlined), label: Text('Generic UI')),
+              segments: [
+                const ButtonSegment(value: 0, icon: Icon(Icons.memory), label: Text('Spell')),
+                const ButtonSegment(value: 1, icon: Icon(Icons.pets), label: Text('Creature')),
+                const ButtonSegment(value: 2, icon: Icon(Icons.shield_outlined), label: Text('Item')),
+                const ButtonSegment(value: 3, icon: Icon(Icons.stars_outlined), label: Text('Feat')),
+                const ButtonSegment(value: 4, icon: Icon(Icons.shield), label: Text('Class')),
+                ButtonSegment(
+                  value: 5,
+                  icon: const Icon(Icons.groups_outlined),
+                  label: Text(edition == DmRulesEdition.v2014 ? 'Race' : 'Species'),
+                ),
+                const ButtonSegment(value: 6, icon: Icon(Icons.widgets_outlined), label: Text('UI Icon')),
               ],
               selected: {_builderMode},
-              onSelectionChanged: (set) =>
-                  setState(() => _builderMode = set.first),
+              onSelectionChanged: (val) {
+                setState(() {
+                  _builderMode = val.first;
+                  _builderShapeOverride = null;
+                });
+              },
             ),
           ),
           const SizedBox(height: 16),
@@ -2110,8 +2169,8 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
               }).toList(),
             ),
           ] else if (_builderMode == 5) ...[
-            const Text('Select Species / Race:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text('Select ${edition == DmRulesEdition.v2014 ? "Race (2014 SRD)" : "Species (2024 SRD)"}:',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -2433,7 +2492,7 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
   // 9. FULL STYLE GUIDE CODEX
   // ---------------------------------------------------------------------------
 
-  Widget _buildFullStyleGuide(bool isDark) {
+  Widget _buildFullStyleGuide(bool isDark, DmRulesEdition edition) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -2723,8 +2782,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
           const SizedBox(height: 32),
 
           // Section 8: Species & Heritages
-          const Text('8. Species & Heritage Sigils',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+              '8. ${edition == DmRulesEdition.v2014 ? "Races" : "Species"} & Heritage Sigils (${edition.label} SRD)',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
@@ -2749,10 +2809,10 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                   color: col)),
-                          Text('${st.size} • ${st.speed} ft Speed',
+                          Text('${st.getSize(edition)} • ${st.getSpeed(edition)} ft Speed',
                               style: const TextStyle(
                                   fontSize: 11, fontFamily: 'monospace')),
-                          Text(st.traits,
+                          Text(st.getTraits(edition),
                               style: TextStyle(
                                   fontSize: 10,
                                   color: isDark ? Colors.white70 : Colors.black54)),
@@ -3081,8 +3141,18 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
     );
   }
 
-  void _showSpeciesDetails(GlyphSpeciesEntry species, bool isDark) {
+  void _showSpeciesDetails(
+      GlyphSpeciesEntry species, bool isDark, DmRulesEdition edition) {
     final speciesColor = species.speciesType.getLegibleColor(isDark);
+    final speed = species.getSpeed(edition);
+    final size = species.getSize(edition);
+    final traits = species.getTraits(edition);
+    final summary = species.getSummary(edition);
+    final rings = species.getActionRings(edition);
+
+    final speed2014 = species.getSpeed(DmRulesEdition.v2014);
+    final speed2024 = species.getSpeed(DmRulesEdition.v2024);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -3090,28 +3160,77 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
           children: [
             DndGlyph.species(
                 speciesType: species.speciesType,
-                actionRings: species.actionRings,
+                actionRings: rings,
                 size: 40,
                 isDarkMode: isDark),
             const SizedBox(width: 12),
             Expanded(
-                child: Text(species.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(species.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    edition == DmRulesEdition.v2014
+                        ? '2014 SRD Race'
+                        : '2024 SRD Species',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: speciesColor,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow('Size', species.size, accentColor: speciesColor),
-            _buildDetailRow('Speed', '${species.speed} feet'),
-            _buildDetailRow('Traits', species.traits),
-            const SizedBox(height: 10),
-            Text(species.summary, style: const TextStyle(fontSize: 13)),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow('Rules Edition', '${edition.label} SRD Rules',
+                  accentColor: speciesColor),
+              _buildDetailRow('Size', size),
+              _buildDetailRow(
+                  'Movement Speed', '$speed feet (${edition.label} SRD)'),
+              _buildDetailRow('Heritage Traits', traits),
+              const SizedBox(height: 10),
+              Text(summary, style: const TextStyle(fontSize: 13)),
+              if (speed2014 != speed2024) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: speciesColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border:
+                        Border.all(color: speciesColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.compare_arrows, size: 16, color: speciesColor),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '2014 Speed: $speed2014 ft ➔ 2024 Speed: $speed2024 ft',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: speciesColor,
+                              fontFamily: 'monospace'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
         ],
       ),
     );
@@ -3375,13 +3494,31 @@ class _StandaloneRingPainter extends CustomPainter {
           canvas.drawCircle(right, 1.0 * scale, nodeFill);
         }
       case ActionRingType.concentration:
-        canvas.drawOval(
-            Rect.fromCenter(center: center, width: r * 2.1, height: r * 1.5),
-            strokePaint);
+        final outerOrbit =
+            Rect.fromCenter(center: center, width: r * 2.1, height: r * 1.45);
+        final innerOrbit =
+            Rect.fromCenter(center: center, width: r * 1.45, height: r * 2.1);
+        canvas.drawOval(outerOrbit, strokePaint);
+        canvas.drawOval(innerOrbit, finePaint);
         if (!isGlow) {
-          canvas.drawOval(
-              Rect.fromCenter(center: center, width: r * 1.5, height: r * 2.1),
-              finePaint);
+          final satEast = Offset(center.dx + r * 1.05, center.dy);
+          final satWest = Offset(center.dx - r * 1.05, center.dy);
+          final satNorth = Offset(center.dx, center.dy - r * 1.05);
+          final satSouth = Offset(center.dx, center.dy + r * 1.05);
+
+          canvas.drawCircle(satEast, 1.1 * scale, nodeFill);
+          canvas.drawCircle(satWest, 1.1 * scale, nodeFill);
+          canvas.drawCircle(satNorth, 0.9 * scale, nodeFill);
+          canvas.drawCircle(satSouth, 0.9 * scale, nodeFill);
+
+          canvas.drawLine(satEast - Offset(0, 1.2 * scale),
+              satEast + Offset(0, 1.2 * scale), finePaint);
+          canvas.drawLine(satWest - Offset(0, 1.2 * scale),
+              satWest + Offset(0, 1.2 * scale), finePaint);
+          canvas.drawLine(satNorth - Offset(1.2 * scale, 0),
+              satNorth + Offset(1.2 * scale, 0), finePaint);
+          canvas.drawLine(satSouth - Offset(1.2 * scale, 0),
+              satSouth + Offset(1.2 * scale, 0), finePaint);
         }
       case ActionRingType.attunement:
         canvas.drawCircle(center, r, strokePaint);

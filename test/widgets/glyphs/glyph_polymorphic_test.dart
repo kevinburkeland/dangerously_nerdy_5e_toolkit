@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/glyph_gallery_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/glyph_tokens.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
@@ -270,6 +271,62 @@ void main() {
         expect(darkCol, isNotNull);
         expect(lightCol, isNotNull);
       }
+    });
+
+    test('SpeciesType 2014 vs 2024 SRD speed, size, and trait specifications', () {
+      // Gnome: 25 ft in 2014 vs 30 ft in 2024
+      expect(SpeciesType.gnome.getSpeed(DmRulesEdition.v2014), equals(25));
+      expect(SpeciesType.gnome.getSpeed(DmRulesEdition.v2024), equals(30));
+
+      // Dwarf: 25 ft in 2014 vs 30 ft in 2024
+      expect(SpeciesType.dwarf.getSpeed(DmRulesEdition.v2014), equals(25));
+      expect(SpeciesType.dwarf.getSpeed(DmRulesEdition.v2024), equals(30));
+
+      // Halfling: 25 ft in 2014 vs 30 ft in 2024
+      expect(SpeciesType.halfling.getSpeed(DmRulesEdition.v2014), equals(25));
+      expect(SpeciesType.halfling.getSpeed(DmRulesEdition.v2024), equals(30));
+
+      // Goliath: 30 ft in 2014 vs 35 ft in 2024
+      expect(SpeciesType.goliath.getSpeed(DmRulesEdition.v2014), equals(30));
+      expect(SpeciesType.goliath.getSpeed(DmRulesEdition.v2024), equals(35));
+
+      // Elf & Human: 30 ft in both
+      expect(SpeciesType.elf.getSpeed(DmRulesEdition.v2014), equals(30));
+      expect(SpeciesType.elf.getSpeed(DmRulesEdition.v2024), equals(30));
+      expect(SpeciesType.human.getSpeed(DmRulesEdition.v2014), equals(30));
+      expect(SpeciesType.human.getSpeed(DmRulesEdition.v2024), equals(30));
+
+      // Size differences: Human is Medium in 2014, Medium or Small in 2024
+      expect(SpeciesType.human.getSize(DmRulesEdition.v2014), equals('Medium'));
+      expect(SpeciesType.human.getSize(DmRulesEdition.v2024), equals('Medium or Small'));
+
+      // Gnome is Small in both
+      expect(SpeciesType.gnome.getSize(DmRulesEdition.v2014), equals('Small'));
+      expect(SpeciesType.gnome.getSize(DmRulesEdition.v2024), equals('Small'));
+
+      // Trait differences
+      expect(SpeciesType.gnome.getTraits(DmRulesEdition.v2014),
+          contains('Gnome Cunning'));
+      expect(SpeciesType.gnome.getTraits(DmRulesEdition.v2024),
+          contains('Gnomish Cunning'));
+      expect(SpeciesType.dwarf.getTraits(DmRulesEdition.v2024),
+          contains('Tremorsense'));
+    });
+
+    test('GlyphSpeciesEntry returns edition-aware data and action rings', () {
+      final gnome = GlyphGalleryData.allSpecies
+          .firstWhere((s) => s.speciesType == SpeciesType.gnome);
+
+      expect(gnome.getSpeed(DmRulesEdition.v2014), equals(25));
+      expect(gnome.getSpeed(DmRulesEdition.v2024), equals(30));
+      expect(gnome.getActionRings(DmRulesEdition.v2014), isNotEmpty);
+      expect(gnome.getActionRings(DmRulesEdition.v2024), isNotEmpty);
+
+      final dwarf = GlyphGalleryData.allSpecies
+          .firstWhere((s) => s.speciesType == SpeciesType.dwarf);
+
+      expect(dwarf.getSpeed(DmRulesEdition.v2014), equals(25));
+      expect(dwarf.getSpeed(DmRulesEdition.v2024), equals(30));
     });
   });
 }

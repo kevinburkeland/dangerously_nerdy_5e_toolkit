@@ -278,6 +278,16 @@ void main() {
       expect(find.text('5. The 4 Progression Tiers & Threat Architecture'),
           findsOneWidget);
       expect(find.text('Tier 1 • Initiate / CR 0–4'), findsOneWidget);
+      expect(find.text('8. Species & Heritage Sigils (2024 SRD)'), findsOneWidget);
+
+      // Toggle to 2014 edition via RulesEditionToggle in AppBar
+      final toggle2014 = find.text('2014');
+      expect(toggle2014, findsWidgets);
+      await tester.tap(toggle2014.first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('8. Races & Heritage Sigils (2014 SRD)'), findsOneWidget);
+      expect(find.text('Races & Heritages'), findsOneWidget);
     });
 
     testWidgets('DndGlyph applies frameShapeOverride properly',

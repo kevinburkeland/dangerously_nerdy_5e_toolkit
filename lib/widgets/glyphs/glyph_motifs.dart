@@ -1980,13 +1980,34 @@ class GlyphMotifs {
         break;
 
       case GenericUiGlyphType.concentrating:
-        // CONCENTRIC ORBITAL SATELLITE LOOPS
-        canvas.drawCircle(center, 4.5 * scale, primaryLine);
-        final satA = Offset(center.dx + 4.5 * scale * cos(pulseTurns * 2 * pi), center.dy + 4.5 * scale * sin(pulseTurns * 2 * pi));
-        final satB = Offset(center.dx + 4.5 * scale * cos(pulseTurns * 2 * pi + pi), center.dy + 4.5 * scale * sin(pulseTurns * 2 * pi + pi));
-        canvas.drawCircle(satA, 1.2 * scale, nodeFill);
-        canvas.drawCircle(satB, 1.2 * scale, nodeFill);
-        canvas.drawCircle(center, 1.5 * scale, nodeFill);
+        // DUAL HARMONIC ORBITAL SATELLITE LOOPS & APEX BEACON NODES
+        final orbitA =
+            Rect.fromCenter(center: center, width: 11.0 * scale, height: 7.2 * scale);
+        final orbitB =
+            Rect.fromCenter(center: center, width: 7.2 * scale, height: 11.0 * scale);
+        canvas.drawOval(orbitA, primaryLine);
+        canvas.drawOval(orbitB, fineLine);
+        // 4 Orbital satellite nodes at the apsides with telemetry tangent pulse ticks
+        final satEast = Offset(center.dx + 5.5 * scale, center.dy);
+        final satWest = Offset(center.dx - 5.5 * scale, center.dy);
+        final satNorth = Offset(center.dx, center.dy - 5.5 * scale);
+        final satSouth = Offset(center.dx, center.dy + 5.5 * scale);
+
+        canvas.drawCircle(satEast, 1.2 * scale, nodeFill);
+        canvas.drawCircle(satWest, 1.2 * scale, nodeFill);
+        canvas.drawCircle(satNorth, 1.0 * scale, nodeFill);
+        canvas.drawCircle(satSouth, 1.0 * scale, nodeFill);
+        canvas.drawCircle(center, 1.4 * scale, nodeFill);
+
+        // Tangent pulse micro-ticks
+        canvas.drawLine(satEast - Offset(0, 1.4 * scale),
+            satEast + Offset(0, 1.4 * scale), fineLine);
+        canvas.drawLine(satWest - Offset(0, 1.4 * scale),
+            satWest + Offset(0, 1.4 * scale), fineLine);
+        canvas.drawLine(satNorth - Offset(1.4 * scale, 0),
+            satNorth + Offset(1.4 * scale, 0), fineLine);
+        canvas.drawLine(satSouth - Offset(1.4 * scale, 0),
+            satSouth + Offset(1.4 * scale, 0), fineLine);
         break;
 
       case GenericUiGlyphType.deathSave:
