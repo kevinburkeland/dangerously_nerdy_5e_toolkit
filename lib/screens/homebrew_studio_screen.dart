@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/domain/homebrew_extended_entities.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../services/ingestion/compendium_json_ingestion_pipeline.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
@@ -8,7 +9,7 @@ import '../widgets/homebrew/monster_builder_dialog.dart';
 import '../widgets/homebrew/spell_builder_dialog.dart';
 
 /// Comprehensive Homebrew Studio screen allowing users to create, edit, import, and manage
-/// custom spells, monsters, and magic items/equipment.
+/// custom spells, monsters, magic items, classes, subclasses, races, feats, backgrounds, and rules.
 class HomebrewStudioScreen extends StatefulWidget {
   const HomebrewStudioScreen({super.key});
 
@@ -24,12 +25,21 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
   List<Spell> _spells = [];
   List<Monster> _monsters = [];
   List<EquipmentItem> _items = [];
+  List<CharacterClass> _classes = [];
+  List<Subclass> _subclasses = [];
+  List<Race> _races = [];
+  List<Feat> _feats = [];
+  List<Background> _backgrounds = [];
+  List<HomebrewCompendiumEntry> _otherEntries = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _loadAll();
   }
 
@@ -44,12 +54,24 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
     final spells = await _persistence.loadCustomSpells();
     final monsters = await _persistence.loadCustomMonsters();
     final items = await _persistence.loadCustomItems();
+    final classes = await _persistence.loadCustomClasses();
+    final subclasses = await _persistence.loadCustomSubclasses();
+    final races = await _persistence.loadCustomRaces();
+    final feats = await _persistence.loadCustomFeats();
+    final backgrounds = await _persistence.loadCustomBackgrounds();
+    final others = await _persistence.loadCustomOtherEntries();
 
     if (mounted) {
       setState(() {
         _spells = spells;
         _monsters = monsters;
         _items = items;
+        _classes = classes;
+        _subclasses = subclasses;
+        _races = races;
+        _feats = feats;
+        _backgrounds = backgrounds;
+        _otherEntries = others;
         _isLoading = false;
       });
     }
@@ -133,6 +155,118 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
     }
   }
 
+  Future<void> _deleteClass(String slug) async {
+    await _persistence.deleteCustomClass(slug);
+    await _loadAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deleted class')),
+      );
+    }
+  }
+
+  Future<void> _deleteSubclass(String slug) async {
+    await _persistence.deleteCustomSubclass(slug);
+    await _loadAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deleted subclass')),
+      );
+    }
+  }
+
+  Future<void> _deleteRace(String slug) async {
+    await _persistence.deleteCustomRace(slug);
+    await _loadAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deleted race / species')),
+      );
+    }
+  }
+
+  Future<void> _deleteFeat(String slug) async {
+    await _persistence.deleteCustomFeat(slug);
+    await _loadAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deleted feat')),
+      );
+    }
+  }
+
+  Future<void> _deleteBackground(String slug) async {
+    await _persistence.deleteCustomBackground(slug);
+    await _loadAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deleted background')),
+      );
+    }
+  }
+
+  Future<void> _deleteOtherEntry(String slug) async {
+    await _persistence.deleteCustomOtherEntry(slug);
+    await _loadAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deleted compendium entry')),
+      );
+    }
+  }
+
+  void _showDetailModal({
+    required String title,
+    required String category,
+    required String contentMarkdown,
+    List<String>? metadataLines,
+  }) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  Text(category, style: TextStyle(fontSize: 12, color: Theme.of(ctx).colorScheme.primary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (metadataLines != null && metadataLines.isNotEmpty) ...[
+                for (final line in metadataLines)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(line, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  ),
+                const Divider(),
+              ],
+              Text(
+                contentMarkdown.isNotEmpty ? contentMarkdown : 'No additional descriptions provided.',
+                style: const TextStyle(fontSize: 14, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openImportDialog() async {
     final result = await showDialog<IngestionBatchResult>(
       context: context,
@@ -168,10 +302,16 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: [
             Tab(icon: const Icon(Icons.auto_awesome), text: 'Spells (${_spells.length})'),
             Tab(icon: const Icon(Icons.pets), text: 'Monsters (${_monsters.length})'),
             Tab(icon: const Icon(Icons.shield), text: 'Items (${_items.length})'),
+            Tab(icon: const Icon(Icons.military_tech), text: 'Classes (${_classes.length + _subclasses.length})'),
+            Tab(icon: const Icon(Icons.person), text: 'Races (${_races.length})'),
+            Tab(icon: const Icon(Icons.stars), text: 'Feats (${_feats.length})'),
+            Tab(icon: const Icon(Icons.menu_book), text: 'Backgrounds (${_backgrounds.length})'),
+            Tab(icon: const Icon(Icons.table_chart), text: 'Rules & Tables (${_otherEntries.length})'),
           ],
         ),
       ),
@@ -183,6 +323,11 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
                 _buildSpellsTab(theme),
                 _buildMonstersTab(theme),
                 _buildItemsTab(theme),
+                _buildClassesTab(theme),
+                _buildRacesTab(theme),
+                _buildFeatsTab(theme),
+                _buildBackgroundsTab(theme),
+                _buildOtherEntriesTab(theme),
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
@@ -197,13 +342,18 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
             case 2:
               _createOrEditItem();
               break;
+            default:
+              _openImportDialog();
+              break;
           }
         },
-        icon: const Icon(Icons.add),
+        icon: Icon(_tabController.index <= 2 ? Icons.add : Icons.download),
         label: Text(
           _tabController.index == 0
               ? 'New Spell'
-              : (_tabController.index == 1 ? 'New Monster' : 'New Item'),
+              : (_tabController.index == 1
+                  ? 'New Monster'
+                  : (_tabController.index == 2 ? 'New Item' : 'Import JSON')),
         ),
       ),
     );
@@ -351,6 +501,256 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
     );
   }
 
+  Widget _buildClassesTab(ThemeData theme) {
+    final combinedCount = _classes.length + _subclasses.length;
+    if (combinedCount == 0) {
+      return _buildEmptyState(
+        theme,
+        icon: Icons.military_tech_outlined,
+        title: 'No Custom Classes',
+        subtitle: 'Import class or subclass packages via the JSON Importer.',
+        onAction: _openImportDialog,
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (_classes.isNotEmpty) ...[
+          Text('Classes (${_classes.length})', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          for (final cl in _classes)
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blue.withValues(alpha: 0.2),
+                  child: Text(cl.hitDie, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                ),
+                title: Text(cl.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Hit Die: ${cl.hitDie} • Primary: ${cl.primaryAbility ?? "Custom"} • Subclasses: ${cl.subclasses.length}'),
+                onTap: () => _showDetailModal(
+                  title: cl.name,
+                  category: 'Class (${cl.hitDie})',
+                  contentMarkdown: cl.featuresMarkdown,
+                  metadataLines: [
+                    'Hit Die: ${cl.hitDie}',
+                    if (cl.savingThrows.isNotEmpty) 'Saving Throws: ${cl.savingThrows.join(", ")}',
+                    if (cl.primaryAbility != null) 'Primary Ability: ${cl.primaryAbility}',
+                  ],
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  onPressed: () => _deleteClass(cl.id.slug),
+                ),
+              ),
+            ),
+        ],
+        if (_subclasses.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text('Subclasses (${_subclasses.length})', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          for (final sub in _subclasses)
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.indigo.withValues(alpha: 0.2),
+                  child: const Icon(Icons.star, color: Colors.indigoAccent),
+                ),
+                title: Text(sub.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Class: ${sub.classSlug} • ${sub.shortName}'),
+                onTap: () => _showDetailModal(
+                  title: sub.name,
+                  category: 'Subclass (${sub.classSlug})',
+                  contentMarkdown: sub.featuresMarkdown,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  onPressed: () => _deleteSubclass(sub.id.slug),
+                ),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildRacesTab(ThemeData theme) {
+    if (_races.isEmpty) {
+      return _buildEmptyState(
+        theme,
+        icon: Icons.person_outline,
+        title: 'No Custom Races / Species',
+        subtitle: 'Import species or lineages via the JSON Importer.',
+        onAction: _openImportDialog,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _races.length,
+      itemBuilder: (ctx, idx) {
+        final race = _races[idx];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.teal.withValues(alpha: 0.2),
+              child: const Icon(Icons.person, color: Colors.tealAccent),
+            ),
+            title: Text(race.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('${race.size} • Speed: ${race.speed} • Subraces: ${race.subraces.length}'),
+            onTap: () => _showDetailModal(
+              title: race.name,
+              category: 'Species / Race (${race.size})',
+              contentMarkdown: race.traitsMarkdown,
+              metadataLines: [
+                'Size: ${race.size}',
+                'Speed: ${race.speed}',
+                if (race.abilityScoreSummary != null) 'Abilities: ${race.abilityScoreSummary}',
+              ],
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: () => _deleteRace(race.id.slug),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatsTab(ThemeData theme) {
+    if (_feats.isEmpty) {
+      return _buildEmptyState(
+        theme,
+        icon: Icons.stars_outlined,
+        title: 'No Custom Feats',
+        subtitle: 'Import homebrew feats and epic boons via the JSON Importer.',
+        onAction: _openImportDialog,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _feats.length,
+      itemBuilder: (ctx, idx) {
+        final feat = _feats[idx];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.orange.withValues(alpha: 0.2),
+              child: const Icon(Icons.stars, color: Colors.orangeAccent),
+            ),
+            title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('${feat.category}${feat.prerequisite != null ? " • Prereq: ${feat.prerequisite}" : ""}'),
+            onTap: () => _showDetailModal(
+              title: feat.name,
+              category: 'Feat (${feat.category})',
+              contentMarkdown: feat.descriptionMarkdown,
+              metadataLines: [
+                'Category: ${feat.category}',
+                if (feat.prerequisite != null) 'Prerequisite: ${feat.prerequisite}',
+              ],
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: () => _deleteFeat(feat.id.slug),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBackgroundsTab(ThemeData theme) {
+    if (_backgrounds.isEmpty) {
+      return _buildEmptyState(
+        theme,
+        icon: Icons.menu_book_outlined,
+        title: 'No Custom Backgrounds',
+        subtitle: 'Import character backgrounds via the JSON Importer.',
+        onAction: _openImportDialog,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _backgrounds.length,
+      itemBuilder: (ctx, idx) {
+        final bg = _backgrounds[idx];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.brown.withValues(alpha: 0.2),
+              child: const Icon(Icons.menu_book, color: Colors.amberAccent),
+            ),
+            title: Text(bg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('Skills: ${bg.skillProficiencies.join(", ")}${bg.originFeat != null ? " • Feat: ${bg.originFeat}" : ""}'),
+            onTap: () => _showDetailModal(
+              title: bg.name,
+              category: 'Background',
+              contentMarkdown: bg.descriptionMarkdown,
+              metadataLines: [
+                if (bg.skillProficiencies.isNotEmpty) 'Skill Proficiencies: ${bg.skillProficiencies.join(", ")}',
+                if (bg.toolProficiencies.isNotEmpty) 'Tool Proficiencies: ${bg.toolProficiencies.join(", ")}',
+                if (bg.languages.isNotEmpty) 'Languages: ${bg.languages.join(", ")}',
+                if (bg.originFeat != null) 'Origin Feat: ${bg.originFeat}',
+              ],
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: () => _deleteBackground(bg.id.slug),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOtherEntriesTab(ThemeData theme) {
+    if (_otherEntries.isEmpty) {
+      return _buildEmptyState(
+        theme,
+        icon: Icons.table_chart_outlined,
+        title: 'No Custom Rules or Tables',
+        subtitle: 'Import custom tables, variant rules, or hazards via the JSON Importer.',
+        onAction: _openImportDialog,
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _otherEntries.length,
+      itemBuilder: (ctx, idx) {
+        final entry = _otherEntries[idx];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.cyan.withValues(alpha: 0.2),
+              child: const Icon(Icons.table_chart, color: Colors.cyanAccent),
+            ),
+            title: Text(entry.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('Category: ${entry.category}'),
+            onTap: () => _showDetailModal(
+              title: entry.name,
+              category: entry.category,
+              contentMarkdown: entry.descriptionMarkdown,
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: () => _deleteOtherEntry(entry.id.slug),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildEmptyState(
     ThemeData theme, {
     required IconData icon,
@@ -387,3 +787,4 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
     );
   }
 }
+

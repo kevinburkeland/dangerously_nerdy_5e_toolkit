@@ -46,6 +46,24 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
       for (final item in _previewResult!.items) {
         await persistence.saveCustomItem(item);
       }
+      for (final cl in _previewResult!.classes) {
+        await persistence.saveCustomClass(cl);
+      }
+      for (final sub in _previewResult!.subclasses) {
+        await persistence.saveCustomSubclass(sub);
+      }
+      for (final race in _previewResult!.races) {
+        await persistence.saveCustomRace(race);
+      }
+      for (final feat in _previewResult!.feats) {
+        await persistence.saveCustomFeat(feat);
+      }
+      for (final bg in _previewResult!.backgrounds) {
+        await persistence.saveCustomBackground(bg);
+      }
+      for (final other in _previewResult!.otherEntries) {
+        await persistence.saveCustomOtherEntry(other);
+      }
 
       if (mounted) {
         Navigator.of(context).pop(_previewResult);
@@ -85,7 +103,7 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Paste a standard JSON compendium snippet or bundle (Spells, Monsters, or Items):',
+              'Paste a standard JSON compendium snippet or bundle (Spells, Monsters, Items, Classes, Races, Feats, Backgrounds, Tables, Rules):',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -95,7 +113,7 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
               controller: _textController,
               maxLines: 8,
               decoration: const InputDecoration(
-                hintText: '{\n  "spell": [\n    {\n      "name": "Custom Spell",\n      "level": 1,\n      ...\n    }\n  ]\n}',
+                hintText: '{\n  "class": [...],\n  "race": [...],\n  "feat": [...],\n  "spell": [...],\n  "monster": [...],\n  "item": [...]\n}',
                 alignLabelWithHint: true,
                 border: OutlineInputBorder(),
               ),
@@ -126,12 +144,24 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
+                    if (preview.classes.isNotEmpty)
+                      Text('• Classes: ${preview.classes.length} (${preview.classes.map((c) => c.name).take(3).join(', ')}${preview.classes.length > 3 ? '...' : ''})'),
+                    if (preview.subclasses.isNotEmpty)
+                      Text('• Subclasses: ${preview.subclasses.length} (${preview.subclasses.map((s) => s.name).take(3).join(', ')}${preview.subclasses.length > 3 ? '...' : ''})'),
+                    if (preview.races.isNotEmpty)
+                      Text('• Races / Species: ${preview.races.length} (${preview.races.map((r) => r.name).take(3).join(', ')}${preview.races.length > 3 ? '...' : ''})'),
+                    if (preview.feats.isNotEmpty)
+                      Text('• Feats: ${preview.feats.length} (${preview.feats.map((f) => f.name).take(3).join(', ')}${preview.feats.length > 3 ? '...' : ''})'),
+                    if (preview.backgrounds.isNotEmpty)
+                      Text('• Backgrounds: ${preview.backgrounds.length} (${preview.backgrounds.map((b) => b.name).take(3).join(', ')}${preview.backgrounds.length > 3 ? '...' : ''})'),
                     if (preview.spells.isNotEmpty)
                       Text('• Spells: ${preview.spells.length} (${preview.spells.map((s) => s.name).take(3).join(', ')}${preview.spells.length > 3 ? '...' : ''})'),
                     if (preview.monsters.isNotEmpty)
                       Text('• Monsters: ${preview.monsters.length} (${preview.monsters.map((m) => m.name).take(3).join(', ')}${preview.monsters.length > 3 ? '...' : ''})'),
                     if (preview.items.isNotEmpty)
                       Text('• Items: ${preview.items.length} (${preview.items.map((i) => i.name).take(3).join(', ')}${preview.items.length > 3 ? '...' : ''})'),
+                    if (preview.otherEntries.isNotEmpty)
+                      Text('• Other / Rules / Tables: ${preview.otherEntries.length} (${preview.otherEntries.map((o) => o.name).take(3).join(', ')}${preview.otherEntries.length > 3 ? '...' : ''})'),
                     if (preview.hasErrors) ...[
                       const SizedBox(height: 6),
                       Text(

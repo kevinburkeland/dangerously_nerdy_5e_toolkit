@@ -99,5 +99,41 @@ void main() {
       // Verify imported spell appears on screen
       expect(find.text('Frost Nova'), findsOneWidget);
     });
+
+    testWidgets('imports multi-category bundle including classes, races, and feats', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomebrewStudioScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open import dialog
+      await tester.tap(find.byIcon(Icons.file_download_outlined));
+      await tester.pumpAndSettle();
+
+      const multiBundle = '''
+{
+  "class": [{"name": "Blood Hunter", "hd": {"faces": 10}, "classFeatures": ["Crimson Rite: Enhance weapons"]}],
+  "race": [{"name": "Genasi", "size": "Medium", "trait": ["Elemental Heritage: Innate power"]}],
+  "feat": [{"name": "Fey Touched", "category": "General", "entries": ["Cast Misty Step once per long rest."]}]
+}
+''';
+
+      await tester.enterText(find.byType(TextField), multiBundle);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Detected 3 entities'), findsOneWidget);
+      expect(find.textContaining('Classes: 1 (Blood Hunter)'), findsOneWidget);
+      expect(find.textContaining('Races / Species: 1 (Genasi)'), findsOneWidget);
+      expect(find.textContaining('Feats: 1 (Fey Touched)'), findsOneWidget);
+
+      await tester.tap(find.text('Import to Compendium'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Classes (1)'), findsOneWidget);
+      expect(find.textContaining('Races (1)'), findsOneWidget);
+      expect(find.textContaining('Feats (1)'), findsOneWidget);
+    });
   });
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/app_settings.dart';
 import '../../models/custom_preset.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/dpr/dpr_serialization.dart';
 import '../logging_service.dart';
@@ -20,6 +21,12 @@ class AppBackupPayload {
   final List<Map<String, dynamic>> customSpells;
   final List<Map<String, dynamic>> customMonsters;
   final List<Map<String, dynamic>> customItems;
+  final List<Map<String, dynamic>> customClasses;
+  final List<Map<String, dynamic>> customSubclasses;
+  final List<Map<String, dynamic>> customRaces;
+  final List<Map<String, dynamic>> customFeats;
+  final List<Map<String, dynamic>> customBackgrounds;
+  final List<Map<String, dynamic>> customOtherEntries;
 
   AppBackupPayload({
     required this.schemaVersion,
@@ -30,6 +37,12 @@ class AppBackupPayload {
     this.customSpells = const [],
     this.customMonsters = const [],
     this.customItems = const [],
+    this.customClasses = const [],
+    this.customSubclasses = const [],
+    this.customRaces = const [],
+    this.customFeats = const [],
+    this.customBackgrounds = const [],
+    this.customOtherEntries = const [],
   });
 
   Map<String, dynamic> toMap() => {
@@ -41,6 +54,12 @@ class AppBackupPayload {
         'customSpells': customSpells,
         'customMonsters': customMonsters,
         'customItems': customItems,
+        'customClasses': customClasses,
+        'customSubclasses': customSubclasses,
+        'customRaces': customRaces,
+        'customFeats': customFeats,
+        'customBackgrounds': customBackgrounds,
+        'customOtherEntries': customOtherEntries,
       };
 
   factory AppBackupPayload.fromMap(Map<String, dynamic> map) {
@@ -68,6 +87,30 @@ class AppBackupPayload {
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
           .toList(),
+      customClasses: (map['customClasses'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customSubclasses: (map['customSubclasses'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customRaces: (map['customRaces'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customFeats: (map['customFeats'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customBackgrounds: (map['customBackgrounds'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customOtherEntries: (map['customOtherEntries'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
     );
   }
 }
@@ -80,6 +123,12 @@ class BackupRestoreResult {
   final int restoredHomebrewSpellsCount;
   final int restoredHomebrewMonstersCount;
   final int restoredHomebrewItemsCount;
+  final int restoredHomebrewClassesCount;
+  final int restoredHomebrewSubclassesCount;
+  final int restoredHomebrewRacesCount;
+  final int restoredHomebrewFeatsCount;
+  final int restoredHomebrewBackgroundsCount;
+  final int restoredHomebrewOtherCount;
   final String? errorMessage;
 
   const BackupRestoreResult({
@@ -89,6 +138,12 @@ class BackupRestoreResult {
     this.restoredHomebrewSpellsCount = 0,
     this.restoredHomebrewMonstersCount = 0,
     this.restoredHomebrewItemsCount = 0,
+    this.restoredHomebrewClassesCount = 0,
+    this.restoredHomebrewSubclassesCount = 0,
+    this.restoredHomebrewRacesCount = 0,
+    this.restoredHomebrewFeatsCount = 0,
+    this.restoredHomebrewBackgroundsCount = 0,
+    this.restoredHomebrewOtherCount = 0,
     this.errorMessage,
   });
 
@@ -97,7 +152,13 @@ class BackupRestoreResult {
       restoredDprProfilesCount +
       restoredHomebrewSpellsCount +
       restoredHomebrewMonstersCount +
-      restoredHomebrewItemsCount;
+      restoredHomebrewItemsCount +
+      restoredHomebrewClassesCount +
+      restoredHomebrewSubclassesCount +
+      restoredHomebrewRacesCount +
+      restoredHomebrewFeatsCount +
+      restoredHomebrewBackgroundsCount +
+      restoredHomebrewOtherCount;
 }
 
 class AppBackupService {
@@ -114,6 +175,12 @@ class AppBackupService {
     final customSpells = await HomebrewPersistenceService().loadCustomSpells();
     final customMonsters = await HomebrewPersistenceService().loadCustomMonsters();
     final customItems = await HomebrewPersistenceService().loadCustomItems();
+    final customClasses = await HomebrewPersistenceService().loadCustomClasses();
+    final customSubclasses = await HomebrewPersistenceService().loadCustomSubclasses();
+    final customRaces = await HomebrewPersistenceService().loadCustomRaces();
+    final customFeats = await HomebrewPersistenceService().loadCustomFeats();
+    final customBackgrounds = await HomebrewPersistenceService().loadCustomBackgrounds();
+    final customOthers = await HomebrewPersistenceService().loadCustomOtherEntries();
 
     final payload = AppBackupPayload(
       schemaVersion: currentSchemaVersion,
@@ -139,6 +206,12 @@ class AppBackupService {
       customSpells: customSpells.map((s) => s.toMap()).toList(),
       customMonsters: customMonsters.map((m) => m.toMap()).toList(),
       customItems: customItems.map((i) => i.toMap()).toList(),
+      customClasses: customClasses.map((c) => c.toMap()).toList(),
+      customSubclasses: customSubclasses.map((s) => s.toMap()).toList(),
+      customRaces: customRaces.map((r) => r.toMap()).toList(),
+      customFeats: customFeats.map((f) => f.toMap()).toList(),
+      customBackgrounds: customBackgrounds.map((b) => b.toMap()).toList(),
+      customOtherEntries: customOthers.map((o) => o.toMap()).toList(),
     );
 
     return const JsonEncoder.withIndent('  ').convert(payload.toMap());
@@ -210,6 +283,60 @@ class AppBackupService {
         } catch (_) {}
       }
 
+      int classesRestored = 0;
+      for (final rawClass in backup.customClasses) {
+        try {
+          final cl = CharacterClass.fromMap(rawClass);
+          await HomebrewPersistenceService().saveCustomClass(cl);
+          classesRestored++;
+        } catch (_) {}
+      }
+
+      int subclassesRestored = 0;
+      for (final rawSub in backup.customSubclasses) {
+        try {
+          final sub = Subclass.fromMap(rawSub);
+          await HomebrewPersistenceService().saveCustomSubclass(sub);
+          subclassesRestored++;
+        } catch (_) {}
+      }
+
+      int racesRestored = 0;
+      for (final rawRace in backup.customRaces) {
+        try {
+          final race = Race.fromMap(rawRace);
+          await HomebrewPersistenceService().saveCustomRace(race);
+          racesRestored++;
+        } catch (_) {}
+      }
+
+      int featsRestored = 0;
+      for (final rawFeat in backup.customFeats) {
+        try {
+          final feat = Feat.fromMap(rawFeat);
+          await HomebrewPersistenceService().saveCustomFeat(feat);
+          featsRestored++;
+        } catch (_) {}
+      }
+
+      int backgroundsRestored = 0;
+      for (final rawBg in backup.customBackgrounds) {
+        try {
+          final bg = Background.fromMap(rawBg);
+          await HomebrewPersistenceService().saveCustomBackground(bg);
+          backgroundsRestored++;
+        } catch (_) {}
+      }
+
+      int othersRestored = 0;
+      for (final rawOther in backup.customOtherEntries) {
+        try {
+          final other = HomebrewCompendiumEntry.fromMap(rawOther);
+          await HomebrewPersistenceService().saveCustomOtherEntry(other);
+          othersRestored++;
+        } catch (_) {}
+      }
+
       return BackupRestoreResult(
         success: true,
         restoredPresetsCount: presetsRestored,
@@ -217,6 +344,12 @@ class AppBackupService {
         restoredHomebrewSpellsCount: spellsRestored,
         restoredHomebrewMonstersCount: monstersRestored,
         restoredHomebrewItemsCount: itemsRestored,
+        restoredHomebrewClassesCount: classesRestored,
+        restoredHomebrewSubclassesCount: subclassesRestored,
+        restoredHomebrewRacesCount: racesRestored,
+        restoredHomebrewFeatsCount: featsRestored,
+        restoredHomebrewBackgroundsCount: backgroundsRestored,
+        restoredHomebrewOtherCount: othersRestored,
       );
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(

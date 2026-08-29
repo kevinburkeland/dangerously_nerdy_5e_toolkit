@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/monster_codex_data.dart';
 import '../logging_service.dart';
@@ -10,6 +11,12 @@ class HomebrewPersistenceService {
   static const String _keyHomebrewSpells = 'dn_homebrew_spells_v1';
   static const String _keyHomebrewMonsters = 'dn_homebrew_monsters_v1';
   static const String _keyHomebrewItems = 'dn_homebrew_items_v1';
+  static const String _keyHomebrewClasses = 'dn_homebrew_classes_v1';
+  static const String _keyHomebrewSubclasses = 'dn_homebrew_subclasses_v1';
+  static const String _keyHomebrewRaces = 'dn_homebrew_races_v1';
+  static const String _keyHomebrewFeats = 'dn_homebrew_feats_v1';
+  static const String _keyHomebrewBackgrounds = 'dn_homebrew_backgrounds_v1';
+  static const String _keyHomebrewOther = 'dn_homebrew_other_v1';
   static const String _keyCampaignOverrides = 'dn_campaign_overrides_v1';
 
   static final HomebrewPersistenceService _instance =
@@ -151,6 +158,258 @@ class HomebrewPersistenceService {
     );
   }
 
+  /// Loads all custom classes from persistent storage.
+  Future<List<CharacterClass>> loadCustomClasses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawList = prefs.getStringList(_keyHomebrewClasses) ?? [];
+      return rawList
+          .map((jsonStr) => CharacterClass.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
+          .toList();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew classes');
+      return [];
+    }
+  }
+
+  /// Saves a custom class to persistent storage.
+  Future<void> saveCustomClass(CharacterClass characterClass) async {
+    final classes = await loadCustomClasses();
+    final idx = classes.indexWhere((c) => c.id.slug == characterClass.id.slug);
+    if (idx != -1) {
+      classes[idx] = characterClass;
+    } else {
+      classes.add(characterClass);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewClasses,
+      classes.map((c) => json.encode(c.toMap())).toList(),
+    );
+  }
+
+  /// Deletes a custom class by slug.
+  Future<void> deleteCustomClass(String slug) async {
+    final classes = await loadCustomClasses();
+    classes.removeWhere((c) => c.id.slug == slug);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewClasses,
+      classes.map((c) => json.encode(c.toMap())).toList(),
+    );
+  }
+
+  /// Loads all custom subclasses from persistent storage.
+  Future<List<Subclass>> loadCustomSubclasses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawList = prefs.getStringList(_keyHomebrewSubclasses) ?? [];
+      return rawList
+          .map((jsonStr) => Subclass.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
+          .toList();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew subclasses');
+      return [];
+    }
+  }
+
+  /// Saves a custom subclass to persistent storage.
+  Future<void> saveCustomSubclass(Subclass subclass) async {
+    final subs = await loadCustomSubclasses();
+    final idx = subs.indexWhere((s) => s.id.slug == subclass.id.slug);
+    if (idx != -1) {
+      subs[idx] = subclass;
+    } else {
+      subs.add(subclass);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewSubclasses,
+      subs.map((s) => json.encode(s.toMap())).toList(),
+    );
+  }
+
+  /// Deletes a custom subclass by slug.
+  Future<void> deleteCustomSubclass(String slug) async {
+    final subs = await loadCustomSubclasses();
+    subs.removeWhere((s) => s.id.slug == slug);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewSubclasses,
+      subs.map((s) => json.encode(s.toMap())).toList(),
+    );
+  }
+
+  /// Loads all custom races from persistent storage.
+  Future<List<Race>> loadCustomRaces() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawList = prefs.getStringList(_keyHomebrewRaces) ?? [];
+      return rawList
+          .map((jsonStr) => Race.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
+          .toList();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew races');
+      return [];
+    }
+  }
+
+  /// Saves a custom race to persistent storage.
+  Future<void> saveCustomRace(Race race) async {
+    final races = await loadCustomRaces();
+    final idx = races.indexWhere((r) => r.id.slug == race.id.slug);
+    if (idx != -1) {
+      races[idx] = race;
+    } else {
+      races.add(race);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewRaces,
+      races.map((r) => json.encode(r.toMap())).toList(),
+    );
+  }
+
+  /// Deletes a custom race by slug.
+  Future<void> deleteCustomRace(String slug) async {
+    final races = await loadCustomRaces();
+    races.removeWhere((r) => r.id.slug == slug);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewRaces,
+      races.map((r) => json.encode(r.toMap())).toList(),
+    );
+  }
+
+  /// Loads all custom feats from persistent storage.
+  Future<List<Feat>> loadCustomFeats() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawList = prefs.getStringList(_keyHomebrewFeats) ?? [];
+      return rawList
+          .map((jsonStr) => Feat.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
+          .toList();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew feats');
+      return [];
+    }
+  }
+
+  /// Saves a custom feat to persistent storage.
+  Future<void> saveCustomFeat(Feat feat) async {
+    final feats = await loadCustomFeats();
+    final idx = feats.indexWhere((f) => f.id.slug == feat.id.slug);
+    if (idx != -1) {
+      feats[idx] = feat;
+    } else {
+      feats.add(feat);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewFeats,
+      feats.map((f) => json.encode(f.toMap())).toList(),
+    );
+  }
+
+  /// Deletes a custom feat by slug.
+  Future<void> deleteCustomFeat(String slug) async {
+    final feats = await loadCustomFeats();
+    feats.removeWhere((f) => f.id.slug == slug);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewFeats,
+      feats.map((f) => json.encode(f.toMap())).toList(),
+    );
+  }
+
+  /// Loads all custom backgrounds from persistent storage.
+  Future<List<Background>> loadCustomBackgrounds() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawList = prefs.getStringList(_keyHomebrewBackgrounds) ?? [];
+      return rawList
+          .map((jsonStr) => Background.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
+          .toList();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew backgrounds');
+      return [];
+    }
+  }
+
+  /// Saves a custom background to persistent storage.
+  Future<void> saveCustomBackground(Background background) async {
+    final backgrounds = await loadCustomBackgrounds();
+    final idx = backgrounds.indexWhere((b) => b.id.slug == background.id.slug);
+    if (idx != -1) {
+      backgrounds[idx] = background;
+    } else {
+      backgrounds.add(background);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewBackgrounds,
+      backgrounds.map((b) => json.encode(b.toMap())).toList(),
+    );
+  }
+
+  /// Deletes a custom background by slug.
+  Future<void> deleteCustomBackground(String slug) async {
+    final backgrounds = await loadCustomBackgrounds();
+    backgrounds.removeWhere((b) => b.id.slug == slug);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewBackgrounds,
+      backgrounds.map((b) => json.encode(b.toMap())).toList(),
+    );
+  }
+
+  /// Loads all custom generic entries (tables, rules, etc.) from persistent storage.
+  Future<List<HomebrewCompendiumEntry>> loadCustomOtherEntries() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rawList = prefs.getStringList(_keyHomebrewOther) ?? [];
+      return rawList
+          .map((jsonStr) => HomebrewCompendiumEntry.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
+          .toList();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew custom entries');
+      return [];
+    }
+  }
+
+  /// Saves a generic compendium entry to persistent storage.
+  Future<void> saveCustomOtherEntry(HomebrewCompendiumEntry entry) async {
+    final entries = await loadCustomOtherEntries();
+    final idx = entries.indexWhere((e) => e.id.slug == entry.id.slug);
+    if (idx != -1) {
+      entries[idx] = entry;
+    } else {
+      entries.add(entry);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewOther,
+      entries.map((e) => json.encode(e.toMap())).toList(),
+    );
+  }
+
+  /// Deletes a generic compendium entry by slug.
+  Future<void> deleteCustomOtherEntry(String slug) async {
+    final entries = await loadCustomOtherEntries();
+    entries.removeWhere((e) => e.id.slug == slug);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewOther,
+      entries.map((e) => json.encode(e.toMap())).toList(),
+    );
+  }
+
   /// Hydrates a LayeredPriorityRepository with saved Homebrew and Campaign Overrides.
   Future<void> hydrateRepository(LayeredPriorityRepository repository) async {
     // 1. Homebrew Layer
@@ -182,6 +441,36 @@ class HomebrewPersistenceService {
     for (final i in items) {
       homebrewLayer.registerEntity(i);
     }
+
+    final classes = await loadCustomClasses();
+    for (final c in classes) {
+      homebrewLayer.registerEntity(c);
+    }
+
+    final subclasses = await loadCustomSubclasses();
+    for (final sub in subclasses) {
+      homebrewLayer.registerEntity(sub);
+    }
+
+    final races = await loadCustomRaces();
+    for (final r in races) {
+      homebrewLayer.registerEntity(r);
+    }
+
+    final feats = await loadCustomFeats();
+    for (final f in feats) {
+      homebrewLayer.registerEntity(f);
+    }
+
+    final backgrounds = await loadCustomBackgrounds();
+    for (final b in backgrounds) {
+      homebrewLayer.registerEntity(b);
+    }
+
+    final others = await loadCustomOtherEntries();
+    for (final o in others) {
+      homebrewLayer.registerEntity(o);
+    }
   }
 
   /// Clears all saved homebrew and override data.
@@ -190,6 +479,12 @@ class HomebrewPersistenceService {
     await prefs.remove(_keyHomebrewSpells);
     await prefs.remove(_keyHomebrewMonsters);
     await prefs.remove(_keyHomebrewItems);
+    await prefs.remove(_keyHomebrewClasses);
+    await prefs.remove(_keyHomebrewSubclasses);
+    await prefs.remove(_keyHomebrewRaces);
+    await prefs.remove(_keyHomebrewFeats);
+    await prefs.remove(_keyHomebrewBackgrounds);
+    await prefs.remove(_keyHomebrewOther);
     await prefs.remove(_keyCampaignOverrides);
     MonsterCodexLibrary.clearHomebrewMonsters();
   }
