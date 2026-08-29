@@ -15,6 +15,7 @@ import '../widgets/app_logo.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
 import '../widgets/party/campaign_dialogs.dart';
 import '../widgets/room_banner_widget.dart';
+import 'character_builder_screen.dart';
 import 'dice_roller_screen.dart';
 import 'dm_reference_screen.dart';
 import 'dpr_calculator_screen.dart';
@@ -569,13 +570,22 @@ class _LandingScreenState extends State<LandingScreen> {
           _buildQuickGlyphBadge(
             context,
             label: 'Spellbook',
-            glyph: DndGlyph.spell(
-              school: SpellSchool.evocation,
-              level: 3,
-              damageAccent: DamageAccent.fire,
-              glyphColor: Colors.purpleAccent,
-              size: 24,
-              isDarkMode: isDark,
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.spell(
+                    school: SpellSchool.evocation,
+                    level: 3,
+                    damageAccent: DamageAccent.fire,
+                    glyphColor: Colors.purpleAccent,
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -586,15 +596,26 @@ class _LandingScreenState extends State<LandingScreen> {
           _buildQuickGlyphBadge(
             context,
             label: 'Bestiary Codex',
-            glyph: DndGlyph.monster(
-              creatureType: CreatureType.dragon,
-              crTier: 3,
-              glyphColor: Colors.greenAccent,
-              actionRings: const [
-                ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.fire),
-              ],
-              size: 24,
-              isDarkMode: isDark,
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.monster(
+                    creatureType: CreatureType.dragon,
+                    crTier: 3,
+                    glyphColor: Colors.greenAccent,
+                    actionRings: const [
+                      ActionTraitRing(
+                          ringType: ActionRingType.recharge,
+                          damageType: DamageAccent.fire),
+                    ],
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -605,13 +626,22 @@ class _LandingScreenState extends State<LandingScreen> {
           _buildQuickGlyphBadge(
             context,
             label: 'Magic Items',
-            glyph: DndGlyph.item(
-              category: ItemCategory.wondrousItem,
-              rarity: ItemRarity.veryRare,
-              requiresAttunement: true,
-              glyphColor: Colors.tealAccent,
-              size: 24,
-              isDarkMode: isDark,
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.item(
+                    category: ItemCategory.wondrousItem,
+                    rarity: ItemRarity.veryRare,
+                    requiresAttunement: true,
+                    glyphColor: Colors.tealAccent,
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -621,14 +651,47 @@ class _LandingScreenState extends State<LandingScreen> {
           const SizedBox(width: 8),
           _buildQuickGlyphBadge(
             context,
+            label: 'Character Studio',
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.classFeature(
+                    classType: DndClassType.fighter,
+                    glyphColor: Colors.amberAccent,
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CharacterBuilderScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
             label: 'Combat DPR',
-            glyph: DndGlyph.item(
-              category: ItemCategory.weapon,
-              rarity: ItemRarity.rare,
-              damageAccent: DamageAccent.force,
-              glyphColor: Colors.cyanAccent,
-              size: 24,
-              isDarkMode: isDark,
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.item(
+                    category: ItemCategory.weapon,
+                    rarity: ItemRarity.rare,
+                    damageAccent: DamageAccent.force,
+                    glyphColor: Colors.cyanAccent,
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -639,12 +702,20 @@ class _LandingScreenState extends State<LandingScreen> {
           _buildQuickGlyphBadge(
             context,
             label: 'Dice & Party',
-            glyph: DndGlyph.spell(
-              school: SpellSchool.divination,
-              level: 0,
-              glyphColor: Colors.cyanAccent,
-              size: 24,
-              isDarkMode: isDark,
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.genericUi(
+                    uiType: GenericUiGlyphType.d20,
+                    glyphColor: Colors.cyanAccent,
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -655,12 +726,21 @@ class _LandingScreenState extends State<LandingScreen> {
           _buildQuickGlyphBadge(
             context,
             label: 'Glyph Studio',
-            glyph: DndGlyph.spell(
-              school: SpellSchool.divination,
-              level: 9,
-              glyphColor: const Color(0xFFC084FC),
-              size: 24,
-              isDarkMode: isDark,
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.spell(
+                    school: SpellSchool.divination,
+                    level: 9,
+                    glyphColor: const Color(0xFFC084FC),
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
             ),
             onTap: () => Navigator.push(
               context,
@@ -812,12 +892,20 @@ class _LandingScreenState extends State<LandingScreen> {
     if (glyphWidget == null) {
       switch (item.id) {
         case 'dice_roller':
-          glyphWidget = DndGlyph.spell(
-            school: SpellSchool.divination,
-            level: 0,
+          glyphWidget = DndGlyph.genericUi(
+            uiType: GenericUiGlyphType.d20,
+            glyphColor: item.accentColor,
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'character_builder':
+          glyphWidget = DndGlyph.classFeature(
+            classType: DndClassType.fighter,
             glyphColor: item.accentColor,
             actionRings: const [
-              ActionTraitRing(ringType: ActionRingType.legendary, label: 'Multiplayer Dice Rooms'),
+              ActionTraitRing(ringType: ActionRingType.hitDie, label: 'd10 Hit Die'),
+              ActionTraitRing(ringType: ActionRingType.resource, label: 'Second Wind'),
             ],
             size: 42,
             isDarkMode: isDark,
@@ -832,6 +920,25 @@ class _LandingScreenState extends State<LandingScreen> {
             actionRings: const [
               ActionTraitRing(ringType: ActionRingType.recharge, damageType: DamageAccent.force, label: 'DPS & Graph'),
             ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'party_room':
+          glyphWidget = DndGlyph.species(
+            speciesType: SpeciesType.human,
+            glyphColor: item.accentColor,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.passive, label: 'Party Sync'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
+          break;
+        case 'homebrew_studio':
+          glyphWidget = DndGlyph.genericUi(
+            uiType: GenericUiGlyphType.d100,
+            glyphColor: item.accentColor,
             size: 42,
             isDarkMode: isDark,
           );
@@ -1023,7 +1130,7 @@ class _LandingScreenState extends State<LandingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (glyphWidget != null)
-                glyphWidget
+                RepaintBoundary(child: glyphWidget)
               else
                 Container(
                   padding: const EdgeInsets.all(10),

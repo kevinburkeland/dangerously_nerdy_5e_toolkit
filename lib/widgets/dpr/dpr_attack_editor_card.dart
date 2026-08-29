@@ -3,6 +3,8 @@ import '../../models/dm_screen_data.dart';
 import '../../models/dpr/dpr_models.dart';
 import '../../services/haptic_service.dart';
 import '../common/numeric_stepper.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Interactive card component for configuring a single weapon attack or cantrip action.
 class DprAttackEditorCard extends StatelessWidget {
@@ -30,6 +32,16 @@ class DprAttackEditorCard extends StatelessWidget {
     required this.onEquipPreset,
     this.onDelete,
   });
+
+  static DamageAccent? _getDamageAccent(String dt) {
+    final d = dt.toLowerCase();
+    for (final acc in DamageAccent.values) {
+      if (acc.name.toLowerCase() == d || acc.displayName.toLowerCase() == d) {
+        return acc;
+      }
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +92,23 @@ class DprAttackEditorCard extends StatelessWidget {
           // Equip Preset Weapon / Cantrip / Magic Item Row
           Row(
             children: [
+              RepaintBoundary(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: DndGlyph.item(
+                      category: ItemCategory.weapon,
+                      rarity: ItemRarity.rare,
+                      damageAccent: _getDamageAccent(attack.damageType),
+                      size: 28,
+                      isDarkMode: isDark,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.auto_fix_high, size: 16),

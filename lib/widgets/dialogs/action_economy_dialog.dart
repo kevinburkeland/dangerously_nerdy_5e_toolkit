@@ -3,6 +3,8 @@ import '../../models/dm_screen_data.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_theme.dart';
 import '../dm_reference/rules_edition_toggle.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 class ActionEconomyDialog extends StatefulWidget {
   final DmRulesEdition? initialEdition;
@@ -127,11 +129,76 @@ class _ActionEconomyDialogState extends State<ActionEconomyDialog> with SingleTi
               unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              tabs: const [
-                Tab(text: '1 Action (Standard)'),
-                Tab(text: 'Bonus Action'),
-                Tab(text: 'Reaction'),
-                Tab(text: 'Cover Rules'),
+              tabs: [
+                Tab(
+                  icon: RepaintBoundary(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: DndGlyph.genericUi(
+                          uiType: GenericUiGlyphType.actionEconomyAction,
+                          size: 18,
+                          isDarkMode: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  text: '1 Action (Standard)',
+                ),
+                Tab(
+                  icon: RepaintBoundary(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: DndGlyph.genericUi(
+                          uiType: GenericUiGlyphType.actionEconomyBonus,
+                          size: 18,
+                          isDarkMode: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  text: 'Bonus Action',
+                ),
+                Tab(
+                  icon: RepaintBoundary(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: DndGlyph.genericUi(
+                          uiType: GenericUiGlyphType.actionEconomyReaction,
+                          size: 18,
+                          isDarkMode: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  text: 'Reaction',
+                ),
+                Tab(
+                  icon: RepaintBoundary(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: DndGlyph.item(
+                          category: ItemCategory.armor,
+                          rarity: ItemRarity.common,
+                          size: 18,
+                          isDarkMode: isDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                  text: 'Cover Rules',
+                ),
               ],
             ),
             Divider(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),

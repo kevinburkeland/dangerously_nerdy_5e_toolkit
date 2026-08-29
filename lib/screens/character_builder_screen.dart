@@ -22,6 +22,8 @@ import '../services/rules/dnd_5e_rules_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/level_up_pipeline.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../widgets/glyphs/dnd_glyph.dart';
+import '../widgets/glyphs/glyph_tokens.dart';
 import '../widgets/room_banner_widget.dart';
 
 /// Interactive Character Generator, Live State Sheet, and Multiclassing Studio
@@ -546,6 +548,22 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
+  static DndClassType? _findClassType(String slug) {
+    final s = slug.toLowerCase();
+    for (final c in DndClassType.values) {
+      if (c.name.toLowerCase() == s || c.displayName.toLowerCase() == s) return c;
+    }
+    return null;
+  }
+
+  static SpeciesType? _findSpeciesType(String slug) {
+    final s = slug.toLowerCase();
+    for (final sp in SpeciesType.values) {
+      if (sp.name.toLowerCase() == s || sp.displayName.toLowerCase() == s) return sp;
+    }
+    return null;
+  }
+
   // --------------------------------------------------------------------------
   // TAB 1: LIVE SHEET & REACTIVE STATS
   // --------------------------------------------------------------------------
@@ -581,6 +599,23 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    if (curClass != null && _findClassType(curClass.classRef.slug) != null) ...[
+                      RepaintBoundary(
+                        child: SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: DndGlyph.classFeature(
+                              classType: _findClassType(curClass.classRef.slug)!,
+                              size: 48,
+                              isDarkMode: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1449,6 +1484,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const SizedBox(height: 12),
         ...SrdSpeciesLibrary.allSpecies.map((sp) {
           final isSelected = _selectedSpecies == sp.id.slug;
+          final spType = _findSpeciesType(sp.id.slug) ?? SpeciesType.human;
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
@@ -1462,9 +1498,29 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             child: Material(
               color: Colors.transparent,
               child: ListTile(
-                leading: Icon(
-                  isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                  color: isSelected ? Colors.cyanAccent : Colors.white54,
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                      color: isSelected ? Colors.cyanAccent : Colors.white54,
+                    ),
+                    const SizedBox(width: 8),
+                    RepaintBoundary(
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: DndGlyph.species(
+                            speciesType: spType,
+                            size: 32,
+                            isDarkMode: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 title: Text(sp.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text('Speed: ${sp.speed} • Size: ${sp.size}\n${sp.abilityScoreSummary ?? ""}',
@@ -1482,6 +1538,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep2Class(ThemeData theme, CharacterClass curClass, List<SkillType> allowedSkills, int allowedCount) {
+    final curClassType = _findClassType(_selectedClass) ?? DndClassType.fighter;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1491,6 +1548,53 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const Text('Select your core adventurer class and starting skill proficiencies.',
             style: TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.cyan.shade900.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              RepaintBoundary(
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: DndGlyph.classFeature(
+                      classType: curClassType,
+                      size: 48,
+                      isDarkMode: true,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      curClassType.displayName.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.cyanAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    Text(
+                      'd${curClassType.hitDieSides} Hit Die • Resource: ${curClassType.primaryResource}',
+                      style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         DropdownButtonFormField<String>(
           initialValue: _selectedClass,
           decoration: const InputDecoration(labelText: 'Starting Class', border: OutlineInputBorder()),
@@ -1735,9 +1839,30 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             child: Material(
               color: Colors.transparent,
               child: ListTile(
-                leading: Icon(
-                  isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                  color: isSelected ? Colors.purpleAccent : Colors.white54,
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                      color: isSelected ? Colors.purpleAccent : Colors.white54,
+                    ),
+                    const SizedBox(width: 8),
+                    RepaintBoundary(
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: DndGlyph.feat(
+                            category: FeatCategory.origin,
+                            featId: feat.id.slug,
+                            size: 32,
+                            isDarkMode: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(feat.descriptionMarkdown, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),

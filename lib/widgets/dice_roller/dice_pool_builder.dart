@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/dice_roll.dart';
 import '../../theme/app_theme.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 class DicePoolBuilder extends StatelessWidget {
   final List<DiceEntry> dicePool;
@@ -27,6 +29,19 @@ class DicePoolBuilder extends StatelessWidget {
     required this.onUpdateModifier,
     required this.onUpdateRollMode,
   });
+
+  static GenericUiGlyphType? getDieGlyphType(DieType die) {
+    return switch (die) {
+      DieType.d4 => GenericUiGlyphType.d4,
+      DieType.d6 => GenericUiGlyphType.d6,
+      DieType.d8 => GenericUiGlyphType.d8,
+      DieType.d10 => GenericUiGlyphType.d10,
+      DieType.d12 => GenericUiGlyphType.d12,
+      DieType.d20 => GenericUiGlyphType.d20,
+      DieType.d100 => GenericUiGlyphType.d100,
+      _ => null,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,11 +92,31 @@ class DicePoolBuilder extends StatelessWidget {
           children: [
             ...DieType.values.where((d) => d != DieType.custom).map((die) {
               final isInPool = dicePool.any((e) => e.dieType == die);
+              final glyphType = getDieGlyphType(die);
               return Semantics(
                 button: true,
                 selected: isInPool,
                 label: 'Add ${die.label} to dice pool',
                 child: ChoiceChip(
+                  avatar: glyphType != null
+                      ? RepaintBoundary(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: DndGlyph.genericUi(
+                                uiType: glyphType,
+                                size: 18,
+                                isDarkMode: isDark,
+                                glyphColor: isInPool
+                                    ? theme.colorScheme.onPrimary
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        )
+                      : null,
                   label: Text(
                     die.label.toUpperCase(),
                     style: TextStyle(
@@ -339,14 +374,47 @@ class DicePoolBuilder extends StatelessWidget {
                             fontSize: 15,
                             fontWeight: FontWeight.w600)),
                     SegmentedButton<RollMode>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
-                            value: RollMode.disadvantage,
-                            label: Text('Dis')),
+                          value: RollMode.disadvantage,
+                          label: const Text('Dis'),
+                          icon: RepaintBoundary(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: DndGlyph.genericUi(
+                                  uiType: GenericUiGlyphType.disadvantage,
+                                  size: 18,
+                                  isDarkMode: isDark,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const ButtonSegment(
+                          value: RollMode.normal,
+                          label: Text('Norm'),
+                        ),
                         ButtonSegment(
-                            value: RollMode.normal, label: Text('Norm')),
-                        ButtonSegment(
-                            value: RollMode.advantage, label: Text('Adv')),
+                          value: RollMode.advantage,
+                          label: const Text('Adv'),
+                          icon: RepaintBoundary(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: DndGlyph.genericUi(
+                                  uiType: GenericUiGlyphType.advantage,
+                                  size: 18,
+                                  isDarkMode: isDark,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                       selected: {rollMode},
                       onSelectionChanged: (newSelection) {

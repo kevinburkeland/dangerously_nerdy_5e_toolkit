@@ -3,6 +3,8 @@ import '../../models/dm_screen_data.dart';
 import '../../providers/settings_provider.dart';
 import '../../theme/app_theme.dart';
 import '../dm_reference/rules_edition_toggle.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 class ConditionReferenceDialog extends StatefulWidget {
   final DmRulesEdition? initialEdition;
@@ -24,6 +26,44 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
   DmRulesEdition? _localEditionOverride;
   String _searchQuery = '';
   String _selectedCategory = 'All';
+
+  Widget _buildConditionIcon(DmReferenceItem item, Color itemColor, bool isDark) {
+    final title = item.title.toLowerCase();
+    GenericUiGlyphType? uiType;
+    if (title.contains('concentration')) {
+      uiType = GenericUiGlyphType.concentrating;
+    } else if (title.contains('unconscious') ||
+        title.contains('incapacitated') ||
+        title.contains('death')) {
+      uiType = GenericUiGlyphType.deathSave;
+    } else if (title.contains('invisible')) {
+      uiType = GenericUiGlyphType.advantage;
+    } else if (title.contains('blind') ||
+        title.contains('prone') ||
+        title.contains('disadvantage')) {
+      uiType = GenericUiGlyphType.disadvantage;
+    }
+
+    if (uiType != null) {
+      return RepaintBoundary(
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: DndGlyph.genericUi(
+              uiType: uiType,
+              size: 22,
+              isDarkMode: isDark,
+              glyphColor: itemColor,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Icon(item.icon, color: itemColor, size: 20);
+  }
 
   @override
   void initState() {
@@ -101,7 +141,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
               child: TextField(
                 style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Search conditions (e.g. Advantage, Saving throw, Crit, Speed 0)...',
+                  hintText: 'Search conditions (e.g., Blinded, Prone, Invisible, Exhaustion)...',
                   hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6), fontSize: 12),
                   prefixIcon: Icon(Icons.search, color: primary, size: 18),
                   filled: true,
@@ -118,7 +158,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
 
             // Category Filter Chips
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -184,7 +224,7 @@ class _ConditionReferenceDialogState extends State<ConditionReferenceDialog> {
                                         color: itemColor.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: Icon(item.icon, color: itemColor, size: 20),
+                                      child: _buildConditionIcon(item, itemColor, isDark),
                                     ),
                                     const SizedBox(width: 10),
                                     Expanded(
