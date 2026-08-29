@@ -221,7 +221,7 @@ class CompendiumJsonIngestionPipeline {
         if (trait is Map) {
           final tName = trait['name'] ?? '';
           final parsedEntries = _transformer.transformEntries(trait['entries']);
-          actionsBuffer.writeln('### $tName\n${parsedEntries.markdown}\n');
+          actionsBuffer.writeln('**$tName**: ${parsedEntries.markdown}\n');
         }
       }
     }

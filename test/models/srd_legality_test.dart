@@ -34,7 +34,7 @@ void main() {
     ];
 
     test('SRD summons library contains no WotC Product Identity terms in names or descriptions', () {
-      const allPresets = SrdSummonsLibrary.allPresets;
+      final allPresets = SrdSummonsLibrary.allPresets;
       expect(allPresets, isNotEmpty);
 
       for (final preset in allPresets) {

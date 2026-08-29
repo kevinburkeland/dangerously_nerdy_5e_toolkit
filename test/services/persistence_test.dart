@@ -147,7 +147,7 @@ void main() {
       );
 
       final backupJson = await AppBackupService().exportFullBackupJson(initialSettings);
-      expect(backupJson, contains('"schemaVersion": 2'));
+      expect(backupJson, contains('"schemaVersion": ${AppBackupService.currentSchemaVersion}'));
       expect(backupJson, contains('"arcaneSapphire"'));
 
       final restoreResult = await AppBackupService().importFullBackupJson(backupJson);

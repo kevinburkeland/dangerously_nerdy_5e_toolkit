@@ -586,38 +586,105 @@ extension MonsterHomebrewExt on Monster {
     final parsedActions = <CreatureAction>[];
     final parsedTraits = <CreatureTrait>[];
 
-    final blocks = actionsMarkdown.split(RegExp(r'\n{2,}|\n(?=[-*#]|\*\*)'));
+    final blocks = actionsMarkdown.split(RegExp(r'\n{2,}|\n(?=#{1,6}\s+)|(?<=\n)(?=[-*•]\s+|\*\*)'));
     for (final rawBlock in blocks) {
       final block = rawBlock.trim();
       if (block.isEmpty) continue;
 
-      final titleMatch = RegExp(r'^(?:[-*#\s]*\**)([^:*#\n]+)(?:\**)?:\s*([\s\S]*)$').firstMatch(block);
-      if (titleMatch != null) {
-        final title = titleMatch.group(1)!.trim().replaceAll('*', '');
-        final desc = titleMatch.group(2)!.trim();
+      // Filter out standalone section headers like "### Actions", "### Traits", "### Reactions"
+      final isPureSectionHeader = RegExp(
+        r'^#{1,6}\s*(actions?|traits?|reactions?|bonus\s*actions?|legendary\s*actions?)\s*$',
+        caseSensitive: false,
+      ).hasMatch(block);
+      if (isPureSectionHeader) continue;
 
-        final lower = '$title $desc'.toLowerCase();
-        if (lower.contains('attack') ||
-            lower.contains('to hit') ||
-            lower.contains('reach') ||
-            lower.contains('range') ||
-            lower.contains('damage')) {
+      String? title;
+      String? desc;
+
+      // 1. Markdown Heading format: "### Title\nDesc" or "### Title: Desc" or "### Title"
+      final headingMatch = RegExp(r'^#{1,6}\s+([^\n:]+?)(?:\s*:\s*|\s*\n\s*)([\s\S]*)$').firstMatch(block);
+      if (headingMatch != null) {
+        title = headingMatch.group(1)!.trim();
+        desc = headingMatch.group(2)!.trim();
+      }
+
+      // 2. Bold/Italic/Bullet Prefix with colon or period: "**Title**: Desc" or "**Title.** Desc" or "*Title.* Desc" or "- **Title**: Desc"
+      if (title == null) {
+        final prefixMatch = RegExp(r'^(?:[-*•\s]*)[\*_]{1,3}([^\*_:.\n]+?)[\*_]{1,3}[:.]\s*([\s\S]*)$').firstMatch(block);
+        if (prefixMatch != null) {
+          title = prefixMatch.group(1)!.trim();
+          desc = prefixMatch.group(2)!.trim();
+        }
+      }
+
+      // 3. Plain text with colon: "Title: Desc" or "- Title: Desc"
+      if (title == null) {
+        final colonMatch = RegExp(r'^(?:[-*•\s]*)([^:\n]+?):\s*([\s\S]*)$').firstMatch(block);
+        if (colonMatch != null) {
+          title = colonMatch.group(1)!.trim();
+          desc = colonMatch.group(2)!.trim();
+        }
+      }
+
+      // 4. Fallback: single heading line without body or multi-line block where first line is title
+      if (title == null) {
+        if (block.startsWith('#')) {
+          final cleanTitle = block.replaceAll(RegExp(r'^#{1,6}\s*'), '').trim();
+          if (cleanTitle.isNotEmpty) {
+            title = cleanTitle;
+            desc = '';
+          }
+        } else if (block.contains('\n')) {
+          final firstLine = block.substring(0, block.indexOf('\n')).trim();
+          if (firstLine.isNotEmpty && firstLine.length < 50) {
+            title = firstLine.replaceAll(RegExp(r'^[#*\-•\s]+|[*_:]+$'), '').trim();
+            desc = block.substring(block.indexOf('\n')).trim();
+          }
+        }
+      }
+
+      if (title != null && title.isNotEmpty) {
+        title = title.replaceAll(RegExp(r'^[#*\-•\s]+|[*_:]+$'), '').trim();
+        desc = (desc ?? '').trim();
+
+        // Skip if title is just section header without content
+        if (RegExp(r'^(actions?|traits?|reactions?|bonus\s*actions?|legendary\s*actions?)$', caseSensitive: false).hasMatch(title) && desc.isEmpty) {
+          continue;
+        }
+
+        final isAction = title.toLowerCase().contains('multiattack') ||
+            desc.toLowerCase().contains('weapon attack') ||
+            desc.toLowerCase().contains('spell attack') ||
+            desc.toLowerCase().contains('to hit') ||
+            desc.toLowerCase().contains('hit:');
+
+        if (isAction) {
           final atkBonusMatch = RegExp(r'([+-]\d+)\s+to\s+hit').firstMatch(desc);
-          final reachMatch = RegExp(r'(?:reach|range)\s+([^,.\n]+)').firstMatch(desc);
+          final reachMatch = RegExp(r'(?:reach|range)\s+([^,\n]+)').firstMatch(desc);
+          final reachRaw = reachMatch?.group(1)?.trim();
+          final reachClean = reachRaw != null
+              ? (reachRaw.endsWith('ft') ? '$reachRaw.' : reachRaw)
+              : null;
           final hitDmgMatch = RegExp(r'(?:Hit:?\s*)?(\d+\s*\([^)]+\)[^.\n]*)').firstMatch(desc);
 
           parsedActions.add(CreatureAction(
             name: title,
-            description: desc,
-            attackBonus: atkBonusMatch != null ? int.tryParse(atkBonusMatch.group(1)!) : null,
-            reach: reachMatch != null ? reachMatch.group(1)!.trim() : null,
-            hitDamage: hitDmgMatch != null ? hitDmgMatch.group(1)!.trim() : null,
+            description: desc.isNotEmpty ? desc : title,
+            attackBonus: int.tryParse(atkBonusMatch?.group(1) ?? ''),
+            reach: reachClean,
+            hitDamage: hitDmgMatch?.group(1)?.trim(),
           ));
         } else {
-          parsedTraits.add(CreatureTrait(name: title, description: desc));
+          parsedTraits.add(CreatureTrait(
+            name: title,
+            description: desc.isNotEmpty ? desc : title,
+          ));
         }
       } else {
-        parsedTraits.add(CreatureTrait(name: 'Feature', description: block));
+        final clean = block.replaceAll(RegExp(r'^[#*\-•\s]+'), '').trim();
+        if (clean.isNotEmpty) {
+          parsedTraits.add(CreatureTrait(name: 'Feature', description: clean));
+        }
       }
     }
 

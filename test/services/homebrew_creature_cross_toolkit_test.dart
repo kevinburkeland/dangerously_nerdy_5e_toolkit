@@ -5,10 +5,8 @@ import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/spells/beast_presets.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/srd_summons_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/monster_codex_screen.dart';
@@ -89,6 +87,56 @@ void main() {
       expect(monsterItem.challengeRating, equals(1.0));
     });
 
+    test('parses ### markdown headers without colon into named traits and actions', () {
+      final headingMonster = Monster(
+        id: const EntityId(slug: 'shadow-stalker', ruleset: RulesetVersion.homebrew),
+        name: 'Shadow Stalker',
+        size: 'Medium',
+        monsterType: 'Monstrosity',
+        alignment: 'Neutral Evil',
+        armorClass: 14,
+        hitPoints: 32,
+        hitDieFormula: '5d8+10',
+        challengeRating: '2',
+        actionsMarkdown: '''
+### Traits
+### Pack Tactics
+The stalker has advantage on an attack roll against a creature if at least one ally is within 5 ft.
+
+### Keen Smell
+The stalker has advantage on Wisdom (Perception) checks that rely on smell.
+
+### Actions
+### Bite
+Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d8 + 3) piercing damage.
+''',
+      );
+
+      final statBlock = headingMonster.toMinionStatBlock();
+
+      // Traits should be parsed with their exact names (NOT 'Feature')
+      expect(statBlock.traits.length, equals(2));
+      expect(statBlock.traits[0].name, equals('Pack Tactics'));
+      expect(statBlock.traits[0].description, contains('advantage on an attack roll'));
+      expect(statBlock.traits[1].name, equals('Keen Smell'));
+      expect(statBlock.traits[1].description, contains('Wisdom (Perception) checks'));
+
+      // Actions should be parsed cleanly without section headers
+      expect(statBlock.actions.length, equals(1));
+      expect(statBlock.actions[0].name, equals('Bite'));
+      expect(statBlock.actions[0].attackBonus, equals(5));
+      expect(statBlock.actions[0].reach, equals('5 ft.'));
+      expect(statBlock.actions[0].hitDamage, contains('8 (1d8 + 3) piercing damage'));
+
+      // Primary attack math
+      expect(statBlock.attackBonus, equals(5));
+      expect(statBlock.damageDiceCount, equals(1));
+      expect(statBlock.damageDiceSides, equals(8));
+      expect(statBlock.damageBonus, equals(3));
+      expect(statBlock.damageType, equals('Piercing'));
+      expect(statBlock.hasPackTactics, isTrue);
+    });
+
     test('HomebrewPersistenceService syncs to MonsterCodexLibrary dynamically', () async {
       final service = HomebrewPersistenceService();
       await service.saveCustomMonster(customBeast);
@@ -110,7 +158,7 @@ void main() {
       await service.saveCustomMonster(customBeast);
       await service.saveCustomMonster(customDragon);
 
-      final animalsPreset = BeastSummons.conjureAnimalsPreset;
+      const animalsPreset = BeastSummons.conjureAnimalsPreset;
       final effectiveCreatures = animalsPreset.effectiveStatBlocks;
 
       // Dire Timber Wolf is a Beast with CR 1, so it MUST appear in Conjure Animals!
@@ -199,6 +247,15 @@ void main() {
 
       expect(find.widgetWithText(ListTile, 'Astral Drake'), findsOneWidget);
       expect(find.text('HOMEBREW'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ListTile, 'Astral Drake'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('ADD TO TEAM CRIMSON'));
+      await tester.pumpAndSettle();
+
+      expect(selectedMonster?.id, equals('astral-drake'));
+      expect(selectedCount, equals(1));
     });
   });
 }

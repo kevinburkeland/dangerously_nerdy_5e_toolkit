@@ -101,6 +101,8 @@ class BackupRestoreResult {
 }
 
 class AppBackupService {
+  static const int currentSchemaVersion = 3;
+
   static final AppBackupService _instance = AppBackupService._internal();
   factory AppBackupService() => _instance;
   AppBackupService._internal();
@@ -114,7 +116,7 @@ class AppBackupService {
     final customItems = await HomebrewPersistenceService().loadCustomItems();
 
     final payload = AppBackupPayload(
-      schemaVersion: 3,
+      schemaVersion: currentSchemaVersion,
       exportedAt: DateTime.now(),
       settings: {
         'themeMode': currentSettings.themeMode.name,
