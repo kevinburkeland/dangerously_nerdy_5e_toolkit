@@ -360,7 +360,7 @@ class GlyphGeometry {
     final center = Offset(w / 2.0, h / 2.0);
     final scale = s / baseGrid;
     final pulse =
-        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.0)) : 0.0;
 
     // Tier 2 (Adept / Levels 3-5 / CR 5-10): instrument-panel brace, not a cluster. The visual reads as a refined, advanced glyph.
     if (tierLevel == 2) {

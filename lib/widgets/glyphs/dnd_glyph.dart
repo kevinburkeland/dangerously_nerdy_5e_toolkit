@@ -770,7 +770,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
     final center = Offset(size.width / 2.0, size.height / 2.0);
     final primary = themeData.primary;
     final energyWave = animateMotifPulse
-        ? (0.5 + 0.5 * sin(ringRotationProgress.value * 2.0 * pi * 1.5))
+        ? (0.5 + 0.5 * sin(ringRotationProgress.value * 2.0 * pi * 2.0))
         : 0.0;
     final int effectiveTier = school != null
         ? (tierLevel <= 2 ? 1 : (tierLevel <= 5 ? 2 : (tierLevel <= 8 ? 3 : 4)))
@@ -950,7 +950,7 @@ class _DndHolographicWireframePainter extends CustomPainter {
           .transform(entryBurstProgress.value.clamp(0.0, 1.0));
       final burstIntensity = (1.0 - burstT).clamp(0.0, 1.0);
       final scanWave =
-          0.5 + 0.5 * sin(t * 2.0 * pi * (1.0 + tierIntensity * 0.5));
+          0.5 + 0.5 * sin(t * 2.0 * pi * 2.0);
 
       // Aggressive lock-in burst on hover enter/activate.
       final burstRing = Paint()
@@ -975,8 +975,8 @@ class _DndHolographicWireframePainter extends CustomPainter {
       canvas.drawCircle(
           center, scale * (1.6 + burstIntensity * 1.6), coreFlash);
 
-      // Tactical scanner bar in steady hover state.
-      final scanAngle = t * 2.0 * pi * 0.60;
+      // Tactical scanner bar in steady hover state (1 exact 360 degree rotation per loop).
+      final scanAngle = t * 2.0 * pi;
       final scanLength = scale * 20.0;
       final scanThickness =
           scale * (1.2 + scanWave * 0.45 + burstIntensity * 0.55);
