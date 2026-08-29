@@ -325,6 +325,268 @@ enum GlyphFrameShape {
   const GlyphFrameShape(this.displayName);
 }
 
+/// Category classification for all renderable glyph entities.
+enum GlyphCategory {
+  spell('Spell', Icons.memory),
+  creature('Minion & Creature', Icons.hub),
+  item('Magic Item & Gear', Icons.shield_outlined),
+  classFeature('Class Feature', Icons.shield),
+  species('Species & Heritage', Icons.groups_outlined),
+  feat('Feat & Epic Boon', Icons.stars_outlined),
+  genericUi('Generic UI & Dice', Icons.widgets_outlined);
+
+  final String displayName;
+  final IconData icon;
+  const GlyphCategory(this.displayName, this.icon);
+}
+
+/// Abstract polymorphic interface implemented by any entity renderable as a techno-rune glyph.
+abstract class GlyphRenderable {
+  String get glyphId;
+  String get displayName;
+  GlyphCategory get glyphCategory;
+  List<ActionTraitRing> get actionRings;
+  DamageAccent? get primaryAccent;
+  IconData? get fallbackIcon;
+  Map<String, dynamic>? get metadata;
+}
+
+/// 13 Core D&D 5e Character Classes + Artificer.
+enum DndClassType {
+  barbarian('Barbarian', 12, Color(0xFFEF4444), GlyphFrameShape.heavySquare, 'Rage'),
+  bard('Bard', 8, Color(0xFFEC4899), GlyphFrameShape.filigreeOval, 'Bardic Inspiration'),
+  cleric('Cleric', 8, Color(0xFFF59E0B), GlyphFrameShape.crest, 'Channel Divinity'),
+  druid('Druid', 8, Color(0xFF10B981), GlyphFrameShape.teardrop, 'Wild Shape'),
+  fighter('Fighter', 10, Color(0xFFDC2626), GlyphFrameShape.heaterShield, 'Action Surge'),
+  monk('Monk', 8, Color(0xFF06B6D4), GlyphFrameShape.circle, 'Ki / Focus'),
+  paladin('Paladin', 10, Color(0xFFFBBF24), GlyphFrameShape.sharpDiamondShield, 'Lay on Hands'),
+  ranger('Ranger', 10, Color(0xFF16A34A), GlyphFrameShape.softShield, 'Spell Slots / Hunter'),
+  rogue('Rogue', 8, Color(0xFF64748B), GlyphFrameShape.softRhombus, 'Sneak Attack'),
+  sorcerer('Sorcerer', 6, Color(0xFFF97316), GlyphFrameShape.diamond, 'Sorcery Points'),
+  warlock('Warlock', 8, Color(0xFFA855F7), GlyphFrameShape.octagon, 'Pact Magic Slots'),
+  wizard('Wizard', 6, Color(0xFF3B82F6), GlyphFrameShape.hexagon, 'Arcane Recovery'),
+  artificer('Artificer', 8, Color(0xFFD97706), GlyphFrameShape.heavyHex, 'Infusions');
+
+  final String displayName;
+  final int hitDieSides;
+  final Color primaryColor;
+  final GlyphFrameShape frameShape;
+  final String primaryResource;
+
+  const DndClassType(
+    this.displayName,
+    this.hitDieSides,
+    this.primaryColor,
+    this.frameShape,
+    this.primaryResource,
+  );
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      return switch (this) {
+        DndClassType.barbarian => const Color(0xFFB91C1C),
+        DndClassType.bard => const Color(0xFFBE185D),
+        DndClassType.cleric => const Color(0xFFB45309),
+        DndClassType.druid => const Color(0xFF047857),
+        DndClassType.fighter => const Color(0xFF991B1B),
+        DndClassType.monk => const Color(0xFF0891B2),
+        DndClassType.paladin => const Color(0xFFB45309),
+        DndClassType.ranger => const Color(0xFF15803D),
+        DndClassType.rogue => const Color(0xFF334155),
+        DndClassType.sorcerer => const Color(0xFFC2410C),
+        DndClassType.warlock => const Color(0xFF7E22CE),
+        DndClassType.wizard => const Color(0xFF1D4ED8),
+        DndClassType.artificer => const Color(0xFF9A3412),
+      };
+    }
+    return switch (this) {
+      DndClassType.barbarian => const Color(0xFFF87171),
+      DndClassType.bard => const Color(0xFFF472B6),
+      DndClassType.cleric => const Color(0xFFFBBF24),
+      DndClassType.druid => const Color(0xFF34D399),
+      DndClassType.fighter => const Color(0xFFEF4444),
+      DndClassType.monk => const Color(0xFF22D3EE),
+      DndClassType.paladin => const Color(0xFFFDE047),
+      DndClassType.ranger => const Color(0xFF4ADE80),
+      DndClassType.rogue => const Color(0xFF94A3B8),
+      DndClassType.sorcerer => const Color(0xFFFB923C),
+      DndClassType.warlock => const Color(0xFFC084FC),
+      DndClassType.wizard => const Color(0xFF60A5FA),
+      DndClassType.artificer => const Color(0xFFFBBF24),
+    };
+  }
+}
+
+/// Feat category classification (Origin, General, Epic Boon).
+enum FeatCategory {
+  origin('Origin Feat (Level 1)', Color(0xFF38BDF8), 1, GlyphFrameShape.softRhombus),
+  general('General Feat (Level 4+)', Color(0xFFA855F7), 2, GlyphFrameShape.crest),
+  epicBoon('Epic Boon (Level 19+)', Color(0xFFF59E0B), 4, GlyphFrameShape.diamond);
+
+  final String displayName;
+  final Color primaryColor;
+  final int tierLevel;
+  final GlyphFrameShape frameShape;
+
+  const FeatCategory(
+    this.displayName,
+    this.primaryColor,
+    this.tierLevel,
+    this.frameShape,
+  );
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      return switch (this) {
+        FeatCategory.origin => const Color(0xFF0369A1),
+        FeatCategory.general => const Color(0xFF7E22CE),
+        FeatCategory.epicBoon => const Color(0xFFB45309),
+      };
+    }
+    return switch (this) {
+      FeatCategory.origin => const Color(0xFF38BDF8),
+      FeatCategory.general => const Color(0xFFC084FC),
+      FeatCategory.epicBoon => const Color(0xFFFBBF24),
+    };
+  }
+}
+
+/// Trigger economy activation for feats and traits.
+enum FeatTriggerType {
+  passive('Passive / Innate'),
+  action('Action'),
+  bonusAction('Bonus Action'),
+  reaction('Reaction'),
+  resource('Resource / Rest');
+
+  final String displayName;
+  const FeatTriggerType(this.displayName);
+}
+
+/// 10 Core D&D 5e Species / Races.
+enum SpeciesType {
+  human('Human', 'Medium', 30, 'Versatile / Resourceful', Color(0xFF94A3B8), GlyphFrameShape.circle),
+  elf('Elf', 'Medium', 30, 'Darkvision (60 ft), Keen Senses', Color(0xFF34D399), GlyphFrameShape.filigreeOval),
+  dwarf('Dwarf', 'Medium', 30, 'Darkvision (60 ft), Dwarven Resilience', Color(0xFFF59E0B), GlyphFrameShape.heavyHex),
+  halfling('Halfling', 'Small', 30, 'Lucky, Brave, Halfling Nimbleness', Color(0xFF22C55E), GlyphFrameShape.softShield),
+  dragonborn('Dragonborn', 'Medium', 30, 'Breath Weapon, Damage Resistance', Color(0xFFEF4444), GlyphFrameShape.sharpDiamondShield),
+  gnome('Gnome', 'Small', 30, 'Darkvision (60 ft), Gnomish Cunning', Color(0xFF06B6D4), GlyphFrameShape.hexagon),
+  tiefling('Tiefling', 'Medium', 30, 'Darkvision (60 ft), Hellish Resistance', Color(0xFFF43F5E), GlyphFrameShape.pointedShield),
+  orc('Orc', 'Medium', 30, 'Darkvision (120 ft), Relentless Endurance', Color(0xFF84CC16), GlyphFrameShape.jaggedCrest),
+  goliath('Goliath', 'Medium', 35, 'Giant Ancestry, Stone\'s Endurance', Color(0xFF64748B), GlyphFrameShape.heavySquare),
+  aasimar('Aasimar', 'Medium', 30, 'Darkvision (60 ft), Celestial Revelation', Color(0xFFFBBF24), GlyphFrameShape.crest);
+
+  final String displayName;
+  final String size;
+  final int speed;
+  final String traits;
+  final Color primaryColor;
+  final GlyphFrameShape frameShape;
+
+  const SpeciesType(
+    this.displayName,
+    this.size,
+    this.speed,
+    this.traits,
+    this.primaryColor,
+    this.frameShape,
+  );
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      return switch (this) {
+        SpeciesType.human => const Color(0xFF334155),
+        SpeciesType.elf => const Color(0xFF047857),
+        SpeciesType.dwarf => const Color(0xFFB45309),
+        SpeciesType.halfling => const Color(0xFF15803D),
+        SpeciesType.dragonborn => const Color(0xFFB91C1C),
+        SpeciesType.gnome => const Color(0xFF0891B2),
+        SpeciesType.tiefling => const Color(0xFFBE123C),
+        SpeciesType.orc => const Color(0xFF4D7C0F),
+        SpeciesType.goliath => const Color(0xFF334155),
+        SpeciesType.aasimar => const Color(0xFFB45309),
+      };
+    }
+    return switch (this) {
+      SpeciesType.human => const Color(0xFFCBD5E1),
+      SpeciesType.elf => const Color(0xFF34D399),
+      SpeciesType.dwarf => const Color(0xFFFBBF24),
+      SpeciesType.halfling => const Color(0xFF4ADE80),
+      SpeciesType.dragonborn => const Color(0xFFF87171),
+      SpeciesType.gnome => const Color(0xFF22D3EE),
+      SpeciesType.tiefling => const Color(0xFFFB7185),
+      SpeciesType.orc => const Color(0xFFA3E635),
+      SpeciesType.goliath => const Color(0xFF94A3B8),
+      SpeciesType.aasimar => const Color(0xFFFDE047),
+    };
+  }
+}
+
+/// Generic UI Glyphs: Polyhedrals, HUD Status Reticles, and Action Economy Badges.
+enum GenericUiGlyphType {
+  d4('d4 Tetrahedron', Color(0xFF60A5FA), GlyphFrameShape.upwardTriangle),
+  d6('d6 Cube', Color(0xFF34D399), GlyphFrameShape.heavySquare),
+  d8('d8 Octahedron', Color(0xFFFBBF24), GlyphFrameShape.diamond),
+  d10('d10 Trapezohedron', Color(0xFFFB923C), GlyphFrameShape.rhombus),
+  d12('d12 Dodecahedron', Color(0xFFA78BFA), GlyphFrameShape.heavyHex),
+  d20('d20 Icosahedron', Color(0xFFF43F5E), GlyphFrameShape.hexagon),
+  d100('d100 Percentile', Color(0xFFEC4899), GlyphFrameShape.circle),
+  advantage('Advantage Beacon', Color(0xFF22C55E), GlyphFrameShape.upwardTriangle),
+  disadvantage('Disadvantage Quench', Color(0xFFEF4444), GlyphFrameShape.invertedTriangle),
+  concentrating('Concentrating', Color(0xFF38BDF8), GlyphFrameShape.circle),
+  deathSave('Death Save Telemetry', Color(0xFFF43F5E), GlyphFrameShape.tombstone),
+  actionEconomyAction('Standard Action', Color(0xFF3B82F6), GlyphFrameShape.diamond),
+  actionEconomyBonus('Bonus Action', Color(0xFFF59E0B), GlyphFrameShape.softRhombus),
+  actionEconomyReaction('Reaction Trigger', Color(0xFF06B6D4), GlyphFrameShape.heaterShield);
+
+  final String displayName;
+  final Color primaryColor;
+  final GlyphFrameShape frameShape;
+
+  const GenericUiGlyphType(
+    this.displayName,
+    this.primaryColor,
+    this.frameShape,
+  );
+
+  Color getLegibleColor(bool isDarkMode) {
+    if (!isDarkMode) {
+      return switch (this) {
+        GenericUiGlyphType.d4 => const Color(0xFF1D4ED8),
+        GenericUiGlyphType.d6 => const Color(0xFF047857),
+        GenericUiGlyphType.d8 => const Color(0xFFB45309),
+        GenericUiGlyphType.d10 => const Color(0xFFC2410C),
+        GenericUiGlyphType.d12 => const Color(0xFF6D28D9),
+        GenericUiGlyphType.d20 => const Color(0xFFBE123C),
+        GenericUiGlyphType.d100 => const Color(0xFFBE185D),
+        GenericUiGlyphType.advantage => const Color(0xFF15803D),
+        GenericUiGlyphType.disadvantage => const Color(0xFFB91C1C),
+        GenericUiGlyphType.concentrating => const Color(0xFF0369A1),
+        GenericUiGlyphType.deathSave => const Color(0xFF9F1239),
+        GenericUiGlyphType.actionEconomyAction => const Color(0xFF1D4ED8),
+        GenericUiGlyphType.actionEconomyBonus => const Color(0xFFB45309),
+        GenericUiGlyphType.actionEconomyReaction => const Color(0xFF0891B2),
+      };
+    }
+    return switch (this) {
+      GenericUiGlyphType.d4 => const Color(0xFF60A5FA),
+      GenericUiGlyphType.d6 => const Color(0xFF34D399),
+      GenericUiGlyphType.d8 => const Color(0xFFFBBF24),
+      GenericUiGlyphType.d10 => const Color(0xFFFB923C),
+      GenericUiGlyphType.d12 => const Color(0xFFA78BFA),
+      GenericUiGlyphType.d20 => const Color(0xFFFB7185),
+      GenericUiGlyphType.d100 => const Color(0xFFF472B6),
+      GenericUiGlyphType.advantage => const Color(0xFF4ADE80),
+      GenericUiGlyphType.disadvantage => const Color(0xFFF87171),
+      GenericUiGlyphType.concentrating => const Color(0xFF38BDF8),
+      GenericUiGlyphType.deathSave => const Color(0xFFFB7185),
+      GenericUiGlyphType.actionEconomyAction => const Color(0xFF60A5FA),
+      GenericUiGlyphType.actionEconomyBonus => const Color(0xFFFBBF24),
+      GenericUiGlyphType.actionEconomyReaction => const Color(0xFF22D3EE),
+    };
+  }
+}
+
 /// Action & Attack Ring Types for Dynamic Wireframe Trait Composability.
 enum ActionRingType {
   melee('Melee Attack'), // Faceted Diamond / Octagonal Ring with blade ticks
@@ -340,7 +602,13 @@ enum ActionRingType {
       'Sustain/Healing'), // Harmonic cradle ring for healing, regeneration, and shielding
   legendary('Legendary Trait'), // Spiked Starburst Crown Ring
   concentration('Concentration'), // Dual-Harmonic Orbital Wireframe Loop Ring
-  attunement('Attunement'); // Sacred Attunement Tether Wireframe Ring
+  attunement('Attunement'), // Sacred Attunement Tether Wireframe Ring
+  bonusAction('Bonus Action'), // Triple-Spark Triangulation Ring
+  resource('Resource Pool'), // Segmented Recharge & Rest Matrix Ring
+  passive('Passive Trait'), // Continuous Harmonic Outer Ring
+  speed('Speed / Mobility'), // Radial Motion Vector Arc Ring
+  sense('Sensory Radar'), // Concentric Sonar Sweep Ring
+  hitDie('Hit Die Geometry'); // Polyhedral Hit Die Ring
 
   final String displayName;
   const ActionRingType(this.displayName);
@@ -413,6 +681,24 @@ class ActionTraitRing {
     }
     if (ringType == ActionRingType.reaction) {
       return isDarkMode ? const Color(0xFF67E8F9) : const Color(0xFF0891B2);
+    }
+    if (ringType == ActionRingType.bonusAction) {
+      return isDarkMode ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+    }
+    if (ringType == ActionRingType.resource) {
+      return isDarkMode ? const Color(0xFF34D399) : const Color(0xFF059669);
+    }
+    if (ringType == ActionRingType.passive) {
+      return isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+    }
+    if (ringType == ActionRingType.speed) {
+      return isDarkMode ? const Color(0xFF22D3EE) : const Color(0xFF0284C7);
+    }
+    if (ringType == ActionRingType.sense) {
+      return isDarkMode ? const Color(0xFFC084FC) : const Color(0xFF7E22CE);
+    }
+    if (ringType == ActionRingType.hitDie) {
+      return isDarkMode ? const Color(0xFFFDE047) : const Color(0xFFB45309);
     }
 
     final accents = allDamageTypes;
@@ -576,6 +862,66 @@ class GlyphThemeData {
           : category.darkFillTint,
       border: effectivePrimary,
       frameShape: shapeOverride ?? category.frameShape,
+    );
+  }
+
+  factory GlyphThemeData.fromClass(
+    DndClassType classType, {
+    Color? primaryColorOverride,
+    GlyphFrameShape? shapeOverride,
+  }) {
+    final effectivePrimary = primaryColorOverride ?? classType.primaryColor;
+    return GlyphThemeData(
+      primary: effectivePrimary,
+      lightFill: effectivePrimary.withValues(alpha: 0.12),
+      darkFill: effectivePrimary.withValues(alpha: 0.20),
+      border: effectivePrimary,
+      frameShape: shapeOverride ?? classType.frameShape,
+    );
+  }
+
+  factory GlyphThemeData.fromFeat(
+    FeatCategory featCategory, {
+    Color? primaryColorOverride,
+    GlyphFrameShape? shapeOverride,
+  }) {
+    final effectivePrimary = primaryColorOverride ?? featCategory.primaryColor;
+    return GlyphThemeData(
+      primary: effectivePrimary,
+      lightFill: effectivePrimary.withValues(alpha: 0.12),
+      darkFill: effectivePrimary.withValues(alpha: 0.20),
+      border: effectivePrimary,
+      frameShape: shapeOverride ?? featCategory.frameShape,
+    );
+  }
+
+  factory GlyphThemeData.fromSpecies(
+    SpeciesType speciesType, {
+    Color? primaryColorOverride,
+    GlyphFrameShape? shapeOverride,
+  }) {
+    final effectivePrimary = primaryColorOverride ?? speciesType.primaryColor;
+    return GlyphThemeData(
+      primary: effectivePrimary,
+      lightFill: effectivePrimary.withValues(alpha: 0.12),
+      darkFill: effectivePrimary.withValues(alpha: 0.20),
+      border: effectivePrimary,
+      frameShape: shapeOverride ?? speciesType.frameShape,
+    );
+  }
+
+  factory GlyphThemeData.fromGenericUi(
+    GenericUiGlyphType uiType, {
+    Color? primaryColorOverride,
+    GlyphFrameShape? shapeOverride,
+  }) {
+    final effectivePrimary = primaryColorOverride ?? uiType.primaryColor;
+    return GlyphThemeData(
+      primary: effectivePrimary,
+      lightFill: effectivePrimary.withValues(alpha: 0.12),
+      darkFill: effectivePrimary.withValues(alpha: 0.20),
+      border: effectivePrimary,
+      frameShape: shapeOverride ?? uiType.frameShape,
     );
   }
 

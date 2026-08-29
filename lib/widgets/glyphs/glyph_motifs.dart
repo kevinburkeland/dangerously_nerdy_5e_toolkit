@@ -1157,5 +1157,896 @@ class GlyphMotifs {
 
     canvas.restore();
   }
+
+  // ---------------------------------------------------------------------------
+  // CHARACTER CLASS TECHNO-RUNES & HIT DIE GEOMETRY
+  // ---------------------------------------------------------------------------
+
+  static void drawClassMotif({
+    required Canvas canvas,
+    required Size size,
+    required DndClassType classType,
+    required Color color,
+    required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
+  }) {
+    final w = size.width;
+    final h = size.height;
+    final s = min(w, h);
+    final center = Offset(w / 2.0, h / 2.0);
+    final scale = s / baseGrid;
+    final pulseWave =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
+    final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
+    final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
+    final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
+    final fineAlpha =
+        animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(pulseScale, pulseScale);
+    canvas.translate(-center.dx, -center.dy);
+
+    final primaryLine = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.35 * scale
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fineLine = Paint()
+      ..color = color.withValues(alpha: fineAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.85 * scale
+      ..strokeCap = StrokeCap.round;
+
+    final nodeFill = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.fill;
+
+    final nodeHollow = Paint()
+      ..color = isDarkMode ? const Color(0xFF0F172A) : Colors.white
+      ..style = PaintingStyle.fill;
+
+    // 1. Draw Hit Die Facet Geometry (d6, d8, d10, d12) in background
+    final hitDieRadius = 6.2 * scale;
+    final hitSides = classType.hitDieSides;
+    final hitPoly = Path();
+    for (int i = 0; i < hitSides; i++) {
+      final a = (i * (360.0 / hitSides) - 90.0) * pi / 180.0;
+      final pt = Offset(
+        center.dx + hitDieRadius * cos(a),
+        center.dy + hitDieRadius * sin(a),
+      );
+      if (i == 0) {
+        hitPoly.moveTo(pt.dx, pt.dy);
+      } else {
+        hitPoly.lineTo(pt.dx, pt.dy);
+      }
+    }
+    hitPoly.close();
+    canvas.drawPath(hitPoly, fineLine);
+
+    // 2. Draw Class-Specific Cyber-Sigil
+    switch (classType) {
+      case DndClassType.barbarian:
+        // CROSSED BATTLEAXES & PRIMAL RAGE BURST
+        canvas.drawLine(
+          center - Offset(5.0 * scale, 5.0 * scale),
+          center + Offset(5.0 * scale, 5.0 * scale),
+          primaryLine,
+        );
+        canvas.drawLine(
+          center - Offset(-5.0 * scale, 5.0 * scale),
+          center + Offset(-5.0 * scale, 5.0 * scale),
+          primaryLine,
+        );
+        // Axe blade crescents
+        final axeA = Path()
+          ..moveTo(center.dx - 5.5 * scale, center.dy - 3.5 * scale)
+          ..quadraticBezierTo(center.dx - 3.0 * scale, center.dy - 5.5 * scale, center.dx - 2.0 * scale, center.dy - 3.0 * scale);
+        final axeB = Path()
+          ..moveTo(center.dx + 5.5 * scale, center.dy - 3.5 * scale)
+          ..quadraticBezierTo(center.dx + 3.0 * scale, center.dy - 5.5 * scale, center.dx + 2.0 * scale, center.dy - 3.0 * scale);
+        canvas.drawPath(axeA, primaryLine);
+        canvas.drawPath(axeB, primaryLine);
+        canvas.drawCircle(center, 1.4 * scale, nodeFill);
+        break;
+
+      case DndClassType.bard:
+        // HARMONIC LYRE & SINE SOUNDWAVE RESONANCE
+        final lyre = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy - 4.0 * scale)
+          ..cubicTo(center.dx - 4.5 * scale, center.dy + 3.0 * scale, center.dx, center.dy + 5.0 * scale, center.dx, center.dy + 5.0 * scale)
+          ..cubicTo(center.dx, center.dy + 5.0 * scale, center.dx + 4.5 * scale, center.dy + 3.0 * scale, center.dx + 4.5 * scale, center.dy - 4.0 * scale);
+        canvas.drawPath(lyre, primaryLine);
+        // Strings / frequency lines
+        canvas.drawLine(Offset(center.dx - 2.0 * scale, center.dy - 3.0 * scale), Offset(center.dx - 2.0 * scale, center.dy + 3.5 * scale), fineLine);
+        canvas.drawLine(Offset(center.dx, center.dy - 3.0 * scale), Offset(center.dx, center.dy + 4.5 * scale), fineLine);
+        canvas.drawLine(Offset(center.dx + 2.0 * scale, center.dy - 3.0 * scale), Offset(center.dx + 2.0 * scale, center.dy + 3.5 * scale), fineLine);
+        canvas.drawCircle(center - Offset(4.5 * scale, 4.0 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(4.5 * scale, -4.0 * scale), 1.0 * scale, nodeFill);
+        break;
+
+      case DndClassType.cleric:
+        // SACRED SOLAR CROSS & DIVINE HALO RADIANCE
+        canvas.drawCircle(center, 3.8 * scale, fineLine);
+        canvas.drawLine(center - Offset(0, 5.8 * scale), center + Offset(0, 5.8 * scale), primaryLine);
+        canvas.drawLine(center - Offset(4.5 * scale, 1.8 * scale), center + Offset(4.5 * scale, -1.8 * scale), primaryLine);
+        // 4 Radiant burst flares
+        for (int i = 0; i < 4; i++) {
+          final a = (i * 90.0 + 45.0) * pi / 180.0;
+          canvas.drawLine(
+            Offset(center.dx + 3.8 * scale * cos(a), center.dy + 3.8 * scale * sin(a)),
+            Offset(center.dx + 5.5 * scale * cos(a), center.dy + 5.5 * scale * sin(a)),
+            fineLine,
+          );
+        }
+        canvas.drawCircle(center - Offset(0, 1.8 * scale), 1.2 * scale, nodeFill);
+        break;
+
+      case DndClassType.druid:
+        // SACRED OAK LEAF & PRIMAL SPIRAL RUNES
+        final leaf = Path()
+          ..moveTo(center.dx, center.dy - 5.5 * scale)
+          ..quadraticBezierTo(center.dx + 4.5 * scale, center.dy - 1.0 * scale, center.dx, center.dy + 5.5 * scale)
+          ..quadraticBezierTo(center.dx - 4.5 * scale, center.dy - 1.0 * scale, center.dx, center.dy - 5.5 * scale);
+        canvas.drawPath(leaf, primaryLine);
+        // Central vein & spiral arcs
+        canvas.drawLine(center - Offset(0, 5.0 * scale), center + Offset(0, 5.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(0, 2.0 * scale), center + Offset(2.5 * scale, -0.5 * scale), fineLine);
+        canvas.drawLine(center + Offset(0, 1.0 * scale), center - Offset(2.5 * scale, -2.5 * scale), fineLine);
+        canvas.drawCircle(center, 1.1 * scale, nodeFill);
+        break;
+
+      case DndClassType.fighter:
+        // CROSSED LONGSWORDS & VANGUARD RETICLE
+        canvas.drawLine(center - Offset(5.0 * scale, 5.0 * scale), center + Offset(5.0 * scale, 5.0 * scale), primaryLine);
+        canvas.drawLine(center - Offset(-5.0 * scale, 5.0 * scale), center + Offset(-5.0 * scale, 5.0 * scale), primaryLine);
+        // Crossguards
+        canvas.drawLine(
+          center - Offset(3.5 * scale, 3.5 * scale) - Offset(1.5 * scale, -1.5 * scale),
+          center - Offset(3.5 * scale, 3.5 * scale) + Offset(1.5 * scale, -1.5 * scale),
+          primaryLine,
+        );
+        canvas.drawLine(
+          center - Offset(-3.5 * scale, 3.5 * scale) - Offset(1.5 * scale, 1.5 * scale),
+          center - Offset(-3.5 * scale, 3.5 * scale) + Offset(1.5 * scale, 1.5 * scale),
+          primaryLine,
+        );
+        canvas.drawCircle(center, 1.3 * scale, nodeFill);
+        break;
+
+      case DndClassType.monk:
+        // CHAKRA FOCAL CIRCLES & INNER KI VECTOR
+        canvas.drawCircle(center, 4.8 * scale, primaryLine);
+        canvas.drawCircle(center, 2.2 * scale, fineLine);
+        // S-curve flowing chi channel
+        final chi = Path()
+          ..moveTo(center.dx, center.dy - 4.8 * scale)
+          ..quadraticBezierTo(center.dx + 2.5 * scale, center.dy - 2.4 * scale, center.dx, center.dy)
+          ..quadraticBezierTo(center.dx - 2.5 * scale, center.dy + 2.4 * scale, center.dx, center.dy + 4.8 * scale);
+        canvas.drawPath(chi, primaryLine);
+        canvas.drawCircle(center - Offset(0, 2.4 * scale), 1.0 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(0, 2.4 * scale), 1.0 * scale, nodeHollow);
+        break;
+
+      case DndClassType.paladin:
+        // RADIANT SMITE SHIELD & SACRED SWORD
+        final shield = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy - 4.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 4.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy)
+          ..quadraticBezierTo(center.dx, center.dy + 5.5 * scale, center.dx, center.dy + 5.5 * scale)
+          ..quadraticBezierTo(center.dx - 4.5 * scale, center.dy, center.dx - 4.5 * scale, center.dy)
+          ..close();
+        canvas.drawPath(shield, primaryLine);
+        // Central holy blade
+        canvas.drawLine(center - Offset(0, 3.5 * scale), center + Offset(0, 3.5 * scale), primaryLine);
+        canvas.drawLine(center - Offset(2.0 * scale, 1.5 * scale), center + Offset(2.0 * scale, -1.5 * scale), fineLine);
+        canvas.drawCircle(center - Offset(0, 1.5 * scale), 1.0 * scale, nodeFill);
+        break;
+
+      case DndClassType.ranger:
+        // HUNTER'S BOW & RADIAL TRACKING RETICLE
+        final bow = Path()
+          ..moveTo(center.dx - 4.0 * scale, center.dy - 5.0 * scale)
+          ..quadraticBezierTo(center.dx + 4.0 * scale, center.dy, center.dx - 4.0 * scale, center.dy + 5.0 * scale);
+        canvas.drawPath(bow, primaryLine);
+        canvas.drawLine(center - Offset(4.0 * scale, 5.0 * scale), center - Offset(4.0 * scale, -5.0 * scale), fineLine);
+        // Arrow
+        canvas.drawLine(center - Offset(4.0 * scale, 0), center + Offset(5.0 * scale, 0), primaryLine);
+        canvas.drawLine(center + Offset(3.5 * scale, -1.5 * scale), center + Offset(5.0 * scale, 0), primaryLine);
+        canvas.drawLine(center + Offset(3.5 * scale, 1.5 * scale), center + Offset(5.0 * scale, 0), primaryLine);
+        break;
+
+      case DndClassType.rogue:
+        // SHADOW STILETTO & PRECISION SNEAK ATTACK RETICLE
+        final stiletto = Path()
+          ..moveTo(center.dx, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 1.2 * scale, center.dy + 2.0 * scale)
+          ..lineTo(center.dx - 1.2 * scale, center.dy + 2.0 * scale)
+          ..close();
+        canvas.drawPath(stiletto, primaryLine);
+        canvas.drawLine(center - Offset(3.0 * scale, -2.0 * scale), center + Offset(3.0 * scale, 2.0 * scale), primaryLine);
+        canvas.drawLine(center + Offset(0, 2.0 * scale), center + Offset(0, 5.0 * scale), primaryLine);
+        // Stealth diamond ticks
+        canvas.drawCircle(center - Offset(4.5 * scale, 0), 0.8 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(4.5 * scale, 0), 0.8 * scale, nodeFill);
+        break;
+
+      case DndClassType.sorcerer:
+        // WILD MAGIC CHAOS VORTEX & INNER DRAGON SPARK
+        final vortex = Path();
+        const vortexPts = 6;
+        for (int i = 0; i < vortexPts; i++) {
+          final a = (i * 60.0 + (pulseTurns * 120.0)) * pi / 180.0;
+          final rOut = (i.isEven ? 5.2 : 3.0) * scale;
+          final pt = Offset(center.dx + rOut * cos(a), center.dy + rOut * sin(a));
+          if (i == 0) {
+            vortex.moveTo(pt.dx, pt.dy);
+          } else {
+            vortex.lineTo(pt.dx, pt.dy);
+          }
+        }
+        vortex.close();
+        canvas.drawPath(vortex, primaryLine);
+        canvas.drawCircle(center, 1.6 * scale, nodeFill);
+        break;
+
+      case DndClassType.warlock:
+        // ELDRITCH EYE & PATRON CONTRACT OCCULT PENTACLE
+        final eye = Path()
+          ..moveTo(center.dx - 5.0 * scale, center.dy)
+          ..quadraticBezierTo(center.dx, center.dy - 3.5 * scale, center.dx + 5.0 * scale, center.dy)
+          ..quadraticBezierTo(center.dx, center.dy + 3.5 * scale, center.dx - 5.0 * scale, center.dy);
+        canvas.drawPath(eye, primaryLine);
+        canvas.drawCircle(center, 1.8 * scale, primaryLine);
+        canvas.drawCircle(center, 0.9 * scale, nodeFill);
+        // Vertical occult lock lines
+        canvas.drawLine(center - Offset(0, 5.0 * scale), center - Offset(0, 3.5 * scale), fineLine);
+        canvas.drawLine(center + Offset(0, 3.5 * scale), center + Offset(0, 5.0 * scale), fineLine);
+        break;
+
+      case DndClassType.wizard:
+        // ARCANE PENTACLE & RUNIC SCRIBE SPIRE
+        final star = Path();
+        for (int i = 0; i < 5; i++) {
+          final a = (i * 144.0 - 90.0) * pi / 180.0;
+          final pt = Offset(center.dx + 5.0 * scale * cos(a), center.dy + 5.0 * scale * sin(a));
+          if (i == 0) {
+            star.moveTo(pt.dx, pt.dy);
+          } else {
+            star.lineTo(pt.dx, pt.dy);
+          }
+        }
+        star.close();
+        canvas.drawPath(star, primaryLine);
+        canvas.drawCircle(center, 1.5 * scale, nodeHollow);
+        canvas.drawCircle(center, 1.5 * scale, fineLine);
+        canvas.drawCircle(center, 0.7 * scale, nodeFill);
+        break;
+
+      case DndClassType.artificer:
+        // INTERLOCKING CLOCKWORK GEAR & CALIPER RUNES
+        final gear = Path();
+        const teeth = 8;
+        for (int i = 0; i < teeth * 2; i++) {
+          final a = (i * (360.0 / (teeth * 2))) * pi / 180.0;
+          final r = (i.isEven ? 5.2 : 3.8) * scale;
+          final pt = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
+          if (i == 0) {
+            gear.moveTo(pt.dx, pt.dy);
+          } else {
+            gear.lineTo(pt.dx, pt.dy);
+          }
+        }
+        gear.close();
+        canvas.drawPath(gear, primaryLine);
+        canvas.drawCircle(center, 2.0 * scale, nodeHollow);
+        canvas.drawCircle(center, 2.0 * scale, fineLine);
+        canvas.drawCircle(center, 0.8 * scale, nodeFill);
+        break;
+    }
+
+    canvas.restore();
+  }
+
+  // ---------------------------------------------------------------------------
+  // FEAT & EPIC BOON TECHNO-RUNES
+  // ---------------------------------------------------------------------------
+
+  static void drawFeatMotif({
+    required Canvas canvas,
+    required Size size,
+    required FeatCategory category,
+    required String featId,
+    required Color color,
+    required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
+  }) {
+    final w = size.width;
+    final h = size.height;
+    final s = min(w, h);
+    final center = Offset(w / 2.0, h / 2.0);
+    final scale = s / baseGrid;
+    final pulseWave =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
+    final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
+    final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
+    final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
+    final fineAlpha =
+        animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(pulseScale, pulseScale);
+    canvas.translate(-center.dx, -center.dy);
+
+    final primaryLine = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.35 * scale
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fineLine = Paint()
+      ..color = color.withValues(alpha: fineAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.85 * scale
+      ..strokeCap = StrokeCap.round;
+
+    final nodeFill = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.fill;
+
+    final lowerId = featId.toLowerCase();
+
+    if (lowerId.contains('alert')) {
+      // 360-degree radar sensor & alert diamond
+      canvas.drawCircle(center, 5.0 * scale, fineLine);
+      canvas.drawCircle(center, 2.5 * scale, primaryLine);
+      canvas.drawLine(center, center + Offset(4.8 * scale * cos(pulseTurns * 2 * pi), 4.8 * scale * sin(pulseTurns * 2 * pi)), primaryLine);
+      canvas.drawCircle(center, 1.2 * scale, nodeFill);
+    } else if (lowerId.contains('war_caster') || lowerId.contains('warcaster')) {
+      // Crossed focus wand and concentration shield aegis
+      canvas.drawLine(center - Offset(4.5 * scale, 4.5 * scale), center + Offset(4.5 * scale, 4.5 * scale), primaryLine);
+      canvas.drawCircle(center, 3.5 * scale, primaryLine);
+      canvas.drawCircle(center - Offset(4.5 * scale, 4.5 * scale), 1.0 * scale, nodeFill);
+      canvas.drawCircle(center + Offset(4.5 * scale, 4.5 * scale), 1.0 * scale, nodeFill);
+      canvas.drawCircle(center, 1.2 * scale, nodeFill);
+    } else if (lowerId.contains('great_weapon') || lowerId.contains('heavy')) {
+      // Heavy cleave arc & crushing greatsword blade
+      final blade = Path()
+        ..moveTo(center.dx - 1.5 * scale, center.dy - 5.5 * scale)
+        ..lineTo(center.dx + 1.5 * scale, center.dy - 5.5 * scale)
+        ..lineTo(center.dx + 2.0 * scale, center.dy + 3.0 * scale)
+        ..lineTo(center.dx, center.dy + 5.5 * scale)
+        ..lineTo(center.dx - 2.0 * scale, center.dy + 3.0 * scale)
+        ..close();
+      canvas.drawPath(blade, primaryLine);
+      final cleaveArc = Rect.fromCircle(center: center, radius: 4.5 * scale);
+      canvas.drawArc(cleaveArc, -pi * 0.8, pi * 1.6, false, fineLine);
+      canvas.drawCircle(center, 1.0 * scale, nodeFill);
+    } else if (lowerId.contains('sharpshooter') || lowerId.contains('sniper')) {
+      // Precision concentric crosshairs & distance scope ticks
+      canvas.drawCircle(center, 5.2 * scale, primaryLine);
+      canvas.drawCircle(center, 2.8 * scale, fineLine);
+      canvas.drawLine(center - Offset(6.0 * scale, 0), center + Offset(6.0 * scale, 0), fineLine);
+      canvas.drawLine(center - Offset(0, 6.0 * scale), center + Offset(0, 6.0 * scale), fineLine);
+      canvas.drawCircle(center, 1.0 * scale, nodeFill);
+    } else if (lowerId.contains('sentinel')) {
+      // Halberd restraint anchor & perimeter lockdown brackets
+      canvas.drawCircle(center, 4.0 * scale, primaryLine);
+      canvas.drawLine(center - Offset(0, 5.5 * scale), center + Offset(0, 5.5 * scale), primaryLine);
+      canvas.drawLine(center - Offset(4.0 * scale, 0), center + Offset(4.0 * scale, 0), primaryLine);
+      canvas.drawCircle(center, 1.4 * scale, nodeFill);
+    } else if (lowerId.contains('lucky')) {
+      // 4-Leaf quantum probability clover node
+      for (int i = 0; i < 4; i++) {
+        final a = (i * 90.0) * pi / 180.0;
+        final pt = Offset(center.dx + 2.8 * scale * cos(a), center.dy + 2.8 * scale * sin(a));
+        canvas.drawCircle(pt, 1.8 * scale, fineLine);
+      }
+      canvas.drawCircle(center, 1.2 * scale, nodeFill);
+    } else if (category == FeatCategory.epicBoon) {
+      // COSMIC STARBURST CORONA & TRANSCENDENT APEX
+      final star = Path();
+      const pts = 8;
+      for (int i = 0; i < pts * 2; i++) {
+        final a = (i * (360.0 / (pts * 2))) * pi / 180.0;
+        final r = (i.isEven ? 5.8 : 2.6) * scale;
+        final pt = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
+        if (i == 0) {
+          star.moveTo(pt.dx, pt.dy);
+        } else {
+          star.lineTo(pt.dx, pt.dy);
+        }
+      }
+      star.close();
+      canvas.drawPath(star, primaryLine);
+      canvas.drawCircle(center, 1.8 * scale, nodeFill);
+    } else if (category == FeatCategory.general) {
+      // GENERAL FEAT APEX STAR MATRIX
+      final diamond = Path()
+        ..moveTo(center.dx, center.dy - 5.5 * scale)
+        ..lineTo(center.dx + 4.5 * scale, center.dy)
+        ..lineTo(center.dx, center.dy + 5.5 * scale)
+        ..lineTo(center.dx - 4.5 * scale, center.dy)
+        ..close();
+      canvas.drawPath(diamond, primaryLine);
+      canvas.drawCircle(center, 2.5 * scale, fineLine);
+      canvas.drawCircle(center, 1.1 * scale, nodeFill);
+    } else {
+      // ORIGIN FEAT SEED BEACON
+      canvas.drawCircle(center, 4.5 * scale, primaryLine);
+      canvas.drawLine(center - Offset(0, 5.5 * scale), center + Offset(0, 5.5 * scale), fineLine);
+      canvas.drawLine(center - Offset(5.5 * scale, 0), center + Offset(5.5 * scale, 0), fineLine);
+      canvas.drawCircle(center, 1.3 * scale, nodeFill);
+    }
+
+    canvas.restore();
+  }
+
+  // ---------------------------------------------------------------------------
+  // SPECIES / RACE TECHNO-RUNES
+  // ---------------------------------------------------------------------------
+
+  static void drawSpeciesMotif({
+    required Canvas canvas,
+    required Size size,
+    required SpeciesType speciesType,
+    required Color color,
+    required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
+  }) {
+    final w = size.width;
+    final h = size.height;
+    final s = min(w, h);
+    final center = Offset(w / 2.0, h / 2.0);
+    final scale = s / baseGrid;
+    final pulseWave =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
+    final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
+    final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
+    final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
+    final fineAlpha =
+        animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(pulseScale, pulseScale);
+    canvas.translate(-center.dx, -center.dy);
+
+    final primaryLine = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.35 * scale
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fineLine = Paint()
+      ..color = color.withValues(alpha: fineAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.85 * scale
+      ..strokeCap = StrokeCap.round;
+
+    final nodeFill = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.fill;
+
+    switch (speciesType) {
+      case SpeciesType.human:
+        // 8-POINT VERSATILE COMPASS & NEXUS STAR
+        for (int i = 0; i < 8; i++) {
+          final a = (i * 45.0) * pi / 180.0;
+          final len = (i.isEven ? 5.2 : 3.2) * scale;
+          canvas.drawLine(center, Offset(center.dx + len * cos(a), center.dy + len * sin(a)), primaryLine);
+          canvas.drawCircle(Offset(center.dx + len * cos(a), center.dy + len * sin(a)), 0.8 * scale, nodeFill);
+        }
+        canvas.drawCircle(center, 1.4 * scale, nodeFill);
+        break;
+
+      case SpeciesType.elf:
+        // CRESCENT MOON & SYLVAN STARLIGHT FILIGREE
+        final moon = Path()
+          ..addArc(Rect.fromCircle(center: center, radius: 4.8 * scale), -pi * 0.45, pi * 0.9)
+          ..quadraticBezierTo(center.dx + 1.5 * scale, center.dy, center.dx + 4.8 * scale * cos(-pi * 0.45), center.dy + 4.8 * scale * sin(-pi * 0.45));
+        canvas.drawPath(moon, primaryLine);
+        // Starlight diamond
+        final star = Path()
+          ..moveTo(center.dx - 2.0 * scale, center.dy - 3.5 * scale)
+          ..lineTo(center.dx - 1.0 * scale, center.dy - 2.0 * scale)
+          ..lineTo(center.dx - 2.0 * scale, center.dy - 0.5 * scale)
+          ..lineTo(center.dx - 3.0 * scale, center.dy - 2.0 * scale)
+          ..close();
+        canvas.drawPath(star, fineLine);
+        canvas.drawCircle(center, 1.0 * scale, nodeFill);
+        break;
+
+      case SpeciesType.dwarf:
+        // MOUNTAIN ANVIL & GEOMETRIC STONE-RUNE
+        final anvil = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy - 3.0 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 3.0 * scale)
+          ..lineTo(center.dx + 3.0 * scale, center.dy - 0.5 * scale)
+          ..lineTo(center.dx + 2.0 * scale, center.dy + 3.5 * scale)
+          ..lineTo(center.dx - 2.0 * scale, center.dy + 3.5 * scale)
+          ..lineTo(center.dx - 3.0 * scale, center.dy - 0.5 * scale)
+          ..close();
+        canvas.drawPath(anvil, primaryLine);
+        canvas.drawLine(center - Offset(3.5 * scale, -3.5 * scale), center + Offset(3.5 * scale, 3.5 * scale), primaryLine);
+        canvas.drawCircle(center - Offset(0, 1.5 * scale), 1.0 * scale, nodeFill);
+        break;
+
+      case SpeciesType.halfling:
+        // 4-PETAL HEARTH RUNESTONE & BRAVE CHEVRON
+        for (int i = 0; i < 4; i++) {
+          final a = (i * 90.0) * pi / 180.0;
+          final p = Offset(center.dx + 2.5 * scale * cos(a), center.dy + 2.5 * scale * sin(a));
+          canvas.drawCircle(p, 1.6 * scale, fineLine);
+        }
+        canvas.drawCircle(center, 1.2 * scale, nodeFill);
+        break;
+
+      case SpeciesType.dragonborn:
+        // DRACONIC SCALES & BREATH WEAPON DIAMOND
+        final crest = Path()
+          ..moveTo(center.dx, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 1.0 * scale)
+          ..lineTo(center.dx, center.dy + 5.5 * scale)
+          ..lineTo(center.dx - 4.5 * scale, center.dy - 1.0 * scale)
+          ..close();
+        canvas.drawPath(crest, primaryLine);
+        canvas.drawLine(center - Offset(0, 5.0 * scale), center + Offset(0, 5.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(3.5 * scale, 0), center + Offset(3.5 * scale, 0), fineLine);
+        canvas.drawCircle(center, 1.2 * scale, nodeFill);
+        break;
+
+      case SpeciesType.gnome:
+        // CLOCKWORK ESCAPEMENT GEAR & LENS
+        canvas.drawCircle(center, 4.2 * scale, primaryLine);
+        for (int i = 0; i < 6; i++) {
+          final a = (i * 60.0) * pi / 180.0;
+          canvas.drawLine(
+            Offset(center.dx + 4.2 * scale * cos(a), center.dy + 4.2 * scale * sin(a)),
+            Offset(center.dx + 5.5 * scale * cos(a), center.dy + 5.5 * scale * sin(a)),
+            primaryLine,
+          );
+        }
+        canvas.drawCircle(center, 1.8 * scale, fineLine);
+        canvas.drawCircle(center, 0.8 * scale, nodeFill);
+        break;
+
+      case SpeciesType.tiefling:
+        // INFERNAL HORNS & BRIMSTONE CHEVRON
+        final hornA = Path()
+          ..moveTo(center.dx - 3.5 * scale, center.dy + 4.0 * scale)
+          ..quadraticBezierTo(center.dx - 5.0 * scale, center.dy - 1.0 * scale, center.dx - 3.0 * scale, center.dy - 5.0 * scale);
+        final hornB = Path()
+          ..moveTo(center.dx + 3.5 * scale, center.dy + 4.0 * scale)
+          ..quadraticBezierTo(center.dx + 5.0 * scale, center.dy - 1.0 * scale, center.dx + 3.0 * scale, center.dy - 5.0 * scale);
+        canvas.drawPath(hornA, primaryLine);
+        canvas.drawPath(hornB, primaryLine);
+        canvas.drawCircle(center + Offset(0, 2.0 * scale), 1.4 * scale, nodeFill);
+        break;
+
+      case SpeciesType.orc:
+        // RELENTLESS TUSKS & BATTLE SKULL CREST
+        final tuskA = Path()
+          ..moveTo(center.dx - 3.5 * scale, center.dy + 4.5 * scale)
+          ..lineTo(center.dx - 2.0 * scale, center.dy - 1.5 * scale)
+          ..lineTo(center.dx - 1.0 * scale, center.dy + 4.5 * scale);
+        final tuskB = Path()
+          ..moveTo(center.dx + 3.5 * scale, center.dy + 4.5 * scale)
+          ..lineTo(center.dx + 2.0 * scale, center.dy - 1.5 * scale)
+          ..lineTo(center.dx + 1.0 * scale, center.dy + 4.5 * scale);
+        canvas.drawPath(tuskA, primaryLine);
+        canvas.drawPath(tuskB, primaryLine);
+        canvas.drawLine(center - Offset(4.0 * scale, 3.0 * scale), center + Offset(4.0 * scale, -3.0 * scale), fineLine);
+        canvas.drawCircle(center - Offset(0, 2.0 * scale), 1.2 * scale, nodeFill);
+        break;
+
+      case SpeciesType.goliath:
+        // MEGALITHIC STONE MONOLITH & PEAK CHEVRON
+        final peak = Path()
+          ..moveTo(center.dx, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy + 4.5 * scale)
+          ..lineTo(center.dx - 4.5 * scale, center.dy + 4.5 * scale)
+          ..close();
+        canvas.drawPath(peak, primaryLine);
+        canvas.drawLine(center - Offset(0, 5.0 * scale), center + Offset(0, 4.0 * scale), fineLine);
+        canvas.drawLine(center - Offset(2.5 * scale, 1.0 * scale), center + Offset(2.5 * scale, 1.0 * scale), fineLine);
+        canvas.drawCircle(center, 1.2 * scale, nodeFill);
+        break;
+
+      case SpeciesType.aasimar:
+        // CELESTIAL RADIANT WINGS & HALO
+        canvas.drawCircle(center - Offset(0, 3.5 * scale), 1.8 * scale, primaryLine);
+        final wingA = Path()
+          ..moveTo(center.dx - 1.0 * scale, center.dy - 1.0 * scale)
+          ..quadraticBezierTo(center.dx - 5.5 * scale, center.dy - 3.0 * scale, center.dx - 4.5 * scale, center.dy + 4.0 * scale);
+        final wingB = Path()
+          ..moveTo(center.dx + 1.0 * scale, center.dy - 1.0 * scale)
+          ..quadraticBezierTo(center.dx + 5.5 * scale, center.dy - 3.0 * scale, center.dx + 4.5 * scale, center.dy + 4.0 * scale);
+        canvas.drawPath(wingA, primaryLine);
+        canvas.drawPath(wingB, primaryLine);
+        canvas.drawCircle(center + Offset(0, 1.5 * scale), 1.1 * scale, nodeFill);
+        break;
+    }
+
+    canvas.restore();
+  }
+
+  // ---------------------------------------------------------------------------
+  // GENERIC UI & POLYHEDRAL WIREFRAME MOTIFS
+  // ---------------------------------------------------------------------------
+
+  static void drawGenericUiMotif({
+    required Canvas canvas,
+    required Size size,
+    required GenericUiGlyphType uiType,
+    required Color color,
+    required bool isDarkMode,
+    double pulseTurns = 0.0,
+    bool animatePulse = false,
+  }) {
+    final w = size.width;
+    final h = size.height;
+    final s = min(w, h);
+    final center = Offset(w / 2.0, h / 2.0);
+    final scale = s / baseGrid;
+    final pulseWave =
+        animatePulse ? (0.5 + 0.5 * sin(pulseTurns * 2.0 * pi * 1.2)) : 0.0;
+    final pulseScale = animatePulse ? (1.0 + 0.045 * pulseWave) : 1.0;
+    final primaryAlpha = animatePulse ? (0.88 + 0.12 * pulseWave) : 1.0;
+    final fineBaseAlpha = isDarkMode ? 0.70 : 0.55;
+    final fineAlpha =
+        animatePulse ? (fineBaseAlpha + 0.20 * pulseWave) : fineBaseAlpha;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(pulseScale, pulseScale);
+    canvas.translate(-center.dx, -center.dy);
+
+    final primaryLine = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.35 * scale
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final fineLine = Paint()
+      ..color = color.withValues(alpha: fineAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.85 * scale
+      ..strokeCap = StrokeCap.round;
+
+    final nodeFill = Paint()
+      ..color = color.withValues(alpha: primaryAlpha.clamp(0.0, 1.0))
+      ..style = PaintingStyle.fill;
+
+    switch (uiType) {
+      case GenericUiGlyphType.d4:
+        // WIREFRAME TETRAHEDRON
+        final pTop = Offset(center.dx, center.dy - 5.5 * scale);
+        final pBL = Offset(center.dx - 5.0 * scale, center.dy + 4.5 * scale);
+        final pBR = Offset(center.dx + 5.0 * scale, center.dy + 4.5 * scale);
+        final pC = Offset(center.dx, center.dy + 1.0 * scale);
+        final tri = Path()..moveTo(pTop.dx, pTop.dy)..lineTo(pBR.dx, pBR.dy)..lineTo(pBL.dx, pBL.dy)..close();
+        canvas.drawPath(tri, primaryLine);
+        canvas.drawLine(pTop, pC, fineLine);
+        canvas.drawLine(pBL, pC, fineLine);
+        canvas.drawLine(pBR, pC, fineLine);
+        canvas.drawCircle(pC, 0.9 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.d6:
+        // ISOMETRIC 3D CUBE
+        final d6Path = Path()
+          ..moveTo(center.dx, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 2.8 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy + 2.8 * scale)
+          ..lineTo(center.dx, center.dy + 5.5 * scale)
+          ..lineTo(center.dx - 4.5 * scale, center.dy + 2.8 * scale)
+          ..lineTo(center.dx - 4.5 * scale, center.dy - 2.8 * scale)
+          ..close();
+        canvas.drawPath(d6Path, primaryLine);
+        canvas.drawLine(center, Offset(center.dx, center.dy - 5.5 * scale), fineLine);
+        canvas.drawLine(center, Offset(center.dx + 4.5 * scale, center.dy + 2.8 * scale), fineLine);
+        canvas.drawLine(center, Offset(center.dx - 4.5 * scale, center.dy + 2.8 * scale), fineLine);
+        canvas.drawCircle(center, 1.0 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.d8:
+        // WIREFRAME OCTAHEDRON DIAMOND
+        final d8Path = Path()
+          ..moveTo(center.dx, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy)
+          ..lineTo(center.dx, center.dy + 5.5 * scale)
+          ..lineTo(center.dx - 4.5 * scale, center.dy)
+          ..close();
+        canvas.drawPath(d8Path, primaryLine);
+        canvas.drawLine(Offset(center.dx - 4.5 * scale, center.dy), Offset(center.dx + 4.5 * scale, center.dy), fineLine);
+        canvas.drawLine(Offset(center.dx, center.dy - 5.5 * scale), center, fineLine);
+        canvas.drawLine(Offset(center.dx, center.dy + 5.5 * scale), center, fineLine);
+        canvas.drawCircle(center, 1.1 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.d10:
+        // WIREFRAME TRAPEZOHEDRON KITE
+        final d10Path = Path()
+          ..moveTo(center.dx, center.dy - 5.5 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 1.0 * scale)
+          ..lineTo(center.dx + 2.5 * scale, center.dy + 5.0 * scale)
+          ..lineTo(center.dx - 2.5 * scale, center.dy + 5.0 * scale)
+          ..lineTo(center.dx - 4.5 * scale, center.dy - 1.0 * scale)
+          ..close();
+        canvas.drawPath(d10Path, primaryLine);
+        canvas.drawLine(Offset(center.dx, center.dy - 5.5 * scale), center, fineLine);
+        canvas.drawLine(Offset(center.dx + 4.5 * scale, center.dy - 1.0 * scale), center, fineLine);
+        canvas.drawLine(Offset(center.dx - 4.5 * scale, center.dy - 1.0 * scale), center, fineLine);
+        canvas.drawCircle(center, 1.1 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.d12:
+        // WIREFRAME DODECAHEDRON
+        final d12Path = Path();
+        for (int i = 0; i < 10; i++) {
+          final a = (i * 36.0 - 90.0) * pi / 180.0;
+          final r = (i.isEven ? 5.2 : 4.2) * scale;
+          final pt = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
+          if (i == 0) {
+            d12Path.moveTo(pt.dx, pt.dy);
+          } else {
+            d12Path.lineTo(pt.dx, pt.dy);
+          }
+        }
+        d12Path.close();
+        canvas.drawPath(d12Path, primaryLine);
+        canvas.drawCircle(center, 2.0 * scale, fineLine);
+        canvas.drawCircle(center, 0.9 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.d20:
+        // WIREFRAME ICOSAHEDRON
+        final hex = Path();
+        for (int i = 0; i < 6; i++) {
+          final a = (i * 60.0 - 30.0) * pi / 180.0;
+          final pt = Offset(center.dx + 5.2 * scale * cos(a), center.dy + 5.2 * scale * sin(a));
+          if (i == 0) {
+            hex.moveTo(pt.dx, pt.dy);
+          } else {
+            hex.lineTo(pt.dx, pt.dy);
+          }
+        }
+        hex.close();
+        canvas.drawPath(hex, primaryLine);
+        // Inverted central triangle
+        final innerTri = Path();
+        for (int i = 0; i < 3; i++) {
+          final a = (i * 120.0 + 90.0) * pi / 180.0;
+          final pt = Offset(center.dx + 3.0 * scale * cos(a), center.dy + 3.0 * scale * sin(a));
+          if (i == 0) {
+            innerTri.moveTo(pt.dx, pt.dy);
+          } else {
+            innerTri.lineTo(pt.dx, pt.dy);
+          }
+        }
+        innerTri.close();
+        canvas.drawPath(innerTri, fineLine);
+        canvas.drawCircle(center, 1.1 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.d100:
+        // DUAL PERCENTILE MATRIX
+        canvas.drawCircle(center - Offset(2.2 * scale, 0), 3.2 * scale, primaryLine);
+        canvas.drawCircle(center + Offset(2.2 * scale, 0), 3.2 * scale, fineLine);
+        canvas.drawCircle(center, 1.0 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.advantage:
+        // DUAL UPWARD CHEVRONS
+        final c1 = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy + 3.0 * scale)
+          ..lineTo(center.dx, center.dy - 1.0 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy + 3.0 * scale);
+        final c2 = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy - 1.0 * scale)
+          ..lineTo(center.dx, center.dy - 5.0 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 1.0 * scale);
+        canvas.drawPath(c1, fineLine);
+        canvas.drawPath(c2, primaryLine);
+        canvas.drawCircle(center - Offset(0, 5.0 * scale), 1.0 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.disadvantage:
+        // DUAL DOWNWARD CHEVRONS
+        final c1 = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy - 3.0 * scale)
+          ..lineTo(center.dx, center.dy + 1.0 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy - 3.0 * scale);
+        final c2 = Path()
+          ..moveTo(center.dx - 4.5 * scale, center.dy + 1.0 * scale)
+          ..lineTo(center.dx, center.dy + 5.0 * scale)
+          ..lineTo(center.dx + 4.5 * scale, center.dy + 1.0 * scale);
+        canvas.drawPath(c1, fineLine);
+        canvas.drawPath(c2, primaryLine);
+        canvas.drawCircle(center + Offset(0, 5.0 * scale), 1.0 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.concentrating:
+        // CONCENTRIC ORBITAL SATELLITE LOOPS
+        canvas.drawCircle(center, 4.5 * scale, primaryLine);
+        final satA = Offset(center.dx + 4.5 * scale * cos(pulseTurns * 2 * pi), center.dy + 4.5 * scale * sin(pulseTurns * 2 * pi));
+        final satB = Offset(center.dx + 4.5 * scale * cos(pulseTurns * 2 * pi + pi), center.dy + 4.5 * scale * sin(pulseTurns * 2 * pi + pi));
+        canvas.drawCircle(satA, 1.2 * scale, nodeFill);
+        canvas.drawCircle(satB, 1.2 * scale, nodeFill);
+        canvas.drawCircle(center, 1.5 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.deathSave:
+        // CARDIAC TELEMETRY PULSE LINE
+        final pulse = Path()
+          ..moveTo(center.dx - 5.5 * scale, center.dy)
+          ..lineTo(center.dx - 2.5 * scale, center.dy)
+          ..lineTo(center.dx - 1.2 * scale, center.dy - 4.5 * scale)
+          ..lineTo(center.dx + 0.8 * scale, center.dy + 4.5 * scale)
+          ..lineTo(center.dx + 2.2 * scale, center.dy)
+          ..lineTo(center.dx + 5.5 * scale, center.dy);
+        canvas.drawPath(pulse, primaryLine);
+        canvas.drawCircle(center - Offset(1.2 * scale, 4.5 * scale), 0.9 * scale, nodeFill);
+        canvas.drawCircle(center + Offset(0.8 * scale, -4.5 * scale), 0.9 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.actionEconomyAction:
+        // PRIMARY ACTION DIAMOND NODE
+        final d = Path()
+          ..moveTo(center.dx, center.dy - 4.8 * scale)
+          ..lineTo(center.dx + 4.8 * scale, center.dy)
+          ..lineTo(center.dx, center.dy + 4.8 * scale)
+          ..lineTo(center.dx - 4.8 * scale, center.dy)
+          ..close();
+        canvas.drawPath(d, primaryLine);
+        canvas.drawCircle(center, 2.0 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.actionEconomyBonus:
+        // TRIPLE SPARK QUICK ACTION NODE
+        for (int i = 0; i < 3; i++) {
+          final a = (i * 120.0 - 90.0) * pi / 180.0;
+          canvas.drawLine(
+            center,
+            Offset(center.dx + 5.0 * scale * cos(a), center.dy + 5.0 * scale * sin(a)),
+            primaryLine,
+          );
+          canvas.drawCircle(
+            Offset(center.dx + 5.0 * scale * cos(a), center.dy + 5.0 * scale * sin(a)),
+            1.2 * scale,
+            nodeFill,
+          );
+        }
+        canvas.drawCircle(center, 1.4 * scale, nodeFill);
+        break;
+
+      case GenericUiGlyphType.actionEconomyReaction:
+        // DEFLECTION BRACKET SHIELD
+        final bracket = Path()
+          ..moveTo(center.dx - 4.0 * scale, center.dy - 4.0 * scale)
+          ..lineTo(center.dx + 2.0 * scale, center.dy)
+          ..lineTo(center.dx - 4.0 * scale, center.dy + 4.0 * scale);
+        canvas.drawPath(bracket, primaryLine);
+        canvas.drawLine(center + Offset(4.0 * scale, -4.0 * scale), center + Offset(4.0 * scale, 4.0 * scale), fineLine);
+        canvas.drawCircle(center + Offset(2.0 * scale, 0), 1.2 * scale, nodeFill);
+        break;
+    }
+
+    canvas.restore();
+  }
 }
+
 

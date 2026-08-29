@@ -878,6 +878,117 @@ class GlyphGeometry {
           canvas.drawPath(diamond, finePaint);
         }
         break;
+
+      case ActionRingType.bonusAction:
+        // Triple-Spark Triangulation Ring with Quick-Action Apex Rays
+        canvas.drawCircle(center, r, mainPaint);
+        if (!isGlow) {
+          const sparks = 3;
+          for (int i = 0; i < sparks; i++) {
+            final a = (i * 120.0 - 90.0) * pi / 180.0;
+            final pInner = Offset(center.dx + (r - 1.5 * scale) * cos(a),
+                center.dy + (r - 1.5 * scale) * sin(a));
+            final pOuter = Offset(center.dx + (r + 1.8 * scale) * cos(a),
+                center.dy + (r + 1.8 * scale) * sin(a));
+            canvas.drawLine(pInner, pOuter, finePaint);
+            canvas.drawCircle(pOuter, 1.0 * scale, nodeFill);
+          }
+        }
+        break;
+
+      case ActionRingType.resource:
+        // Segmented Rest & Recharge Resource Matrix Ring
+        const segments = 4;
+        for (int i = 0; i < segments; i++) {
+          final aStart = (i * 90.0 + 10.0) * pi / 180.0;
+          final aEnd = (i * 90.0 + 80.0) * pi / 180.0;
+          final rect = Rect.fromCircle(center: center, radius: r);
+          canvas.drawArc(rect, aStart, aEnd - aStart, false, mainPaint);
+          if (!isGlow) {
+            final aMid = (i * 90.0 + 45.0) * pi / 180.0;
+            final p = Offset(center.dx + (r + 0.8 * scale) * cos(aMid),
+                center.dy + (r + 0.8 * scale) * sin(aMid));
+            canvas.drawCircle(p, 0.85 * scale, nodeFill);
+          }
+        }
+        break;
+
+      case ActionRingType.passive:
+        // Continuous Harmonic Double Ring with Steady Resonance
+        canvas.drawCircle(center, r, mainPaint);
+        canvas.drawCircle(center, r - 0.9 * scale, finePaint);
+        if (!isGlow) {
+          for (int i = 0; i < 8; i++) {
+            final a = (i * 45.0) * pi / 180.0;
+            final pt = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
+            canvas.drawCircle(pt, 0.65 * scale, nodeFill);
+          }
+        }
+        break;
+
+      case ActionRingType.speed:
+        // Velocity Motion Vector Arc Ring with Forward Chevrons
+        final rect = Rect.fromCircle(center: center, radius: r);
+        canvas.drawArc(rect, -pi * 0.75, pi * 1.5, false, mainPaint);
+        if (!isGlow) {
+          for (int i = 0; i < 3; i++) {
+            final a = (-pi * 0.45) + (i * pi * 0.45);
+            final p1 = Offset(center.dx + (r - 1.2 * scale) * cos(a - 0.1),
+                center.dy + (r - 1.2 * scale) * sin(a - 0.1));
+            final p2 = Offset(center.dx + (r + 1.2 * scale) * cos(a),
+                center.dy + (r + 1.2 * scale) * sin(a));
+            final p3 = Offset(center.dx + (r - 1.2 * scale) * cos(a + 0.1),
+                center.dy + (r - 1.2 * scale) * sin(a + 0.1));
+            final chevron = Path()
+              ..moveTo(p1.dx, p1.dy)
+              ..lineTo(p2.dx, p2.dy)
+              ..lineTo(p3.dx, p3.dy);
+            canvas.drawPath(chevron, finePaint);
+            canvas.drawCircle(p2, 0.75 * scale, nodeFill);
+          }
+        }
+        break;
+
+      case ActionRingType.sense:
+        // Sensory Sonar Radar Sweep Ring with Crosshair Coordinates
+        canvas.drawCircle(center, r, mainPaint);
+        canvas.drawCircle(center, r * 0.7, finePaint);
+        if (!isGlow) {
+          for (int i = 0; i < 4; i++) {
+            final a = (i * 90.0 + 45.0) * pi / 180.0;
+            final p1 = Offset(center.dx + (r * 0.6) * cos(a),
+                center.dy + (r * 0.6) * sin(a));
+            final p2 = Offset(center.dx + (r + 1.5 * scale) * cos(a),
+                center.dy + (r + 1.5 * scale) * sin(a));
+            canvas.drawLine(p1, p2, finePaint);
+            canvas.drawCircle(p2, 0.8 * scale, nodeFill);
+          }
+        }
+        break;
+
+      case ActionRingType.hitDie:
+        // Polyhedral Hit Die Ring with Faceted Coordinate Geometry
+        final poly = Path();
+        const numSides = 6;
+        for (int i = 0; i < numSides; i++) {
+          final a = (i * 60.0 - 30.0) * pi / 180.0;
+          final pt = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
+          if (i == 0) {
+            poly.moveTo(pt.dx, pt.dy);
+          } else {
+            poly.lineTo(pt.dx, pt.dy);
+          }
+        }
+        poly.close();
+        canvas.drawPath(poly, mainPaint);
+        if (!isGlow) {
+          for (int i = 0; i < numSides; i++) {
+            final a = (i * 60.0 - 30.0) * pi / 180.0;
+            final pt = Offset(center.dx + r * cos(a), center.dy + r * sin(a));
+            canvas.drawCircle(pt, 0.9 * scale, nodeFill);
+          }
+        }
+        break;
     }
   }
 

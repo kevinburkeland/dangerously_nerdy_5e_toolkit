@@ -6,7 +6,7 @@ import 'glyph_geometry.dart';
 import 'glyph_motifs.dart';
 import '../../providers/settings_provider.dart';
 
-/// Universal Dynamic D&D Vector Glyph Widget for Spells, Monsters, and Magic Items.
+/// Universal Dynamic D&D Vector Glyph Widget for Spells, Monsters, Magic Items, Classes, Feats, Species, and Generic UI.
 /// Renders an authentic holographic wireframe techno-rune schematic HUD with
 /// dynamic, damage-colored geometric action trait rings.
 class DndGlyph extends StatefulWidget {
@@ -14,8 +14,13 @@ class DndGlyph extends StatefulWidget {
   final CreatureType? creatureType;
   final ItemCategory? itemCategory;
   final ItemRarity? itemRarity;
+  final DndClassType? classType;
+  final FeatCategory? featCategory;
+  final String? featId;
+  final SpeciesType? speciesType;
+  final GenericUiGlyphType? genericUiType;
   final GlyphThemeData themeData;
-  final int tierLevel; // Spell Level (0-9), Monster CR Tier (1-4), or Item Rarity (0-5)
+  final int tierLevel; // Spell Level (0-9), Monster CR Tier (1-4), Item Rarity (0-5), Feat Tier (1-4), Hit Die (6-12)
   final List<ActionTraitRing> actionRings;
   final DamageAccent? damageAccent; // Legacy support
   final ActionBadge? actionBadge; // Legacy support
@@ -31,6 +36,11 @@ class DndGlyph extends StatefulWidget {
     this.creatureType,
     this.itemCategory,
     this.itemRarity,
+    this.classType,
+    this.featCategory,
+    this.featId,
+    this.speciesType,
+    this.genericUiType,
     required this.themeData,
     this.tierLevel = 0,
     this.actionRings = const [],
@@ -206,6 +216,295 @@ class DndGlyph extends StatefulWidget {
     );
   }
 
+  /// Factory constructor for Character Class Glyphs.
+  factory DndGlyph.classFeature({
+    Key? key,
+    required DndClassType classType,
+    GlyphFrameShape? frameShapeOverride,
+    GlyphThemeData? themeData,
+    List<ActionTraitRing>? actionRings,
+    Color? glyphColor,
+    double size = 32.0,
+    bool? isDarkMode,
+    bool isActive = false,
+    VoidCallback? onTap,
+    String? tooltip,
+  }) {
+    final effectiveTheme = themeData ??
+        GlyphThemeData.fromClass(
+          classType,
+          primaryColorOverride: glyphColor,
+          shapeOverride: frameShapeOverride,
+        );
+
+    final rings = actionRings ?? [
+      ActionTraitRing(
+        ringType: ActionRingType.hitDie,
+        label: 'd${classType.hitDieSides} Hit Die',
+      ),
+      ActionTraitRing(
+        ringType: ActionRingType.resource,
+        label: classType.primaryResource,
+      ),
+    ];
+
+    return DndGlyph._(
+      key: key,
+      classType: classType,
+      themeData: effectiveTheme,
+      tierLevel: classType.hitDieSides <= 6 ? 1 : (classType.hitDieSides <= 8 ? 2 : (classType.hitDieSides <= 10 ? 3 : 4)),
+      actionRings: rings,
+      size: size,
+      isDarkMode: isDarkMode,
+      isActive: isActive,
+      onTap: onTap,
+      tooltip: tooltip ?? '${classType.displayName} (d${classType.hitDieSides}, ${classType.primaryResource})',
+    );
+  }
+
+  /// Factory constructor for Feat & Epic Boon Glyphs.
+  factory DndGlyph.feat({
+    Key? key,
+    required FeatCategory category,
+    required String featId,
+    String? displayName,
+    GlyphFrameShape? frameShapeOverride,
+    GlyphThemeData? themeData,
+    List<ActionTraitRing>? actionRings,
+    Color? glyphColor,
+    double size = 32.0,
+    bool? isDarkMode,
+    bool isActive = false,
+    VoidCallback? onTap,
+    String? tooltip,
+  }) {
+    final effectiveTheme = themeData ??
+        GlyphThemeData.fromFeat(
+          category,
+          primaryColorOverride: glyphColor,
+          shapeOverride: frameShapeOverride,
+        );
+
+    final rings = actionRings ?? [
+      ActionTraitRing(
+        ringType: category == FeatCategory.epicBoon ? ActionRingType.legendary : ActionRingType.passive,
+        label: category.displayName,
+      ),
+    ];
+
+    return DndGlyph._(
+      key: key,
+      featCategory: category,
+      featId: featId,
+      themeData: effectiveTheme,
+      tierLevel: category.tierLevel,
+      actionRings: rings,
+      size: size,
+      isDarkMode: isDarkMode,
+      isActive: isActive,
+      onTap: onTap,
+      tooltip: tooltip ?? '${displayName ?? featId} (${category.displayName})',
+    );
+  }
+
+  /// Factory constructor for Species & Heritage Glyphs.
+  factory DndGlyph.species({
+    Key? key,
+    required SpeciesType speciesType,
+    GlyphFrameShape? frameShapeOverride,
+    GlyphThemeData? themeData,
+    List<ActionTraitRing>? actionRings,
+    Color? glyphColor,
+    double size = 32.0,
+    bool? isDarkMode,
+    bool isActive = false,
+    VoidCallback? onTap,
+    String? tooltip,
+  }) {
+    final effectiveTheme = themeData ??
+        GlyphThemeData.fromSpecies(
+          speciesType,
+          primaryColorOverride: glyphColor,
+          shapeOverride: frameShapeOverride,
+        );
+
+    final rings = actionRings ?? [
+      ActionTraitRing(
+        ringType: ActionRingType.speed,
+        label: '${speciesType.speed} ft Movement Speed',
+      ),
+      ActionTraitRing(
+        ringType: ActionRingType.sense,
+        label: speciesType.traits,
+      ),
+    ];
+
+    return DndGlyph._(
+      key: key,
+      speciesType: speciesType,
+      themeData: effectiveTheme,
+      tierLevel: 2,
+      actionRings: rings,
+      size: size,
+      isDarkMode: isDarkMode,
+      isActive: isActive,
+      onTap: onTap,
+      tooltip: tooltip ?? '${speciesType.displayName} (${speciesType.size}, ${speciesType.speed} ft)',
+    );
+  }
+
+  /// Factory constructor for Generic UI & Polyhedral Glyphs.
+  factory DndGlyph.genericUi({
+    Key? key,
+    required GenericUiGlyphType uiType,
+    GlyphFrameShape? frameShapeOverride,
+    GlyphThemeData? themeData,
+    List<ActionTraitRing>? actionRings,
+    Color? glyphColor,
+    double size = 32.0,
+    bool? isDarkMode,
+    bool isActive = false,
+    VoidCallback? onTap,
+    String? tooltip,
+  }) {
+    final effectiveTheme = themeData ??
+        GlyphThemeData.fromGenericUi(
+          uiType,
+          primaryColorOverride: glyphColor,
+          shapeOverride: frameShapeOverride,
+        );
+
+    return DndGlyph._(
+      key: key,
+      genericUiType: uiType,
+      themeData: effectiveTheme,
+      tierLevel: 1,
+      actionRings: actionRings ?? const [],
+      size: size,
+      isDarkMode: isDarkMode,
+      isActive: isActive,
+      onTap: onTap,
+      tooltip: tooltip ?? uiType.displayName,
+    );
+  }
+
+  /// Polymorphic factory constructor that renders any [GlyphRenderable] instance.
+  factory DndGlyph.fromRenderable(
+    GlyphRenderable item, {
+    Key? key,
+    double size = 32.0,
+    bool? isDarkMode,
+    bool isActive = false,
+    VoidCallback? onTap,
+    String? tooltip,
+  }) {
+    final meta = item.metadata ?? const <String, dynamic>{};
+    switch (item.glyphCategory) {
+      case GlyphCategory.spell:
+        final school = meta['school'] as SpellSchool? ?? SpellSchool.evocation;
+        final level = meta['level'] as int? ?? 0;
+        return DndGlyph.spell(
+          key: key,
+          school: school,
+          level: level,
+          actionRings: item.actionRings,
+          damageAccent: item.primaryAccent,
+          size: size,
+          isDarkMode: isDarkMode,
+          isActive: isActive,
+          onTap: onTap,
+          tooltip: tooltip ?? item.displayName,
+        );
+
+      case GlyphCategory.creature:
+        final cType = meta['creatureType'] as CreatureType? ?? CreatureType.beast;
+        final crTier = meta['crTier'] as int? ?? 1;
+        return DndGlyph.monster(
+          key: key,
+          creatureType: cType,
+          crTier: crTier,
+          actionRings: item.actionRings,
+          size: size,
+          isDarkMode: isDarkMode,
+          isActive: isActive,
+          onTap: onTap,
+          tooltip: tooltip ?? item.displayName,
+        );
+
+      case GlyphCategory.item:
+        final cat = meta['category'] as ItemCategory? ?? ItemCategory.wondrousItem;
+        final rarity = meta['rarity'] as ItemRarity? ?? ItemRarity.common;
+        final requiresAttunement = meta['requiresAttunement'] as bool? ?? false;
+        return DndGlyph.item(
+          key: key,
+          category: cat,
+          rarity: rarity,
+          requiresAttunement: requiresAttunement,
+          actionRings: item.actionRings,
+          damageAccent: item.primaryAccent,
+          size: size,
+          isDarkMode: isDarkMode,
+          isActive: isActive,
+          onTap: onTap,
+          tooltip: tooltip ?? item.displayName,
+        );
+
+      case GlyphCategory.classFeature:
+        final classType = meta['classType'] as DndClassType? ?? DndClassType.fighter;
+        return DndGlyph.classFeature(
+          key: key,
+          classType: classType,
+          actionRings: item.actionRings,
+          size: size,
+          isDarkMode: isDarkMode,
+          isActive: isActive,
+          onTap: onTap,
+          tooltip: tooltip ?? item.displayName,
+        );
+
+      case GlyphCategory.feat:
+        final featCat = meta['featCategory'] as FeatCategory? ?? FeatCategory.general;
+        return DndGlyph.feat(
+          key: key,
+          category: featCat,
+          featId: item.glyphId,
+          displayName: item.displayName,
+          actionRings: item.actionRings,
+          size: size,
+          isDarkMode: isDarkMode,
+          isActive: isActive,
+          onTap: onTap,
+          tooltip: tooltip ?? item.displayName,
+        );
+
+      case GlyphCategory.species:
+        final sType = meta['speciesType'] as SpeciesType? ?? SpeciesType.human;
+        return DndGlyph.species(
+          key: key,
+          speciesType: sType,
+          actionRings: item.actionRings,
+          size: size,
+          isDarkMode: isDarkMode,
+          isActive: isActive,
+          onTap: onTap,
+          tooltip: tooltip ?? item.displayName,
+        );
+
+      case GlyphCategory.genericUi:
+        final uiType = meta['uiType'] as GenericUiGlyphType? ?? GenericUiGlyphType.d20;
+        return DndGlyph.genericUi(
+          key: key,
+          uiType: uiType,
+          actionRings: item.actionRings,
+          size: size,
+          isDarkMode: isDarkMode,
+          isActive: isActive,
+          onTap: onTap,
+          tooltip: tooltip ?? item.displayName,
+        );
+    }
+  }
+
   static ActionTraitRing _mapLegacyBadge(ActionBadge badge) {
     switch (badge) {
       case ActionBadge.melee:
@@ -351,6 +650,11 @@ class _DndGlyphState extends State<DndGlyph> with TickerProviderStateMixin {
           creatureType: widget.creatureType,
           itemCategory: widget.itemCategory,
           itemRarity: widget.itemRarity,
+          classType: widget.classType,
+          featCategory: widget.featCategory,
+          featId: widget.featId,
+          speciesType: widget.speciesType,
+          genericUiType: widget.genericUiType,
           themeData: widget.themeData,
           tierLevel: widget.tierLevel,
           actionRings: widget.actionRings,
@@ -418,6 +722,11 @@ class _DndHolographicWireframePainter extends CustomPainter {
   final CreatureType? creatureType;
   final ItemCategory? itemCategory;
   final ItemRarity? itemRarity;
+  final DndClassType? classType;
+  final FeatCategory? featCategory;
+  final String? featId;
+  final SpeciesType? speciesType;
+  final GenericUiGlyphType? genericUiType;
   final GlyphThemeData themeData;
   final int tierLevel;
   final List<ActionTraitRing> actionRings;
@@ -435,6 +744,11 @@ class _DndHolographicWireframePainter extends CustomPainter {
     required this.creatureType,
     this.itemCategory,
     this.itemRarity,
+    this.classType,
+    this.featCategory,
+    this.featId,
+    this.speciesType,
+    this.genericUiType,
     required this.themeData,
     required this.tierLevel,
     required this.actionRings,
@@ -752,6 +1066,47 @@ class _DndHolographicWireframePainter extends CustomPainter {
         pulseTurns: ringRotationProgress.value,
         animatePulse: false,
       );
+    } else if (classType != null) {
+      GlyphMotifs.drawClassMotif(
+        canvas: canvas,
+        size: size,
+        classType: classType!,
+        color: motifColor,
+        isDarkMode: isDarkMode,
+        pulseTurns: ringRotationProgress.value,
+        animatePulse: false,
+      );
+    } else if (featCategory != null) {
+      GlyphMotifs.drawFeatMotif(
+        canvas: canvas,
+        size: size,
+        category: featCategory!,
+        featId: featId ?? '',
+        color: motifColor,
+        isDarkMode: isDarkMode,
+        pulseTurns: ringRotationProgress.value,
+        animatePulse: false,
+      );
+    } else if (speciesType != null) {
+      GlyphMotifs.drawSpeciesMotif(
+        canvas: canvas,
+        size: size,
+        speciesType: speciesType!,
+        color: motifColor,
+        isDarkMode: isDarkMode,
+        pulseTurns: ringRotationProgress.value,
+        animatePulse: false,
+      );
+    } else if (genericUiType != null) {
+      GlyphMotifs.drawGenericUiMotif(
+        canvas: canvas,
+        size: size,
+        uiType: genericUiType!,
+        color: motifColor,
+        isDarkMode: isDarkMode,
+        pulseTurns: ringRotationProgress.value,
+        animatePulse: false,
+      );
     }
     canvas.restore();
 
@@ -783,6 +1138,11 @@ class _DndHolographicWireframePainter extends CustomPainter {
         old.creatureType != creatureType ||
         old.itemCategory != itemCategory ||
         old.itemRarity != itemRarity ||
+        old.classType != classType ||
+        old.featCategory != featCategory ||
+        old.featId != featId ||
+        old.speciesType != speciesType ||
+        old.genericUiType != genericUiType ||
         old.themeData != themeData ||
         old.tierLevel != tierLevel ||
         !listEquals(old.actionRings, actionRings) ||

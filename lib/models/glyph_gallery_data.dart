@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
 import 'dm_screen_data.dart';
 import 'spellbook_data.dart';
 import 'srd_summons/srd_summons_library.dart';
 
 /// Data model representing a spell entry in the Glyph Gallery.
-class GlyphSpellEntry {
+class GlyphSpellEntry implements GlyphRenderable {
   final String spellId;
   final String summary;
 
@@ -23,10 +24,38 @@ class GlyphSpellEntry {
   String get name => spell.getName(DmRulesEdition.v2024);
   SpellSchool get school => spell.getSchool(DmRulesEdition.v2024);
   int get level => spell.level;
+
+  @override
+  String get glyphId => spellId;
+
+  @override
+  String get displayName => name;
+
+  @override
+  GlyphCategory get glyphCategory => GlyphCategory.spell;
+
+  @override
   List<ActionTraitRing> get actionRings =>
       spell.getGlyphActionRings(DmRulesEdition.v2024);
-  DamageAccent? get damageAccent =>
+
+  @override
+  DamageAccent? get primaryAccent =>
       spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024);
+
+  @override
+  IconData? get fallbackIcon => school.icon;
+
+  @override
+  Map<String, dynamic>? get metadata => {
+        'school': school,
+        'level': level,
+        'summary': summary,
+        'castingTime': castingTime,
+        'range': range,
+        'duration': duration,
+      };
+
+  DamageAccent? get damageAccent => primaryAccent;
   String get castingTime => spell.getRules(DmRulesEdition.v2024).castingTime;
   String get range => spell.getRules(DmRulesEdition.v2024).range;
   String get duration => spell.getRules(DmRulesEdition.v2024).duration;
@@ -35,11 +64,12 @@ class GlyphSpellEntry {
 }
 
 /// Data model representing a creature entry in the Glyph Gallery.
-class GlyphCreatureEntry {
+class GlyphCreatureEntry implements GlyphRenderable {
   final String name;
   final CreatureType type;
   final String cr;
   final int crTier; // 1: CR 0-4, 2: CR 5-10, 3: CR 11-16, 4: CR 17+
+  @override
   final List<ActionTraitRing> actionRings;
   final ActionBadge? actionBadge;
   final int ac;
@@ -59,15 +89,44 @@ class GlyphCreatureEntry {
     required this.speed,
     required this.primaryAttack,
   });
+
+  @override
+  String get glyphId =>
+      'creature_${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_')}';
+
+  @override
+  String get displayName => name;
+
+  @override
+  GlyphCategory get glyphCategory => GlyphCategory.creature;
+
+  @override
+  DamageAccent? get primaryAccent =>
+      actionRings.isNotEmpty ? actionRings.first.damageType : null;
+
+  @override
+  IconData? get fallbackIcon => Icons.pets;
+
+  @override
+  Map<String, dynamic>? get metadata => {
+        'creatureType': type,
+        'cr': cr,
+        'crTier': crTier,
+        'ac': ac,
+        'hp': hp,
+        'speed': speed,
+        'primaryAttack': primaryAttack,
+      };
 }
 
 /// Data model representing a magic item entry in the Glyph Gallery.
-class GlyphItemEntry {
+class GlyphItemEntry implements GlyphRenderable {
   final String name;
   final ItemCategory category;
   final ItemRarity rarity;
   final bool requiresAttunement;
   final DamageAccent? damageAccent;
+  @override
   final List<ActionTraitRing> actionRings;
   final String summary;
 
@@ -80,9 +139,218 @@ class GlyphItemEntry {
     this.actionRings = const [],
     required this.summary,
   });
+
+  @override
+  String get glyphId =>
+      'item_${name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_')}';
+
+  @override
+  String get displayName => name;
+
+  @override
+  GlyphCategory get glyphCategory => GlyphCategory.item;
+
+  @override
+  DamageAccent? get primaryAccent =>
+      damageAccent ??
+      (actionRings.isNotEmpty ? actionRings.first.damageType : null);
+
+  @override
+  IconData? get fallbackIcon => category.icon;
+
+  @override
+  Map<String, dynamic>? get metadata => {
+        'category': category,
+        'rarity': rarity,
+        'requiresAttunement': requiresAttunement,
+        'summary': summary,
+      };
 }
 
-/// Library of known spells, creatures, and magic items in the toolkit with multi-ring action traits.
+/// Data model representing a character class entry in the Glyph Gallery.
+class GlyphClassEntry implements GlyphRenderable {
+  final String name;
+  final DndClassType classType;
+  final String primaryAbility;
+  final String savingThrows;
+  final String primaryResource;
+  @override
+  final List<ActionTraitRing> actionRings;
+  final String summary;
+
+  const GlyphClassEntry({
+    required this.name,
+    required this.classType,
+    required this.primaryAbility,
+    required this.savingThrows,
+    required this.primaryResource,
+    required this.actionRings,
+    required this.summary,
+  });
+
+  @override
+  String get glyphId => 'class_${classType.name}';
+
+  @override
+  String get displayName => name;
+
+  @override
+  GlyphCategory get glyphCategory => GlyphCategory.classFeature;
+
+  @override
+  DamageAccent? get primaryAccent => null;
+
+  @override
+  IconData? get fallbackIcon => Icons.shield;
+
+  @override
+  Map<String, dynamic>? get metadata => {
+        'classType': classType,
+        'hitDieSides': classType.hitDieSides,
+        'primaryAbility': primaryAbility,
+        'savingThrows': savingThrows,
+        'primaryResource': primaryResource,
+        'summary': summary,
+      };
+}
+
+/// Data model representing a feat entry in the Glyph Gallery.
+class GlyphFeatEntry implements GlyphRenderable {
+  final String featId;
+  final String name;
+  final FeatCategory featCategory;
+  final int minLevel;
+  final String? prerequisite;
+  final FeatTriggerType triggerType;
+  @override
+  final List<ActionTraitRing> actionRings;
+  final DamageAccent? damageAccent;
+  final String summary;
+
+  const GlyphFeatEntry({
+    required this.featId,
+    required this.name,
+    required this.featCategory,
+    this.minLevel = 1,
+    this.prerequisite,
+    this.triggerType = FeatTriggerType.passive,
+    required this.actionRings,
+    this.damageAccent,
+    required this.summary,
+  });
+
+  @override
+  String get glyphId => featId;
+
+  @override
+  String get displayName => name;
+
+  @override
+  GlyphCategory get glyphCategory => GlyphCategory.feat;
+
+  @override
+  DamageAccent? get primaryAccent => damageAccent;
+
+  @override
+  IconData? get fallbackIcon => Icons.stars_outlined;
+
+  @override
+  Map<String, dynamic>? get metadata => {
+        'featCategory': featCategory,
+        'minLevel': minLevel,
+        'prerequisite': prerequisite,
+        'triggerType': triggerType,
+        'summary': summary,
+      };
+}
+
+/// Data model representing a species entry in the Glyph Gallery.
+class GlyphSpeciesEntry implements GlyphRenderable {
+  final String name;
+  final SpeciesType speciesType;
+  final String size;
+  final int speed;
+  final String traits;
+  @override
+  final List<ActionTraitRing> actionRings;
+  final String summary;
+
+  const GlyphSpeciesEntry({
+    required this.name,
+    required this.speciesType,
+    required this.size,
+    required this.speed,
+    required this.traits,
+    required this.actionRings,
+    required this.summary,
+  });
+
+  @override
+  String get glyphId => 'species_${speciesType.name}';
+
+  @override
+  String get displayName => name;
+
+  @override
+  GlyphCategory get glyphCategory => GlyphCategory.species;
+
+  @override
+  DamageAccent? get primaryAccent => null;
+
+  @override
+  IconData? get fallbackIcon => Icons.groups_outlined;
+
+  @override
+  Map<String, dynamic>? get metadata => {
+        'speciesType': speciesType,
+        'size': size,
+        'speed': speed,
+        'traits': traits,
+        'summary': summary,
+      };
+}
+
+/// Data model representing a generic UI glyph entry in the Glyph Gallery.
+class GlyphGenericEntry implements GlyphRenderable {
+  final String name;
+  final GenericUiGlyphType uiType;
+  final String group;
+  @override
+  final List<ActionTraitRing> actionRings;
+  final String summary;
+
+  const GlyphGenericEntry({
+    required this.name,
+    required this.uiType,
+    required this.group,
+    this.actionRings = const [],
+    required this.summary,
+  });
+
+  @override
+  String get glyphId => 'ui_${uiType.name}';
+
+  @override
+  String get displayName => name;
+
+  @override
+  GlyphCategory get glyphCategory => GlyphCategory.genericUi;
+
+  @override
+  DamageAccent? get primaryAccent => null;
+
+  @override
+  IconData? get fallbackIcon => Icons.widgets_outlined;
+
+  @override
+  Map<String, dynamic>? get metadata => {
+        'uiType': uiType,
+        'group': group,
+        'summary': summary,
+      };
+}
+
+/// Library of known spells, creatures, magic items, feats, classes, species, and generic UI in the toolkit.
 class GlyphGalleryData {
   // ---------------------------------------------------------------------------
   // SPELLS (The 7 core summon/minion spells in the toolkit)
@@ -1025,6 +1293,744 @@ class GlyphGalleryData {
       rarity: ItemRarity.common,
       summary:
           'A curious desiccated goblin hand wearing a rusted iron band, rolled from the 100 SRD Trinkets.',
+    ),
+  ];
+
+  // ---------------------------------------------------------------------------
+  // FEATS & EPIC BOONS (Representative 2014/2024 SRD Feats)
+  // ---------------------------------------------------------------------------
+  static const List<GlyphFeatEntry> allFeats = [
+    GlyphFeatEntry(
+      featId: 'feat_alert',
+      name: 'Alert',
+      featCategory: FeatCategory.origin,
+      minLevel: 1,
+      triggerType: FeatTriggerType.passive,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: '+Proficiency to Initiative & Swap Initiative',
+        ),
+      ],
+      summary:
+          'Always on the lookout for danger. You gain a bonus to initiative rolls equal to your proficiency bonus and can swap initiative with a willing ally.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_war_caster',
+      name: 'War Caster',
+      featCategory: FeatCategory.general,
+      minLevel: 4,
+      prerequisite: 'Spellcasting or Pact Magic feature',
+      triggerType: FeatTriggerType.reaction,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.concentration,
+          label: 'Advantage on Concentration Saves',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Opportunity Attack Spell Cast',
+        ),
+      ],
+      summary:
+          'Master of combat spellcasting. Grants advantage on Constitution saves for concentration, somatic spells with weapons equipped, and casting spells on Opportunity Attacks.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_great_weapon_master',
+      name: 'Great Weapon Master',
+      featCategory: FeatCategory.general,
+      minLevel: 4,
+      prerequisite: 'Strength 13+',
+      triggerType: FeatTriggerType.bonusAction,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.melee,
+          label: '+Proficiency Heavy Weapon Damage',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Bonus Attack on Crit or Kill',
+        ),
+      ],
+      summary:
+          'Devastating strikes with heavy weapons. Hit with heavy weapons deals extra damage equal to your proficiency bonus, and crits/kills grant a bonus attack.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_sharpshooter',
+      name: 'Sharpshooter',
+      featCategory: FeatCategory.general,
+      minLevel: 4,
+      prerequisite: 'Dexterity 13+',
+      triggerType: FeatTriggerType.passive,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.ranged,
+          label: 'Ignore 1/2 & 3/4 Cover, Max Range',
+        ),
+      ],
+      summary:
+          'Supreme marksman. Ranged weapon attacks ignore half and three-quarters cover, suffer no disadvantage at long range, and can fire in melee range.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_sentinel',
+      name: 'Sentinel',
+      featCategory: FeatCategory.general,
+      minLevel: 4,
+      prerequisite: 'Strength or Dexterity 13+',
+      triggerType: FeatTriggerType.reaction,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'OA Sets Speed to 0 & Ignore Disengage',
+        ),
+      ],
+      summary:
+          'Immovable guardian. Hitting a creature with an opportunity attack reduces its speed to 0 for the turn, and you can strike creatures even if they disengage.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_lucky',
+      name: 'Lucky',
+      featCategory: FeatCategory.origin,
+      minLevel: 1,
+      triggerType: FeatTriggerType.reaction,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.resource,
+          label: 'Luck Points = Proficiency Bonus',
+        ),
+      ],
+      summary:
+          'Uncanny knack for survival. You possess luck points equal to your proficiency bonus to gain advantage or force disadvantage on incoming attacks.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_tavern_brawler',
+      name: 'Tavern Brawler',
+      featCategory: FeatCategory.origin,
+      minLevel: 1,
+      triggerType: FeatTriggerType.passive,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.melee,
+          label: '1d4 Unarmed Strike & Push 5 ft',
+        ),
+      ],
+      summary:
+          'Accustomed to rough-and-tumble fighting. Your unarmed strikes deal 1d4 + Str mod damage, you reroll damage 1s, and you can push targets 5 feet on hit.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_inspiring_leader',
+      name: 'Inspiring Leader',
+      featCategory: FeatCategory.general,
+      minLevel: 4,
+      prerequisite: 'Charisma or Wisdom 13+',
+      triggerType: FeatTriggerType.resource,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sustain,
+          label: 'Temp HP = Level + Ability Mod',
+        ),
+      ],
+      summary:
+          'Inspire confidence in your allies. Deliver a 10-minute speech granting temporary hit points equal to your level + ability modifier to up to 6 allies.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_boon_combat_prowess',
+      name: 'Boon of Combat Prowess',
+      featCategory: FeatCategory.epicBoon,
+      minLevel: 19,
+      triggerType: FeatTriggerType.passive,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.legendary,
+          label: 'Turn Miss into Hit (1/Turn)',
+        ),
+      ],
+      summary:
+          'Transcendent martial mastery. When you miss with an attack roll, you can choose to hit instead once per combat round.',
+    ),
+    GlyphFeatEntry(
+      featId: 'feat_boon_spell_recall',
+      name: 'Boon of Spell Recall',
+      featCategory: FeatCategory.epicBoon,
+      minLevel: 19,
+      triggerType: FeatTriggerType.reaction,
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.legendary,
+          damageType: DamageAccent.radiant,
+          label: '25% Free Slot Chance on 1st-4th Level',
+        ),
+      ],
+      summary:
+          'Unfathomable arcane resonance. Whenever you cast a spell of 1st through 4th level, roll a d4; on a 4, the spell slot is not expended.',
+    ),
+  ];
+
+  // ---------------------------------------------------------------------------
+  // CHARACTER CLASSES (13 Core SRD Classes & Hit Die Geometries)
+  // ---------------------------------------------------------------------------
+  static const List<GlyphClassEntry> allClasses = [
+    GlyphClassEntry(
+      name: 'Barbarian',
+      classType: DndClassType.barbarian,
+      primaryAbility: 'Strength',
+      savingThrows: 'Strength & Constitution',
+      primaryResource: 'Rage (d12 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd12 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Enter Rage & Primal Power',
+        ),
+      ],
+      summary:
+          'A fierce warrior of primitive background who can enter a battle rage, shrugging off fatal injuries with a titanic d12 hit die.',
+    ),
+    GlyphClassEntry(
+      name: 'Bard',
+      classType: DndClassType.bard,
+      primaryAbility: 'Charisma',
+      savingThrows: 'Dexterity & Charisma',
+      primaryResource: 'Bardic Inspiration (d8 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd8 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Bardic Inspiration Die',
+        ),
+      ],
+      summary:
+          'An inspiring magician whose power echoes the music of creation, weaving spells and inspiring allies with harmonic resonance.',
+    ),
+    GlyphClassEntry(
+      name: 'Cleric',
+      classType: DndClassType.cleric,
+      primaryAbility: 'Wisdom',
+      savingThrows: 'Wisdom & Charisma',
+      primaryResource: 'Channel Divinity (d8 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd8 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.resource,
+          label: 'Channel Divinity & Turn Undead',
+        ),
+      ],
+      summary:
+          'A priestly champion who wields divine magic in service of a higher power, smiting unholy foes and restoring vitality.',
+    ),
+    GlyphClassEntry(
+      name: 'Druid',
+      classType: DndClassType.druid,
+      primaryAbility: 'Wisdom',
+      savingThrows: 'Intelligence & Wisdom',
+      primaryResource: 'Wild Shape (d8 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd8 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Wild Shape Beast Matrix',
+        ),
+      ],
+      summary:
+          'A priest of the Old Faith, wielding the powers of nature and adopting the forms of beasts through sacred Wild Shape.',
+    ),
+    GlyphClassEntry(
+      name: 'Fighter',
+      classType: DndClassType.fighter,
+      primaryAbility: 'Strength or Dexterity',
+      savingThrows: 'Strength & Constitution',
+      primaryResource: 'Action Surge (d10 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd10 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.resource,
+          label: 'Action Surge (Extra Action)',
+        ),
+      ],
+      summary:
+          'A master of martial combat, skilled with a variety of weapons and armor, capable of pushing past physical limits with Action Surge.',
+    ),
+    GlyphClassEntry(
+      name: 'Monk',
+      classType: DndClassType.monk,
+      primaryAbility: 'Dexterity & Wisdom',
+      savingThrows: 'Strength & Dexterity',
+      primaryResource: 'Focus / Ki Points (d8 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd8 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.resource,
+          label: 'Focus Points (Flurry, Patient Defense)',
+        ),
+      ],
+      summary:
+          'A master of martial arts, harnessing the power of the body in pursuit of physical and spiritual perfection through ki channels.',
+    ),
+    GlyphClassEntry(
+      name: 'Paladin',
+      classType: DndClassType.paladin,
+      primaryAbility: 'Strength & Charisma',
+      savingThrows: 'Wisdom & Charisma',
+      primaryResource: 'Lay on Hands & Divine Smite (d10 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd10 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.sustain,
+          damageType: DamageAccent.radiant,
+          label: 'Lay on Hands Pool (5x Level)',
+        ),
+      ],
+      summary:
+          'A holy warrior bound to a sacred oath, smiting foes with radiant retribution and healing comrades with Lay on Hands.',
+    ),
+    GlyphClassEntry(
+      name: 'Ranger',
+      classType: DndClassType.ranger,
+      primaryAbility: 'Dexterity & Wisdom',
+      savingThrows: 'Strength & Dexterity',
+      primaryResource: 'Hunter\'s Mark & Spell Slots (d10 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd10 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          label: 'Hunter\'s Mark Tracking',
+        ),
+      ],
+      summary:
+          'A warrior who uses martial prowess and nature magic to combat threats on the edges of civilization, tracking targets across any terrain.',
+    ),
+    GlyphClassEntry(
+      name: 'Rogue',
+      classType: DndClassType.rogue,
+      primaryAbility: 'Dexterity',
+      savingThrows: 'Dexterity & Intelligence',
+      primaryResource: 'Sneak Attack (d8 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd8 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.melee,
+          label: 'Sneak Attack (+Xd6 Damage)',
+        ),
+      ],
+      summary:
+          'A scoundrel who uses stealth and trickery to overcome obstacles and enemies, landing devastating sneak attack strikes.',
+    ),
+    GlyphClassEntry(
+      name: 'Sorcerer',
+      classType: DndClassType.sorcerer,
+      primaryAbility: 'Charisma',
+      savingThrows: 'Constitution & Charisma',
+      primaryResource: 'Sorcery Points & Metamagic (d6 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd6 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.resource,
+          damageType: DamageAccent.fire,
+          label: 'Sorcery Points & Metamagic Shaper',
+        ),
+      ],
+      summary:
+          'A spellcaster who draws on inherent magic from a gift or bloodline, bending and sculpting spells with Metamagic.',
+    ),
+    GlyphClassEntry(
+      name: 'Warlock',
+      classType: DndClassType.warlock,
+      primaryAbility: 'Charisma',
+      savingThrows: 'Wisdom & Charisma',
+      primaryResource: 'Pact Magic Slots (d8 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd8 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.recharge,
+          damageType: DamageAccent.necrotic,
+          label: 'Pact Slots (Recharge on Short Rest)',
+        ),
+      ],
+      summary:
+          'A wielder of magic that is derived from a bargain with an otherworldly patron, unleashing potent spells that recharge on short rests.',
+    ),
+    GlyphClassEntry(
+      name: 'Wizard',
+      classType: DndClassType.wizard,
+      primaryAbility: 'Intelligence',
+      savingThrows: 'Intelligence & Wisdom',
+      primaryResource: 'Arcane Recovery & Spellbook (d6 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd6 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.resource,
+          damageType: DamageAccent.force,
+          label: 'Arcane Recovery (Half Level in Slots)',
+        ),
+      ],
+      summary:
+          'A scholarly magic-user capable of manipulating the structures of reality, mastering the widest repository of arcane spells.',
+    ),
+    GlyphClassEntry(
+      name: 'Artificer',
+      classType: DndClassType.artificer,
+      primaryAbility: 'Intelligence',
+      savingThrows: 'Constitution & Intelligence',
+      primaryResource: 'Infusions & Magical Tinkering (d8 Hit Die)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.hitDie,
+          label: 'd8 Hit Die Geometry',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.resource,
+          label: 'Infused Items & Crafting Repertoire',
+        ),
+      ],
+      summary:
+          'Masters of invention, artificers use ingenuity and magic to unlock extraordinary capabilities in objects and construct techno-magical wonders.',
+    ),
+  ];
+
+  // ---------------------------------------------------------------------------
+  // SPECIES / HERITAGES (10 Core SRD 2014/2024 Species)
+  // ---------------------------------------------------------------------------
+  static const List<GlyphSpeciesEntry> allSpecies = [
+    GlyphSpeciesEntry(
+      name: 'Human',
+      speciesType: SpeciesType.human,
+      size: 'Medium',
+      speed: 30,
+      traits: 'Resourceful Inspiration, Skillful, Versatile',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.speed,
+          label: '30 ft Base Speed',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Origin Feat & Heroic Inspiration',
+        ),
+      ],
+      summary:
+          'Versatile and ambitious, humans innovate and adapt swiftly to any challenge, gaining bonus feats and heroic inspiration.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Elf',
+      speciesType: SpeciesType.elf,
+      size: 'Medium',
+      speed: 30,
+      traits: 'Darkvision (60 ft), Keen Senses, Fey Ancestry, Trance',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Fey Ancestry & Trance Meditation',
+        ),
+      ],
+      summary:
+          'A magical people of otherworldly grace, possessing keen senses, deep connection to the Feywild, and resistance to charms and sleep.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Dwarf',
+      speciesType: SpeciesType.dwarf,
+      size: 'Medium',
+      speed: 30,
+      traits: 'Darkvision (60 ft), Dwarven Resilience, Dwarven Toughness',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          damageType: DamageAccent.poison,
+          label: 'Poison Resistance & +1 HP/Level',
+        ),
+      ],
+      summary:
+          'Bold and hardy, dwarves are skilled warriors, miners, and stonecraft artisans with innate resilience against poisons.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Halfling',
+      speciesType: SpeciesType.halfling,
+      size: 'Small',
+      speed: 30,
+      traits: 'Lucky, Brave, Halfling Nimbleness, Naturally Stealthy',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Lucky (Reroll d20 1s)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Brave (Advantage vs Frightened)',
+        ),
+      ],
+      summary:
+          'Diminutive survivors who survive by luck and stealth, rerolling natural 1s on attack rolls, ability checks, and saving throws.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Dragonborn',
+      speciesType: SpeciesType.dragonborn,
+      size: 'Medium',
+      speed: 30,
+      traits: 'Breath Weapon, Damage Resistance, Darkvision (60 ft)',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.recharge,
+          damageType: DamageAccent.fire,
+          label: 'Draconic Breath Weapon (Line / Cone)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          damageType: DamageAccent.fire,
+          label: 'Draconic Ancestral Resistance',
+        ),
+      ],
+      summary:
+          'Born of dragons, dragonborn wield the raw elemental breath weapon and damage resistance of their draconic ancestry.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Gnome',
+      speciesType: SpeciesType.gnome,
+      size: 'Small',
+      speed: 30,
+      traits: 'Darkvision (60 ft), Gnomish Cunning',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Gnomish Cunning (Advantage on Int/Wis/Cha Saves)',
+        ),
+      ],
+      summary:
+          'Clever inventors and illusionists whose mental defenses effortlessly deflect magical assault via Gnomish Cunning.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Tiefling',
+      speciesType: SpeciesType.tiefling,
+      size: 'Medium',
+      speed: 30,
+      traits: 'Darkvision (60 ft), Hellish Resistance, Otherworldly Presence',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Darkvision (60 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          damageType: DamageAccent.fire,
+          label: 'Fire Resistance & Thaumaturgy',
+        ),
+      ],
+      summary:
+          'Carrying the bloodline of the Lower Planes, tieflings wield infernal resistance to fire and innate thaumaturgical cantrips.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Orc',
+      speciesType: SpeciesType.orc,
+      size: 'Medium',
+      speed: 30,
+      traits: 'Darkvision (120 ft), Relentless Endurance, Adrenaline Rush',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sense,
+          label: 'Superior Darkvision (120 ft)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Relentless Endurance (Drop to 1 HP)',
+        ),
+      ],
+      summary:
+          'Unstoppable juggernauts endowed with 120-foot darkvision and the power to drop to 1 hit point instead of 0 when reduced to zero.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Goliath',
+      speciesType: SpeciesType.goliath,
+      size: 'Medium',
+      speed: 35,
+      traits: 'Giant Ancestry, Large Form, Powerful Build, Stone\'s Endurance',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.speed,
+          label: '35 ft Base Movement Speed',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.reaction,
+          label: 'Stone\'s Endurance (Reduce 1d12 + Con Damage)',
+        ),
+      ],
+      summary:
+          'Towering champions carrying the blood of mountain giants, swift-footed and capable of shrugging off lethal blows with Stone\'s Endurance.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Aasimar',
+      speciesType: SpeciesType.aasimar,
+      size: 'Medium',
+      speed: 30,
+      traits: 'Darkvision (60 ft), Celestial Resistance, Healing Hands, Celestial Revelation',
+      actionRings: [
+        ActionTraitRing(
+          ringType: ActionRingType.sustain,
+          damageType: DamageAccent.radiant,
+          label: 'Healing Hands (D6s = Prof Bonus)',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.bonusAction,
+          damageType: DamageAccent.radiant,
+          label: 'Celestial Revelation (Radiant Wings)',
+        ),
+      ],
+      summary:
+          'Blessed with celestial heritage from Mount Celestia, aasimar unfurl radiant wings to heal comrades and smite fiends.',
+    ),
+  ];
+
+  // ---------------------------------------------------------------------------
+  // GENERIC UI & POLYHEDRAL HUD ICONS
+  // ---------------------------------------------------------------------------
+  static const List<GlyphGenericEntry> allGenericUi = [
+    // DICE POLYHEDRALS
+    GlyphGenericEntry(
+      name: 'd4 Die',
+      uiType: GenericUiGlyphType.d4,
+      group: 'Dice Polyhedrals',
+      summary:
+          'Tetrahedral 4-sided wireframe die used for daggers, healing potions, and bless bonuses.',
+    ),
+    GlyphGenericEntry(
+      name: 'd6 Die',
+      uiType: GenericUiGlyphType.d6,
+      group: 'Dice Polyhedrals',
+      summary:
+          'Hexahedral 6-sided isometric cube used for sneak attack, fireball, shortswords, and ability scores.',
+    ),
+    GlyphGenericEntry(
+      name: 'd8 Die',
+      uiType: GenericUiGlyphType.d8,
+      group: 'Dice Polyhedrals',
+      summary:
+          'Octahedral 8-sided diamond wireframe die used for longswords, divine smite, and medium hit dice.',
+    ),
+    GlyphGenericEntry(
+      name: 'd10 Die',
+      uiType: GenericUiGlyphType.d10,
+      group: 'Dice Polyhedrals',
+      summary:
+          'Pentagonal trapezohedron 10-sided kite die used for eldritch blast, halberds, and fighter hit dice.',
+    ),
+    GlyphGenericEntry(
+      name: 'd12 Die',
+      uiType: GenericUiGlyphType.d12,
+      group: 'Dice Polyhedrals',
+      summary:
+          'Dodecahedral 12-sided faceted polygon die used for greataxes, barbarian hit dice, and chain lightning.',
+    ),
+    GlyphGenericEntry(
+      name: 'd20 Die',
+      uiType: GenericUiGlyphType.d20,
+      group: 'Dice Polyhedrals',
+      summary:
+          'Icosahedral 20-sided core D&D die used for all attack rolls, ability checks, and saving throws.',
+    ),
+    GlyphGenericEntry(
+      name: 'd100 Die',
+      uiType: GenericUiGlyphType.d100,
+      group: 'Dice Polyhedrals',
+      summary:
+          'Percentile dual-coordinate matrix die used for divine intervention and loot tables.',
+    ),
+
+    // STATUS HUD INDICATORS
+    GlyphGenericEntry(
+      name: 'Advantage',
+      uiType: GenericUiGlyphType.advantage,
+      group: 'Status HUD Badges',
+      summary:
+          'Dual upward green flow chevrons indicating roll 2d20 and take the higher result.',
+    ),
+    GlyphGenericEntry(
+      name: 'Disadvantage',
+      uiType: GenericUiGlyphType.disadvantage,
+      group: 'Status HUD Badges',
+      summary:
+          'Dual downward crimson flow chevrons indicating roll 2d20 and take the lower result.',
+    ),
+    GlyphGenericEntry(
+      name: 'Concentrating',
+      uiType: GenericUiGlyphType.concentrating,
+      group: 'Status HUD Badges',
+      summary:
+          'Orbital satellite telemetry loop indicating active spell concentration maintenance.',
+    ),
+    GlyphGenericEntry(
+      name: 'Death Save',
+      uiType: GenericUiGlyphType.deathSave,
+      group: 'Status HUD Badges',
+      summary:
+          'Cardiac electrocardiogram telemetry line indicating active death saving throw state at 0 HP.',
+    ),
+
+    // ACTION ECONOMY COUNTERS
+    GlyphGenericEntry(
+      name: 'Action',
+      uiType: GenericUiGlyphType.actionEconomyAction,
+      group: 'Action Economy',
+      summary:
+          'Standard primary action economy token used for Attack, Cast a Spell, Dash, Disengage, Dodge, and Help.',
+    ),
+    GlyphGenericEntry(
+      name: 'Bonus Action',
+      uiType: GenericUiGlyphType.actionEconomyBonus,
+      group: 'Action Economy',
+      summary:
+          'Triple-spark quick action economy token used for swift spells, second wind, and off-hand strikes.',
+    ),
+    GlyphGenericEntry(
+      name: 'Reaction',
+      uiType: GenericUiGlyphType.actionEconomyReaction,
+      group: 'Action Economy',
+      summary:
+          'Deflection bracket reaction economy token used for Shield, Counterspell, and Opportunity Attacks.',
     ),
   ];
 }

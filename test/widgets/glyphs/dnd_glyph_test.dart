@@ -238,7 +238,9 @@ void main() {
       expect(find.text('Small Animated Object'), findsOneWidget);
 
       // Switch to Custom Glyph Studio tab
-      await tester.tap(find.text('Custom Glyph Studio'));
+      final studioTab = find.text('Custom Glyph Studio');
+      await tester.ensureVisible(studioTab);
+      await tester.tap(studioTab);
       await tester.pumpAndSettle();
       expect(find.text('Interactive Custom Glyph Studio'), findsOneWidget);
       expect(find.text('Select Arcane Spell School:'), findsOneWidget);
@@ -261,7 +263,9 @@ void main() {
           findsOneWidget);
 
       // Switch to Full Style Guide Codex tab
-      await tester.tap(find.text('Full Style Guide Codex'));
+      final codexTab = find.text('Full Style Guide Codex');
+      await tester.ensureVisible(codexTab);
+      await tester.tap(codexTab);
       await tester.pumpAndSettle();
       expect(
           find.text(
