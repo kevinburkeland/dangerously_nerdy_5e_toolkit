@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../screens/arena_simulator_screen.dart';
+import '../screens/character_builder_screen.dart';
 import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/dpr_calculator_screen.dart';
@@ -100,6 +101,39 @@ class LandingToolRegistry {
 
   static List<LandingToolItem> get defaultTools => [
         // Core Utilities
+        LandingToolItem(
+          id: 'character_builder',
+          title: 'Character Generator & Live Sheet',
+          category: 'Core Utilities',
+          badgeText: '2014 & 2024 SRD',
+          badgeColor: Colors.cyanAccent,
+          icon: Icons.person_add_alt_1,
+          accentColor: Colors.cyanAccent,
+          description:
+              'Interactive 5e character creator with Point Buy / Standard Array, reactive AC & HP calculation, dynamic equipment attunement, room loot transfer, and multiclassing level-up studio.',
+          keywords: [
+            'character',
+            'builder',
+            'creator',
+            'sheet',
+            'generator',
+            'multiclass',
+            'level up',
+            'point buy',
+            'stats',
+            'inventory',
+            'attunement',
+            '2024',
+            '2014',
+            'srd'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CharacterBuilderScreen()),
+            );
+          },
+        ),
         LandingToolItem(
           id: 'party_room_vault',
           title: 'Party Room & Shared Vault',
