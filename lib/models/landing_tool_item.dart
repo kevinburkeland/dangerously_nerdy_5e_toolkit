@@ -5,6 +5,7 @@ import '../screens/dice_roller_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/dpr_calculator_screen.dart';
 import '../screens/glyph_showcase_screen.dart';
+import '../screens/homebrew_studio_screen.dart';
 import '../screens/item_compendium_screen.dart';
 import '../screens/minion_tool_screen.dart';
 import '../screens/monster_codex_screen.dart';
@@ -244,6 +245,36 @@ class LandingToolRegistry {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ArenaSimulatorScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'homebrew_studio',
+          title: 'Homebrew Studio & Importer',
+          category: 'Core Utilities',
+          badgeText: 'Builders & JSON',
+          badgeColor: Colors.pinkAccent,
+          icon: Icons.dashboard_customize_outlined,
+          accentColor: Colors.pinkAccent,
+          description:
+              'Craft custom spells, monsters, and magic items with interactive builders, or import community JSON compendium packs.',
+          keywords: [
+            'homebrew',
+            'custom',
+            'builder',
+            'importer',
+            'json',
+            'spell builder',
+            'monster builder',
+            'item builder',
+            'compendium',
+            'pack',
+            'create',
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HomebrewStudioScreen()),
             );
           },
         ),

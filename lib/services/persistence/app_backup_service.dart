@@ -2,19 +2,24 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/app_settings.dart';
 import '../../models/custom_preset.dart';
+import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/dpr/dpr_serialization.dart';
 import '../logging_service.dart';
 import '../minion_session_service.dart';
 import '../preset_service.dart';
 import 'dpr_persistence_service.dart';
+import 'homebrew_persistence_service.dart';
 
-/// Backup archive payload representing all user preferences, presets, builds, and sessions.
+/// Backup archive payload representing all user preferences, presets, builds, and custom homebrew compendium entities.
 class AppBackupPayload {
   final int schemaVersion;
   final DateTime exportedAt;
   final Map<String, dynamic> settings;
   final List<Map<String, dynamic>> dicePresets;
   final List<Map<String, dynamic>> dprProfiles;
+  final List<Map<String, dynamic>> customSpells;
+  final List<Map<String, dynamic>> customMonsters;
+  final List<Map<String, dynamic>> customItems;
 
   AppBackupPayload({
     required this.schemaVersion,
@@ -22,6 +27,9 @@ class AppBackupPayload {
     required this.settings,
     required this.dicePresets,
     required this.dprProfiles,
+    this.customSpells = const [],
+    this.customMonsters = const [],
+    this.customItems = const [],
   });
 
   Map<String, dynamic> toMap() => {
@@ -30,6 +38,9 @@ class AppBackupPayload {
         'settings': settings,
         'dicePresets': dicePresets,
         'dprProfiles': dprProfiles,
+        'customSpells': customSpells,
+        'customMonsters': customMonsters,
+        'customItems': customItems,
       };
 
   factory AppBackupPayload.fromMap(Map<String, dynamic> map) {
@@ -45,6 +56,18 @@ class AppBackupPayload {
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
           .toList(),
+      customSpells: (map['customSpells'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customMonsters: (map['customMonsters'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customItems: (map['customItems'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
     );
   }
 }
@@ -54,14 +77,27 @@ class BackupRestoreResult {
   final bool success;
   final int restoredPresetsCount;
   final int restoredDprProfilesCount;
+  final int restoredHomebrewSpellsCount;
+  final int restoredHomebrewMonstersCount;
+  final int restoredHomebrewItemsCount;
   final String? errorMessage;
 
   const BackupRestoreResult({
     required this.success,
     this.restoredPresetsCount = 0,
     this.restoredDprProfilesCount = 0,
+    this.restoredHomebrewSpellsCount = 0,
+    this.restoredHomebrewMonstersCount = 0,
+    this.restoredHomebrewItemsCount = 0,
     this.errorMessage,
   });
+
+  int get totalRestoredEntities =>
+      restoredPresetsCount +
+      restoredDprProfilesCount +
+      restoredHomebrewSpellsCount +
+      restoredHomebrewMonstersCount +
+      restoredHomebrewItemsCount;
 }
 
 class AppBackupService {
@@ -69,13 +105,16 @@ class AppBackupService {
   factory AppBackupService() => _instance;
   AppBackupService._internal();
 
-  /// Generates a complete JSON backup archive of all settings, presets, and DPR builds.
+  /// Generates a complete JSON backup archive of all settings, presets, DPR builds, and homebrew compendium entities.
   Future<String> exportFullBackupJson(AppSettings currentSettings) async {
     final customPresets = await PresetService().loadCustomPresets();
     final dprProfiles = await DprPersistenceService().loadSavedProfiles();
+    final customSpells = await HomebrewPersistenceService().loadCustomSpells();
+    final customMonsters = await HomebrewPersistenceService().loadCustomMonsters();
+    final customItems = await HomebrewPersistenceService().loadCustomItems();
 
     final payload = AppBackupPayload(
-      schemaVersion: 2,
+      schemaVersion: 3,
       exportedAt: DateTime.now(),
       settings: {
         'themeMode': currentSettings.themeMode.name,
@@ -95,6 +134,9 @@ class AppBackupService {
       },
       dicePresets: customPresets.map((p) => p.toMap()).toList(),
       dprProfiles: dprProfiles.map((p) => p.toMap()).toList(),
+      customSpells: customSpells.map((s) => s.toMap()).toList(),
+      customMonsters: customMonsters.map((m) => m.toMap()).toList(),
+      customItems: customItems.map((i) => i.toMap()).toList(),
     );
 
     return const JsonEncoder.withIndent('  ').convert(payload.toMap());
@@ -104,10 +146,10 @@ class AppBackupService {
   Future<BackupRestoreResult> importFullBackupJson(String jsonString) async {
     try {
       final cleanInput = jsonString.trim();
-      if (cleanInput.length > 1000000) {
+      if (cleanInput.length > 2000000) {
         return const BackupRestoreResult(
           success: false,
-          errorMessage: 'Backup file exceeds maximum allowed size (1MB)',
+          errorMessage: 'Backup file exceeds maximum allowed size (2MB)',
         );
       }
 
@@ -139,10 +181,40 @@ class AppBackupService {
         } catch (_) {}
       }
 
+      int spellsRestored = 0;
+      for (final rawSpell in backup.customSpells) {
+        try {
+          final spell = Spell.fromMap(rawSpell);
+          await HomebrewPersistenceService().saveCustomSpell(spell);
+          spellsRestored++;
+        } catch (_) {}
+      }
+
+      int monstersRestored = 0;
+      for (final rawMonster in backup.customMonsters) {
+        try {
+          final monster = Monster.fromMap(rawMonster);
+          await HomebrewPersistenceService().saveCustomMonster(monster);
+          monstersRestored++;
+        } catch (_) {}
+      }
+
+      int itemsRestored = 0;
+      for (final rawItem in backup.customItems) {
+        try {
+          final item = EquipmentItem.fromMap(rawItem);
+          await HomebrewPersistenceService().saveCustomItem(item);
+          itemsRestored++;
+        } catch (_) {}
+      }
+
       return BackupRestoreResult(
         success: true,
         restoredPresetsCount: presetsRestored,
         restoredDprProfilesCount: profilesRestored,
+        restoredHomebrewSpellsCount: spellsRestored,
+        restoredHomebrewMonstersCount: monstersRestored,
+        restoredHomebrewItemsCount: itemsRestored,
       );
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(

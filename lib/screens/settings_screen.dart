@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
 import '../providers/settings_provider.dart';
+import '../screens/homebrew_studio_screen.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/app_backup_service.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
@@ -336,6 +337,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       runSpacing: 8,
                       children: [
                         FilledButton.tonalIcon(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const HomebrewStudioScreen(),
+                            ),
+                          ),
+                          icon: const Icon(Icons.dashboard_customize_outlined, size: 18),
+                          label: const Text('Homebrew Studio'),
+                        ),
+                        FilledButton.tonalIcon(
                           onPressed: _exportAppBackup,
                           icon: const Icon(Icons.file_download_outlined, size: 18),
                           label: const Text('Export Backup'),
@@ -480,10 +490,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       if (restoreResult.success) {
         HapticService.mediumImpact(context);
+        final homebrewCount = restoreResult.restoredHomebrewSpellsCount +
+            restoreResult.restoredHomebrewMonstersCount +
+            restoreResult.restoredHomebrewItemsCount;
+        final homebrewSuffix = homebrewCount > 0 ? ', and $homebrewCount homebrew entities' : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Successfully restored ${restoreResult.restoredPresetsCount} presets and ${restoreResult.restoredDprProfilesCount} character builds!',
+              'Successfully restored ${restoreResult.restoredPresetsCount} presets, ${restoreResult.restoredDprProfilesCount} character builds$homebrewSuffix!',
             ),
           ),
         );
