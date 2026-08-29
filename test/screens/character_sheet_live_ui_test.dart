@@ -3,13 +3,53 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/dm_reference/rules_edition_toggle.dart';
 
 Widget createTestApp() {
   return const MaterialApp(
     home: CharacterBuilderScreen(),
+  );
+}
+
+Character _createTestHero(String slug, String name) {
+  return CharacterFactory.createLevel1Character(
+    CharacterCreationRequest(
+      characterName: name,
+      ruleset: RulesetVersion.v2024,
+      speciesRef: const EntityReference(
+        refType: EntityType.species,
+        slug: 'human',
+        displayName: 'Human',
+      ),
+      backgroundRef: const EntityReference(
+        refType: EntityType.background,
+        slug: 'soldier',
+        displayName: 'Soldier',
+      ),
+      startingClassSlug: 'fighter',
+      startingClassDisplayName: 'Fighter',
+      startingClassHitDie: 'd10',
+      baseScores: const AbilityScores.standardArray(),
+      bonusScores: const AbilityScores(strength: 2, constitution: 1),
+      savingThrowProficiencies: const {
+        AbilityType.strength,
+        AbilityType.constitution,
+      },
+      skillProficiencies: const {
+        SkillType.athletics: SkillProficiencyLevel.proficient,
+        SkillType.stealth: SkillProficiencyLevel.none,
+      },
+    ),
+  ).copyWith(
+    id: EntityId(slug: slug, ruleset: RulesetVersion.v2024),
+    name: name,
   );
 }
 
@@ -19,7 +59,7 @@ void main() {
   });
 
   group('CharacterBuilderScreen Live Sheet & Wizard UI Tests', () {
-    testWidgets('Renders top RulesEditionToggle in AppBar, tabs, and default Character Selector', (tester) async {
+    testWidgets('Renders empty roster state when no characters are created', (tester) async {
       tester.view.physicalSize = const Size(1200, 1600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -38,17 +78,19 @@ void main() {
       expect(find.text('Inventory & Loot'), findsOneWidget);
       expect(find.text('Level Up'), findsOneWidget);
 
-      // Default Character Selector View
+      // Default Character Selector View with empty state
       expect(find.text('5e Character Roster'), findsOneWidget);
-      expect(find.text('Valeros Ironclad'), findsOneWidget);
-      expect(find.text('Eldrin Shadowbane'), findsOneWidget);
-      expect(find.text('Lyra Sunseeker'), findsOneWidget);
+      expect(find.text('No characters in roster yet.'), findsOneWidget);
+      expect(find.text('Create New Character'), findsOneWidget);
     });
 
     testWidgets('Tapping Open Sheet on character opens Live Sheet with vitals and skills', (tester) async {
       tester.view.physicalSize = const Size(1200, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
+
+      final testHero = _createTestHero('valeros-ironclad', 'Valeros Ironclad');
+      await CharacterPersistenceService().saveRoster([testHero]);
 
       await tester.pumpWidget(createTestApp());
       await tester.pumpAndSettle();
@@ -84,6 +126,9 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
+      final testHero = _createTestHero('valeros-ironclad', 'Valeros Ironclad');
+      await CharacterPersistenceService().saveRoster([testHero]);
+
       await tester.pumpWidget(createTestApp());
       await tester.pumpAndSettle();
 
@@ -106,6 +151,10 @@ void main() {
       tester.view.physicalSize = const Size(1200, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
+
+      final hero1 = _createTestHero('valeros-ironclad', 'Valeros Ironclad');
+      final hero2 = _createTestHero('lyra-sunseeker', 'Lyra Sunseeker');
+      await CharacterPersistenceService().saveRoster([hero1, hero2]);
 
       await tester.pumpWidget(createTestApp());
       await tester.pumpAndSettle();
@@ -133,6 +182,9 @@ void main() {
       tester.view.physicalSize = const Size(1200, 1600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
+
+      final testHero = _createTestHero('valeros-ironclad', 'Valeros Ironclad');
+      await CharacterPersistenceService().saveRoster([testHero]);
 
       await tester.pumpWidget(createTestApp());
       await tester.pumpAndSettle();
@@ -261,4 +313,3 @@ void main() {
     });
   });
 }
-

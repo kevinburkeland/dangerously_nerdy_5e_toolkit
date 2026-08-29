@@ -54,8 +54,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   RulesetVersion? _rosterRulesetFilter;
 
   // Active Character & State
-  late Character _character;
-  late ComputedCharacterStats _computedStats;
+  Character? _character;
+  ComputedCharacterStats? _computedStats;
   int _currentHp = 12;
   int _tempHp = 0;
   int _deathSaveSuccesses = 0;
@@ -289,10 +289,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   void _initDefaultCharacter() {
-    _characterRoster = CharacterPersistenceService.getDefaultStarterRoster();
-    _character = _characterRoster.first;
-    _recalculateStats();
-    _currentHp = _computedStats.maxHp;
+    _characterRoster = [];
+    _character = null;
+    _isSelectorView = true;
     _loadPersistedRoster();
   }
 
@@ -302,16 +301,21 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     if (mounted) {
       setState(() {
         _characterRoster = loaded;
-        if (activeId != null) {
-          final matched = _characterRoster.cast<Character?>().firstWhere(
-                (c) => c?.id.slug == activeId,
-                orElse: () => null,
-              );
-          if (matched != null) {
-            _character = matched;
-            _recalculateStats();
-            _currentHp = _computedStats.maxHp;
+        if (_characterRoster.isNotEmpty) {
+          if (activeId != null) {
+            final matched = _characterRoster.cast<Character?>().firstWhere(
+                  (c) => c?.id.slug == activeId,
+                  orElse: () => null,
+                );
+            _character = matched ?? _characterRoster.first;
+          } else {
+            _character = _characterRoster.first;
           }
+          _recalculateStats();
+          _currentHp = _computedStats?.maxHp ?? 10;
+        } else {
+          _character = null;
+          _isSelectorView = true;
         }
       });
     }
@@ -371,10 +375,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final updated = await _persistenceService.deleteCharacter(char.id.slug);
     setState(() {
       _characterRoster = updated;
-      if (_character.id.slug == char.id.slug) {
+      if (_character?.id.slug == char.id.slug) {
         if (_characterRoster.isNotEmpty) {
           _character = _characterRoster.first;
           _recalculateStats();
+        } else {
+          _character = null;
         }
         _isSelectorView = true;
       }
@@ -429,9 +435,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   void _recalculateStats() {
-    setState(() {
-      _computedStats = CharacterStatCalculator.compute(_character, _resolver);
-    });
+    final char = _character;
+    if (char != null) {
+      setState(() {
+        _computedStats = CharacterStatCalculator.compute(char, _resolver);
+      });
+    }
   }
 
   void _onRulesEditionChanged(DmRulesEdition newEdition) {
@@ -442,10 +451,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       _selectedRuleset = newEdition == DmRulesEdition.v2024
           ? RulesetVersion.v2024
           : RulesetVersion.v2014;
-      _character = _character.copyWith(
-        id: EntityId(slug: _character.id.slug, ruleset: _selectedRuleset),
-      );
-      _recalculateStats();
+      final char = _character;
+      if (char != null) {
+        _character = char.copyWith(
+          id: EntityId(slug: char.id.slug, ruleset: _selectedRuleset),
+        );
+        _recalculateStats();
+      }
     });
     SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
   }
@@ -545,10 +557,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       _selectedRuleset = activeEdition == DmRulesEdition.v2024
           ? RulesetVersion.v2024
           : RulesetVersion.v2014;
-      _character = _character.copyWith(
-        id: EntityId(slug: _character.id.slug, ruleset: _selectedRuleset),
-      );
-      _computedStats = CharacterStatCalculator.compute(_character, _resolver);
+      final char = _character;
+      if (char != null) {
+        _character = char.copyWith(
+          id: EntityId(slug: char.id.slug, ruleset: _selectedRuleset),
+        );
+        _computedStats = CharacterStatCalculator.compute(_character!, _resolver);
+      }
     }
 
     return Scaffold(
@@ -559,7 +574,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                _isSelectorView ? 'Character Studio' : _character.name,
+                _isSelectorView || _character == null ? 'Character Studio' : _character!.name,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -797,21 +812,19 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     const Icon(Icons.person_off_outlined,
                         color: Colors.white38, size: 36),
                     const SizedBox(height: 8),
-                    const Text('No characters found matching your filter.',
-                        style: TextStyle(color: Colors.white70)),
+                    Text(
+                      _characterRoster.isEmpty
+                          ? 'No characters in roster yet.'
+                          : 'No characters found matching your filter.',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
                     const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.restore, size: 16),
-                      label: const Text('Reset Starter Heroes'),
-                      onPressed: () async {
-                        final starters =
-                            CharacterPersistenceService.getDefaultStarterRoster();
-                        await _persistenceService.saveRoster(starters);
-                        setState(() {
-                          _characterRoster = starters;
-                          _character = starters.first;
-                          _recalculateStats();
-                        });
+                    FilledButton.icon(
+                      icon: const Icon(Icons.person_add_alt_1, size: 16),
+                      label: const Text('Create New Character'),
+                      onPressed: () {
+                        HapticService.selectionTick(context);
+                        _tabController.animateTo(1);
                       },
                     ),
                   ],
@@ -825,7 +838,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             final clsType = curCls != null
                 ? _findClassType(curCls.classRef.slug)
                 : DndClassType.fighter;
-            final isCurrentActive = _character.id.slug == hero.id.slug;
+            final isCurrentActive = _character?.id.slug == hero.id.slug;
             final heroStats =
                 CharacterStatCalculator.compute(hero, _resolver);
 
@@ -971,14 +984,19 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildActiveLiveSheetView(ThemeData theme) {
-    final curClass = _character.progression.classes.firstOrNull;
+    final char = _character;
+    final stats = _computedStats;
+    if (char == null || stats == null) {
+      return _buildCharacterSelectorView(theme);
+    }
+    final curClass = char.progression.classes.firstOrNull;
     final srdClass = curClass != null
         ? SrdClassesLibrary.findBySlug(curClass.classRef.slug)
         : null;
     final srdSpecies =
-        SrdSpeciesLibrary.findBySlug(_character.speciesRef.slug);
-    final srdBackground = _character.backgroundRef != null
-        ? SrdBackgroundsLibrary.findBySlug(_character.backgroundRef!.slug)
+        SrdSpeciesLibrary.findBySlug(char.speciesRef.slug);
+    final srdBackground = char.backgroundRef != null
+        ? SrdBackgroundsLibrary.findBySlug(char.backgroundRef!.slug)
         : null;
 
     // Filter skills
@@ -1033,9 +1051,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     IconButton(
                       icon: const Icon(Icons.delete_outline,
                           color: Colors.redAccent, size: 20),
-                      tooltip: 'Delete ${_character.name}',
+                      tooltip: 'Delete ${char.name}',
                       onPressed: () =>
-                          _confirmDeleteCharacter(_character),
+                          _confirmDeleteCharacter(char),
                     ),
                   ],
                 ),
@@ -1065,7 +1083,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _character.name,
+                            char.name,
                             style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -1073,7 +1091,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Level ${_character.totalLevel} ${_character.progression.classes.map((c) => "${c.classRef.displayName} ${c.level}").join(" / ")} • ${_character.speciesRef.displayName} • ${_character.backgroundRef?.displayName ?? "Adventurer"}',
+                            'Level ${char.totalLevel} ${char.progression.classes.map((c) => "${c.classRef.displayName} ${c.level}").join(" / ")} • ${char.speciesRef.displayName} • ${char.backgroundRef?.displayName ?? "Adventurer"}',
                             style: TextStyle(color: Colors.cyanAccent.shade100, fontSize: 13),
                           ),
                         ],
@@ -1082,7 +1100,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     Chip(
                       backgroundColor: Colors.cyan.shade900,
                       label: Text(
-                        _character.ruleset == RulesetVersion.v2024 ? '2024 REVISED' : '2014 CLASSIC',
+                        char.ruleset == RulesetVersion.v2024 ? '2024 REVISED' : '2014 CLASSIC',
                         style: const TextStyle(
                             color: Colors.cyanAccent,
                             fontWeight: FontWeight.bold,
@@ -1097,11 +1115,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStatPill('ARMOR CLASS', '${_computedStats.armorClass}', Colors.amberAccent, Icons.shield),
-                    _buildHpPill('HIT POINTS', '$_currentHp / ${_computedStats.maxHp}', Colors.redAccent, Icons.favorite),
-                    _buildStatPill('PROF BONUS', '+${_computedStats.proficiencyBonus}', Colors.cyanAccent, Icons.star),
-                    _buildStatPill('SPEED', '${_computedStats.speedFeet} ft', Colors.greenAccent, Icons.directions_run),
-                    _buildStatPill('INITIATIVE', _computedStats.initiativeBonus >= 0 ? '+${_computedStats.initiativeBonus}' : '${_computedStats.initiativeBonus}', Colors.deepOrangeAccent, Icons.flash_on),
+                    _buildStatPill('ARMOR CLASS', '${stats.armorClass}', Colors.amberAccent, Icons.shield),
+                    _buildHpPill('HIT POINTS', '$_currentHp / ${stats.maxHp}', Colors.redAccent, Icons.favorite),
+                    _buildStatPill('PROF BONUS', '+${stats.proficiencyBonus}', Colors.cyanAccent, Icons.star),
+                    _buildStatPill('SPEED', '${stats.speedFeet} ft', Colors.greenAccent, Icons.directions_run),
+                    _buildStatPill('INITIATIVE', stats.initiativeBonus >= 0 ? '+${stats.initiativeBonus}' : '${stats.initiativeBonus}', Colors.deepOrangeAccent, Icons.flash_on),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -1110,7 +1128,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   children: [
                     Expanded(
                       child: Text(
-                        'AC Formula: ${_computedStats.armorClassBreakdown}',
+                        'AC Formula: ${stats.armorClassBreakdown}',
                         style: const TextStyle(fontSize: 11.5, color: Colors.white60, fontStyle: FontStyle.italic),
                       ),
                     ),
@@ -1125,80 +1143,87 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                       label: const Text('Roll Init', style: TextStyle(fontSize: 11)),
                       onPressed: () => _rollDie(
                         title: 'Initiative Roll',
-                        modifier: _computedStats.initiativeBonus,
+                        modifier: stats.initiativeBonus,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ),
+                const SizedBox(height: 8),
 
-        const SizedBox(height: 16),
-
-        // HP & Resource Control Card
-        Card(
-          color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.healing, color: Colors.greenAccent, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          'HP Tracker: $_currentHp / ${_computedStats.maxHp}${_tempHp > 0 ? " (+$_tempHp Temp)" : ""}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                // HP, Temp HP & Interactive Adjustments
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'HP Tracker: $_currentHp / ${stats.maxHp}${_tempHp > 0 ? " (+$_tempHp Temp)" : ""}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.remove, size: 16, color: Colors.redAccent),
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () {
+                                  if (_currentHp > 0) {
+                                    setState(() => _currentHp = math.max(0, _currentHp - 1));
+                                  }
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.add, size: 16, color: Colors.greenAccent),
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () {
+                                  if (_currentHp < stats.maxHp) {
+                                    setState(() => _currentHp = math.min(stats.maxHp, _currentHp + 1));
+                                  }
+                                },
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                                child: const Text('Short/Long Rest', style: TextStyle(fontSize: 11)),
+                                onPressed: () {
+                                  setState(() {
+                                    _currentHp = stats.maxHp;
+                                    _tempHp = 0;
+                                    _deathSaveSuccesses = 0;
+                                    _deathSaveFailures = 0;
+                                  });
+                                  HapticService.selectionTick(context);
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: stats.maxHp > 0 ? (_currentHp / stats.maxHp).clamp(0.0, 1.0) : 0.0,
+                          backgroundColor: Colors.white12,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _currentHp > (stats.maxHp * 0.5)
+                                ? Colors.greenAccent
+                                : (_currentHp > (stats.maxHp * 0.25)
+                                    ? Colors.amberAccent
+                                    : Colors.redAccent),
+                          ),
+                          minHeight: 6,
                         ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-                          tooltip: 'Take 1 Damage',
-                          onPressed: () {
-                            if (_currentHp > 0) {
-                              setState(() => _currentHp = math.max(0, _currentHp - 1));
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline, color: Colors.greenAccent),
-                          tooltip: 'Heal 1 HP',
-                          onPressed: () {
-                            if (_currentHp < _computedStats.maxHp) {
-                              setState(() => _currentHp = math.min(_computedStats.maxHp, _currentHp + 1));
-                            }
-                          },
-                        ),
-                        TextButton(
-                          child: const Text('Long Rest', style: TextStyle(fontSize: 11, color: Colors.cyanAccent)),
-                          onPressed: () {
-                            HapticService.selectionTick(context);
-                            setState(() {
-                              _currentHp = _computedStats.maxHp;
-                              _tempHp = 0;
-                              _deathSaveSuccesses = 0;
-                              _deathSaveFailures = 0;
-                              _hasHeroicInspiration = true;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Long Rest completed: HP and Resources restored!')),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-                const Divider(height: 12),
+
+                const SizedBox(height: 12),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -1206,7 +1231,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     Column(
                       children: [
                         const Text('HIT DICE', style: TextStyle(fontSize: 10, color: Colors.white60)),
-                        Text('1 / ${_character.totalLevel} (${_character.progression.classes.firstOrNull?.hitDie ?? "d10"})',
+                        Text('1 / ${char.totalLevel} (${char.progression.classes.firstOrNull?.hitDie ?? "d10"})',
                             style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent)),
                       ],
                     ),
@@ -1278,8 +1303,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: AbilityType.values.map((ab) {
-            final score = _computedStats.effectiveScores.getScore(ab);
-            final mod = _computedStats.abilityModifiers[ab]!;
+            final score = stats.effectiveScores.getScore(ab);
+            final mod = stats.abilityModifiers[ab]!;
             final modStr = mod >= 0 ? '+$mod' : '$mod';
             return Expanded(
               child: Container(
@@ -1321,13 +1346,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.shield_outlined, color: Colors.amberAccent, size: 18),
+                        const Icon(Icons.shield_outlined, color: Colors.cyanAccent, size: 18),
                         const SizedBox(width: 8),
                         Text('SAVING THROWS',
                             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
                       ],
                     ),
-                    const Text('● = Proficient', style: TextStyle(fontSize: 11, color: Colors.white60)),
+                    const Text('Proficient saves highlighted', style: TextStyle(fontSize: 11, color: Colors.white60)),
                   ],
                 ),
                 const Divider(height: 16),
@@ -1339,8 +1364,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                   children: AbilityType.values.map((ab) {
-                    final isProf = _character.savingThrowProficiencies.contains(ab);
-                    final mod = _computedStats.savingThrowModifiers[ab] ?? _computedStats.abilityModifiers[ab]!;
+                    final isProf = char.savingThrowProficiencies.contains(ab);
+                    final mod = stats.savingThrowModifiers[ab] ?? stats.abilityModifiers[ab]!;
                     final modStr = mod >= 0 ? '+$mod' : '$mod';
                     return InkWell(
                       key: ValueKey('save_tile_${ab.name}'),
@@ -1455,8 +1480,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
                 // Skills List
                 ...filteredSkills.map((sk) {
-                  final profLevel = _character.skillProficiencies[sk] ?? SkillProficiencyLevel.none;
-                  final mod = _computedStats.skillModifiers[sk] ?? 0;
+                  final profLevel = char.skillProficiencies[sk] ?? SkillProficiencyLevel.none;
+                  final mod = stats.skillModifiers[sk] ?? 0;
                   final modStr = mod >= 0 ? '+$mod' : '$mod';
                   final passive = 10 + mod;
                   final skillDef = SrdSkillsLibrary.getDefinition(sk);
@@ -1575,12 +1600,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ),
 
         const SizedBox(height: 16),
-
-        // ATTACK PROFILES
-        Text('ATTACK PROFILES & WEAPONS',
+        // ACTIONS & ATTACKS CARD
+        Text('ACTIONS & ATTACKS',
             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         const SizedBox(height: 8),
-        ..._computedStats.attackProfiles.map((atk) => Card(
+
+        ...stats.attackProfiles.map((atk) => Card(
               color: const Color(0xFF1E293B),
               child: ListTile(
                 leading: const Icon(Icons.colorize, color: Colors.redAccent),
@@ -1637,9 +1662,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   Text(srdBackground.descriptionMarkdown, style: const TextStyle(fontSize: 12, color: Colors.white70)),
                   const SizedBox(height: 10),
                 ],
-                if (_character.feats.isNotEmpty) ...[
+                if (char.feats.isNotEmpty) ...[
                   const Text('Active Feats:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
-                  ..._character.feats.map((fRef) {
+                  ...char.feats.map((fRef) {
                     final featObj = SrdFeatsLibrary.findBySlug(fRef.slug);
                     return Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -1682,9 +1707,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildPassiveBadge('Passive Perception', _computedStats.passivePerception, Colors.cyanAccent),
-                    _buildPassiveBadge('Passive Investigation', _computedStats.passiveInvestigation, Colors.amberAccent),
-                    _buildPassiveBadge('Passive Insight', _computedStats.passiveInsight, Colors.purpleAccent),
+                    _buildPassiveBadge('Passive Perception', stats.passivePerception, Colors.cyanAccent),
+                    _buildPassiveBadge('Passive Investigation', stats.passiveInvestigation, Colors.amberAccent),
+                    _buildPassiveBadge('Passive Insight', stats.passiveInsight, Colors.purpleAccent),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -1696,7 +1721,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                       style: const TextStyle(fontSize: 12, color: Colors.white70)),
                   const SizedBox(height: 4),
                 ],
-                Text('Languages: ${_character.languages.join(", ")}',
+                Text('Languages: ${char.languages.join(", ")}',
                     style: const TextStyle(fontSize: 12, color: Colors.white70)),
               ],
             ),
@@ -2544,7 +2569,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           _character = newChar;
           _isSelectorView = false;
           _recalculateStats();
-          _currentHp = _computedStats.maxHp;
+          _currentHp = _computedStats?.maxHp ?? 10;
           _tabController.animateTo(0);
         });
       }
@@ -2559,6 +2584,38 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   // TAB 3: INVENTORY & ATOMICS LOOT TRANSFERS
   // --------------------------------------------------------------------------
   Widget _buildInventoryTab(ThemeData theme) {
+    final char = _character;
+    if (char == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.inventory_2_outlined, color: Colors.white38, size: 48),
+              const SizedBox(height: 12),
+              const Text('No Active Character',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              const Text('Select or create a character to manage inventory and equipment.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                icon: const Icon(Icons.groups_outlined, size: 18),
+                label: const Text('Go to Character Roster'),
+                onPressed: () {
+                  setState(() {
+                    _isSelectorView = true;
+                    _tabController.animateTo(0);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -2575,12 +2632,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     const Icon(Icons.auto_awesome, color: Colors.purpleAccent),
                     const SizedBox(width: 8),
                     Text(
-                      'Attunement: ${_character.attunedItemCount} / ${_character.maxAttunementSlots} Slots',
+                      'Attunement: ${char.attunedItemCount} / ${char.maxAttunementSlots} Slots',
                       style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ],
                 ),
-                Text('Gold: ${_character.purse.gp} GP',
+                Text('Gold: ${char.purse.gp} GP',
                     style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold)),
               ],
             ),
@@ -2592,7 +2649,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         const SizedBox(height: 8),
 
-        ..._character.inventory.map((item) {
+        ...char.inventory.map((item) {
           return Card(
             color: const Color(0xFF1E293B),
             child: ListTile(
@@ -2612,7 +2669,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                       onPressed: () {
                         try {
                           final updated = InventoryTransactionService.attuneItem(
-                              _character, item.instanceId, !item.isAttuned);
+                              char, item.instanceId, !item.isAttuned);
                           setState(() {
                             _character = updated;
                             _recalculateStats();
@@ -2630,8 +2687,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     tooltip: item.isEquipped ? 'Unequip' : 'Equip',
                     onPressed: () {
                       final updated = item.isEquipped
-                          ? InventoryTransactionService.unequipItem(_character, item.instanceId)
-                          : InventoryTransactionService.equipItem(_character, item.instanceId, EquipmentSlot.mainHand);
+                          ? InventoryTransactionService.unequipItem(char, item.instanceId)
+                          : InventoryTransactionService.equipItem(char, item.instanceId, EquipmentSlot.mainHand);
                       setState(() {
                         _character = updated;
                         _recalculateStats();
@@ -2671,7 +2728,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                         onPressed: () {
                           final res = InventoryTransactionService.transferFromContainerToCharacter(
                             sourceContainer: _roomChest,
-                            destinationCharacter: _character,
+                            destinationCharacter: char,
                             instanceId: _roomChest.items.firstOrNull?.instanceId ?? '',
                             quantity: 0,
                             currency: const PartyPurse(gp: 50),
@@ -2702,7 +2759,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                           HapticService.selectionTick(context);
                           final res = InventoryTransactionService.transferFromContainerToCharacter(
                             sourceContainer: _roomChest,
-                            destinationCharacter: _character,
+                            destinationCharacter: char,
                             instanceId: lootItem.instanceId,
                             quantity: 1,
                           );
@@ -2726,7 +2783,39 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   // TAB 4: LEVEL UP & MULTICLASSING PIPELINE
   // --------------------------------------------------------------------------
   Widget _buildLevelUpTab(ThemeData theme) {
-    final validation = LevelUpPipeline.validateMulticlass(_character, _levelUpTargetClass);
+    final char = _character;
+    if (char == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.upgrade, color: Colors.white38, size: 48),
+              const SizedBox(height: 12),
+              const Text('No Active Character',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              const Text('Select or create a character to advance levels.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                icon: const Icon(Icons.groups_outlined, size: 18),
+                label: const Text('Go to Character Roster'),
+                onPressed: () {
+                  setState(() {
+                    _isSelectorView = true;
+                    _tabController.animateTo(0);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final validation = LevelUpPipeline.validateMulticlass(char, _levelUpTargetClass);
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -2900,7 +2989,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       asiOrFeat: asiChoice,
     );
 
-    final updated = LevelUpPipeline.applyLevelUp(_character, request, resolver: _resolver);
+    final char = _character;
+    if (char == null) return;
+
+    final updated = LevelUpPipeline.applyLevelUp(char, request, resolver: _resolver);
     _persistenceService.saveCharacter(updated).then((updatedRoster) {
       if (mounted) {
         setState(() {
@@ -2908,7 +3000,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           _character = updated;
           _isSelectorView = false;
           _recalculateStats();
-          _currentHp = _computedStats.maxHp;
+          _currentHp = _computedStats?.maxHp ?? 10;
           _tabController.animateTo(0);
         });
       }
