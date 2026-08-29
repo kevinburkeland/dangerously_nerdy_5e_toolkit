@@ -14,6 +14,11 @@ enum EntityType {
   equipment,
   feat,
   classFeature,
+  character,
+  species,
+  classDefinition,
+  subclass,
+  background,
   custom,
 }
 

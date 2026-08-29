@@ -1,0 +1,498 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_stat_calculator.dart';
+
+void main() {
+  group('CharacterStatCalculator Tests', () {
+    late LayeredPriorityRepository repository;
+    late ReferenceResolver resolver;
+    late PriorityLayer baseLayer;
+
+    late EquipmentItem chainMail;
+    late EquipmentItem breastplate;
+    late EquipmentItem leatherArmor;
+    late EquipmentItem shield;
+    late EquipmentItem ringOfProtection;
+    late EquipmentItem gauntletsOfOgrePower;
+    late EquipmentItem rapier;
+
+    setUp(() {
+      repository = LayeredPriorityRepository();
+      resolver = ReferenceResolver(repository);
+
+      chainMail = EquipmentItem(
+        id: const EntityId(slug: 'chain-mail', ruleset: RulesetVersion.v2024),
+        name: 'Chain Mail',
+        itemType: 'Heavy Armor',
+        rarity: 'Common',
+        requiresAttunement: false,
+        descriptionMarkdown: 'Heavy armor AC 16.',
+        customProperties: const {
+          'baseAc': 16,
+          'armorType': 'heavy',
+        },
+      );
+
+      breastplate = EquipmentItem(
+        id: const EntityId(slug: 'breastplate', ruleset: RulesetVersion.v2024),
+        name: 'Breastplate',
+        itemType: 'Medium Armor',
+        rarity: 'Common',
+        requiresAttunement: false,
+        descriptionMarkdown: 'Medium armor AC 14.',
+        customProperties: const {
+          'baseAc': 14,
+          'armorType': 'medium',
+          'maxDexBonus': 2,
+        },
+      );
+
+      leatherArmor = EquipmentItem(
+        id: const EntityId(slug: 'leather-armor', ruleset: RulesetVersion.v2024),
+        name: 'Leather Armor',
+        itemType: 'Light Armor',
+        rarity: 'Common',
+        requiresAttunement: false,
+        descriptionMarkdown: 'Light armor AC 11.',
+        customProperties: const {
+          'baseAc': 11,
+          'armorType': 'light',
+        },
+      );
+
+      shield = EquipmentItem(
+        id: const EntityId(slug: 'shield', ruleset: RulesetVersion.v2024),
+        name: 'Shield',
+        itemType: 'Shield',
+        rarity: 'Common',
+        requiresAttunement: false,
+        descriptionMarkdown: '+2 AC.',
+        customProperties: const {
+          'isShield': true,
+          'acBonus': 2,
+        },
+      );
+
+      ringOfProtection = EquipmentItem(
+        id: const EntityId(slug: 'ring-of-protection', ruleset: RulesetVersion.v2024),
+        name: 'Ring of Protection',
+        itemType: 'Ring',
+        rarity: 'Rare',
+        requiresAttunement: true,
+        descriptionMarkdown: '+1 AC and +1 Saves.',
+        customProperties: const {
+          'acBonus': 1,
+        },
+      );
+
+      gauntletsOfOgrePower = EquipmentItem(
+        id: const EntityId(slug: 'gauntlets-of-ogre-power', ruleset: RulesetVersion.v2024),
+        name: 'Gauntlets of Ogre Power',
+        itemType: 'Wondrous Item',
+        rarity: 'Uncommon',
+        requiresAttunement: true,
+        descriptionMarkdown: 'Sets STR to 19.',
+        customProperties: const {
+          'abilityOverrides': {'strength': 19},
+        },
+      );
+
+      rapier = EquipmentItem(
+        id: const EntityId(slug: 'rapier', ruleset: RulesetVersion.v2024),
+        name: 'Rapier',
+        itemType: 'Martial Melee Weapon',
+        rarity: 'Common',
+        requiresAttunement: false,
+        descriptionMarkdown: '1d8 piercing, finesse.',
+        customProperties: const {
+          'isWeapon': true,
+          'isFinesse': true,
+          'damageFormula': '1d8',
+          'damageType': 'piercing',
+        },
+      );
+
+      baseLayer = PriorityLayer(
+        layerId: 'base-srd-2024',
+        name: 'SRD 2024',
+        priority: LayerPriority.baseRuleset,
+      )
+        ..registerEntity(chainMail)
+        ..registerEntity(breastplate)
+        ..registerEntity(leatherArmor)
+        ..registerEntity(shield)
+        ..registerEntity(ringOfProtection)
+        ..registerEntity(gauntletsOfOgrePower)
+        ..registerEntity(rapier);
+
+      repository.addLayer(baseLayer);
+    });
+
+    test('computes unarmored AC (10 + DEX mod)', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-rogue', ruleset: RulesetVersion.v2024),
+        name: 'Test Rogue',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'rogue',
+              displayName: 'Rogue',
+            ),
+            level: 3,
+            hitDie: 'd8',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 10,
+          dexterity: 16, // +3 mod
+          constitution: 14, // +2 mod
+          intelligence: 12,
+          wisdom: 10,
+          charisma: 8,
+        ),
+        resources: const CharacterResourcePool(currentHp: 24),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      expect(stats.armorClass, equals(13)); // 10 + 3
+      expect(stats.proficiencyBonus, equals(2)); // Level 3 = +2
+      expect(stats.passivePerception, equals(10)); // 10 + 0 WIS
+    });
+
+    test('computes Barbarian Unarmored Defense (10 + DEX + CON)', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
+        name: 'Test Barbarian',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'barbarian',
+              displayName: 'Barbarian',
+            ),
+            level: 1,
+            hitDie: 'd12',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 16,
+          dexterity: 14, // +2 mod
+          constitution: 16, // +3 mod
+          intelligence: 8,
+          wisdom: 12,
+          charisma: 10,
+        ),
+        resources: const CharacterResourcePool(currentHp: 15),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      expect(stats.armorClass, equals(15)); // 10 + 2 + 3
+    });
+
+    test('computes Medium Armor with DEX capped at +2, plus Shield', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
+        name: 'Test Cleric',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'dwarf',
+          displayName: 'Dwarf',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'cleric',
+              displayName: 'Cleric',
+            ),
+            level: 5,
+            hitDie: 'd8',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 14,
+          dexterity: 16, // +3 mod (should be capped at +2 for medium)
+          constitution: 14,
+          intelligence: 10,
+          wisdom: 16, // +3 mod
+          charisma: 10,
+        ),
+        inventory: const [
+          InventoryItemInstance(
+            instanceId: 'inst-breastplate',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'breastplate',
+              displayName: 'Breastplate',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.armor,
+          ),
+          InventoryItemInstance(
+            instanceId: 'inst-shield',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'shield',
+              displayName: 'Shield',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.shield,
+          ),
+        ],
+        resources: const CharacterResourcePool(currentHp: 38),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      // Breastplate 14 + capped DEX 2 + Shield 2 = 18
+      expect(stats.armorClass, equals(18));
+      expect(stats.proficiencyBonus, equals(3)); // Level 5 = +3
+      expect(stats.spellSaveDcs['cleric'], equals(14)); // 8 + 3 + 3
+      expect(stats.spellAttackBonuses['cleric'], equals(6)); // 3 + 3
+    });
+
+    test('attunement requirement enforces stat bonus only when attuned', () {
+      // Unattuned Ring of Protection
+      final charUnattuned = Character(
+        id: const EntityId(slug: 'test-fighter', ruleset: RulesetVersion.v2024),
+        name: 'Test Fighter',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'fighter',
+              displayName: 'Fighter',
+            ),
+            level: 1,
+            hitDie: 'd10',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 16,
+          dexterity: 10,
+          constitution: 14,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        inventory: const [
+          InventoryItemInstance(
+            instanceId: 'inst-ring',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'ring-of-protection',
+              displayName: 'Ring of Protection',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.ring1,
+            requiresAttunement: true,
+            isAttuned: false, // NOT ATTUNED
+          ),
+        ],
+        resources: const CharacterResourcePool(currentHp: 12),
+      );
+
+      final statsUnattuned = CharacterStatCalculator.compute(charUnattuned, resolver);
+      expect(statsUnattuned.armorClass, equals(10)); // No bonus
+
+      // Attuned Ring of Protection
+      final charAttuned = charUnattuned.copyWith(
+        inventory: const [
+          InventoryItemInstance(
+            instanceId: 'inst-ring',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'ring-of-protection',
+              displayName: 'Ring of Protection',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.ring1,
+            requiresAttunement: true,
+            isAttuned: true, // ATTUNED
+          ),
+        ],
+      );
+
+      final statsAttuned = CharacterStatCalculator.compute(charAttuned, resolver);
+      expect(statsAttuned.armorClass, equals(11)); // +1 AC applied
+    });
+
+    test('Gauntlets of Ogre Power overrides STR to 19 when attuned', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
+        name: 'Test Wizard',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'gnome',
+          displayName: 'Gnome',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'wizard',
+              displayName: 'Wizard',
+            ),
+            level: 1,
+            hitDie: 'd6',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 8, // base -1 mod
+          dexterity: 14,
+          constitution: 12,
+          intelligence: 16,
+          wisdom: 12,
+          charisma: 10,
+        ),
+        inventory: const [
+          InventoryItemInstance(
+            instanceId: 'inst-gauntlets',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'gauntlets-of-ogre-power',
+              displayName: 'Gauntlets of Ogre Power',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.wondrous,
+            requiresAttunement: true,
+            isAttuned: true,
+          ),
+        ],
+        resources: const CharacterResourcePool(currentHp: 7),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      expect(stats.effectiveScores.strength, equals(19));
+      expect(stats.abilityModifiers[AbilityType.strength], equals(4)); // 19 = +4
+    });
+
+    test('finesse weapon picks DEX over STR when DEX is higher', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-duelist', ruleset: RulesetVersion.v2024),
+        name: 'Test Duelist',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'fighter',
+              displayName: 'Fighter',
+            ),
+            level: 1,
+            hitDie: 'd10',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 10, // +0
+          dexterity: 16, // +3
+          constitution: 14,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        inventory: const [
+          InventoryItemInstance(
+            instanceId: 'inst-rapier',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'rapier',
+              displayName: 'Rapier',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.mainHand,
+          ),
+        ],
+        resources: const CharacterResourcePool(currentHp: 12),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      expect(stats.attackProfiles.length, equals(1));
+      final attack = stats.attackProfiles.first;
+      expect(attack.weaponName, equals('Rapier'));
+      expect(attack.attackBonus, equals(5)); // Prof +2 + DEX +3 = +5
+      expect(attack.damageFormula, equals('1d8 + 3'));
+      expect(attack.damageType, equals(DamageType.piercing));
+    });
+
+    test('missing equipment reference falls back gracefully to UnresolvedReference stub without crash', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-missing', ruleset: RulesetVersion.v2024),
+        name: 'Test Missing Gear',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'fighter',
+              displayName: 'Fighter',
+            ),
+            level: 1,
+            hitDie: 'd10',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 14,
+          dexterity: 12,
+          constitution: 14,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        inventory: const [
+          InventoryItemInstance(
+            instanceId: 'inst-deleted-sword',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'deleted-legendary-blade',
+              displayName: 'Deleted Legendary Blade',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.mainHand,
+          ),
+        ],
+        resources: const CharacterResourcePool(currentHp: 12),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      expect(stats.armorClass, equals(11)); // 10 + 1 DEX
+      expect(stats.unresolvedReferences.length, equals(1));
+      expect(stats.unresolvedReferences.first.slug, equals('deleted-legendary-blade'));
+    });
+  });
+}
