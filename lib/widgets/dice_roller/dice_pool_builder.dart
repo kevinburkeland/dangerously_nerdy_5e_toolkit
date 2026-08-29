@@ -30,6 +30,12 @@ class DicePoolBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDefaultPool = dicePool.length == 1 &&
+        dicePool.first.dieType == DieType.d20 &&
+        dicePool.first.count == 1 &&
+        dicePool.first.customSides == 6 &&
+        modifier == 0 &&
+        rollMode == RollMode.normal;
     final hasD20 = dicePool.any((e) => e.dieType == DieType.d20);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -53,9 +59,7 @@ class DicePoolBuilder extends StatelessWidget {
                     fontSize: 14),
               ),
             ),
-            if (dicePool.length > 1 ||
-                dicePool.first.count > 1 ||
-                dicePool.first.dieType != DieType.d20)
+            if (!isDefaultPool)
               TextButton.icon(
                 style: TextButton.styleFrom(padding: EdgeInsets.zero),
                 icon: Icon(Icons.refresh,
@@ -139,97 +143,109 @@ class DicePoolBuilder extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Dice Pool Entry Items
-              ...dicePool.asMap().entries.map((entry) {
-                final index = entry.key;
-                final diceEntry = entry.value;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: primary.withValues(alpha: 0.4)),
-                            ),
-                            child: Text(
-                              diceEntry.dieLabel.toUpperCase(),
-                              style: TextStyle(
-                                  color: primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Quantity: ${diceEntry.count}',
-                            style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ],
+              if (dicePool.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  child: Center(
+                    child: Text(
+                      'Dice pool is empty. Select a die above to add.',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.remove_circle_outline,
-                                color: primary),
-                            tooltip: 'Decrease quantity of ${diceEntry.dieLabel}',
-                            onPressed: () {
-                              final updatedPool = List<DiceEntry>.from(dicePool);
-                              if (diceEntry.count > 1) {
-                                updatedPool[index] = diceEntry.copyWith(
-                                    count: diceEntry.count - 1);
-                              } else {
-                                if (updatedPool.length > 1) {
-                                  updatedPool.removeAt(index);
-                                }
-                              }
-                              onUpdateDicePool(updatedPool);
-                            },
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.black38 : theme.colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                )
+              else
+                ...dicePool.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final diceEntry = entry.value;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                    color: primary.withValues(alpha: 0.4)),
+                              ),
+                              child: Text(
+                                diceEntry.dieLabel.toUpperCase(),
+                                style: TextStyle(
+                                    color: primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14),
+                              ),
                             ),
-                            child: Text(
-                              '${diceEntry.count}',
+                            const SizedBox(width: 10),
+                            Text(
+                              'Quantity: ${diceEntry.count}',
                               style: TextStyle(
                                   color: theme.colorScheme.onSurface,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600),
                             ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.add_circle_outline,
-                                color: primary),
-                            tooltip: 'Increase quantity of ${diceEntry.dieLabel}',
-                            onPressed: () {
-                              final updatedPool = List<DiceEntry>.from(dicePool);
-                              if (diceEntry.count < 50) {
-                                updatedPool[index] = diceEntry.copyWith(
-                                    count: diceEntry.count + 1);
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.remove_circle_outline,
+                                  color: primary),
+                              tooltip: 'Decrease quantity of ${diceEntry.dieLabel}',
+                              onPressed: () {
+                                final updatedPool = List<DiceEntry>.from(dicePool);
+                                if (diceEntry.count > 1) {
+                                  updatedPool[index] = diceEntry.copyWith(
+                                      count: diceEntry.count - 1);
+                                } else {
+                                  updatedPool.removeAt(index);
+                                }
                                 onUpdateDicePool(updatedPool);
-                              }
-                            },
-                          ),
-                          if (dicePool.length > 1)
+                              },
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.black38 : theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${diceEntry.count}',
+                                style: TextStyle(
+                                    color: theme.colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.add_circle_outline,
+                                  color: primary),
+                              tooltip: 'Increase quantity of ${diceEntry.dieLabel}',
+                              onPressed: () {
+                                final updatedPool = List<DiceEntry>.from(dicePool);
+                                if (diceEntry.count < 50) {
+                                  updatedPool[index] = diceEntry.copyWith(
+                                      count: diceEntry.count + 1);
+                                  onUpdateDicePool(updatedPool);
+                                }
+                              },
+                            ),
                             IconButton(
                               icon: Icon(Icons.close,
                                   color: theme.colorScheme.onSurfaceVariant, size: 18),
@@ -240,12 +256,12 @@ class DicePoolBuilder extends StatelessWidget {
                                 onUpdateDicePool(updatedPool);
                               },
                             ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
 
               Divider(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2), height: 24),
 

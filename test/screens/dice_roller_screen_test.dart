@@ -181,5 +181,86 @@ void main() {
 
     roomService.leaveRoom();
   });
+
+  testWidgets('Allows fully emptying dice pool by removing the initial d20 and adding a custom die', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const DiceRollerScreen()));
+
+    // Verify initial state
+    expect(find.text('DICE POOL & MODIFIERS'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'ROLL 1D20'), findsOneWidget);
+
+    // Tap remove (X) button on the d20 entry to fully empty the pool
+    final removeD20Button = find.byTooltip('Remove d20 from pool');
+    expect(removeD20Button, findsOneWidget);
+    await tester.tap(removeD20Button);
+    await tester.pumpAndSettle();
+
+    // Pool should now show empty placeholder
+    expect(find.text('Dice pool is empty. Select a die above to add.'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'SELECT DICE TO ROLL'), findsOneWidget);
+
+    // Roll button is disabled
+    final rollButton = tester.widget<ElevatedButton>(find.widgetWithText(ElevatedButton, 'SELECT DICE TO ROLL'));
+    expect(rollButton.onPressed, isNull);
+
+    // 'Reset Pool' button should now be visible since pool is empty
+    expect(find.text('Reset Pool'), findsOneWidget);
+
+    // Add a custom die to the empty pool
+    final customChip = find.text('CUSTOM (d7)');
+    await tester.tap(customChip);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Custom Sided Die'), findsOneWidget);
+    final textField = find.byType(TextField);
+    await tester.enterText(textField, '100');
+    await tester.pumpAndSettle();
+
+    final addDieButton = find.widgetWithText(ElevatedButton, 'Add Die');
+    await tester.tap(addDieButton);
+    await tester.pumpAndSettle();
+
+    // The pool now contains only the custom d100 die without any leftover d20
+    expect(find.text('Dice pool is empty. Select a die above to add.'), findsNothing);
+    expect(find.widgetWithText(ElevatedButton, 'ROLL 1D100'), findsOneWidget);
+    expect(find.text('Quantity: 1'), findsOneWidget);
+  });
+
+  testWidgets('Decreasing quantity of a 1-count die removes it and empties pool', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const DiceRollerScreen()));
+
+    // Tap '-' button on the single d20
+    final decreaseBtn = find.byTooltip('Decrease quantity of d20');
+    expect(decreaseBtn, findsOneWidget);
+    await tester.tap(decreaseBtn);
+    await tester.pumpAndSettle();
+
+    // Pool is now empty
+    expect(find.text('Dice pool is empty. Select a die above to add.'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'SELECT DICE TO ROLL'), findsOneWidget);
+
+    // Tapping Reset Pool restores 1d20
+    await tester.tap(find.text('Reset Pool'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(ElevatedButton, 'ROLL 1D20'), findsOneWidget);
+  });
+
+  testWidgets('Saving preset is prevented when pool is empty', (WidgetTester tester) async {
+    await tester.pumpWidget(createTestableWidget(const DiceRollerScreen()));
+
+    // Remove d20 to empty pool
+    await tester.tap(find.byTooltip('Remove d20 from pool'));
+    await tester.pumpAndSettle();
+
+    // Tap Save Current preset button
+    await tester.ensureVisible(find.text('Save Current'));
+    await tester.tap(find.text('Save Current'));
+    await tester.pumpAndSettle();
+
+    // SnackBar warning is displayed and SavePresetDialog is not opened
+    expect(find.text('Cannot save preset with an empty dice pool.'), findsOneWidget);
+    expect(find.text('Save Custom Preset'), findsNothing);
+  });
 }
 

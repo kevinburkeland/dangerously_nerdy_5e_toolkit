@@ -135,6 +135,8 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   void _rollDice() {
+    if (_dicePool.isEmpty) return;
+
     final settings = SettingsScope.settingsOf(context, listen: false);
     final res = DiceRollResult.rollPool(
       diceEntries: _dicePool,
@@ -199,6 +201,12 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
   }
 
   String get _currentFormulaString {
+    if (_dicePool.isEmpty) {
+      if (_modifier != 0) {
+        return DiceFormatters.formatBonus(_modifier);
+      }
+      return '';
+    }
     final dicePart = _dicePool.map((e) => e.formulaString).join(' + ');
     final modStr = DiceFormatters.formatModifierExpression(_modifier);
     return '${dicePart.toUpperCase()}$modStr';
@@ -206,6 +214,12 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
 
   Future<void> _showSavePresetDialog() async {
     HapticService.selectionTick(context);
+    if (_dicePool.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot save preset with an empty dice pool.')),
+      );
+      return;
+    }
     final name = await SavePresetDialog.show(context, formulaText: _currentFormulaString);
     if (name != null && name.isNotEmpty && mounted) {
       final messenger = ScaffoldMessenger.of(context);
@@ -318,6 +332,7 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
     final settingsProvider = SettingsScope.of(context);
     final settings = settingsProvider.settings;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return CriticalEffectOverlay(
       controller: _critController,
@@ -492,22 +507,34 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
                             height: 52,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: theme.colorScheme.onPrimary,
+                                backgroundColor: _dicePool.isEmpty
+                                    ? (isDark ? Colors.white12 : Colors.black12)
+                                    : theme.colorScheme.primary,
+                                foregroundColor: _dicePool.isEmpty
+                                    ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
+                                    : theme.colorScheme.onPrimary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                elevation: 4,
+                                elevation: _dicePool.isEmpty ? 0 : 4,
                               ),
-                              onPressed: _rollDice,
+                              onPressed: _dicePool.isEmpty ? null : _rollDice,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.casino, size: 24),
+                                  Icon(
+                                    Icons.casino,
+                                    size: 24,
+                                    color: _dicePool.isEmpty
+                                        ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
+                                        : null,
+                                  ),
                                   const SizedBox(width: 8),
                                   Flexible(
                                     child: Text(
-                                      'ROLL $_currentFormulaString',
+                                      _dicePool.isEmpty
+                                          ? 'SELECT DICE TO ROLL'
+                                          : 'ROLL $_currentFormulaString',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w900,
                                         fontSize: 16,
