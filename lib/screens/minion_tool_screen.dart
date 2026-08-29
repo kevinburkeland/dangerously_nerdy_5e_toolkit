@@ -3,6 +3,7 @@ import '../models/spell_session.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../services/minion_session_service.dart';
+import '../services/persistence/homebrew_persistence_service.dart';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../utils/secure_random.dart';
 import '../widgets/minions/active_session_header.dart';
@@ -46,6 +47,7 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
+    HomebrewPersistenceService().syncToLibraries();
     final service = widget.sessionService ?? MinionSessionService();
     _session = widget.session ??
         service.getOrCreateSession(

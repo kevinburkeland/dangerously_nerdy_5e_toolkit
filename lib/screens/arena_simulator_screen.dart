@@ -8,6 +8,7 @@ import '../models/dm_screen_data.dart';
 import '../models/monster_codex_data.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
+import '../services/persistence/homebrew_persistence_service.dart';
 import '../services/rules/arena_combat_engine.dart';
 import '../widgets/arena/arena_clash_stage.dart';
 import '../widgets/arena/arena_combat_log_view.dart';
@@ -63,6 +64,7 @@ class _ArenaSimulatorScreenState extends State<ArenaSimulatorScreen> {
     if (widget.initialEdition != null) {
       _localEditionOverride = widget.initialEdition;
     }
+    HomebrewPersistenceService().syncToLibraries();
   }
 
   @override

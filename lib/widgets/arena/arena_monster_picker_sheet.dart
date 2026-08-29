@@ -347,9 +347,28 @@ class _ArenaMonsterPickerSheetState extends State<ArenaMonsterPickerSheet> {
                             size: 38,
                             isDarkMode: isDark,
                           ),
-                          title: Text(
-                            monsterName,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          title: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  monsterName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (monster.isHomebrew) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.6)),
+                                  ),
+                                  child: const Text('HOMEBREW', style: TextStyle(color: Colors.purpleAccent, fontSize: 8.5, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ],
                           ),
                           subtitle: Text(
                             'CR ${sb.crDisplay} • HP ${sb.maxHp} • AC ${sb.ac} • ${sb.typeDisplay}',

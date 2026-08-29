@@ -5,6 +5,7 @@ import '../models/srd_summons/minion_stat_block.dart';
 import '../providers/settings_provider.dart';
 import '../services/a11y_service.dart';
 import '../services/haptic_service.dart';
+import '../services/persistence/homebrew_persistence_service.dart';
 import '../services/rules/spellcasting_rules_engine.dart';
 import '../widgets/common/compendium_search_header.dart';
 import '../widgets/common/empty_state_card.dart';
@@ -21,7 +22,8 @@ import '../widgets/room_banner_widget.dart';
 enum MonsterCodexViewMode {
   allMonsters('All Monsters', Icons.pets),
   myBestiary('My Bestiary', Icons.bookmark),
-  revisions2024('2024 Diffs', Icons.auto_awesome);
+  revisions2024('2024 Diffs', Icons.auto_awesome),
+  homebrew('Homebrew', Icons.auto_fix_high);
 
   final String label;
   final IconData icon;
@@ -69,6 +71,14 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     super.initState();
     if (widget.initialEdition != null) {
       _localEditionOverride = widget.initialEdition;
+    }
+    _syncHomebrew();
+  }
+
+  Future<void> _syncHomebrew() async {
+    await HomebrewPersistenceService().syncToLibraries();
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -285,6 +295,10 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
           !monster.isChangedIn2024) {
         return false;
       }
+      if (_viewMode == MonsterCodexViewMode.homebrew &&
+          !monster.isHomebrew) {
+        return false;
+      }
       if (_showOnlyPinned && !pinnedIds.contains(monster.id)) {
         return false;
       }
@@ -459,6 +473,15 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
                         ),
                         icon: Icon(MonsterCodexViewMode.revisions2024.icon, size: 15),
                       ),
+                      if (MonsterCodexLibrary.homebrewMonsters.isNotEmpty)
+                        ButtonSegment<MonsterCodexViewMode>(
+                          value: MonsterCodexViewMode.homebrew,
+                          label: Text(
+                            '${MonsterCodexViewMode.homebrew.label} (${MonsterCodexLibrary.homebrewMonsters.length})',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          icon: Icon(MonsterCodexViewMode.homebrew.icon, size: 15),
+                        ),
                     ],
                     selected: {_viewMode},
                     onSelectionChanged: (newSelection) {

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../monster_codex_data.dart';
 import '../spellbook_data.dart';
 import '../../widgets/glyphs/dnd_glyph.dart';
 import 'minion_stat_block.dart';
@@ -42,6 +43,62 @@ class SummonPreset {
 
   /// Canonical source spell from the SRD Spellbook, if applicable.
   SpellItem? get sourceSpell => spellId != null ? SpellbookLibrary.getSpellById(spellId!) : null;
+
+  /// Effective stat blocks combining canonical SRD monsters and applicable custom Homebrew creatures.
+  List<MinionStatBlock> get effectiveStatBlocks {
+    if (MonsterCodexLibrary.homebrewMonsters.isEmpty) {
+      return statBlocks;
+    }
+
+    final existingIds = statBlocks.map((s) => s.id).toSet();
+    final existingNames = statBlocks.map((s) => s.name.toLowerCase()).toSet();
+    final matchingHomebrew = <MinionStatBlock>[];
+
+    for (final monsterItem in MonsterCodexLibrary.homebrewMonsters) {
+      final sb = monsterItem.sourceStatBlock;
+      if (existingIds.contains(sb.id) || existingNames.contains(sb.name.toLowerCase())) {
+        continue;
+      }
+
+      final typeLower = sb.typeDisplay.toLowerCase();
+      final cr = sb.crValue;
+
+      if (id == 'conjure_animals') {
+        // Conjure animals allows beasts of CR <= 2
+        if (typeLower.contains('beast') && cr <= 2.0) {
+          matchingHomebrew.add(sb);
+        }
+      } else if (id == 'animate_dead' || id == 'create_undead') {
+        // Undead spells
+        if (typeLower.contains('undead')) {
+          matchingHomebrew.add(sb);
+        }
+      } else if (id == 'conjure_elemental' || id == 'conjure_minor_elementals') {
+        // Elemental spells
+        if (typeLower.contains('elemental')) {
+          matchingHomebrew.add(sb);
+        }
+      } else if (id == 'giant_insect') {
+        // Insects / arachnids
+        if ((typeLower.contains('beast') || typeLower.contains('monstrosity')) &&
+            (sb.name.toLowerCase().contains('insect') ||
+                sb.name.toLowerCase().contains('spider') ||
+                sb.name.toLowerCase().contains('wasp') ||
+                sb.name.toLowerCase().contains('centipede') ||
+                sb.name.toLowerCase().contains('scorpion') ||
+                sb.name.toLowerCase().contains('beetle') ||
+                sb.name.toLowerCase().contains('ant'))) {
+          matchingHomebrew.add(sb);
+        }
+      }
+    }
+
+    if (matchingHomebrew.isEmpty) {
+      return statBlocks;
+    }
+
+    return [...statBlocks, ...matchingHomebrew];
+  }
 
   int calculateMaxPoints(int spellLevel) {
     if (budgetCalculator != null) {

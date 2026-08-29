@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dm_screen_data.dart';
+import 'domain/spell_monster_equipment.dart';
 import 'dpr/dpr_models.dart';
 import 'monster_codex/bestiary/bestiary_cr_0_to_quarter.dart';
 import 'monster_codex/bestiary/bestiary_cr_five_to_eight.dart';
@@ -112,6 +113,7 @@ class MonsterItem {
   String get type => sourceStatBlock.typeDisplay;
   String get alignment => sourceStatBlock.alignment;
   String get crDisplay => sourceStatBlock.crDisplay;
+  bool get isHomebrew => sourcePresetId == 'homebrew';
   double get challengeRating => _parseChallengeRating(sourceStatBlock.crDisplay);
   int get ac => sourceStatBlock.ac;
   int get hp => sourceStatBlock.maxHp;
@@ -340,7 +342,44 @@ class MonsterItem {
 class MonsterCodexLibrary {
   MonsterCodexLibrary._();
 
-  static final List<MonsterItem> allMonsters = _buildAllMonsters();
+  static final List<MonsterItem> _baseMonsters = _buildAllMonsters();
+  static List<MonsterItem> _homebrewMonsters = [];
+
+  static List<MonsterItem> get allMonsters => [
+        ..._baseMonsters,
+        ..._homebrewMonsters,
+      ];
+
+  static List<MonsterItem> get homebrewMonsters =>
+      List.unmodifiable(_homebrewMonsters);
+
+  static void setHomebrewMonsters(List<Monster> monsters) {
+    _homebrewMonsters = monsters.map((m) => m.toMonsterItem()).toList()
+      ..sort((a, b) {
+        final crCompare = a.challengeRating.compareTo(b.challengeRating);
+        if (crCompare != 0) return crCompare;
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+  }
+
+  static void addHomebrewMonster(Monster monster) {
+    final item = monster.toMonsterItem();
+    _homebrewMonsters.removeWhere((m) => m.id == item.id);
+    _homebrewMonsters.add(item);
+    _homebrewMonsters.sort((a, b) {
+      final crCompare = a.challengeRating.compareTo(b.challengeRating);
+      if (crCompare != 0) return crCompare;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+  }
+
+  static void removeHomebrewMonster(String slug) {
+    _homebrewMonsters.removeWhere((m) => m.id == slug);
+  }
+
+  static void clearHomebrewMonsters() {
+    _homebrewMonsters.clear();
+  }
 
   static MonsterItem? getMonsterById(String id) {
     try {
@@ -524,5 +563,186 @@ class MonsterCodexLibrary {
       });
 
     return monsters;
+  }
+}
+
+/// Extension mapping domain Monster to MinionStatBlock and MonsterItem for cross-toolkit usage.
+extension MonsterHomebrewExt on Monster {
+  MinionStatBlock toMinionStatBlock() {
+    final parsedCr = MonsterItem._parseChallengeRating(challengeRating);
+    final crStr = challengeRating.trim().toLowerCase().startsWith('cr')
+        ? challengeRating.trim()
+        : 'CR $challengeRating';
+
+    // Parse ability scores
+    final str = (customProperties['strScore'] as num?)?.toInt() ?? 10;
+    final dex = (customProperties['dexScore'] as num?)?.toInt() ?? 10;
+    final con = (customProperties['conScore'] as num?)?.toInt() ?? 10;
+    final intSc = (customProperties['intScore'] as num?)?.toInt() ?? 10;
+    final wis = (customProperties['wisScore'] as num?)?.toInt() ?? 10;
+    final cha = (customProperties['chaScore'] as num?)?.toInt() ?? 10;
+
+    // Parse traits & actions from actionsMarkdown
+    final parsedActions = <CreatureAction>[];
+    final parsedTraits = <CreatureTrait>[];
+
+    final blocks = actionsMarkdown.split(RegExp(r'\n{2,}|\n(?=[-*#]|\*\*)'));
+    for (final rawBlock in blocks) {
+      final block = rawBlock.trim();
+      if (block.isEmpty) continue;
+
+      final titleMatch = RegExp(r'^(?:[-*#\s]*\**)([^:*#\n]+)(?:\**)?:\s*([\s\S]*)$').firstMatch(block);
+      if (titleMatch != null) {
+        final title = titleMatch.group(1)!.trim().replaceAll('*', '');
+        final desc = titleMatch.group(2)!.trim();
+
+        final lower = '$title $desc'.toLowerCase();
+        if (lower.contains('attack') ||
+            lower.contains('to hit') ||
+            lower.contains('reach') ||
+            lower.contains('range') ||
+            lower.contains('damage')) {
+          final atkBonusMatch = RegExp(r'([+-]\d+)\s+to\s+hit').firstMatch(desc);
+          final reachMatch = RegExp(r'(?:reach|range)\s+([^,.\n]+)').firstMatch(desc);
+          final hitDmgMatch = RegExp(r'(?:Hit:?\s*)?(\d+\s*\([^)]+\)[^.\n]*)').firstMatch(desc);
+
+          parsedActions.add(CreatureAction(
+            name: title,
+            description: desc,
+            attackBonus: atkBonusMatch != null ? int.tryParse(atkBonusMatch.group(1)!) : null,
+            reach: reachMatch != null ? reachMatch.group(1)!.trim() : null,
+            hitDamage: hitDmgMatch != null ? hitDmgMatch.group(1)!.trim() : null,
+          ));
+        } else {
+          parsedTraits.add(CreatureTrait(name: title, description: desc));
+        }
+      } else {
+        parsedTraits.add(CreatureTrait(name: 'Feature', description: block));
+      }
+    }
+
+    // Determine primary attack parameters
+    int atkBonus = ((parsedCr * 1.5).round() + 2).clamp(2, 14);
+    int dmgCount = 1;
+    int dmgSides = 6;
+    int dmgBonus = 2;
+    String dmgType = 'Slashing';
+    final packTactics = actionsMarkdown.toLowerCase().contains('pack tactics');
+
+    if (parsedActions.isNotEmpty) {
+      final firstWithBonus = parsedActions.firstWhere(
+        (a) => a.attackBonus != null,
+        orElse: () => parsedActions.first,
+      );
+      if (firstWithBonus.attackBonus != null) {
+        atkBonus = firstWithBonus.attackBonus!;
+      }
+      final fullText = '${firstWithBonus.hitDamage ?? ""} ${firstWithBonus.description}';
+      final dmgMatch = RegExp(r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?')
+          .firstMatch(fullText);
+      if (dmgMatch != null) {
+        dmgCount = int.tryParse(dmgMatch.group(1)!) ?? 1;
+        dmgSides = int.tryParse(dmgMatch.group(2)!) ?? 6;
+        final sign = dmgMatch.group(3);
+        final bonusVal = int.tryParse(dmgMatch.group(4) ?? '') ?? 0;
+        dmgBonus = sign == '-' ? -bonusVal : bonusVal;
+      }
+      final typeMatch = RegExp(
+        r'(bludgeoning|piercing|slashing|fire|cold|lightning|thunder|acid|poison|necrotic|radiant|force|psychic)',
+        caseSensitive: false,
+      ).firstMatch(fullText);
+      if (typeMatch != null) {
+        final t = typeMatch.group(1)!;
+        dmgType = t[0].toUpperCase() + t.substring(1).toLowerCase();
+      }
+    } else if (attackMath.isNotEmpty) {
+      final math = attackMath.first;
+      final dmgMatch = RegExp(r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?')
+          .firstMatch(math.diceFormula);
+      if (dmgMatch != null) {
+        dmgCount = int.tryParse(dmgMatch.group(1)!) ?? 1;
+        dmgSides = int.tryParse(dmgMatch.group(2)!) ?? 6;
+        final sign = dmgMatch.group(3);
+        final bonusVal = int.tryParse(dmgMatch.group(4) ?? '') ?? 0;
+        dmgBonus = sign == '-' ? -bonusVal : bonusVal;
+      }
+      final typeName = math.damageType.name;
+      if (typeName.isNotEmpty) {
+        dmgType = typeName[0].toUpperCase() + typeName.substring(1);
+      }
+    }
+
+    Color color;
+    final typeLower = monsterType.toLowerCase();
+    if (typeLower.contains('beast')) {
+      color = const Color(0xFF388E3C);
+    } else if (typeLower.contains('dragon')) {
+      color = const Color(0xFFFF8F00);
+    } else if (typeLower.contains('fiend')) {
+      color = const Color(0xFFC62828);
+    } else if (typeLower.contains('undead')) {
+      color = const Color(0xFF7B1FA2);
+    } else if (typeLower.contains('elemental')) {
+      color = const Color(0xFFE65100);
+    } else if (typeLower.contains('fey')) {
+      color = const Color(0xFF00897B);
+    } else if (typeLower.contains('celestial')) {
+      color = const Color(0xFF0288D1);
+    } else if (typeLower.contains('construct')) {
+      color = const Color(0xFF5D4037);
+    } else if (typeLower.contains('aberration')) {
+      color = const Color(0xFF6A1B9A);
+    } else {
+      color = const Color(0xFF8B5CF6);
+    }
+
+    return MinionStatBlock(
+      id: id.slug,
+      name: name,
+      sizeDisplay: size,
+      crDisplay: crStr,
+      typeDisplay: monsterType,
+      alignment: alignment,
+      ac: armorClass,
+      maxHp: hitPoints,
+      hitDice: hitDieFormula.isNotEmpty ? hitDieFormula : null,
+      speed: customProperties['speed']?.toString() ?? '30 ft.',
+      strScore: str,
+      dexScore: dex,
+      conScore: con,
+      intScore: intSc,
+      wisScore: wis,
+      chaScore: cha,
+      savingThrows: customProperties['savingThrows']?.toString(),
+      skills: customProperties['skills']?.toString(),
+      damageVulnerabilities: customProperties['damageVulnerabilities']?.toString(),
+      damageResistances: customProperties['damageResistances']?.toString(),
+      damageImmunities: customProperties['damageImmunities']?.toString(),
+      conditionImmunities: customProperties['conditionImmunities']?.toString(),
+      senses: customProperties['senses']?.toString() ?? 'passive Perception 10',
+      languages: customProperties['languages']?.toString() ?? '—',
+      traits: parsedTraits,
+      actions: parsedActions,
+      attackBonus: atkBonus,
+      damageDiceCount: dmgCount,
+      damageDiceSides: dmgSides,
+      damageBonus: dmgBonus,
+      damageType: dmgType,
+      hasPackTactics: packTactics,
+      accentColor: color,
+    );
+  }
+
+  MonsterItem toMonsterItem() {
+    final statBlock = toMinionStatBlock();
+    return MonsterItem(
+      id: id.slug,
+      name: name,
+      statBlock2014: statBlock,
+      statBlock2024: statBlock,
+      sourcePresetId: 'homebrew',
+      sourcePresetName: 'Homebrew & Custom Creatures',
+      sourceCategory: SummonCategory.spell,
+    );
   }
 }

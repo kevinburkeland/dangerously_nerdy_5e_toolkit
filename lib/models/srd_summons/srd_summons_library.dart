@@ -1,3 +1,4 @@
+import '../monster_codex_data.dart';
 import 'minion_stat_block.dart';
 import 'summon_preset.dart';
 import 'spells/animate_objects_preset.dart';
@@ -86,8 +87,25 @@ class SrdSummonsLibrary {
   static const serpentineOwl = FigurinesSummons.serpentineOwl;
   static const silverRaven = FigurinesSummons.silverRaven;
 
+  static SummonPreset get homebrewPreset => SummonPreset(
+        id: 'homebrew_minions',
+        name: 'Homebrew Creatures',
+        category: SummonCategory.spell,
+        levelDisplay: 'Custom Compendium',
+        castingTime: 'Special',
+        range: '60 feet',
+        components: 'V, S',
+        duration: 'Concentration, up to 1 hour',
+        description:
+            'Summon any custom homebrew creatures created in the Homebrew Studio.',
+        upcastRules: 'Adjust point capacity with spell slot level.',
+        statBlocks: MonsterCodexLibrary.homebrewMonsters
+            .map((m) => m.sourceStatBlock)
+            .toList(),
+      );
+
   // Decoupled Spell Presets
-  static const spellPresets = <SummonPreset>[
+  static const _baseSpellPresets = <SummonPreset>[
     AnimateObjectsSummon.preset,
     BeastSummons.conjureAnimalsPreset,
     UndeadSummons.animateDeadPreset,
@@ -96,6 +114,11 @@ class SrdSummonsLibrary {
     ElementalSummons.conjureMinorElementalsPreset,
     InsectSummons.giantInsectPreset,
   ];
+
+  static List<SummonPreset> get spellPresets => [
+        ..._baseSpellPresets,
+        if (MonsterCodexLibrary.homebrewMonsters.isNotEmpty) homebrewPreset,
+      ];
 
   // Decoupled Magic Item Presets
   static const magicItemPresets = <SummonPreset>[
@@ -109,15 +132,20 @@ class SrdSummonsLibrary {
     FigurinesSummons.figurinesPreset,
   ];
 
-  static const allPresets = <SummonPreset>[
-    ...spellPresets,
-    ...magicItemPresets,
-  ];
+  static List<SummonPreset> get allPresets => [
+        ...spellPresets,
+        ...magicItemPresets,
+      ];
 
   static MinionStatBlock? findStatBlockById(String id) {
     for (final preset in allPresets) {
-      for (final sb in preset.statBlocks) {
+      for (final sb in preset.effectiveStatBlocks) {
         if (sb.id == id) return sb;
+      }
+    }
+    for (final m in MonsterCodexLibrary.homebrewMonsters) {
+      if (m.id == id || m.sourceStatBlock.id == id) {
+        return m.sourceStatBlock;
       }
     }
     return null;
@@ -126,8 +154,14 @@ class SrdSummonsLibrary {
   static MinionStatBlock? findStatBlockByName(String name) {
     final lower = name.trim().toLowerCase();
     for (final preset in allPresets) {
-      for (final sb in preset.statBlocks) {
+      for (final sb in preset.effectiveStatBlocks) {
         if (sb.name.toLowerCase() == lower) return sb;
+      }
+    }
+    for (final m in MonsterCodexLibrary.homebrewMonsters) {
+      if (m.name.toLowerCase() == lower ||
+          m.sourceStatBlock.name.toLowerCase() == lower) {
+        return m.sourceStatBlock;
       }
     }
     return null;

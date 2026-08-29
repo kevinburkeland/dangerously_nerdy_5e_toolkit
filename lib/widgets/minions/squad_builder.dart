@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/animated_object.dart';
+import '../../models/monster_codex_data.dart';
 import '../../models/spell_session.dart';
 import '../../models/srd_summons/srd_summons_library.dart';
 import '../../services/a11y_service.dart';
@@ -164,17 +165,29 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<SummonPreset>(
-                  value: _selectedPreset,
+                  value: SrdSummonsLibrary.allPresets.firstWhere(
+                    (p) => p.id == _selectedPreset.id,
+                    orElse: () => _selectedPreset,
+                  ),
                   dropdownColor: tabletop.cardBackground,
                   isExpanded: true,
                   icon: Icon(Icons.arrow_drop_down, color: primary),
                   items: [
                     ...SrdSummonsLibrary.spellPresets.map((preset) {
+                      final isHomebrew = preset.id == 'homebrew_minions';
                       return DropdownMenuItem<SummonPreset>(
                         value: preset,
                         child: Text(
-                          '🔮 ${preset.name} (${preset.levelDisplay})',
-                          style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 13),
+                          isHomebrew
+                              ? '✨ ${preset.name} (${preset.levelDisplay})'
+                              : '🔮 ${preset.name} (${preset.levelDisplay})',
+                          style: TextStyle(
+                            color: isHomebrew
+                                ? (isDark ? Colors.purpleAccent : Colors.deepPurple)
+                                : theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                       );
                     }),
@@ -261,7 +274,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _selectedPreset.statBlocks.map((sb) {
+                children: _selectedPreset.effectiveStatBlocks.map((sb) {
                   return _buildChip('+1 ${sb.name}', () => _addMinions(sb, 1));
                 }).toList(),
               ),
@@ -277,7 +290,8 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
             const SizedBox(height: 8),
 
             Column(
-              children: _selectedPreset.statBlocks.map((sb) {
+              children: _selectedPreset.effectiveStatBlocks.map((sb) {
+                final isHb = MonsterCodexLibrary.homebrewMonsters.any((m) => m.id == sb.id);
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
@@ -311,6 +325,18 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (isHb) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.6)),
+                              ),
+                              child: const Text('HOMEBREW', style: TextStyle(color: Colors.purpleAccent, fontSize: 8.5, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
                           if (sb.hasPackTactics) ...[
                             const SizedBox(width: 6),
                             Container(
@@ -325,7 +351,7 @@ class _SquadBuilderBottomSheetState extends State<SquadBuilderBottomSheet> {
                         ],
                       ),
                       subtitle: Text(
-                        'HP ${sb.maxHp} | AC ${sb.ac} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
+                        '${sb.crDisplay} | HP ${sb.maxHp} | AC ${sb.ac} | +${sb.attackBonus} to hit | ${sb.fullDamageFormula}',
                         style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
                       ),
                       trailing: Row(

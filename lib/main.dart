@@ -10,6 +10,7 @@ import 'models/app_settings.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
 import 'services/app_services.dart';
+import 'services/persistence/homebrew_persistence_service.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -42,11 +43,12 @@ void main() {
     try {
       prefs = await SharedPreferences.getInstance();
       await services.migrationService.runMigrations(prefs);
+      await HomebrewPersistenceService().syncToLibraries();
     } catch (e, stackTrace) {
       logger.logNonFatal(
         e,
         stackTrace,
-        reason: 'Failed to initialize SharedPreferences / migrations during startup',
+        reason: 'Failed to initialize SharedPreferences / migrations / homebrew during startup',
       );
     }
 

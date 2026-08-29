@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/monster_codex_data.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
 
@@ -73,7 +74,13 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Saves a custom monster to persistent storage.
+  /// Synchronizes all loaded homebrew monsters into the global MonsterCodexLibrary.
+  Future<void> syncToLibraries() async {
+    final monsters = await loadCustomMonsters();
+    MonsterCodexLibrary.setHomebrewMonsters(monsters);
+  }
+
+  /// Saves a custom monster to persistent storage and updates MonsterCodexLibrary.
   Future<void> saveCustomMonster(Monster monster) async {
     final monsters = await loadCustomMonsters();
     final idx = monsters.indexWhere((m) => m.id.slug == monster.id.slug);
@@ -87,9 +94,10 @@ class HomebrewPersistenceService {
       _keyHomebrewMonsters,
       monsters.map((m) => json.encode(m.toMap())).toList(),
     );
+    MonsterCodexLibrary.addHomebrewMonster(monster);
   }
 
-  /// Deletes a custom monster by slug.
+  /// Deletes a custom monster by slug and updates MonsterCodexLibrary.
   Future<void> deleteCustomMonster(String slug) async {
     final monsters = await loadCustomMonsters();
     monsters.removeWhere((m) => m.id.slug == slug);
@@ -98,6 +106,7 @@ class HomebrewPersistenceService {
       _keyHomebrewMonsters,
       monsters.map((m) => json.encode(m.toMap())).toList(),
     );
+    MonsterCodexLibrary.removeHomebrewMonster(slug);
   }
 
   /// Loads all custom items from persistent storage.
@@ -182,5 +191,6 @@ class HomebrewPersistenceService {
     await prefs.remove(_keyHomebrewMonsters);
     await prefs.remove(_keyHomebrewItems);
     await prefs.remove(_keyCampaignOverrides);
+    MonsterCodexLibrary.clearHomebrewMonsters();
   }
 }
