@@ -654,46 +654,27 @@ class DprCombatantProfile {
     final adv = advantage ??
         (sb.hasPackTactics ? AdvantageType.advantage : AdvantageType.normal);
 
-    final parsedActions = <DprAttackAction>[];
-
-    // Try parsing specific weapon attack actions from the monster stat block
-    for (int i = 0; i < sb.actions.length; i++) {
-      final act = sb.actions[i];
-      if (act.attackBonus != null || (act.attackType != null && act.attackType!.contains('Attack'))) {
-        final parsedDice = _parseDamageFormula(act.hitDamage ?? sb.primaryDamageFormula);
-        parsedActions.add(
-          DprAttackAction(
-            id: '${monster.id}_action_$i',
-            name: act.name,
-            attackBonus: act.attackBonus ?? sb.attackBonus,
-            diceCount: parsedDice.diceCount > 0 ? parsedDice.diceCount : sb.damageDiceCount,
-            diceSides: parsedDice.diceSides > 0 ? parsedDice.diceSides : sb.damageDiceSides,
-            damageBonus: parsedDice.bonus != 0 ? parsedDice.bonus : sb.damageBonus,
-            damageType: parsedDice.damageType.isNotEmpty ? parsedDice.damageType : sb.damageType,
-            attacksPerRound: 1,
-          ),
-        );
-      }
-    }
-
-    // Fallback if no actions parsed
-    if (parsedActions.isEmpty) {
-      parsedActions.add(
-        DprAttackAction(
-          id: '${monster.id}_default',
-          name: monster.getName(edition),
-          attackBonus: sb.attackBonus,
-          diceCount: sb.damageDiceCount,
-          diceSides: sb.damageDiceSides,
-          damageBonus: sb.damageBonus,
-          damageType: sb.damageType,
-          secondaryDiceCount: sb.secondaryDamageDiceCount,
-          secondaryDiceSides: sb.secondaryDamageDiceSides,
-          secondaryDamageType: sb.secondaryDamageType,
-          attacksPerRound: 1,
-        ),
-      );
-    }
+    final extracted = sb.extractDprAttacks().where((a) => !a.isLegendaryAction).toList();
+    final activeAttacks = extracted.where((a) => a.attacksPerRound > 0).toList();
+    final finalAttacks = activeAttacks.isNotEmpty
+        ? activeAttacks
+        : (extracted.isNotEmpty
+            ? extracted
+            : [
+                DprAttackAction(
+                  id: '${monster.id}_default',
+                  name: monster.getName(edition),
+                  attackBonus: sb.attackBonus,
+                  diceCount: sb.damageDiceCount,
+                  diceSides: sb.damageDiceSides,
+                  damageBonus: sb.damageBonus,
+                  damageType: sb.damageType,
+                  secondaryDiceCount: sb.secondaryDamageDiceCount,
+                  secondaryDiceSides: sb.secondaryDamageDiceSides,
+                  secondaryDamageType: sb.secondaryDamageType,
+                  attacksPerRound: 1,
+                ),
+              ]);
 
     return DprCombatantProfile(
       id: monster.id,
@@ -703,31 +684,9 @@ class DprCombatantProfile {
       abilityScore: math.max(sb.strScore, sb.dexScore),
       proficiencyBonus: ((math.max(1, monster.challengeRating.ceil()) - 1) ~/ 4) + 2,
       defaultAdvantage: adv,
-      attacks: parsedActions,
+      attacks: finalAttacks,
     );
   }
-
-  static _ParsedDamage _parseDamageFormula(String text) {
-    final match = _damageFormulaRegex.firstMatch(text);
-    if (match != null) {
-      final count = int.tryParse(match.group(1) ?? '1') ?? 1;
-      final sides = int.tryParse(match.group(2) ?? '6') ?? 6;
-      final sign = match.group(3) ?? '+';
-      final bonusVal = int.tryParse(match.group(4) ?? '0') ?? 0;
-      final bonus = sign == '-' ? -bonusVal : bonusVal;
-      final dmgType = match.group(5) ?? '';
-      return _ParsedDamage(count, sides, bonus, dmgType);
-    }
-    return const _ParsedDamage(1, 6, 0, '');
-  }
-}
-
-class _ParsedDamage {
-  final int diceCount;
-  final int diceSides;
-  final int bonus;
-  final String damageType;
-  const _ParsedDamage(this.diceCount, this.diceSides, this.bonus, this.damageType);
 }
 
 /// Calculated data point for a specific target AC.
@@ -827,7 +786,6 @@ class DprMonsterAcPreset {
 }
 
 // --- Hoisted Regular Expression Constants for DPR Parsers ---
-final RegExp _damageFormulaRegex = RegExp(r'(\d+)\s*d\s*(\d+)(?:\s*([+-])\s*(\d+))?(?:\s+([a-zA-Z]+))?');
 final RegExp _globalAttackCountRegex = RegExp(
   r'makes\s+(one|two|three|four|five|six|seven|eight|\d+)\s+(?:melee\s+|ranged\s+|weapon\s+)?attacks?',
   caseSensitive: false,
@@ -859,7 +817,7 @@ final RegExp _damageTypePattern = RegExp(
   caseSensitive: false,
 );
 final RegExp _secondaryDicePattern = RegExp(
-  r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s*(?:\d+)?\s*\(?(\d+)\s*d\s*(\d+)\)?(?:\s*([+-]\s*\d+))?\s*(\w+)?\s*damage',
+  r'(?:plus|and(?:\s+the\s+target)?\s+takes?|extra)\s*(?:\d+\s*)?\(?(\d+)\s*d\s*(\d+)\)?(?:\s*([+-]\s*\d+))?\s*(\w+)?\s*damage',
   caseSensitive: false,
 );
 final RegExp _legendaryCostPattern = RegExp(r'\(costs\s*\d+\s*actions?\)', caseSensitive: false);
@@ -960,7 +918,7 @@ extension MinionStatBlockDprExt on MinionStatBlock {
     CreatureAction? multiattack,
   ) {
     if (multiattack == null) {
-      // Without Multiattack, a creature has 1 action per round and makes 1 attack.
+      // Without Multiattack, a creature has 1 action per round and makes 1 attack with its most efficient action.
       _assignSingleBestAttack(attacks, 1);
       return;
     }
@@ -1033,17 +991,31 @@ extension MinionStatBlockDprExt on MinionStatBlock {
       }
 
       if (branchCounts.any((c) => c > 0)) {
-        // Calculate estimated branch offensive DPR
+        // Calculate estimated branch offensive DPR using comprehensive probabilistic hit & crit values
         double branchDpr = 0.0;
         for (int i = 0; i < attacks.length; i++) {
           if (branchCounts[i] > 0) {
             final a = attacks[i];
-            final avgHitDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
-                a.damageBonus +
-                (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0) +
-                a.secondaryDamageBonus;
-            final hitProb = ((21 - (15 - a.attackBonus)).clamp(2, 20)) / 20.0;
-            branchDpr += (avgHitDmg * hitProb) * branchCounts[i];
+            final primaryAvg = (a.diceCount * (a.diceSides + 1) / 2.0) + a.damageBonus;
+            final secAvg = (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0) + a.secondaryDamageBonus;
+            final totalHitDmg = primaryAvg + secAvg;
+
+            double singleDpr;
+            if (a.deliveryType == DprActionDeliveryType.savingThrow) {
+              final dc = a.saveDc ?? 13;
+              final failProb = ((dc - 2) / 20.0).clamp(0.05, 0.95);
+              final successFactor = a.halfDamageOnSave ? 0.5 : 0.0;
+              final aoeMultiplier = a.isAoe ? 2.0 : 1.0;
+              singleDpr = (totalHitDmg * (failProb + (1.0 - failProb) * successFactor)) * aoeMultiplier;
+            } else {
+              final neededRoll = (15 - a.attackBonus).clamp(2, 20);
+              final hitProb = (21.0 - neededRoll) / 20.0;
+              const critProb = 1.0 / 20.0;
+              final critDmg = (a.diceCount * (a.diceSides + 1) / 2.0) + (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0);
+              singleDpr = (totalHitDmg * hitProb) + (critDmg * critProb);
+            }
+
+            branchDpr += singleDpr * branchCounts[i];
           }
         }
 
@@ -1088,17 +1060,33 @@ extension MinionStatBlockDprExt on MinionStatBlock {
   }
 
   void _assignSingleBestAttack(List<DprAttackAction> attacks, int count) {
+    if (attacks.isEmpty) return;
     int bestIndex = 0;
-    double maxDmg = -1;
+    double maxEfficiency = -1.0;
 
     for (int i = 0; i < attacks.length; i++) {
       final a = attacks[i];
-      final avgDmg = (a.diceCount * (a.diceSides + 1) / 2.0) +
-          a.damageBonus +
-          (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0) +
-          a.secondaryDamageBonus;
-      if (avgDmg > maxDmg) {
-        maxDmg = avgDmg;
+      final primaryAvg = (a.diceCount * (a.diceSides + 1) / 2.0) + a.damageBonus;
+      final secAvg = (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0) + a.secondaryDamageBonus;
+      final totalHitDmg = primaryAvg + secAvg;
+
+      double efficiency;
+      if (a.deliveryType == DprActionDeliveryType.savingThrow) {
+        final dc = a.saveDc ?? 13;
+        final failProb = ((dc - 2) / 20.0).clamp(0.05, 0.95);
+        final successFactor = a.halfDamageOnSave ? 0.5 : 0.0;
+        final aoeMultiplier = a.isAoe ? 2.0 : 1.0;
+        efficiency = (totalHitDmg * (failProb + (1.0 - failProb) * successFactor)) * aoeMultiplier;
+      } else {
+        final neededRoll = (15 - a.attackBonus).clamp(2, 20);
+        final hitProb = (21.0 - neededRoll) / 20.0;
+        const critProb = 1.0 / 20.0;
+        final critDmg = (a.diceCount * (a.diceSides + 1) / 2.0) + (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0);
+        efficiency = (totalHitDmg * hitProb) + (critDmg * critProb);
+      }
+
+      if (efficiency > maxEfficiency) {
+        maxEfficiency = efficiency;
         bestIndex = i;
       }
     }

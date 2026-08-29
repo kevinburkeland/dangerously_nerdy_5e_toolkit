@@ -594,8 +594,9 @@ class CompendiumJsonIngestionPipeline {
 
     // Actions & Traits
     final actionsBuffer = StringBuffer();
-    if (map['trait'] is List) {
-      for (final trait in map['trait']) {
+    final traits = (map['trait'] is List ? map['trait'] : map['traits']) as List?;
+    if (traits != null) {
+      for (final trait in traits) {
         if (trait is Map) {
           final tName = trait['name'] ?? '';
           final parsedEntries = _transformer.transformEntries(trait['entries']);
@@ -603,13 +604,51 @@ class CompendiumJsonIngestionPipeline {
         }
       }
     }
-    if (map['action'] is List) {
+
+    final actions = (map['action'] is List ? map['action'] : map['actions']) as List?;
+    if (actions != null) {
       actionsBuffer.writeln('### Actions');
-      for (final action in map['action']) {
+      for (final action in actions) {
         if (action is Map) {
           final aName = action['name'] ?? '';
           final parsedEntries = _transformer.transformEntries(action['entries']);
           actionsBuffer.writeln('**$aName**: ${parsedEntries.markdown}\n');
+        }
+      }
+    }
+
+    final bonusActions = (map['bonus'] is List ? map['bonus'] : map['bonusActions']) as List?;
+    if (bonusActions != null && bonusActions.isNotEmpty) {
+      actionsBuffer.writeln('\n### Bonus Actions');
+      for (final bonus in bonusActions) {
+        if (bonus is Map) {
+          final bName = bonus['name'] ?? '';
+          final parsedEntries = _transformer.transformEntries(bonus['entries']);
+          actionsBuffer.writeln('**$bName**: ${parsedEntries.markdown}\n');
+        }
+      }
+    }
+
+    final reactions = (map['reaction'] is List ? map['reaction'] : map['reactions']) as List?;
+    if (reactions != null && reactions.isNotEmpty) {
+      actionsBuffer.writeln('\n### Reactions');
+      for (final reaction in reactions) {
+        if (reaction is Map) {
+          final rName = reaction['name'] ?? '';
+          final parsedEntries = _transformer.transformEntries(reaction['entries']);
+          actionsBuffer.writeln('**$rName**: ${parsedEntries.markdown}\n');
+        }
+      }
+    }
+
+    final legendary = (map['legendary'] is List ? map['legendary'] : map['legendaryActions']) as List?;
+    if (legendary != null && legendary.isNotEmpty) {
+      actionsBuffer.writeln('\n### Legendary Actions');
+      for (final leg in legendary) {
+        if (leg is Map) {
+          final lName = leg['name'] ?? '';
+          final parsedEntries = _transformer.transformEntries(leg['entries']);
+          actionsBuffer.writeln('**$lName**: ${parsedEntries.markdown}\n');
         }
       }
     }

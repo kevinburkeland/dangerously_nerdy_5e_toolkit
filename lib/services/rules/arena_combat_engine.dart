@@ -2503,13 +2503,36 @@ class ArenaCombatEngine {
       return result;
     }
 
-    // Fallback: If no attack has attacksPerRound > 0, pick the single best standard attack
+    // Fallback: If no attack has attacksPerRound > 0, pick the single most efficient standard attack
     final standardAttacks = candidateAttacks.where((a) => !a.isLegendaryAction && a.rechargeRoll == null).toList();
     if (standardAttacks.isNotEmpty) {
+      standardAttacks.sort((a, b) => _estimateAttackDpr(b).compareTo(_estimateAttackDpr(a)));
       return [standardAttacks.first.copyWith(attacksPerRound: 1)];
     }
 
-    return candidateAttacks.take(1).map((a) => a.copyWith(attacksPerRound: 1)).toList();
+    final sortedCandidates = List<DprAttackAction>.from(candidateAttacks);
+    sortedCandidates.sort((a, b) => _estimateAttackDpr(b).compareTo(_estimateAttackDpr(a)));
+    return sortedCandidates.take(1).map((a) => a.copyWith(attacksPerRound: 1)).toList();
+  }
+
+  double _estimateAttackDpr(DprAttackAction a) {
+    final primaryAvg = (a.diceCount * (a.diceSides + 1) / 2.0) + a.damageBonus;
+    final secAvg = (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0) + a.secondaryDamageBonus;
+    final totalHitDmg = primaryAvg + secAvg;
+
+    if (a.deliveryType == DprActionDeliveryType.savingThrow) {
+      final dc = a.saveDc ?? 13;
+      final failProb = ((dc - 2) / 20.0).clamp(0.05, 0.95);
+      final successFactor = a.halfDamageOnSave ? 0.5 : 0.0;
+      final aoeMultiplier = a.isAoe ? 2.0 : 1.0;
+      return (totalHitDmg * (failProb + (1.0 - failProb) * successFactor)) * aoeMultiplier;
+    } else {
+      final neededRoll = (15 - a.attackBonus).clamp(2, 20);
+      final hitProb = (21.0 - neededRoll) / 20.0;
+      const critProb = 1.0 / 20.0;
+      final critDmg = (a.diceCount * (a.diceSides + 1) / 2.0) + (a.secondaryDiceCount * (a.secondaryDiceSides + 1) / 2.0);
+      return (totalHitDmg * hitProb) + (critDmg * critProb);
+    }
   }
 
   /// Resolves an Area of Effect (AoE) attack hitting a dynamic number of opponents based on DMG p.249 Theater-of-the-Mind.
