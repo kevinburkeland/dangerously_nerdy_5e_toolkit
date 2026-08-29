@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/dice_formatters.dart';
 import '../common/diff_highlight_banner.dart';
@@ -211,6 +212,7 @@ class _MonsterComparisonDialogState extends State<MonsterComparisonDialog> {
                 currentEdition: _activeEdition,
                 onEditionChanged: (newEdition) {
                   setState(() => _activeEdition = newEdition);
+                  SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
                 },
                 isDense: true,
               ),

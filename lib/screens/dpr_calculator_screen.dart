@@ -99,6 +99,7 @@ class _DprCalculatorScreenState extends State<DprCalculatorScreen> {
       }).toList();
       _profile = _profile.copyWith(attacks: updatedAttacks);
     });
+    SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
     _autoSaveDraft();
   }
 

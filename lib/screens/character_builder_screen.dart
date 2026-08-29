@@ -21,6 +21,8 @@ import '../services/rules/character_stat_calculator.dart';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/level_up_pipeline.dart';
+import '../services/persistence/character_persistence_service.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
@@ -42,6 +44,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   // Active Edition
   DmRulesEdition _rulesEdition = DmRulesEdition.v2024;
+  DmRulesEdition? _localEditionOverride;
+
+  // Character Persistence & Roster
+  final CharacterPersistenceService _persistenceService = CharacterPersistenceService();
+  List<Character> _characterRoster = [];
+  bool _isSelectorView = true; // Defaults to Character Selector
+  String _rosterSearchQuery = '';
+  RulesetVersion? _rosterRulesetFilter;
 
   // Active Character & State
   late Character _character;
@@ -279,75 +289,105 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   void _initDefaultCharacter() {
-    const request = CharacterCreationRequest(
-      characterName: 'Valeros Ironclad',
-      ruleset: RulesetVersion.v2024,
-      speciesRef: EntityReference(
-        refType: EntityType.species,
-        slug: 'human',
-        displayName: 'Human',
-      ),
-      backgroundRef: EntityReference(
-        refType: EntityType.background,
-        slug: 'soldier',
-        displayName: 'Soldier',
-      ),
-      startingClassSlug: 'fighter',
-      startingClassDisplayName: 'Fighter',
-      startingClassHitDie: 'd10',
-      baseScores: AbilityScores.standardArray(),
-      bonusScores: AbilityScores(strength: 2, constitution: 1),
-      savingThrowProficiencies: {
-        AbilityType.strength,
-        AbilityType.constitution
-      },
-      skillProficiencies: {
-        SkillType.athletics: SkillProficiencyLevel.proficient,
-        SkillType.intimidation: SkillProficiencyLevel.proficient,
-        SkillType.perception: SkillProficiencyLevel.proficient,
-      },
-      originFeats: [
-        EntityReference(
-          refType: EntityType.feat,
-          slug: 'savage-attacker',
-          displayName: 'Savage Attacker',
-        ),
-      ],
-      startingEquipment: [
-        StartingEquipmentItemRequest(
-          itemRef: EntityReference(
-            refType: EntityType.equipment,
-            slug: 'chain-mail',
-            displayName: 'Chain Mail',
-          ),
-          equipImmediately: true,
-          defaultSlot: EquipmentSlot.armor,
-        ),
-        StartingEquipmentItemRequest(
-          itemRef: EntityReference(
-            refType: EntityType.equipment,
-            slug: 'longsword',
-            displayName: 'Longsword',
-          ),
-          equipImmediately: true,
-          defaultSlot: EquipmentSlot.mainHand,
-        ),
-        StartingEquipmentItemRequest(
-          itemRef: EntityReference(
-            refType: EntityType.equipment,
-            slug: 'shield',
-            displayName: 'Shield',
-          ),
-          equipImmediately: true,
-          defaultSlot: EquipmentSlot.shield,
-        ),
-      ],
-      startingPurse: PartyPurse(gp: 25, sp: 40),
-    );
-
-    _character = CharacterFactory.createLevel1Character(request);
+    _characterRoster = CharacterPersistenceService.getDefaultStarterRoster();
+    _character = _characterRoster.first;
     _recalculateStats();
     _currentHp = _computedStats.maxHp;
+    _loadPersistedRoster();
+  }
+
+  Future<void> _loadPersistedRoster() async {
+    final loaded = await _persistenceService.loadCharacters();
+    final activeId = await _persistenceService.loadActiveCharacterId();
+    if (mounted) {
+      setState(() {
+        _characterRoster = loaded;
+        if (activeId != null) {
+          final matched = _characterRoster.cast<Character?>().firstWhere(
+                (c) => c?.id.slug == activeId,
+                orElse: () => null,
+              );
+          if (matched != null) {
+            _character = matched;
+            _recalculateStats();
+            _currentHp = _computedStats.maxHp;
+          }
+        }
+      });
+    }
+  }
+
+  void _selectCharacter(Character char) {
+    HapticService.selectionTick(context);
+    setState(() {
+      _character = char;
+      _currentHp = char.resources.currentHp > 0 ? char.resources.currentHp : 1;
+      _tempHp = char.resources.tempHp;
+      _rulesEdition = char.ruleset == RulesetVersion.v2024
+          ? DmRulesEdition.v2024
+          : DmRulesEdition.v2014;
+      _isSelectorView = false;
+      _recalculateStats();
+    });
+    _persistenceService.saveActiveCharacterId(char.id.slug);
+  }
+
+  void _confirmDeleteCharacter(Character char) {
+    HapticService.selectionTick(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: Text('Delete ${char.name}?',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Are you sure you want to delete ${char.name}? This character will be permanently removed from your roster.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.shade700,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _deleteCharacter(char);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteCharacter(Character char) async {
+    HapticService.heavyImpact(context);
+    final updated = await _persistenceService.deleteCharacter(char.id.slug);
+    setState(() {
+      _characterRoster = updated;
+      if (_character.id.slug == char.id.slug) {
+        if (_characterRoster.isNotEmpty) {
+          _character = _characterRoster.first;
+          _recalculateStats();
+        }
+        _isSelectorView = true;
+      }
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade900,
+          content: Text('${char.name} deleted from roster.'),
+        ),
+      );
+    }
   }
 
   void _initSampleChest() {
@@ -397,6 +437,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   void _onRulesEditionChanged(DmRulesEdition newEdition) {
     HapticService.selectionTick(context);
     setState(() {
+      _localEditionOverride = newEdition;
       _rulesEdition = newEdition;
       _selectedRuleset = newEdition == DmRulesEdition.v2024
           ? RulesetVersion.v2024
@@ -406,6 +447,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       );
       _recalculateStats();
     });
+    SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
   }
 
   void _rollDie({
@@ -493,6 +535,21 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settingsProvider = SettingsScope.maybeOf(context);
+    final activeEdition = _localEditionOverride ??
+        settingsProvider?.settings.rulesEdition ??
+        _rulesEdition;
+
+    if (_localEditionOverride == null && activeEdition != _rulesEdition) {
+      _rulesEdition = activeEdition;
+      _selectedRuleset = activeEdition == DmRulesEdition.v2024
+          ? RulesetVersion.v2024
+          : RulesetVersion.v2014;
+      _character = _character.copyWith(
+        id: EntityId(slug: _character.id.slug, ruleset: _selectedRuleset),
+      );
+      _computedStats = CharacterStatCalculator.compute(_character, _resolver);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -502,7 +559,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                _character.name,
+                _isSelectorView ? 'Character Studio' : _character.name,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -568,17 +625,372 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   // TAB 1: LIVE SHEET & REACTIVE STATS
   // --------------------------------------------------------------------------
   Widget _buildLiveSheetTab(ThemeData theme) {
+    if (_isSelectorView || _characterRoster.isEmpty) {
+      return _buildCharacterSelectorView(theme);
+    }
+    return _buildActiveLiveSheetView(theme);
+  }
+
+  Widget _buildMiniPill(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildCharacterSelectorView(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+
+    final filteredRoster = _characterRoster.where((c) {
+      if (_rosterRulesetFilter != null && c.ruleset != _rosterRulesetFilter) {
+        return false;
+      }
+      if (_rosterSearchQuery.isEmpty) return true;
+      final q = _rosterSearchQuery.toLowerCase();
+      final nameMatches = c.name.toLowerCase().contains(q);
+      final classMatches = c.progression.classes
+          .any((cls) => cls.classRef.displayName.toLowerCase().contains(q));
+      final speciesMatches = c.speciesRef.displayName.toLowerCase().contains(q);
+      final bgMatches =
+          c.backgroundRef?.displayName.toLowerCase().contains(q) ?? false;
+      return nameMatches || classMatches || speciesMatches || bgMatches;
+    }).toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Roster Banner / Hero Card
+        Card(
+          color: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.cyanAccent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.groups_outlined,
+                      color: Colors.cyanAccent, size: 28),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '5e Character Roster',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Select an adventurer to inspect their live sheet, or manage your party members.',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyanAccent.shade700,
+                    foregroundColor: Colors.black,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  icon: const Icon(Icons.person_add_alt_1, size: 16),
+                  label: const Text('New Hero',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  onPressed: () {
+                    HapticService.selectionTick(context);
+                    _tabController.animateTo(1);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Search Bar
+        TextField(
+          style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13),
+          decoration: InputDecoration(
+            hintText: 'Search heroes by name, class, species...',
+            hintStyle: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                fontSize: 12),
+            prefixIcon: Icon(Icons.search, color: primary, size: 18),
+            filled: true,
+            fillColor: isDark
+                ? const Color(0xFF1E293B)
+                : theme.colorScheme.surfaceContainerHighest,
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (val) => setState(() => _rosterSearchQuery = val.trim()),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Ruleset Filter Chips
+        Row(
+          children: [
+            FilterChip(
+              label:
+                  const Text('All Rulesets', style: TextStyle(fontSize: 11)),
+              selected: _rosterRulesetFilter == null,
+              onSelected: (_) => setState(() => _rosterRulesetFilter = null),
+            ),
+            const SizedBox(width: 6),
+            FilterChip(
+              label:
+                  const Text('2024 Revised', style: TextStyle(fontSize: 11)),
+              selected: _rosterRulesetFilter == RulesetVersion.v2024,
+              onSelected: (_) =>
+                  setState(() => _rosterRulesetFilter = RulesetVersion.v2024),
+            ),
+            const SizedBox(width: 6),
+            FilterChip(
+              label:
+                  const Text('2014 Classic', style: TextStyle(fontSize: 11)),
+              selected: _rosterRulesetFilter == RulesetVersion.v2014,
+              onSelected: (_) =>
+                  setState(() => _rosterRulesetFilter = RulesetVersion.v2014),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        if (filteredRoster.isEmpty)
+          Card(
+            color: const Color(0xFF1E293B),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  children: [
+                    const Icon(Icons.person_off_outlined,
+                        color: Colors.white38, size: 36),
+                    const SizedBox(height: 8),
+                    const Text('No characters found matching your filter.',
+                        style: TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.restore, size: 16),
+                      label: const Text('Reset Starter Heroes'),
+                      onPressed: () async {
+                        final starters =
+                            CharacterPersistenceService.getDefaultStarterRoster();
+                        await _persistenceService.saveRoster(starters);
+                        setState(() {
+                          _characterRoster = starters;
+                          _character = starters.first;
+                          _recalculateStats();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          ...filteredRoster.map((hero) {
+            final curCls = hero.progression.classes.firstOrNull;
+            final clsType = curCls != null
+                ? _findClassType(curCls.classRef.slug)
+                : DndClassType.fighter;
+            final isCurrentActive = _character.id.slug == hero.id.slug;
+            final heroStats =
+                CharacterStatCalculator.compute(hero, _resolver);
+
+            return Card(
+              key: ValueKey('character_card_${hero.id.slug}'),
+              color: const Color(0xFF1E293B),
+              margin: const EdgeInsets.only(bottom: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isCurrentActive ? Colors.cyanAccent : Colors.white12,
+                  width: isCurrentActive ? 1.5 : 1.0,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        RepaintBoundary(
+                          child: SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: DndGlyph.classFeature(
+                                classType: clsType ?? DndClassType.fighter,
+                                size: 44,
+                                isDarkMode: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      hero.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: hero.ruleset ==
+                                              RulesetVersion.v2024
+                                          ? Colors.cyan.shade900
+                                              .withValues(alpha: 0.6)
+                                          : Colors.amber.shade900
+                                              .withValues(alpha: 0.6),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      hero.ruleset == RulesetVersion.v2024
+                                          ? '2024'
+                                          : '2014',
+                                      style: TextStyle(
+                                        color: hero.ruleset ==
+                                                RulesetVersion.v2024
+                                            ? Colors.cyanAccent
+                                            : Colors.amberAccent,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Level ${hero.totalLevel} ${hero.progression.classes.map((c) => "${c.classRef.displayName} ${c.level}").join(" / ")} • ${hero.speciesRef.displayName} • ${hero.backgroundRef?.displayName ?? "Adventurer"}',
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          key: ValueKey('delete_character_${hero.id.slug}'),
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.redAccent, size: 20),
+                          tooltip: 'Delete Character',
+                          onPressed: () => _confirmDeleteCharacter(hero),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 16, color: Colors.white12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            _buildMiniPill(
+                                'AC ${heroStats.armorClass}', Colors.amberAccent),
+                            _buildMiniPill(
+                                'HP ${hero.resources.currentHp}/${heroStats.maxHp}',
+                                Colors.redAccent),
+                            _buildMiniPill(
+                                'Prof +${heroStats.proficiencyBonus}',
+                                Colors.cyanAccent),
+                            _buildMiniPill(
+                                'Speed ${hero.baseSpeedFeet}ft',
+                                Colors.greenAccent),
+                          ],
+                        ),
+                        ElevatedButton.icon(
+                          key: ValueKey('open_sheet_${hero.id.slug}'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.cyanAccent.shade700,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            minimumSize: Size.zero,
+                          ),
+                          icon: const Icon(Icons.badge_outlined, size: 14),
+                          label: const Text('Open Sheet',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold)),
+                          onPressed: () => _selectCharacter(hero),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildActiveLiveSheetView(ThemeData theme) {
     final curClass = _character.progression.classes.firstOrNull;
-    final srdClass = curClass != null ? SrdClassesLibrary.findBySlug(curClass.classRef.slug) : null;
-    final srdSpecies = SrdSpeciesLibrary.findBySlug(_character.speciesRef.slug);
-    final srdBackground = _character.backgroundRef != null ? SrdBackgroundsLibrary.findBySlug(_character.backgroundRef!.slug) : null;
+    final srdClass = curClass != null
+        ? SrdClassesLibrary.findBySlug(curClass.classRef.slug)
+        : null;
+    final srdSpecies =
+        SrdSpeciesLibrary.findBySlug(_character.speciesRef.slug);
+    final srdBackground = _character.backgroundRef != null
+        ? SrdBackgroundsLibrary.findBySlug(_character.backgroundRef!.slug)
+        : null;
 
     // Filter skills
     final filteredSkills = SkillType.values.where((sk) {
-      if (_selectedAbilityFilter != null && sk.defaultAbility != _selectedAbilityFilter) {
+      if (_selectedAbilityFilter != null &&
+          sk.defaultAbility != _selectedAbilityFilter) {
         return false;
       }
-      if (_skillSearchQuery.isNotEmpty && !sk.displayName.toLowerCase().contains(_skillSearchQuery.toLowerCase())) {
+      if (_skillSearchQuery.isNotEmpty &&
+          !sk.displayName
+              .toLowerCase()
+              .contains(_skillSearchQuery.toLowerCase())) {
         return false;
       }
       return true;
@@ -590,12 +1002,44 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         // Header Summary Card
         Card(
           color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.cyanAccent,
+                        side: const BorderSide(color: Colors.cyanAccent),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        minimumSize: Size.zero,
+                      ),
+                      icon: const Icon(Icons.groups_outlined, size: 16),
+                      label: Text(
+                          'Switch Hero (${_characterRoster.length})',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
+                      onPressed: () {
+                        HapticService.selectionTick(context);
+                        setState(() => _isSelectorView = true);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline,
+                          color: Colors.redAccent, size: 20),
+                      tooltip: 'Delete ${_character.name}',
+                      onPressed: () =>
+                          _confirmDeleteCharacter(_character),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1461,11 +1905,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           ],
           selected: {_selectedRuleset},
           onSelectionChanged: (set) {
-            HapticService.selectionTick(context);
-            setState(() {
-              _selectedRuleset = set.first;
-              _rulesEdition = _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014;
-            });
+            final targetRuleset = set.first;
+            final targetEdition = targetRuleset == RulesetVersion.v2024
+                ? DmRulesEdition.v2024
+                : DmRulesEdition.v2014;
+            _onRulesEditionChanged(targetEdition);
           },
         ),
       ],
@@ -1523,7 +1967,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   ],
                 ),
                 title: Text(sp.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('Speed: ${sp.speed} • Size: ${sp.size}\n${sp.abilityScoreSummary ?? ""}',
+                subtitle: Text('Speed: ${sp.getSpeedForEdition(_rulesEdition)} • Size: ${sp.size}\n${sp.abilityScoreSummary ?? ""}',
                     style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
                 onTap: () {
                   HapticService.selectionTick(context);
@@ -2092,15 +2536,22 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       startingPurse: const PartyPurse(gp: 20),
     );
 
-    setState(() {
-      _character = CharacterFactory.createLevel1Character(request);
-      _recalculateStats();
-      _currentHp = _computedStats.maxHp;
-      _tabController.animateTo(0);
+    final newChar = CharacterFactory.createLevel1Character(request);
+    _persistenceService.saveCharacter(newChar).then((updatedRoster) {
+      if (mounted) {
+        setState(() {
+          _characterRoster = updatedRoster;
+          _character = newChar;
+          _isSelectorView = false;
+          _recalculateStats();
+          _currentHp = _computedStats.maxHp;
+          _tabController.animateTo(0);
+        });
+      }
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Created ${_character.name} successfully!')),
+      SnackBar(content: Text('Created ${newChar.name} successfully!')),
     );
   }
 
@@ -2450,15 +2901,21 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
 
     final updated = LevelUpPipeline.applyLevelUp(_character, request, resolver: _resolver);
-    setState(() {
-      _character = updated;
-      _recalculateStats();
-      _currentHp = _computedStats.maxHp;
-      _tabController.animateTo(0);
+    _persistenceService.saveCharacter(updated).then((updatedRoster) {
+      if (mounted) {
+        setState(() {
+          _characterRoster = updatedRoster;
+          _character = updated;
+          _isSelectorView = false;
+          _recalculateStats();
+          _currentHp = _computedStats.maxHp;
+          _tabController.animateTo(0);
+        });
+      }
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_character.name} is now Level ${_character.totalLevel}!')),
+      SnackBar(content: Text('${updated.name} is now Level ${updated.totalLevel}!')),
     );
   }
 }

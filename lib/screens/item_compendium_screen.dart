@@ -219,6 +219,7 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
               setState(() {
                 _localEditionOverride = newEdition;
               });
+              settingsProvider?.setRulesEdition(newEdition);
             },
           ),
           if (_viewMode == ItemCompendiumViewMode.myReliquary &&

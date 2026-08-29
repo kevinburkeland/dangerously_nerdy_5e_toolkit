@@ -377,6 +377,7 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
               setState(() {
                 _localEditionOverride = newEdition;
               });
+              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
             },
           ),
           if (_viewMode == MonsterCodexViewMode.myBestiary &&

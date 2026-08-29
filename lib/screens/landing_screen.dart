@@ -3,6 +3,7 @@ import '../models/dm_screen_data.dart';
 import '../models/landing_tool_item.dart';
 import '../models/party/campaign_membership.dart';
 import '../models/spellbook_data.dart';
+import '../providers/settings_provider.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../services/party/campaign_registry_service.dart';
@@ -858,16 +859,17 @@ class _LandingScreenState extends State<LandingScreen> {
       'giant_insect': 'spell_giant_insect',
     };
 
+    final activeEdition = SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
     final spellId = spellGlyphIdsByToolId[item.id];
     if (spellId != null) {
       final spell = SpellbookLibrary.getSpellById(spellId);
       if (spell != null) {
         glyphWidget = DndGlyph.spell(
-          school: spell.getSchool(DmRulesEdition.v2024),
+          school: spell.getSchool(activeEdition),
           level: spell.level,
           glyphColor: item.accentColor,
-          actionRings: spell.getGlyphActionRings(DmRulesEdition.v2024),
-          damageAccent: spell.getGlyphPrimaryDamageAccent(DmRulesEdition.v2024),
+          actionRings: spell.getGlyphActionRings(activeEdition),
+          damageAccent: spell.getGlyphPrimaryDamageAccent(activeEdition),
           size: 42,
           isDarkMode: isDark,
         );

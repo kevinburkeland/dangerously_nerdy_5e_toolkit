@@ -183,7 +183,23 @@ class CharacterFactory {
         currentHitDice: currentHitDice,
       ),
       maxAttunementSlots: 3,
-      baseSpeedFeet: request.baseSpeedFeet,
+      baseSpeedFeet: () {
+        if (request.ruleset == RulesetVersion.v2014) {
+          if (request.speciesRef.slug == 'dwarf' ||
+              request.speciesRef.slug == 'gnome' ||
+              request.speciesRef.slug == 'halfling') {
+            return 25;
+          }
+          if (request.speciesRef.slug == 'goliath') {
+            return 30;
+          }
+        } else {
+          if (request.speciesRef.slug == 'goliath') {
+            return 35;
+          }
+        }
+        return request.baseSpeedFeet;
+      }(),
     );
 
     return character;

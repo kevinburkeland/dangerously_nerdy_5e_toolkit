@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../dm_screen_data.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
 
@@ -183,6 +184,23 @@ class Race extends DomainEntity {
 
   @override
   EntityType get entityType => EntityType.species;
+
+  /// Returns the base movement speed formatted for the selected rules edition.
+  String getSpeedForEdition(DmRulesEdition edition) {
+    if (edition == DmRulesEdition.v2014) {
+      if (id.slug == 'dwarf' || id.slug == 'gnome' || id.slug == 'halfling') {
+        return '25 ft.';
+      }
+      if (id.slug == 'goliath') {
+        return '30 ft.';
+      }
+    } else {
+      if (id.slug == 'goliath') {
+        return '35 ft.';
+      }
+    }
+    return speed;
+  }
 
   @override
   Map<String, dynamic> toMap() => {

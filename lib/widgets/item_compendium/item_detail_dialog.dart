@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/magic_items/magic_item_data.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 import '../common/diff_highlight_banner.dart';
 import '../dm_reference/rules_edition_toggle.dart';
@@ -272,6 +273,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                   currentEdition: _activeEdition,
                   onEditionChanged: (newEdition) {
                     setState(() => _activeEdition = newEdition);
+                    SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
                   },
                   isDense: true,
                 ),
