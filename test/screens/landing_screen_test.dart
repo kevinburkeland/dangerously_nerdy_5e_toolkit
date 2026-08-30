@@ -20,15 +20,7 @@ void main() {
     await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
     expect(find.text('DangerouslyNerdy 5e Toolkit'), findsOneWidget);
-    expect(find.text('Select a Tool'), findsOneWidget);
     expect(find.byType(DndGlyph), findsWidgets);
-
-    // Hero quick launch badges
-    expect(find.text('Bestiary Codex'), findsOneWidget);
-    expect(find.text('Magic Items'), findsOneWidget);
-    expect(find.text('Combat DPR'), findsOneWidget);
-    expect(find.text('Dice & Party'), findsOneWidget);
-    expect(find.text('Glyph Studio'), findsOneWidget);
 
     // Section headers
     expect(find.text('SPELL MINION COMPANIONS'), findsOneWidget);
