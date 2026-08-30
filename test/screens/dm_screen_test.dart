@@ -24,10 +24,10 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
-    testWidgets('renders DM Screen with title, quick roller, and cards', (WidgetTester tester) async {
+    testWidgets('renders Rules Compendium with title, quick roller, and cards', (WidgetTester tester) async {
       await tester.pumpWidget(createTestableWidget(const DmReferenceScreen()));
 
-      expect(find.text("DM's Screen"), findsOneWidget);
+      expect(find.text("Rules Compendium"), findsOneWidget);
       expect(find.text('Quick Roller:'), findsOneWidget);
       expect(find.text('d20'), findsOneWidget);
       expect(find.text('d100'), findsOneWidget);
@@ -237,18 +237,18 @@ void main() {
     testWidgets('LandingScreen launches DmReferenceScreen from card and AppBar', (WidgetTester tester) async {
       await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
-      // Find DM screen tool card
-      final dmCard = find.text("DM's Screen & Rulebook");
-      expect(dmCard, findsOneWidget);
+      // Find Rules Compendium tool card
+      final rulesCard = find.text("Rules Compendium (SRD 5.1 & 5.2)");
+      expect(rulesCard, findsOneWidget);
 
-      await tester.ensureVisible(dmCard);
+      await tester.ensureVisible(rulesCard);
       await tester.pumpAndSettle();
 
-      await tester.tap(dmCard);
+      await tester.tap(rulesCard);
       await tester.pumpAndSettle();
 
       expect(find.byType(DmReferenceScreen), findsOneWidget);
-      expect(find.text("DM's Screen"), findsOneWidget);
+      expect(find.text("Rules Compendium"), findsOneWidget);
     });
   });
 }

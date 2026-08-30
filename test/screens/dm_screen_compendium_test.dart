@@ -220,7 +220,7 @@ void main() {
 
       await tester.pumpWidget(createTestableWidget(const RulesCompendiumScreen()));
 
-      expect(find.text("DM's Screen"), findsOneWidget);
+      expect(find.text("Rules Compendium"), findsOneWidget);
       expect(find.text('Quick Roller:'), findsOneWidget);
       expect(find.widgetWithText(ChoiceChip, 'All Rules'), findsOneWidget);
       expect(find.widgetWithText(ChoiceChip, 'Actions & Combat'), findsOneWidget);

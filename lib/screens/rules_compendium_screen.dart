@@ -122,13 +122,13 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            const Icon(Icons.shield_outlined, color: Colors.amber),
+            const Icon(Icons.menu_book_rounded, color: Colors.amber),
             const SizedBox(width: 10),
             Expanded(
               child: Semantics(
                 header: true,
                 child: const Text(
-                  "DM's Screen",
+                  "Rules Compendium",
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),

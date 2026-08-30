@@ -325,20 +325,24 @@ class LandingToolRegistry {
           },
         ),
         LandingToolItem(
-          id: 'dm_screen',
-          title: "DM's Screen & Rulebook",
+          id: 'rules_compendium',
+          title: "Rules Compendium (SRD 5.1 & 5.2)",
           category: 'Core Utilities',
-          badgeText: '2014 & 2024 Rules',
+          badgeText: '2014 & 2024 SRD',
           badgeColor: Colors.amberAccent,
-          icon: Icons.shield_outlined,
+          icon: Icons.menu_book_rounded,
           accentColor: Colors.amberAccent,
           description:
-              "Instant rules reference with 2014 RAW vs 2024 Revised switch, side-by-side comparison, conditions, DC tables, and quick roller.",
+              "Instant SRD rules reference engine with 2014 RAW vs 2024 Revised comparative diffs, tokenized search, interactive math calculators, conditions, and DC tables.",
           keywords: [
+            'rules',
+            'compendium',
+            'rules compendium',
+            'srd',
             'dm',
             'dungeon master',
             'screen',
-            'rules',
+            'dm screen',
             '2024',
             '2014',
             'conditions',
@@ -356,7 +360,7 @@ class LandingToolRegistry {
           onLaunch: (context) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const DmReferenceScreen()),
+              MaterialPageRoute(builder: (_) => const RulesCompendiumScreen()),
             );
           },
         ),

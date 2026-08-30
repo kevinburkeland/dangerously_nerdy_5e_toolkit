@@ -106,10 +106,10 @@ class _LandingScreenState extends State<LandingScreen> {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.shield_outlined, color: theme.colorScheme.primary),
-            tooltip: "DM's Screen & Rulebook (2014 / 2024)",
+            icon: Icon(Icons.menu_book_rounded, color: theme.colorScheme.primary),
+            tooltip: "Rules Compendium (SRD 5.1 / 5.2)",
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DmReferenceScreen()),
+              MaterialPageRoute(builder: (_) => const RulesCompendiumScreen()),
             ),
           ),
           IconButton(
