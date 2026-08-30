@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import '../../models/characters/subclass_spells_library.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/spellbook_data.dart' show SpellClass, SpellbookLibrary;
 import '../repository/reference_resolver.dart';
 
 /// Specification of spell quota limits for a given class slice at a specific level.
@@ -16,6 +18,10 @@ class SpellAllocationLimits {
   final int maxSpellSlotLevel; // Highest spell slot tier available for this class slice
   final bool isSpellcaster;
   final String castingAbility;
+  final int magicalSecretsCount; // Number of cross-list magical secret picks
+  final Set<SpellClass> allowedMagicalSecretClasses; // Eligible classes for Magical Secrets
+  final int mysticArcanumLevel; // 6, 7, 8, or 9 for high-level Warlocks
+  final int alwaysPreparedSubclassCount; // Number of domain/oath spells auto-prepared
 
   const SpellAllocationLimits({
     required this.maxCantrips,
@@ -26,6 +32,10 @@ class SpellAllocationLimits {
     required this.maxSpellSlotLevel,
     required this.isSpellcaster,
     required this.castingAbility,
+    this.magicalSecretsCount = 0,
+    this.allowedMagicalSecretClasses = const {},
+    this.mysticArcanumLevel = 0,
+    this.alwaysPreparedSubclassCount = 0,
   });
 
   const SpellAllocationLimits.nonCaster()
@@ -36,7 +46,11 @@ class SpellAllocationLimits {
         maxSpellbookLevelUpScribe = 0,
         maxSpellSlotLevel = 0,
         isSpellcaster = false,
-        castingAbility = 'Intelligence';
+        castingAbility = 'Intelligence',
+        magicalSecretsCount = 0,
+        allowedMagicalSecretClasses = const {},
+        mysticArcanumLevel = 0,
+        alwaysPreparedSubclassCount = 0;
 }
 
 /// Validation result container for spell selection.
@@ -120,9 +134,11 @@ class SpellAllocationValidator {
     required String classSlug,
     required int classLevel,
     required int abilityModifier,
+    String? subclassSlug,
     DmRulesEdition edition = DmRulesEdition.v2014,
   }) {
     final slug = classSlug.toLowerCase();
+    final sub = subclassSlug?.toLowerCase().replaceAll('-', '_') ?? '';
     final lvl = classLevel.clamp(1, 20);
     final maxTier = getMaxSpellTierForClass(classSlug: slug, classLevel: lvl, edition: edition);
 
@@ -156,6 +172,44 @@ class SpellAllocationValidator {
       case 'bard':
         final cantrips = (lvl >= 10) ? 4 : ((lvl >= 4) ? 3 : 2);
         final known = _bardSpellsKnown[lvl] ?? 4;
+        
+        var secretsCount = 0;
+        var allowedSecretClasses = <SpellClass>{};
+
+        if (edition == DmRulesEdition.v2024) {
+          if (lvl >= 10) {
+            allowedSecretClasses = {
+              SpellClass.bard,
+              SpellClass.cleric,
+              SpellClass.druid,
+              SpellClass.wizard,
+            };
+          }
+          if (sub.contains('lore') && lvl >= 6 && lvl < 10) {
+            secretsCount = 2;
+            allowedSecretClasses = {
+              SpellClass.cleric,
+              SpellClass.druid,
+              SpellClass.wizard,
+            };
+          }
+        } else {
+          // 2014 Magical Secrets
+          if (lvl >= 18) {
+            secretsCount = 6;
+          } else if (lvl >= 14) {
+            secretsCount = 4;
+          } else if (lvl >= 10) {
+            secretsCount = 2;
+          }
+          if (sub.contains('lore') && lvl >= 6) {
+            secretsCount += 2;
+          }
+          if (secretsCount > 0) {
+            allowedSecretClasses = SpellClass.values.toSet();
+          }
+        }
+
         return SpellAllocationLimits(
           maxCantrips: cantrips,
           maxSpellsKnown: known,
@@ -163,11 +217,20 @@ class SpellAllocationValidator {
           maxSpellSlotLevel: maxTier,
           isSpellcaster: true,
           castingAbility: 'Charisma',
+          magicalSecretsCount: secretsCount,
+          allowedMagicalSecretClasses: allowedSecretClasses,
         );
 
       case 'cleric':
         final cantrips = (lvl >= 10) ? 5 : ((lvl >= 4) ? 4 : 3);
         final maxPrepared = math.max(1, lvl + abilityModifier);
+        final alwaysPreparedCount = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+          classSlug: 'cleric',
+          subclassSlug: subclassSlug,
+          classLevel: lvl,
+          edition: edition,
+        ).length;
+
         return SpellAllocationLimits(
           maxCantrips: cantrips,
           maxSpellsKnown: 0,
@@ -175,11 +238,19 @@ class SpellAllocationValidator {
           maxSpellSlotLevel: maxTier,
           isSpellcaster: true,
           castingAbility: 'Wisdom',
+          alwaysPreparedSubclassCount: alwaysPreparedCount,
         );
 
       case 'druid':
         final cantrips = (lvl >= 10) ? 4 : ((lvl >= 4) ? 3 : 2);
         final maxPrepared = math.max(1, lvl + abilityModifier);
+        final alwaysPreparedCount = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+          classSlug: 'druid',
+          subclassSlug: subclassSlug,
+          classLevel: lvl,
+          edition: edition,
+        ).length;
+
         return SpellAllocationLimits(
           maxCantrips: cantrips,
           maxSpellsKnown: 0,
@@ -187,11 +258,14 @@ class SpellAllocationValidator {
           maxSpellSlotLevel: maxTier,
           isSpellcaster: true,
           castingAbility: 'Wisdom',
+          alwaysPreparedSubclassCount: alwaysPreparedCount,
         );
 
       case 'warlock':
         final cantrips = (lvl >= 10) ? 4 : ((lvl >= 4) ? 3 : 2);
         final known = _warlockSpellsKnown[lvl] ?? 2;
+        final mysticTier = (lvl >= 17) ? 9 : ((lvl >= 15) ? 8 : ((lvl >= 13) ? 7 : ((lvl >= 11) ? 6 : 0)));
+
         return SpellAllocationLimits(
           maxCantrips: cantrips,
           maxSpellsKnown: known,
@@ -199,12 +273,20 @@ class SpellAllocationValidator {
           maxSpellSlotLevel: maxTier,
           isSpellcaster: true,
           castingAbility: 'Charisma',
+          mysticArcanumLevel: mysticTier,
         );
 
       case 'paladin':
         final maxPrepared = (edition == DmRulesEdition.v2024)
             ? math.max(1, ((lvl + 1) ~/ 2) + abilityModifier)
             : (lvl < 2 ? 0 : math.max(1, (lvl ~/ 2) + abilityModifier));
+        final alwaysPreparedCount = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+          classSlug: 'paladin',
+          subclassSlug: subclassSlug,
+          classLevel: lvl,
+          edition: edition,
+        ).length;
+
         return SpellAllocationLimits(
           maxCantrips: 0,
           maxSpellsKnown: 0,
@@ -212,6 +294,7 @@ class SpellAllocationValidator {
           maxSpellSlotLevel: maxTier,
           isSpellcaster: lvl >= (edition == DmRulesEdition.v2024 ? 1 : 2),
           castingAbility: 'Charisma',
+          alwaysPreparedSubclassCount: alwaysPreparedCount,
         );
 
       case 'ranger':
@@ -260,10 +343,12 @@ class SpellAllocationValidator {
     required String targetClassSlug,
     required int targetClassLevel,
     required int castingAbilityModifier,
+    String? subclassSlug,
     required List<EntityReference<Spell>> cantrips,
     required List<EntityReference<Spell>> spellsKnown,
     required List<EntityReference<Spell>> spellsPrepared,
     List<EntityReference<Spell>> spellbookSpells = const [],
+    List<String> alwaysPreparedSpellIds = const [],
     required DmRulesEdition edition,
     ReferenceResolver? resolver,
   }) {
@@ -274,6 +359,7 @@ class SpellAllocationValidator {
       classSlug: targetClassSlug,
       classLevel: targetClassLevel,
       abilityModifier: castingAbilityModifier,
+      subclassSlug: subclassSlug,
       edition: edition,
     );
 
@@ -310,16 +396,21 @@ class SpellAllocationValidator {
       }
     }
 
-    // 4. Prepared Spells Limit Check
+    // 4. Prepared Spells Limit Check (Exempting domain/oath always-prepared spells)
     if (limits.maxSpellsPrepared > 0) {
-      if (spellsPrepared.length > limits.maxSpellsPrepared) {
+      final effectivePreparedCount = spellsPrepared.where((ref) {
+        return !alwaysPreparedSpellIds.contains(ref.slug) &&
+            !alwaysPreparedSpellIds.contains(ref.displayName.toLowerCase());
+      }).length;
+
+      if (effectivePreparedCount > limits.maxSpellsPrepared) {
         errors.add(
-          'Prepared ${spellsPrepared.length} spells, exceeding the prepared limit of ${limits.maxSpellsPrepared} (Level $targetClassLevel + Ability Mod $castingAbilityModifier).',
+          'Prepared $effectivePreparedCount spells, exceeding the prepared limit of ${limits.maxSpellsPrepared} (Level $targetClassLevel + Ability Mod $castingAbilityModifier).',
         );
       }
     }
 
-    // 5. Spell Tier Gating Check (Resolving actual spell entity if resolver is provided)
+    // 5. Spell Tier & Class Gating Check
     if (resolver != null) {
       final allSelectedSpells = {...cantrips, ...spellsKnown, ...spellsPrepared, ...spellbookSpells};
       for (final ref in allSelectedSpells) {
@@ -330,10 +421,17 @@ class SpellAllocationValidator {
 
           if (isCantrip && spell.level != 0) {
             errors.add('Spell "${spell.name}" is Level ${spell.level} but was assigned as a cantrip.');
-          } else if (!isCantrip && spell.level > limits.maxSpellSlotLevel) {
-            errors.add(
-              'Spell "${spell.name}" is Level ${spell.level}, but $targetClassSlug at level $targetClassLevel can only cast up to Level ${limits.maxSpellSlotLevel} spells.',
-            );
+          } else if (!isCantrip) {
+            // Check Mystic Arcanum exception for Warlock
+            final isMysticArcanum = targetClassSlug.toLowerCase() == 'warlock' &&
+                limits.mysticArcanumLevel > 0 &&
+                spell.level == limits.mysticArcanumLevel;
+
+            if (!isMysticArcanum && spell.level > limits.maxSpellSlotLevel) {
+              errors.add(
+                'Spell "${spell.name}" is Level ${spell.level}, but $targetClassSlug at level $targetClassLevel can only cast up to Level ${limits.maxSpellSlotLevel} spells.',
+              );
+            }
           }
         }
       }
@@ -345,3 +443,4 @@ class SpellAllocationValidator {
     return const SpellValidationResult.valid();
   }
 }
+

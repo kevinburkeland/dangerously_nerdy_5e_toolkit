@@ -11,6 +11,7 @@ import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/character_progression_engine.dart';
 import '../../services/rules/character_evaluation_engine.dart';
+import '../../services/rules/spell_allocation_validator.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../theme/app_theme.dart';
 
@@ -73,6 +74,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   final List<String> _newCantrips = [];
   final List<String> _newSpells = [];
   String _spellSearchQuery = '';
+  SpellClass? _selectedSpellListSource;
+  bool _showAllSpellListsForSecrets = false;
   final TextEditingController _customCantripController = TextEditingController();
   final TextEditingController _customSpellController = TextEditingController();
 
@@ -329,7 +332,20 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       );
     }).toList();
 
-    final spellRefs = _newSpells.map((s) {
+    final allSpellsList = List<String>.from(_newSpells);
+    final alwaysPrepared = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: _selectedClassSlug,
+      subclassSlug: subclassRef?.slug ?? _effectiveSubclassSlug,
+      classLevel: _targetClassNewLevel,
+      edition: edition,
+    );
+    for (final s in alwaysPrepared) {
+      if (!allSpellsList.contains(s.id)) {
+        allSpellsList.add(s.id);
+      }
+    }
+
+    final spellRefs = allSpellsList.map((s) {
       final spell = SpellbookLibrary.getSpellById(s);
       return EntityReference<Spell>(
         refType: EntityType.spell,
@@ -1097,6 +1113,10 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       return ((lvl + 1) ~/ 2).clamp(1, 9);
     }
     if (slug == 'warlock') {
+      if (lvl >= 17) return 9;
+      if (lvl >= 15) return 8;
+      if (lvl >= 13) return 7;
+      if (lvl >= 11) return 6;
       return ((lvl + 1) ~/ 2).clamp(1, 5);
     }
     if (['paladin', 'ranger'].contains(slug)) {
@@ -1162,14 +1182,46 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final edition = widget.character.id.ruleset == RulesetVersion.v2024
         ? DmRulesEdition.v2024
         : DmRulesEdition.v2014;
-    final spellClass = _targetSpellClass;
+    final defaultSpellClass = _targetSpellClass;
     final maxLvl = _maxAccessibleSpellLevel;
 
+    final limits = SpellAllocationValidator.getLimitsForClass(
+      classSlug: _selectedClassSlug,
+      classLevel: _targetClassNewLevel,
+      abilityModifier: 3,
+      subclassSlug: _effectiveSubclassSlug,
+      edition: edition,
+    );
+
+    final isMagicalSecretsActive = limits.magicalSecretsCount > 0 || limits.allowedMagicalSecretClasses.isNotEmpty;
+    final isMysticArcanumActive = limits.mysticArcanumLevel > 0;
+    final alwaysPreparedSpells = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: _selectedClassSlug,
+      subclassSlug: _effectiveSubclassSlug,
+      classLevel: _targetClassNewLevel,
+      edition: edition,
+    );
+
+    // Filter spells based on class list, active Magical Secrets, or specific cross-list browsing
     final allClassSpells = SpellbookLibrary.allSpells.where((s) {
       if (s.level > maxLvl) return false;
-      if (spellClass == null) return s.level <= maxLvl;
+
+      // Handle Mystic Arcanum high level spells (levels 6-9) for Warlock
+      if (_selectedClassSlug.toLowerCase() == 'warlock' && isMysticArcanumActive && s.level > 5) {
+        if (s.level != limits.mysticArcanumLevel) return false;
+        final rules = s.getRules(edition);
+        return rules.classes.contains(SpellClass.warlock);
+      }
+
+      if (_showAllSpellListsForSecrets) {
+        return true;
+      }
+
+      final activeClassFilter = _selectedSpellListSource ?? defaultSpellClass;
+      if (activeClassFilter == null) return s.level <= maxLvl;
+
       final rules = s.getRules(edition);
-      final isClassSpell = rules.classes.contains(spellClass);
+      final isClassSpell = rules.classes.contains(activeClassFilter);
       final isExpanded = SubclassSpellsLibrary.isExpandedSpell(_selectedClassSlug, _effectiveSubclassSlug, s, edition);
       return isClassSpell || isExpanded;
     }).toList();
@@ -1187,14 +1239,190 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Spells & Cantrips Advancement',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Spells & Cantrips Advancement',
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.purpleAccent),
+              ),
+            ),
+            if (isMagicalSecretsActive)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade900.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amberAccent),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome, size: 12, color: Colors.amberAccent),
+                    SizedBox(width: 4),
+                    Text(
+                      'MAGICAL SECRETS',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amberAccent),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
         const SizedBox(height: 4),
         Text(
           'Select newly learned, prepared, or subclass spells for $_selectedClassSlug (Max Spell Level: $maxLvl).',
           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
+
+        // Subclass Always-Prepared Spells Alert Card
+        if (alwaysPreparedSpells.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.teal.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.tealAccent.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.verified, size: 14, color: Colors.tealAccent),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Subclass Granted Spells (Always Prepared, Free Quota):',
+                        style: theme.textTheme.labelSmall?.copyWith(color: Colors.tealAccent, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: alwaysPreparedSpells.map((s) {
+                    return Chip(
+                      visualDensity: VisualDensity.compact,
+                      label: Text('${s.getName(edition)} (L${s.level})', style: const TextStyle(fontSize: 11)),
+                      backgroundColor: Colors.teal.shade800.withValues(alpha: 0.4),
+                      side: BorderSide(color: Colors.tealAccent.withValues(alpha: 0.3)),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Mystic Arcanum Milestone Callout
+        if (isMysticArcanumActive) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade900.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.deepPurpleAccent),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.star, color: Colors.deepPurpleAccent),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mystic Arcanum Milestone (Level ${limits.mysticArcanumLevel} Spell)',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.deepPurpleAccent),
+                      ),
+                      Text(
+                        'Choose one 6th-9th level Warlock spell. You can cast it once per long rest without expending a spell slot.',
+                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Magical Secrets List Switcher Bar
+        if (isMagicalSecretsActive) ...[
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                const Text('Spell List: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                ChoiceChip(
+                  label: const Text('Bard List'),
+                  selected: _selectedSpellListSource == null && !_showAllSpellListsForSecrets,
+                  onSelected: (selected) {
+                    setState(() {
+                      _selectedSpellListSource = null;
+                      _showAllSpellListsForSecrets = false;
+                    });
+                  },
+                ),
+                const SizedBox(width: 6),
+                if (limits.allowedMagicalSecretClasses.contains(SpellClass.wizard))
+                  ChoiceChip(
+                    label: const Text('Wizard'),
+                    selected: _selectedSpellListSource == SpellClass.wizard,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedSpellListSource = selected ? SpellClass.wizard : null;
+                        _showAllSpellListsForSecrets = false;
+                      });
+                    },
+                  ),
+                const SizedBox(width: 6),
+                if (limits.allowedMagicalSecretClasses.contains(SpellClass.cleric))
+                  ChoiceChip(
+                    label: const Text('Cleric'),
+                    selected: _selectedSpellListSource == SpellClass.cleric,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedSpellListSource = selected ? SpellClass.cleric : null;
+                        _showAllSpellListsForSecrets = false;
+                      });
+                    },
+                  ),
+                const SizedBox(width: 6),
+                if (limits.allowedMagicalSecretClasses.contains(SpellClass.druid))
+                  ChoiceChip(
+                    label: const Text('Druid'),
+                    selected: _selectedSpellListSource == SpellClass.druid,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedSpellListSource = selected ? SpellClass.druid : null;
+                        _showAllSpellListsForSecrets = false;
+                      });
+                    },
+                  ),
+                const SizedBox(width: 6),
+                if (limits.allowedMagicalSecretClasses.length > 4 || edition == DmRulesEdition.v2014)
+                  ChoiceChip(
+                    label: const Text('All Spell Lists ✨'),
+                    selected: _showAllSpellListsForSecrets,
+                    onSelected: (selected) {
+                      setState(() {
+                        _showAllSpellListsForSecrets = selected;
+                        _selectedSpellListSource = null;
+                      });
+                    },
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
 
         // Selected Spells Summary Chips
         if (_newCantrips.isNotEmpty || _newSpells.isNotEmpty) ...[

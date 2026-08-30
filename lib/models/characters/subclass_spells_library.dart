@@ -234,4 +234,40 @@ class SubclassSpellsLibrary {
           cleanName.contains(cleanExp);
     });
   }
+
+  /// Indicates whether the class's subclass spells are auto-prepared (e.g. Cleric Domains, Paladin Oaths)
+  /// as opposed to being expanded options added to the spells known pool (e.g. Warlock Patrons).
+  static bool isAlwaysPreparedSubclass(String classSlug) {
+    final slug = classSlug.toLowerCase();
+    return slug == 'cleric' || slug == 'paladin' || slug == 'druid';
+  }
+
+  /// Returns the list of auto-granted [SpellItem]s for a given class, subclass, and class level.
+  static List<SpellItem> getAlwaysPreparedSpellsForLevel({
+    required String classSlug,
+    required String? subclassSlug,
+    required int classLevel,
+    required DmRulesEdition edition,
+  }) {
+    if (!isAlwaysPreparedSubclass(classSlug) || subclassSlug == null || subclassSlug.isEmpty) {
+      return const [];
+    }
+
+    final maxTier = switch (classSlug.toLowerCase()) {
+      'cleric' || 'druid' => (classLevel + 1) ~/ 2,
+      'paladin' => (classLevel < 3) ? 0 : ((classLevel + 3) ~/ 4),
+      _ => 0,
+    };
+
+    if (maxTier <= 0) return const [];
+
+    final expanded = getExpandedSpells(classSlug, subclassSlug);
+    if (expanded.isEmpty) return const [];
+
+    return SpellbookLibrary.allSpells.where((s) {
+      if (s.level == 0 || s.level > maxTier) return false;
+      return isExpandedSpell(classSlug, subclassSlug, s, edition);
+    }).toList();
+  }
 }
+

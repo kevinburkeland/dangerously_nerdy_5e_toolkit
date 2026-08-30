@@ -214,5 +214,158 @@ void main() {
 
       expect(find.textContaining('No Spellcasting Advancement at Level 2'), findsOneWidget);
     });
+
+    testWidgets('LevelUpWizardDialog shows Magical Secrets chip and spell list switcher for Bard leveling to 10', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final bard = Character(
+        id: const EntityId(slug: 'test-bard', ruleset: RulesetVersion.v2024),
+        name: 'Elven Minstrel',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'entertainer', displayName: 'Entertainer'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'bard', displayName: 'Bard'),
+              subclassRef: EntityReference(refType: EntityType.subclass, slug: 'college_of_lore', displayName: 'College of Lore'),
+              level: 9,
+              hitDie: 'd8',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 12, intelligence: 12, wisdom: 12, charisma: 18),
+        resources: const CharacterResourcePool(currentHp: 55, currentHitDice: {'d8': 9}),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(character: bard),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to Step 5 (Spells)
+      await tester.tap(find.text('Next Step')); // Step 2 (HP)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 3 (Features)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 4 (ASI/Feat)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 5 (Spells)
+      await tester.pumpAndSettle();
+
+      expect(find.text('MAGICAL SECRETS'), findsOneWidget);
+      expect(find.text('Bard List'), findsOneWidget);
+      expect(find.text('Wizard'), findsOneWidget);
+      expect(find.text('Cleric'), findsOneWidget);
+      expect(find.text('Druid'), findsOneWidget);
+
+      // Switch to Wizard list
+      await tester.tap(find.text('Wizard'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('LevelUpWizardDialog shows Mystic Arcanum banner for Warlock leveling to 11', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final warlock = Character(
+        id: const EntityId(slug: 'test-warlock-10', ruleset: RulesetVersion.v2024),
+        name: 'High Warlock',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
+              subclassRef: EntityReference(refType: EntityType.subclass, slug: 'the_fiend', displayName: 'The Fiend'),
+              level: 10,
+              hitDie: 'd8',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 18),
+        resources: const CharacterResourcePool(currentHp: 65, currentHitDice: {'d8': 10}),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(character: warlock),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to Step 5 (Spells)
+      await tester.tap(find.text('Next Step')); // Step 2 (HP)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 3 (Features)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 4 (ASI/Feat)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 5 (Spells)
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Mystic Arcanum Milestone (Level 6 Spell)'), findsOneWidget);
+    });
+
+    testWidgets('LevelUpWizardDialog displays Subclass Granted Spells for Cleric', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final cleric = Character(
+        id: const EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
+        name: 'Life Cleric',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'cleric', displayName: 'Cleric'),
+              subclassRef: EntityReference(refType: EntityType.subclass, slug: 'life_domain', displayName: 'Life Domain'),
+              level: 2,
+              hitDie: 'd8',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: const AbilityScores(strength: 14, dexterity: 10, constitution: 14, intelligence: 10, wisdom: 16, charisma: 12),
+        resources: const CharacterResourcePool(currentHp: 18, currentHitDice: {'d8': 2}),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(character: cleric),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to Step 5 (Spells)
+      await tester.tap(find.text('Next Step')); // Step 2 (HP)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 3 (Features)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 4 (ASI/Feat)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 5 (Spells)
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Subclass Granted Spells (Always Prepared, Free Quota)'), findsOneWidget);
+      expect(find.textContaining('Bless'), findsWidgets);
+      expect(find.textContaining('Cure Wounds'), findsWidgets);
+    });
   });
 }
+
+
