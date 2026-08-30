@@ -3,7 +3,153 @@ import '../dm_screen_data.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
 
-/// Class definition representing a full 5e class progression, hit dice, and proficiencies.
+/// Types of class decision points encountered during character creation and progression.
+enum FeatureChoiceType {
+  subclassSelection,
+  fightingStyle,
+  invocations,
+  primalOrder,
+  divineOrder,
+  expertise,
+  languageOrTool,
+  pactBoon,
+  customOption;
+
+  String get displayName {
+    switch (this) {
+      case FeatureChoiceType.subclassSelection:
+        return 'Subclass / Archetype';
+      case FeatureChoiceType.fightingStyle:
+        return 'Fighting Style';
+      case FeatureChoiceType.invocations:
+        return 'Eldritch Invocations';
+      case FeatureChoiceType.primalOrder:
+        return 'Primal Order';
+      case FeatureChoiceType.divineOrder:
+        return 'Divine Order';
+      case FeatureChoiceType.expertise:
+        return 'Expertise';
+      case FeatureChoiceType.languageOrTool:
+        return 'Language / Tool';
+      case FeatureChoiceType.pactBoon:
+        return 'Pact Boon';
+      case FeatureChoiceType.customOption:
+        return 'Special Option';
+    }
+  }
+}
+
+/// A specific selectable option within a [ClassFeatureDecision].
+@immutable
+class FeatureOption {
+  final String id;
+  final String name;
+  final String descriptionMarkdown;
+  final Map<String, dynamic> grants; // e.g. {'acBonus': 1, 'bonusSpells': [...], 'proficiencies': [...]}
+  final Map<String, dynamic> customProperties;
+
+  const FeatureOption({
+    required this.id,
+    required this.name,
+    required this.descriptionMarkdown,
+    this.grants = const {},
+    this.customProperties = const {},
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'descriptionMarkdown': descriptionMarkdown,
+        'grants': grants,
+        'customProperties': customProperties,
+      };
+
+  factory FeatureOption.fromMap(Map<String, dynamic> map) {
+    return FeatureOption(
+      id: map['id']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
+      descriptionMarkdown: map['descriptionMarkdown']?.toString() ?? '',
+      grants: Map<String, dynamic>.from(map['grants'] as Map? ?? {}),
+      customProperties: Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+    );
+  }
+}
+
+/// Declarative schema defining a decision point / choice requirement at a specific class level.
+@immutable
+class ClassFeatureDecision {
+  final String id;
+  final String name;
+  final String prompt;
+  final int levelRequired;
+  final FeatureChoiceType type;
+  final int minSelections;
+  final int maxSelections;
+  final List<FeatureOption> availableOptions;
+  final RulesetVersion ruleset;
+  final Map<String, dynamic> customProperties;
+
+  const ClassFeatureDecision({
+    required this.id,
+    required this.name,
+    required this.prompt,
+    required this.levelRequired,
+    required this.type,
+    this.minSelections = 1,
+    this.maxSelections = 1,
+    this.availableOptions = const [],
+    this.ruleset = RulesetVersion.v2024,
+    this.customProperties = const {},
+  });
+
+  bool isValidSelection(List<String> selectedIds) {
+    return selectedIds.length >= minSelections && selectedIds.length <= maxSelections;
+  }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'prompt': prompt,
+        'levelRequired': levelRequired,
+        'type': type.name,
+        'minSelections': minSelections,
+        'maxSelections': maxSelections,
+        'availableOptions': availableOptions.map((o) => o.toMap()).toList(),
+        'ruleset': ruleset.name,
+        'customProperties': customProperties,
+      };
+
+  factory ClassFeatureDecision.fromMap(Map<String, dynamic> map) {
+    final typeName = map['type']?.toString();
+    final type = FeatureChoiceType.values.firstWhere(
+      (t) => t.name == typeName,
+      orElse: () => FeatureChoiceType.customOption,
+    );
+    final rulesetName = map['ruleset']?.toString();
+    final ruleset = RulesetVersion.values.firstWhere(
+      (r) => r.name == rulesetName,
+      orElse: () => RulesetVersion.v2024,
+    );
+
+    return ClassFeatureDecision(
+      id: map['id']?.toString() ?? '',
+      name: map['name']?.toString() ?? '',
+      prompt: map['prompt']?.toString() ?? '',
+      levelRequired: (map['levelRequired'] as num?)?.toInt() ?? 1,
+      type: type,
+      minSelections: (map['minSelections'] as num?)?.toInt() ?? 1,
+      maxSelections: (map['maxSelections'] as num?)?.toInt() ?? 1,
+      availableOptions: (map['availableOptions'] as List? ?? [])
+          .whereType<Map>()
+          .map((o) => FeatureOption.fromMap(Map<String, dynamic>.from(o)))
+          .toList(),
+      ruleset: ruleset,
+      customProperties: Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+    );
+  }
+}
+
+/// Class definition representing a full 5e class progression, hit dice, proficiencies, and declarative feature decisions.
 @immutable
 class CharacterClass extends DomainEntity {
   @override
@@ -18,6 +164,8 @@ class CharacterClass extends DomainEntity {
   final String? spellcastingAbility;
   final String featuresMarkdown;
   final List<Subclass> subclasses;
+  final int subclassSelectionLevel;
+  final List<ClassFeatureDecision> featureDecisions;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -32,11 +180,41 @@ class CharacterClass extends DomainEntity {
     this.spellcastingAbility,
     required this.featuresMarkdown,
     this.subclasses = const [],
+    this.subclassSelectionLevel = 3,
+    this.featureDecisions = const [],
     this.customProperties = const {},
   });
 
   @override
   EntityType get entityType => EntityType.classDefinition;
+
+  /// Returns the required level for selecting a subclass archetype under [ruleset].
+  int getSubclassLevel([RulesetVersion? ruleset]) {
+    final activeRuleset = ruleset ?? id.ruleset;
+    if (activeRuleset == RulesetVersion.v2014) {
+      final slug = id.slug.toLowerCase();
+      if (['cleric', 'sorcerer', 'warlock'].contains(slug)) return 1;
+      if (['druid', 'wizard'].contains(slug)) return 2;
+      return 3;
+    }
+    return subclassSelectionLevel;
+  }
+
+  /// Returns all feature decisions configured for [level], optionally filtered by [ruleset].
+  List<ClassFeatureDecision> getDecisionsForLevel(int level, {RulesetVersion? ruleset}) {
+    return featureDecisions.where((d) {
+      if (d.levelRequired != level) return false;
+      if (ruleset != null && d.ruleset != ruleset && d.ruleset != RulesetVersion.homebrew) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  /// Finds a specific feature decision by its unique identifier.
+  ClassFeatureDecision? getDecision(String decisionId) {
+    return featureDecisions.where((d) => d.id == decisionId).firstOrNull;
+  }
 
   @override
   Map<String, dynamic> toMap() => {
@@ -50,6 +228,8 @@ class CharacterClass extends DomainEntity {
         'spellcastingAbility': spellcastingAbility,
         'featuresMarkdown': featuresMarkdown,
         'subclasses': subclasses.map((s) => s.toMap()).toList(),
+        'subclassSelectionLevel': subclassSelectionLevel,
+        'featureDecisions': featureDecisions.map((f) => f.toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -74,6 +254,11 @@ class CharacterClass extends DomainEntity {
           .whereType<Map>()
           .map((e) => Subclass.fromMap(Map<String, dynamic>.from(e)))
           .toList(),
+      subclassSelectionLevel: (map['subclassSelectionLevel'] as num?)?.toInt() ?? 3,
+      featureDecisions: (map['featureDecisions'] as List? ?? [])
+          .whereType<Map>()
+          .map((d) => ClassFeatureDecision.fromMap(Map<String, dynamic>.from(d)))
+          .toList(),
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
@@ -90,6 +275,8 @@ class CharacterClass extends DomainEntity {
     String? spellcastingAbility,
     String? featuresMarkdown,
     List<Subclass>? subclasses,
+    int? subclassSelectionLevel,
+    List<ClassFeatureDecision>? featureDecisions,
     Map<String, dynamic>? customProperties,
   }) {
     return CharacterClass(
@@ -103,6 +290,8 @@ class CharacterClass extends DomainEntity {
       spellcastingAbility: spellcastingAbility ?? this.spellcastingAbility,
       featuresMarkdown: featuresMarkdown ?? this.featuresMarkdown,
       subclasses: subclasses ?? this.subclasses,
+      subclassSelectionLevel: subclassSelectionLevel ?? this.subclassSelectionLevel,
+      featureDecisions: featureDecisions ?? this.featureDecisions,
       customProperties: customProperties ?? this.customProperties,
     );
   }

@@ -363,6 +363,7 @@ class ClassLevelProgression {
   final String hitDie; // e.g. "d8", "d10", "d12", "d6"
   final List<int> hitPointsRolled; // HP gained per level above 1st
   final bool isStartingClass;
+  final Map<String, List<String>> selectedFeatureOptions; // decisionId -> [selectedOptionIds]
 
   const ClassLevelProgression({
     required this.classRef,
@@ -371,6 +372,7 @@ class ClassLevelProgression {
     required this.hitDie,
     this.hitPointsRolled = const [],
     this.isStartingClass = false,
+    this.selectedFeatureOptions = const {},
   });
 
   int get hitDieSides {
@@ -387,6 +389,7 @@ class ClassLevelProgression {
     String? hitDie,
     List<int>? hitPointsRolled,
     bool? isStartingClass,
+    Map<String, List<String>>? selectedFeatureOptions,
   }) {
     return ClassLevelProgression(
       classRef: classRef ?? this.classRef,
@@ -395,6 +398,7 @@ class ClassLevelProgression {
       hitDie: hitDie ?? this.hitDie,
       hitPointsRolled: hitPointsRolled ?? this.hitPointsRolled,
       isStartingClass: isStartingClass ?? this.isStartingClass,
+      selectedFeatureOptions: selectedFeatureOptions ?? this.selectedFeatureOptions,
     );
   }
 
@@ -405,9 +409,22 @@ class ClassLevelProgression {
         'hitDie': hitDie,
         'hitPointsRolled': hitPointsRolled,
         'isStartingClass': isStartingClass,
+        'selectedFeatureOptions': selectedFeatureOptions,
       };
 
   factory ClassLevelProgression.fromMap(Map<String, dynamic> map) {
+    final rawOptions = map['selectedFeatureOptions'];
+    final parsedOptions = <String, List<String>>{};
+    if (rawOptions is Map) {
+      rawOptions.forEach((key, val) {
+        if (val is List) {
+          parsedOptions[key.toString()] = val.map((e) => e.toString()).toList();
+        } else if (val != null) {
+          parsedOptions[key.toString()] = [val.toString()];
+        }
+      });
+    }
+
     return ClassLevelProgression(
       classRef: EntityReference<DomainEntity>.fromMap(
           Map<String, dynamic>.from(map['classRef'] as Map? ?? {})),
@@ -422,6 +439,7 @@ class ClassLevelProgression {
           .map((n) => n.toInt())
           .toList(),
       isStartingClass: map['isStartingClass'] == true,
+      selectedFeatureOptions: parsedOptions,
     );
   }
 }
@@ -444,6 +462,27 @@ class CharacterProgression {
 
   ClassLevelProgression? getClass(String classSlug) =>
       classes.where((c) => c.classRef.slug == classSlug).firstOrNull;
+
+  /// Retrieves all selected option IDs for a specific decision across all classes.
+  List<String> getSelectedOptionsForDecision(String decisionId) {
+    final results = <String>[];
+    for (final c in classes) {
+      final opts = c.selectedFeatureOptions[decisionId];
+      if (opts != null) results.addAll(opts);
+    }
+    return results;
+  }
+
+  /// Aggregates all selected feature option IDs across all classes.
+  Map<String, List<String>> getAllSelectedFeatureOptions() {
+    final merged = <String, List<String>>{};
+    for (final c in classes) {
+      c.selectedFeatureOptions.forEach((k, v) {
+        merged.putIfAbsent(k, () => []).addAll(v);
+      });
+    }
+    return merged;
+  }
 
   CharacterProgression copyWith({
     List<ClassLevelProgression>? classes,

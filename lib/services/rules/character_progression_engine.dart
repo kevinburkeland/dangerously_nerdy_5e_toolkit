@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../repository/reference_resolver.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
@@ -50,6 +51,7 @@ class LevelUpRequest {
   final AsiOrFeatChoice? asiOrFeat;
   final List<EntityReference<Spell>> newCantrips;
   final List<EntityReference<Spell>> newSpells;
+  final Map<String, List<String>> selectedFeatureOptions;
 
   const LevelUpRequest({
     required this.targetClassSlug,
@@ -61,6 +63,7 @@ class LevelUpRequest {
     this.asiOrFeat,
     this.newCantrips = const [],
     this.newSpells = const [],
+    this.selectedFeatureOptions = const {},
   });
 }
 
@@ -176,9 +179,28 @@ class CharacterProgressionEngine {
     }
   }
 
-  /// Checks if reaching [newClassLevel] in [classSlug] unlocks subclass selection.
-  /// Standard 5e (and 2024 revision) unlocks subclass archetypes at Level 3.
-  static bool isSubclassMilestone(String classSlug, int newClassLevel) {
+  /// Checks if reaching [newClassLevel] in [classSlug] unlocks subclass selection,
+  /// respecting ruleset version (2014 vs 2024) or custom class configuration.
+  static bool isSubclassMilestone(
+    String classSlug,
+    int newClassLevel, {
+    RulesetVersion ruleset = RulesetVersion.v2024,
+    CharacterClass? characterClass,
+  }) {
+    if (characterClass != null) {
+      return newClassLevel == characterClass.subclassSelectionLevel;
+    }
+    if (ruleset == RulesetVersion.v2014) {
+      final slug = classSlug.toLowerCase();
+      if (['cleric', 'sorcerer', 'warlock'].contains(slug)) {
+        return newClassLevel == 1;
+      }
+      if (['druid', 'wizard'].contains(slug)) {
+        return newClassLevel == 2;
+      }
+      return newClassLevel == 3;
+    }
+    // 2024 Revision standardizes all subclass selections to Level 3
     return newClassLevel == 3;
   }
 
@@ -265,10 +287,16 @@ class CharacterProgressionEngine {
             : (request.hpChoice.rolledValue ?? avg);
         rolledHpList.add(addedHp);
 
+        final mergedOptions = Map<String, List<String>>.from(cls.selectedFeatureOptions);
+        request.selectedFeatureOptions.forEach((k, v) {
+          mergedOptions[k] = List<String>.from(v);
+        });
+
         updatedClasses.add(cls.copyWith(
           level: newLevel,
           subclassRef: request.subclassRef ?? cls.subclassRef,
           hitPointsRolled: rolledHpList,
+          selectedFeatureOptions: mergedOptions,
         ));
       } else {
         updatedClasses.add(cls);
@@ -296,6 +324,7 @@ class CharacterProgressionEngine {
         hitDie: hitDie,
         hitPointsRolled: [addedHp],
         isStartingClass: false,
+        selectedFeatureOptions: request.selectedFeatureOptions,
       ));
     }
 

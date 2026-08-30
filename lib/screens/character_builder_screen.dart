@@ -71,6 +71,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   String _selectedClass = 'fighter';
   String _selectedBackground = 'soldier';
   String _selectedFeat = 'tough';
+  String? _wizardSelectedSubclass;
+  final Map<String, List<String>> _wizardSelectedFeatureOptions = {};
   final Set<String> _selectedWizardCantrips = {};
   final Set<String> _selectedWizardSpells = {};
   String _selectedStartingEquipmentPreset = 'chain_and_sword';
@@ -1066,15 +1068,28 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final hasFeatStep = is2024 || curSpecies.grantsBonusFeat;
+    final curClass = SrdClassesLibrary.findBySlug(_selectedClass, ruleset: _selectedRuleset) ?? SrdClassesLibrary.fighter;
     final isCaster = _isSpellcasterClass(_selectedClass, _selectedRuleset);
 
     final steps = <String>[
       'basics',
       'species',
       'class',
-      'background',
-      'scores',
     ];
+
+    // Subclass step if chosen class selects subclass at Level 1 (e.g. 2014 Cleric, Sorcerer, Warlock)
+    if (curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty) {
+      steps.add('subclass');
+    }
+
+    // Class Decisions step if class declares level 1 decisions (e.g. Fighting Style, Divine Order, Primal Order, Invocations)
+    final lvl1Decisions = curClass.getDecisionsForLevel(1, ruleset: _selectedRuleset);
+    if (lvl1Decisions.isNotEmpty) {
+      steps.add('class_decisions');
+    }
+
+    steps.add('background');
+    steps.add('scores');
     if (hasFeatStep) steps.add('feats');
     if (isCaster) steps.add('spells');
     steps.add('equipment');
@@ -1091,12 +1106,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final maxStepIndex = steps.length - 1;
     if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
 
-    final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
+    final curClass = SrdClassesLibrary.findBySlug(_selectedClass, ruleset: _selectedRuleset) ?? SrdClassesLibrary.fighter;
     final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
     final allowedClassSkills = (curClass.customProperties['allowedSkills'] as List? ?? [])
         .map((s) => SkillType.values.firstWhere((st) => st.name == s.toString(), orElse: () => SkillType.athletics))
         .toList();
     final allowedSkillCount = (curClass.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
+    final lvl1Decisions = curClass.getDecisionsForLevel(1, ruleset: _selectedRuleset);
 
     final currentStepKey = steps[_wizardStep];
 
@@ -1133,6 +1149,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 'basics' => _buildStep0Basics(theme),
                 'species' => _buildStep1Species(theme),
                 'class' => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
+                'subclass' => _buildStepSubclass(theme, curClass),
+                'class_decisions' => _buildStepClassDecisions(theme, curClass, lvl1Decisions),
                 'background' => _buildStep3Background(theme, curBackground),
                 'scores' => _buildStep4AbilityScores(theme),
                 'feats' => _buildStep5Feats(theme),
@@ -1449,6 +1467,225 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             );
           }).toList(),
         ),
+      ],
+    );
+  }
+
+  Widget _buildStepSubclass(ThemeData theme, CharacterClass curClass) {
+    if (curClass.subclasses.isEmpty) {
+      return const Text('No subclasses available for this class.');
+    }
+    _wizardSelectedSubclass ??= curClass.subclasses.first.id.slug;
+    final selectedSlug = _wizardSelectedSubclass!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Choose ${curClass.name} Subclass / Archetype',
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Under the selected ruleset (${_selectedRuleset == RulesetVersion.v2024 ? '2024' : '2014'}), ${curClass.name} chooses an archetype at 1st level.',
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
+        const SizedBox(height: 14),
+        ...curClass.subclasses.map((sub) {
+          final isSelected = sub.id.slug == selectedSlug;
+          return Card(
+            color: isSelected ? Colors.cyan.shade900.withValues(alpha: 0.4) : const Color(0xFF0F172A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: isSelected ? Colors.cyanAccent : Colors.white12,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            margin: const EdgeInsets.only(bottom: 12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                HapticService.selectionTick(context);
+                setState(() => _wizardSelectedSubclass = sub.id.slug);
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                          color: isSelected ? Colors.cyanAccent : Colors.white54,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            sub.name,
+                            style: TextStyle(
+                              color: isSelected ? Colors.cyanAccent : Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (sub.featuresMarkdown.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      FormattedMarkdownText(
+                        sub.featuresMarkdown,
+                        defaultColor: Colors.white70,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildStepClassDecisions(ThemeData theme, CharacterClass curClass, List<ClassFeatureDecision> decisions) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${curClass.name} Decisions & Specializations',
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Customize your ${curClass.name} feature options at 1st level.',
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
+        const SizedBox(height: 14),
+        ...decisions.map((decision) {
+          final selected = _wizardSelectedFeatureOptions[decision.id] ??= [
+            if (decision.availableOptions.isNotEmpty) decision.availableOptions.first.id,
+          ];
+
+          return Card(
+            color: const Color(0xFF0F172A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: const BorderSide(color: Colors.white24),
+            ),
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.cyan.shade800,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          decision.type.displayName,
+                          style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          decision.name,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(decision.prompt, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 12),
+                  ...decision.availableOptions.map((opt) {
+                    final isOptSelected = selected.contains(opt.id);
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isOptSelected ? Colors.cyan.shade900.withValues(alpha: 0.3) : Colors.black26,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isOptSelected ? Colors.cyanAccent.withValues(alpha: 0.7) : Colors.white12,
+                        ),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () {
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            if (decision.maxSelections == 1) {
+                              _wizardSelectedFeatureOptions[decision.id] = [opt.id];
+                            } else {
+                              final list = List<String>.from(_wizardSelectedFeatureOptions[decision.id] ?? []);
+                              if (list.contains(opt.id)) {
+                                if (list.length > decision.minSelections) {
+                                  list.remove(opt.id);
+                                }
+                              } else {
+                                if (list.length < decision.maxSelections) {
+                                  list.add(opt.id);
+                                }
+                              }
+                              _wizardSelectedFeatureOptions[decision.id] = list;
+                            }
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    decision.maxSelections == 1
+                                        ? (isOptSelected ? Icons.radio_button_checked : Icons.radio_button_off)
+                                        : (isOptSelected ? Icons.check_box : Icons.check_box_outline_blank),
+                                    color: isOptSelected ? Colors.cyanAccent : Colors.white38,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    opt.name,
+                                    style: TextStyle(
+                                      color: isOptSelected ? Colors.cyanAccent : Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (opt.descriptionMarkdown.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 26),
+                                  child: FormattedMarkdownText(
+                                    opt.descriptionMarkdown,
+                                    defaultColor: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -2618,6 +2855,20 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
     final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
 
+    EntityReference<DomainEntity>? startingSubclassRef;
+    if (curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty) {
+      final chosenSubSlug = _wizardSelectedSubclass ?? curClass.subclasses.first.id.slug;
+      final sub = curClass.subclasses.firstWhere(
+        (s) => s.id.slug == chosenSubSlug,
+        orElse: () => curClass.subclasses.first,
+      );
+      startingSubclassRef = EntityReference<DomainEntity>(
+        refType: EntityType.subclass,
+        slug: sub.id.slug,
+        displayName: sub.name,
+      );
+    }
+
     final request = CharacterCreationRequest(
       characterName: _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim(),
       ruleset: _selectedRuleset,
@@ -2651,6 +2902,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       cantrips: cantripRefs,
       spellsKnown: spellRefs,
       spellsPrepared: spellRefs,
+      startingSubclassRef: startingSubclassRef,
+      selectedFeatureOptions: Map<String, List<String>>.from(_wizardSelectedFeatureOptions),
     );
 
     final newChar = CharacterFactory.createLevel1Character(request);

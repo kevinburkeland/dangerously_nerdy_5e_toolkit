@@ -11,6 +11,16 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  Future<void> advanceToAbilityScores(WidgetTester tester) async {
+    for (int i = 0; i < 10; i++) {
+      if (find.textContaining('Ability Score Allocation').evaluate().isNotEmpty) {
+        break;
+      }
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+    }
+  }
+
   group('Character Builder Ability Score Generation & Lineage Bonus Tests', () {
     testWidgets('supports switching to Dice Roll mode and rolling stats', (tester) async {
       tester.view.physicalSize = const Size(1200, 2400);
@@ -28,17 +38,10 @@ void main() {
       await tester.tap(find.text('Guided Builder'));
       await tester.pumpAndSettle();
 
-      // Advance from Step 1 to Step 5
-      await tester.tap(find.text('Next Step')); // Step 1 -> 2
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step')); // Step 2 -> 3
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step')); // Step 3 -> 4
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step')); // Step 4 -> 5
-      await tester.pumpAndSettle();
+      // Advance to Ability Scores step
+      await advanceToAbilityScores(tester);
 
-      expect(find.text('Step 5: Ability Score Allocation'), findsOneWidget);
+      expect(find.textContaining('Ability Score Allocation'), findsOneWidget);
 
       // Tap 'Dice Roll' segment
       await tester.tap(find.text('Dice Roll'));
@@ -69,15 +72,8 @@ void main() {
       await tester.tap(find.text('Guided Builder'));
       await tester.pumpAndSettle();
 
-      // Advance to Step 5
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
+      // Advance to Ability Scores step
+      await advanceToAbilityScores(tester);
 
       // Tap 'Enter Own' segment
       await tester.tap(find.text('Enter Own'));
@@ -115,13 +111,8 @@ void main() {
       await tester.tap(find.text('Human (Variant)'));
       await tester.pumpAndSettle();
 
-      // Step 2 -> Step 3 -> Step 4 -> Step 5
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
+      // Advance to Ability Scores
+      await advanceToAbilityScores(tester);
 
       expect(find.text('Human (Variant) Lineage Bonus (+1 to 2 Scores)'), findsOneWidget);
       expect(find.text('STRENGTH (+1 Bonus)'), findsOneWidget);
@@ -165,13 +156,8 @@ void main() {
       await tester.tap(find.text('Custom Lineage'));
       await tester.pumpAndSettle();
 
-      // Step 2 -> Step 3 -> Step 4 -> Step 5
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
+      // Advance to Ability Scores
+      await advanceToAbilityScores(tester);
 
       // Should show Custom Lineage Bonus (+2 to 1 Score)
       expect(find.text('Custom Lineage Lineage Bonus (+2 to 1 Score)'), findsOneWidget);
@@ -182,11 +168,11 @@ void main() {
       await tester.tap(find.text('CHARISMA (+2 Bonus)'));
       await tester.pumpAndSettle();
 
-      // Advance to Step 6 (Custom Lineage Bonus Feat step)
+      // Advance to Custom Lineage Bonus Feat step
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Step 6: Custom Lineage Bonus Feat'), findsOneWidget);
+      expect(find.textContaining('Custom Lineage Bonus Feat'), findsOneWidget);
       expect(find.textContaining('As a Custom Lineage, choose your 1st-level bonus feat'), findsOneWidget);
     });
 
@@ -234,13 +220,8 @@ void main() {
       await tester.tap(find.text('Astral Elf (Homebrew)'));
       await tester.pumpAndSettle();
 
-      // Advance to Step 5 (Ability Scores)
-      await tester.tap(find.text('Next Step')); // Step 3
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step')); // Step 4
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step')); // Step 5
-      await tester.pumpAndSettle();
+      // Advance to Ability Scores
+      await advanceToAbilityScores(tester);
 
       expect(find.text('Astral Elf (Homebrew) Lineage Bonus (+1 to 3 Scores)'), findsOneWidget);
       expect(find.text('Select 3 different ability scores to receive a +1 bonus:'), findsOneWidget);
@@ -253,11 +234,11 @@ void main() {
       await tester.tap(find.text('INTELLIGENCE (+1 Bonus)'));
       await tester.pumpAndSettle();
 
-      // Advance to Step 6 Feats
+      // Advance to Feats step
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Step 6: Astral Elf (Homebrew) Bonus Feat'), findsOneWidget);
+      expect(find.textContaining('Astral Elf (Homebrew) Bonus Feat'), findsOneWidget);
       expect(find.textContaining('As a Astral Elf (Homebrew), choose your 1st-level bonus feat'), findsOneWidget);
     });
   });

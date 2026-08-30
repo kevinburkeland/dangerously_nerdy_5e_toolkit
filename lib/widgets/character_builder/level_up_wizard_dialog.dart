@@ -5,6 +5,7 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/characters/srd_classes_library.dart';
 import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/character_progression_engine.dart';
@@ -230,8 +231,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
         .where((c) => c.classRef.slug.toLowerCase() == _selectedClassSlug.toLowerCase())
         .map((c) => c.subclassRef)
         .firstOrNull;
+    final cls = SrdClassesLibrary.findBySlug(_selectedClassSlug, ruleset: widget.character.id.ruleset);
     return existingSubclass == null &&
-        CharacterProgressionEngine.isSubclassMilestone(_selectedClassSlug, _targetClassNewLevel);
+        CharacterProgressionEngine.isSubclassMilestone(
+          _selectedClassSlug,
+          _targetClassNewLevel,
+          ruleset: widget.character.id.ruleset,
+          characterClass: cls,
+        );
   }
 
   int get _conModifier {
@@ -289,7 +296,16 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
 
     EntityReference<DomainEntity>? subclassRef;
     if (_selectedSubclass != null) {
-      final subs = _subclassesByClass[_selectedClassSlug] ?? [];
+      final customCls = SrdClassesLibrary.findBySlug(_selectedClassSlug, ruleset: widget.character.id.ruleset);
+      final List<Map<String, String>> subs = [];
+      if (customCls != null && customCls.subclasses.isNotEmpty) {
+        for (final s in customCls.subclasses) {
+          subs.add({'slug': s.id.slug, 'name': s.name});
+        }
+      }
+      if (subs.isEmpty) {
+        subs.addAll(_subclassesByClass[_selectedClassSlug] ?? []);
+      }
       final sub = subs.firstWhere((s) => s['slug'] == _selectedSubclass, orElse: () => {'slug': _selectedSubclass!, 'name': _selectedSubclass!});
       subclassRef = EntityReference<DomainEntity>(
         refType: EntityType.subclass,
@@ -769,7 +785,20 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   // STEP 3: SUBCLASS & FEATURES
   // --------------------------------------------------------------------------
   Widget _buildStep3SubclassAndFeatures(ThemeData theme, TabletopColors? customColors) {
-    final availableSubs = _subclassesByClass[_selectedClassSlug] ?? [];
+    final customCls = SrdClassesLibrary.findBySlug(_selectedClassSlug, ruleset: widget.character.id.ruleset);
+    final List<Map<String, String>> availableSubs = [];
+    if (customCls != null && customCls.subclasses.isNotEmpty) {
+      for (final s in customCls.subclasses) {
+        availableSubs.add({
+          'slug': s.id.slug,
+          'name': s.name,
+          'desc': s.featuresMarkdown.split('\n').firstWhere((l) => l.trim().isNotEmpty, orElse: () => s.name),
+        });
+      }
+    }
+    if (availableSubs.isEmpty) {
+      availableSubs.addAll(_subclassesByClass[_selectedClassSlug] ?? []);
+    }
     final needsSubclass = _isSubclassMilestone && availableSubs.isNotEmpty;
 
     return Column(

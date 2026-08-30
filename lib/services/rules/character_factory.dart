@@ -50,6 +50,8 @@ class CharacterCreationRequest {
   final List<EntityReference<Spell>> spellsPrepared;
   final List<EntityReference<DomainEntity>> originFeats;
   final int baseSpeedFeet;
+  final EntityReference<DomainEntity>? startingSubclassRef;
+  final Map<String, List<String>> selectedFeatureOptions;
 
   const CharacterCreationRequest({
     required this.characterName,
@@ -72,6 +74,8 @@ class CharacterCreationRequest {
     this.spellsPrepared = const [],
     this.originFeats = const [],
     this.baseSpeedFeet = 30,
+    this.startingSubclassRef,
+    this.selectedFeatureOptions = const {},
   });
 }
 
@@ -143,10 +147,12 @@ class CharacterFactory {
         slug: request.startingClassSlug,
         displayName: request.startingClassDisplayName,
       ),
+      subclassRef: request.startingSubclassRef,
       level: 1,
       hitDie: request.startingClassHitDie,
       hitPointsRolled: const [],
       isStartingClass: true,
+      selectedFeatureOptions: request.selectedFeatureOptions,
     );
 
     final progression = CharacterProgression(

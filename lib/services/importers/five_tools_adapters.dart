@@ -355,11 +355,55 @@ class FiveToolsAdapters {
 
     final parsed = parser.parseEntries(json['classFeatures'] ?? json['entries'], defaultRuleset: ruleset);
 
+    // Extract subclass level (e.g. from subclassTitle, subclassProgression, or explicit field)
+    int subclassLevel = (json['subclassSelectionLevel'] as num?)?.toInt() ??
+        (json['subclassLevel'] as num?)?.toInt() ??
+        3;
+
+    // Parse explicit featureDecisions or optionalfeatureProg
+    final featureDecisions = <ClassFeatureDecision>[];
+    if (json['featureDecisions'] is List) {
+      for (final decMap in json['featureDecisions']) {
+        if (decMap is Map<String, dynamic>) {
+          featureDecisions.add(ClassFeatureDecision.fromMap(decMap));
+        }
+      }
+    } else if (json['optionalfeatureProg'] is List) {
+      // 5eTools optional feature progression
+      for (final prog in json['optionalfeatureProg']) {
+        if (prog is Map) {
+          final progName = prog['name']?.toString() ?? 'Class Choice';
+          final progTypeStr = prog['featureType']?.toString().toLowerCase() ?? '';
+          final progLevel = (prog['progression'] as Map?)?.keys.map((k) => int.tryParse(k.toString()) ?? 1).firstOrNull ?? 1;
+
+          FeatureChoiceType choiceType = FeatureChoiceType.customOption;
+          if (progTypeStr.contains('fs') || progName.toLowerCase().contains('fighting style')) {
+            choiceType = FeatureChoiceType.fightingStyle;
+          } else if (progTypeStr.contains('ei') || progName.toLowerCase().contains('invocation')) {
+            choiceType = FeatureChoiceType.invocations;
+          } else if (progTypeStr.contains('pb') || progName.toLowerCase().contains('pact boon')) {
+            choiceType = FeatureChoiceType.pactBoon;
+          }
+
+          featureDecisions.add(ClassFeatureDecision(
+            id: '$slug-${_slugify(progName)}-$progLevel',
+            name: progName,
+            prompt: 'Select $progName',
+            levelRequired: progLevel,
+            type: choiceType,
+            ruleset: ruleset,
+          ));
+        }
+      }
+    }
+
     return CharacterClass(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       hitDie: hitDie,
       featuresMarkdown: parsed.cleanMarkdown,
+      subclassSelectionLevel: subclassLevel,
+      featureDecisions: featureDecisions,
       customProperties: {
         'source': source ?? '5eTools',
         'rawJson': json,

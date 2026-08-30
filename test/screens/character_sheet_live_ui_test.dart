@@ -360,7 +360,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
 
-      // Step 3 -> Step 4 (Background)
+      // Step 3 -> Step 4 (Class Decisions -> Background)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Fighter Decisions & Specializations'), findsOneWidget);
+
+      // Class Decisions -> Background
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
       expect(find.text('Step 4: Choose Background'), findsOneWidget);
@@ -371,15 +376,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Step 5: Ability Score Allocation'), findsOneWidget);
 
-      // Step 5 -> Step 6 (Equipment - Feats step was skipped!)
+      // Step 5 -> Equipment (Feats step was skipped!)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Step 6: Starting Equipment'), findsOneWidget);
+      expect(find.textContaining('Starting Equipment'), findsOneWidget);
 
-      // Step 6 -> Step 7 (Review)
+      // Equipment -> Review
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 7: Review & Finalize'), findsOneWidget);
+      expect(find.textContaining('Review & Finalize'), findsOneWidget);
       expect(find.textContaining('Origin Feat:'), findsNothing);
 
       // Create character
@@ -430,7 +435,12 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 3 -> Step 4 (Background)
+      // Step 3 -> Class Decisions
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Fighter Decisions & Specializations'), findsOneWidget);
+
+      // Class Decisions -> Step 4 (Background)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
@@ -441,17 +451,17 @@ void main() {
       // Step 5 -> Step 6 (Variant Human Feat)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 6: Human (Variant) Bonus Feat'), findsOneWidget);
+      expect(find.textContaining('Human (Variant) Bonus Feat'), findsOneWidget);
 
       // Step 6 -> Step 7 (Equipment)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Step 7: Starting Equipment'), findsOneWidget);
+      expect(find.textContaining('Starting Equipment'), findsOneWidget);
 
       // Step 7 -> Step 8 (Review)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 8: Review & Finalize'), findsOneWidget);
+      expect(find.textContaining('Review & Finalize'), findsOneWidget);
     });
   });
 }

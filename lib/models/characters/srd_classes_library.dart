@@ -2,6 +2,143 @@ import 'package:flutter/foundation.dart';
 import '../domain/core_types.dart';
 import '../domain/homebrew_extended_entities.dart';
 
+/// Canonical Fighting Style feature options shared between Fighter, Paladin, Ranger, and Feats.
+class SrdFeatureOptions {
+  static const List<FeatureOption> fightingStyles = [
+    FeatureOption(
+      id: 'archery',
+      name: 'Archery',
+      descriptionMarkdown: 'You gain a +2 bonus to attack rolls you make with ranged weapons.',
+      grants: {'rangedAttackBonus': 2},
+    ),
+    FeatureOption(
+      id: 'defense',
+      name: 'Defense',
+      descriptionMarkdown: 'While you are wearing armor, you gain a +1 bonus to AC.',
+      grants: {'acBonus': 1, 'requiresArmor': true},
+    ),
+    FeatureOption(
+      id: 'dueling',
+      name: 'Dueling',
+      descriptionMarkdown:
+          'When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.',
+      grants: {'meleeOneHandedDamageBonus': 2},
+    ),
+    FeatureOption(
+      id: 'great_weapon_fighting',
+      name: 'Great Weapon Fighting',
+      descriptionMarkdown:
+          'When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die.',
+      grants: {'rerollDamageOn1or2': true},
+    ),
+    FeatureOption(
+      id: 'protection',
+      name: 'Protection',
+      descriptionMarkdown:
+          'When a creature you can see attacks a target other than you within 5 feet, you can use your reaction to impose Disadvantage on the attack roll (requires shield).',
+      grants: {'hasProtectionReaction': true},
+    ),
+    FeatureOption(
+      id: 'two_weapon_fighting',
+      name: 'Two-Weapon Fighting',
+      descriptionMarkdown:
+          'When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack.',
+      grants: {'offhandDamageModifier': true},
+    ),
+  ];
+
+  static const List<FeatureOption> clericDivineOrders = [
+    FeatureOption(
+      id: 'protector',
+      name: 'Protector',
+      descriptionMarkdown:
+          'Trained for battle, you gain Martial weapon proficiency and Heavy armor training.',
+      grants: {
+        'bonusArmorProficiencies': ['Heavy Armor'],
+        'bonusWeaponProficiencies': ['Martial Weapons'],
+      },
+    ),
+    FeatureOption(
+      id: 'thaumaturge',
+      name: 'Thaumaturge',
+      descriptionMarkdown:
+          'Delving into sacred mysteries, you learn one extra Cleric cantrip and gain a bonus to Religion and Arcana/Insight checks equal to your Wisdom modifier.',
+      grants: {
+        'bonusCantripCount': 1,
+        'skillAbilityBonus': {'religion': 'wisdom', 'insight': 'wisdom'},
+      },
+    ),
+  ];
+
+  static const List<FeatureOption> druidPrimalOrders = [
+    FeatureOption(
+      id: 'magician',
+      name: 'Magician',
+      descriptionMarkdown:
+          'You know one extra Druid cantrip. In addition, you gain a bonus to Nature and Animal Handling checks equal to your Wisdom modifier.',
+      grants: {
+        'bonusCantripCount': 1,
+        'skillAbilityBonus': {'nature': 'wisdom', 'animalHandling': 'wisdom'},
+      },
+    ),
+    FeatureOption(
+      id: 'warden',
+      name: 'Warden',
+      descriptionMarkdown:
+          'Trained for resilience, you gain Martial weapon proficiency and Medium armor training.',
+      grants: {
+        'bonusArmorProficiencies': ['Medium Armor'],
+        'bonusWeaponProficiencies': ['Martial Weapons'],
+      },
+    ),
+  ];
+
+  static const List<FeatureOption> warlockInvocationsAndBoons = [
+    FeatureOption(
+      id: 'pact_of_the_blade',
+      name: 'Pact of the Blade',
+      descriptionMarkdown:
+          'You can conjure or bond with a magical melee weapon. You can use your Charisma modifier instead of Strength or Dexterity for attack and damage rolls with that weapon.',
+      grants: {'chaWeaponAttacks': true},
+    ),
+    FeatureOption(
+      id: 'pact_of_the_tome',
+      name: 'Pact of the Tome',
+      descriptionMarkdown:
+          'Your patron bestows a grimoire called the Book of Shadows. You learn 3 cantrips from any class list and can cast ritual spells.',
+      grants: {'bonusCantripCount': 3, 'ritualCasting': true},
+    ),
+    FeatureOption(
+      id: 'pact_of_the_chain',
+      name: 'Pact of the Chain',
+      descriptionMarkdown:
+          'You learn the Find Familiar spell and can summon special forms: Imp, Pseudodragon, Quasit, or Sprite.',
+      grants: {'bonusSpells': ['find-familiar']},
+    ),
+    FeatureOption(
+      id: 'armor_of_shadows',
+      name: 'Armor of Shadows',
+      descriptionMarkdown:
+          'You can cast Mage Armor on yourself at will, without expending a spell slot or material components.',
+      grants: {'atWillSpells': ['mage-armor']},
+    ),
+    FeatureOption(
+      id: 'agonizing_blast',
+      name: 'Agonizing Blast',
+      descriptionMarkdown:
+          'When you cast Eldritch Blast, add your Charisma modifier to the damage it deals on a hit.',
+      grants: {'eldritchBlastChaDamage': true},
+    ),
+    FeatureOption(
+      id: 'devils_sight',
+      name: 'Devil\'s Sight',
+      descriptionMarkdown:
+          'You can see normally in darkness, both magical and nonmagical, to a distance of 120 feet.',
+      grants: {'darkvisionFeet': 120, 'seeMagicalDarkness': true},
+    ),
+  ];
+}
+
 /// Comprehensive SRD 5.1 and 5.2 Classes Library containing all 12 core classes.
 @immutable
 class SrdClassesLibrary {
@@ -106,6 +243,7 @@ class SrdClassesLibrary {
     spellcastingAbility: 'Wisdom',
     featuresMarkdown:
         '**Spellcasting.** Full divine spellcaster using Wisdom.\n\n'
+        '**Divine Order.** Specialization in Protector (Heavy Armor & Martial Weapons) or Thaumaturge (Extra Cantrip & Skill Bonus).\n\n'
         '**Channel Divinity.** Powerful divine surges (e.g. Turn Undead, Divine Spark).\n\n'
         '**Turn Undead.** Undead must flee from you on failed WIS saving throw.\n\n'
         '**Divine Intervention.** Call upon your deity for direct miraculous intervention.',
@@ -113,6 +251,19 @@ class SrdClassesLibrary {
       'skillChoiceCount': 2,
       'allowedSkills': ['history', 'insight', 'medicine', 'persuasion', 'religion'],
     },
+    featureDecisions: const [
+      ClassFeatureDecision(
+        id: 'cleric-divine-order-1',
+        name: 'Divine Order',
+        prompt: 'Choose your Cleric Divine Order (Protector or Thaumaturge)',
+        levelRequired: 1,
+        type: FeatureChoiceType.divineOrder,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.clericDivineOrders,
+        ruleset: RulesetVersion.v2024,
+      ),
+    ],
     subclasses: [
       Subclass(
         id: const EntityId(slug: 'life-domain', ruleset: RulesetVersion.v2024),
@@ -121,6 +272,14 @@ class SrdClassesLibrary {
         featuresMarkdown:
             '**Disciple of Life.** Healing spells restore an additional 2 + spell level HP.\n\n'
             '**Preserve Life.** Channel Divinity to heal injured allies within 30 feet.',
+      ),
+      Subclass(
+        id: const EntityId(slug: 'light-domain', ruleset: RulesetVersion.v2024),
+        name: 'Light Domain',
+        classSlug: 'cleric',
+        featuresMarkdown:
+            '**Warding Flare.** Impose Disadvantage on an attacker within 30 feet.\n\n'
+            '**Radiance of the Dawn.** Channel Divinity to blast radiant energy 30 ft around you.',
       ),
     ],
   );
@@ -147,6 +306,7 @@ class SrdClassesLibrary {
     spellcastingAbility: 'Wisdom',
     featuresMarkdown:
         '**Spellcasting.** Nature-based full spellcaster with ritual casting.\n\n'
+        '**Primal Order.** Choose Magician (extra cantrip & skill bonus) or Warden (Medium armor & martial weapons).\n\n'
         '**Wild Shape.** Magically transform into the form of a beast or elemental.\n\n'
         '**Wild Companion.** Summon a familiar spirit using your Wild Shape charges.',
     customProperties: const {
@@ -162,6 +322,19 @@ class SrdClassesLibrary {
         'survival'
       ],
     },
+    featureDecisions: const [
+      ClassFeatureDecision(
+        id: 'druid-primal-order-1',
+        name: 'Primal Order',
+        prompt: 'Choose your Druidic Primal Order (Magician or Warden)',
+        levelRequired: 1,
+        type: FeatureChoiceType.primalOrder,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.druidPrimalOrders,
+        ruleset: RulesetVersion.v2024,
+      ),
+    ],
     subclasses: [
       Subclass(
         id: const EntityId(slug: 'circle-of-the-land', ruleset: RulesetVersion.v2024),
@@ -170,6 +343,13 @@ class SrdClassesLibrary {
         featuresMarkdown:
             '**Natural Recovery.** Regain spell slots on Short Rest.\n\n'
             '**Circle Spells.** Gain bonus domain spells based on chosen biome.',
+      ),
+      Subclass(
+        id: const EntityId(slug: 'circle-of-the-moon', ruleset: RulesetVersion.v2024),
+        name: 'Circle of the Moon',
+        classSlug: 'druid',
+        featuresMarkdown:
+            '**Combat Wild Shape.** Transform as a Bonus Action and assume higher CR beast forms.',
       ),
     ],
   );
@@ -201,6 +381,30 @@ class SrdClassesLibrary {
         'survival'
       ],
     },
+    featureDecisions: const [
+      ClassFeatureDecision(
+        id: 'fighter-fighting-style-1',
+        name: 'Fighting Style',
+        prompt: 'Select your 1st-level Fighter Fighting Style',
+        levelRequired: 1,
+        type: FeatureChoiceType.fightingStyle,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.fightingStyles,
+        ruleset: RulesetVersion.v2024,
+      ),
+      ClassFeatureDecision(
+        id: 'fighter-fighting-style-1-2014',
+        name: 'Fighting Style',
+        prompt: 'Select your 1st-level Fighter Fighting Style',
+        levelRequired: 1,
+        type: FeatureChoiceType.fightingStyle,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.fightingStyles,
+        ruleset: RulesetVersion.v2014,
+      ),
+    ],
     subclasses: [
       Subclass(
         id: const EntityId(slug: 'champion', ruleset: RulesetVersion.v2024),
@@ -209,6 +413,13 @@ class SrdClassesLibrary {
         featuresMarkdown:
             '**Improved Critical.** Your weapon attacks score a critical hit on a roll of 19 or 20.\n\n'
             '**Remarkable Athlete.** Bonus to non-proficient STR, DEX, and CON checks; increased jump distance.',
+      ),
+      Subclass(
+        id: const EntityId(slug: 'battle-master', ruleset: RulesetVersion.v2024),
+        name: 'Battle Master',
+        classSlug: 'fighter',
+        featuresMarkdown:
+            '**Combat Superiority.** Superiority dice (d8-d12) to fuel tactical battle maneuvers.',
       ),
     ],
   );
@@ -274,6 +485,47 @@ class SrdClassesLibrary {
         'religion'
       ],
     },
+    featureDecisions: const [
+      ClassFeatureDecision(
+        id: 'paladin-fighting-style-2',
+        name: 'Fighting Style',
+        prompt: 'Select your Paladin Fighting Style',
+        levelRequired: 2,
+        type: FeatureChoiceType.fightingStyle,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: [
+          FeatureOption(
+            id: 'defense',
+            name: 'Defense',
+            descriptionMarkdown: 'While you are wearing armor, you gain a +1 bonus to AC.',
+            grants: {'acBonus': 1, 'requiresArmor': true},
+          ),
+          FeatureOption(
+            id: 'dueling',
+            name: 'Dueling',
+            descriptionMarkdown:
+                'When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.',
+            grants: {'meleeOneHandedDamageBonus': 2},
+          ),
+          FeatureOption(
+            id: 'great_weapon_fighting',
+            name: 'Great Weapon Fighting',
+            descriptionMarkdown:
+                'When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die.',
+            grants: {'rerollDamageOn1or2': true},
+          ),
+          FeatureOption(
+            id: 'protection',
+            name: 'Protection',
+            descriptionMarkdown:
+                'When a creature you can see attacks a target other than you within 5 feet, you can use your reaction to impose Disadvantage on the attack roll (requires shield).',
+            grants: {'hasProtectionReaction': true},
+          ),
+        ],
+        ruleset: RulesetVersion.v2024,
+      ),
+    ],
     subclasses: [
       Subclass(
         id: const EntityId(slug: 'oath-of-devotion', ruleset: RulesetVersion.v2024),
@@ -313,6 +565,46 @@ class SrdClassesLibrary {
         'survival'
       ],
     },
+    featureDecisions: const [
+      ClassFeatureDecision(
+        id: 'ranger-fighting-style-2',
+        name: 'Fighting Style',
+        prompt: 'Select your Ranger Fighting Style',
+        levelRequired: 2,
+        type: FeatureChoiceType.fightingStyle,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: [
+          FeatureOption(
+            id: 'archery',
+            name: 'Archery',
+            descriptionMarkdown: 'You gain a +2 bonus to attack rolls you make with ranged weapons.',
+            grants: {'rangedAttackBonus': 2},
+          ),
+          FeatureOption(
+            id: 'defense',
+            name: 'Defense',
+            descriptionMarkdown: 'While you are wearing armor, you gain a +1 bonus to AC.',
+            grants: {'acBonus': 1, 'requiresArmor': true},
+          ),
+          FeatureOption(
+            id: 'dueling',
+            name: 'Dueling',
+            descriptionMarkdown:
+                'When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.',
+            grants: {'meleeOneHandedDamageBonus': 2},
+          ),
+          FeatureOption(
+            id: 'two_weapon_fighting',
+            name: 'Two-Weapon Fighting',
+            descriptionMarkdown:
+                'When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack.',
+            grants: {'offhandDamageModifier': true},
+          ),
+        ],
+        ruleset: RulesetVersion.v2024,
+      ),
+    ],
     subclasses: [
       Subclass(
         id: const EntityId(slug: 'hunter', ruleset: RulesetVersion.v2024),
@@ -410,6 +702,18 @@ class SrdClassesLibrary {
         featuresMarkdown:
             '**Draconic Resilience.** Base AC 13 + DEX mod, and +1 Max HP per Sorcerer level.\n\n'
             '**Elemental Affinity.** Add CHA modifier to damage matching draconic ancestry.',
+        customProperties: const {
+          'acFormula': '13 + DEX',
+          'baseAc': 13,
+        },
+      ),
+      Subclass(
+        id: const EntityId(slug: 'wild-magic', ruleset: RulesetVersion.v2024),
+        name: 'Wild Magic',
+        classSlug: 'sorcerer',
+        featuresMarkdown:
+            '**Tides of Chaos.** Gain Advantage on one d20 roll before taking a long rest.\n\n'
+            '**Wild Magic Surge.** Rolling a 1 on a d20 test triggers chaotic surges.',
       ),
     ],
   );
@@ -440,6 +744,63 @@ class SrdClassesLibrary {
         'religion'
       ],
     },
+    featureDecisions: const [
+      ClassFeatureDecision(
+        id: 'warlock-invocations-1',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose your 1st-level Eldritch Invocation or Pact Boon',
+        levelRequired: 1,
+        type: FeatureChoiceType.invocations,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        ruleset: RulesetVersion.v2024,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-invocations-2-2014',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose your 2nd-level Eldritch Invocations',
+        levelRequired: 2,
+        type: FeatureChoiceType.invocations,
+        minSelections: 2,
+        maxSelections: 2,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        ruleset: RulesetVersion.v2014,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-pact-boon-3-2014',
+        name: 'Pact Boon',
+        prompt: 'Choose your 3rd-level Pact Boon',
+        levelRequired: 3,
+        type: FeatureChoiceType.pactBoon,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: [
+          FeatureOption(
+            id: 'pact_of_the_blade',
+            name: 'Pact of the Blade',
+            descriptionMarkdown:
+                'You can conjure or bond with a magical melee weapon.',
+            grants: {'bladePact': true},
+          ),
+          FeatureOption(
+            id: 'pact_of_the_tome',
+            name: 'Pact of the Tome',
+            descriptionMarkdown:
+                'Your patron bestows the Book of Shadows with 3 extra cantrips.',
+            grants: {'bonusCantripCount': 3},
+          ),
+          FeatureOption(
+            id: 'pact_of_the_chain',
+            name: 'Pact of the Chain',
+            descriptionMarkdown:
+                'You learn Find Familiar with special forms: Imp, Pseudodragon, Quasit, Sprite.',
+            grants: {'bonusSpells': ['find-familiar']},
+          ),
+        ],
+        ruleset: RulesetVersion.v2014,
+      ),
+    ],
     subclasses: [
       Subclass(
         id: const EntityId(slug: 'fiend-patron', ruleset: RulesetVersion.v2024),
@@ -448,6 +809,14 @@ class SrdClassesLibrary {
         featuresMarkdown:
             '**Dark One\'s Blessing.** Gain temporary HP equal to CHA mod + Warlock Level upon reducing a hostile creature to 0 HP.\n\n'
             '**Dark One\'s Own Luck.** Add 1d10 to an ability check or saving throw.',
+      ),
+      Subclass(
+        id: const EntityId(slug: 'archfey-patron', ruleset: RulesetVersion.v2024),
+        name: 'The Archfey',
+        classSlug: 'warlock',
+        featuresMarkdown:
+            '**Fey Presence.** Cause creatures in a 10-foot cube to become charmed or frightened.\n\n'
+            '**Misty Escape.** Turn invisible and teleport 60 ft as a Reaction upon taking damage.',
       ),
     ],
   );
@@ -533,8 +902,12 @@ class SrdClassesLibrary {
     _customClasses.removeWhere((c) => c.id.slug == slug);
   }
 
-  static CharacterClass? findBySlug(String slug) {
+  static CharacterClass? findBySlug(String slug, {RulesetVersion? ruleset}) {
     final clean = slug.toLowerCase().trim();
+    if (ruleset != null) {
+      final match = allClasses.where((c) => (c.id.slug == clean || c.name.toLowerCase() == clean) && c.id.ruleset == ruleset).firstOrNull;
+      if (match != null) return match;
+    }
     return allClasses.where((c) => c.id.slug == clean || c.name.toLowerCase() == clean).firstOrNull;
   }
 }

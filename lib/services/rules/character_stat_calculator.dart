@@ -272,10 +272,32 @@ class CharacterStatCalculator {
       }
     }
 
-    // If unarmored, check Unarmored Defense
+    // Check Defense Fighting Style grant (+1 AC while wearing armor)
+    bool hasDefenseStyle = false;
+    for (final cls in character.progression.classes) {
+      for (final optList in cls.selectedFeatureOptions.values) {
+        if (optList.contains('defense')) {
+          hasDefenseStyle = true;
+        }
+      }
+    }
+    if (hasDefenseStyle && hasEquippedArmor) {
+      magicAcBonus += 1;
+      buffNotes.add('Defense Fighting Style: +1 AC');
+    }
+
+    // If unarmored, check Unarmored Defense & Draconic Resilience
     if (!hasEquippedArmor) {
       final classSlugs = character.progression.classes.map((c) => c.classRef.slug.toLowerCase()).toSet();
-      if (classSlugs.contains('barbarian')) {
+      final hasDraconicSorcery = character.progression.classes.any((c) =>
+          c.subclassRef?.slug.toLowerCase() == 'draconic-sorcery' ||
+          c.subclassRef?.slug.toLowerCase() == 'draconic_bloodline');
+
+      if (hasDraconicSorcery) {
+        baseAc = 13;
+        dexContribution = abilityMods[AbilityType.dexterity]!;
+        acFormula = '13 (Draconic Resilience) + $dexContribution (DEX)';
+      } else if (classSlugs.contains('barbarian')) {
         baseAc = 10;
         final conBonus = abilityMods[AbilityType.constitution]!;
         dexContribution = abilityMods[AbilityType.dexterity]!;
@@ -296,7 +318,7 @@ class CharacterStatCalculator {
       acFormula += ' + $shieldBonus (Shield)';
     }
     if (magicAcBonus > 0) {
-      acFormula += ' + $magicAcBonus (Magic Bonus)';
+      acFormula += ' + $magicAcBonus (Bonus)';
     }
 
     final totalAc = baseAc + (hasEquippedArmor && propsArmorHeavy(character, resolver) ? 0 : dexContribution) + shieldBonus + magicAcBonus;

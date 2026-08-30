@@ -134,6 +134,11 @@ class CompendiumJsonIngestionPipeline {
     final otherEntries = <HomebrewCompendiumEntry>[];
     final errors = <String>[];
 
+    // If the map itself represents a single class (e.g. contains 'hd' and 'name'), delegate to _ingestSingleEntityMap
+    if (map.containsKey('hd') && map.containsKey('name')) {
+      return _ingestSingleEntityMap(map);
+    }
+
     // Helper to safely loop over list in map key
     void ingestArray(String key, void Function(Map<String, dynamic>) handler, String entityLabel) {
       if (map.containsKey(key) && map[key] is List) {
@@ -359,6 +364,21 @@ class CompendiumJsonIngestionPipeline {
       }
     }
 
+    final subclassSelectionLevel = (map['subclassSelectionLevel'] as num?)?.toInt() ??
+        (map['subclassLevel'] as num?)?.toInt() ??
+        3;
+
+    final featureDecisions = <ClassFeatureDecision>[];
+    if (map['featureDecisions'] is List) {
+      for (final decMap in map['featureDecisions']) {
+        if (decMap is Map<String, dynamic>) {
+          try {
+            featureDecisions.add(ClassFeatureDecision.fromMap(decMap));
+          } catch (_) {}
+        }
+      }
+    }
+
     return CharacterClass(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
@@ -368,6 +388,9 @@ class CompendiumJsonIngestionPipeline {
       spellcastingAbility: map['spellcastingAbility']?.toString(),
       featuresMarkdown: parsedEntries.markdown,
       subclasses: subList,
+      subclassSelectionLevel: subclassSelectionLevel,
+      featureDecisions: featureDecisions,
+      customProperties: Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
   }
 
