@@ -22,7 +22,7 @@ void main() {
   group('Rules Compendium Dataset & Search Engine Tests', () {
     test('comprehensive rules corpus indexes all SRD categories and required rules', () {
       const items = DmScreenLibrary.allItems;
-      expect(items.length, greaterThanOrEqualTo(25));
+      expect(items.length, greaterThanOrEqualTo(35));
 
       // Category coverage
       final categories = items.map((i) => i.category).toSet();
@@ -264,11 +264,15 @@ void main() {
 
       // Filter to Concentration
       final searchField = find.byType(TextField);
-      await tester.enterText(searchField, 'Concentration');
+      await tester.enterText(searchField, 'Concentration Rules');
       await tester.pumpAndSettle();
 
       final openCalcBtn = find.text('Open Interactive Calculator');
       expect(openCalcBtn, findsOneWidget);
+
+      await tester.ensureVisible(openCalcBtn);
+      await tester.pumpAndSettle();
+
       await tester.tap(openCalcBtn);
       await tester.pumpAndSettle();
 

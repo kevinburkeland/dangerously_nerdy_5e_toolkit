@@ -169,9 +169,9 @@ class DmReferenceItem {
         if (edQuery == 'diff' || edQuery == 'changed') {
           if (!isChangedIn2024) return false;
         } else if (edQuery == '2024') {
-          // All items are valid for 2024
+          // Valid in 2024
         } else if (edQuery == '2014') {
-          // All items are valid for 2014
+          // Valid in 2014
         }
       } else if (token.startsWith('cost:')) {
         final costQuery = token.substring(5);
@@ -249,25 +249,26 @@ class DmScreenLibrary {
     ),
     DmReferenceItem(
       id: 'action_cast_spell',
-      title: 'Cast a Spell',
+      title: 'Cast a Spell / Magic Action',
       title2014: 'Cast a Spell',
-      title2024: 'Cast a Spell (2024 Slot Limit)',
+      title2024: 'Magic Action (2024 Slot Limit)',
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action (or Bonus Action / Reaction)',
       icon: Icons.auto_awesome,
       color: Colors.purpleAccent,
-      summary: 'Cast a spell with standard casting time and slot restrictions.',
-      tags: ['cast a spell', 'spell', 'magic', 'cantrip', 'spell slot', 'standard_action'],
+      summary: 'Cast a spell or activate a magic item with slot restrictions.',
+      tags: ['cast a spell', 'magic action', 'spell', 'magic', 'cantrip', 'spell slot', 'standard_action'],
       isChangedIn2024: true,
-      diffSummary: '2024 limits you to expending only ONE spell slot on your turn (allowing Cantrip + Leveled, but preventing Double Leveled Slots).',
+      diffSummary: '2024 codifies this as the "Magic Action" and limits you to expending only ONE spell slot on your turn (allowing Cantrip + Leveled, but preventing Double Leveled Slots).',
       rules2014: [
         'Cast a spell with a casting time of 1 Action.',
         'Observe V, S, M component rules and concentration limits.',
         'If you cast a Bonus Action spell, you can only cast Cantrips with your Action.',
       ],
       rules2024: [
-        'Cast a spell. On your turn, you can expend only ONE spell slot (you may cast multiple spells if only one uses a slot, e.g., slot + cantrip).',
+        'Magic Action: Cast a spell or activate a magical item/feature.',
+        'Spell Slot Limitation: On your turn, you can expend only ONE spell slot (you may cast multiple spells if only one uses a slot, e.g., slot + cantrip).',
         'Observe V, S, M components and concentration rules.',
       ],
     ),
@@ -471,6 +472,24 @@ class DmScreenLibrary {
       ],
     ),
     DmReferenceItem(
+      id: 'action_improvise',
+      title: 'Improvising an Action',
+      category: DmCategory.actions,
+      subCategory: 'Standard Action',
+      cost: '1 Action',
+      icon: Icons.lightbulb_outline,
+      color: Colors.amber,
+      summary: 'Perform unlisted stunts, tricks, or environmental maneuvers.',
+      tags: ['improvise', 'stunt', 'dm ruling', 'action', 'standard_action'],
+      isChangedIn2024: false,
+      rules2014: [
+        'When you describe an action not detailed elsewhere in the rules, the DM tells you whether that action is possible and what kind of roll you need to make (if any).',
+      ],
+      rules2024: [
+        'Perform unique maneuvers not covered by standard actions. DM assigns appropriate ability check and DC.',
+      ],
+    ),
+    DmReferenceItem(
       id: 'action_grapple_shove',
       title: 'Grapple & Shove (Unarmed Strikes)',
       title2014: 'Grapple & Shove (2014 Contested)',
@@ -498,6 +517,94 @@ class DmScreenLibrary {
         'Shove: Target is pushed 5 feet away or knocked Prone on failed save.',
         'Escaping: Target makes a STR/DEX save at the END of each of its turns against the escape DC (no action required on its turn).',
         'Target must be no more than one size larger than you.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_damage_rolls_crit',
+      title: 'Attack Rolls, Advantage & Critical Hits',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Per Attack',
+      icon: Icons.gps_fixed,
+      color: Colors.redAccent,
+      summary: 'd20 + modifier + PB vs AC, natural 20 critical hits, natural 1 automatic miss.',
+      tags: ['attack roll', 'ac', 'advantage', 'disadvantage', 'critical hit', 'nat 20', 'nat 1', 'fumble', 'combat'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Attack Roll: 1d20 + Ability Modifier + Proficiency Bonus (if proficient) vs target AC.',
+        'Natural 20: Always hits regardless of AC, and rolls all damage dice TWICE.',
+        'Natural 1: Always misses regardless of modifiers.',
+        'Advantage/Disadvantage: Multiple instances do not stack; 1 advantage and 1 disadvantage cancel each other out completely.',
+      ],
+      rules2024: [
+        'Attack Roll: 1d20 + Mod + PB vs AC.',
+        'Natural 20 (Critical Hit): Automatic hit, roll damage dice twice.',
+        'Natural 1: Automatic miss.',
+        'Advantage/Disadvantage cancel completely regardless of quantity.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_damage_types',
+      title: 'Damage Types, Resistance & Vulnerability',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Damage Resolution',
+      icon: Icons.whatshot,
+      color: Colors.orangeAccent,
+      summary: 'Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder.',
+      tags: ['damage types', 'resistance', 'vulnerability', 'immunity', 'acid', 'fire', 'force', 'radiant', 'necrotic', 'psychic'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Resistance: Reduces damage of that type by HALF (round down).',
+        'Vulnerability: DOUBLES damage of that type.',
+        'Immunity: Creature takes 0 damage from that type.',
+        'Order of Application: Flat modifiers applied FIRST, then Resistance, then Vulnerability.',
+      ],
+      rules2024: [
+        'Resistance halves damage.',
+        'Vulnerability doubles damage.',
+        'Immunity prevents all damage.',
+        'Order: Add/subtract modifiers -> Resistance -> Vulnerability.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_unseen_attackers',
+      title: 'Unseen Attackers & Targets',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Continuous',
+      icon: Icons.visibility_off,
+      color: Colors.blueGrey,
+      summary: 'Advantage on attacks when unseen; disadvantage against unseen targets.',
+      tags: ['unseen', 'hidden', 'invisible', 'advantage', 'disadvantage', 'combat'],
+      isChangedIn2024: false,
+      rules2014: [
+        'When you make an attack against a target you can\'t see, you have Disadvantage on the attack roll.',
+        'When a creature can\'t see you, you have Advantage on attack rolls against it.',
+        'If you are hidden, making an attack reveals your location whether you hit or miss.',
+      ],
+      rules2024: [
+        'Attacking unseen targets gives Disadvantage.',
+        'Attacking while unseen gives Advantage.',
+        'Making an attack ends stealth/hidden location.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_ranged_in_melee',
+      title: 'Ranged Attacks in Close Combat',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Within 5 ft',
+      icon: Icons.crisis_alert,
+      color: Colors.deepOrange,
+      summary: 'Disadvantage on ranged attack rolls when a hostile creature is within 5 ft.',
+      tags: ['ranged', 'melee range', '5 ft', 'disadvantage', 'bow', 'spell attack', 'combat'],
+      isChangedIn2024: false,
+      rules2014: [
+        'When you make a ranged attack with a weapon, a spell, or another means, you have Disadvantage on the attack roll if you are within 5 feet of a hostile creature who can see you and isn\'t Incapacitated.',
+      ],
+      rules2024: [
+        'Ranged attacks suffer Disadvantage if an active hostile creature is within 5 ft of you.',
       ],
     ),
     DmReferenceItem(
@@ -556,6 +663,114 @@ class DmScreenLibrary {
       ],
     ),
     DmReferenceItem(
+      id: 'action_nonlethal_knockout',
+      title: 'Knocking a Creature Out (Nonlethal Damage)',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Upon Dropping to 0 HP',
+      icon: Icons.bedtime_outlined,
+      color: Colors.indigoAccent,
+      summary: 'Declare nonlethal damage with melee attacks to knock unconscious instead of killing.',
+      tags: ['knockout', 'nonlethal', 'unconscious', 'stable', '0 hp', 'melee'],
+      isChangedIn2024: false,
+      rules2014: [
+        'When an attacker reduces a creature to 0 HP with a MELEE attack, the attacker can choose to knock the creature out.',
+        'The decision is made at the instant damage is dealt.',
+        'The creature falls Unconscious and is immediately Stable (does not make death saves).',
+      ],
+      rules2024: [
+        'When reducing a creature to 0 HP with a melee attack, choose to knock unconscious (Stable at 0 HP) instead of killing.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_temporary_hp',
+      title: 'Temporary Hit Points (THP Rules)',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Continuous',
+      icon: Icons.shield_outlined,
+      color: Colors.cyanAccent,
+      summary: 'Buffer HP that absorbs damage; do not stack, cannot be healed.',
+      tags: ['temporary hp', 'thp', 'buffer', 'healing', 'stacking', 'combat'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Temporary HP are not actual HP; they are a separate buffer against damage.',
+        'Do Not Stack: If you gain temporary HP while already having some, choose whether to keep your current amount or replace with the new amount.',
+        'Cannot be Healed: Healing spells and potions do not restore temporary HP.',
+        'Dropping to 0 HP removes all temporary HP.',
+      ],
+      rules2024: [
+        'Temporary HP absorbs incoming damage first.',
+        'Never stacks; choose highest value.',
+        'Cannot be restored by healing.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_movement_combat',
+      title: 'Movement in Combat, Difficult Terrain & Squeezing',
+      category: DmCategory.actions,
+      subCategory: 'Movement Rule',
+      cost: 'During Your Turn',
+      icon: Icons.alt_route,
+      color: Colors.tealAccent,
+      summary: 'Splitting movement, double cost terrain, and squeezing through small openings.',
+      tags: ['movement', 'difficult terrain', 'squeezing', 'half speed', 'climbing', 'swimming'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Breaking Up Move: You can split your movement before, between, and after attacks.',
+        'Difficult Terrain: Moving 1 foot costs 2 feet of movement (+1 extra foot per foot moved).',
+        'Climbing & Swimming: Costs 1 extra foot per foot moved unless you have climb/swim speed.',
+        'Crawling: Costs 1 extra foot per foot moved.',
+        'Squeezing: A creature can squeeze through a space one size smaller. While squeezing: costs 1 extra foot per foot moved, Disadvantage on attacks and Dex saves, attacks against have Advantage.',
+      ],
+      rules2024: [
+        'Split movement freely around attacks and actions.',
+        'Difficult terrain, climbing, and swimming cost 1 extra foot of movement per foot moved.',
+        'Squeezing through smaller spaces confers Disadvantage on attacks and Dex saves.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_jumping',
+      title: 'Jumping Rules (Long Jump & High Jump)',
+      category: DmCategory.actions,
+      subCategory: 'Movement Rule',
+      cost: 'Part of Movement',
+      icon: Icons.nordic_walking,
+      color: Colors.greenAccent,
+      summary: 'Long Jump (STR score ft) & High Jump (3 + STR mod ft) with 10ft running start.',
+      tags: ['jumping', 'long jump', 'high jump', 'strength', 'athletics', 'movement'],
+      isChangedIn2024: true,
+      diffSummary: '2024 makes Jumping an active check (DC 10 Athletics/Acrobatics) to clear obstacles or gain extra height beyond standard baseline.',
+      rules2014: [
+        'Long Jump: With a 10-foot running start, jump horizontal feet equal to your STR score (half from standing). DC 10 Athletics to clear low obstacles (height = 1/4 jump distance).',
+        'High Jump: With a 10-foot running start, leap into air vertical feet equal to 3 + STR modifier (half from standing). Reach extends arms 1.5x height above yourself.',
+      ],
+      rules2024: [
+        'Long Jump: Jump distance equals STR score in feet (10ft run). Half from standing.',
+        'High Jump: 3 + STR modifier in feet.',
+        '2024 Jump Action: DC 10 Strength (Athletics) or Dexterity (Acrobatics) check to leap extra distance.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_flying_falling',
+      title: 'Flying Movement & Aerial Falls',
+      category: DmCategory.actions,
+      subCategory: 'Movement Rule',
+      cost: 'Continuous',
+      icon: Icons.flight,
+      color: Colors.lightBlueAccent,
+      summary: 'Hover capability, falling when speed is 0 or knocked prone.',
+      tags: ['flying', 'fly speed', 'hover', 'aerial', 'falling', 'prone', 'movement'],
+      isChangedIn2024: false,
+      rules2014: [
+        'A flying creature falls if it is knocked Prone, has its speed reduced to 0, or is deprived of the ability to move (unless it can Hover or is held aloft by magic like the Fly spell).',
+        'Falling rate: 500 feet per round instantly.',
+      ],
+      rules2024: [
+        'Flying creatures fall if knocked Prone or speed drops to 0 unless they have the Hover trait.',
+      ],
+    ),
+    DmReferenceItem(
       id: 'action_underwater_combat',
       title: 'Underwater Combat',
       category: DmCategory.actions,
@@ -597,6 +812,24 @@ class DmScreenLibrary {
         'Mounting/Dismounting costs half your Speed.',
         'Controlled Mount matches your initiative order; can only Dash, Disengage, or Dodge.',
         'Independent Mount retains initiative and full action economy.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_flanking',
+      title: 'Flanking (Optional Rule)',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Tactical Positioning',
+      icon: Icons.join_inner,
+      color: Colors.amber,
+      summary: 'Advantage on melee attacks when ally is on direct opposite side of enemy.',
+      tags: ['flanking', 'optional', 'advantage', 'positioning', 'grid', 'combat'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Optional Rule (DMG p. 251): When a creature and at least one ally are on opposite sides/corners of an enemy in melee reach, they have Advantage on melee attack rolls against that enemy.',
+      ],
+      rules2024: [
+        'Optional positioning rule giving Advantage to attackers on opposite sides of a target.',
       ],
     ),
 
@@ -642,8 +875,7 @@ class DmScreenLibrary {
       isChangedIn2024: true,
       diffSummary: '2014 Bonus Action spell rule limited your Action to Cantrips. 2024 limits you to 1 spell slot per turn.',
       rules2014: [
-        'If you cast a Bonus Action spell (e.g. Healing Word, Misty Step):',
-        'You CANNOT cast another spell on the same turn, EXCEPT for a Cantrip with a casting time of 1 Action.',
+        'If you cast a Bonus Action spell (e.g. Healing Word, Misty Step), you cannot cast another spell on the same turn except for a Cantrip with a casting time of 1 Action.',
       ],
       rules2024: [
         'Cast a spell with a casting time of 1 Bonus Action. Follows the 1-spell-slot-per-turn limitation.',
@@ -729,7 +961,7 @@ class DmScreenLibrary {
     ),
 
     // ==========================================
-    // CONDITIONS & STATUSES (INDIVIDUAL ITEMS)
+    // CONDITIONS & STATUSES
     // ==========================================
     DmReferenceItem(
       id: 'cond_blinded',
@@ -1079,6 +1311,28 @@ class DmScreenLibrary {
         'You can act normally on your first turn.',
       ],
     ),
+    DmReferenceItem(
+      id: 'cond_poisons_diseases',
+      title: 'Poisons & Diseases (SRD)',
+      category: DmCategory.conditions,
+      subCategory: 'Hazards',
+      icon: Icons.coronavirus_outlined,
+      color: Colors.green,
+      summary: 'Contact, Ingested, Inhaled, and Injury poison mechanics and sample afflictions.',
+      tags: ['poison', 'disease', 'toxic', 'cackle fever', 'sewer plague', 'sight rot', 'paralysis'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Contact: Applied to an object; takes effect on skin contact.',
+        'Ingested: Consumed in food or liquid.',
+        'Inhaled: Dispersed in air; affects creatures in 5ft cloud.',
+        'Injury: Delivered through piercing or slashing weapon damage.',
+        'Sample Diseases: Sewer Plague (DC 11 Con save or 1 level exhaustion and regain 0 HP on rest), Cackle Fever (DC 13 Con save or 1d10 psychic damage and laughing fits), Sight Rot (DC 15 Con save or blindness).',
+      ],
+      rules2024: [
+        'Poisons function by method of exposure (Contact, Ingested, Inhaled, Injury).',
+        'Diseases require recurring Constitution saving throws at the end of each Long Rest to recover.',
+      ],
+    ),
 
     // ==========================================
     // ENVIRONMENT & HAZARDS / COVER
@@ -1198,6 +1452,7 @@ class DmScreenLibrary {
         'Darkvision: See in Dim Light within range as Bright Light, and Darkness as Dim Light (grayscale only).',
         'Blindsight: Perceive surroundings without relying on sight within specified radius.',
         'Truesight: See in normal and magical darkness, perceive invisible creatures, illusions, and shapechangers.',
+        'Tremorsense: Detect and pinpoint the origin of vibrations within range along the same surface.',
       ],
       rules2024: [
         'Bright Light: Clear visibility.',
@@ -1205,6 +1460,7 @@ class DmScreenLibrary {
         'Darkness: Heavily Obscured. Creatures without special senses have the Blinded condition.',
         'Darkvision: Treats Darkness within radius as Dim Light, Dim Light as Bright Light.',
         'Blindsight & Truesight: Function identically to 2014 definitions.',
+        'Tremorsense: Pinpoints location of creatures touching ground/substance.',
       ],
     ),
     DmReferenceItem(
@@ -1243,6 +1499,47 @@ class DmScreenLibrary {
       rules2024: [
         'Extreme Cold: DC 10 Con save per hour without cold gear or gain 1 level of Exhaustion.',
         'Extreme Heat: DC 5 (+1 per hour) Con save or gain 1 level of Exhaustion. Disadvantage if wearing Medium or Heavy armor.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'env_weather_hazards',
+      title: 'Severe Weather (Precipitation, Wind, Altitude)',
+      category: DmCategory.environment,
+      icon: Icons.storm,
+      color: Colors.blueAccent,
+      summary: 'Heavy rain/snow, strong winds, and high altitude thin air penalties.',
+      tags: ['weather', 'heavy rain', 'snow', 'strong wind', 'altitude', 'visibility', 'hazard'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Heavy Precipitation: Rain or heavy snow lightly obscures the area and imposes Disadvantage on Wisdom (Perception) checks relying on sight and hearing. Extinguishes open flames.',
+        'Strong Wind: Disadvantage on ranged weapon attack rolls and Wisdom (Perception) checks relying on hearing. Extinguishes unprotected flames; flying creatures must land at end of turn or fall.',
+        'High Altitude: At elevations above 10,000 feet, creatures can travel only half as far before suffering exhaustion unless acclimated.',
+      ],
+      rules2024: [
+        'Precipitation imposes Lightly Obscured condition and Disadvantage on Perception.',
+        'Strong winds impose Disadvantage on ranged attacks and hearing Perception.',
+        'High altitude halves overland travel distances.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'env_wilderness_hazards',
+      title: 'Wilderness Hazards (Quicksand, Ice, Desecrated Ground)',
+      category: DmCategory.environment,
+      icon: Icons.warning_amber_rounded,
+      color: Colors.lime,
+      summary: 'Quicksand sinking DCs, slippery ice acrobatics, and unholy ground buffs.',
+      tags: ['quicksand', 'slippery ice', 'desecrated ground', 'razorvine', 'hazard', 'environment'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Quicksand: Spot with DC 15 Survival/Perception. When entering, sink 1d4+1 feet. Sinks 1d4 feet each turn. DC 10 + feet sunk Athletics check to escape.',
+        'Slippery Ice: Difficult terrain. DC 10 Dexterity (Acrobatics) check when moving across ice on foot or fall Prone.',
+        'Desecrated Ground: Undead have Advantage on all saving throws while in the area. Dispel Evil and Good purifies.',
+        'Razorvine: Difficult terrain. DC 10 Dex save or take 1d10 piercing damage (1d10 slashing for unarmored).',
+      ],
+      rules2024: [
+        'Quicksand sinks creatures; requires Athletics checks to climb out.',
+        'Slippery ice requires DC 10 Acrobatics checks when dashing/moving rapidly.',
+        'Desecrated ground bolsters undead saving throws with Advantage.',
       ],
     ),
     DmReferenceItem(
@@ -1297,6 +1594,48 @@ class DmScreenLibrary {
       ],
     ),
     DmReferenceItem(
+      id: 'exp_ability_scores_skills',
+      title: '6 Ability Scores & 18 Skills Matrix',
+      category: DmCategory.exploration,
+      icon: Icons.psychology_alt,
+      color: Colors.cyanAccent,
+      summary: 'STR (Athletics), DEX (Acrobatics, Sleight of Hand, Stealth), INT (Arcana, History, Investigation, Nature, Religion), WIS (Animal Handling, Insight, Medicine, Perception, Survival), CHA (Deception, Intimidation, Performance, Persuasion).',
+      tags: ['skills', 'ability check', 'athletics', 'acrobatics', 'stealth', 'perception', 'investigation', 'insight', 'persuasion', 'arcana'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Strength: Athletics (Climbing, jumping, swimming, shoving).',
+        'Dexterity: Acrobatics (Balance, flips), Sleight of Hand (Pickpocket, conceal), Stealth (Hiding).',
+        'Constitution: Concentration, stamina, forced march, breath holding.',
+        'Intelligence: Arcana (Spells, lore), History (Events, kingdoms), Investigation (Deduction, searching clues), Nature (Flora, fauna), Religion (Deities, rites).',
+        'Wisdom: Animal Handling (Calming beasts), Insight (Discerning lies), Medicine (Stabilizing, diagnosing), Perception (Spotting, hearing), Survival (Tracking, foraging).',
+        'Charisma: Deception (Lying), Intimidation (Threats), Performance (Entertainment), Persuasion (Honest influence).',
+      ],
+      rules2024: [
+        'Skills map to the six ability scores identically.',
+        'Tool proficiencies add your Proficiency Bonus when crafting or utilizing specialized equipment.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'exp_passive_checks',
+      title: 'Passive Checks & Contested Rolls',
+      category: DmCategory.exploration,
+      icon: Icons.remove_red_eye_outlined,
+      color: Colors.teal,
+      summary: 'Formula: 10 + all modifiers (+5 with advantage, -5 with disadvantage).',
+      tags: ['passive check', 'passive perception', 'contested roll', 'stealth vs perception', 'exploration'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Passive Check = 10 + all modifiers normally applied to the check.',
+        'If the character has Advantage: add +5 to passive score.',
+        'If the character has Disadvantage: subtract -5 from passive score.',
+        'Contested Checks: Both sides roll d20 + modifiers. Highest total wins. Ties mean the status quo remains unchanged.',
+      ],
+      rules2024: [
+        'Passive score = 10 + modifier (+5 Advantage / -5 Disadvantage).',
+        'Contested rolls resolve simultaneous opposing efforts.',
+      ],
+    ),
+    DmReferenceItem(
       id: 'exp_travel_pace',
       title: 'Travel Pace & Exploration Speed',
       category: DmCategory.exploration,
@@ -1317,6 +1656,25 @@ class DmScreenLibrary {
         'Normal Pace: 3 mph (24 miles/day).',
         'Slow Pace: 2 mph (18 miles/day). Able to use Stealth while traveling.',
         'Difficult Terrain: Halves travel pace.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'exp_forced_march',
+      title: 'Forced March & Travel Exhaustion',
+      category: DmCategory.exploration,
+      icon: Icons.hiking,
+      color: Colors.deepOrangeAccent,
+      summary: 'Traveling beyond 8 hours daily requires progressive Constitution saving throws.',
+      tags: ['forced march', 'travel', 'exhaustion', 'con save', 'overland', 'exploration'],
+      isChangedIn2024: false,
+      rules2014: [
+        'The travel pace assumes 8 hours of travel per day.',
+        'For each additional hour of travel beyond 8 hours, each character makes a Constitution saving throw at the end of the hour.',
+        'DC = 10 + 1 for each hour past 8 hours.',
+        'On a failed save, a character gains 1 level of Exhaustion.',
+      ],
+      rules2024: [
+        'Traveling beyond 8 hours daily requires DC 10 (+1/hour) Constitution saves against gaining Exhaustion.',
       ],
     ),
     DmReferenceItem(
@@ -1360,6 +1718,25 @@ class DmScreenLibrary {
         '• Indifferent NPC: DC 15 check.',
         '• Hostile NPC: DC 20 check.',
         'Success grants the requested favor or changes the NPC\'s immediate stance.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'exp_traps_detection',
+      title: 'Traps: Spotting, Disarming & Triggering',
+      category: DmCategory.exploration,
+      icon: Icons.dangerous_outlined,
+      color: Colors.redAccent,
+      summary: 'Perception / Investigation DCs to find traps; Thieves\' Tools to disarm.',
+      tags: ['traps', 'spotting', 'disarming', 'thieves tools', 'perception', 'investigation', 'hazard'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Spotting: Wisdom (Perception) passive or active check vs trap Stealth DC.',
+        'Understanding Mechanism: Intelligence (Investigation) check to deduce trigger mechanism.',
+        'Disarming: Dexterity check using Thieves\' Tools vs trap Disarm DC. Failure by 5 or more triggers the trap immediately.',
+      ],
+      rules2024: [
+        'Search action (Wisdom/Perception) locates hidden triggers.',
+        'Utilize action with Thieves\' Tools disarms mechanical traps.',
       ],
     ),
 
@@ -1422,7 +1799,7 @@ class DmScreenLibrary {
       rules2014: [
         'Casting Times: 1 Action, 1 Bonus Action, 1 Reaction, 1 Minute to 24 Hours.',
         'Ritual Casting: If a spell has the Ritual tag and you have ritual capability, you can cast it without expending a spell slot by adding 10 minutes to the casting time.',
-        'Areas of Effect: Cone, Cube, Cylinder, Line, Sphere originating from a chosen point within range.',
+        'Areas of Effect: Cone (width = length at base), Cube (face = length), Cylinder (radius + height), Line (length x 5ft width), Sphere (radius from origin).',
         'Cover and AoE: Spells originate from a point; total cover blocks the line of effect unless specified otherwise.',
       ],
       rules2024: [
@@ -1433,7 +1810,7 @@ class DmScreenLibrary {
     ),
     DmReferenceItem(
       id: 'magic_combining_effects',
-      title: 'Combining Magical Effects',
+      title: 'Combining Magical Effects & Spell Stacking',
       category: DmCategory.magicAndResting,
       icon: Icons.layers,
       color: Colors.indigoAccent,
@@ -1468,6 +1845,46 @@ class DmScreenLibrary {
         'Spell Slot Limitation: On a single turn, you can expend only ONE spell slot to cast a spell.',
         'You can freely cast a Leveled Spell using a slot AND any number of Cantrips (e.g., Leveled Bonus Action + Action Cantrip, or Action Leveled + Cantrip).',
         'Prevents burning two spell slots via Action Surge on the same turn.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'magic_counterspell_dispel',
+      title: 'Counterspelling & Dispelling Magic',
+      category: DmCategory.magicAndResting,
+      icon: Icons.flash_off,
+      color: Colors.purple,
+      summary: 'Resolving spell counter attempts and removing magical effects.',
+      tags: ['counterspell', 'dispel magic', 'abjuration', 'dc 10 + level', 'reaction', 'magic'],
+      isChangedIn2024: true,
+      diffSummary: '2014 Counterspell used an ability check (DC 10 + spell level). 2024 makes Counterspell force a Constitution saving throw from the caster to prevent the slot from being wasted.',
+      rules2014: [
+        'Counterspell: Automatically cancels spells of 3rd level or lower. For higher level spells, make an ability check (DC = 10 + spell level) using your spellcasting ability.',
+        'Dispel Magic: Automatically ends spells of 3rd level or lower on target. For higher level spells, make an ability check (DC = 10 + spell level).',
+      ],
+      rules2024: [
+        'Counterspell: Target makes a Constitution saving throw. On failed save, spell fails and spell slot is expended.',
+        'Dispel Magic: Automatically dispels 3rd level or lower; higher level requires DC 10 + spell level check.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'magic_attunement',
+      title: 'Magic Item Attunement & Identification',
+      category: DmCategory.magicAndResting,
+      icon: Icons.auto_fix_high,
+      color: Colors.cyanAccent,
+      summary: '3-item attunement limit, Short Rest attunement/identification rules.',
+      tags: ['attunement', 'identify', 'magic items', 'short rest', '3 items', 'magic'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Attunement Limit: A creature can be attuned to no more than 3 magic items simultaneously.',
+        'Attuning: Requires a creature to spend a Short Rest focused on only that item in physical contact.',
+        'Ending Attunement: Requires a Short Rest, or ends if the creature dies or is separated by 100+ feet for 24 hours.',
+        'Identifying: Cast Identify spell, or spend a Short Rest focusing on one item to learn its properties.',
+      ],
+      rules2024: [
+        'Maximum 3 attuned magic items at once.',
+        'Attuning takes 1 Short Rest.',
+        'Short rest focus or Identify spell reveals magic properties.',
       ],
     ),
     DmReferenceItem(
@@ -1512,6 +1929,25 @@ class DmScreenLibrary {
       rules2024: [
         'Living expenses range from Wretched (free) to Aristocratic (10+ GP/day).',
         'Determines access to resources, NPC connections, and recovery comfort during downtime.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'magic_downtime_activities',
+      title: 'Downtime Activities & Crafting',
+      category: DmCategory.magicAndResting,
+      icon: Icons.construction,
+      color: Colors.tealAccent,
+      summary: 'Crafting non-magic items, potions, scrolls, training languages, and recuperating.',
+      tags: ['downtime', 'crafting', 'training', 'recuperating', 'research', 'professions', 'magic'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Crafting: Craft non-magic items at a rate of 5 GP per day (costs half in raw materials). Multiple characters can combine efforts.',
+        'Practicing a Profession: Earn enough to maintain a Modest lifestyle for free, or Comfortable if in a guild.',
+        'Recuperating: 3 days of downtime allows an extra saving throw to end a debilitating disease or poison.',
+        'Training: Spend 250 days and 1 GP per day with a trainer to learn a new language or set of tools.',
+      ],
+      rules2024: [
+        'Downtime rules provide standard crafting speeds, spell scroll scribing, and language/tool training with dedicated proficiencies.',
       ],
     ),
 
@@ -1647,6 +2083,67 @@ class DmScreenLibrary {
         'Medium Armor: Don 5 min, Doff 1 min.',
         'Heavy Armor: Don 10 min, Doff 5 min.',
         'Shield: Don/Doff takes 1 Action (+2 AC).',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'table_currency_exchange',
+      title: 'Standard Currency Exchange & Coin Weight',
+      category: DmCategory.tables,
+      icon: Icons.paid_outlined,
+      color: Colors.amberAccent,
+      summary: '1 PP = 10 GP = 20 EP = 100 SP = 1,000 CP; 50 coins weigh 1 lb.',
+      tags: ['currency', 'gold', 'silver', 'copper', 'electrum', 'platinum', 'coins', 'weight'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Copper Piece (CP): 1/100 GP.',
+        'Silver Piece (SP): 1/10 GP (10 CP).',
+        'Electrum Piece (EP): 1/2 GP (50 CP or 5 SP).',
+        'Gold Piece (GP): Standard currency (10 SP or 100 CP).',
+        'Platinum Piece (PP): 10 GP (100 SP or 1,000 CP).',
+        'Coin Weight: 50 coins of any denomination weigh exactly 1 pound.',
+      ],
+      rules2024: [
+        'Standard denominations: 1 PP = 10 GP = 20 EP = 100 SP = 1,000 CP.',
+        'Weight: 50 coins = 1 lb.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'table_standard_languages',
+      title: 'Standard & Exotic Languages Matrix',
+      category: DmCategory.tables,
+      icon: Icons.translate,
+      color: Colors.lightGreenAccent,
+      summary: 'Common, Dwarvish, Elvish, Draconic, Undercommon, Sylvan, Celestial, Abyssal, Infernal.',
+      tags: ['languages', 'common', 'elvish', 'dwarvish', 'draconic', 'celestial', 'infernal', 'abyssal', 'undercommon'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Standard Languages: Common (Humans), Dwarvish (Dwarves), Elvish (Elves), Giant (Ogres, Giants), Gnomish (Gnomes), Goblin (Goblins), Halfling (Halflings), Orc (Orcs).',
+        'Exotic Languages: Abyssal (Demons), Celestial (Celestials), Draconic (Dragons, Dragonborn), Deep Speech (Mind Flayers, Beholders), Infernal (Devils), Primordial (Elementals, Aquan, Auran, Ignan, Terran), Sylvan (Fey), Undercommon (Underdark dwellers).',
+      ],
+      rules2024: [
+        'Standard and Exotic languages remain consistent for communication, ancient scripts, and planar interactions.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'table_adventuring_gear_lighting',
+      title: 'Adventuring Gear & Light Sources',
+      category: DmCategory.tables,
+      icon: Icons.flashlight_on_outlined,
+      color: Colors.orangeAccent,
+      summary: 'Torches, Lanterns, Flasks, Ropes, and Container capacities.',
+      tags: ['lighting', 'torch', 'lantern', 'bullseye', 'hooded lantern', 'backpack', 'pouch', 'gear'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Torch (1 CP): Burns 1 hr • 20ft Bright Light + 20ft Dim Light. Melee weapon 1 fire damage.',
+        'Hooded Lantern (5 GP): Burns 6 hrs per 1 pint oil • 30ft Bright Light + 30ft Dim Light. Lower hood reduces to 5ft Dim Light.',
+        'Bullseye Lantern (10 GP): Burns 6 hrs per pint oil • 60ft cone Bright Light + 60ft cone Dim Light.',
+        'Candle (1 CP): Burns 1 hr • 5ft Bright Light + 5ft Dim Light.',
+        'Container Capacities: Backpack (1 cubic ft / 30 lbs), Pouch (1/5 cubic ft / 6 lbs), Sack (1 cubic ft / 30 lbs), Chest (12 cubic ft / 300 lbs).',
+      ],
+      rules2024: [
+        'Torches provide 20/20ft light for 1 hour.',
+        'Hooded Lantern provides 30/30ft light; Bullseye provides 60/60ft cone light.',
+        'Standard container capacities govern equipment loads.',
       ],
     ),
   ];

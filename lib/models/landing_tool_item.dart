@@ -326,14 +326,14 @@ class LandingToolRegistry {
         ),
         LandingToolItem(
           id: 'rules_compendium',
-          title: "Rules Compendium (SRD 5.1 & 5.2)",
+          title: "Rules Compendium",
           category: 'Core Utilities',
-          badgeText: '2014 & 2024 SRD',
+          badgeText: '2014 & 2024 Rules',
           badgeColor: Colors.amberAccent,
           icon: Icons.menu_book_rounded,
           accentColor: Colors.amberAccent,
           description:
-              "Instant SRD rules reference engine with 2014 RAW vs 2024 Revised comparative diffs, tokenized search, interactive math calculators, conditions, and DC tables.",
+              "Instant rules reference engine with 2014 RAW vs 2024 Revised comparative diffs, tokenized search, interactive math calculators, conditions, and DC tables.",
           keywords: [
             'rules',
             'compendium',

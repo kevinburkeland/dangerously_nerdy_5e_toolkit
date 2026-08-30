@@ -238,7 +238,7 @@ void main() {
       await tester.pumpWidget(createTestableWidget(const LandingScreen()));
 
       // Find Rules Compendium tool card
-      final rulesCard = find.text("Rules Compendium (SRD 5.1 & 5.2)");
+      final rulesCard = find.widgetWithText(Card, 'Rules Compendium');
       expect(rulesCard, findsOneWidget);
 
       await tester.ensureVisible(rulesCard);

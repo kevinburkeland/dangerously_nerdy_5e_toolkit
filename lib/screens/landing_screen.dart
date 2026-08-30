@@ -107,7 +107,7 @@ class _LandingScreenState extends State<LandingScreen> {
           ),
           IconButton(
             icon: Icon(Icons.menu_book_rounded, color: theme.colorScheme.primary),
-            tooltip: "Rules Compendium (SRD 5.1 / 5.2)",
+            tooltip: "Rules Compendium (2014 / 2024)",
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const RulesCompendiumScreen()),
             ),
