@@ -69,7 +69,7 @@ void main() {
     test('parses flexible ability score increases (e.g. choose 2 +1)', () {
       final raw = {
         'name': 'Custom Lineage',
-        'source': 'TCE',
+        'source': 'HOMEBREW',
         'size': 'M',
         'ability': [
           {

@@ -112,7 +112,7 @@ void main() {
     test('maps 2024 source tag to v2024 ruleset version', () {
       final spell = parser.parseSpell({
         'name': 'Healing Word',
-        'source': 'XPHB',
+        'source': 'SRD52',
         'level': 1,
       });
 

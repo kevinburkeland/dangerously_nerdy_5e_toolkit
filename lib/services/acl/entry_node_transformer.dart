@@ -16,7 +16,7 @@ class ParsedEntryResult {
   });
 }
 
-/// Universal recursive Anti-Corruption Layer transformer for 5etools-style
+/// Universal recursive Anti-Corruption Layer transformer for community
 /// compendium AST entry trees.
 ///
 /// Correctly handles all standard node types:
@@ -291,7 +291,7 @@ class EntryNodeTransformer {
     if (cell is String) return _processTags(cell, math, refs, defaultRuleset);
     if (cell is num) return cell.toString();
     if (cell is Map<String, dynamic>) {
-      // 5etools roll cell: {type: "cell", roll: {min: 1, max: 100}}
+      // AST roll cell: {type: "cell", roll: {min: 1, max: 100}}
       if (cell['type'] == 'cell' && cell['roll'] is Map) {
         final roll = cell['roll'] as Map;
         final min = roll['min'] ?? roll['exact'];
@@ -319,7 +319,7 @@ class EntryNodeTransformer {
       buffer.write('**$name.** ');
     }
 
-    // 5etools ability format: {str: 2}, {choose: {count: 1, amount: 2, from: [...]}}
+    // AST ability format: {str: 2}, {choose: {count: 1, amount: 2, from: [...]}}
     final parts = <String>[];
     for (final stat in const ['str', 'dex', 'con', 'int', 'wis', 'cha']) {
       if (node[stat] is num) {

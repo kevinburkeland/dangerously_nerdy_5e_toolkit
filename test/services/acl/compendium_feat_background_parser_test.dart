@@ -16,7 +16,7 @@ void main() {
     test('parses Origin Feat with structured prerequisites', () {
       final raw = {
         'name': 'Alert',
-        'source': 'XPHB',
+        'source': 'SRD52',
         'category': 'Origin',
         'prerequisite': [
           {'level': 1, 'other': 'Origin Feat'}
@@ -41,38 +41,38 @@ void main() {
 
     test('parses 2024 Background with Origin Feat and multi-skill proficiencies', () {
       final raw = {
-        'name': 'Wayfarer',
-        'source': 'XPHB',
+        'name': 'Acolyte',
+        'source': 'SRD52',
         'ability': [
-          {'dex': true, 'wis': true, 'cha': true}
+          {'int': true, 'wis': true, 'cha': true}
         ],
-        'feat': 'Lucky',
-        'skillProficiencies': ['Insight', 'Stealth'],
-        'toolProficiencies': ['Thieves\' tools'],
-        'languageProficiencies': ['Thieves\' cant'],
+        'feat': 'Magic Initiate',
+        'skillProficiencies': ['Insight', 'Religion'],
+        'toolProficiencies': ['Calligrapher\'s supplies'],
+        'languageProficiencies': ['Celestial'],
         'startingEquipment': [
-          {'item': 'Thieves\' tools'},
-          {'item': 'Pouch with 16 GP'}
+          {'item': 'Holy Symbol'},
+          {'item': 'Pouch with 15 GP'}
         ],
         'entries': [
-          'You grew up among travelers, drifters, and wanderers.',
-          'Feature: Wayfarer\'s Network. You know informants in every major settlement.'
+          'You devoted yourself to service in a temple.',
+          'Feature: Shelter of the Faithful. You and your companions can receive free healing and care at a temple.'
         ],
-        'flavorLore': 'Street urchin background refined for 2024'
+        'flavorLore': 'Canonical SRD 5.2 religious acolyte'
       };
 
       final bg = backgroundParser.parseBackground(raw);
 
-      expect(bg.name, equals('Wayfarer'));
-      expect(bg.id.slug, equals('wayfarer'));
-      expect(bg.originFeat, equals('Lucky'));
+      expect(bg.name, equals('Acolyte'));
+      expect(bg.id.slug, equals('acolyte'));
+      expect(bg.originFeat, equals('Magic Initiate'));
       expect(bg.skillProficiencies, contains('Insight'));
-      expect(bg.skillProficiencies, contains('Stealth'));
-      expect(bg.toolProficiencies, contains('Thieves\' tools'));
-      expect(bg.languages, contains('Thieves\' cant'));
-      expect(bg.abilityScoreSummary, contains('DEX'));
-      expect(bg.descriptionMarkdown, contains('Wayfarer\'s Network'));
-      expect(bg.customProperties['flavorLore'], equals('Street urchin background refined for 2024'));
+      expect(bg.skillProficiencies, contains('Religion'));
+      expect(bg.toolProficiencies, contains('Calligrapher\'s supplies'));
+      expect(bg.languages, contains('Celestial'));
+      expect(bg.abilityScoreSummary, contains('INT'));
+      expect(bg.descriptionMarkdown, contains('Shelter of the Faithful'));
+      expect(bg.customProperties['flavorLore'], equals('Canonical SRD 5.2 religious acolyte'));
       expect(bg.customProperties['startingEquipment'], isNotNull);
     });
   });

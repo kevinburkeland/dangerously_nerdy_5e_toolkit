@@ -217,7 +217,7 @@ class CompendiumClassParser {
     final features = raw['classFeatures'] ?? raw['entries'];
     if (features == null) return '';
 
-    // 5etools classFeatures may be:
+    // Compendium classFeatures may be:
     //   - A List<String> of pipe-syntax feature references ("Fighter|classFeature|1|PHB");
     //     these are cross-references with no description content — drop silently.
     //   - A List<Map> of inline {type:"entries", name, entries:[...]} blocks with real content.
