@@ -72,11 +72,11 @@ void main() {
       expect(find.text('2024'), findsWidgets);
       expect(find.text('2014'), findsWidgets);
 
-      // Tabs
+      // Tabs: in selector/empty state, only Live Sheet and Guided Builder are shown
       expect(find.text('Live Sheet'), findsOneWidget);
       expect(find.text('Guided Builder'), findsOneWidget);
-      expect(find.text('Inventory & Loot'), findsOneWidget);
-      expect(find.text('Level Up'), findsOneWidget);
+      expect(find.text('Inventory & Loot'), findsNothing);
+      expect(find.text('Level Up'), findsNothing);
 
       // Default Character Selector View with empty state
       expect(find.text('5e Character Roster'), findsOneWidget);
@@ -95,11 +95,23 @@ void main() {
       await tester.pumpWidget(createTestApp());
       await tester.pumpAndSettle();
 
+      // In selector view, only 2 tabs
+      expect(find.text('Live Sheet'), findsOneWidget);
+      expect(find.text('Guided Builder'), findsOneWidget);
+      expect(find.text('Inventory & Loot'), findsNothing);
+      expect(find.text('Level Up'), findsNothing);
+
       // Tap Open Sheet on Valeros Ironclad
       final openSheetBtn = find.byKey(const ValueKey('open_sheet_valeros-ironclad'));
       expect(openSheetBtn, findsOneWidget);
       await tester.tap(openSheetBtn);
       await tester.pumpAndSettle();
+
+      // Now actively viewing a character -> all 4 tabs present
+      expect(find.text('Live Sheet'), findsOneWidget);
+      expect(find.text('Guided Builder'), findsOneWidget);
+      expect(find.text('Inventory & Loot'), findsOneWidget);
+      expect(find.text('Level Up'), findsOneWidget);
 
       // Vitals
       expect(find.text('ARMOR CLASS'), findsOneWidget);

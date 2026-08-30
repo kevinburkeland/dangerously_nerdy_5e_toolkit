@@ -39,7 +39,7 @@ class CharacterBuilderScreen extends StatefulWidget {
 }
 
 class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
   late LayeredPriorityRepository _repository;
   late ReferenceResolver _resolver;
@@ -145,10 +145,27 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     'Cassian Brightwood',
   ];
 
+  bool get _hasActiveCharacter => !_isSelectorView && _character != null;
+  int get _expectedTabCount => _hasActiveCharacter ? 4 : 2;
+
+  void _syncTabController() {
+    final expected = _expectedTabCount;
+    if (_tabController.length != expected) {
+      final oldIndex = _tabController.index.clamp(0, expected - 1);
+      final old = _tabController;
+      _tabController = TabController(
+        length: expected,
+        initialIndex: oldIndex,
+        vsync: this,
+      );
+      old.dispose();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: _expectedTabCount, vsync: this);
 
     _repository = LayeredPriorityRepository();
     _resolver = ReferenceResolver(_repository);
@@ -351,6 +368,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           _character = null;
           _isSelectorView = true;
         }
+        _syncTabController();
       });
     }
   }
@@ -366,6 +384,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           : DmRulesEdition.v2014;
       _isSelectorView = false;
       _recalculateStats();
+      _syncTabController();
     });
     _persistenceService.saveActiveCharacterId(char.id.slug);
   }
@@ -418,6 +437,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         }
         _isSelectorView = true;
       }
+      _syncTabController();
     });
 
     if (mounted) {
@@ -600,6 +620,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       }
     }
 
+    _syncTabController();
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -623,16 +645,22 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           const SizedBox(width: 8),
         ],
         bottom: TabBar(
+          key: ValueKey('studio_tab_bar_$_hasActiveCharacter'),
           controller: _tabController,
           indicatorColor: Colors.cyanAccent,
           labelColor: Colors.cyanAccent,
           unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(icon: Icon(Icons.badge_outlined), text: 'Live Sheet'),
-            Tab(icon: Icon(Icons.auto_awesome), text: 'Guided Builder'),
-            Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Inventory & Loot'),
-            Tab(icon: Icon(Icons.upgrade), text: 'Level Up'),
-          ],
+          tabs: _hasActiveCharacter
+              ? const [
+                  Tab(icon: Icon(Icons.badge_outlined), text: 'Live Sheet'),
+                  Tab(icon: Icon(Icons.auto_awesome), text: 'Guided Builder'),
+                  Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Inventory & Loot'),
+                  Tab(icon: Icon(Icons.upgrade), text: 'Level Up'),
+                ]
+              : const [
+                  Tab(icon: Icon(Icons.badge_outlined), text: 'Live Sheet'),
+                  Tab(icon: Icon(Icons.auto_awesome), text: 'Guided Builder'),
+                ],
         ),
       ),
       body: Column(
@@ -640,12 +668,15 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           RoomBannerWidget(),
           Expanded(
             child: TabBarView(
+              key: ValueKey('studio_tab_bar_view_$_hasActiveCharacter'),
               controller: _tabController,
               children: [
                 _buildLiveSheetTab(theme),
                 _buildGuidedBuilderTab(theme),
-                _buildInventoryTab(theme),
-                _buildLevelUpTab(theme),
+                if (_hasActiveCharacter) ...[
+                  _buildInventoryTab(theme),
+                  _buildLevelUpTab(theme),
+                ],
               ],
             ),
           ),
@@ -1080,7 +1111,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                               fontSize: 12, fontWeight: FontWeight.bold)),
                       onPressed: () {
                         HapticService.selectionTick(context);
-                        setState(() => _isSelectorView = true);
+                        setState(() {
+                          _isSelectorView = true;
+                          _syncTabController();
+                        });
                       },
                     ),
                     IconButton(
@@ -3239,6 +3273,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           _isSelectorView = false;
           _recalculateStats();
           _currentHp = _computedStats?.maxHp ?? 10;
+          _syncTabController();
           _tabController.animateTo(0);
         });
       }
@@ -3276,6 +3311,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 onPressed: () {
                   setState(() {
                     _isSelectorView = true;
+                    _syncTabController();
                     _tabController.animateTo(0);
                   });
                 },
@@ -3617,6 +3653,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 onPressed: () {
                   setState(() {
                     _isSelectorView = true;
+                    _syncTabController();
                     _tabController.animateTo(0);
                   });
                 },
@@ -3812,6 +3849,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           _isSelectorView = false;
           _recalculateStats();
           _currentHp = _computedStats?.maxHp ?? 10;
+          _syncTabController();
           _tabController.animateTo(0);
         });
       }
