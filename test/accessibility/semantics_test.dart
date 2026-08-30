@@ -73,8 +73,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Verify "DM's Screen" header exists
-      expect(find.text("DM's Screen"), findsOneWidget);
+      // Verify "Rules Compendium" header exists
+      expect(find.text("Rules Compendium"), findsOneWidget);
 
       // Verify quick dice button semantics
       expect(find.text('d20'), findsOneWidget);

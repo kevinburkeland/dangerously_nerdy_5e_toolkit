@@ -45,7 +45,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text("DM's Screen"), findsOneWidget);
+      expect(find.text("Rules Compendium"), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

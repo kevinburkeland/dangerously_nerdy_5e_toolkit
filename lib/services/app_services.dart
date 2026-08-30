@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'logging_service.dart';
 import 'minion_session_service.dart';
 import 'persistence/app_backup_service.dart';
+import 'persistence/campaign_profile_service.dart';
 import 'persistence/debounced_storage_service.dart';
+import 'persistence/dm_backup_service.dart';
 import 'persistence/dpr_persistence_service.dart';
 import 'persistence/storage_migration_service.dart';
 import 'preset_service.dart';
@@ -24,6 +26,8 @@ class AppServices {
   final DprPersistenceService _dprPersistence;
   final PresetService _presetService;
   final MinionSessionService _minionSession;
+  final CampaignProfileService _campaignProfileService;
+  final DmBackupService _dmBackupService;
 
   AppServices._({
     LoggingService? logger,
@@ -33,13 +37,17 @@ class AppServices {
     DprPersistenceService? dprPersistence,
     PresetService? presetService,
     MinionSessionService? minionSession,
+    CampaignProfileService? campaignProfileService,
+    DmBackupService? dmBackupService,
   })  : _logger = logger ?? LoggingService(),
         _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
         _migrationService = migrationService ?? StorageMigrationService(),
         _backupService = backupService ?? AppBackupService(),
         _dprPersistence = dprPersistence ?? DprPersistenceService(),
         _presetService = presetService ?? PresetService(),
-        _minionSession = minionSession ?? MinionSessionService();
+        _minionSession = minionSession ?? MinionSessionService(),
+        _campaignProfileService = campaignProfileService ?? CampaignProfileService(),
+        _dmBackupService = dmBackupService ?? DmBackupService();
 
   /// Core logging and crash reporting service
   LoggingService get logger => _logger;
@@ -62,6 +70,12 @@ class AppServices {
   /// Minion session state coordinator
   MinionSessionService get minionSession => _minionSession;
 
+  /// Campaign profile persistence service
+  CampaignProfileService get campaignProfileService => _campaignProfileService;
+
+  /// DM snapshot import/export service
+  DmBackupService get dmBackupService => _dmBackupService;
+
   /// Registers service overrides for unit or widget testing.
   @visibleForTesting
   static void registerOverrides({
@@ -72,6 +86,8 @@ class AppServices {
     DprPersistenceService? dprPersistence,
     PresetService? presetService,
     MinionSessionService? minionSession,
+    CampaignProfileService? campaignProfileService,
+    DmBackupService? dmBackupService,
   }) {
     _instance = AppServices._(
       logger: logger ?? _instance._logger,
@@ -81,6 +97,8 @@ class AppServices {
       dprPersistence: dprPersistence ?? _instance._dprPersistence,
       presetService: presetService ?? _instance._presetService,
       minionSession: minionSession ?? _instance._minionSession,
+      campaignProfileService: campaignProfileService ?? _instance._campaignProfileService,
+      dmBackupService: dmBackupService ?? _instance._dmBackupService,
     );
   }
 
@@ -91,6 +109,7 @@ class AppServices {
     _instance.debouncedStorage.cancelAllForTesting();
     _instance.presetService.clearCacheForTesting();
     _instance.minionSession.clearCacheForTesting();
+    _instance.campaignProfileService.clearCacheForTesting();
     _instance = AppServices._();
   }
 }

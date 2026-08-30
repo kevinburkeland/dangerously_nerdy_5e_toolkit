@@ -3,6 +3,7 @@ import '../models/srd_summons/srd_summons_library.dart';
 import '../screens/arena_simulator_screen.dart';
 import '../screens/character_builder_screen.dart';
 import '../screens/dice_roller_screen.dart';
+import '../screens/dm_dashboard_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/dpr_calculator_screen.dart';
 import '../screens/glyph_showcase_screen.dart';
@@ -101,6 +102,44 @@ class LandingToolRegistry {
 
   static List<LandingToolItem> get defaultTools => [
         // Core Utilities
+        LandingToolItem(
+          id: 'dm_dashboard',
+          title: 'DM Dashboard & Command Console',
+          category: 'Core Utilities',
+          badgeText: 'Multi-Campaign HUD',
+          badgeColor: Colors.amberAccent,
+          icon: Icons.dashboard_customize,
+          accentColor: Colors.amberAccent,
+          description:
+              'Integrated Dungeon Master workspace with turn & initiative tracking, party vitality HUD, minion counters, SRD calculators, notes scratchpad, and JSON snapshot backups.',
+          keywords: [
+            'dm',
+            'dashboard',
+            'console',
+            'command',
+            'screen',
+            'initiative',
+            'tracker',
+            'encounter',
+            'party',
+            'vitality',
+            'roster',
+            'minions',
+            'animated objects',
+            'campaign',
+            'scratchpad',
+            'notes',
+            'purse',
+            'backup',
+            'export'
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DmDashboardScreen()),
+            );
+          },
+        ),
         LandingToolItem(
           id: 'character_builder',
           title: 'Character Generator & Live Sheet',
