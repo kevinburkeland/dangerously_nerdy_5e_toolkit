@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 enum DmRulesEdition {
   v2014,
-  v2024;
+  v2024,
+  comparative;
 
-  String get label => this == DmRulesEdition.v2014 ? '2014' : '2024';
+  String get label => switch (this) {
+        DmRulesEdition.v2014 => '2014',
+        DmRulesEdition.v2024 => '2024',
+        DmRulesEdition.comparative => 'Diff',
+      };
 }
 
 enum DmCategory {
@@ -54,6 +59,7 @@ class DmReferenceItem {
   final String? diffSummary;
   final List<String> tags;
   final bool isChangedIn2024;
+  final String? interactiveTool;
   final Map<String, dynamic>? extraData;
 
   const DmReferenceItem({
@@ -74,6 +80,7 @@ class DmReferenceItem {
     this.diffSummary,
     required this.tags,
     this.isChangedIn2024 = false,
+    this.interactiveTool,
     this.extraData,
   });
 
@@ -112,10 +119,12 @@ class DmReferenceItem {
     final cached = _corpusCache[id];
     if (cached != null) return cached;
     final buffer = StringBuffer()
+      ..write('$id ')
       ..write('$title ')
       ..write('${title2014 ?? ""} ')
       ..write('${title2024 ?? ""} ')
       ..write('$summary ')
+      ..write('${category.name} ')
       ..write('${category.label} ')
       ..write('${subCategory ?? ""} ')
       ..write('${cost ?? ""} ')
@@ -136,11 +145,45 @@ class DmReferenceItem {
     return corpus;
   }
 
+  /// Multi-field tokenized search with operator parsing (e.g. tag:action, edition:diff, category:combat)
   bool matches(String query) {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return true;
-    final q = trimmed.toLowerCase();
-    return _getCorpus().contains(q);
+
+    final tokens = trimmed.toLowerCase().split(RegExp(r'\s+')).where((t) => t.isNotEmpty);
+    final corpus = _getCorpus();
+
+    for (final token in tokens) {
+      if (token.startsWith('tag:')) {
+        final tagQuery = token.substring(4);
+        if (!tags.any((t) => t.toLowerCase().contains(tagQuery))) {
+          return false;
+        }
+      } else if (token.startsWith('category:')) {
+        final catQuery = token.substring(9);
+        final matchesCat = category.name.toLowerCase().contains(catQuery) ||
+            category.label.toLowerCase().contains(catQuery);
+        if (!matchesCat) return false;
+      } else if (token.startsWith('edition:')) {
+        final edQuery = token.substring(8);
+        if (edQuery == 'diff' || edQuery == 'changed') {
+          if (!isChangedIn2024) return false;
+        } else if (edQuery == '2024') {
+          // All items are valid for 2024
+        } else if (edQuery == '2014') {
+          // All items are valid for 2014
+        }
+      } else if (token.startsWith('cost:')) {
+        final costQuery = token.substring(5);
+        final c = (cost ?? cost2024 ?? cost2014 ?? '').toLowerCase();
+        if (!c.contains(costQuery)) return false;
+      } else {
+        if (!corpus.contains(token)) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 }
 
@@ -189,7 +232,7 @@ class DmScreenLibrary {
       icon: Icons.sports_kabaddi,
       color: Colors.amber,
       summary: 'Make one melee or ranged weapon/unarmed attack.',
-      tags: ['attack', 'melee', 'ranged', 'extra attack', 'weapon', 'unarmed', 'standard_action'],
+      tags: ['attack', 'melee', 'ranged', 'extra attack', 'weapon', 'unarmed', 'standard_action', 'combat'],
       isChangedIn2024: true,
       diffSummary: '2024 lets you draw/stow a weapon before or after EACH attack, and Unarmed Strikes now offer Damage, Grapple, or Shove options directly.',
       rules2014: [
@@ -408,20 +451,23 @@ class DmScreenLibrary {
     ),
     DmReferenceItem(
       id: 'action_use_object',
-      title: 'Use an Object',
+      title: 'Use an Object / Utilize',
+      title2014: 'Use an Object',
+      title2024: 'Utilize (2024)',
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
       icon: Icons.touch_app,
       color: Colors.pinkAccent,
       summary: 'Interact with a second object or operate complex mechanical apparatuses.',
-      tags: ['use an object', 'interact', 'item', 'mechanism', 'standard_action'],
-      isChangedIn2024: false,
+      tags: ['use an object', 'utilize', 'interact', 'item', 'mechanism', 'standard_action'],
+      isChangedIn2024: true,
+      diffSummary: '2024 renames Use an Object to Utilize and standardizes equipping/using non-magic gear and apparatuses.',
       rules2014: [
         'Interact with a second object on your turn, or use a complex item (like applying a potion or pulling a lever).',
       ],
       rules2024: [
-        'Interact with a second object or use complex specialized gear.',
+        'Utilize action: Interact with a second object, use specialized non-magic adventuring gear, or operate complex devices.',
       ],
     ),
     DmReferenceItem(
@@ -435,8 +481,9 @@ class DmScreenLibrary {
       icon: Icons.sports_mma,
       color: Colors.deepOrangeAccent,
       summary: 'Grab or knock down / push a creature.',
-      tags: ['grapple', 'shove', 'push', 'prone', 'unarmed strike', 'athletics', 'save dc', 'standard_action'],
+      tags: ['grapple', 'shove', 'push', 'prone', 'unarmed strike', 'athletics', 'save dc', 'standard_action', 'calculator'],
       isChangedIn2024: true,
+      interactiveTool: 'grapple_shove',
       diffSummary: '2014 used contested Athletics checks. 2024 makes Grapple/Shove a saving throw (DC = 8 + STR + Prof) against the target\'s STR/DEX save!',
       rules2014: [
         'Contested Check: Attacker rolls Strength (Athletics) contested by target\'s Strength (Athletics) or Dexterity (Acrobatics).',
@@ -508,6 +555,50 @@ class DmScreenLibrary {
         'Stabilize: Action for DC 10 Wisdom (Medicine) check or Healer\'s Kit. Creature stays stable at 0 HP.',
       ],
     ),
+    DmReferenceItem(
+      id: 'action_underwater_combat',
+      title: 'Underwater Combat',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Continuous',
+      icon: Icons.water,
+      color: Colors.cyan,
+      summary: 'Weapon restrictions, movement penalties, and fire resistance submerged.',
+      tags: ['underwater', 'submerged', 'swimming', 'dagger', 'javelin', 'trident', 'spear', 'crossbow', 'fire resistance', 'combat'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Melee Attack: Disadvantage unless weapon is Dagger, Javelin, Shortsword, Spear, Trident, or creature has a swimming speed.',
+        'Ranged Attack: Automatically misses beyond normal range. Disadvantage within normal range unless Crossbow, Net, Dart, Javelin, Spear, Trident.',
+        'Submerged creatures and objects have Resistance to fire damage.',
+      ],
+      rules2024: [
+        'Melee attacks have Disadvantage unless using Dagger, Javelin, Shortsword, Spear, Trident, or creature has swim speed.',
+        'Ranged attacks auto-miss beyond normal range, and have Disadvantage within normal range unless using a Crossbow or underwater thrown weapon.',
+        'Fully submerged creatures and objects have Resistance to fire damage.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'action_mounted_combat',
+      title: 'Mounted Combat',
+      category: DmCategory.actions,
+      subCategory: 'Combat Rule',
+      cost: 'Half Speed to Mount/Dismount',
+      icon: Icons.cruelty_free,
+      color: Colors.brown,
+      summary: 'Mounting, dismounting, controlled vs independent mounts.',
+      tags: ['mounted', 'horse', 'mount', 'dismount', 'controlled mount', 'independent mount', 'combat'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Mounting/Dismounting: Costs half your speed. If knocked Prone while mounted, make DC 10 Dex save or land Prone 5ft away.',
+        'Controlled Mount: Matches your initiative. Only takes Dash, Disengage, Dodge. Can move while you take actions.',
+        'Independent Mount: Retains its own initiative and takes actions normally. Provokes opportunity attacks against itself or rider.',
+      ],
+      rules2024: [
+        'Mounting/Dismounting costs half your Speed.',
+        'Controlled Mount matches your initiative order; can only Dash, Disengage, or Dodge.',
+        'Independent Mount retains initiative and full action economy.',
+      ],
+    ),
 
     // ==========================================
     // ACTIONS & COMBAT (BONUS ACTIONS)
@@ -551,7 +642,8 @@ class DmScreenLibrary {
       isChangedIn2024: true,
       diffSummary: '2014 Bonus Action spell rule limited your Action to Cantrips. 2024 limits you to 1 spell slot per turn.',
       rules2014: [
-        'If you cast a Bonus Action spell (e.g. Healing Word, Misty Step), you cannot cast another spell on the same turn except for a Cantrip with a casting time of 1 Action.',
+        'If you cast a Bonus Action spell (e.g. Healing Word, Misty Step):',
+        'You CANNOT cast another spell on the same turn, EXCEPT for a Cantrip with a casting time of 1 Action.',
       ],
       rules2024: [
         'Cast a spell with a casting time of 1 Bonus Action. Follows the 1-spell-slot-per-turn limitation.',
@@ -723,8 +815,9 @@ class DmScreenLibrary {
       icon: Icons.sports_mma,
       color: Colors.amber,
       summary: 'Speed is 0 and held in place by opponent.',
-      tags: ['grappled', 'speed 0', 'escape', 'disadvantage', 'movement'],
+      tags: ['grappled', 'speed 0', 'escape', 'disadvantage', 'movement', 'calculator'],
       isChangedIn2024: true,
+      interactiveTool: 'grapple_shove',
       diffSummary: '2024 grappled creatures suffer Disadvantage on attacks against anyone other than the grappler, and make saves at the end of each turn.',
       rules2014: [
         'A grappled creature’s speed becomes 0, and it can’t benefit from any bonus to its speed.',
@@ -1073,8 +1166,9 @@ class DmScreenLibrary {
       icon: Icons.south,
       color: Colors.deepOrange,
       summary: 'Impact bludgeoning damage and landing on other creatures.',
-      tags: ['falling', 'bludgeoning', '1d6 per 10ft', 'max 20d6', 'landing on creature', 'hazard'],
+      tags: ['falling', 'bludgeoning', '1d6 per 10ft', 'max 20d6', 'landing on creature', 'hazard', 'calculator'],
       isChangedIn2024: true,
+      interactiveTool: 'falling',
       diffSummary: '2024 standardizes falling onto another creature: DC 15 Dex save, damage is split evenly between both creatures on fail!',
       rules2014: [
         '1d6 bludgeoning damage for every 10 feet fallen (max 20d6).',
@@ -1094,7 +1188,7 @@ class DmScreenLibrary {
       icon: Icons.lightbulb_outline,
       color: Colors.amber,
       summary: 'Bright, Dim Light, Darkness, Darkvision, Blindsight, and Truesight.',
-      tags: ['vision', 'light', 'dim light', 'darkness', 'darkvision', 'blindsight', 'truesight', 'perception'],
+      tags: ['vision', 'light', 'dim light', 'darkness', 'darkvision', 'blindsight', 'truesight', 'tremorsense', 'perception'],
       isChangedIn2024: false,
       diffSummary: 'Lighting categories and sight rules remain consistent.',
       rules2014: [
@@ -1132,6 +1226,44 @@ class DmScreenLibrary {
         'Suffocating: Survives for Constitution modifier rounds (minimum 1 round). After that, drops to 0 HP and begins making death saves.',
       ],
     ),
+    DmReferenceItem(
+      id: 'env_extreme_temperatures',
+      title: 'Extreme Heat & Extreme Cold',
+      category: DmCategory.environment,
+      icon: Icons.thermostat,
+      color: Colors.deepOrangeAccent,
+      summary: 'Environmental temperature hazards and exhaustion saves.',
+      tags: ['extreme heat', 'extreme cold', 'con save', 'exhaustion', 'freezing', 'heatstroke', 'environment'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Extreme Cold (0°F or lower): DC 10 Constitution save at the end of each hour or gain 1 level of Exhaustion (auto-succeeds with cold weather gear).',
+        'Extreme Heat (100°F or higher): DC 5 Constitution save at the end of each hour (+1 DC per hour), Disadvantage if in medium/heavy armor; gain 1 level of Exhaustion on fail.',
+        'Creatures need twice as much water in extreme heat.',
+      ],
+      rules2024: [
+        'Extreme Cold: DC 10 Con save per hour without cold gear or gain 1 level of Exhaustion.',
+        'Extreme Heat: DC 5 (+1 per hour) Con save or gain 1 level of Exhaustion. Disadvantage if wearing Medium or Heavy armor.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'env_survival_foraging',
+      title: 'Wilderness Survival & Foraging',
+      category: DmCategory.environment,
+      icon: Icons.eco,
+      color: Colors.green,
+      summary: 'Food and water requirements, foraging DCs, and starvation.',
+      tags: ['foraging', 'survival', 'food', 'water', 'starvation', 'dehydration', 'environment'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Food: 1 pound of food per day. Can go without food for 3 + Con mod days before suffering 1 level of exhaustion per day.',
+        'Water: 1 gallon of water per day (2 gallons in extreme heat). If half water consumed: DC 15 Con save or 1 level exhaustion. If less: automatic exhaustion.',
+        'Foraging: Wisdom (Survival) check while traveling. Abundant (DC 10), Typical (DC 15), Scarce (DC 20). Success yields 1d6 + WIS lbs food and 1d6 + WIS gallons water.',
+      ],
+      rules2024: [
+        'Characters require 1 lb food and 1 gallon water daily.',
+        'Foraging check: DC 10 (lush) to DC 20 (barren desert). Success yields 1d6 + WIS mod lbs of food and gallons of water.',
+      ],
+    ),
 
     // ==========================================
     // EXPLORATION & DCS
@@ -1143,8 +1275,9 @@ class DmScreenLibrary {
       icon: Icons.speed,
       color: Colors.lightGreenAccent,
       summary: 'Standard task difficulty ratings from Very Easy to Impossible.',
-      tags: ['dc', 'difficulty', 'checks', 'very easy', 'easy', 'medium', 'hard', 'very hard', 'nearly impossible'],
+      tags: ['dc', 'difficulty', 'checks', 'very easy', 'easy', 'medium', 'hard', 'very hard', 'nearly impossible', 'calculator'],
       isChangedIn2024: false,
+      interactiveTool: 'dc_benchmark',
       diffSummary: 'Standard DC scale (5, 10, 15, 20, 25, 30) is the foundational benchmark for all 5e editions.',
       rules2014: [
         'DC 5: Very Easy (e.g. noticing a loud noise, climbing a knotted rope).',
@@ -1187,6 +1320,26 @@ class DmScreenLibrary {
       ],
     ),
     DmReferenceItem(
+      id: 'exp_marching_order_nav',
+      title: 'Marching Order & Navigation DCs',
+      category: DmCategory.exploration,
+      icon: Icons.navigation,
+      color: Colors.deepPurpleAccent,
+      summary: 'Ranks (front, middle, rear) and navigation checks.',
+      tags: ['marching order', 'ranks', 'navigation', 'lost', 'wilderness', 'exploration'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Front Rank: Spots traps, first target of frontal ambushes, rolls active/passive Perception in front.',
+        'Middle Rank: Protected core for navigators, mapmakers, and vulnerable allies.',
+        'Rear Rank: Spots enemies approaching from behind; notices sneak attacks from the rear.',
+        'Navigating: Wisdom (Survival) check at the start of travel. Forest DC 15, Swamp DC 15, Desert DC 15, Mountain DC 15. On failure, party travels in random direction.',
+      ],
+      rules2024: [
+        'Marching order establishes front, middle, and rear lines.',
+        'Characters navigating make a Survival check (DC 10-20 depending on terrain visibility). Failure causes the party to become lost.',
+      ],
+    ),
+    DmReferenceItem(
       id: 'exp_social_influence',
       title: 'Social Interaction & NPC Attitudes',
       category: DmCategory.exploration,
@@ -1220,8 +1373,9 @@ class DmScreenLibrary {
       icon: Icons.psychology,
       color: Colors.purpleAccent,
       summary: 'Maintaining active spells, saving throws, and simultaneous spell rules.',
-      tags: ['concentration', 'save', 'con save', 'damage', 'dc 10', 'incapacitated', 'spellcasting'],
+      tags: ['concentration', 'save', 'con save', 'damage', 'dc 10', 'incapacitated', 'spellcasting', 'calculator'],
       isChangedIn2024: false,
+      interactiveTool: 'concentration',
       diffSummary: 'DC formula (max of 10 or half damage) is identical in both editions.',
       rules2014: [
         'You can only concentrate on ONE spell at a time.',
@@ -1233,6 +1387,66 @@ class DmScreenLibrary {
         'Concentrate on 1 spell at a time.',
         'Taking Damage: Con saving throw. DC = max(10, floor(damage taken / 2)). Separate roll for each damage source.',
         'Incapacitated condition or Death immediately ends Concentration.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'magic_spell_components',
+      title: 'Spell Components (V, S, M & GP Costs)',
+      category: DmCategory.magicAndResting,
+      icon: Icons.grain,
+      color: Colors.tealAccent,
+      summary: 'Verbal, Somatic, and Material component requirements.',
+      tags: ['components', 'verbal', 'somatic', 'material', 'focus', 'component pouch', 'gp cost', 'magic'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Verbal (V): Audible chanting. Cannot be cast while Gagged or in a Silence spell.',
+        'Somatic (S): Forceful hand gestures. Requires at least one free hand.',
+        'Material (M): Specific objects. A Component Pouch or Spellcasting Focus can replace non-consumed materials without GP cost.',
+        'Consumed / Priced Materials: If a material specifies a gold cost (e.g. 100 GP diamond), it must be provided and cannot be substituted by a focus.',
+      ],
+      rules2024: [
+        'Verbal (V): Spoken incantations.',
+        'Somatic (S): Hand gestures requiring a free hand (hand holding focus can fulfill somatic component).',
+        'Material (M): Specific items. Focus replaces materials unless cost is specified or consumed.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'magic_casting_times_rituals',
+      title: 'Casting Times, Areas of Effect & Rituals',
+      category: DmCategory.magicAndResting,
+      icon: Icons.hourglass_bottom,
+      color: Colors.deepPurpleAccent,
+      summary: 'Action, Bonus Action, Reaction, Areas (Cone, Cube, Cylinder, Line, Sphere), and Rituals.',
+      tags: ['casting time', 'ritual', 'aoe', 'cone', 'cube', 'cylinder', 'line', 'sphere', 'magic'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Casting Times: 1 Action, 1 Bonus Action, 1 Reaction, 1 Minute to 24 Hours.',
+        'Ritual Casting: If a spell has the Ritual tag and you have ritual capability, you can cast it without expending a spell slot by adding 10 minutes to the casting time.',
+        'Areas of Effect: Cone, Cube, Cylinder, Line, Sphere originating from a chosen point within range.',
+        'Cover and AoE: Spells originate from a point; total cover blocks the line of effect unless specified otherwise.',
+      ],
+      rules2024: [
+        'Standard casting times apply.',
+        'Ritual casting adds 10 minutes to casting time to cast without expending a spell slot.',
+        'Areas of Effect (Cone, Cube, Cylinder, Line, Sphere) remain standard geometries.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'magic_combining_effects',
+      title: 'Combining Magical Effects',
+      category: DmCategory.magicAndResting,
+      icon: Icons.layers,
+      color: Colors.indigoAccent,
+      summary: 'Stacking spells and resolving identical magical effects.',
+      tags: ['combining', 'stacking', 'spells', 'buffs', 'magic effects', 'magic'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Different Spells: The effects of different spells add together while their durations overlap (e.g. Bless + Shield of Faith).',
+        'Same Spell Twice: The effects of the same spell cast multiple times do NOT combine. Only the most potent effect (e.g. highest bonus or highest spell slot level) applies while durations overlap.',
+      ],
+      rules2024: [
+        'Different spells combine normally.',
+        'Identical spells do not stack; only the strongest/most potent casting takes effect.',
       ],
     ),
     DmReferenceItem(
@@ -1263,7 +1477,7 @@ class DmScreenLibrary {
       icon: Icons.bed,
       color: Colors.indigoAccent,
       summary: 'Hit Dice recovery, HP restoration, and interruption rules.',
-      tags: ['short rest', 'long rest', 'hit dice', 'recovery', 'exhaustion', 'interruption'],
+      tags: ['short rest', 'long rest', 'hit dice', 'recovery', 'exhaustion', 'interruption', 'resting'],
       isChangedIn2024: false,
       diffSummary: 'Short Rest (1 hr) and Long Rest (8 hrs, regain all HP, half Hit Dice, 1 Exhaustion level) are consistent.',
       rules2014: [
@@ -1275,6 +1489,29 @@ class DmScreenLibrary {
         'Short Rest (1 hour): Spend Hit Dice to heal (Hit Die + Con mod).',
         'Long Rest (8 hours, max 1 per 24h): Regain all HP, half total Hit Dice (min 1), remove 1 Exhaustion level.',
         'Interrupted if combat or strenuous activity exceeds 1 hour.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'magic_downtime_expenses',
+      title: 'Lifestyle Expenses & Downtime',
+      category: DmCategory.magicAndResting,
+      icon: Icons.monetization_on,
+      color: Colors.amber,
+      summary: 'Daily living expenses from Wretched to Aristocratic.',
+      tags: ['lifestyle', 'expenses', 'gp per day', 'wretched', 'squalid', 'poor', 'modest', 'comfortable', 'wealthy', 'aristocratic', 'downtime'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Wretched (0 GP/day): Homeless, destitute, disease risk.',
+        'Squalid (1 SP/day): Shared room in rundown district, filthy.',
+        'Poor (2 SP/day): Simple tavern room, plain food.',
+        'Modest (1 GP/day): Basic lodging, clean water and food.',
+        'Comfortable (2 GP/day): Private room, hearty meals, well maintained gear.',
+        'Wealthy (4 GP/day): Luxurious quarters, fine wine, prestigious staff.',
+        'Aristocratic (10+ GP/day): Opulent estate, royal treatment, lavish feasts.',
+      ],
+      rules2024: [
+        'Living expenses range from Wretched (free) to Aristocratic (10+ GP/day).',
+        'Determines access to resources, NPC connections, and recovery comfort during downtime.',
       ],
     ),
 
@@ -1331,6 +1568,85 @@ class DmScreenLibrary {
         'Medium HP: Fragile 4 / Resilient 18.',
         'Large HP: Fragile 5 / Resilient 27.',
         'Immune to Poison and Psychic damage.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'table_size_space_carrying',
+      title: 'Creature Sizes, Space & Carrying Capacity',
+      category: DmCategory.tables,
+      icon: Icons.aspect_ratio,
+      color: Colors.blueAccent,
+      summary: 'Grid space control, carrying capacity, push/drag/lift formulas.',
+      tags: ['size', 'space', 'carrying capacity', 'push', 'drag', 'lift', 'tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Tiny: 2½ by 2½ ft (Space) • Carrying Capacity = STR × 15 × 0.5 lbs.',
+        'Small: 5 by 5 ft (Space) • Carrying Capacity = STR × 15 lbs.',
+        'Medium: 5 by 5 ft (Space) • Carrying Capacity = STR × 15 lbs.',
+        'Large: 10 by 10 ft (Space) • Carrying Capacity = STR × 15 × 2 lbs.',
+        'Huge: 15 by 15 ft (Space) • Carrying Capacity = STR × 15 × 4 lbs.',
+        'Gargantuan: 20 by 20 ft or larger • Carrying Capacity = STR × 15 × 8 lbs.',
+        'Push, Drag, or Lift: Up to twice your carrying capacity (STR × 30 lbs, modified by size). Speed drops to 5 ft if exceeding carrying capacity.',
+      ],
+      rules2024: [
+        'Creature sizes control grid space: Tiny (2.5x2.5 ft), Small (5x5 ft), Medium (5x5 ft), Large (10x10 ft), Huge (15x15 ft), Gargantuan (20x20+ ft).',
+        'Carrying capacity = STR score × 15 lbs (multiplied for Large+ or halved for Tiny).',
+        'Push / Drag / Lift = STR score × 30 lbs.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'table_weapon_properties_masteries',
+      title: 'Weapon Properties & 2024 Masteries Matrix',
+      category: DmCategory.tables,
+      icon: Icons.colorize,
+      color: Colors.redAccent,
+      summary: 'Standard properties (Finesse, Light, Heavy, Reach) & 2024 Masteries (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).',
+      tags: ['weapon properties', 'finesse', 'heavy', 'light', 'masteries', 'cleave', 'graze', 'nick', 'push', 'sap', 'slow', 'topple', 'vex'],
+      isChangedIn2024: true,
+      diffSummary: '2024 adds codified Weapon Masteries: Cleave (extra attack on adjacent), Graze (damage on miss), Nick (extra light attack without bonus action), Push (10ft knockback), Sap (enemy disadvantage), Slow (-10ft speed), Topple (Prone save), Vex (advantage on next attack).',
+      rules2014: [
+        'Ammunition: Requires projectiles and free hand to load.',
+        'Finesse: Choose STR or DEX modifier for attack and damage.',
+        'Heavy: Small creatures have Disadvantage on attack rolls.',
+        'Light: Ideal for two-weapon fighting.',
+        'Loading: Only 1 attack per action/bonus/reaction regardless of Extra Attack.',
+        'Reach: Adds 5 feet to melee attack reach.',
+        'Thrown: Can be thrown for ranged attack using same modifier as melee.',
+        'Two-Handed: Requires two hands to make an attack.',
+        'Versatile: Can be used with one or two hands (larger damage die).',
+      ],
+      rules2024: [
+        '2024 Weapon Masteries (Class Feature):',
+        '• Cleave: On hit, make another melee attack against adjacent creature within 5ft dealing weapon damage (no ability mod).',
+        '• Graze: On miss, deal damage equal to your ability modifier to the target.',
+        '• Nick: Extra light weapon attack is part of Attack action instead of Bonus Action.',
+        '• Push: On hit, push a creature up to 10 feet away (size Large or smaller).',
+        '• Sap: On hit, target has Disadvantage on its next attack roll before start of your next turn.',
+        '• Slow: On hit, reduce target speed by 10 feet until start of your next turn.',
+        '• Topple: On hit, target must succeed on a Con save (DC = 8 + Stat + PB) or fall Prone.',
+        '• Vex: On hit, gain Advantage on your next attack roll against that target before end of next turn.',
+      ],
+    ),
+    DmReferenceItem(
+      id: 'table_armor_don_doff',
+      title: 'Armor Table & Donning / Doffing Times',
+      category: DmCategory.tables,
+      icon: Icons.shield,
+      color: Colors.amber,
+      summary: 'AC formulas, stealth penalties, Strength minimums, and equip times.',
+      tags: ['armor', 'shield', 'don', 'doff', 'light armor', 'medium armor', 'heavy armor', 'stealth disadvantage'],
+      isChangedIn2024: false,
+      rules2014: [
+        'Light Armor: Padded (11+DEX, Disadv Stealth), Leather (11+DEX), Studded Leather (12+DEX). Don: 1 min • Doff: 1 min.',
+        'Medium Armor: Hide (12+DEX max 2), Chain Shirt (13+DEX max 2), Scale Mail (14+DEX max 2, Disadv), Breastplate (14+DEX max 2), Half Plate (15+DEX max 2, Disadv). Don: 5 min • Doff: 1 min.',
+        'Heavy Armor: Ring Mail (14, Disadv), Chain Mail (16, STR 13, Disadv), Splint (17, STR 15, Disadv), Plate (18, STR 15, Disadv). Don: 10 min • Doff: 5 min.',
+        'Shield: +2 AC. Don: 1 Action • Doff: 1 Action.',
+      ],
+      rules2024: [
+        'Light Armor: Don 1 min, Doff 1 min.',
+        'Medium Armor: Don 5 min, Doff 1 min.',
+        'Heavy Armor: Don 10 min, Doff 5 min.',
+        'Shield: Don/Doff takes 1 Action (+2 AC).',
       ],
     ),
   ];
