@@ -43,6 +43,16 @@ enum HapticFeedbackLevel {
   const HapticFeedbackLevel(this.label);
 }
 
+/// Available guided character creation wizard step ordering flows
+enum WizardOrderingPreset {
+  classic2014('2014 Classic (Species First)'),
+  modern2024('2024 Modern (Class First)'),
+  attributesFirst('Attributes First (Scores First)');
+
+  final String label;
+  const WizardOrderingPreset(this.label);
+}
+
 /// Immutable user preferences and visual polish configuration
 @immutable
 class AppSettings {
@@ -50,6 +60,7 @@ class AppSettings {
   final FantasyAccent fantasyAccent;
   final bool oledPitchBlack;
   final HapticFeedbackLevel hapticLevel;
+  final WizardOrderingPreset wizardOrderingPreset;
   final bool enableCritFumbleFx;
   final bool enableSpellParticles;
   final bool enable3dDiceOverlays;
@@ -66,6 +77,7 @@ class AppSettings {
     this.fantasyAccent = FantasyAccent.paladinGold,
     this.oledPitchBlack = false,
     this.hapticLevel = HapticFeedbackLevel.light,
+    this.wizardOrderingPreset = WizardOrderingPreset.classic2014,
     this.enableCritFumbleFx = true,
     this.enableSpellParticles = true,
     this.enable3dDiceOverlays = true,
@@ -92,6 +104,7 @@ class AppSettings {
     FantasyAccent? fantasyAccent,
     bool? oledPitchBlack,
     HapticFeedbackLevel? hapticLevel,
+    WizardOrderingPreset? wizardOrderingPreset,
     bool? enableCritFumbleFx,
     bool? enableSpellParticles,
     bool? enable3dDiceOverlays,
@@ -108,6 +121,7 @@ class AppSettings {
       fantasyAccent: fantasyAccent ?? this.fantasyAccent,
       oledPitchBlack: oledPitchBlack ?? this.oledPitchBlack,
       hapticLevel: hapticLevel ?? this.hapticLevel,
+      wizardOrderingPreset: wizardOrderingPreset ?? this.wizardOrderingPreset,
       enableCritFumbleFx: enableCritFumbleFx ?? this.enableCritFumbleFx,
       enableSpellParticles: enableSpellParticles ?? this.enableSpellParticles,
       enable3dDiceOverlays: enable3dDiceOverlays ?? this.enable3dDiceOverlays,
@@ -130,6 +144,7 @@ class AppSettings {
           fantasyAccent == other.fantasyAccent &&
           oledPitchBlack == other.oledPitchBlack &&
           hapticLevel == other.hapticLevel &&
+          wizardOrderingPreset == other.wizardOrderingPreset &&
           enableCritFumbleFx == other.enableCritFumbleFx &&
           enableSpellParticles == other.enableSpellParticles &&
           enable3dDiceOverlays == other.enable3dDiceOverlays &&
@@ -147,6 +162,7 @@ class AppSettings {
         fantasyAccent,
         oledPitchBlack,
         hapticLevel,
+        wizardOrderingPreset,
         enableCritFumbleFx,
         enableSpellParticles,
         enable3dDiceOverlays,

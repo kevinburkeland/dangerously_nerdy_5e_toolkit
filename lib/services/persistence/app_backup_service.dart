@@ -190,6 +190,7 @@ class AppBackupService {
         'fantasyAccent': currentSettings.fantasyAccent.name,
         'oledPitchBlack': currentSettings.oledPitchBlack,
         'hapticLevel': currentSettings.hapticLevel.name,
+        'wizardOrderingPreset': currentSettings.wizardOrderingPreset.name,
         'enableCritFumbleFx': currentSettings.enableCritFumbleFx,
         'enableSpellParticles': currentSettings.enableSpellParticles,
         'enable3dDiceOverlays': currentSettings.enable3dDiceOverlays,

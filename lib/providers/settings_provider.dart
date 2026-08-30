@@ -10,6 +10,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _kFantasyAccentV2 = 'setting_fantasy_accent_v2';
   static const _kHapticLevelV2 = 'setting_haptic_level_v2';
   static const _kRulesEditionV2 = 'setting_rules_edition_v2';
+  static const _kWizardOrderingPreset = 'setting_wizard_ordering_preset';
 
   // Boolean & Collection keys
   static const _kOledPitchBlack = 'setting_oled_pitch_black';
@@ -103,6 +104,16 @@ class SettingsProvider extends ChangeNotifier {
         }
       }
 
+      // 5. WizardOrderingPreset
+      WizardOrderingPreset resolvedWizardOrder = WizardOrderingPreset.classic2014;
+      final wizardOrderStr = prefs.getString(_kWizardOrderingPreset);
+      if (wizardOrderStr != null) {
+        resolvedWizardOrder = WizardOrderingPreset.values.firstWhere(
+          (e) => e.name == wizardOrderStr,
+          orElse: () => WizardOrderingPreset.classic2014,
+        );
+      }
+
       final oled = prefs.getBool(_kOledPitchBlack);
       final critFx = prefs.getBool(_kCritFumbleFx);
       final particles = prefs.getBool(_kSpellParticles);
@@ -119,6 +130,7 @@ class SettingsProvider extends ChangeNotifier {
         fantasyAccent: resolvedAccent,
         oledPitchBlack: oled ?? false,
         hapticLevel: resolvedHaptic,
+        wizardOrderingPreset: resolvedWizardOrder,
         enableCritFumbleFx: critFx ?? true,
         enableSpellParticles: particles ?? true,
         enable3dDiceOverlays: dice ?? true,
@@ -167,6 +179,7 @@ class SettingsProvider extends ChangeNotifier {
         prefs.setString(_kFantasyAccentV2, newSettings.fantasyAccent.name),
         prefs.setBool(_kOledPitchBlack, newSettings.oledPitchBlack),
         prefs.setString(_kHapticLevelV2, newSettings.hapticLevel.name),
+        prefs.setString(_kWizardOrderingPreset, newSettings.wizardOrderingPreset.name),
         prefs.setBool(_kCritFumbleFx, newSettings.enableCritFumbleFx),
         prefs.setBool(_kSpellParticles, newSettings.enableSpellParticles),
         prefs.setBool(_k3dDice, newSettings.enable3dDiceOverlays),
@@ -191,6 +204,7 @@ class SettingsProvider extends ChangeNotifier {
   void setFantasyAccent(FantasyAccent accent) => updateSettings(_settings.copyWith(fantasyAccent: accent));
   void setOledMode(bool value) => updateSettings(_settings.copyWith(oledPitchBlack: value));
   void setHapticLevel(HapticFeedbackLevel level) => updateSettings(_settings.copyWith(hapticLevel: level));
+  void setWizardOrderingPreset(WizardOrderingPreset preset) => updateSettings(_settings.copyWith(wizardOrderingPreset: preset));
   void setCritFumbleFx(bool value) => updateSettings(_settings.copyWith(enableCritFumbleFx: value));
   void setSpellParticles(bool value) => updateSettings(_settings.copyWith(enableSpellParticles: value));
   void set3dDiceOverlays(bool value) => updateSettings(_settings.copyWith(enable3dDiceOverlays: value));

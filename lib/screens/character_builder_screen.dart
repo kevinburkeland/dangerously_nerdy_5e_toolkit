@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../models/app_settings.dart';
 import '../models/characters/srd_feats_library.dart';
 import '../models/characters/srd_classes_library.dart';
 import '../models/characters/srd_species_library.dart';
@@ -20,6 +21,8 @@ import '../services/rules/character_factory.dart';
 import '../services/rules/character_stat_calculator.dart';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
+import '../services/rules/spell_allocation_validator.dart';
+import '../services/rules/skill_trait_resolver.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
 import '../providers/settings_provider.dart';
@@ -77,6 +80,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   final Set<String> _selectedWizardSpells = {};
   String _selectedStartingEquipmentPreset = 'chain_and_sword';
   Set<SkillType> _wizardSelectedSkills = {SkillType.athletics, SkillType.intimidation};
+  final Set<SkillType> _compensatorySkillPicks = {};
+  final Set<SkillType> _speciesBonusSkillPicks = {};
 
   // Ability Allocation Mode
   String _abilityScoreMode = 'standard'; // 'standard', 'pointBuy', 'rolled', 'manual'
@@ -1064,32 +1069,52 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     };
   }
 
+  AbilityType _getCastingAbility(String slug) {
+    return switch (slug.toLowerCase()) {
+      'wizard' || 'artificer' => AbilityType.intelligence,
+      'cleric' || 'druid' || 'ranger' => AbilityType.wisdom,
+      _ => AbilityType.charisma,
+    };
+  }
+
   List<String> _getWizardStepTypes() {
     final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final hasFeatStep = is2024 || curSpecies.grantsBonusFeat;
     final curClass = SrdClassesLibrary.findBySlug(_selectedClass, ruleset: _selectedRuleset) ?? SrdClassesLibrary.fighter;
     final isCaster = _isSpellcasterClass(_selectedClass, _selectedRuleset);
-
-    final steps = <String>[
-      'basics',
-      'species',
-      'class',
-    ];
-
-    // Subclass step if chosen class selects subclass at Level 1 (e.g. 2014 Cleric, Sorcerer, Warlock)
-    if (curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty) {
-      steps.add('subclass');
-    }
-
-    // Class Decisions step if class declares level 1 decisions (e.g. Fighting Style, Divine Order, Primal Order, Invocations)
+    final hasSubclass = curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty;
     final lvl1Decisions = curClass.getDecisionsForLevel(1, ruleset: _selectedRuleset);
-    if (lvl1Decisions.isNotEmpty) {
-      steps.add('class_decisions');
+    final hasDecisions = lvl1Decisions.isNotEmpty;
+
+    final preset = SettingsScope.settingsOf(context, listen: false).wizardOrderingPreset;
+
+    final steps = <String>['basics'];
+
+    void addClassBlocks() {
+      steps.add('class');
+      if (hasSubclass) steps.add('subclass');
+      if (hasDecisions) steps.add('class_decisions');
     }
 
-    steps.add('background');
-    steps.add('scores');
+    switch (preset) {
+      case WizardOrderingPreset.modern2024:
+        addClassBlocks();
+        steps.add('background');
+        steps.add('species');
+        steps.add('scores');
+      case WizardOrderingPreset.attributesFirst:
+        steps.add('scores');
+        addClassBlocks();
+        steps.add('species');
+        steps.add('background');
+      case WizardOrderingPreset.classic2014:
+        steps.add('species');
+        addClassBlocks();
+        steps.add('background');
+        steps.add('scores');
+    }
+
     if (hasFeatStep) steps.add('feats');
     if (isCaster) steps.add('spells');
     steps.add('equipment');
@@ -1355,6 +1380,20 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   Widget _buildStep2Class(ThemeData theme, CharacterClass curClass, List<SkillType> allowedSkills, int allowedCount) {
     final curClassType = _findClassType(_selectedClass) ?? DndClassType.fighter;
+    final edition = _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014;
+
+    // Resolve skills through the rules engine to detect collisions and compensatory picks
+    final skillReport = SkillTraitResolver.resolveSkills(
+      speciesSlug: _selectedSpecies,
+      backgroundSlug: _selectedBackground,
+      classSlug: curClass.id.slug,
+      requestedClassSkills: _wizardSelectedSkills,
+      compensatoryPicks: _compensatorySkillPicks,
+      edition: edition,
+    );
+
+    final speciesBonusSkillCount = SkillTraitResolver.getSpeciesBonusSkillCount(_selectedSpecies, edition);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1427,6 +1466,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   .toList();
               final cnt = (newCls.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
               _wizardSelectedSkills = newAllowed.take(cnt).toSet();
+              _compensatorySkillPicks.clear();
             });
           },
         ),
@@ -1449,15 +1489,28 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           runSpacing: 6,
           children: allowedSkills.map((sk) {
             final isChosen = _wizardSelectedSkills.contains(sk);
+            final source = skillReport.grantedSkills[sk];
+            final isGrantedByOther = source != null && !source.startsWith('Class:');
+
             return FilterChip(
-              label: Text(sk.displayName),
+              label: Text(isGrantedByOther ? '${sk.displayName} ($source)' : sk.displayName),
               selected: isChosen,
+              avatar: isGrantedByOther
+                  ? const Icon(Icons.info_outline, size: 14, color: Colors.amberAccent)
+                  : null,
               onSelected: (selected) {
                 HapticService.selectionTick(context);
                 setState(() {
                   if (selected) {
                     if (_wizardSelectedSkills.length < allowedCount) {
                       _wizardSelectedSkills.add(sk);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Cannot select more than $allowedCount class skills for ${curClass.name}.'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
                     }
                   } else {
                     _wizardSelectedSkills.remove(sk);
@@ -1467,6 +1520,157 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             );
           }).toList(),
         ),
+
+        // Collision & Compensatory Picks Section
+        if (skillReport.collidingSkills.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amberAccent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Skill Collision Detected: ${skillReport.collidingSkills.map((s) => s.displayName).join(", ")} is already granted by your background/species.',
+                        style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Per RAW rules, you receive ${skillReport.compensatoryPicksEarned} compensatory choice(s) from any remaining unselected skill.',
+                  style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Compensatory Pick(s):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text(
+                      '${_compensatorySkillPicks.length} / ${skillReport.compensatoryPicksEarned} selected',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _compensatorySkillPicks.length == skillReport.compensatoryPicksEarned ? Colors.greenAccent : Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: SkillType.values.where((sk) {
+                    return skillReport.availableSkillPool.contains(sk) || _compensatorySkillPicks.contains(sk);
+                  }).map((sk) {
+                    final isChosen = _compensatorySkillPicks.contains(sk);
+                    return FilterChip(
+                      label: Text(sk.displayName, style: const TextStyle(fontSize: 12)),
+                      selected: isChosen,
+                      selectedColor: Colors.amberAccent.withValues(alpha: 0.3),
+                      onSelected: (selected) {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          if (selected) {
+                            if (_compensatorySkillPicks.length < skillReport.compensatoryPicksEarned) {
+                              _compensatorySkillPicks.add(sk);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Cannot select more than ${skillReport.compensatoryPicksEarned} compensatory skill(s).'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } else {
+                            _compensatorySkillPicks.remove(sk);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // Species Flexible Bonus Skills (e.g. Human Skillful, Half-Elf Skill Versatility)
+        if (speciesBonusSkillCount > 0) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.tealAccent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.tealAccent.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Species Bonus Skill (${SrdSpeciesLibrary.findBySlug(_selectedSpecies)?.name ?? "Species"}):',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.tealAccent)),
+                    Text(
+                      '${_speciesBonusSkillPicks.length} / $speciesBonusSkillCount selected',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _speciesBonusSkillPicks.length == speciesBonusSkillCount ? Colors.greenAccent : Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: SkillType.values.where((sk) {
+                    return !skillReport.resolvedProficiencies.containsKey(sk) || _speciesBonusSkillPicks.contains(sk);
+                  }).map((sk) {
+                    final isChosen = _speciesBonusSkillPicks.contains(sk);
+                    return FilterChip(
+                      label: Text(sk.displayName, style: const TextStyle(fontSize: 12)),
+                      selected: isChosen,
+                      selectedColor: Colors.tealAccent.withValues(alpha: 0.3),
+                      onSelected: (selected) {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          if (selected) {
+                            if (_speciesBonusSkillPicks.length < speciesBonusSkillCount) {
+                              _speciesBonusSkillPicks.add(sk);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Cannot select more than $speciesBonusSkillCount species bonus skill(s).'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } else {
+                            _speciesBonusSkillPicks.remove(sk);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -2482,13 +2686,44 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final level1Spells = allClassSpells.where((s) => s.level == 1).toList();
     final stepNumber = _getWizardStepTypes().indexOf('spells') + 1;
 
+    // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
+    final castingAbility = _getCastingAbility(curClass.id.slug);
+    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
+    final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
+    final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
+    final effectiveScores = _wizardBaseScores.withBonus(calculatedBonuses);
+    final castingMod = effectiveScores.getModifier(castingAbility);
+
+    final limits = SpellAllocationValidator.getLimitsForClass(
+      classSlug: curClass.id.slug,
+      classLevel: 1,
+      abilityModifier: castingMod,
+      edition: edition,
+    );
+
+    final maxCantrips = limits.maxCantrips;
+    final isWizard = curClass.id.slug.toLowerCase() == 'wizard';
+    final maxSpells = (isWizard && limits.maxSpellbookInitialScribe > 0)
+        ? limits.maxSpellbookInitialScribe // 6 for Wizard spellbook
+        : (limits.maxSpellsPrepared > 0 ? limits.maxSpellsPrepared : limits.maxSpellsKnown);
+
+    final spellsSectionTitle = isWizard
+        ? 'SPELLBOOK (1ST-LEVEL SPELLS)'
+        : (limits.maxSpellsPrepared > 0 ? 'PREPARED 1ST-LEVEL SPELLS' : '1ST-LEVEL SPELLS KNOWN');
+
+    final spellsSubtitle = isWizard
+        ? 'A Level 1 Wizard must choose exactly 6 1st-level spells to scribe into their spellbook.'
+        : (limits.maxSpellsPrepared > 0
+            ? 'Prepared limit: Level 1 + ${castingAbility.shortName} mod (${castingMod >= 0 ? "+$castingMod" : "$castingMod"}) = $maxSpells spells.'
+            : 'Spells known limit: $maxSpells spells.');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Step $stepNumber: Spells & Cantrips',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
         const SizedBox(height: 6),
-        Text('Select your starting cantrips and 1st-level spells for ${curClass.name}.',
+        Text('Select starting cantrips and 1st-level spells for ${curClass.name} (${castingAbility.shortName} mod: ${castingMod >= 0 ? "+$castingMod" : "$castingMod"}).',
             style: const TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
 
@@ -2501,11 +2736,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             onPressed: () {
               HapticService.selectionTick(context);
               setState(() {
-                if (cantrips.isNotEmpty) {
-                  _selectedWizardCantrips.addAll(cantrips.take(3).map((c) => c.id));
+                _selectedWizardCantrips.clear();
+                _selectedWizardSpells.clear();
+                if (cantrips.isNotEmpty && maxCantrips > 0) {
+                  _selectedWizardCantrips.addAll(cantrips.take(maxCantrips).map((c) => c.id));
                 }
-                if (level1Spells.isNotEmpty) {
-                  _selectedWizardSpells.addAll(level1Spells.take(4).map((s) => s.id));
+                if (level1Spells.isNotEmpty && maxSpells > 0) {
+                  _selectedWizardSpells.addAll(level1Spells.take(maxSpells).map((s) => s.id));
                 }
               });
             },
@@ -2513,53 +2750,70 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ),
 
         // Section 1: Cantrips
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.purple.shade900.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('CANTRIPS (Level 0)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
-                  Text('${_selectedWizardCantrips.length} selected', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (cantrips.isEmpty)
-                const Text('No class-specific cantrips found.', style: TextStyle(fontSize: 12, color: Colors.white54))
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: cantrips.map((c) {
-                    final isSelected = _selectedWizardCantrips.contains(c.id);
-                    return FilterChip(
-                      selected: isSelected,
-                      selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
-                      label: Text(c.getName(edition)),
-                      avatar: Icon(Icons.star, size: 14, color: isSelected ? Colors.purpleAccent : Colors.white54),
-                      onSelected: (selected) {
-                        HapticService.selectionTick(context);
-                        setState(() {
-                          if (selected) {
-                            _selectedWizardCantrips.add(c.id);
-                          } else {
-                            _selectedWizardCantrips.remove(c.id);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
+        if (maxCantrips > 0 || cantrips.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade900.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('CANTRIPS (Level 0)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+                    Text(
+                      '${_selectedWizardCantrips.length} / $maxCantrips selected',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _selectedWizardCantrips.length == maxCantrips ? Colors.greenAccent : Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-            ],
+                const SizedBox(height: 8),
+                if (cantrips.isEmpty)
+                  const Text('No class-specific cantrips found.', style: TextStyle(fontSize: 12, color: Colors.white54))
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: cantrips.map((c) {
+                      final isSelected = _selectedWizardCantrips.contains(c.id);
+                      return FilterChip(
+                        selected: isSelected,
+                        selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
+                        label: Text(c.getName(edition)),
+                        avatar: Icon(Icons.star, size: 14, color: isSelected ? Colors.purpleAccent : Colors.white54),
+                        onSelected: (selected) {
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            if (selected) {
+                              if (_selectedWizardCantrips.length < maxCantrips) {
+                                _selectedWizardCantrips.add(c.id);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Cannot select more than $maxCantrips cantrips for Level 1 ${curClass.name}.'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            } else {
+                              _selectedWizardCantrips.remove(c.id);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
           ),
-        ),
 
         const SizedBox(height: 16),
 
@@ -2577,10 +2831,19 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('1ST-LEVEL SPELLS', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-                  Text('${_selectedWizardSpells.length} selected', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                  Text(spellsSectionTitle, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+                  Text(
+                    '${_selectedWizardSpells.length} / $maxSpells selected',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _selectedWizardSpells.length == maxSpells ? Colors.greenAccent : Colors.amberAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
+              const SizedBox(height: 4),
+              Text(spellsSubtitle, style: const TextStyle(fontSize: 11, color: Colors.white60, fontStyle: FontStyle.italic)),
               const SizedBox(height: 8),
               if (level1Spells.isEmpty)
                 const Text('No class-specific 1st-level spells found.', style: TextStyle(fontSize: 12, color: Colors.white54))
@@ -2599,7 +2862,16 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                         HapticService.selectionTick(context);
                         setState(() {
                           if (selected) {
-                            _selectedWizardSpells.add(s.id);
+                            if (_selectedWizardSpells.length < maxSpells) {
+                              _selectedWizardSpells.add(s.id);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Cannot select more than $maxSpells spells for Level 1 ${curClass.name}.'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
                           } else {
                             _selectedWizardSpells.remove(s.id);
                           }
@@ -2640,7 +2912,18 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ),
         const SizedBox(height: 8),
         Text('Class Saving Throws: ${cls.savingThrows.join(", ")}', style: const TextStyle(fontSize: 12)),
-        Text('Skill Proficiencies: ${_wizardSelectedSkills.map((s) => s.displayName).join(", ")}', style: const TextStyle(fontSize: 12)),
+        Builder(builder: (ctx) {
+          final reviewSkillReport = SkillTraitResolver.resolveSkills(
+            speciesSlug: _selectedSpecies,
+            backgroundSlug: _selectedBackground,
+            classSlug: cls.id.slug,
+            requestedClassSkills: _wizardSelectedSkills,
+            compensatoryPicks: _compensatorySkillPicks,
+            edition: _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014,
+          );
+          final allReviewSkills = {...reviewSkillReport.resolvedProficiencies.keys, ..._speciesBonusSkillPicks};
+          return Text('Skill Proficiencies: ${allReviewSkills.map((s) => s.displayName).join(", ")}', style: const TextStyle(fontSize: 12));
+        }),
         if (hasFeat)
           Text(is2024 ? 'Origin Feat: ${_selectedFeat.toUpperCase()}' : 'Feat: ${_selectedFeat.toUpperCase()}',
               style: const TextStyle(fontSize: 12, color: Colors.purpleAccent)),
@@ -2813,18 +3096,18 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       return match;
     }).toSet();
 
-    // Map skill proficiencies
-    final skillMap = <SkillType, SkillProficiencyLevel>{};
-    for (final sk in _wizardSelectedSkills) {
+    // Map skill proficiencies using SkillTraitResolver
+    final skillReport = SkillTraitResolver.resolveSkills(
+      speciesSlug: _selectedSpecies,
+      backgroundSlug: _selectedBackground,
+      classSlug: curClass.id.slug,
+      requestedClassSkills: _wizardSelectedSkills,
+      compensatoryPicks: _compensatorySkillPicks,
+      edition: _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014,
+    );
+    final skillMap = Map<SkillType, SkillProficiencyLevel>.from(skillReport.resolvedProficiencies);
+    for (final sk in _speciesBonusSkillPicks) {
       skillMap[sk] = SkillProficiencyLevel.proficient;
-    }
-    // Also grant background skills
-    for (final bgSkStr in curBackground.skillProficiencies) {
-      final bgSk = SkillType.values.firstWhere(
-        (st) => st.displayName.toLowerCase() == bgSkStr.toLowerCase() || st.name.toLowerCase() == bgSkStr.toLowerCase(),
-        orElse: () => SkillType.perception,
-      );
-      skillMap[bgSk] = SkillProficiencyLevel.proficient;
     }
 
     // Starting equipment and purse from chosen SRD package

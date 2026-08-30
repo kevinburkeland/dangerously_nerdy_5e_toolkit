@@ -67,6 +67,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       showIcons: true,
                       showSubtext: true,
                     ),
+                    const Divider(height: 24),
+                    const Text('Character Creation Step Flow', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Determines the default guided sequence for building characters in the Character Wizard.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<WizardOrderingPreset>(
+                      initialValue: s.wizardOrderingPreset,
+                      decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                      items: WizardOrderingPreset.values
+                          .map((p) => DropdownMenuItem(value: p, child: Text(p.label)))
+                          .toList(),
+                      onChanged: (p) {
+                        if (p != null) {
+                          HapticService.selectionTick(context);
+                          settingsProvider.setWizardOrderingPreset(p);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
