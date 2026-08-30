@@ -3,6 +3,7 @@ import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
+import '../../models/characters/srd_classes_library.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
@@ -406,6 +407,112 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
             ),
           );
         }),
+
+        // Features & Traits Section (Invocations, Feats, Specializations)
+        Builder(
+          builder: (context) {
+            final allSelectedOptions = character.progression.getAllSelectedFeatureOptions();
+            if (allSelectedOptions.isEmpty && character.feats.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Text(
+                  'SPECIALIZATIONS, INVOCATIONS & FEATS',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    color: Colors.cyanAccent,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Render Selected Feature Options (e.g. Eldritch Invocations, Fighting Style, Divine Order)
+                ...allSelectedOptions.entries.map((entry) {
+                  final decisionId = entry.key;
+                  final optionIds = entry.value;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.cyan.shade900.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.auto_awesome, size: 14, color: Colors.cyanAccent),
+                            const SizedBox(width: 6),
+                            Text(
+                              decisionId.replaceAll('-', ' ').toUpperCase(),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.cyanAccent),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: optionIds.map((optId) {
+                            final opt = SrdFeatureOptions.allOptions.where((o) => o.id == optId).firstOrNull;
+                            return Chip(
+                              label: Text(opt?.name ?? optId.replaceAll('_', ' ')),
+                              backgroundColor: Colors.cyan.shade900.withValues(alpha: 0.5),
+                              visualDensity: VisualDensity.compact,
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                // Render Feats
+                if (character.feats.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade900.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.military_tech, size: 14, color: Colors.amber),
+                            SizedBox(width: 6),
+                            Text('FEATS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.amber)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: character.feats.map((f) {
+                            return Chip(
+                              label: Text(f.displayName),
+                              backgroundColor: Colors.amber.shade900.withValues(alpha: 0.4),
+                              visualDensity: VisualDensity.compact,
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }

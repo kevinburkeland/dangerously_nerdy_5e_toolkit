@@ -6,6 +6,7 @@ import '../models/characters/srd_classes_library.dart';
 import '../models/characters/srd_species_library.dart';
 import '../models/characters/srd_backgrounds_library.dart';
 import '../models/characters/srd_equipment_library.dart';
+import '../models/characters/subclass_spells_library.dart';
 import '../models/magic_items/magic_item_library.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/character_models.dart';
@@ -2677,9 +2678,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final spellClass = _findSpellClass(curClass.id.slug);
 
     final allClassSpells = SpellbookLibrary.allSpells.where((s) {
+      if (s.level > 1) return false;
       if (spellClass == null) return s.level <= 1;
       final rules = s.getRules(edition);
-      return rules.classes.contains(spellClass);
+      final isClassSpell = rules.classes.contains(spellClass);
+      final isExpanded = SubclassSpellsLibrary.isExpandedSpell(curClass.id.slug, _wizardSelectedSubclass, s, edition);
+      return isClassSpell || isExpanded;
     }).toList();
 
     final cantrips = allClassSpells.where((s) => s.level == 0).toList();

@@ -321,6 +321,14 @@ class SrdFeatureOptions {
         ..._customInvocations,
       ];
 
+  /// All feature options across all classes and custom invocations
+  static List<FeatureOption> get allOptions => [
+        ...fightingStyles,
+        ...clericDivineOrders,
+        ...druidPrimalOrders,
+        ...warlockInvocationsAndBoons,
+      ];
+
   /// Sets the list of custom homebrew Eldritch Invocations
   static void setCustomInvocations(List<FeatureOption> custom) {
     _customInvocations = List<FeatureOption>.from(custom);

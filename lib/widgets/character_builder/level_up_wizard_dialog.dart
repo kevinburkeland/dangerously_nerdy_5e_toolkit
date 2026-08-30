@@ -6,6 +6,7 @@ import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/subclass_spells_library.dart';
 import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/character_progression_engine.dart';
@@ -57,6 +58,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
 
   // Step 3: Subclass Selection
   String? _selectedSubclass;
+  final Map<String, List<String>> _selectedFeatureOptions = {};
 
   // Step 4: ASI / Feat
   bool _isAsiSelected = true;
@@ -346,6 +348,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       asiOrFeat: asiChoice,
       newCantrips: cantripRefs,
       newSpells: spellRefs,
+      selectedFeatureOptions: Map<String, List<String>>.from(_selectedFeatureOptions),
     );
   }
 
@@ -800,17 +803,18 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       availableSubs.addAll(_subclassesByClass[_selectedClassSlug] ?? []);
     }
     final needsSubclass = _isSubclassMilestone && availableSubs.isNotEmpty;
+    final decisions = customCls?.getDecisionsForLevel(_targetClassNewLevel, ruleset: widget.character.id.ruleset) ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Class Features & Archetypes',
+          'Class Features & Specializations',
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
-          'Unlocking features for $_selectedClassSlug Level $_targetClassNewLevel.',
+          'Unlocking features and choices for $_selectedClassSlug Level $_targetClassNewLevel.',
           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
@@ -857,6 +861,93 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           const SizedBox(height: 16),
         ],
 
+        // Feature Decisions (e.g. Eldritch Invocations, Fighting Style, Divine Order, etc.)
+        if (decisions.isNotEmpty) ...[
+          ...decisions.map((decision) {
+            final selected = _selectedFeatureOptions[decision.id] ??= [];
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.cyan.shade900.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.cyan.shade800,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          decision.type.displayName,
+                          style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          decision.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${decision.prompt} (Selected: ${selected.length} / ${decision.maxSelections})',
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: decision.availableOptions.map((opt) {
+                      final isSelected = selected.contains(opt.id);
+                      return FilterChip(
+                        selected: isSelected,
+                        selectedColor: Colors.cyanAccent.withValues(alpha: 0.35),
+                        label: Text(opt.name),
+                        avatar: Icon(
+                          isSelected ? Icons.check_circle : Icons.circle_outlined,
+                          size: 14,
+                          color: isSelected ? Colors.cyanAccent : Colors.white54,
+                        ),
+                        onSelected: (bool chosen) {
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            final list = List<String>.from(_selectedFeatureOptions[decision.id] ?? []);
+                            if (chosen) {
+                              if (decision.maxSelections == 1) {
+                                list.clear();
+                                list.add(opt.id);
+                              } else {
+                                if (list.length >= decision.maxSelections) {
+                                  list.removeAt(0);
+                                }
+                                list.add(opt.id);
+                              }
+                            } else {
+                              list.remove(opt.id);
+                            }
+                            _selectedFeatureOptions[decision.id] = list;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+
         // General features overview
         Container(
           padding: const EdgeInsets.all(14),
@@ -874,6 +965,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               if (_isAsiEligible) const Text('• Ability Score Improvement / Feat Eligible'),
               if (needsSubclass && _selectedSubclass != null)
                 Text('• Specialization: $_selectedSubclass'),
+              if (_selectedFeatureOptions.isNotEmpty)
+                Text('• Chosen Specializations: ${_selectedFeatureOptions.values.expand((v) => v).join(', ')}'),
             ],
           ),
         ),
@@ -989,6 +1082,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     );
   }
 
+  String? get _effectiveSubclassSlug {
+    if (_selectedSubclass != null) return _selectedSubclass;
+    final match = widget.character.progression.classes.where(
+      (c) => c.classRef.slug.toLowerCase() == _selectedClassSlug.toLowerCase(),
+    );
+    return match.isNotEmpty ? match.first.subclassRef?.slug : null;
+  }
+
   int get _maxAccessibleSpellLevel {
     final slug = _selectedClassSlug.toLowerCase();
     final lvl = _targetClassNewLevel;
@@ -999,17 +1100,23 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       return ((lvl + 1) ~/ 2).clamp(1, 5);
     }
     if (['paladin', 'ranger'].contains(slug)) {
-      return (lvl ~/ 2).clamp(1, 5);
+      if (lvl < 2) {
+        return (widget.character.id.ruleset == RulesetVersion.v2024 && slug == 'ranger') ? 1 : 0;
+      }
+      return ((lvl + 3) ~/ 4).clamp(1, 5);
     }
     if (slug == 'artificer') {
-      return ((lvl + 1) ~/ 2).clamp(1, 5);
+      return ((lvl + 3) ~/ 4).clamp(1, 5);
     }
-    if (_selectedSubclass != null &&
-        (_selectedSubclass!.contains('eldritch_knight') || _selectedSubclass!.contains('arcane_trickster'))) {
-      return ((lvl + 1) ~/ 3).clamp(1, 4);
+    final effSub = _effectiveSubclassSlug?.toLowerCase() ?? '';
+    if (effSub.contains('eldritch_knight') || effSub.contains('arcane_trickster')) {
+      if (lvl < 3) return 0;
+      return ((lvl + 1) ~/ 6 + 1).clamp(1, 4);
     }
-    return 1;
+    return 0;
   }
+
+  bool get _isSpellcaster => _maxAccessibleSpellLevel > 0;
 
   SpellClass? get _targetSpellClass {
     return switch (_selectedClassSlug.toLowerCase()) {
@@ -1030,6 +1137,28 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   // STEP 5: SPELLS
   // --------------------------------------------------------------------------
   Widget _buildStep5Spells(ThemeData theme, TabletopColors? customColors) {
+    if (!_isSpellcaster) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            const Icon(Icons.auto_awesome_outlined, size: 40, color: Colors.white54),
+            const SizedBox(height: 12),
+            Text(
+              'No Spellcasting Advancement at Level $_targetClassNewLevel',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '$_selectedClassSlug does not learn or prepare spells at this level.',
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      );
+    }
+
     final edition = widget.character.id.ruleset == RulesetVersion.v2024
         ? DmRulesEdition.v2024
         : DmRulesEdition.v2014;
@@ -1037,9 +1166,12 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final maxLvl = _maxAccessibleSpellLevel;
 
     final allClassSpells = SpellbookLibrary.allSpells.where((s) {
+      if (s.level > maxLvl) return false;
       if (spellClass == null) return s.level <= maxLvl;
       final rules = s.getRules(edition);
-      return rules.classes.contains(spellClass) && s.level <= maxLvl;
+      final isClassSpell = rules.classes.contains(spellClass);
+      final isExpanded = SubclassSpellsLibrary.isExpandedSpell(_selectedClassSlug, _effectiveSubclassSlug, s, edition);
+      return isClassSpell || isExpanded;
     }).toList();
 
     final filtered = allClassSpells.where((s) {
