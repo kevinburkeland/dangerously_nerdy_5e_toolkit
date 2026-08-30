@@ -22,10 +22,25 @@ class CompendiumGenericEntryParser {
     final source = raw['source']?.toString().toUpperCase() ?? 'HOMEBREW';
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
-    final category = raw['category']?.toString() ??
-        raw['featureType']?.toString() ??
-        raw['type']?.toString() ??
-        defaultCategory;
+    String category = defaultCategory;
+    if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
+      category = raw['category'].toString();
+    } else if (raw['featureType'] != null) {
+      final ft = raw['featureType'].toString().toUpperCase();
+      if (ft == 'EI' || ft.contains('INVOCATION')) {
+        category = 'Eldritch Invocation';
+      } else if (ft == 'MM' || ft.contains('METAMAGIC')) {
+        category = 'Metamagic';
+      } else if (ft == 'MAN' || ft == 'BM' || ft.contains('MANEUVER')) {
+        category = 'Maneuver';
+      } else if (ft == 'AI' || ft == 'INF' || ft.contains('INFUSION')) {
+        category = 'Infusion';
+      } else {
+        category = raw['featureType'].toString();
+      }
+    } else if (raw['type'] != null && raw['type'].toString().isNotEmpty) {
+      category = raw['type'].toString();
+    }
 
     final parsedEntries = transformer.transformEntries(
       raw['entries'] ?? raw['rows'] ?? raw['table'] ?? raw['entry'],

@@ -196,6 +196,17 @@ class SrdEquivalenceIndex {
     }
     _index(EntityType.background, bgSlugs, bgNames);
 
+    // 9. Canonical Eldritch Invocations & Optional Features (SrdFeatureOptions)
+    final invSlugs = <String>{};
+    final invNames = <String>{};
+    for (final inv in SrdFeatureOptions.warlockInvocationsAndBoons) {
+      invSlugs.add(inv.id.toLowerCase().trim());
+      invSlugs.add(inv.id.replaceAll('_', '-').toLowerCase().trim());
+      invSlugs.add(_slugify(inv.name));
+      invNames.add(_slugify(inv.name));
+    }
+    _index(EntityType.custom, invSlugs, invNames);
+
     _built = true;
   }
 

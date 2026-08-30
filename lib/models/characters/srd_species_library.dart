@@ -276,13 +276,40 @@ class SrdSpeciesLibrary {
   ];
 
   static List<Race> _customSpecies = [];
+  static List<Subrace> _customSubraces = [];
 
-  /// Dynamic list of all available species (Base SRD + Custom Homebrew)
-  static List<Race> get allSpecies => [..._baseSpecies, ..._customSpecies];
+  /// Dynamic list of all available species (Base SRD + Custom Homebrew) with custom subraces attached
+  static List<Race> get allSpecies {
+    return [..._baseSpecies, ..._customSpecies].map((r) {
+      final cleanRaceSlug = r.id.slug.toLowerCase().trim();
+      final cleanRaceName = r.name.toLowerCase().trim();
+
+      final matchingCustomSubraces = _customSubraces.where((s) {
+        final subRaceSlug = s.raceSlug.toLowerCase().trim();
+        return subRaceSlug == cleanRaceSlug ||
+            subRaceSlug == cleanRaceName ||
+            subRaceSlug.replaceAll('-', ' ') == cleanRaceName ||
+            subRaceSlug.replaceAll(' ', '-') == cleanRaceSlug;
+      }).toList();
+
+      if (matchingCustomSubraces.isEmpty) return r;
+
+      final existingSlugs = r.subraces.map((s) => s.id.slug.toLowerCase().trim()).toSet();
+      final newSubraces = matchingCustomSubraces.where((s) => !existingSlugs.contains(s.id.slug.toLowerCase().trim())).toList();
+
+      if (newSubraces.isEmpty) return r;
+      return r.copyWith(subraces: [...r.subraces, ...newSubraces]);
+    }).toList();
+  }
 
   /// Sets the list of custom/homebrew species
   static void setCustomSpecies(List<Race> custom) {
     _customSpecies = List<Race>.from(custom);
+  }
+
+  /// Sets the list of standalone custom/homebrew subraces
+  static void setCustomSubraces(List<Subrace> custom) {
+    _customSubraces = List<Subrace>.from(custom);
   }
 
   /// Adds or replaces a custom species in the library
@@ -291,9 +318,20 @@ class SrdSpeciesLibrary {
     _customSpecies.add(race);
   }
 
+  /// Adds or replaces a custom subrace in the library
+  static void addCustomSubrace(Subrace subrace) {
+    _customSubraces.removeWhere((s) => s.id.slug == subrace.id.slug);
+    _customSubraces.add(subrace);
+  }
+
   /// Removes a custom species by slug
   static void removeCustomSpecies(String slug) {
     _customSpecies.removeWhere((r) => r.id.slug == slug);
+  }
+
+  /// Removes a custom subrace by slug
+  static void removeCustomSubrace(String slug) {
+    _customSubraces.removeWhere((s) => s.id.slug == slug);
   }
 
   static List<Race> getSpeciesForRuleset(RulesetVersion ruleset) {

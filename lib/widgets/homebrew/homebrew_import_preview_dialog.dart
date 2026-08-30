@@ -289,8 +289,16 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                   _buildCategorySection('Feats', analysis.feats),
                 if (analysis.backgrounds.isNotEmpty)
                   _buildCategorySection('Backgrounds', analysis.backgrounds),
-                if (analysis.otherEntries.isNotEmpty)
-                  _buildCategorySection('Rules & Tables', analysis.otherEntries),
+                if (analysis.otherEntries.any((e) => e.incomingEntity.category.toLowerCase().contains('invocation')))
+                  _buildCategorySection(
+                    'Eldritch Invocations',
+                    analysis.otherEntries.where((e) => e.incomingEntity.category.toLowerCase().contains('invocation')).toList(),
+                  ),
+                if (analysis.otherEntries.any((e) => !e.incomingEntity.category.toLowerCase().contains('invocation')))
+                  _buildCategorySection(
+                    'Rules & Tables',
+                    analysis.otherEntries.where((e) => !e.incomingEntity.category.toLowerCase().contains('invocation')).toList(),
+                  ),
               ],
             ),
           ),

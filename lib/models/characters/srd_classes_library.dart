@@ -93,50 +93,249 @@ class SrdFeatureOptions {
     ),
   ];
 
-  static const List<FeatureOption> warlockInvocationsAndBoons = [
-    FeatureOption(
-      id: 'pact_of_the_blade',
-      name: 'Pact of the Blade',
-      descriptionMarkdown:
-          'You can conjure or bond with a magical melee weapon. You can use your Charisma modifier instead of Strength or Dexterity for attack and damage rolls with that weapon.',
-      grants: {'chaWeaponAttacks': true},
-    ),
-    FeatureOption(
-      id: 'pact_of_the_tome',
-      name: 'Pact of the Tome',
-      descriptionMarkdown:
-          'Your patron bestows a grimoire called the Book of Shadows. You learn 3 cantrips from any class list and can cast ritual spells.',
-      grants: {'bonusCantripCount': 3, 'ritualCasting': true},
-    ),
-    FeatureOption(
-      id: 'pact_of_the_chain',
-      name: 'Pact of the Chain',
-      descriptionMarkdown:
-          'You learn the Find Familiar spell and can summon special forms: Imp, Pseudodragon, Quasit, or Sprite.',
-      grants: {'bonusSpells': ['find-familiar']},
-    ),
-    FeatureOption(
-      id: 'armor_of_shadows',
-      name: 'Armor of Shadows',
-      descriptionMarkdown:
-          'You can cast Mage Armor on yourself at will, without expending a spell slot or material components.',
-      grants: {'atWillSpells': ['mage-armor']},
-    ),
-    FeatureOption(
+  static final List<FeatureOption> _baseWarlockInvocations = [
+    const FeatureOption(
       id: 'agonizing_blast',
       name: 'Agonizing Blast',
       descriptionMarkdown:
           'When you cast Eldritch Blast, add your Charisma modifier to the damage it deals on a hit.',
       grants: {'eldritchBlastChaDamage': true},
     ),
-    FeatureOption(
+    const FeatureOption(
+      id: 'armor_of_shadows',
+      name: 'Armor of Shadows',
+      descriptionMarkdown:
+          'You can cast Mage Armor on yourself at will, without expending a spell slot or material components.',
+      grants: {'atWillSpells': ['mage-armor']},
+    ),
+    const FeatureOption(
+      id: 'ascendant_step',
+      name: 'Ascendant Step',
+      descriptionMarkdown:
+          'Prerequisite: 9th level. You can cast Levitate on yourself at will, without expending a spell slot or material components.',
+      grants: {'atWillSpells': ['levitate']},
+    ),
+    const FeatureOption(
+      id: 'beast_speech',
+      name: 'Beast Speech',
+      descriptionMarkdown:
+          'You can cast Speak with Animals at will, without expending a spell slot.',
+      grants: {'atWillSpells': ['speak-with-animals']},
+    ),
+    const FeatureOption(
+      id: 'beguiling_influence',
+      name: 'Beguiling Influence',
+      descriptionMarkdown:
+          'You gain proficiency in the Deception and Persuasion skills.',
+      grants: {'bonusSkills': ['deception', 'persuasion']},
+    ),
+    const FeatureOption(
+      id: 'book_of_ancient_secrets',
+      name: 'Book of Ancient Secrets',
+      descriptionMarkdown:
+          'Prerequisite: Pact of the Tome feature. You can inscribe magical rituals in your Book of Shadows and cast ritual spells from any class list.',
+      grants: {'ritualCasting': true},
+    ),
+    const FeatureOption(
+      id: 'chains_of_carceri',
+      name: 'Chains of Carceri',
+      descriptionMarkdown:
+          'Prerequisite: 15th level, Pact of the Chain feature. You can cast Hold Monster at will targeting a celestial, fiend, or elemental without expending a spell slot.',
+      grants: {'atWillSpells': ['hold-monster']},
+    ),
+    const FeatureOption(
       id: 'devils_sight',
       name: 'Devil\'s Sight',
       descriptionMarkdown:
           'You can see normally in darkness, both magical and nonmagical, to a distance of 120 feet.',
       grants: {'darkvisionFeet': 120, 'seeMagicalDarkness': true},
     ),
+    const FeatureOption(
+      id: 'dreadful_word',
+      name: 'Dreadful Word',
+      descriptionMarkdown:
+          'Prerequisite: 7th level. You can cast Confusion once using a warlock spell slot.',
+      grants: {'bonusSpells': ['confusion']},
+    ),
+    const FeatureOption(
+      id: 'eldritch_sight',
+      name: 'Eldritch Sight',
+      descriptionMarkdown:
+          'You can cast Detect Magic at will, without expending a spell slot.',
+      grants: {'atWillSpells': ['detect-magic']},
+    ),
+    const FeatureOption(
+      id: 'eldritch_spear',
+      name: 'Eldritch Spear',
+      descriptionMarkdown:
+          'Prerequisite: Eldritch Blast cantrip. When you cast Eldritch Blast, its range increases to 300 feet.',
+      grants: {'eldritchBlastRangeFeet': 300},
+    ),
+    const FeatureOption(
+      id: 'eyes_of_the_rune_keeper',
+      name: 'Eyes of the Rune Keeper',
+      descriptionMarkdown:
+          'You can read all writing.',
+      grants: {'readAllWriting': true},
+    ),
+    const FeatureOption(
+      id: 'fiendish_vigor',
+      name: 'Fiendish Vigor',
+      descriptionMarkdown:
+          'You can cast False Life on yourself at will as a 1st-level spell, without expending a spell slot or material components.',
+      grants: {'atWillSpells': ['false-life']},
+    ),
+    const FeatureOption(
+      id: 'gaze_of_two_minds',
+      name: 'Gaze of Two Minds',
+      descriptionMarkdown:
+          'You can use your action to touch a willing humanoid and perceive through its senses until the end of your next turn.',
+      grants: {'gazeOfTwoMinds': true},
+    ),
+    const FeatureOption(
+      id: 'lessons_of_the_first_ones',
+      name: 'Lessons of the First Ones',
+      descriptionMarkdown:
+          'You receive an Origin Feat of your choice from the feat library.',
+      grants: {'bonusOriginFeat': true},
+    ),
+    const FeatureOption(
+      id: 'lifedrinker',
+      name: 'Lifedrinker',
+      descriptionMarkdown:
+          'Prerequisite: 9th/12th level, Pact of the Blade feature. When you hit a creature with your pact weapon, the creature takes extra necrotic or radiant damage equal to your Charisma modifier.',
+      grants: {'lifedrinkerDamage': true},
+    ),
+    const FeatureOption(
+      id: 'mask_of_many_faces',
+      name: 'Mask of Many Faces',
+      descriptionMarkdown:
+          'You can cast Disguise Self at will, without expending a spell slot.',
+      grants: {'atWillSpells': ['disguise-self']},
+    ),
+    const FeatureOption(
+      id: 'misty_visions',
+      name: 'Misty Visions',
+      descriptionMarkdown:
+          'You can cast Silent Image at will, without expending a spell slot or material components.',
+      grants: {'atWillSpells': ['silent-image']},
+    ),
+    const FeatureOption(
+      id: 'one_with_shadows',
+      name: 'One with Shadows',
+      descriptionMarkdown:
+          'Prerequisite: 5th level. When you are in an area of dim light or darkness, you can use your action to become invisible until you move or take an action or a reaction.',
+      grants: {'oneWithShadows': true},
+    ),
+    const FeatureOption(
+      id: 'otherworldly_leap',
+      name: 'Otherworldly Leap',
+      descriptionMarkdown:
+          'Prerequisite: 9th level. You can cast Jump on yourself at will, without expending a spell slot.',
+      grants: {'atWillSpells': ['jump']},
+    ),
+    const FeatureOption(
+      id: 'pact_of_the_blade',
+      name: 'Pact of the Blade',
+      descriptionMarkdown:
+          'You can conjure or bond with a magical melee weapon. You can use your Charisma modifier instead of Strength or Dexterity for attack and damage rolls with that weapon.',
+      grants: {'chaWeaponAttacks': true, 'bladePact': true},
+    ),
+    const FeatureOption(
+      id: 'pact_of_the_chain',
+      name: 'Pact of the Chain',
+      descriptionMarkdown:
+          'You learn the Find Familiar spell and can summon special forms: Imp, Pseudodragon, Quasit, or Sprite.',
+      grants: {'bonusSpells': ['find-familiar']},
+    ),
+    const FeatureOption(
+      id: 'pact_of_the_tome',
+      name: 'Pact of the Tome',
+      descriptionMarkdown:
+          'Your patron bestows a grimoire called the Book of Shadows. You learn 3 cantrips from any class list and can cast ritual spells.',
+      grants: {'bonusCantripCount': 3, 'ritualCasting': true},
+    ),
+    const FeatureOption(
+      id: 'repelling_blast',
+      name: 'Repelling Blast',
+      descriptionMarkdown:
+          'Prerequisite: Eldritch Blast cantrip. When you hit a creature with Eldritch Blast, you can push the creature up to 10 feet away from you in a straight line.',
+      grants: {'repellingBlast': true},
+    ),
+    const FeatureOption(
+      id: 'sculptor_of_flesh',
+      name: 'Sculptor of Flesh',
+      descriptionMarkdown:
+          'Prerequisite: 7th level. You can cast Polymorph once using a warlock spell slot.',
+      grants: {'bonusSpells': ['polymorph']},
+    ),
+    const FeatureOption(
+      id: 'sign_of_ill_omen',
+      name: 'Sign of Ill Omen',
+      descriptionMarkdown:
+          'Prerequisite: 5th level. You can cast Bestow Curse once using a warlock spell slot.',
+      grants: {'bonusSpells': ['bestow-curse']},
+    ),
+    const FeatureOption(
+      id: 'thief_of_five_fates',
+      name: 'Thief of Five Fates',
+      descriptionMarkdown:
+          'You can cast Bane once using a warlock spell slot.',
+      grants: {'bonusSpells': ['bane']},
+    ),
+    const FeatureOption(
+      id: 'thirsting_blade',
+      name: 'Thirsting Blade',
+      descriptionMarkdown:
+          'Prerequisite: 5th level, Pact of the Blade feature. You can attack with your pact weapon twice whenever you take the Attack action on your turn.',
+      grants: {'extraAttack': true},
+    ),
+    const FeatureOption(
+      id: 'visions_of_distant_realms',
+      name: 'Visions of Distant Realms',
+      descriptionMarkdown:
+          'Prerequisite: 15th level. You can cast Arcane Eye at will, without expending a spell slot.',
+      grants: {'atWillSpells': ['arcane-eye']},
+    ),
+    const FeatureOption(
+      id: 'whispers_of_the_grave',
+      name: 'Whispers of the Grave',
+      descriptionMarkdown:
+          'Prerequisite: 9th level. You can cast Speak with Dead at will, without expending a spell slot.',
+      grants: {'atWillSpells': ['speak-with-dead']},
+    ),
+    const FeatureOption(
+      id: 'witch_sight',
+      name: 'Witch Sight',
+      descriptionMarkdown:
+          'Prerequisite: 15th level. You can see the true form of any shapechanger or creature concealed by illusion or transmutation magic within 30 feet of you.',
+      grants: {'truesightFeet': 30},
+    ),
   ];
+
+  static List<FeatureOption> _customInvocations = [];
+
+  /// Dynamic list of all available Eldritch Invocations (Base SRD + Custom Homebrew)
+  static List<FeatureOption> get warlockInvocationsAndBoons => [
+        ..._baseWarlockInvocations,
+        ..._customInvocations,
+      ];
+
+  /// Sets the list of custom homebrew Eldritch Invocations
+  static void setCustomInvocations(List<FeatureOption> custom) {
+    _customInvocations = List<FeatureOption>.from(custom);
+  }
+
+  /// Adds or replaces a custom homebrew invocation
+  static void addCustomInvocation(FeatureOption opt) {
+    _customInvocations.removeWhere((o) => o.id == opt.id);
+    _customInvocations.add(opt);
+  }
+
+  /// Removes a custom homebrew invocation by id
+  static void removeCustomInvocation(String id) {
+    _customInvocations.removeWhere((o) => o.id == id);
+  }
 }
 
 /// Comprehensive SRD 5.1 and 5.2 Classes Library containing all 12 core classes.
@@ -718,7 +917,7 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass warlock = CharacterClass(
+  static CharacterClass get warlock => CharacterClass(
     id: const EntityId(slug: 'warlock', ruleset: RulesetVersion.v2024),
     name: 'Warlock',
     hitDie: 'd8',
@@ -744,7 +943,7 @@ class SrdClassesLibrary {
         'religion'
       ],
     },
-    featureDecisions: const [
+    featureDecisions: [
       ClassFeatureDecision(
         id: 'warlock-invocations-1',
         name: 'Eldritch Invocations',
@@ -757,17 +956,16 @@ class SrdClassesLibrary {
         ruleset: RulesetVersion.v2024,
       ),
       ClassFeatureDecision(
-        id: 'warlock-invocations-2-2014',
+        id: 'warlock-invocations-2',
         name: 'Eldritch Invocations',
-        prompt: 'Choose your 2nd-level Eldritch Invocations',
+        prompt: 'Choose 2 Eldritch Invocations',
         levelRequired: 2,
         type: FeatureChoiceType.invocations,
         minSelections: 2,
         maxSelections: 2,
         availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
-        ruleset: RulesetVersion.v2014,
       ),
-      ClassFeatureDecision(
+      const ClassFeatureDecision(
         id: 'warlock-pact-boon-3-2014',
         name: 'Pact Boon',
         prompt: 'Choose your 3rd-level Pact Boon',
@@ -799,6 +997,66 @@ class SrdClassesLibrary {
           ),
         ],
         ruleset: RulesetVersion.v2014,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-invocations-5',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose an additional Eldritch Invocation',
+        levelRequired: 5,
+        type: FeatureChoiceType.invocations,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-invocations-7',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose an additional Eldritch Invocation',
+        levelRequired: 7,
+        type: FeatureChoiceType.invocations,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-invocations-9',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose an additional Eldritch Invocation',
+        levelRequired: 9,
+        type: FeatureChoiceType.invocations,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-invocations-12',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose an additional Eldritch Invocation',
+        levelRequired: 12,
+        type: FeatureChoiceType.invocations,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-invocations-15',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose an additional Eldritch Invocation',
+        levelRequired: 15,
+        type: FeatureChoiceType.invocations,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+      ),
+      ClassFeatureDecision(
+        id: 'warlock-invocations-18',
+        name: 'Eldritch Invocations',
+        prompt: 'Choose an additional Eldritch Invocation',
+        levelRequired: 18,
+        type: FeatureChoiceType.invocations,
+        minSelections: 1,
+        maxSelections: 1,
+        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
       ),
     ],
     subclasses: [
@@ -866,7 +1124,7 @@ class SrdClassesLibrary {
   );
 
   /// Base Core 12 SRD Classes
-  static final List<CharacterClass> _baseClasses = [
+  static List<CharacterClass> get _baseClasses => [
     barbarian,
     bard,
     cleric,
@@ -882,13 +1140,49 @@ class SrdClassesLibrary {
   ];
 
   static List<CharacterClass> _customClasses = [];
+  static List<Subclass> _customSubclasses = [];
 
-  /// Dynamic list of all available classes (Base SRD + Custom Homebrew)
-  static List<CharacterClass> get allClasses => [..._baseClasses, ..._customClasses];
+  /// Dynamic list of all available classes (Base SRD + Custom Homebrew) with their custom subclasses attached
+  static List<CharacterClass> get allClasses {
+    return [..._baseClasses, ..._customClasses].map((c) {
+      final cleanClassSlug = c.id.slug.toLowerCase().trim();
+      final cleanClassName = c.name.toLowerCase().trim();
+
+      final matchingCustomSubs = _customSubclasses.where((s) {
+        final subClassSlug = s.classSlug.toLowerCase().trim();
+        return subClassSlug == cleanClassSlug ||
+            subClassSlug == cleanClassName ||
+            subClassSlug.replaceAll('-', ' ') == cleanClassName ||
+            subClassSlug.replaceAll(' ', '-') == cleanClassSlug;
+      }).toList();
+
+      if (matchingCustomSubs.isEmpty) return c;
+
+      final existingSlugs = c.subclasses.map((s) => s.id.slug.toLowerCase().trim()).toSet();
+      final newSubs = matchingCustomSubs.where((s) => !existingSlugs.contains(s.id.slug.toLowerCase().trim())).toList();
+
+      if (newSubs.isEmpty) return c;
+      return c.copyWith(subclasses: [...c.subclasses, ...newSubs]);
+    }).toList();
+  }
+
+  /// Dynamic list of all available subclasses across all classes
+  static List<Subclass> get allSubclasses {
+    final all = <Subclass>[];
+    for (final c in allClasses) {
+      all.addAll(c.subclasses);
+    }
+    return all;
+  }
 
   /// Sets the list of custom/homebrew classes
   static void setCustomClasses(List<CharacterClass> custom) {
     _customClasses = List<CharacterClass>.from(custom);
+  }
+
+  /// Sets the list of standalone custom/homebrew subclasses
+  static void setCustomSubclasses(List<Subclass> custom) {
+    _customSubclasses = List<Subclass>.from(custom);
   }
 
   /// Adds or replaces a custom class in the library
@@ -897,9 +1191,20 @@ class SrdClassesLibrary {
     _customClasses.add(cls);
   }
 
+  /// Adds or replaces a custom subclass in the library
+  static void addCustomSubclass(Subclass sub) {
+    _customSubclasses.removeWhere((s) => s.id.slug == sub.id.slug);
+    _customSubclasses.add(sub);
+  }
+
   /// Removes a custom class by slug
   static void removeCustomClass(String slug) {
     _customClasses.removeWhere((c) => c.id.slug == slug);
+  }
+
+  /// Removes a custom subclass by slug
+  static void removeCustomSubclass(String slug) {
+    _customSubclasses.removeWhere((s) => s.id.slug == slug);
   }
 
   static CharacterClass? findBySlug(String slug, {RulesetVersion? ruleset}) {

@@ -153,14 +153,34 @@ class HomebrewPersistenceService {
     final races = await loadCustomRaces();
     SrdSpeciesLibrary.setCustomSpecies(races);
 
+    final customSubraces = <Subrace>[];
+    for (final r in races) {
+      customSubraces.addAll(r.subraces);
+    }
+    SrdSpeciesLibrary.setCustomSubraces(customSubraces);
+
     final feats = await loadCustomFeats();
     SrdFeatsLibrary.setCustomFeats(feats);
 
     final classes = await loadCustomClasses();
     SrdClassesLibrary.setCustomClasses(classes);
 
+    final subclasses = await loadCustomSubclasses();
+    SrdClassesLibrary.setCustomSubclasses(subclasses);
+
     final backgrounds = await loadCustomBackgrounds();
     SrdBackgroundsLibrary.setCustomBackgrounds(backgrounds);
+
+    final others = await loadCustomOtherEntries();
+    final customInvocations = others
+        .where((e) => e.category.toLowerCase().contains('invocation'))
+        .map((e) => FeatureOption(
+              id: e.id.slug,
+              name: e.name,
+              descriptionMarkdown: e.descriptionMarkdown,
+            ))
+        .toList();
+    SrdFeatureOptions.setCustomInvocations(customInvocations);
   }
 
   /// Saves a custom monster to persistent storage and updates MonsterCodexLibrary.
@@ -422,6 +442,7 @@ class HomebrewPersistenceService {
     if (rawPayload != null) {
       await _saveRawPayload(_keyHomebrewSubclassesRaw, subclass.id.slug, rawPayload, prefs);
     }
+    SrdClassesLibrary.addCustomSubclass(subclass);
   }
 
   /// Batch saves multiple custom subclasses to persistent storage.
@@ -452,6 +473,9 @@ class HomebrewPersistenceService {
         await _saveRawPayload(_keyHomebrewSubclassesRaw, newSubclasses[i].id.slug, rawPayloads[i], prefs);
       }
     }
+    for (final s in newSubclasses) {
+      SrdClassesLibrary.addCustomSubclass(s);
+    }
   }
 
   /// Deletes a custom subclass by slug.
@@ -464,6 +488,7 @@ class HomebrewPersistenceService {
       subs.map((s) => json.encode(s.toMap())).toList(),
     );
     await _deleteRawPayload(_keyHomebrewSubclassesRaw, slug, prefs);
+    SrdClassesLibrary.removeCustomSubclass(slug);
   }
 
   /// Loads all custom races from persistent storage.
@@ -741,6 +766,13 @@ class HomebrewPersistenceService {
     if (rawPayload != null) {
       await _saveRawPayload(_keyHomebrewOtherRaw, entry.id.slug, rawPayload, prefs);
     }
+    if (entry.category.toLowerCase().contains('invocation')) {
+      SrdFeatureOptions.addCustomInvocation(FeatureOption(
+        id: entry.id.slug,
+        name: entry.name,
+        descriptionMarkdown: entry.descriptionMarkdown,
+      ));
+    }
   }
 
   /// Deletes a generic compendium entry by slug.
@@ -753,6 +785,7 @@ class HomebrewPersistenceService {
       entries.map((e) => json.encode(e.toMap())).toList(),
     );
     await _deleteRawPayload(_keyHomebrewOtherRaw, slug, prefs);
+    SrdFeatureOptions.removeCustomInvocation(slug);
   }
 
   /// Batch deletes multiple custom entities by [slugs] for the given [EntityType].

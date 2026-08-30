@@ -503,7 +503,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
             Tab(icon: const Icon(Icons.person), text: 'Races (${_races.length})'),
             Tab(icon: const Icon(Icons.stars), text: 'Feats (${_feats.length})'),
             Tab(icon: const Icon(Icons.menu_book), text: 'Backgrounds (${_backgrounds.length})'),
-            Tab(icon: const Icon(Icons.table_chart), text: 'Rules & Tables (${_otherEntries.length})'),
+            Tab(icon: const Icon(Icons.table_chart), text: 'Invocations & Rules (${_otherEntries.length})'),
           ],
         ),
       ),
@@ -1330,8 +1330,8 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
       return _buildEmptyState(
         theme,
         icon: Icons.table_chart_outlined,
-        title: 'No Custom Rules or Tables',
-        subtitle: 'Import custom tables, variant rules, or hazards via the JSON Importer.',
+        title: 'No Custom Invocations or Rules',
+        subtitle: 'Import custom Eldritch Invocations, optional features, tables, or rules via the JSON Importer.',
         onAction: _openImportDialog,
       );
     }

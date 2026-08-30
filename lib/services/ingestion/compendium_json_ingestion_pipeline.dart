@@ -276,8 +276,31 @@ class CompendiumJsonIngestionPipeline {
         (raw) => items.add(itemParser.parseItem(raw)), 'Item');
 
     // Classes & Subclasses
-    ingestKeys(['class', 'classes'], (raw) => classes.add(classParser.parseClass(raw)), 'Class');
-    ingestKeys(['subclass', 'subclasses'], (raw) => subclasses.add(classParser.parseSubclass(raw)), 'Subclass');
+    ingestKeys(['class', 'classes'], (raw) {
+      final parsedClass = classParser.parseClass(raw);
+      classes.add(parsedClass);
+      // Automatically extract any embedded subclasses as standalone subclasses
+      // so additive additions to SRD classes are tracked and importable!
+      for (final sub in parsedClass.subclasses) {
+        if (!subclasses.any((s) => s.id.slug == sub.id.slug)) {
+          subclasses.add(sub);
+        }
+      }
+    }, 'Class');
+
+    ingestKeys(['subclass', 'subclasses'], (raw) {
+      final sub = classParser.parseSubclass(raw);
+      if (!subclasses.any((s) => s.id.slug == sub.id.slug)) {
+        subclasses.add(sub);
+      }
+      final matchClass = classes.where((c) => c.id.slug == sub.classSlug || c.name.toLowerCase() == sub.classSlug.toLowerCase()).firstOrNull;
+      if (matchClass != null) {
+        if (!matchClass.subclasses.any((s) => s.id.slug == sub.id.slug)) {
+          final idx = classes.indexOf(matchClass);
+          classes[idx] = matchClass.copyWith(subclasses: [...matchClass.subclasses, sub]);
+        }
+      }
+    }, 'Subclass');
 
     // Races / Species
     ingestKeys(['race', 'races', 'species', 'lineage', 'lineages'], (raw) => races.add(raceParser.parseRace(raw)), 'Race');
@@ -303,9 +326,34 @@ class CompendiumJsonIngestionPipeline {
     // Backgrounds
     ingestKeys(['background', 'backgrounds'], (raw) => backgrounds.add(backgroundParser.parseBackground(raw)), 'Background');
 
-    // Other Compendium Entities
+    // Eldritch Invocations
+    ingestKeys([
+      'invocation',
+      'invocations',
+      'eldritchinvocation',
+      'eldritchinvocations',
+    ], (raw) {
+      otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Eldritch Invocation'));
+    }, 'Eldritch Invocation');
+
+    // Other Compendium Entities & Optional Features
+    ingestKeys(['optionalfeature', 'optionalfeatures'], (raw) {
+      final featureType = raw['featureType']?.toString().toUpperCase() ?? '';
+      final name = raw['name']?.toString().toLowerCase() ?? '';
+      String category = 'Optional Feature';
+      if (featureType.contains('EI') || name.contains('invocation') || raw['isInvocation'] == true) {
+        category = 'Eldritch Invocation';
+      } else if (featureType.contains('MM') || name.contains('metamagic')) {
+        category = 'Metamagic';
+      } else if (featureType.contains('MAN') || featureType.contains('BM') || name.contains('maneuver')) {
+        category = 'Maneuver';
+      } else if (featureType.contains('AI') || featureType.contains('INF') || name.contains('infusion')) {
+        category = 'Infusion';
+      }
+      otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: category));
+    }, 'Optional Feature');
+
     ingestKeys(['table', 'tables'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Table')), 'Table');
-    ingestKeys(['optionalfeature', 'optionalfeatures'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Optional Feature')), 'Optional Feature');
     ingestKeys(['reward', 'rewards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Reward')), 'Reward');
     ingestKeys(['condition', 'conditions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Condition')), 'Condition');
     ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Hazard')), 'Hazard');
@@ -378,7 +426,10 @@ class CompendiumJsonIngestionPipeline {
         (lowerKeys.contains('proficiency') && lowerKeys.contains('subclasses'))) {
       try {
         final cl = classParser.parseClass(map);
-        return IngestionBatchResult(classes: [cl]);
+        return IngestionBatchResult(
+          classes: [cl],
+          subclasses: cl.subclasses,
+        );
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse class: $e']);
       }
