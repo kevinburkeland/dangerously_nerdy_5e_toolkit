@@ -4,8 +4,10 @@ import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/party_purse.dart';
+import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import 'character_progression_engine.dart';
 import 'dnd_5e_rules_engine.dart';
+import 'skill_trait_resolver.dart';
 
 /// Starting Equipment Preset Item Request
 @immutable
@@ -160,6 +162,12 @@ class CharacterFactory {
     // Initial Spell Slots Resource
     final startingSpellSlots = CharacterProgressionEngine.computeSpellSlots(progression.classes);
 
+    final speciesTraits = SkillTraitResolver.getSpeciesTraits(
+      speciesSlug: request.speciesRef.slug,
+      subraceSlug: null,
+      edition: request.ruleset == RulesetVersion.v2014 ? DmRulesEdition.v2014 : DmRulesEdition.v2024,
+    );
+
     final character = Character(
       id: EntityId(
         slug: _slugify(request.characterName),
@@ -182,29 +190,13 @@ class CharacterFactory {
       spellsPrepared: request.spellsPrepared,
       feats: request.originFeats,
       resources: CharacterResourcePool(
-        currentHp: startingHp,
+        currentHp: startingHp + speciesTraits.hpPerLevelBonus,
         tempHp: 0,
         currentHitDice: currentHitDice,
         spellSlots: startingSpellSlots,
       ),
       maxAttunementSlots: 3,
-      baseSpeedFeet: () {
-        if (request.ruleset == RulesetVersion.v2014) {
-          if (request.speciesRef.slug == 'dwarf' ||
-              request.speciesRef.slug == 'gnome' ||
-              request.speciesRef.slug == 'halfling') {
-            return 25;
-          }
-          if (request.speciesRef.slug == 'goliath') {
-            return 30;
-          }
-        } else {
-          if (request.speciesRef.slug == 'goliath') {
-            return 35;
-          }
-        }
-        return request.baseSpeedFeet;
-      }(),
+      baseSpeedFeet: speciesTraits.baseSpeedFeet,
     );
 
     return character;

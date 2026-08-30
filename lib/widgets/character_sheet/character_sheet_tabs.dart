@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/character_evaluation_engine.dart';
 import '../spellbook/spell_quick_roll_dialog.dart';
+import 'interactive_roll_action_card.dart';
 
 /// 4-Tab Content Area: Actions & Combat, Spells & Magic, Skills & Traits, and Inventory & Reliquary.
 class CharacterSheetTabs extends StatefulWidget {
@@ -108,7 +109,10 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
           ),
         ),
         const SizedBox(height: 8),
-        ...stats.attackProfiles.map((atk) => _buildAttackCard(context, atk)),
+        ...stats.attackProfiles.map((atk) => InteractiveRollActionCard(
+          attack: atk,
+          characterName: character.name,
+        )),
 
         const SizedBox(height: 16),
 

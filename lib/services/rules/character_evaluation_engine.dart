@@ -415,6 +415,14 @@ class CharacterEvaluationEngine {
       }
     }
 
+    // Dwarven Toughness (Hill Dwarf or 2024 Dwarf)
+    final speciesSlug = character.speciesRef.slug.toLowerCase();
+    if (character.customProperties['dwarvenToughness'] == true ||
+        (speciesSlug.contains('dwarf') && (edition == DmRulesEdition.v2024 || speciesSlug.contains('hill')))) {
+      maxHp += character.totalLevel;
+      buffNotes.add('Dwarven Toughness: +${character.totalLevel} HP');
+    }
+
     // Apply 2014 Exhaustion Tier 4 (halve max HP)
     if (exhaustion.maxHpMultiplier < 1.0) {
       maxHp = (maxHp * exhaustion.maxHpMultiplier).floor();
