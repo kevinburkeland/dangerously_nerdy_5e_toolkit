@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/importers/five_tools_tag_parser.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/importers/compendium_tag_parser.dart';
 
 void main() {
-  group('FiveToolsTagParser', () {
-    late FiveToolsTagParser parser;
+  group('CompendiumTagParser', () {
+    late CompendiumTagParser parser;
 
     setUp(() {
-      parser = FiveToolsTagParser();
+      parser = CompendiumTagParser();
     });
 
     test('detects 2014 ruleset provenance', () {

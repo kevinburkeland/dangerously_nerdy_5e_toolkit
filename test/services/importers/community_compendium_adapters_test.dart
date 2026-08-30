@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/importers/five_tools_adapters.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_adapters.dart';
 
 void main() {
-  group('FiveToolsAdapters', () {
-    late FiveToolsAdapters adapters;
+  group('CommunityCompendiumAdapters', () {
+    late CommunityCompendiumAdapters adapters;
 
     setUp(() {
-      adapters = FiveToolsAdapters();
+      adapters = CommunityCompendiumAdapters();
     });
 
     test('parses 2014 and 2024 Spells with distinct rulesets', () {

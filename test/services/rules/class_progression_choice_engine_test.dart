@@ -6,7 +6,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/importers/five_tools_adapters.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_adapters.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
@@ -179,8 +179,8 @@ void main() {
     });
 
     group('4. Homebrew Ingestion & ACL Normalization', () {
-      test('5eTools parser extracts custom subclass selection level and feature decisions', () {
-        final adapter = FiveToolsAdapters();
+      test('Community compendium parser extracts custom subclass selection level and feature decisions', () {
+        final adapter = CommunityCompendiumAdapters();
         final rawClassJson = {
           'name': 'Blood Hunter',
           'source': 'HOMEBREW',

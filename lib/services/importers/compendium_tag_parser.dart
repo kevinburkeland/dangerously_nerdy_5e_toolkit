@@ -2,7 +2,7 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 
-/// Result of transforming 5eTools entries and inline tags
+/// Result of transforming community compendium entries and inline tags
 class ParsedTextResult {
   final String cleanMarkdown;
   final List<EvaluationMath> extractedMath;
@@ -15,8 +15,8 @@ class ParsedTextResult {
   });
 }
 
-/// Robust parser for 5eTools community JSON tags, entries AST, and source detection.
-class FiveToolsTagParser {
+/// Robust parser for community compendium JSON tags, entries AST, and source detection.
+class CompendiumTagParser {
   static final RegExp tagPattern = RegExp(r'\{@([a-zA-Z0-9_-]+)\s+([^}]+)\}');
 
   /// Detects whether a given source tag originates from 2014, 2024, or third-party/homebrew.
@@ -130,7 +130,7 @@ class FiveToolsTagParser {
     }
   }
 
-  /// Processes inline 5eTools tags like {@damage 1d8}, {@spell Fireball}, {@dice 1d20+3}.
+  /// Processes inline compendium tags like {@damage 1d8}, {@spell Fireball}, {@dice 1d20+3}.
   String processTags(
     String input, {
     List<EvaluationMath>? math,
@@ -216,21 +216,25 @@ class FiveToolsTagParser {
 
         case 'i':
         case 'italic':
+        case 'em':
           return '*$primary*';
 
-        case 'recharge':
-          return primary.isNotEmpty ? '(Recharge $primary)' : '(Recharge 6)';
+        case 'strike':
+          return '~~$primary~~';
+
+        case 'code':
+          return '`$primary`';
 
         case 'note':
-          return '*(Note: $primary)*';
+          return '> **Note:** $primary';
 
         default:
-          return parts.length > 2 ? parts[2].trim() : primary;
+          return primary;
       }
     });
   }
 
-  /// Strips all 5eTools inline tags without capturing math or references.
+  /// Strips all compendium inline tags without capturing math or references.
   String stripTags(String text) {
     return processTags(text);
   }
@@ -257,7 +261,7 @@ class FiveToolsTagParser {
     );
   }
 
-  /// Renders a 5eTools table AST node into clean GitHub-flavored markdown.
+  /// Renders a compendium table AST node into clean GitHub-flavored markdown.
   String parseTableNode(
     Map<String, dynamic> tableMap, {
     List<EvaluationMath>? math,

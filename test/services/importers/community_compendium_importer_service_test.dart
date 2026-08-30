@@ -3,38 +3,38 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/importers/five_tools_importer_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_importer_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('FiveToolsImporterService', () {
-    late FiveToolsImporterService importer;
+  group('CommunityCompendiumImporterService', () {
+    late CommunityCompendiumImporterService importer;
     late HomebrewPersistenceService homebrewService;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       homebrewService = HomebrewPersistenceService();
-      importer = FiveToolsImporterService(homebrewService: homebrewService);
+      importer = CommunityCompendiumImporterService(homebrewService: homebrewService);
     });
 
     test('detects schema types accurately', () {
       expect(
         importer.detectType({'name': 'Shield', 'level': 1, 'school': 'A'}),
-        equals(FiveToolsImportType.spell),
+        equals(CompendiumImportType.spell),
       );
       expect(
         importer.detectType({'name': 'Orc', 'cr': '1/2', 'hp': {'average': 15}}),
-        equals(FiveToolsImportType.monster),
+        equals(CompendiumImportType.monster),
       );
       expect(
         importer.detectType({'name': 'Cloak of Protection', 'rarity': 'Uncommon', 'type': 'W'}),
-        equals(FiveToolsImportType.item),
+        equals(CompendiumImportType.item),
       );
       expect(
         importer.detectType({'spell': [{'name': 'Light'}]}),
-        equals(FiveToolsImportType.bundle),
+        equals(CompendiumImportType.bundle),
       );
     });
 

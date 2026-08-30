@@ -70,7 +70,7 @@ void main() {
       expect(saved.first.slug, equals('solar-flare'));
     });
 
-    testWidgets('opens HomebrewImportDialog and parses compendium JSON', (tester) async {
+    testWidgets('opens HomebrewImportPreviewDialog and parses compendium JSON', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomebrewStudioScreen(),
@@ -82,25 +82,30 @@ void main() {
       await tester.tap(find.byIcon(Icons.file_download_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.text('Import Compendium JSON'), findsOneWidget);
+      expect(find.text('Import Homebrew / Compendium JSON'), findsOneWidget);
 
       const jsonSnippet = '{"spell":[{"name":"Frost Nova","source":"HOMEBREW","level":3,"school":"V","time":[{"number":1,"unit":"action"}],"range":{"type":"point","distance":{"type":"feet","amount":30}},"components":{"v":true,"s":true},"duration":[{"type":"instant"}],"entries":["Freezes ground dealing {@damage 6d6|cold} damage."]}]}';
 
       await tester.enterText(find.byType(TextField), jsonSnippet);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Detected 1 entities'), findsOneWidget);
-      expect(find.text('• Spells: 1 (Frost Nova)'), findsOneWidget);
+      // Tap Analyze Bundle button
+      await tester.tap(find.text('Analyze Bundle'));
+      await tester.pumpAndSettle();
 
-      // Tap Import button
-      await tester.tap(find.text('Import to Compendium'));
+      expect(find.text('1 New'), findsOneWidget);
+      expect(find.text('Spells (1/1)'), findsOneWidget);
+      expect(find.text('Frost Nova'), findsOneWidget);
+
+      // Tap Confirm Import button
+      await tester.tap(find.text('Confirm Import (1 items)'));
       await tester.pumpAndSettle();
 
       // Verify imported spell appears on screen
       expect(find.text('Frost Nova'), findsOneWidget);
     });
 
-    testWidgets('imports multi-category bundle including classes, races, and feats', (tester) async {
+    testWidgets('imports multi-category bundle including classes, races, and feats with deduplication', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: HomebrewStudioScreen(),
@@ -123,17 +128,45 @@ void main() {
       await tester.enterText(find.byType(TextField), multiBundle);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Detected 3 entities'), findsOneWidget);
-      expect(find.textContaining('Classes: 1 (Blood Hunter)'), findsOneWidget);
-      expect(find.textContaining('Races / Species: 1 (Genasi)'), findsOneWidget);
-      expect(find.textContaining('Feats: 1 (Fey Touched)'), findsOneWidget);
+      // Tap Analyze Bundle
+      await tester.tap(find.text('Analyze Bundle'));
+      await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Import to Compendium'));
+      expect(find.text('3 New'), findsOneWidget);
+      expect(find.text('Classes (1/1)'), findsOneWidget);
+      expect(find.text('Races & Species (1/1)'), findsOneWidget);
+      expect(find.text('Feats (1/1)'), findsOneWidget);
+
+      await tester.tap(find.text('Confirm Import (3 items)'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Classes (1)'), findsOneWidget);
       expect(find.textContaining('Races (1)'), findsOneWidget);
       expect(find.textContaining('Feats (1)'), findsOneWidget);
+    });
+
+    testWidgets('opens HomebrewExportDialog and generates bundle JSON', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomebrewStudioScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap export icon button in AppBar
+      await tester.tap(find.byIcon(Icons.file_upload_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Export Homebrew Pack'), findsOneWidget);
+      expect(find.text('Bundle Name'), findsOneWidget);
+      expect(find.text('Include Categories:'), findsOneWidget);
+
+      // Tap Generate Bundle
+      await tester.tap(find.text('Generate Bundle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bundle Generated'), findsOneWidget);
+      expect(find.text('Copy to Clipboard'), findsOneWidget);
     });
   });
 }

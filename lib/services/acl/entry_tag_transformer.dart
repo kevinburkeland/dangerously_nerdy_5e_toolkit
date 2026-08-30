@@ -1,5 +1,6 @@
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 
 /// Result of transforming polymorphic compendium entries
@@ -144,6 +145,15 @@ class EntryTagTransformer {
           ));
           return '**`$primary ${dmgType.name}`**';
 
+        case 'd20':
+        case 'hit':
+        case 'atk':
+          final prefix = primary.startsWith('+') || primary.startsWith('-') ? '' : '+';
+          return '**`$prefix$primary`**';
+
+        case 'recharge':
+          return primary.isEmpty ? '*(Recharge 6)*' : '*(Recharge $primary–6)*';
+
         case 'scaledamage':
         case 'scaledice':
           final baseDice = parts.length > 1 ? parts[1].trim() : primary;
@@ -179,6 +189,7 @@ class EntryTagTransformer {
           return '[$primary](ref://equipment/$slug)';
 
         case 'creature':
+        case 'monster':
           final slug = _slugify(primary);
           refsList.add(EntityReference<Monster>(
             refType: EntityType.monster,
@@ -187,6 +198,52 @@ class EntryTagTransformer {
           ));
           return '[$primary](ref://monster/$slug)';
 
+        case 'class':
+          final slug = _slugify(primary);
+          refsList.add(EntityReference<CharacterClass>(
+            refType: EntityType.classDefinition,
+            slug: slug,
+            displayName: primary,
+          ));
+          return '[$primary](ref://class/$slug)';
+
+        case 'subclass':
+          final slug = _slugify(primary);
+          refsList.add(EntityReference<Subclass>(
+            refType: EntityType.subclass,
+            slug: slug,
+            displayName: primary,
+          ));
+          return '[$primary](ref://subclass/$slug)';
+
+        case 'race':
+        case 'species':
+          final slug = _slugify(primary);
+          refsList.add(EntityReference<Race>(
+            refType: EntityType.species,
+            slug: slug,
+            displayName: primary,
+          ));
+          return '[$primary](ref://species/$slug)';
+
+        case 'feat':
+          final slug = _slugify(primary);
+          refsList.add(EntityReference<Feat>(
+            refType: EntityType.feat,
+            slug: slug,
+            displayName: primary,
+          ));
+          return '[$primary](ref://feat/$slug)';
+
+        case 'background':
+          final slug = _slugify(primary);
+          refsList.add(EntityReference<Background>(
+            refType: EntityType.background,
+            slug: slug,
+            displayName: primary,
+          ));
+          return '[$primary](ref://background/$slug)';
+
         case 'condition':
         case 'status':
           return '**$primary**';
@@ -194,8 +251,35 @@ class EntryTagTransformer {
         case 'dc':
           return 'DC $primary';
 
+        case 'skill':
+        case 'sense':
+        case 'action':
+        case 'hazard':
+        case 'reward':
+        case 'table':
+          return '**$primary**';
+
+        case 'b':
+        case 'bold':
+          return '**$primary**';
+
+        case 'i':
+        case 'italic':
+          return '*$primary*';
+
+        case 'strike':
+        case 's':
+          return '~~$primary~~';
+
+        case 'code':
+          return '`$primary`';
+
+        case 'note':
+          return '> **Note:** $primary';
+
         case 'quickref':
         case 'filter':
+        case 'link':
           return primary;
 
         default:

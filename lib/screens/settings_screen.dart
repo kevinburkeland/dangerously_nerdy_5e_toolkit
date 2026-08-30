@@ -6,6 +6,8 @@ import '../services/haptic_service.dart';
 import '../services/persistence/app_backup_service.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
+import '../widgets/homebrew/homebrew_export_dialog.dart';
+import '../widgets/homebrew/homebrew_import_preview_dialog.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/meters/animated_resource_meter.dart';
 
@@ -346,14 +348,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           label: const Text('Homebrew Studio'),
                         ),
                         FilledButton.tonalIcon(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (_) => const HomebrewImportPreviewDialog(),
+                          ),
+                          icon: const Icon(Icons.download_for_offline_outlined, size: 18),
+                          label: const Text('Import Homebrew Pack'),
+                        ),
+                        FilledButton.tonalIcon(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (_) => const HomebrewExportDialog(),
+                          ),
+                          icon: const Icon(Icons.upload_file_outlined, size: 18),
+                          label: const Text('Export Homebrew Pack'),
+                        ),
+                        FilledButton.tonalIcon(
                           onPressed: _exportAppBackup,
                           icon: const Icon(Icons.file_download_outlined, size: 18),
-                          label: const Text('Export Backup'),
+                          label: const Text('Export Full Backup'),
                         ),
                         FilledButton.tonalIcon(
                           onPressed: _importAppBackup,
                           icon: const Icon(Icons.file_upload_outlined, size: 18),
-                          label: const Text('Import Backup'),
+                          label: const Text('Import Full Backup'),
                         ),
                         OutlinedButton.icon(
                           onPressed: _confirmResetSettings,

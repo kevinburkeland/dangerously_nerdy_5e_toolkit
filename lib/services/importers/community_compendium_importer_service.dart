@@ -4,10 +4,10 @@ import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../logging_service.dart';
 import '../persistence/homebrew_persistence_service.dart';
-import 'five_tools_adapters.dart';
+import 'community_compendium_adapters.dart';
 
-/// Identified classification of 5eTools JSON payloads.
-enum FiveToolsImportType {
+/// Identified classification of community compendium JSON payloads.
+enum CompendiumImportType {
   spell,
   monster,
   item,
@@ -20,8 +20,8 @@ enum FiveToolsImportType {
   unknown,
 }
 
-/// Comprehensive summary report of a 5eTools ingestion operation.
-class FiveToolsImportResult {
+/// Comprehensive summary report of a community compendium ingestion operation.
+class CompendiumImportResult {
   final List<Spell> spells;
   final List<Monster> monsters;
   final List<EquipmentItem> items;
@@ -33,7 +33,7 @@ class FiveToolsImportResult {
   final List<String> warnings;
   final List<String> errors;
 
-  const FiveToolsImportResult({
+  const CompendiumImportResult({
     this.spells = const [],
     this.monsters = const [],
     this.items = const [],
@@ -60,45 +60,45 @@ class FiveToolsImportResult {
   bool get isSuccess => totalImported > 0 && errors.isEmpty;
 }
 
-/// Service orchestrating 5eTools community JSON ingestion, schema detection, and compendium synchronization.
-class FiveToolsImporterService {
-  final FiveToolsAdapters adapters;
+/// Service orchestrating community compendium JSON ingestion, schema detection, and compendium synchronization.
+class CommunityCompendiumImporterService {
+  final CommunityCompendiumAdapters adapters;
   final HomebrewPersistenceService homebrewService;
 
-  FiveToolsImporterService({
-    FiveToolsAdapters? adapters,
+  CommunityCompendiumImporterService({
+    CommunityCompendiumAdapters? adapters,
     HomebrewPersistenceService? homebrewService,
-  })  : adapters = adapters ?? FiveToolsAdapters(),
+  })  : adapters = adapters ?? CommunityCompendiumAdapters(),
         homebrewService = homebrewService ?? HomebrewPersistenceService();
 
   /// Inspects a JSON map to detect entity type.
-  FiveToolsImportType detectType(Map<String, dynamic> json) {
-    if (json.containsKey('spell') && json['spell'] is List) return FiveToolsImportType.bundle;
-    if (json.containsKey('monster') && json['monster'] is List) return FiveToolsImportType.bundle;
-    if (json.containsKey('item') && json['item'] is List) return FiveToolsImportType.bundle;
-    if (json.containsKey('class') && json['class'] is List) return FiveToolsImportType.bundle;
-    if (json.containsKey('subclass') && json['subclass'] is List) return FiveToolsImportType.bundle;
-    if (json.containsKey('race') && json['race'] is List) return FiveToolsImportType.bundle;
-    if (json.containsKey('feat') && json['feat'] is List) return FiveToolsImportType.bundle;
-    if (json.containsKey('background') && json['background'] is List) return FiveToolsImportType.bundle;
+  CompendiumImportType detectType(Map<String, dynamic> json) {
+    if (json.containsKey('spell') && json['spell'] is List) return CompendiumImportType.bundle;
+    if (json.containsKey('monster') && json['monster'] is List) return CompendiumImportType.bundle;
+    if (json.containsKey('item') && json['item'] is List) return CompendiumImportType.bundle;
+    if (json.containsKey('class') && json['class'] is List) return CompendiumImportType.bundle;
+    if (json.containsKey('subclass') && json['subclass'] is List) return CompendiumImportType.bundle;
+    if (json.containsKey('race') && json['race'] is List) return CompendiumImportType.bundle;
+    if (json.containsKey('feat') && json['feat'] is List) return CompendiumImportType.bundle;
+    if (json.containsKey('background') && json['background'] is List) return CompendiumImportType.bundle;
 
     // Single entity detection
-    if (json.containsKey('school') && json.containsKey('level')) return FiveToolsImportType.spell;
-    if (json.containsKey('cr') || (json.containsKey('ac') && json.containsKey('hp'))) return FiveToolsImportType.monster;
-    if (json.containsKey('rarity') || (json.containsKey('type') && json.containsKey('reqAttune'))) return FiveToolsImportType.item;
-    if (json.containsKey('hd') && json.containsKey('name')) return FiveToolsImportType.characterClass;
-    if (json.containsKey('className') && json.containsKey('shortName')) return FiveToolsImportType.subclass;
-    if (json.containsKey('speed') && json.containsKey('size') && !json.containsKey('cr')) return FiveToolsImportType.race;
-    if (json.containsKey('category') && json.containsKey('prerequisite')) return FiveToolsImportType.feat;
+    if (json.containsKey('school') && json.containsKey('level')) return CompendiumImportType.spell;
+    if (json.containsKey('cr') || (json.containsKey('ac') && json.containsKey('hp'))) return CompendiumImportType.monster;
+    if (json.containsKey('rarity') || (json.containsKey('type') && json.containsKey('reqAttune'))) return CompendiumImportType.item;
+    if (json.containsKey('hd') && json.containsKey('name')) return CompendiumImportType.characterClass;
+    if (json.containsKey('className') && json.containsKey('shortName')) return CompendiumImportType.subclass;
+    if (json.containsKey('speed') && json.containsKey('size') && !json.containsKey('cr')) return CompendiumImportType.race;
+    if (json.containsKey('category') && json.containsKey('prerequisite')) return CompendiumImportType.feat;
     if (json.containsKey('skillProficiencies') || (json.containsKey('name') && json.containsKey('entries') && !json.containsKey('cr'))) {
-      return FiveToolsImportType.background;
+      return CompendiumImportType.background;
     }
 
-    return FiveToolsImportType.unknown;
+    return CompendiumImportType.unknown;
   }
 
   /// Parses raw JSON string (single entity, list of entities, or root bundle map) and optionally syncs to registries.
-  Future<FiveToolsImportResult> importJsonString(
+  Future<CompendiumImportResult> importJsonString(
     String rawJson, {
     bool persistAndSync = true,
     RulesetVersion? forceRuleset,
@@ -106,7 +106,7 @@ class FiveToolsImporterService {
     try {
       final clean = rawJson.trim();
       if (clean.isEmpty) {
-        return const FiveToolsImportResult(errors: ['JSON payload is empty.']);
+        return const CompendiumImportResult(errors: ['JSON payload is empty.']);
       }
 
       final decoded = json.decode(clean);
@@ -157,7 +157,7 @@ class FiveToolsImporterService {
           forceRuleset: forceRuleset,
         );
       } else {
-        return const FiveToolsImportResult(
+        return const CompendiumImportResult(
           errors: ['Root JSON structure must be an Object Map or List of entities.'],
         );
       }
@@ -176,7 +176,7 @@ class FiveToolsImporterService {
         await homebrewService.syncToLibraries();
       }
 
-      return FiveToolsImportResult(
+      return CompendiumImportResult(
         spells: List.unmodifiable(spells),
         monsters: List.unmodifiable(monsters),
         items: List.unmodifiable(items),
@@ -192,9 +192,9 @@ class FiveToolsImporterService {
       LoggingService().logNonFatal(
         e,
         st,
-        reason: 'Failed to import 5eTools JSON payload',
+        reason: 'Failed to import compendium JSON payload',
       );
-      return FiveToolsImportResult(errors: ['JSON parse error: $e']);
+      return CompendiumImportResult(errors: ['JSON parse error: $e']);
     }
   }
 
@@ -353,24 +353,24 @@ class FiveToolsImporterService {
     final type = detectType(item);
     try {
       switch (type) {
-        case FiveToolsImportType.spell:
+        case CompendiumImportType.spell:
           spells.add(adapters.parseSpell(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.monster:
+        case CompendiumImportType.monster:
           monsters.add(adapters.parseMonster(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.item:
+        case CompendiumImportType.item:
           items.add(adapters.parseItem(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.characterClass:
+        case CompendiumImportType.characterClass:
           classes.add(adapters.parseClass(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.subclass:
+        case CompendiumImportType.subclass:
           subclasses.add(adapters.parseSubclass(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.race:
+        case CompendiumImportType.race:
           races.add(adapters.parseRace(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.feat:
+        case CompendiumImportType.feat:
           feats.add(adapters.parseFeat(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.background:
+        case CompendiumImportType.background:
           backgrounds.add(adapters.parseBackground(item, forceRuleset: forceRuleset));
-        case FiveToolsImportType.bundle:
-        case FiveToolsImportType.unknown:
+        case CompendiumImportType.bundle:
+        case CompendiumImportType.unknown:
           warnings.add('Unrecognized entity schema for "${item['name'] ?? 'Unknown'}"');
       }
     } catch (e) {

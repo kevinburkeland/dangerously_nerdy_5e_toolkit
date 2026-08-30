@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'importers/five_tools_importer_service.dart';
+import 'importers/community_compendium_importer_service.dart';
 import 'logging_service.dart';
 import 'minion_session_service.dart';
 import 'persistence/app_backup_service.dart';
@@ -31,7 +31,7 @@ class AppServices {
   final CampaignProfileService _campaignProfileService;
   final DmBackupService _dmBackupService;
   final HomebrewPersistenceService _homebrewPersistence;
-  final FiveToolsImporterService _fiveToolsImporter;
+  final CommunityCompendiumImporterService _communityCompendiumImporter;
 
   AppServices._({
     LoggingService? logger,
@@ -44,7 +44,7 @@ class AppServices {
     CampaignProfileService? campaignProfileService,
     DmBackupService? dmBackupService,
     HomebrewPersistenceService? homebrewPersistence,
-    FiveToolsImporterService? fiveToolsImporter,
+    CommunityCompendiumImporterService? communityCompendiumImporter,
   })  : _logger = logger ?? LoggingService(),
         _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
         _migrationService = migrationService ?? StorageMigrationService(),
@@ -55,7 +55,7 @@ class AppServices {
         _campaignProfileService = campaignProfileService ?? CampaignProfileService(),
         _dmBackupService = dmBackupService ?? DmBackupService(),
         _homebrewPersistence = homebrewPersistence ?? HomebrewPersistenceService(),
-        _fiveToolsImporter = fiveToolsImporter ?? FiveToolsImporterService();
+        _communityCompendiumImporter = communityCompendiumImporter ?? CommunityCompendiumImporterService();
 
   /// Core logging and crash reporting service
   LoggingService get logger => _logger;
@@ -87,8 +87,8 @@ class AppServices {
   /// Homebrew and custom compendium persistence service
   HomebrewPersistenceService get homebrewPersistence => _homebrewPersistence;
 
-  /// 5eTools community compendium ingestion service
-  FiveToolsImporterService get fiveToolsImporter => _fiveToolsImporter;
+  /// Community compendium ingestion service
+  CommunityCompendiumImporterService get communityCompendiumImporter => _communityCompendiumImporter;
 
   /// Registers service overrides for unit or widget testing.
   @visibleForTesting
@@ -103,7 +103,7 @@ class AppServices {
     CampaignProfileService? campaignProfileService,
     DmBackupService? dmBackupService,
     HomebrewPersistenceService? homebrewPersistence,
-    FiveToolsImporterService? fiveToolsImporter,
+    CommunityCompendiumImporterService? communityCompendiumImporter,
   }) {
     _instance = AppServices._(
       logger: logger ?? _instance._logger,
@@ -116,7 +116,7 @@ class AppServices {
       campaignProfileService: campaignProfileService ?? _instance._campaignProfileService,
       dmBackupService: dmBackupService ?? _instance._dmBackupService,
       homebrewPersistence: homebrewPersistence ?? _instance._homebrewPersistence,
-      fiveToolsImporter: fiveToolsImporter ?? _instance._fiveToolsImporter,
+      communityCompendiumImporter: communityCompendiumImporter ?? _instance._communityCompendiumImporter,
     );
   }
 

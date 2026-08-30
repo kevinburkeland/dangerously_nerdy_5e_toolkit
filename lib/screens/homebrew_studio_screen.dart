@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/domain/homebrew_extended_entities.dart';
 import '../models/domain/spell_monster_equipment.dart';
-import '../services/ingestion/compendium_json_ingestion_pipeline.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
 import '../widgets/homebrew/equipment_builder_dialog.dart';
-import '../widgets/homebrew/homebrew_import_dialog.dart';
+import '../widgets/homebrew/homebrew_export_dialog.dart';
+import '../widgets/homebrew/homebrew_import_preview_dialog.dart';
 import '../widgets/homebrew/monster_builder_dialog.dart';
 import '../widgets/homebrew/spell_builder_dialog.dart';
 
@@ -268,22 +268,29 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
   }
 
   Future<void> _openImportDialog() async {
-    final result = await showDialog<IngestionBatchResult>(
+    final count = await showDialog<int>(
       context: context,
-      builder: (ctx) => const HomebrewImportDialog(),
+      builder: (ctx) => const HomebrewImportPreviewDialog(),
     );
-    if (result != null && result.totalEntities > 0) {
+    if (count != null && count > 0) {
       await _loadAll();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Successfully imported ${result.totalEntities} custom entities!',
+              'Successfully imported $count custom entities!',
             ),
           ),
         );
       }
     }
+  }
+
+  Future<void> _openExportDialog() async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => const HomebrewExportDialog(),
+    );
   }
 
   @override
@@ -295,7 +302,12 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
         title: const Text('Homebrew Studio'),
         actions: [
           IconButton(
-            tooltip: 'Import Compendium JSON',
+            tooltip: 'Export Homebrew Pack',
+            icon: const Icon(Icons.file_upload_outlined),
+            onPressed: _openExportDialog,
+          ),
+          IconButton(
+            tooltip: 'Import Homebrew / Compendium JSON',
             icon: const Icon(Icons.file_download_outlined),
             onPressed: _openImportDialog,
           ),

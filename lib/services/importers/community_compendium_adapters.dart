@@ -1,14 +1,14 @@
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
-import 'five_tools_tag_parser.dart';
+import 'compendium_tag_parser.dart';
 
-/// Adapters to transform 5eTools raw JSON maps into strongly-typed domain entities.
-class FiveToolsAdapters {
-  final FiveToolsTagParser parser;
+/// Adapters to transform community compendium raw JSON maps into strongly-typed domain entities.
+class CommunityCompendiumAdapters {
+  final CompendiumTagParser parser;
 
-  FiveToolsAdapters({FiveToolsTagParser? parser})
-      : parser = parser ?? FiveToolsTagParser();
+  CommunityCompendiumAdapters({CompendiumTagParser? parser})
+      : parser = parser ?? CompendiumTagParser();
 
   /// Creates a slug from entity name.
   String _slugify(String name) {
@@ -18,7 +18,7 @@ class FiveToolsAdapters {
         .replaceAll(RegExp(r'^-+|-+$'), '');
   }
 
-  /// Parses 5eTools Spell map into canonical [Spell].
+  /// Parses community compendium Spell map into canonical [Spell].
   Spell parseSpell(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Spell';
     final source = json['source']?.toString();
@@ -186,13 +186,13 @@ class FiveToolsAdapters {
       damageMath: parsedEntries.extractedMath,
       relatedEntityRefs: parsedEntries.extractedReferences,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );
   }
 
-  /// Parses 5eTools Monster map into canonical [Monster].
+  /// Parses community compendium Monster map into canonical [Monster].
   Monster parseMonster(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Monster';
     final source = json['source']?.toString();
@@ -292,13 +292,13 @@ class FiveToolsAdapters {
       actionsMarkdown: parsedActions.cleanMarkdown,
       attackMath: parsedActions.extractedMath,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );
   }
 
-  /// Parses 5eTools Item map into canonical [EquipmentItem].
+  /// Parses community compendium Item map into canonical [EquipmentItem].
   EquipmentItem parseItem(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Item';
     final source = json['source']?.toString();
@@ -331,13 +331,13 @@ class FiveToolsAdapters {
       requiresAttunement: reqAttune,
       descriptionMarkdown: parsedEntries.cleanMarkdown,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );
   }
 
-  /// Parses 5eTools Class map into canonical [CharacterClass].
+  /// Parses community compendium Class map into canonical [CharacterClass].
   CharacterClass parseClass(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Class';
     final source = json['source']?.toString();
@@ -369,7 +369,7 @@ class FiveToolsAdapters {
         }
       }
     } else if (json['optionalfeatureProg'] is List) {
-      // 5eTools optional feature progression
+      // Community optional feature progression
       for (final prog in json['optionalfeatureProg']) {
         if (prog is Map) {
           final progName = prog['name']?.toString() ?? 'Class Choice';
@@ -405,13 +405,13 @@ class FiveToolsAdapters {
       subclassSelectionLevel: subclassLevel,
       featureDecisions: featureDecisions,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );
   }
 
-  /// Parses 5eTools Subclass map into canonical [Subclass].
+  /// Parses community compendium Subclass map into canonical [Subclass].
   Subclass parseSubclass(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Subclass';
     final className = json['className']?.toString() ?? 'Fighter';
@@ -429,13 +429,13 @@ class FiveToolsAdapters {
       shortName: json['shortName']?.toString() ?? name,
       featuresMarkdown: parsed.cleanMarkdown,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );
   }
 
-  /// Parses 5eTools Race map into canonical [Race].
+  /// Parses community compendium Race map into canonical [Race].
   Race parseRace(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Race';
     final source = json['source']?.toString();
@@ -466,13 +466,13 @@ class FiveToolsAdapters {
       speed: speed,
       traitsMarkdown: parsed.cleanMarkdown,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );
   }
 
-  /// Parses 5eTools Feat map into canonical [Feat].
+  /// Parses community compendium Feat map into canonical [Feat].
   Feat parseFeat(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Feat';
     final source = json['source']?.toString();
@@ -495,13 +495,13 @@ class FiveToolsAdapters {
       category: category,
       descriptionMarkdown: parsed.cleanMarkdown,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );
   }
 
-  /// Parses 5eTools Background map into canonical [Background].
+  /// Parses community compendium Background map into canonical [Background].
   Background parseBackground(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
     final name = json['name']?.toString() ?? 'Unnamed Background';
     final source = json['source']?.toString();
@@ -515,7 +515,7 @@ class FiveToolsAdapters {
       name: name,
       descriptionMarkdown: parsed.cleanMarkdown,
       customProperties: {
-        'source': source ?? '5eTools',
+        'source': source ?? 'HOMEBREW',
         'rawJson': json,
       },
     );

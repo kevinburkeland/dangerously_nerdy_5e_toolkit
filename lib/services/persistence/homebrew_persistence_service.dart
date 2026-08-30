@@ -4,9 +4,12 @@ import '../../models/characters/srd_backgrounds_library.dart';
 import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
+import '../../models/domain/core_types.dart';
+import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/monster_codex_data.dart';
+import '../acl/homebrew_merge_resolver.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
 
@@ -621,6 +624,259 @@ class HomebrewPersistenceService {
       _keyHomebrewOther,
       entries.map((e) => json.encode(e.toMap())).toList(),
     );
+  }
+
+  /// Exports saved homebrew entities into a portable [HomebrewBundle].
+  Future<HomebrewBundle> exportHomebrewBundle({
+    String? bundleName,
+    String? author,
+    String? description,
+    Set<EntityType>? categories,
+  }) async {
+    final includeSpells = categories == null || categories.contains(EntityType.spell);
+    final includeMonsters = categories == null || categories.contains(EntityType.monster);
+    final includeItems = categories == null || categories.contains(EntityType.equipment);
+    final includeClasses = categories == null || categories.contains(EntityType.classDefinition);
+    final includeSubclasses = categories == null || categories.contains(EntityType.subclass);
+    final includeRaces = categories == null || categories.contains(EntityType.species);
+    final includeFeats = categories == null || categories.contains(EntityType.feat);
+    final includeBackgrounds = categories == null || categories.contains(EntityType.background);
+    final includeOther = categories == null || categories.contains(EntityType.custom);
+
+    return HomebrewBundle(
+      appVersion: '1.0.0',
+      exportedAt: DateTime.now(),
+      bundleName: bundleName,
+      author: author,
+      description: description,
+      spells: includeSpells ? await loadCustomSpells() : const [],
+      monsters: includeMonsters ? await loadCustomMonsters() : const [],
+      items: includeItems ? await loadCustomItems() : const [],
+      classes: includeClasses ? await loadCustomClasses() : const [],
+      subclasses: includeSubclasses ? await loadCustomSubclasses() : const [],
+      races: includeRaces ? await loadCustomRaces() : const [],
+      feats: includeFeats ? await loadCustomFeats() : const [],
+      backgrounds: includeBackgrounds ? await loadCustomBackgrounds() : const [],
+      otherEntries: includeOther ? await loadCustomOtherEntries() : const [],
+    );
+  }
+
+  /// Imports an analyzed and resolved [ImportAnalysisResult], writing entities to storage
+  /// according to user-selected collision resolutions, and syncs runtime libraries immediately.
+  Future<void> importResolvedBundle(ImportAnalysisResult resolution) async {
+    // 1. Spells
+    final existingSpells = await loadCustomSpells();
+    final spellSlugs = existingSpells.map((s) => s.id.slug).toSet();
+    for (final item in resolution.spells) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      Spell toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, spellSlugs);
+        spellSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomSpell(toSave);
+    }
+
+    // 2. Monsters
+    final existingMonsters = await loadCustomMonsters();
+    final monsterSlugs = existingMonsters.map((m) => m.id.slug).toSet();
+    for (final item in resolution.monsters) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      Monster toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, monsterSlugs);
+        monsterSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomMonster(toSave);
+    }
+
+    // 3. Items
+    final existingItems = await loadCustomItems();
+    final itemSlugs = existingItems.map((i) => i.id.slug).toSet();
+    for (final item in resolution.items) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      EquipmentItem toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, itemSlugs);
+        itemSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomItem(toSave);
+    }
+
+    // 4. Classes
+    final existingClasses = await loadCustomClasses();
+    final classSlugs = existingClasses.map((c) => c.id.slug).toSet();
+    for (final item in resolution.classes) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      CharacterClass toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, classSlugs);
+        classSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomClass(toSave);
+    }
+
+    // 5. Subclasses
+    final existingSubclasses = await loadCustomSubclasses();
+    final subSlugs = existingSubclasses.map((s) => s.id.slug).toSet();
+    for (final item in resolution.subclasses) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      Subclass toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, subSlugs);
+        subSlugs.add(newSlug);
+        toSave = Subclass(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+          classSlug: toSave.classSlug,
+          shortName: '${toSave.shortName} (Copy)',
+          featuresMarkdown: toSave.featuresMarkdown,
+          customProperties: toSave.customProperties,
+        );
+      }
+      await saveCustomSubclass(toSave);
+    }
+
+    // 6. Races
+    final existingRaces = await loadCustomRaces();
+    final raceSlugs = existingRaces.map((r) => r.id.slug).toSet();
+    for (final item in resolution.races) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      Race toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, raceSlugs);
+        raceSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomRace(toSave);
+    }
+
+    // 7. Feats
+    final existingFeats = await loadCustomFeats();
+    final featSlugs = existingFeats.map((f) => f.id.slug).toSet();
+    for (final item in resolution.feats) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      Feat toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, featSlugs);
+        featSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomFeat(toSave);
+    }
+
+    // 8. Backgrounds
+    final existingBgs = await loadCustomBackgrounds();
+    final bgSlugs = existingBgs.map((b) => b.id.slug).toSet();
+    for (final item in resolution.backgrounds) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      Background toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, bgSlugs);
+        bgSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomBackground(toSave);
+    }
+
+    // 9. Other entries
+    final existingOthers = await loadCustomOtherEntries();
+    final otherSlugs = existingOthers.map((o) => o.id.slug).toSet();
+    for (final item in resolution.otherEntries) {
+      if (!item.isSelected) continue;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.keepLocal) {
+        continue;
+      }
+
+      HomebrewCompendiumEntry toSave = item.incomingEntity;
+      if (item.disposition == ImportDisposition.collision &&
+          item.resolution == CollisionResolution.duplicateRename) {
+        final newSlug = HomebrewMergeResolver.generateUniqueSlug(toSave.id.slug, otherSlugs);
+        otherSlugs.add(newSlug);
+        toSave = toSave.copyWith(
+          id: EntityId(slug: newSlug, ruleset: toSave.id.ruleset),
+          name: '${toSave.name} (Copy)',
+        );
+      }
+      await saveCustomOtherEntry(toSave);
+    }
+
+    // Immediately synchronize runtime libraries
+    await syncToLibraries();
   }
 
   /// Hydrates a LayeredPriorityRepository with saved Homebrew and Campaign Overrides.
