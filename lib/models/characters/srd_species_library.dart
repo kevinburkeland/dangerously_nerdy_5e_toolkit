@@ -235,8 +235,8 @@ class SrdSpeciesLibrary {
     },
   );
 
-  /// All SRD Species / Races
-  static final List<Race> allSpecies = [
+  /// Base Core SRD Species / Races
+  static final List<Race> _baseSpecies = [
     human,
     humanVariant,
     elf,
@@ -248,6 +248,27 @@ class SrdSpeciesLibrary {
     halfOrc,
     tiefling,
   ];
+
+  static List<Race> _customSpecies = [];
+
+  /// Dynamic list of all available species (Base SRD + Custom Homebrew)
+  static List<Race> get allSpecies => [..._baseSpecies, ..._customSpecies];
+
+  /// Sets the list of custom/homebrew species
+  static void setCustomSpecies(List<Race> custom) {
+    _customSpecies = List<Race>.from(custom);
+  }
+
+  /// Adds or replaces a custom species in the library
+  static void addCustomSpecies(Race race) {
+    _customSpecies.removeWhere((r) => r.id.slug == race.id.slug);
+    _customSpecies.add(race);
+  }
+
+  /// Removes a custom species by slug
+  static void removeCustomSpecies(String slug) {
+    _customSpecies.removeWhere((r) => r.id.slug == slug);
+  }
 
   static List<Race> getSpeciesForRuleset(RulesetVersion ruleset) {
     if (ruleset == RulesetVersion.v2024) {

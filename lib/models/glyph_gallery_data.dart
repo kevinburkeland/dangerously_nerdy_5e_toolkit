@@ -1784,9 +1784,37 @@ class GlyphGalleryData {
         ),
       ],
       summary2014:
-          'Versatile and ambitious, 2014 humans gain +1 to all ability scores (or a bonus feat and skill if utilizing Variant Human rules).',
+          'Versatile and ambitious, 2014 humans gain +1 to all ability scores.',
       summary2024:
           'Resourceful and adaptable, 2024 humans gain Heroic Inspiration each long rest, an extra skill proficiency, and a free Origin Feat.',
+    ),
+    GlyphSpeciesEntry(
+      name: 'Human (Variant)',
+      speciesType: SpeciesType.human,
+      actionRings2014: [
+        ActionTraitRing(
+          ringType: ActionRingType.speed,
+          label: '30 ft Base Movement Speed',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: '+1 to Two Scores, 1 Skill, 1 Feat',
+        ),
+      ],
+      actionRings2024: [
+        ActionTraitRing(
+          ringType: ActionRingType.speed,
+          label: '30 ft Base Speed',
+        ),
+        ActionTraitRing(
+          ringType: ActionRingType.passive,
+          label: 'Variant Human (2014 Optional)',
+        ),
+      ],
+      summary2014:
+          'Optional 2014 variant: gain +1 to two different ability scores of your choice, 1 bonus skill proficiency, and 1 bonus feat from the Feat Library.',
+      summary2024:
+          'Optional 2014 variant rule. In 2024 standard rules, all humans gain Resourceful, Skillful, and Versatile traits.',
     ),
     GlyphSpeciesEntry(
       name: 'Elf',

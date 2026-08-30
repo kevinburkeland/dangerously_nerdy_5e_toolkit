@@ -22,6 +22,7 @@ import '../services/rules/dnd_5e_rules_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/level_up_pipeline.dart';
 import '../services/persistence/character_persistence_service.dart';
+import '../services/persistence/homebrew_persistence_service.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
@@ -77,7 +78,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   String _selectedClass = 'fighter';
   String _selectedBackground = 'soldier';
   String _selectedFeat = 'savage-attacker';
-  bool _enable2014BonusFeat = false;
   String _selectedStartingEquipmentPreset = 'chain_and_sword';
   Set<SkillType> _wizardSelectedSkills = {SkillType.athletics, SkillType.intimidation};
 
@@ -297,6 +297,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Future<void> _loadPersistedRoster() async {
+    await HomebrewPersistenceService().syncToLibraries();
     final loaded = await _persistenceService.loadCharacters();
     final activeId = await _persistenceService.loadActiveCharacterId();
     if (mounted) {
@@ -629,13 +630,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     return null;
   }
 
-  static SpeciesType? _findSpeciesType(String slug) {
+  static SpeciesType _findSpeciesType(String slug) {
     final s = slug.toLowerCase();
     if (s.contains('human')) return SpeciesType.human;
     for (final sp in SpeciesType.values) {
-      if (sp.name.toLowerCase() == s || sp.displayName.toLowerCase() == s) return sp;
+      if (sp.name.toLowerCase() == s || sp.displayName.toLowerCase() == s || s.contains(sp.name.toLowerCase())) return sp;
     }
-    return null;
+    return SpeciesType.human;
   }
 
   // --------------------------------------------------------------------------
@@ -1776,6 +1777,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   // TAB 2: GUIDED CHARACTER CREATION WIZARD (STEP-BY-STEP)
   // --------------------------------------------------------------------------
   Widget _buildGuidedBuilderTab(ThemeData theme) {
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+    final isVariantHuman = _selectedSpecies == 'human-variant';
+    final hasFeatStep = is2024 || isVariantHuman;
+    final maxStepIndex = hasFeatStep ? 7 : 6;
+
     final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
     final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
     final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
@@ -1789,7 +1795,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       children: [
         // Stepper Progress Header
         Row(
-          children: List.generate(8, (i) {
+          children: List.generate(hasFeatStep ? 8 : 7, (i) {
             final isDone = i < _wizardStep;
             final isCur = i == _wizardStep;
             return Expanded(
@@ -1812,16 +1818,30 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: switch (_wizardStep) {
-              0 => _buildStep0Basics(theme),
-              1 => _buildStep1Species(theme),
-              2 => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
-              3 => _buildStep3Background(theme, curBackground),
-              4 => _buildStep4AbilityScores(theme),
-              5 => _buildStep5Feats(theme),
-              6 => _buildStep6Equipment(theme),
-              _ => _buildStep7Review(theme, curSpecies, curClass, curBackground),
-            },
+            child: () {
+              if (hasFeatStep) {
+                return switch (_wizardStep) {
+                  0 => _buildStep0Basics(theme),
+                  1 => _buildStep1Species(theme),
+                  2 => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
+                  3 => _buildStep3Background(theme, curBackground),
+                  4 => _buildStep4AbilityScores(theme),
+                  5 => _buildStep5Feats(theme),
+                  6 => _buildStep6Equipment(theme, hasFeatStep: true),
+                  _ => _buildStep7Review(theme, curSpecies, curClass, curBackground),
+                };
+              } else {
+                return switch (_wizardStep) {
+                  0 => _buildStep0Basics(theme),
+                  1 => _buildStep1Species(theme),
+                  2 => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
+                  3 => _buildStep3Background(theme, curBackground),
+                  4 => _buildStep4AbilityScores(theme),
+                  5 => _buildStep6Equipment(theme, hasFeatStep: false),
+                  _ => _buildStep7Review(theme, curSpecies, curClass, curBackground),
+                };
+              }
+            }(),
           ),
         ),
 
@@ -1842,7 +1862,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
               )
             else
               const SizedBox.shrink(),
-            if (_wizardStep < 7)
+            if (_wizardStep < maxStepIndex)
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.cyanAccent.shade700,
@@ -1944,8 +1964,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep1Species(ThemeData theme) {
-    final is2024 = _rulesEdition == DmRulesEdition.v2024;
-    final speciesList = SrdSpeciesLibrary.getSpeciesForRuleset(is2024 ? RulesetVersion.v2024 : RulesetVersion.v2014);
+    final speciesList = SrdSpeciesLibrary.getSpeciesForRuleset(_selectedRuleset);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1958,7 +1977,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const SizedBox(height: 12),
         ...speciesList.map((sp) {
           final isSelected = _selectedSpecies == sp.id.slug;
-          final spType = _findSpeciesType(sp.id.slug) ?? SpeciesType.human;
+          final spType = _findSpeciesType(sp.id.slug);
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
@@ -2001,7 +2020,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
                 onTap: () {
                   HapticService.selectionTick(context);
-                  setState(() => _selectedSpecies = sp.id.slug);
+                  setState(() {
+                    _selectedSpecies = sp.id.slug;
+                    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+                    final isVariantHuman = _selectedSpecies == 'human-variant';
+                    final hasFeatStep = is2024 || isVariantHuman;
+                    final maxStepIndex = hasFeatStep ? 7 : 6;
+                    if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
+                  });
                 },
               ),
             ),
@@ -2130,7 +2156,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep3Background(ThemeData theme, Background curBackground) {
-    final is2024 = _rulesEdition == DmRulesEdition.v2024;
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2297,127 +2323,87 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep5Feats(ThemeData theme) {
-    final is2024 = _rulesEdition == DmRulesEdition.v2024;
-    final isVariantHuman = _selectedSpecies == 'human-variant';
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final availableFeats = is2024
         ? SrdFeatsLibrary.getOriginFeats()
         : SrdFeatsLibrary.getFeatsForRuleset(RulesetVersion.v2014);
-
-    final showFeatSelector = is2024 || isVariantHuman || _enable2014BonusFeat;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           is2024
-              ? 'Step 6: Origin Feat / Starting Feat'
-              : (isVariantHuman ? 'Step 6: Variant Human Feat (2014 Optional)' : 'Step 6: Feats (2014 Rules)'),
+              ? 'Step 6: Origin Feat'
+              : 'Step 6: Variant Human Bonus Feat (2014 Optional)',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
         ),
         const SizedBox(height: 6),
         Text(
           is2024
-              ? 'Choose your 1st-level origin feat from the SRD Feat Library.'
-              : (isVariantHuman
-                  ? 'As a Variant Human, choose your 1st-level bonus feat from the SRD Feat Library.'
-                  : 'In the 2014 5e rules, 1st-level characters do not gain an Origin Feat by default.'),
+              ? 'Choose your 1st-level origin feat granted by your 2024 background.'
+              : 'As a Variant Human, choose your 1st-level bonus feat from the 2014 SRD Feat Library.',
           style: const TextStyle(fontSize: 12, color: Colors.white70),
         ),
         const SizedBox(height: 12),
-        if (!is2024 && !isVariantHuman) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            margin: const EdgeInsets.only(bottom: 12),
+        ...availableFeats.map((feat) {
+          final isSelected = _selectedFeat == feat.id.slug;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: isSelected ? Colors.purple.shade900.withValues(alpha: 0.3) : Colors.black26,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white24),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.amberAccent, size: 20),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'In 2014 rules, feats are an optional rule chosen at Level 4+ instead of an ASI. Only Variant Humans gain a starting feat at Level 1.',
-                    style: TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Enable DM House Rule Bonus Feat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            subtitle: const Text('Allow picking a 1st-level starting feat for non-variant characters.', style: TextStyle(fontSize: 11, color: Colors.white60)),
-            value: _enable2014BonusFeat,
-            onChanged: (val) {
-              HapticService.selectionTick(context);
-              setState(() => _enable2014BonusFeat = val);
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-        if (showFeatSelector)
-          ...availableFeats.map((feat) {
-            final isSelected = _selectedFeat == feat.id.slug;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.purple.shade900.withValues(alpha: 0.3) : Colors.black26,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isSelected ? Colors.purpleAccent : Colors.white12,
-                  width: isSelected ? 1.5 : 1.0,
-                ),
+              border: Border.all(
+                color: isSelected ? Colors.purpleAccent : Colors.white12,
+                width: isSelected ? 1.5 : 1.0,
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: ListTile(
-                  leading: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                        color: isSelected ? Colors.purpleAccent : Colors.white54,
-                      ),
-                      const SizedBox(width: 8),
-                      RepaintBoundary(
-                        child: SizedBox(
-                          width: 32,
-                          height: 32,
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: DndGlyph.feat(
-                              category: feat.category == 'Origin' ? FeatCategory.origin : FeatCategory.general,
-                              featId: feat.id.slug,
-                              size: 32,
-                              isDarkMode: true,
-                            ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                      color: isSelected ? Colors.purpleAccent : Colors.white54,
+                    ),
+                    const SizedBox(width: 8),
+                    RepaintBoundary(
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: DndGlyph.feat(
+                            category: feat.category == 'Origin' ? FeatCategory.origin : FeatCategory.general,
+                            featId: feat.id.slug,
+                            size: 32,
+                            isDarkMode: true,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(feat.descriptionMarkdown, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
-                  onTap: () {
-                    HapticService.selectionTick(context);
-                    setState(() => _selectedFeat = feat.id.slug);
-                  },
+                    ),
+                  ],
                 ),
+                title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(feat.descriptionMarkdown, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+                onTap: () {
+                  HapticService.selectionTick(context);
+                  setState(() => _selectedFeat = feat.id.slug);
+                },
               ),
-            );
-          }),
+            ),
+          );
+        }),
       ],
     );
   }
 
-  Widget _buildStep6Equipment(ThemeData theme) {
+  Widget _buildStep6Equipment(ThemeData theme, {bool hasFeatStep = true}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Step 7: Starting Equipment Preset',
+        Text('Step ${hasFeatStep ? 7 : 6}: Starting Equipment Preset',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
         const SizedBox(height: 6),
         const Text('Choose your starting loadout package based on your class proficiencies.',
@@ -2474,14 +2460,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   Widget _buildStep7Review(ThemeData theme, Race sp, CharacterClass cls, Background bg) {
     final name = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
-    final is2024 = _rulesEdition == DmRulesEdition.v2024;
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final isVariantHuman = _selectedSpecies == 'human-variant';
-    final hasFeat = is2024 || isVariantHuman || _enable2014BonusFeat;
+    final hasFeat = is2024 || isVariantHuman;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Step 8: Review & Finalize',
+        Text('Step ${hasFeat ? 8 : 7}: Review & Finalize',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
         const SizedBox(height: 6),
         const Text('Review your generated character summary before launching the live sheet.',
@@ -2567,7 +2553,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       equipRequests.add(const StartingEquipmentItemRequest(
         itemRef: EntityReference(refType: EntityType.equipment, slug: 'shield', displayName: 'Shield'),
         equipImmediately: true,
-        defaultSlot: EquipmentSlot.shield,
+        defaultSlot: EquipmentSlot.offHand,
       ));
     } else if (_selectedStartingEquipmentPreset == 'medium_skirmisher') {
       equipRequests.add(const StartingEquipmentItemRequest(
@@ -2602,6 +2588,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       ));
     }
 
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+    final isVariantHuman = curSpecies.id.slug == 'human-variant';
+    final hasFeat = is2024 || isVariantHuman;
+
     final request = CharacterCreationRequest(
       characterName: _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim(),
       ruleset: _selectedRuleset,
@@ -2623,7 +2613,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       savingThrowProficiencies: saveProficiencies,
       skillProficiencies: skillMap,
       originFeats: [
-        if (_rulesEdition == DmRulesEdition.v2024 || curSpecies.id.slug == 'human-variant' || _enable2014BonusFeat)
+        if (hasFeat)
           EntityReference(
             refType: EntityType.feat,
             slug: _selectedFeat,

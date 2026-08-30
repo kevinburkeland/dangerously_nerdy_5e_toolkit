@@ -305,8 +305,8 @@ class SrdFeatsLibrary {
     },
   );
 
-  /// Complete list of SRD Feats
-  static final List<Feat> allFeats = [
+  /// Base Core SRD Feats
+  static final List<Feat> _baseFeats = [
     alert2024,
     crafter2024,
     healer2024,
@@ -329,6 +329,27 @@ class SrdFeatsLibrary {
     heavyArmorMaster,
     grappler,
   ];
+
+  static List<Feat> _customFeats = [];
+
+  /// Dynamic list of all available feats (Base SRD + Custom Homebrew)
+  static List<Feat> get allFeats => [..._baseFeats, ..._customFeats];
+
+  /// Sets the list of custom/homebrew feats
+  static void setCustomFeats(List<Feat> custom) {
+    _customFeats = List<Feat>.from(custom);
+  }
+
+  /// Adds or replaces a custom feat in the library
+  static void addCustomFeat(Feat feat) {
+    _customFeats.removeWhere((f) => f.id.slug == feat.id.slug);
+    _customFeats.add(feat);
+  }
+
+  /// Removes a custom feat by slug
+  static void removeCustomFeat(String slug) {
+    _customFeats.removeWhere((f) => f.id.slug == slug);
+  }
 
   /// Filter feats by category
   static List<Feat> getOriginFeats({RulesetVersion ruleset = RulesetVersion.v2024}) {

@@ -311,5 +311,141 @@ void main() {
       // Gnome/Dwarf speed in 2014 should show 25 ft.
       expect(find.textContaining('Speed: 25 ft.'), findsWidgets);
     });
+
+    testWidgets('2014 character creation skips Feat step and creates character with no origin feats', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final settingsProvider = SettingsProvider(
+        initialSettings: const AppSettings(rulesEdition: DmRulesEdition.v2014),
+        autoLoad: false,
+      );
+
+      await tester.pumpWidget(
+        SettingsScope(
+          notifier: settingsProvider,
+          child: const MaterialApp(
+            home: CharacterBuilderScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Go to Guided Builder tab
+      await tester.tap(find.text('Guided Builder'));
+      await tester.pumpAndSettle();
+
+      // Ensure 2014 is selected
+      await tester.tap(find.text('2014 SRD (5.1 Classic)'));
+      await tester.pumpAndSettle();
+
+      // Step 1 -> Step 2 (Species)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 2: Choose Species / Race'), findsOneWidget);
+
+      // Select standard Human
+      await tester.tap(find.text('Human'));
+      await tester.pumpAndSettle();
+
+      // Step 2 -> Step 3 (Class)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
+
+      // Step 3 -> Step 4 (Background)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 4: Choose Background'), findsOneWidget);
+      expect(find.textContaining('Origin Feat:'), findsNothing);
+
+      // Step 4 -> Step 5 (Ability Scores)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 5: Ability Score Allocation'), findsOneWidget);
+
+      // Step 5 -> Step 6 (Equipment - Feats step was skipped!)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 6: Starting Equipment Preset'), findsOneWidget);
+
+      // Step 6 -> Step 7 (Review)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 7: Review & Finalize'), findsOneWidget);
+      expect(find.textContaining('Origin Feat:'), findsNothing);
+
+      // Create character
+      await tester.tap(find.text('CREATE & LAUNCH SHEET'));
+      await tester.pumpAndSettle();
+
+      final roster = await CharacterPersistenceService().loadCharacters();
+      expect(roster.length, equals(1));
+      expect(roster.first.feats, isEmpty);
+    });
+
+    testWidgets('2014 Variant Human character creation includes Feat step and saves starting feat', (tester) async {
+      tester.view.physicalSize = const Size(1200, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final settingsProvider = SettingsProvider(
+        initialSettings: const AppSettings(rulesEdition: DmRulesEdition.v2014),
+        autoLoad: false,
+      );
+
+      await tester.pumpWidget(
+        SettingsScope(
+          notifier: settingsProvider,
+          child: const MaterialApp(
+            home: CharacterBuilderScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Go to Guided Builder tab
+      await tester.tap(find.text('Guided Builder'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('2014 SRD (5.1 Classic)'));
+      await tester.pumpAndSettle();
+
+      // Step 1 -> Step 2 (Species)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Select Human (Variant)
+      await tester.tap(find.text('Human (Variant)'));
+      await tester.pumpAndSettle();
+
+      // Step 2 -> Step 3 (Class)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 3 -> Step 4 (Background)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 4 -> Step 5 (Ability Scores)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 5 -> Step 6 (Variant Human Feat)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 6: Variant Human Bonus Feat (2014 Optional)'), findsOneWidget);
+
+      // Step 6 -> Step 7 (Equipment)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 7: Starting Equipment Preset'), findsOneWidget);
+
+      // Step 7 -> Step 8 (Review)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 8: Review & Finalize'), findsOneWidget);
+    });
   });
 }

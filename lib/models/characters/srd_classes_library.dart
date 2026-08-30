@@ -496,8 +496,8 @@ class SrdClassesLibrary {
     ],
   );
 
-  /// All 12 SRD Classes
-  static final List<CharacterClass> allClasses = [
+  /// Base Core 12 SRD Classes
+  static final List<CharacterClass> _baseClasses = [
     barbarian,
     bard,
     cleric,
@@ -511,6 +511,27 @@ class SrdClassesLibrary {
     warlock,
     wizard,
   ];
+
+  static List<CharacterClass> _customClasses = [];
+
+  /// Dynamic list of all available classes (Base SRD + Custom Homebrew)
+  static List<CharacterClass> get allClasses => [..._baseClasses, ..._customClasses];
+
+  /// Sets the list of custom/homebrew classes
+  static void setCustomClasses(List<CharacterClass> custom) {
+    _customClasses = List<CharacterClass>.from(custom);
+  }
+
+  /// Adds or replaces a custom class in the library
+  static void addCustomClass(CharacterClass cls) {
+    _customClasses.removeWhere((c) => c.id.slug == cls.id.slug);
+    _customClasses.add(cls);
+  }
+
+  /// Removes a custom class by slug
+  static void removeCustomClass(String slug) {
+    _customClasses.removeWhere((c) => c.id.slug == slug);
+  }
 
   static CharacterClass? findBySlug(String slug) {
     final clean = slug.toLowerCase().trim();

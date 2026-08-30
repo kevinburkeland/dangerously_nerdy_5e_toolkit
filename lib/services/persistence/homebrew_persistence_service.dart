@@ -1,5 +1,9 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/characters/srd_backgrounds_library.dart';
+import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/srd_feats_library.dart';
+import '../../models/characters/srd_species_library.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/monster_codex_data.dart';
@@ -81,10 +85,22 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Synchronizes all loaded homebrew monsters into the global MonsterCodexLibrary.
+  /// Synchronizes all loaded homebrew entities into global runtime libraries.
   Future<void> syncToLibraries() async {
     final monsters = await loadCustomMonsters();
     MonsterCodexLibrary.setHomebrewMonsters(monsters);
+
+    final races = await loadCustomRaces();
+    SrdSpeciesLibrary.setCustomSpecies(races);
+
+    final feats = await loadCustomFeats();
+    SrdFeatsLibrary.setCustomFeats(feats);
+
+    final classes = await loadCustomClasses();
+    SrdClassesLibrary.setCustomClasses(classes);
+
+    final backgrounds = await loadCustomBackgrounds();
+    SrdBackgroundsLibrary.setCustomBackgrounds(backgrounds);
   }
 
   /// Saves a custom monster to persistent storage and updates MonsterCodexLibrary.
@@ -173,7 +189,7 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Saves a custom class to persistent storage.
+  /// Saves a custom class to persistent storage and runtime library.
   Future<void> saveCustomClass(CharacterClass characterClass) async {
     final classes = await loadCustomClasses();
     final idx = classes.indexWhere((c) => c.id.slug == characterClass.id.slug);
@@ -187,9 +203,10 @@ class HomebrewPersistenceService {
       _keyHomebrewClasses,
       classes.map((c) => json.encode(c.toMap())).toList(),
     );
+    SrdClassesLibrary.addCustomClass(characterClass);
   }
 
-  /// Deletes a custom class by slug.
+  /// Deletes a custom class by slug and runtime library.
   Future<void> deleteCustomClass(String slug) async {
     final classes = await loadCustomClasses();
     classes.removeWhere((c) => c.id.slug == slug);
@@ -198,6 +215,7 @@ class HomebrewPersistenceService {
       _keyHomebrewClasses,
       classes.map((c) => json.encode(c.toMap())).toList(),
     );
+    SrdClassesLibrary.removeCustomClass(slug);
   }
 
   /// Loads all custom subclasses from persistent storage.
@@ -257,7 +275,7 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Saves a custom race to persistent storage.
+  /// Saves a custom race to persistent storage and runtime library.
   Future<void> saveCustomRace(Race race) async {
     final races = await loadCustomRaces();
     final idx = races.indexWhere((r) => r.id.slug == race.id.slug);
@@ -271,9 +289,10 @@ class HomebrewPersistenceService {
       _keyHomebrewRaces,
       races.map((r) => json.encode(r.toMap())).toList(),
     );
+    SrdSpeciesLibrary.addCustomSpecies(race);
   }
 
-  /// Deletes a custom race by slug.
+  /// Deletes a custom race by slug and runtime library.
   Future<void> deleteCustomRace(String slug) async {
     final races = await loadCustomRaces();
     races.removeWhere((r) => r.id.slug == slug);
@@ -282,6 +301,7 @@ class HomebrewPersistenceService {
       _keyHomebrewRaces,
       races.map((r) => json.encode(r.toMap())).toList(),
     );
+    SrdSpeciesLibrary.removeCustomSpecies(slug);
   }
 
   /// Loads all custom feats from persistent storage.
@@ -299,7 +319,7 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Saves a custom feat to persistent storage.
+  /// Saves a custom feat to persistent storage and runtime library.
   Future<void> saveCustomFeat(Feat feat) async {
     final feats = await loadCustomFeats();
     final idx = feats.indexWhere((f) => f.id.slug == feat.id.slug);
@@ -313,9 +333,10 @@ class HomebrewPersistenceService {
       _keyHomebrewFeats,
       feats.map((f) => json.encode(f.toMap())).toList(),
     );
+    SrdFeatsLibrary.addCustomFeat(feat);
   }
 
-  /// Deletes a custom feat by slug.
+  /// Deletes a custom feat by slug and runtime library.
   Future<void> deleteCustomFeat(String slug) async {
     final feats = await loadCustomFeats();
     feats.removeWhere((f) => f.id.slug == slug);
@@ -324,6 +345,7 @@ class HomebrewPersistenceService {
       _keyHomebrewFeats,
       feats.map((f) => json.encode(f.toMap())).toList(),
     );
+    SrdFeatsLibrary.removeCustomFeat(slug);
   }
 
   /// Loads all custom backgrounds from persistent storage.
@@ -341,7 +363,7 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Saves a custom background to persistent storage.
+  /// Saves a custom background to persistent storage and runtime library.
   Future<void> saveCustomBackground(Background background) async {
     final backgrounds = await loadCustomBackgrounds();
     final idx = backgrounds.indexWhere((b) => b.id.slug == background.id.slug);
@@ -355,9 +377,10 @@ class HomebrewPersistenceService {
       _keyHomebrewBackgrounds,
       backgrounds.map((b) => json.encode(b.toMap())).toList(),
     );
+    SrdBackgroundsLibrary.addCustomBackground(background);
   }
 
-  /// Deletes a custom background by slug.
+  /// Deletes a custom background by slug and runtime library.
   Future<void> deleteCustomBackground(String slug) async {
     final backgrounds = await loadCustomBackgrounds();
     backgrounds.removeWhere((b) => b.id.slug == slug);
@@ -366,6 +389,7 @@ class HomebrewPersistenceService {
       _keyHomebrewBackgrounds,
       backgrounds.map((b) => json.encode(b.toMap())).toList(),
     );
+    SrdBackgroundsLibrary.removeCustomBackground(slug);
   }
 
   /// Loads all custom generic entries (tables, rules, etc.) from persistent storage.

@@ -149,8 +149,8 @@ class SrdBackgroundsLibrary {
         '**Starting Equipment:** Small Knife, Map of Hometown, Pet Mouse, Token to Remember Parents, Common Clothes, 10 GP.',
   );
 
-  /// All SRD Backgrounds
-  static final List<Background> allBackgrounds = [
+  /// Base Core SRD Backgrounds
+  static final List<Background> _baseBackgrounds = [
     acolyte,
     criminal,
     entertainer,
@@ -162,6 +162,27 @@ class SrdBackgroundsLibrary {
     soldier,
     urchin,
   ];
+
+  static List<Background> _customBackgrounds = [];
+
+  /// Dynamic list of all available backgrounds (Base SRD + Custom Homebrew)
+  static List<Background> get allBackgrounds => [..._baseBackgrounds, ..._customBackgrounds];
+
+  /// Sets the list of custom/homebrew backgrounds
+  static void setCustomBackgrounds(List<Background> custom) {
+    _customBackgrounds = List<Background>.from(custom);
+  }
+
+  /// Adds or replaces a custom background in the library
+  static void addCustomBackground(Background bg) {
+    _customBackgrounds.removeWhere((b) => b.id.slug == bg.id.slug);
+    _customBackgrounds.add(bg);
+  }
+
+  /// Removes a custom background by slug
+  static void removeCustomBackground(String slug) {
+    _customBackgrounds.removeWhere((b) => b.id.slug == slug);
+  }
 
   static Background? findBySlug(String slug) {
     final clean = slug.toLowerCase().trim();
