@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/campaign_profile.dart';
+import '../../models/domain/session_graph_models.dart';
 import '../app_services.dart';
 import '../logging_service.dart';
+import '../party/campaign_registry_service.dart';
+import 'character_persistence_service.dart';
 
 /// Centralized service coordinator for multi-campaign profile lifecycles and debounced persistence.
 class CampaignProfileService extends ChangeNotifier {
@@ -57,9 +60,30 @@ class CampaignProfileService extends ChangeNotifier {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load campaign profiles index');
     }
 
-    // If no profiles exist, create a clean default profile
+    // If no profiles exist, check if the user has an existing campaign in CampaignRegistryService
+    final registry = CampaignRegistryService();
+    final memberships = await registry.loadMemberships();
+    final activeMembership = registry.activeCampaign ?? memberships.firstOrNull;
+
+    // Load any existing characters to populate the default roster
+    final savedCharacters = await CharacterPersistenceService().loadCharacters();
+
+    final campaignName = activeMembership?.campaignName.trim().isNotEmpty == true
+        ? activeMembership!.campaignName.trim()
+        : 'My Campaign';
+    final roomCode = activeMembership?.roomCode ?? 'CR-101';
+
     final defaultProf = CampaignProfile.defaultProfile(
-      name: 'Curse of the Dragon - Main Table',
+      name: campaignName,
+    ).copyWith(
+      partyRoster: savedCharacters,
+      roomState: RoomNodeState(
+        roomId: 'room_${DateTime.now().millisecondsSinceEpoch}',
+        roomCode: roomCode,
+        title: '$campaignName Staging Area',
+        description: 'Active DM session staging node.',
+      ),
+      notesMarkdown: '',
     );
     await saveProfileImmediate(defaultProf);
     await switchProfile(defaultProf.id);

@@ -244,7 +244,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   }
 
   Future<void> _showCreateCampaignDialog() async {
-    final nameCtrl = TextEditingController(text: 'New Adventure Campaign');
+    final nameCtrl = TextEditingController();
     DmRulesEdition edition = _activeProfile?.edition ?? DmRulesEdition.v2024;
 
     await showDialog<void>(
@@ -262,6 +262,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                     controller: nameCtrl,
                     decoration: const InputDecoration(
                       labelText: 'Campaign Title',
+                      hintText: 'e.g. Friday Night Campaign',
                       border: OutlineInputBorder(),
                     ),
                     autofocus: true,
@@ -286,10 +287,11 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (nameCtrl.text.trim().isEmpty) return;
+                    final enteredName = nameCtrl.text.trim();
+                    final finalName = enteredName.isNotEmpty ? enteredName : 'My Campaign';
                     Navigator.pop(ctx);
                     final newProf = CampaignProfile.defaultProfile(
-                      name: nameCtrl.text.trim(),
+                      name: finalName,
                       edition: edition,
                     );
                     final service = AppServices.instance.campaignProfileService;

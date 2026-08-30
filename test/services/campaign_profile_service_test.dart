@@ -8,8 +8,10 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/dm_backup_service.dart';
 
@@ -113,7 +115,7 @@ void main() {
       expect(def.edition, equals(DmRulesEdition.v2024));
       expect(def.pinnedRuleIds.contains('concentration'), isTrue);
       expect(def.pinnedRuleIds.contains('grapple_shove'), isTrue);
-      expect(def.notesMarkdown, contains('Session Notes'));
+      expect(def.notesMarkdown, isEmpty);
     });
   });
 
@@ -123,15 +125,32 @@ void main() {
       AppServices.reset();
     });
 
-    test('loadAllProfiles creates default campaign when storage is empty', () async {
+    test('loadAllProfiles creates default My Campaign when storage is empty', () async {
       final service = CampaignProfileService();
       final profiles = await service.loadAllProfiles();
 
       expect(profiles.length, equals(1));
-      expect(profiles.first.name, equals('Curse of the Dragon - Main Table'));
+      expect(profiles.first.name, equals('My Campaign'));
 
       final active = await service.getActiveProfile();
       expect(active.id, equals(profiles.first.id));
+    });
+
+    test('loadAllProfiles seamlessly adopts existing campaign from CampaignRegistryService', () async {
+      final reg = CampaignRegistryService.newInstance();
+      await reg.saveMembership(CampaignMembership(
+        roomCode: 'NEVER-1',
+        campaignName: 'Neverwinter Nights Table',
+        role: CampaignRole.host,
+        lastPlayed: DateTime.now(),
+      ));
+
+      final service = CampaignProfileService();
+      final profiles = await service.loadAllProfiles();
+
+      expect(profiles.length, equals(1));
+      expect(profiles.first.name, equals('Neverwinter Nights Table'));
+      expect(profiles.first.roomState.roomCode, equals('NEVER-1'));
     });
 
     test('Saves, loads, and switches multiple campaign profiles', () async {

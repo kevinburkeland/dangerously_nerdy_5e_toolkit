@@ -46,7 +46,7 @@ class CampaignProfile {
   }) {
     final now = DateTime.now();
     final profileId = id ?? 'campaign_${now.millisecondsSinceEpoch}';
-    final campaignName = name ?? 'Default Campaign';
+    final campaignName = name ?? 'My Campaign';
 
     return CampaignProfile(
       id: profileId,
@@ -72,7 +72,7 @@ class CampaignProfile {
         'cover',
         'resting',
       },
-      notesMarkdown: '# Session Notes & Scratchpad\n\n- Track secrets, clues, loot notes, and ongoing combat logs here.',
+      notesMarkdown: '',
     );
   }
 
