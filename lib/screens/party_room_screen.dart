@@ -15,6 +15,7 @@ import '../theme/app_theme.dart';
 import '../widgets/party/campaign_dialogs.dart';
 import '../widgets/party/loot_conflict_resolution_dialog.dart';
 import 'dice_roller_screen.dart';
+import 'dm_dashboard_screen.dart';
 
 /// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,
 /// Coin Purse with Party Share distribution, Live Dice Feed, and History/Audit Log with Host Trash Recovery.
@@ -254,10 +255,33 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                       tooltip: 'Share DM Passkey',
                       onPressed: () => ShareDmPasskeyDialog.show(context, _currentMembership!),
                     ),
+                  // DM Dashboard / Console Direct Button (if DM)
+                  if (_isDmOrCoDm)
+                    IconButton(
+                      icon: const Icon(Icons.dashboard_customize_outlined, color: Colors.purpleAccent),
+                      tooltip: 'Open DM Screen / Command Console',
+                      onPressed: () {
+                        HapticService.selectionTick(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DmDashboardScreen(initialCampaignId: 'campaign_$_roomCode'),
+                          ),
+                        );
+                      },
+                    ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
                     onSelected: (val) {
-                      if (val == 'switchChar') {
+                      if (val == 'dmDashboard') {
+                        HapticService.selectionTick(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DmDashboardScreen(initialCampaignId: 'campaign_$_roomCode'),
+                          ),
+                        );
+                      } else if (val == 'switchChar') {
                         SwitchActiveCharacterDialog.show(
                           context,
                           roomCode: _roomCode,
@@ -339,7 +363,17 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                             ],
                           ),
                         ),
-                      if (_isDmOrCoDm)
+                      if (_isDmOrCoDm) ...[
+                        const PopupMenuItem(
+                          value: 'dmDashboard',
+                          child: Row(
+                            children: [
+                              Icon(Icons.dashboard_customize_outlined, size: 18, color: Colors.purpleAccent),
+                              SizedBox(width: 8),
+                              Text('Open DM Screen / Console'),
+                            ],
+                          ),
+                        ),
                         const PopupMenuItem(
                           value: 'passkey',
                           child: Row(
@@ -350,6 +384,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                             ],
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ],

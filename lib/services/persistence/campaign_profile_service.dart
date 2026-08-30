@@ -52,6 +52,35 @@ class CampaignProfileService extends ChangeNotifier {
         }
       }
 
+      // Sync with CampaignRegistryService: Ensure every registered campaign has a corresponding DM profile
+      final registry = CampaignRegistryService();
+      final memberships = await registry.loadMemberships();
+      final savedCharacters = await CharacterPersistenceService().loadCharacters();
+
+      for (final m in memberships) {
+        final alreadyExists = profiles.any(
+          (p) => p.roomState.roomCode.toUpperCase() == m.roomCode.toUpperCase() ||
+                 p.id == 'campaign_${m.roomCode}',
+        );
+        if (!alreadyExists) {
+          final prof = CampaignProfile.defaultProfile(
+            id: 'campaign_${m.roomCode}',
+            name: m.campaignName.trim().isNotEmpty ? m.campaignName.trim() : 'Campaign ${m.roomCode}',
+          ).copyWith(
+            partyRoster: savedCharacters,
+            roomState: RoomNodeState(
+              roomId: 'room_${m.roomCode}',
+              roomCode: m.roomCode,
+              title: '${m.campaignName} Staging Area',
+              description: 'Active DM session staging node.',
+            ),
+            notesMarkdown: '',
+          );
+          await saveProfileImmediate(prof);
+          profiles.add(prof);
+        }
+      }
+
       if (profiles.isNotEmpty) {
         _initialized = true;
         return profiles;
@@ -60,30 +89,9 @@ class CampaignProfileService extends ChangeNotifier {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load campaign profiles index');
     }
 
-    // If no profiles exist, check if the user has an existing campaign in CampaignRegistryService
-    final registry = CampaignRegistryService();
-    final memberships = await registry.loadMemberships();
-    final activeMembership = registry.activeCampaign ?? memberships.firstOrNull;
-
-    // Load any existing characters to populate the default roster
-    final savedCharacters = await CharacterPersistenceService().loadCharacters();
-
-    final campaignName = activeMembership?.campaignName.trim().isNotEmpty == true
-        ? activeMembership!.campaignName.trim()
-        : 'My Campaign';
-    final roomCode = activeMembership?.roomCode ?? 'CR-101';
-
+    // If still no profiles exist, create a clean default profile
     final defaultProf = CampaignProfile.defaultProfile(
-      name: campaignName,
-    ).copyWith(
-      partyRoster: savedCharacters,
-      roomState: RoomNodeState(
-        roomId: 'room_${DateTime.now().millisecondsSinceEpoch}',
-        roomCode: roomCode,
-        title: '$campaignName Staging Area',
-        description: 'Active DM session staging node.',
-      ),
-      notesMarkdown: '',
+      name: 'My Campaign',
     );
     await saveProfileImmediate(defaultProf);
     await switchProfile(defaultProf.id);

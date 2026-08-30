@@ -18,6 +18,7 @@ import '../widgets/party/campaign_dialogs.dart';
 import '../widgets/room_banner_widget.dart';
 import 'character_builder_screen.dart';
 import 'dice_roller_screen.dart';
+import 'dm_dashboard_screen.dart';
 import 'dm_reference_screen.dart';
 import 'dpr_calculator_screen.dart';
 import 'glyph_showcase_screen.dart';
@@ -1330,6 +1331,8 @@ class _LandingScreenState extends State<LandingScreen> {
       badgeText = 'Co-DM';
     }
 
+    final isDm = m.isDmOrCoDm;
+
     return Card(
       elevation: 2,
       margin: EdgeInsets.zero,
@@ -1362,7 +1365,7 @@ class _LandingScreenState extends State<LandingScreen> {
           }
         },
         child: Container(
-          width: 220,
+          width: 250,
           padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1418,6 +1421,40 @@ class _LandingScreenState extends State<LandingScreen> {
                     ),
                   ),
                   const Spacer(),
+                  if (isDm) ...[
+                    InkWell(
+                      onTap: () {
+                        HapticService.selectionTick(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DmDashboardScreen(initialCampaignId: 'campaign_${m.roomCode}'),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.dashboard_customize_outlined, size: 12, color: Colors.amber),
+                            SizedBox(width: 3),
+                            Text(
+                              'DM Screen',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
                 ],
               ),

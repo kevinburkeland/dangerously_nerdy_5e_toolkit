@@ -53,7 +53,12 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
 
     CampaignProfile active;
     if (widget.initialCampaignId != null) {
-      active = profiles.where((p) => p.id == widget.initialCampaignId).firstOrNull ??
+      final req = widget.initialCampaignId!.trim().toUpperCase();
+      active = profiles.where((p) {
+            final pid = p.id.toUpperCase();
+            final rcode = p.roomState.roomCode.toUpperCase();
+            return pid == req || pid == 'CAMPAIGN_$req' || rcode == req;
+          }).firstOrNull ??
           await service.getActiveProfile();
     } else {
       active = await service.getActiveProfile();
