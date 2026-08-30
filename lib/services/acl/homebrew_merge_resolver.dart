@@ -88,6 +88,15 @@ class ImportAnalysisResult {
 
   bool get hasCollisions => collisionCount > 0;
   bool get hasSelected => selectedCount > 0;
+
+  /// Applies the given [resolution] across all items marked as collisions.
+  void applyResolutionToAllCollisions(CollisionResolution resolution) {
+    for (final item in allItems) {
+      if (item.disposition == ImportDisposition.collision) {
+        item.resolution = resolution;
+      }
+    }
+  }
 }
 
 /// Deduplication & Conflict Detection Engine.

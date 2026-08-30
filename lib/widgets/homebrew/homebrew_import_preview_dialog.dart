@@ -28,6 +28,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
   ImportAnalysisResult? _analysisResult;
   bool _isAnalyzing = false;
   bool _isImporting = false;
+  bool _applyToRemainingCollisions = false;
   String? _errorMessage;
 
   @override
@@ -412,10 +413,60 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                   ),
                 ],
                 selected: {item.resolution},
-                onSelectionChanged: (set) => setState(() => item.resolution = set.first),
+                onSelectionChanged: (set) {
+                  final chosen = set.first;
+                  setState(() {
+                    item.resolution = chosen;
+                    if (_applyToRemainingCollisions && _analysisResult != null) {
+                      _analysisResult!.applyResolutionToAllCollisions(chosen);
+                    }
+                  });
+                },
                 style: const ButtonStyle(
                   visualDensity: VisualDensity.compact,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 40, top: 4),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _applyToRemainingCollisions = !_applyToRemainingCollisions;
+                    if (_applyToRemainingCollisions && _analysisResult != null) {
+                      _analysisResult!.applyResolutionToAllCollisions(item.resolution);
+                    }
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        key: const Key('do_for_remaining_collisions_checkbox'),
+                        value: _applyToRemainingCollisions,
+                        onChanged: (val) {
+                          setState(() {
+                            _applyToRemainingCollisions = val ?? false;
+                            if (_applyToRemainingCollisions && _analysisResult != null) {
+                              _analysisResult!.applyResolutionToAllCollisions(item.resolution);
+                            }
+                          });
+                        },
+                        activeColor: Colors.tealAccent,
+                        checkColor: Colors.black,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Do this for remaining collisions',
+                      style: TextStyle(fontSize: 11, color: Colors.white70),
+                    ),
+                  ],
                 ),
               ),
             ),
