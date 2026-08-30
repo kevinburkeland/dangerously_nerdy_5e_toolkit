@@ -1,17 +1,20 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import '../models/dm_screen_data.dart' show DmRulesEdition;
 import '../models/domain/character_models.dart';
 import '../models/domain/entity_reference.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../services/persistence/character_persistence_service.dart';
+import '../services/persistence/debounced_storage_service.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
 import '../services/rules/character_progression_engine.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,
-/// resource management, equipment/attunement toggles, and persistence.
+/// resource management, equipment/attunement toggles, condition management, and debounced persistence.
 class CharacterSheetController extends ChangeNotifier {
   final CharacterPersistenceService _persistenceService;
+  final DebouncedStorageService _debouncedStorage;
   final ReferenceResolver? _resolver;
 
   late Character _character;
@@ -21,9 +24,11 @@ class CharacterSheetController extends ChangeNotifier {
   CharacterSheetController({
     required Character character,
     CharacterPersistenceService? persistenceService,
+    DebouncedStorageService? debouncedStorage,
     ReferenceResolver? resolver,
   })  : _character = character,
         _persistenceService = persistenceService ?? CharacterPersistenceService(),
+        _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
         _resolver = resolver {
     _recalculateStats();
   }
@@ -31,8 +36,11 @@ class CharacterSheetController extends ChangeNotifier {
   Character get character => _character;
   EvaluatedCharacterStats get stats => _stats;
   bool get isSaving => _isSaving;
+  DmRulesEdition get rulesEdition => _character.rulesEdition;
 
   bool get hasInspiration => _character.customProperties['hasInspiration'] == true;
+
+  String get _debounceTaskKey => 'character_sheet_persist_${_character.id.slug}';
 
   /// Recalculates stats synchronously.
   void _recalculateStats() {
@@ -42,14 +50,24 @@ class CharacterSheetController extends ChangeNotifier {
     );
   }
 
-  /// Sets a new active character and re-evaluates stats.
-  void setCharacter(Character newCharacter) {
+  /// Sets a new active character, flushes any pending writes for the previous character, and re-evaluates stats.
+  Future<void> setCharacter(Character newCharacter) async {
+    await flush();
     _character = newCharacter;
     _recalculateStats();
     notifyListeners();
   }
 
-  /// Advances character level via [CharacterProgressionEngine] and persists the result.
+  /// Switches active ruleset edition (2014 vs 2024) and triggers live re-evaluation.
+  Future<void> setRulesEdition(DmRulesEdition edition) async {
+    if (_character.rulesEdition == edition) return;
+    _character = _character.copyWith(rulesEdition: edition);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Advances character level via [CharacterProgressionEngine] and immediately flushes persistence.
   Future<void> applyLevelUp(LevelUpRequest request) async {
     final updated = CharacterProgressionEngine.applyLevelUp(
       _character,
@@ -59,11 +77,25 @@ class CharacterSheetController extends ChangeNotifier {
     _character = updated;
     _recalculateStats();
     notifyListeners();
-    await _persist();
+    await _persistImmediate();
   }
 
-  /// Persists the active character asynchronously.
-  Future<void> _persist() async {
+  /// Schedules debounced disk persistence to prevent main-isolate I/O thrashing.
+  void _schedulePersist({Duration duration = const Duration(milliseconds: 350)}) {
+    _debouncedStorage.scheduleWrite(
+      _debounceTaskKey,
+      () => _persistImmediate(),
+      duration: duration,
+    );
+  }
+
+  /// Flushes pending persistence immediately.
+  Future<void> flush() async {
+    await _debouncedStorage.flushKey(_debounceTaskKey);
+  }
+
+  /// Persists the active character immediately.
+  Future<void> _persistImmediate() async {
     _isSaving = true;
     notifyListeners();
     try {
@@ -81,17 +113,16 @@ class CharacterSheetController extends ChangeNotifier {
         final nextEquipped = !item.isEquipped;
         return item.copyWith(
           isEquipped: nextEquipped,
-          // If unequipping and was equipped to a slot, clear or keep
           equippedSlot: nextEquipped ? (item.equippedSlot ?? EquipmentSlot.wondrous) : null,
         );
       }
       return item;
     }).toList();
 
-    _character = _copyCharacterWith(inventory: updatedInventory);
+    _character = _character.copyWith(inventory: updatedInventory);
     _recalculateStats();
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Toggles the attuned state of an item instance, strictly respecting the dynamic attunement limit.
@@ -119,10 +150,10 @@ class CharacterSheetController extends ChangeNotifier {
       return item;
     }).toList();
 
-    _character = _copyCharacterWith(inventory: updatedInventory);
+    _character = _character.copyWith(inventory: updatedInventory);
     _recalculateStats();
     notifyListeners();
-    await _persist();
+    _schedulePersist();
     return true;
   }
 
@@ -153,7 +184,7 @@ class CharacterSheetController extends ChangeNotifier {
       newHp = math.min(maxHp, curHp + delta);
     }
 
-    _character = _copyCharacterWith(
+    _character = _character.copyWith(
       resources: _character.resources.copyWith(
         currentHp: newHp,
         tempHp: newTemp,
@@ -161,18 +192,60 @@ class CharacterSheetController extends ChangeNotifier {
     );
     _recalculateStats();
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Sets temporary hit points directly.
   Future<void> setTempHp(int tempHp) async {
     final clampedTemp = math.max(0, tempHp);
-    _character = _copyCharacterWith(
+    _character = _character.copyWith(
       resources: _character.resources.copyWith(tempHp: clampedTemp),
     );
     _recalculateStats();
     notifyListeners();
-    await _persist();
+    _schedulePersist();
+  }
+
+  /// Sets or updates exhaustion level (0 to 6).
+  Future<void> setExhaustionLevel(int level) async {
+    final clampedLevel = level.clamp(0, 6);
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere((c) => c.conditionName.toLowerCase() == 'exhaustion');
+
+    if (clampedLevel > 0) {
+      conditions.add(CharacterCondition(
+        conditionName: 'exhaustion',
+        parameters: {'level': clampedLevel},
+      ));
+    }
+
+    _character = _character.copyWith(conditions: conditions);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Adds a condition to the character.
+  Future<void> addCondition(CharacterCondition condition) async {
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere((c) => c.conditionName.toLowerCase() == condition.conditionName.toLowerCase())
+      ..add(condition);
+
+    _character = _character.copyWith(conditions: conditions);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Removes a condition from the character.
+  Future<void> removeCondition(String conditionName) async {
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere((c) => c.conditionName.toLowerCase() == conditionName.toLowerCase());
+
+    _character = _character.copyWith(conditions: conditions);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
   }
 
   /// Spends a hit die of the given type (e.g., "d8", "d10").
@@ -182,12 +255,12 @@ class CharacterSheetController extends ChangeNotifier {
     if (count <= 0) return false;
 
     currentDice[dieType] = count - 1;
-    _character = _copyCharacterWith(
+    _character = _character.copyWith(
       resources: _character.resources.copyWith(currentHitDice: currentDice),
     );
     _recalculateStats();
     notifyListeners();
-    await _persist();
+    _schedulePersist();
     return true;
   }
 
@@ -197,12 +270,12 @@ class CharacterSheetController extends ChangeNotifier {
     final count = currentDice[dieType] ?? 0;
     currentDice[dieType] = count + 1;
 
-    _character = _copyCharacterWith(
+    _character = _character.copyWith(
       resources: _character.resources.copyWith(currentHitDice: currentDice),
     );
     _recalculateStats();
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Toggles heroic inspiration status.
@@ -211,9 +284,9 @@ class CharacterSheetController extends ChangeNotifier {
     final current = customProps['hasInspiration'] == true;
     customProps['hasInspiration'] = !current;
 
-    _character = _copyCharacterWith(customProperties: customProps);
+    _character = _character.copyWith(customProperties: customProps);
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Consumes or recovers a spell slot of a given level.
@@ -231,13 +304,13 @@ class CharacterSheetController extends ChangeNotifier {
       curMap[level] = currentAvailable + 1;
     }
 
-    _character = _copyCharacterWith(
+    _character = _character.copyWith(
       resources: _character.resources.copyWith(
         spellSlots: pool.copyWith(currentSlots: curMap),
       ),
     );
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Consumes or recovers a Pact Magic spell slot.
@@ -253,13 +326,13 @@ class CharacterSheetController extends ChangeNotifier {
       newCur = cur + 1;
     }
 
-    _character = _copyCharacterWith(
+    _character = _character.copyWith(
       resources: _character.resources.copyWith(
         spellSlots: pool.copyWith(pactMagicCurrent: newCur),
       ),
     );
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Restores all spell slots (including Pact Magic) to maximum (Long Rest).
@@ -267,7 +340,7 @@ class CharacterSheetController extends ChangeNotifier {
     final pool = _character.resources.spellSlots;
     final restoredMap = Map<int, int>.from(pool.maxSlots);
 
-    _character = _copyCharacterWith(
+    _character = _character.copyWith(
       resources: _character.resources.copyWith(
         spellSlots: pool.copyWith(
           currentSlots: restoredMap,
@@ -276,7 +349,7 @@ class CharacterSheetController extends ChangeNotifier {
       ),
     );
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Toggles whether a known spell is currently prepared.
@@ -290,9 +363,9 @@ class CharacterSheetController extends ChangeNotifier {
       curPrep.add(spellRef);
     }
 
-    _character = _copyCharacterWith(spellsPrepared: curPrep);
+    _character = _character.copyWith(spellsPrepared: curPrep);
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Adds a new spell or cantrip to the character sheet.
@@ -305,7 +378,7 @@ class CharacterSheetController extends ChangeNotifier {
       final curCantrips = List<EntityReference<Spell>>.from(_character.cantrips);
       if (!curCantrips.any((c) => c.slug == spellRef.slug)) {
         curCantrips.add(spellRef);
-        _character = _copyCharacterWith(cantrips: curCantrips);
+        _character = _character.copyWith(cantrips: curCantrips);
       }
     } else {
       final curKnown = List<EntityReference<Spell>>.from(_character.spellsKnown);
@@ -316,13 +389,13 @@ class CharacterSheetController extends ChangeNotifier {
       if (isPrepared && !curPrep.any((s) => s.slug == spellRef.slug)) {
         curPrep.add(spellRef);
       }
-      _character = _copyCharacterWith(
+      _character = _character.copyWith(
         spellsKnown: curKnown,
         spellsPrepared: curPrep,
       );
     }
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
   /// Removes a spell or cantrip from the character sheet.
@@ -333,54 +406,24 @@ class CharacterSheetController extends ChangeNotifier {
     if (isCantrip) {
       final curCantrips = List<EntityReference<Spell>>.from(_character.cantrips)
         ..removeWhere((c) => c.slug == spellRef.slug);
-      _character = _copyCharacterWith(cantrips: curCantrips);
+      _character = _character.copyWith(cantrips: curCantrips);
     } else {
       final curKnown = List<EntityReference<Spell>>.from(_character.spellsKnown)
         ..removeWhere((s) => s.slug == spellRef.slug);
       final curPrep = List<EntityReference<Spell>>.from(_character.spellsPrepared)
         ..removeWhere((s) => s.slug == spellRef.slug);
-      _character = _copyCharacterWith(
+      _character = _character.copyWith(
         spellsKnown: curKnown,
         spellsPrepared: curPrep,
       );
     }
     notifyListeners();
-    await _persist();
+    _schedulePersist();
   }
 
-  /// Helper to recreate a Character with updated fields since Character does not implement copyWith directly.
-  Character _copyCharacterWith({
-    String? name,
-    CharacterResourcePool? resources,
-    List<InventoryItemInstance>? inventory,
-    List<EntityReference<Spell>>? cantrips,
-    List<EntityReference<Spell>>? spellsKnown,
-    List<EntityReference<Spell>>? spellsPrepared,
-    Map<String, dynamic>? customProperties,
-  }) {
-    return Character(
-      id: _character.id,
-      name: name ?? _character.name,
-      speciesRef: _character.speciesRef,
-      backgroundRef: _character.backgroundRef,
-      progression: _character.progression,
-      baseScores: _character.baseScores,
-      bonusScores: _character.bonusScores,
-      skillProficiencies: _character.skillProficiencies,
-      savingThrowProficiencies: _character.savingThrowProficiencies,
-      toolProficiencies: _character.toolProficiencies,
-      languages: _character.languages,
-      inventory: inventory ?? _character.inventory,
-      purse: _character.purse,
-      cantrips: cantrips ?? _character.cantrips,
-      spellsKnown: spellsKnown ?? _character.spellsKnown,
-      spellsPrepared: spellsPrepared ?? _character.spellsPrepared,
-      feats: _character.feats,
-      resources: resources ?? _character.resources,
-      conditions: _character.conditions,
-      maxAttunementSlots: _character.maxAttunementSlots,
-      baseSpeedFeet: _character.baseSpeedFeet,
-      customProperties: customProperties ?? _character.customProperties,
-    );
+  @override
+  void dispose() {
+    flush();
+    super.dispose();
   }
 }

@@ -1,13 +1,16 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../repository/reference_resolver.dart';
 import 'character_stat_calculator.dart' show ComputedAttackProfile;
 import 'dnd_5e_rules_engine.dart';
+import 'dnd_ruleset_strategy.dart';
 
 export 'character_stat_calculator.dart' show ComputedAttackProfile;
+export 'dnd_ruleset_strategy.dart';
 
 /// Fully evaluated and reactive stat calculation result for a Character.
 @immutable
@@ -33,6 +36,12 @@ class EvaluatedCharacterStats {
   final SpellSlotPool computedSpellSlots;
   final List<ComputedAttackProfile> attackProfiles;
   final List<String> activeBuffNotes;
+  final EncumbranceStatus? encumbrance;
+  final ExhaustionEffects? exhaustion;
+  final int? grappleShoveSaveDc;
+  final String? grappleShoveSummary;
+  final List<WeaponMasteryProperty> activeWeaponMasteries;
+  final DmRulesEdition rulesEdition;
 
   const EvaluatedCharacterStats({
     required this.effectiveScores,
@@ -56,6 +65,12 @@ class EvaluatedCharacterStats {
     required this.computedSpellSlots,
     required this.attackProfiles,
     required this.activeBuffNotes,
+    this.encumbrance,
+    this.exhaustion,
+    this.grappleShoveSaveDc,
+    this.grappleShoveSummary,
+    this.activeWeaponMasteries = const [],
+    this.rulesEdition = DmRulesEdition.v2014,
   });
 }
 
@@ -67,8 +82,28 @@ class CharacterEvaluationEngine {
   static EvaluatedCharacterStats evaluate(
     Character character, {
     ReferenceResolver? resolver,
+    DmRulesEdition? overrideEdition,
   }) {
     final buffNotes = <String>[];
+    final edition = overrideEdition ?? character.rulesEdition;
+    final strategy = RulesetStrategy.forEdition(edition);
+
+    // 0. Evaluate Exhaustion Condition
+    int exhaustionLevel = 0;
+    for (final cond in character.conditions) {
+      if (cond.conditionName.toLowerCase() == 'exhaustion') {
+        final lvl = (cond.parameters['level'] as num?)?.toInt() ?? 1;
+        exhaustionLevel = math.max(exhaustionLevel, lvl);
+      }
+    }
+    final exhaustion = strategy.evaluateExhaustion(exhaustionLevel);
+    if (exhaustion.level > 0) {
+      if (edition == DmRulesEdition.v2024) {
+        buffNotes.add('Exhaustion (Level ${exhaustion.level}): ${exhaustion.d20TestPenalty} to d20 tests, -${exhaustion.speedReductionFeet} ft Speed');
+      } else {
+        buffNotes.add('Exhaustion (Tier ${exhaustion.level}) Active');
+      }
+    }
 
     // 1. Calculate Attunement Slot Limits (Standard 3, scaling with Artificer features)
     int maxAttunement = character.maxAttunementSlots;
@@ -130,7 +165,7 @@ class CharacterEvaluationEngine {
 
       final props = getItemProperties(instance);
 
-      // Direct bonus keys (e.g., strengthBonus: 2 or bonusStrength: 2)
+      // Direct bonus keys
       str += (props['strengthBonus'] as num?)?.toInt() ?? (props['bonusStrength'] as num?)?.toInt() ?? 0;
       dex += (props['dexterityBonus'] as num?)?.toInt() ?? (props['bonusDexterity'] as num?)?.toInt() ?? 0;
       con += (props['constitutionBonus'] as num?)?.toInt() ?? (props['bonusConstitution'] as num?)?.toInt() ?? 0;
@@ -149,7 +184,7 @@ class CharacterEvaluationEngine {
         cha += (bonuses['charisma'] as num?)?.toInt() ?? 0;
       }
 
-      // Direct override keys (e.g., overrideStrength: 21)
+      // Direct override keys (e.g. overrideStrength: 21, overrideConstitution: 19)
       if (props['overrideStrength'] is num) {
         final overrideVal = (props['overrideStrength'] as num).toInt();
         if (overrideVal > str) {
@@ -243,6 +278,20 @@ class CharacterEvaluationEngine {
 
     final profBonus = character.proficiencyBonus;
 
+    // Encumbrance
+    final isPowerfulBuild = character.customProperties['powerfulBuild'] == true ||
+        character.speciesRef.slug.toLowerCase().contains('goliath') ||
+        character.speciesRef.slug.toLowerCase().contains('firbolg');
+    final encumbrance = strategy.calculateEncumbrance(
+      strengthScore: effectiveScores.strength,
+      inventory: character.inventory,
+      totalCoinCount: character.purse.totalCoins,
+      isPowerfulBuildOrLarge: isPowerfulBuild,
+    );
+    if (encumbrance.variantTier != EncumbranceTier.unencumbered) {
+      buffNotes.add('Encumbrance (${encumbrance.variantTier.displayName}): -${encumbrance.speedPenaltyFeet} ft Speed');
+    }
+
     // 4. Armor Class Calculation
     int baseAc = 10;
     String armorDesc = '10 (Base Unarmored)';
@@ -331,7 +380,7 @@ class CharacterEvaluationEngine {
     }
     final breakdownString = '${breakdownParts.join(' + ')} = $totalAc AC';
 
-    // 5. HP, Speed, and Initiative
+    // 5. HP, Speed, and Initiative (Retroactive CON Scaling across all Hit Dice)
     var maxHp = 0;
     final conMod = abilityMods[AbilityType.constitution]!;
     for (int i = 0; i < character.progression.classes.length; i++) {
@@ -357,7 +406,20 @@ class CharacterEvaluationEngine {
         }
       }
     }
-    if (maxHp <= 0) maxHp = 10;
+
+    // Tough feat
+    for (final feat in character.feats) {
+      if (feat.slug == 'tough' || feat.slug == 'toughness') {
+        maxHp += character.totalLevel * 2;
+        buffNotes.add('Tough Feat: +${character.totalLevel * 2} HP');
+      }
+    }
+
+    // Apply 2014 Exhaustion Tier 4 (halve max HP)
+    if (exhaustion.maxHpMultiplier < 1.0) {
+      maxHp = (maxHp * exhaustion.maxHpMultiplier).floor();
+    }
+    if (maxHp <= 0) maxHp = 1;
 
     var speed = character.baseSpeedFeet;
     for (final instance in character.equippedItems) {
@@ -368,7 +430,14 @@ class CharacterEvaluationEngine {
       }
     }
 
-    final initBonus = abilityMods[AbilityType.dexterity]!;
+    // Subtract encumbrance & exhaustion speed penalties
+    speed = math.max(0, speed - encumbrance.speedPenaltyFeet);
+    if (exhaustion.speedMultiplier < 1.0) {
+      speed = (speed * exhaustion.speedMultiplier).floor();
+    }
+    speed = math.max(0, speed - exhaustion.speedReductionFeet);
+
+    final initBonus = abilityMods[AbilityType.dexterity]! + exhaustion.d20TestPenalty;
     final initBonusString = initBonus >= 0 ? '+$initBonus' : '$initBonus';
 
     // 6. Saving Throws
@@ -386,6 +455,7 @@ class CharacterEvaluationEngine {
           saveMod += (props['savingThrowBonus'] as num).toInt();
         }
       }
+      saveMod += exhaustion.d20TestPenalty;
       savingThrows[ability] = saveMod;
     }
 
@@ -395,7 +465,7 @@ class CharacterEvaluationEngine {
       final ability = skill.defaultAbility;
       final mod = abilityMods[ability]!;
       final profLevel = character.skillProficiencies[skill] ?? SkillProficiencyLevel.none;
-      final skillTotal = mod + (profBonus * profLevel.multiplier).floor();
+      final skillTotal = mod + (profBonus * profLevel.multiplier).floor() + exhaustion.d20TestPenalty;
       skillMods[skill] = skillTotal;
     }
 
@@ -433,11 +503,16 @@ class CharacterEvaluationEngine {
 
       final castMod = abilityMods[castingAbility]!;
       spellSaveDcs[className] = 8 + profBonus + castMod + itemSpellBonus;
-      spellAttackBonuses[className] = profBonus + castMod + itemSpellBonus;
+      spellAttackBonuses[className] = profBonus + castMod + itemSpellBonus + exhaustion.d20TestPenalty;
     }
 
-    // 9. Attack Profiles
+    // Compute multiclass spell slots
+    final computedSlots = _computeMulticlassSpellSlots(character.progression.classes, edition);
+
+    // 9. Attack Profiles & Weapon Masteries
     final attackProfiles = <ComputedAttackProfile>[];
+    final activeMasteries = <WeaponMasteryProperty>[];
+
     for (final instance in character.equippedItems) {
       final isWeaponSlot = instance.equippedSlot == EquipmentSlot.mainHand ||
           instance.equippedSlot == EquipmentSlot.offHand ||
@@ -465,10 +540,10 @@ class CharacterEvaluationEngine {
         }
 
         final isProficient = props['isProficient'] != false;
-        final totalAttackBonus = abilityMod + (isProficient ? profBonus : 0) + magicWeaponBonus;
+        final totalAttackBonus = abilityMod + (isProficient ? profBonus : 0) + magicWeaponBonus + exhaustion.d20TestPenalty;
         final attackBonusStr = totalAttackBonus >= 0 ? '+$totalAttackBonus' : '$totalAttackBonus';
 
-        final baseDice = props['damageDice']?.toString() ?? '1d8';
+        final baseDice = props['damageDice']?.toString() ?? props['damageFormula']?.toString() ?? '1d8';
         final isOffhand = instance.equippedSlot == EquipmentSlot.offHand;
         final damageMod = isOffhand ? magicWeaponBonus : (abilityMod + magicWeaponBonus);
         final damageModStr = damageMod > 0 ? ' + $damageMod' : (damageMod < 0 ? ' - ${damageMod.abs()}' : '');
@@ -480,6 +555,38 @@ class CharacterEvaluationEngine {
           orElse: () => DamageType.slashing,
         );
 
+        // Weapon mastery
+        WeaponMasteryProperty? activeMastery;
+        final masteryKey = props['mastery']?.toString() ?? props['weaponMastery']?.toString();
+        final masteryProp = WeaponMasteryProperty.tryParse(masteryKey);
+        if (masteryProp != null) {
+          EquipmentItem? equipEntity;
+          if (resolver != null) {
+            final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+            if (res.isResolved) equipEntity = res.entity;
+          }
+          final weaponEntity = equipEntity ?? EquipmentItem(
+            id: EntityId(slug: instance.itemRef.slug, ruleset: RulesetVersion.v2024),
+            name: instance.displayName,
+            itemType: 'weapon',
+            rarity: 'Common',
+            requiresAttunement: instance.requiresAttunement,
+            descriptionMarkdown: props['notes']?.toString() ?? props['propertiesMarkdown']?.toString() ?? '',
+            customProperties: props,
+          );
+
+          if (strategy.canUseWeaponMastery(character: character, weapon: weaponEntity, mastery: masteryProp)) {
+            activeMastery = masteryProp;
+            if (!activeMasteries.contains(masteryProp)) {
+              activeMasteries.add(masteryProp);
+            }
+          }
+        }
+
+        final noteStr = activeMastery != null
+            ? '[Mastery: ${activeMastery.displayName}] ${props['notes']?.toString() ?? props['propertiesMarkdown']?.toString() ?? ""}'
+            : props['notes']?.toString() ?? props['propertiesMarkdown']?.toString();
+
         attackProfiles.add(ComputedAttackProfile(
           weaponName: weaponName,
           attackBonus: totalAttackBonus,
@@ -488,7 +595,8 @@ class CharacterEvaluationEngine {
           damageType: dmgType,
           range: props['range']?.toString() ?? (isRanged ? '80/320 ft' : '5 ft'),
           isOffhand: isOffhand,
-          notes: props['notes']?.toString(),
+          notes: noteStr?.trim(),
+          activeMastery: activeMastery,
         ));
       }
     }
@@ -496,7 +604,7 @@ class CharacterEvaluationEngine {
     // Default Unarmed Strike if no weapons equipped
     if (attackProfiles.isEmpty) {
       final strMod = abilityMods[AbilityType.strength]!;
-      final atkBonus = strMod + profBonus;
+      final atkBonus = strMod + profBonus + exhaustion.d20TestPenalty;
       final atkBonusStr = atkBonus >= 0 ? '+$atkBonus' : '$atkBonus';
       final dmg = math.max(1, 1 + strMod);
       attackProfiles.add(ComputedAttackProfile(
@@ -508,6 +616,13 @@ class CharacterEvaluationEngine {
         range: '5 ft',
       ));
     }
+
+    // 10. Grapple / Shove DC
+    final grappleShove = strategy.calculateGrappleShoveDc(
+      strengthModifier: abilityMods[AbilityType.strength]!,
+      dexterityModifier: abilityMods[AbilityType.dexterity]!,
+      proficiencyBonus: profBonus,
+    );
 
     return EvaluatedCharacterStats(
       effectiveScores: effectiveScores,
@@ -528,9 +643,90 @@ class CharacterEvaluationEngine {
       passiveInvestigation: passiveInvest,
       spellSaveDcs: spellSaveDcs,
       spellAttackBonuses: spellAttackBonuses,
-      computedSpellSlots: character.resources.spellSlots,
+      computedSpellSlots: computedSlots,
       attackProfiles: attackProfiles,
       activeBuffNotes: buffNotes,
+      encumbrance: encumbrance,
+      exhaustion: exhaustion,
+      grappleShoveSaveDc: grappleShove.dc,
+      grappleShoveSummary: grappleShove.formulaDescription,
+      activeWeaponMasteries: activeMasteries,
+      rulesEdition: edition,
+    );
+  }
+
+  static SpellSlotPool _computeMulticlassSpellSlots(
+    List<ClassLevelProgression> classes,
+    DmRulesEdition edition,
+  ) {
+    int fullCasterLevels = 0;
+    int paladinLevels = 0;
+    int rangerLevels = 0;
+    int artificerLevels = 0;
+    int thirdCasterLevels = 0;
+    int warlockLevels = 0;
+
+    for (final cls in classes) {
+      final slug = cls.classRef.slug.toLowerCase();
+      switch (slug) {
+        case 'wizard':
+        case 'cleric':
+        case 'druid':
+        case 'bard':
+        case 'sorcerer':
+          fullCasterLevels += cls.level;
+        case 'paladin':
+          paladinLevels += cls.level;
+        case 'ranger':
+          rangerLevels += cls.level;
+        case 'artificer':
+          artificerLevels += cls.level;
+        case 'warlock':
+          warlockLevels += cls.level;
+      }
+
+      final subSlug = cls.subclassRef?.slug.toLowerCase() ?? '';
+      if (subSlug.contains('eldritch_knight') || subSlug.contains('arcane_trickster')) {
+        thirdCasterLevels += cls.level;
+      }
+    }
+
+    final ecl = MulticlassSlotMatrix.calculateEffectiveCasterLevel(
+      fullCasterLevels: fullCasterLevels,
+      paladinLevels: paladinLevels,
+      rangerLevels: rangerLevels,
+      artificerLevels: artificerLevels,
+      thirdCasterLevels: thirdCasterLevels,
+      edition: edition,
+    );
+
+    final Map<int, int> maxSlots = {};
+    if (ecl > 0) {
+      final slotList = MulticlassSlotMatrix.getSpellSlots(ecl);
+      for (int i = 0; i < slotList.length; i++) {
+        final slotLevel = i + 1;
+        final count = slotList[i];
+        if (count > 0) {
+          maxSlots[slotLevel] = count;
+        }
+      }
+    }
+
+    // Pact Magic (Separate, unmerged pool)
+    int pactSlotLevel = 0;
+    int pactCount = 0;
+    if (warlockLevels > 0) {
+      final pactData = PactMagicPool.fromWarlockLevel(warlockLevels);
+      pactSlotLevel = pactData.slotLevel;
+      pactCount = pactData.totalSlots;
+    }
+
+    return SpellSlotPool(
+      currentSlots: Map<int, int>.from(maxSlots),
+      maxSlots: maxSlots,
+      pactMagicSlotLevel: pactSlotLevel,
+      pactMagicMax: pactCount,
+      pactMagicCurrent: pactCount,
     );
   }
 }

@@ -5,6 +5,7 @@ import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../repository/reference_resolver.dart';
+import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import 'character_stat_calculator.dart';
 import 'dnd_5e_rules_engine.dart';
 
@@ -375,7 +376,10 @@ class CharacterProgressionEngine {
 
     // 6. Recalculate derived combat stats (HP, Spell Slots) using RAW calculation
     int newMaxHp = _computeMaxHp(candidate);
-    final newSlotPool = computeSpellSlots(candidate.progression.classes);
+    final newSlotPool = computeSpellSlots(
+      candidate.progression.classes,
+      edition: candidate.rulesEdition,
+    );
 
     // Preserve expended slot delta if possible, or initialize up to new max
     final currentSlotMap = Map<int, int>.from(character.resources.spellSlots.currentSlots);
@@ -458,7 +462,10 @@ class CharacterProgressionEngine {
   }
 
   /// Computes composite Multiclass and Pact Magic spell slots.
-  static SpellSlotPool computeSpellSlots(List<ClassLevelProgression> classes) {
+  static SpellSlotPool computeSpellSlots(
+    List<ClassLevelProgression> classes, {
+    DmRulesEdition edition = DmRulesEdition.v2014,
+  }) {
     int fullCasterLevels = 0;
     int paladinLevels = 0;
     int rangerLevels = 0;
@@ -498,6 +505,7 @@ class CharacterProgressionEngine {
       rangerLevels: rangerLevels,
       artificerLevels: artificerLevels,
       thirdCasterLevels: thirdCasterLevels,
+      edition: edition,
     );
 
     final Map<int, int> maxSlots = {};

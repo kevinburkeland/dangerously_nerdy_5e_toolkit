@@ -42,24 +42,32 @@ class MulticlassSlotMatrix {
     return List<int>.from(_standardSlotProgression[effectiveCasterLevel.clamp(1, 20)] ?? List.filled(9, 0));
   }
 
-  /// Computes RAW Effective Spellcaster Level for multiclass characters:
-  /// - Full Casters (Wizard, Cleric, Druid, Sorcerer, Bard): 1:1
-  /// - Paladin / Ranger: floor(level / 2)
-  /// - Artificer: ceil(level / 2)
-  /// - Eldritch Knight / Arcane Trickster: floor(level / 3)
+  /// Computes RAW Effective Spellcaster Level for multiclass characters across 2014 & 2024 editions:
+  /// - 2014: Full (1:1), Paladin/Ranger floor(lvl/2), Artificer ceil(lvl/2), 1/3-caster floor(lvl/3)
+  /// - 2024: Full (1:1), Paladin/Ranger/Artificer ceil(lvl/2), 1/3-caster ceil(lvl/3)
   static int calculateEffectiveCasterLevel({
     int fullCasterLevels = 0,
     int paladinLevels = 0,
     int rangerLevels = 0,
     int artificerLevels = 0,
     int thirdCasterLevels = 0,
+    DmRulesEdition edition = DmRulesEdition.v2014,
   }) {
-    final effective = fullCasterLevels +
-        (paladinLevels ~/ 2) +
-        (rangerLevels ~/ 2) +
-        ((artificerLevels + 1) ~/ 2) +
-        (thirdCasterLevels ~/ 3);
-    return effective.clamp(0, 20);
+    if (edition == DmRulesEdition.v2024) {
+      final paladinEcl = (paladinLevels + 1) ~/ 2;
+      final rangerEcl = (rangerLevels + 1) ~/ 2;
+      final artificerEcl = (artificerLevels + 1) ~/ 2;
+      final thirdEcl = thirdCasterLevels > 0 ? ((thirdCasterLevels + 2) ~/ 3) : 0;
+      final effective = fullCasterLevels + paladinEcl + rangerEcl + artificerEcl + thirdEcl;
+      return effective.clamp(0, 20);
+    } else {
+      final effective = fullCasterLevels +
+          (paladinLevels ~/ 2) +
+          (rangerLevels ~/ 2) +
+          ((artificerLevels + 1) ~/ 2) +
+          (thirdCasterLevels ~/ 3);
+      return effective.clamp(0, 20);
+    }
   }
 }
 

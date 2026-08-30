@@ -3,6 +3,7 @@ import 'core_types.dart';
 import 'entity_reference.dart';
 import 'spell_monster_equipment.dart';
 import '../party/party_purse.dart';
+import '../dm_screen_data.dart' show DmRulesEdition;
 import '../../services/rules/dnd_5e_rules_engine.dart';
 
 /// 5e Core Ability Score Keys
@@ -658,6 +659,7 @@ class Character extends DomainEntity {
   final List<CharacterCondition> conditions;
   final int maxAttunementSlots;
   final int baseSpeedFeet;
+  final DmRulesEdition rulesEdition;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -690,6 +692,7 @@ class Character extends DomainEntity {
     this.conditions = const [],
     this.maxAttunementSlots = 3,
     this.baseSpeedFeet = 30,
+    this.rulesEdition = DmRulesEdition.v2014,
     this.customProperties = const {},
   });
 
@@ -730,6 +733,7 @@ class Character extends DomainEntity {
         'conditions': conditions.map((c) => c.toMap()).toList(),
         'maxAttunementSlots': maxAttunementSlots,
         'baseSpeedFeet': baseSpeedFeet,
+        'rulesEdition': rulesEdition.name,
         'customProperties': customProperties,
       };
 
@@ -759,6 +763,13 @@ class Character extends DomainEntity {
         saves.add(ab);
       }
     }
+
+    final edition = map['rulesEdition'] != null
+        ? DmRulesEdition.values.firstWhere(
+            (e) => e.name == map['rulesEdition'].toString(),
+            orElse: () => DmRulesEdition.v2014,
+          )
+        : DmRulesEdition.v2014;
 
     return Character(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
@@ -818,6 +829,7 @@ class Character extends DomainEntity {
       maxAttunementSlots:
           (map['maxAttunementSlots'] as num?)?.toInt() ?? 3,
       baseSpeedFeet: (map['baseSpeedFeet'] as num?)?.toInt() ?? 30,
+      rulesEdition: edition,
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
@@ -845,6 +857,7 @@ class Character extends DomainEntity {
     List<CharacterCondition>? conditions,
     int? maxAttunementSlots,
     int? baseSpeedFeet,
+    DmRulesEdition? rulesEdition,
     Map<String, dynamic>? customProperties,
   }) {
     return Character(
@@ -870,6 +883,7 @@ class Character extends DomainEntity {
       conditions: conditions ?? this.conditions,
       maxAttunementSlots: maxAttunementSlots ?? this.maxAttunementSlots,
       baseSpeedFeet: baseSpeedFeet ?? this.baseSpeedFeet,
+      rulesEdition: rulesEdition ?? this.rulesEdition,
       customProperties: customProperties ?? this.customProperties,
     );
   }
