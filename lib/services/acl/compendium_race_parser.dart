@@ -34,11 +34,12 @@ class CompendiumRaceParser {
 
     // Subraces
     final subraces = <Subrace>[];
-    if (raw['subraces'] is List) {
-      for (final rawSub in raw['subraces']) {
-        if (rawSub is Map<String, dynamic>) {
+    final rawSubList = raw['subraces'] ?? raw['subrace'];
+    if (rawSubList is List) {
+      for (final rawSub in rawSubList) {
+        if (rawSub is Map) {
           try {
-            subraces.add(parseSubrace(rawSub, defaultRaceSlug: slug, forceRuleset: ruleset));
+            subraces.add(parseSubrace(Map<String, dynamic>.from(rawSub), defaultRaceSlug: slug, forceRuleset: ruleset));
           } catch (_) {}
         }
       }
@@ -86,9 +87,22 @@ class CompendiumRaceParser {
     final source = raw['source']?.toString().toUpperCase() ?? 'PHB';
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
-    final raceSlug = raw['raceName'] != null
-        ? _slugify(raw['raceName'].toString())
-        : (raw['raceSlug']?.toString() ?? defaultRaceSlug ?? '');
+    String raceSlug = '';
+    if (raw['raceName'] != null && raw['raceName'].toString().isNotEmpty) {
+      raceSlug = _slugify(raw['raceName'].toString());
+    } else if (raw['race'] != null) {
+      if (raw['race'] is Map) {
+        raceSlug = _slugify((raw['race'] as Map)['name']?.toString() ?? '');
+      } else {
+        raceSlug = _slugify(raw['race'].toString());
+      }
+    } else if (raw['species'] != null) {
+      raceSlug = _slugify(raw['species'].toString());
+    } else if (raw['raceSlug'] != null && raw['raceSlug'].toString().isNotEmpty) {
+      raceSlug = _slugify(raw['raceSlug'].toString());
+    } else if (defaultRaceSlug != null && defaultRaceSlug.isNotEmpty) {
+      raceSlug = _slugify(defaultRaceSlug);
+    }
 
     final traitsData = raw['trait'] ?? raw['traits'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
     final parsedEntries = transformer.transformEntries(

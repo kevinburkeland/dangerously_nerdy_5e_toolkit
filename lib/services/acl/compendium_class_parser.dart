@@ -40,11 +40,12 @@ class CompendiumClassParser {
 
     // Subclasses
     final subclasses = <Subclass>[];
-    if (raw['subclasses'] is List) {
-      for (final rawSub in raw['subclasses']) {
-        if (rawSub is Map<String, dynamic>) {
+    final rawSubList = raw['subclasses'] ?? raw['subclass'];
+    if (rawSubList is List) {
+      for (final rawSub in rawSubList) {
+        if (rawSub is Map) {
           try {
-            subclasses.add(parseSubclass(rawSub, defaultClassSlug: slug, forceRuleset: ruleset));
+            subclasses.add(parseSubclass(Map<String, dynamic>.from(rawSub), defaultClassSlug: slug, forceRuleset: ruleset));
           } catch (_) {}
         }
       }
@@ -62,9 +63,9 @@ class CompendiumClassParser {
     final featureDecisions = <ClassFeatureDecision>[];
     if (raw['featureDecisions'] is List) {
       for (final dec in raw['featureDecisions']) {
-        if (dec is Map<String, dynamic>) {
+        if (dec is Map) {
           try {
-            featureDecisions.add(ClassFeatureDecision.fromMap(dec));
+            featureDecisions.add(ClassFeatureDecision.fromMap(Map<String, dynamic>.from(dec)));
           } catch (_) {}
         }
       }
@@ -118,22 +119,59 @@ class CompendiumClassParser {
     String? defaultClassSlug,
     RulesetVersion? forceRuleset,
   }) {
-    final name = raw['name']?.toString().trim() ?? 'Unnamed Subclass';
+    final name = raw['name']?.toString().trim() ??
+        raw['subclassName']?.toString().trim() ??
+        raw['title']?.toString().trim() ??
+        'Unnamed Subclass';
     final slug = _slugify(name);
-    final source = raw['source']?.toString().toUpperCase() ?? 'PHB';
+    final source = raw['source']?.toString().toUpperCase() ??
+        raw['subclassSource']?.toString().toUpperCase() ??
+        raw['classSource']?.toString().toUpperCase() ??
+        'PHB';
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
-    final classSlug = raw['className'] != null
-        ? _slugify(raw['className'].toString())
-        : (raw['classSlug']?.toString() ?? defaultClassSlug ?? '');
+    String classSlug = '';
+    if (raw['className'] != null && raw['className'].toString().isNotEmpty) {
+      classSlug = _slugify(raw['className'].toString());
+    } else if (raw['class'] != null) {
+      if (raw['class'] is Map) {
+        classSlug = _slugify((raw['class'] as Map)['name']?.toString() ?? '');
+      } else {
+        classSlug = _slugify(raw['class'].toString());
+      }
+    } else if (raw['classSlug'] != null && raw['classSlug'].toString().isNotEmpty) {
+      classSlug = _slugify(raw['classSlug'].toString());
+    } else if (defaultClassSlug != null && defaultClassSlug.isNotEmpty) {
+      classSlug = _slugify(defaultClassSlug);
+    }
 
     final shortName = raw['shortName']?.toString() ??
+        raw['subclassShortName']?.toString() ??
         raw['subclassTitle']?.toString() ??
         name;
 
-    final entriesData = raw['subclassFeatures'] ?? raw['features'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
+    final entriesData = raw['subclassFeatures'] ??
+        raw['features'] ??
+        raw['entries'] ??
+        raw['desc'] ??
+        raw['description'] ??
+        raw['subclassFeature'];
+
+    dynamic cleanedEntries = entriesData;
+    if (cleanedEntries is List) {
+      final flattened = <dynamic>[];
+      for (final item in cleanedEntries) {
+        if (item is List) {
+          flattened.addAll(item);
+        } else {
+          flattened.add(item);
+        }
+      }
+      cleanedEntries = flattened;
+    }
+
     final parsedEntries = transformer.transformEntries(
-      entriesData,
+      cleanedEntries,
       defaultRuleset: ruleset,
     );
 
@@ -146,6 +184,15 @@ class CompendiumClassParser {
 
     if (raw.containsKey('subclassTableGroups')) {
       customProperties['subclassTableGroups'] = raw['subclassTableGroups'];
+    }
+    if (raw.containsKey('spellcastingAbility')) {
+      customProperties['spellcastingAbility'] = raw['spellcastingAbility'];
+    }
+    if (raw.containsKey('additionalSpells')) {
+      customProperties['additionalSpells'] = raw['additionalSpells'];
+    }
+    if (raw.containsKey('subclassSpells')) {
+      customProperties['subclassSpells'] = raw['subclassSpells'];
     }
 
     return Subclass(

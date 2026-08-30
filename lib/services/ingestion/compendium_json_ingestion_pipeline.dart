@@ -359,11 +359,113 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Hazard')), 'Hazard');
     ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Rule')), 'Rule');
 
-    // Class feature array handling (if separate from class definition)
-    ingestKeys(['classfeature', 'classfeatures', 'subclassfeature', 'subclassfeatures'], (raw) {
-      final className = raw['className']?.toString() ?? '';
-      otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: className.isNotEmpty ? 'Class Feature ($className)' : 'Class Feature'));
+    // Class & Subclass feature array handling (stitches external features into Subclass and Class definitions)
+    final rawSubclassFeatures = <Map<String, dynamic>>[];
+    ingestKeys(['subclassfeature', 'subclassfeatures'], (raw) {
+      rawSubclassFeatures.add(raw);
+    }, 'Subclass Feature');
+
+    final rawClassFeatures = <Map<String, dynamic>>[];
+    ingestKeys(['classfeature', 'classfeatures'], (raw) {
+      rawClassFeatures.add(raw);
     }, 'Class Feature');
+
+    // Stitch external subclass features into Subclasses
+    if (rawSubclassFeatures.isNotEmpty) {
+      final entryTransformer = classParser.transformer;
+      for (int i = 0; i < subclasses.length; i++) {
+        final sub = subclasses[i];
+        final cleanSubName = sub.name.toLowerCase().trim();
+        final cleanSubShort = sub.shortName.toLowerCase().trim();
+        final cleanClass = sub.classSlug.toLowerCase().trim();
+
+        final matchingFeatures = rawSubclassFeatures.where((f) {
+          final fClass = (f['className']?.toString() ?? f['class']?.toString() ?? '').toLowerCase().trim();
+          final fSubShort = (f['subclassShortName']?.toString() ?? f['shortName']?.toString() ?? '').toLowerCase().trim();
+          final fSubName = (f['subclassName']?.toString() ?? f['name']?.toString() ?? '').toLowerCase().trim();
+
+          final matchesClass = fClass.isEmpty || cleanClass.isEmpty || fClass == cleanClass || cleanClass.contains(fClass) || fClass.contains(cleanClass);
+          final matchesSub = fSubShort == cleanSubShort ||
+              fSubShort == cleanSubName ||
+              fSubName == cleanSubName ||
+              fSubName == cleanSubShort ||
+              (fSubShort.isNotEmpty && cleanSubName.contains(fSubShort));
+
+          return matchesClass && matchesSub;
+        }).toList();
+
+        if (matchingFeatures.isNotEmpty) {
+          matchingFeatures.sort((a, b) => ((a['level'] as num?) ?? 0).compareTo((b['level'] as num?) ?? 0));
+          final featureBlocks = <String>[];
+          for (final feat in matchingFeatures) {
+            final fName = feat['name']?.toString() ?? '';
+            final level = feat['level'] != null ? ' (Level ${feat['level']})' : '';
+            final fContent = entryTransformer.transformEntries(feat['entries'] ?? feat['entry'] ?? feat['desc'] ?? feat['description']).markdown;
+            if (fName.isNotEmpty || fContent.isNotEmpty) {
+              featureBlocks.add('### $fName$level\n$fContent');
+            }
+          }
+          if (featureBlocks.isNotEmpty) {
+            final combinedMarkdown = sub.featuresMarkdown.isEmpty || (sub.featuresMarkdown.contains('|') && !sub.featuresMarkdown.contains('\n'))
+                ? featureBlocks.join('\n\n')
+                : '${sub.featuresMarkdown}\n\n${featureBlocks.join('\n\n')}';
+            subclasses[i] = Subclass(
+              id: sub.id,
+              name: sub.name,
+              classSlug: sub.classSlug,
+              shortName: sub.shortName,
+              featuresMarkdown: combinedMarkdown.trim(),
+              customProperties: sub.customProperties,
+            );
+          }
+        }
+      }
+
+      // Keep class.subclasses synchronized with the newly enriched subclasses
+      for (int i = 0; i < classes.length; i++) {
+        final cls = classes[i];
+        final updatedSubs = <Subclass>[];
+        for (final sub in cls.subclasses) {
+          final matchingSub = subclasses.where((s) => s.id.slug == sub.id.slug).firstOrNull;
+          updatedSubs.add(matchingSub ?? sub);
+        }
+        classes[i] = cls.copyWith(subclasses: updatedSubs);
+      }
+    }
+
+    // Stitch external class features into Classes
+    if (rawClassFeatures.isNotEmpty) {
+      final entryTransformer = classParser.transformer;
+      for (int i = 0; i < classes.length; i++) {
+        final cls = classes[i];
+        final cleanClass = cls.id.slug.toLowerCase().trim();
+        final cleanClassName = cls.name.toLowerCase().trim();
+
+        final matchingFeatures = rawClassFeatures.where((f) {
+          final fClass = (f['className']?.toString() ?? f['class']?.toString() ?? '').toLowerCase().trim();
+          return fClass == cleanClass || fClass == cleanClassName;
+        }).toList();
+
+        if (matchingFeatures.isNotEmpty) {
+          matchingFeatures.sort((a, b) => ((a['level'] as num?) ?? 0).compareTo((b['level'] as num?) ?? 0));
+          final featureBlocks = <String>[];
+          for (final feat in matchingFeatures) {
+            final fName = feat['name']?.toString() ?? '';
+            final level = feat['level'] != null ? ' (Level ${feat['level']})' : '';
+            final fContent = entryTransformer.transformEntries(feat['entries'] ?? feat['entry'] ?? feat['desc'] ?? feat['description']).markdown;
+            if (fName.isNotEmpty || fContent.isNotEmpty) {
+              featureBlocks.add('### $fName$level\n$fContent');
+            }
+          }
+          if (featureBlocks.isNotEmpty) {
+            final combinedMarkdown = cls.featuresMarkdown.isEmpty || (cls.featuresMarkdown.contains('|') && !cls.featuresMarkdown.contains('\n'))
+                ? featureBlocks.join('\n\n')
+                : '${cls.featuresMarkdown}\n\n${featureBlocks.join('\n\n')}';
+            classes[i] = cls.copyWith(featuresMarkdown: combinedMarkdown.trim());
+          }
+        }
+      }
+    }
 
     // If no bundle arrays found, attempt single entity map parse
     final hasAny = spells.isNotEmpty ||
@@ -435,8 +537,13 @@ class CompendiumJsonIngestionPipeline {
       }
     }
 
-    // 4. Identify Subclasses (has className or classSlug)
-    if (lowerKeys.contains('classname') || lowerKeys.contains('classslug') || lowerKeys.contains('subclassfeatures')) {
+    // 4. Identify Subclasses (has className, classSlug, subclassFeatures, shortName, subclassTitle, or class)
+    if (lowerKeys.contains('classname') ||
+        lowerKeys.contains('classslug') ||
+        lowerKeys.contains('subclassfeatures') ||
+        lowerKeys.contains('subclassshortname') ||
+        lowerKeys.contains('subclasstitle') ||
+        (lowerKeys.contains('class') && (lowerKeys.contains('features') || lowerKeys.contains('desc') || lowerKeys.contains('entries')))) {
       try {
         final sub = classParser.parseSubclass(map);
         return IngestionBatchResult(subclasses: [sub]);

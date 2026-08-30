@@ -80,8 +80,8 @@ class EntryNodeTransformer {
       return;
     }
 
-    if (node is Map<String, dynamic>) {
-      _parseMapNode(node, buffer, math, refs, depth, defaultRuleset);
+    if (node is Map) {
+      _parseMapNode(Map<String, dynamic>.from(node), buffer, math, refs, depth, defaultRuleset);
       return;
     }
   }
@@ -108,7 +108,7 @@ class EntryNodeTransformer {
           buffer.writeln('$prefix $name');
           buffer.writeln();
         }
-        _parseNode(node['entries'], buffer, math, refs, depth + 1, defaultRuleset);
+        _parseNode(node['entries'] ?? node['entry'] ?? node['desc'] ?? node['description'], buffer, math, refs, depth + 1, defaultRuleset);
 
       // -----------------------------------------------------------------------
       // Inset (rules sidebar / callout) — all lines prefixed with "> ".
@@ -118,7 +118,7 @@ class EntryNodeTransformer {
           buffer.writeln('> **$name**');
           buffer.writeln('>');
         }
-        final insetContent = _captureNode(node['entries'], depth + 1, math, refs, defaultRuleset);
+        final insetContent = _captureNode(node['entries'] ?? node['entry'] ?? node['desc'], depth + 1, math, refs, defaultRuleset);
         for (final line in insetContent.split('\n')) {
           buffer.writeln('> $line');
         }
@@ -157,7 +157,7 @@ class EntryNodeTransformer {
       // Quote / read-aloud — blockquote format.
       // -----------------------------------------------------------------------
       case 'quote':
-        final quoteContent = _captureNode(node['entries'], depth, math, refs, defaultRuleset);
+        final quoteContent = _captureNode(node['entries'] ?? node['entry'] ?? node['desc'], depth, math, refs, defaultRuleset);
         for (final line in quoteContent.split('\n')) {
           buffer.writeln('> $line');
         }
@@ -173,7 +173,7 @@ class EntryNodeTransformer {
         if (name != null && name.isNotEmpty) {
           buffer.writeln('**$name**');
         }
-        _parseNode(node['entries'], buffer, math, refs, depth + 1, defaultRuleset);
+        _parseNode(node['entries'] ?? node['entry'] ?? node['desc'] ?? node['description'], buffer, math, refs, depth + 1, defaultRuleset);
 
       // -----------------------------------------------------------------------
       // Default — if there's an `entries` or `entry` key, recurse into it.
@@ -189,6 +189,16 @@ class EntryNodeTransformer {
           _parseNode(node['entries'], buffer, math, refs, depth + 1, defaultRuleset);
         } else if (node.containsKey('entry')) {
           _parseNode(node['entry'], buffer, math, refs, depth, defaultRuleset);
+        } else if (node.containsKey('desc')) {
+          _parseNode(node['desc'], buffer, math, refs, depth + 1, defaultRuleset);
+        } else if (node.containsKey('description')) {
+          _parseNode(node['description'], buffer, math, refs, depth + 1, defaultRuleset);
+        } else if (node.containsKey('text')) {
+          _parseNode(node['text'], buffer, math, refs, depth + 1, defaultRuleset);
+        } else if (node.containsKey('subclassFeatures')) {
+          _parseNode(node['subclassFeatures'], buffer, math, refs, depth + 1, defaultRuleset);
+        } else if (node.containsKey('features')) {
+          _parseNode(node['features'], buffer, math, refs, depth + 1, defaultRuleset);
         }
     }
   }
@@ -216,9 +226,9 @@ class EntryNodeTransformer {
       if (item is String) {
         final processed = _processTags(item, math, refs, defaultRuleset);
         buffer.writeln('$prefix$processed');
-      } else if (item is Map<String, dynamic>) {
+      } else if (item is Map) {
         // Capture sub-content so we can prefix the first line correctly.
-        final subContent = _captureNode(item, depth, math, refs, defaultRuleset);
+        final subContent = _captureNode(Map<String, dynamic>.from(item), depth, math, refs, defaultRuleset);
         final lines = subContent.split('\n');
         for (int i = 0; i < lines.length; i++) {
           final line = lines[i];
@@ -290,17 +300,18 @@ class EntryNodeTransformer {
   ) {
     if (cell is String) return _processTags(cell, math, refs, defaultRuleset);
     if (cell is num) return cell.toString();
-    if (cell is Map<String, dynamic>) {
+    if (cell is Map) {
+      final cellMap = Map<String, dynamic>.from(cell);
       // AST roll cell: {type: "cell", roll: {min: 1, max: 100}}
-      if (cell['type'] == 'cell' && cell['roll'] is Map) {
-        final roll = cell['roll'] as Map;
+      if (cellMap['type'] == 'cell' && cellMap['roll'] is Map) {
+        final roll = cellMap['roll'] as Map;
         final min = roll['min'] ?? roll['exact'];
         final max = roll['max'];
         if (min != null && max != null) return '$min–$max';
         if (min != null) return '$min';
       }
       // Text cell
-      final entry = cell['entry']?.toString() ?? cell['entries']?.toString() ?? '';
+      final entry = cellMap['entry']?.toString() ?? cellMap['entries']?.toString() ?? '';
       return _processTags(entry, math, refs, defaultRuleset);
     }
     return cell.toString();
