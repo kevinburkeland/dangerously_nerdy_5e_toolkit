@@ -1,13 +1,13 @@
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
-import 'entry_tag_transformer.dart';
+import 'entry_node_transformer.dart';
 
 /// Anti-Corruption Layer (ACL) dedicated transformer for Community Compendium and Homebrew Classes & Subclasses.
 class CompendiumClassParser {
-  final EntryTagTransformer transformer;
+  final EntryNodeTransformer transformer;
 
-  CompendiumClassParser({EntryTagTransformer? transformer})
-      : transformer = transformer ?? EntryTagTransformer();
+  CompendiumClassParser({EntryNodeTransformer? transformer})
+      : transformer = transformer ?? EntryNodeTransformer();
 
   /// Transforms a raw community compendium or homebrew class JSON map into a strongly-typed [CharacterClass].
   CharacterClass parseClass(Map<String, dynamic> raw, {RulesetVersion? forceRuleset}) {
@@ -217,26 +217,24 @@ class CompendiumClassParser {
     final features = raw['classFeatures'] ?? raw['entries'];
     if (features == null) return '';
 
-    if (features is List) {
-      final buffer = StringBuffer();
-      for (final f in features) {
-        if (f is String) {
-          buffer.writeln(f);
-          buffer.writeln();
-        } else if (f is Map<String, dynamic>) {
-          final title = f['name']?.toString();
-          if (title != null && title.isNotEmpty) {
-            buffer.writeln('### $title');
-          }
-          final parsed = transformer.transformEntries(f['entries'] ?? f, defaultRuleset: ruleset);
-          buffer.writeln(parsed.markdown);
-          buffer.writeln();
-        }
-      }
-      return buffer.toString().trim();
-    }
+    // 5etools classFeatures may be:
+    //   - A List<String> of pipe-syntax feature references ("Fighter|classFeature|1|PHB");
+    //     these are cross-references with no description content — drop silently.
+    //   - A List<Map> of inline {type:"entries", name, entries:[...]} blocks with real content.
+    //   - A mixed List combining both.
+    // EntryNodeTransformer handles all cases correctly via its String + Map branches:
+    //   • String branch: emits the raw string (feature refs are just cross-refs — no content).
+    //   • Map branch: recurses fully via _parseMapNode → entries/section handlers.
+    //
+    // We convert pipe-syntax strings to null/empty so they don't litter the output.
+    final cleaned = features is List
+        ? features.map((f) {
+            if (f is String && f.contains('|')) return null; // pipe-ref: skip
+            return f;
+          }).where((f) => f != null).toList()
+        : features;
 
-    return transformer.transformEntries(features, defaultRuleset: ruleset).markdown;
+    return transformer.transformEntries(cleaned, defaultRuleset: ruleset).markdown;
   }
 
   String _slugify(String name) {

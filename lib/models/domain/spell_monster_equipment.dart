@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
+import 'feature_grant.dart';
 
 /// Isolated mathematical formula for damage and dice evaluation
 @immutable
@@ -404,6 +405,8 @@ class EquipmentItem extends DomainEntity {
   final String rarity;
   final bool requiresAttunement;
   final String descriptionMarkdown;
+  /// Declarative mechanic grants emitted when this item is equipped (e.g., AC bonus, speed bonus).
+  final List<FeatureGrant> grants;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -414,6 +417,7 @@ class EquipmentItem extends DomainEntity {
     required this.rarity,
     required this.requiresAttunement,
     required this.descriptionMarkdown,
+    this.grants = const [],
     this.customProperties = const {},
   });
 
@@ -428,6 +432,7 @@ class EquipmentItem extends DomainEntity {
         'rarity': rarity,
         'requiresAttunement': requiresAttunement,
         'descriptionMarkdown': descriptionMarkdown,
+        'grants': grants.map((g) => g.toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -439,6 +444,10 @@ class EquipmentItem extends DomainEntity {
       rarity: map['rarity']?.toString() ?? 'Common',
       requiresAttunement: map['requiresAttunement'] == true,
       descriptionMarkdown: map['descriptionMarkdown']?.toString() ?? '',
+      grants: (map['grants'] as List? ?? [])
+          .whereType<Map>()
+          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+          .toList(),
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
@@ -451,6 +460,7 @@ class EquipmentItem extends DomainEntity {
     String? rarity,
     bool? requiresAttunement,
     String? descriptionMarkdown,
+    List<FeatureGrant>? grants,
     Map<String, dynamic>? customProperties,
   }) {
     return EquipmentItem(
@@ -460,6 +470,7 @@ class EquipmentItem extends DomainEntity {
       rarity: rarity ?? this.rarity,
       requiresAttunement: requiresAttunement ?? this.requiresAttunement,
       descriptionMarkdown: descriptionMarkdown ?? this.descriptionMarkdown,
+      grants: grants ?? this.grants,
       customProperties: customProperties ?? this.customProperties,
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../domain/core_types.dart';
+import '../domain/feature_grant.dart';
 import '../domain/homebrew_extended_entities.dart';
 
 /// Comprehensive SRD 5.1 (2014) and SRD 5.2 (2024) Feat Library.
@@ -16,6 +17,9 @@ class SrdFeatsLibrary {
     descriptionMarkdown:
         '**Initiative Proficiency.** Add your Proficiency Bonus to Initiative rolls.\n\n'
         '**Initiative Swap.** Immediately after rolling Initiative, you can swap your Initiative with a willing ally who rolled Initiative.',
+    grants: [
+      FeatureGrant.passiveBonus(stat: 'initiative', formula: 'profBonus', label: 'Alert: +Prof to Initiative'),
+    ],
     customProperties: const {
       'isOriginFeat': true,
       'initiativeBonus': 'profBonus',
@@ -136,6 +140,9 @@ class SrdFeatsLibrary {
     category: 'Origin',
     descriptionMarkdown:
         '**Enduring Vitality.** Your hit point maximum increases by an amount equal to twice your character level when you gain this feat. Whenever you gain a level thereafter, your HP maximum increases by an additional 2 hit points.',
+    grants: [
+      FeatureGrant.hpBonus(perLevel: 2, label: 'Tough: +2 HP/level'),
+    ],
     customProperties: const {
       'isOriginFeat': true,
       'hpPerLevelBonus': 2,

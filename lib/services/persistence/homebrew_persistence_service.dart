@@ -5,11 +5,18 @@ import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
 import '../../models/domain/core_types.dart';
+import '../../models/domain/entity_reference.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/monster_codex_data.dart';
+import '../acl/compendium_background_parser.dart';
+import '../acl/compendium_class_parser.dart';
+import '../acl/compendium_feat_parser.dart';
+import '../acl/compendium_item_parser.dart';
+import '../acl/compendium_race_parser.dart';
 import '../acl/homebrew_merge_resolver.dart';
+import '../acl/srd_equivalence_index.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
 
@@ -25,6 +32,17 @@ class HomebrewPersistenceService {
   static const String _keyHomebrewBackgrounds = 'dn_homebrew_backgrounds_v1';
   static const String _keyHomebrewOther = 'dn_homebrew_other_v1';
   static const String _keyCampaignOverrides = 'dn_campaign_overrides_v1';
+
+  // Raw payload keys — store original source JSON for lossless re-parsing
+  static const String _keyHomebrewSpellsRaw     = 'dn_homebrew_spells_raw_v1';
+  static const String _keyHomebrewMonstersRaw   = 'dn_homebrew_monsters_raw_v1';
+  static const String _keyHomebrewItemsRaw      = 'dn_homebrew_items_raw_v1';
+  static const String _keyHomebrewClassesRaw    = 'dn_homebrew_classes_raw_v1';
+  static const String _keyHomebrewSubclassesRaw = 'dn_homebrew_subclasses_raw_v1';
+  static const String _keyHomebrewRacesRaw      = 'dn_homebrew_races_raw_v1';
+  static const String _keyHomebrewFeatsRaw      = 'dn_homebrew_feats_raw_v1';
+  static const String _keyHomebrewBackgroundsRaw = 'dn_homebrew_backgrounds_raw_v1';
+  static const String _keyHomebrewOtherRaw      = 'dn_homebrew_other_raw_v1';
 
   static final HomebrewPersistenceService _instance =
       HomebrewPersistenceService._internal();
@@ -46,8 +64,8 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Saves a custom spell to persistent storage.
-  Future<void> saveCustomSpell(Spell spell) async {
+  /// Saves a custom spell to persistent storage, optionally storing [rawPayload].
+  Future<void> saveCustomSpell(Spell spell, {Map<String, dynamic>? rawPayload}) async {
     final spells = await loadCustomSpells();
     final idx = spells.indexWhere(
       (s) => s.id.slug == spell.id.slug && s.id.ruleset == spell.id.ruleset,
@@ -62,13 +80,20 @@ class HomebrewPersistenceService {
       _keyHomebrewSpells,
       spells.map((s) => json.encode(s.toMap())).toList(),
     );
+    if (rawPayload != null) {
+      await _saveRawPayload(_keyHomebrewSpellsRaw, spell.id.slug, rawPayload, prefs);
+    }
   }
 
   /// Batch saves multiple custom spells to persistent storage.
-  Future<void> saveCustomSpellsBatch(List<Spell> newSpells) async {
+  Future<void> saveCustomSpellsBatch(
+    List<Spell> newSpells, {
+    List<Map<String, dynamic>>? rawPayloads,
+  }) async {
     if (newSpells.isEmpty) return;
     final spells = await loadCustomSpells();
-    for (final spell in newSpells) {
+    for (int i = 0; i < newSpells.length; i++) {
+      final spell = newSpells[i];
       final idx = spells.indexWhere(
         (s) => s.id.slug == spell.id.slug && s.id.ruleset == spell.id.ruleset,
       );
@@ -83,6 +108,11 @@ class HomebrewPersistenceService {
       _keyHomebrewSpells,
       spells.map((s) => json.encode(s.toMap())).toList(),
     );
+    if (rawPayloads != null) {
+      for (int i = 0; i < newSpells.length && i < rawPayloads.length; i++) {
+        await _saveRawPayload(_keyHomebrewSpellsRaw, newSpells[i].id.slug, rawPayloads[i], prefs);
+      }
+    }
   }
 
   /// Deletes a custom spell by slug.
@@ -94,6 +124,7 @@ class HomebrewPersistenceService {
       _keyHomebrewSpells,
       spells.map((s) => json.encode(s.toMap())).toList(),
     );
+    await _deleteRawPayload(_keyHomebrewSpellsRaw, slug, prefs);
   }
 
   /// Loads all custom monsters from persistent storage.
@@ -955,6 +986,346 @@ class HomebrewPersistenceService {
     await prefs.remove(_keyHomebrewBackgrounds);
     await prefs.remove(_keyHomebrewOther);
     await prefs.remove(_keyCampaignOverrides);
+    // Clear raw payload keys
+    await prefs.remove(_keyHomebrewSpellsRaw);
+    await prefs.remove(_keyHomebrewMonstersRaw);
+    await prefs.remove(_keyHomebrewItemsRaw);
+    await prefs.remove(_keyHomebrewClassesRaw);
+    await prefs.remove(_keyHomebrewSubclassesRaw);
+    await prefs.remove(_keyHomebrewRacesRaw);
+    await prefs.remove(_keyHomebrewFeatsRaw);
+    await prefs.remove(_keyHomebrewBackgroundsRaw);
+    await prefs.remove(_keyHomebrewOtherRaw);
     MonsterCodexLibrary.clearHomebrewMonsters();
+    SrdSpeciesLibrary.setCustomSpecies([]);
+    SrdFeatsLibrary.setCustomFeats([]);
+    SrdClassesLibrary.setCustomClasses([]);
+    SrdBackgroundsLibrary.setCustomBackgrounds([]);
+    SrdEquivalenceIndex().invalidate();
   }
+
+  /// Purges all persisted data for a single [EntityType] category and
+  /// refreshes the corresponding runtime library.
+  ///
+  /// Only [classDefinition], [subclass], [species], [feat], [background],
+  /// [equipment], [spell], [monster], and [custom] are supported.
+  Future<void> clearHomebrewCategory(EntityType type) async {
+    final prefs = await SharedPreferences.getInstance();
+    switch (type) {
+      case EntityType.spell:
+        await prefs.remove(_keyHomebrewSpells);
+        await prefs.remove(_keyHomebrewSpellsRaw);
+      case EntityType.monster:
+        await prefs.remove(_keyHomebrewMonsters);
+        await prefs.remove(_keyHomebrewMonstersRaw);
+        MonsterCodexLibrary.clearHomebrewMonsters();
+      case EntityType.equipment:
+        await prefs.remove(_keyHomebrewItems);
+        await prefs.remove(_keyHomebrewItemsRaw);
+      case EntityType.classDefinition:
+        await prefs.remove(_keyHomebrewClasses);
+        await prefs.remove(_keyHomebrewClassesRaw);
+        SrdClassesLibrary.setCustomClasses([]);
+      case EntityType.subclass:
+        await prefs.remove(_keyHomebrewSubclasses);
+        await prefs.remove(_keyHomebrewSubclassesRaw);
+      case EntityType.species:
+        await prefs.remove(_keyHomebrewRaces);
+        await prefs.remove(_keyHomebrewRacesRaw);
+        SrdSpeciesLibrary.setCustomSpecies([]);
+      case EntityType.feat:
+        await prefs.remove(_keyHomebrewFeats);
+        await prefs.remove(_keyHomebrewFeatsRaw);
+        SrdFeatsLibrary.setCustomFeats([]);
+      case EntityType.background:
+        await prefs.remove(_keyHomebrewBackgrounds);
+        await prefs.remove(_keyHomebrewBackgroundsRaw);
+        SrdBackgroundsLibrary.setCustomBackgrounds([]);
+      case EntityType.custom:
+        await prefs.remove(_keyHomebrewOther);
+        await prefs.remove(_keyHomebrewOtherRaw);
+      default:
+        break;
+    }
+    SrdEquivalenceIndex().invalidate();
+  }
+
+  /// Loads the raw source JSON payloads for the given [EntityType].
+  /// Returns an empty list for entities without raw payloads (imported before
+  /// raw storage was added).
+  Future<List<Map<String, dynamic>>> loadRawPayloads(EntityType type) async {
+    final key = _rawKeyForType(type);
+    if (key == null) return [];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getString(key);
+      if (stored == null || stored.isEmpty) return [];
+      final decoded = json.decode(stored) as Map<String, dynamic>;
+      return decoded.values
+          .whereType<Map>()
+          .map((m) => Map<String, dynamic>.from(m))
+          .toList();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load raw payloads for $type');
+      return [];
+    }
+  }
+
+  /// Returns how many entities of [type] have stored raw payloads.
+  Future<int> rawPayloadCount(EntityType type) async {
+    final payloads = await loadRawPayloads(type);
+    return payloads.length;
+  }
+
+  /// Re-parses all homebrew entities that have raw payloads using the latest
+  /// parser logic and SRD equivalence filter.
+  ///
+  /// Returns a [ReparseResult] describing what changed.
+  Future<ReparseResult> reparseAllHomebrew() async {
+    final srdIndex = SrdEquivalenceIndex();
+    srdIndex.build();
+
+    int updated = 0;
+    int srdRemoved = 0;
+    int noPayload = 0;
+
+    // Count entities without raw payloads (so the UI can report it)
+    for (final type in _reparsableTypes) {
+      final payloads = await loadRawPayloads(type);
+      final entities = await _loadEntitiesForType(type);
+      noPayload += entities.length - payloads.length;
+    }
+
+    // Re-parse items
+    updated += await _reparseCategory<EquipmentItem>(
+      rawKey: _keyHomebrewItemsRaw,
+      parsedKey: _keyHomebrewItems,
+      fromRaw: (raw) => CompendiumItemParser().parseItem(raw),
+      toJson: (e) => json.encode(e.toMap()),
+      srdIndex: srdIndex,
+      entityType: EntityType.equipment,
+    );
+
+    // Re-parse classes
+    final classParser = CompendiumClassParser();
+    updated += await _reparseCategory<CharacterClass>(
+      rawKey: _keyHomebrewClassesRaw,
+      parsedKey: _keyHomebrewClasses,
+      fromRaw: (raw) => classParser.parseClass(raw),
+      toJson: (e) => json.encode(e.toMap()),
+      srdIndex: srdIndex,
+      entityType: EntityType.classDefinition,
+      onSrdRemoved: (slug) {
+        srdRemoved++;
+        SrdClassesLibrary.removeCustomClass(slug);
+      },
+    );
+
+    // Re-parse subclasses
+    updated += await _reparseCategory<Subclass>(
+      rawKey: _keyHomebrewSubclassesRaw,
+      parsedKey: _keyHomebrewSubclasses,
+      fromRaw: (raw) => classParser.parseSubclass(raw),
+      toJson: (e) => json.encode(e.toMap()),
+      srdIndex: srdIndex,
+      entityType: EntityType.subclass,
+    );
+
+    // Re-parse races
+    updated += await _reparseCategory<Race>(
+      rawKey: _keyHomebrewRacesRaw,
+      parsedKey: _keyHomebrewRaces,
+      fromRaw: (raw) => CompendiumRaceParser().parseRace(raw),
+      toJson: (e) => json.encode(e.toMap()),
+      srdIndex: srdIndex,
+      entityType: EntityType.species,
+      onSrdRemoved: (slug) {
+        srdRemoved++;
+        SrdSpeciesLibrary.removeCustomSpecies(slug);
+      },
+    );
+
+    // Re-parse feats
+    updated += await _reparseCategory<Feat>(
+      rawKey: _keyHomebrewFeatsRaw,
+      parsedKey: _keyHomebrewFeats,
+      fromRaw: (raw) => CompendiumFeatParser().parseFeat(raw),
+      toJson: (e) => json.encode(e.toMap()),
+      srdIndex: srdIndex,
+      entityType: EntityType.feat,
+      onSrdRemoved: (slug) {
+        srdRemoved++;
+        SrdFeatsLibrary.removeCustomFeat(slug);
+      },
+    );
+
+    // Re-parse backgrounds
+    updated += await _reparseCategory<Background>(
+      rawKey: _keyHomebrewBackgroundsRaw,
+      parsedKey: _keyHomebrewBackgrounds,
+      fromRaw: (raw) => CompendiumBackgroundParser().parseBackground(raw),
+      toJson: (e) => json.encode(e.toMap()),
+      srdIndex: srdIndex,
+      entityType: EntityType.background,
+      onSrdRemoved: (slug) {
+        srdRemoved++;
+        SrdBackgroundsLibrary.removeCustomBackground(slug);
+      },
+    );
+
+    await syncToLibraries();
+    srdIndex.invalidate();
+
+    return ReparseResult(
+      updatedCount: updated,
+      srdRemovedCount: srdRemoved,
+      noPayloadCount: noPayload,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Private: raw payload storage helpers
+  // ---------------------------------------------------------------------------
+
+  /// Saves a single raw JSON payload keyed by [entitySlug].
+  /// Uses a `Map<slug, rawJson>` stored as a single JSON string per category.
+  Future<void> _saveRawPayload(
+    String key,
+    String entitySlug,
+    Map<String, dynamic> rawPayload,
+    SharedPreferences prefs,
+  ) async {
+    try {
+      final existing = prefs.getString(key);
+      final map = existing != null && existing.isNotEmpty
+          ? Map<String, dynamic>.from(json.decode(existing) as Map)
+          : <String, dynamic>{};
+      map[entitySlug] = rawPayload;
+      await prefs.setString(key, json.encode(map));
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to save raw payload for $entitySlug');
+    }
+  }
+
+  /// Removes the raw payload for [entitySlug] from [key].
+  Future<void> _deleteRawPayload(
+    String key,
+    String entitySlug,
+    SharedPreferences prefs,
+  ) async {
+    try {
+      final existing = prefs.getString(key);
+      if (existing == null || existing.isEmpty) return;
+      final map = Map<String, dynamic>.from(json.decode(existing) as Map);
+      map.remove(entitySlug);
+      await prefs.setString(key, json.encode(map));
+    } catch (_) {}
+  }
+
+  /// Maps an [EntityType] to its raw payload SharedPreferences key.
+  String? _rawKeyForType(EntityType type) => switch (type) {
+    EntityType.spell => _keyHomebrewSpellsRaw,
+    EntityType.monster => _keyHomebrewMonstersRaw,
+    EntityType.equipment => _keyHomebrewItemsRaw,
+    EntityType.classDefinition => _keyHomebrewClassesRaw,
+    EntityType.subclass => _keyHomebrewSubclassesRaw,
+    EntityType.species => _keyHomebrewRacesRaw,
+    EntityType.feat => _keyHomebrewFeatsRaw,
+    EntityType.background => _keyHomebrewBackgroundsRaw,
+    EntityType.custom => _keyHomebrewOtherRaw,
+    _ => null,
+  };
+
+  static const List<EntityType> _reparsableTypes = [
+    EntityType.equipment,
+    EntityType.classDefinition,
+    EntityType.subclass,
+    EntityType.species,
+    EntityType.feat,
+    EntityType.background,
+  ];
+
+  Future<List<dynamic>> _loadEntitiesForType(EntityType type) async {
+    return switch (type) {
+      EntityType.equipment => await loadCustomItems(),
+      EntityType.classDefinition => await loadCustomClasses(),
+      EntityType.subclass => await loadCustomSubclasses(),
+      EntityType.species => await loadCustomRaces(),
+      EntityType.feat => await loadCustomFeats(),
+      EntityType.background => await loadCustomBackgrounds(),
+      _ => [],
+    };
+  }
+
+  /// Generic re-parse engine for a single category.
+  Future<int> _reparseCategory<T extends DomainEntity>({
+    required String rawKey,
+    required String parsedKey,
+    required T Function(Map<String, dynamic>) fromRaw,
+    required String Function(T) toJson,
+    required SrdEquivalenceIndex srdIndex,
+    required EntityType entityType,
+    void Function(String slug)? onSrdRemoved,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getString(rawKey);
+      if (stored == null || stored.isEmpty) return 0;
+
+      final rawMap = Map<String, dynamic>.from(json.decode(stored) as Map);
+      final reparsed = <T>[];
+
+      for (final entry in rawMap.entries) {
+        final rawPayload = Map<String, dynamic>.from(entry.value as Map);
+        try {
+          final entity = fromRaw(rawPayload);
+          // SRD exact match — remove from homebrew storage
+          final srdResult = srdIndex.checkEntity(
+            slug: entity.id.slug,
+            name: entity.name,
+            type: entityType,
+          );
+          if (srdResult == SrdMatchResult.exactSrdMatch) {
+            onSrdRemoved?.call(entity.id.slug);
+            continue;
+          }
+          reparsed.add(entity);
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Re-parse failed for ${entry.key}');
+        }
+      }
+
+      await prefs.setStringList(parsedKey, reparsed.map(toJson).toList());
+      return reparsed.length;
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Re-parse category $entityType failed');
+      return 0;
+    }
+  }
+}
+
+/// Result of a [HomebrewPersistenceService.reparseAllHomebrew] run.
+class ReparseResult {
+  /// Number of entities successfully re-parsed and updated.
+  final int updatedCount;
+
+  /// Number of entities removed because they matched an SRD canonical entry.
+  final int srdRemovedCount;
+
+  /// Number of entities that could NOT be re-parsed because they were imported
+  /// before raw payload storage was added.
+  final int noPayloadCount;
+
+  const ReparseResult({
+    required this.updatedCount,
+    required this.srdRemovedCount,
+    required this.noPayloadCount,
+  });
+
+  bool get hadSrdRemovals => srdRemovedCount > 0;
+  bool get hasUnreparseableEntities => noPayloadCount > 0;
+
+  @override
+  String toString() =>
+      'ReparseResult(updated=$updatedCount, srdRemoved=$srdRemovedCount, noPayload=$noPayloadCount)';
 }

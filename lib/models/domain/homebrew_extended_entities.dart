@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../dm_screen_data.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
+import 'feature_grant.dart';
 
 /// Types of class decision points encountered during character creation and progression.
 enum FeatureChoiceType {
@@ -166,6 +167,8 @@ class CharacterClass extends DomainEntity {
   final List<Subclass> subclasses;
   final int subclassSelectionLevel;
   final List<ClassFeatureDecision> featureDecisions;
+  /// Declarative mechanic grants emitted by this class (e.g., Unarmored Defense, Spellcasting).
+  final List<FeatureGrant> grants;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -182,6 +185,7 @@ class CharacterClass extends DomainEntity {
     this.subclasses = const [],
     this.subclassSelectionLevel = 3,
     this.featureDecisions = const [],
+    this.grants = const [],
     this.customProperties = const {},
   });
 
@@ -230,6 +234,7 @@ class CharacterClass extends DomainEntity {
         'subclasses': subclasses.map((s) => s.toMap()).toList(),
         'subclassSelectionLevel': subclassSelectionLevel,
         'featureDecisions': featureDecisions.map((f) => f.toMap()).toList(),
+        'grants': grants.map((g) => g.toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -259,6 +264,10 @@ class CharacterClass extends DomainEntity {
           .whereType<Map>()
           .map((d) => ClassFeatureDecision.fromMap(Map<String, dynamic>.from(d)))
           .toList(),
+      grants: (map['grants'] as List? ?? [])
+          .whereType<Map>()
+          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+          .toList(),
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
@@ -277,6 +286,7 @@ class CharacterClass extends DomainEntity {
     List<Subclass>? subclasses,
     int? subclassSelectionLevel,
     List<ClassFeatureDecision>? featureDecisions,
+    List<FeatureGrant>? grants,
     Map<String, dynamic>? customProperties,
   }) {
     return CharacterClass(
@@ -292,6 +302,7 @@ class CharacterClass extends DomainEntity {
       subclasses: subclasses ?? this.subclasses,
       subclassSelectionLevel: subclassSelectionLevel ?? this.subclassSelectionLevel,
       featureDecisions: featureDecisions ?? this.featureDecisions,
+      grants: grants ?? this.grants,
       customProperties: customProperties ?? this.customProperties,
     );
   }
@@ -307,6 +318,8 @@ class Subclass extends DomainEntity {
   final String classSlug;
   final String shortName;
   final String featuresMarkdown;
+  /// Declarative mechanic grants emitted by this subclass archetype.
+  final List<FeatureGrant> grants;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -316,6 +329,7 @@ class Subclass extends DomainEntity {
     required this.classSlug,
     String? shortName,
     required this.featuresMarkdown,
+    this.grants = const [],
     this.customProperties = const {},
   }) : shortName = shortName ?? name;
 
@@ -329,6 +343,7 @@ class Subclass extends DomainEntity {
         'classSlug': classSlug,
         'shortName': shortName,
         'featuresMarkdown': featuresMarkdown,
+        'grants': grants.map((g) => g.toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -339,8 +354,32 @@ class Subclass extends DomainEntity {
       classSlug: map['classSlug']?.toString() ?? '',
       shortName: map['shortName']?.toString() ?? map['name']?.toString() ?? '',
       featuresMarkdown: map['featuresMarkdown']?.toString() ?? '',
+      grants: (map['grants'] as List? ?? [])
+          .whereType<Map>()
+          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+          .toList(),
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+    );
+  }
+
+  Subclass copyWith({
+    EntityId? id,
+    String? name,
+    String? classSlug,
+    String? shortName,
+    String? featuresMarkdown,
+    List<FeatureGrant>? grants,
+    Map<String, dynamic>? customProperties,
+  }) {
+    return Subclass(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      classSlug: classSlug ?? this.classSlug,
+      shortName: shortName ?? this.shortName,
+      featuresMarkdown: featuresMarkdown ?? this.featuresMarkdown,
+      grants: grants ?? this.grants,
+      customProperties: customProperties ?? this.customProperties,
     );
   }
 }
@@ -361,6 +400,8 @@ class Race extends DomainEntity {
   final int flexibleAbilityCount;
   final int flexibleAbilityBonus;
   final Map<String, int> fixedAbilityBonuses;
+  /// Declarative mechanic grants emitted by this species (e.g., darkvision, skill proficiency).
+  final List<FeatureGrant> grants;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -376,6 +417,7 @@ class Race extends DomainEntity {
     int? flexibleAbilityCount,
     int? flexibleAbilityBonus,
     Map<String, int>? fixedAbilityBonuses,
+    this.grants = const [],
     this.customProperties = const {},
   })  : bonusFeatCount = bonusFeatCount ?? _resolveBonusFeatCount(id.slug, customProperties),
         flexibleAbilityCount = flexibleAbilityCount ?? _resolveFlexibleAbilityCount(id.slug, customProperties),
@@ -474,6 +516,7 @@ class Race extends DomainEntity {
         'flexibleAbilityCount': flexibleAbilityCount,
         'flexibleAbilityBonus': flexibleAbilityBonus,
         'fixedAbilityBonuses': fixedAbilityBonuses,
+        'grants': grants.map((g) => g.toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -496,6 +539,10 @@ class Race extends DomainEntity {
       fixedAbilityBonuses: map['fixedAbilityBonuses'] is Map
           ? (map['fixedAbilityBonuses'] as Map).map((k, v) => MapEntry(k.toString(), (v as num).toInt()))
           : null,
+      grants: (map['grants'] as List? ?? [])
+          .whereType<Map>()
+          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+          .toList(),
       customProperties: custom,
     );
   }
@@ -512,6 +559,7 @@ class Race extends DomainEntity {
     int? flexibleAbilityCount,
     int? flexibleAbilityBonus,
     Map<String, int>? fixedAbilityBonuses,
+    List<FeatureGrant>? grants,
     Map<String, dynamic>? customProperties,
   }) {
     return Race(
@@ -526,6 +574,7 @@ class Race extends DomainEntity {
       flexibleAbilityCount: flexibleAbilityCount ?? this.flexibleAbilityCount,
       flexibleAbilityBonus: flexibleAbilityBonus ?? this.flexibleAbilityBonus,
       fixedAbilityBonuses: fixedAbilityBonuses ?? this.fixedAbilityBonuses,
+      grants: grants ?? this.grants,
       customProperties: customProperties ?? this.customProperties,
     );
   }
@@ -585,6 +634,8 @@ class Feat extends DomainEntity {
   final String? prerequisite;
   final String category; // e.g. "Origin", "General", "Fighting Style", "Epic Boon"
   final String descriptionMarkdown;
+  /// Declarative mechanic grants emitted by this feat (e.g., HP bonus, initiative bonus).
+  final List<FeatureGrant> grants;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -594,6 +645,7 @@ class Feat extends DomainEntity {
     this.prerequisite,
     this.category = 'General',
     required this.descriptionMarkdown,
+    this.grants = const [],
     this.customProperties = const {},
   });
 
@@ -607,6 +659,7 @@ class Feat extends DomainEntity {
         'prerequisite': prerequisite,
         'category': category,
         'descriptionMarkdown': descriptionMarkdown,
+        'grants': grants.map((g) => g.toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -617,6 +670,10 @@ class Feat extends DomainEntity {
       prerequisite: map['prerequisite']?.toString(),
       category: map['category']?.toString() ?? 'General',
       descriptionMarkdown: map['descriptionMarkdown']?.toString() ?? '',
+      grants: (map['grants'] as List? ?? [])
+          .whereType<Map>()
+          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+          .toList(),
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
@@ -628,6 +685,7 @@ class Feat extends DomainEntity {
     String? prerequisite,
     String? category,
     String? descriptionMarkdown,
+    List<FeatureGrant>? grants,
     Map<String, dynamic>? customProperties,
   }) {
     return Feat(
@@ -636,6 +694,7 @@ class Feat extends DomainEntity {
       prerequisite: prerequisite ?? this.prerequisite,
       category: category ?? this.category,
       descriptionMarkdown: descriptionMarkdown ?? this.descriptionMarkdown,
+      grants: grants ?? this.grants,
       customProperties: customProperties ?? this.customProperties,
     );
   }
@@ -654,6 +713,8 @@ class Background extends DomainEntity {
   final List<String> toolProficiencies;
   final List<String> languages;
   final String descriptionMarkdown;
+  /// Declarative mechanic grants emitted by this background (e.g., fixed skill proficiencies).
+  final List<FeatureGrant> grants;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -666,6 +727,7 @@ class Background extends DomainEntity {
     this.toolProficiencies = const [],
     this.languages = const [],
     required this.descriptionMarkdown,
+    this.grants = const [],
     this.customProperties = const {},
   });
 
@@ -682,6 +744,7 @@ class Background extends DomainEntity {
         'toolProficiencies': toolProficiencies,
         'languages': languages,
         'descriptionMarkdown': descriptionMarkdown,
+        'grants': grants.map((g) => g.toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -701,6 +764,10 @@ class Background extends DomainEntity {
           .map((e) => e.toString())
           .toList(),
       descriptionMarkdown: map['descriptionMarkdown']?.toString() ?? '',
+      grants: (map['grants'] as List? ?? [])
+          .whereType<Map>()
+          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+          .toList(),
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
@@ -715,6 +782,7 @@ class Background extends DomainEntity {
     List<String>? toolProficiencies,
     List<String>? languages,
     String? descriptionMarkdown,
+    List<FeatureGrant>? grants,
     Map<String, dynamic>? customProperties,
   }) {
     return Background(
@@ -726,6 +794,7 @@ class Background extends DomainEntity {
       toolProficiencies: toolProficiencies ?? this.toolProficiencies,
       languages: languages ?? this.languages,
       descriptionMarkdown: descriptionMarkdown ?? this.descriptionMarkdown,
+      grants: grants ?? this.grants,
       customProperties: customProperties ?? this.customProperties,
     );
   }
