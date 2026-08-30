@@ -24,6 +24,7 @@ import 'glyph_showcase_screen.dart';
 import 'item_compendium_screen.dart';
 import 'monster_codex_screen.dart';
 import 'party_room_screen.dart';
+import 'rules_compendium_screen.dart';
 import 'settings_screen.dart';
 import 'spellbook_screen.dart';
 
@@ -556,6 +557,55 @@ class _LandingScreenState extends State<LandingScreen> {
         children: [
           _buildQuickGlyphBadge(
             context,
+            label: 'DM Console',
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.genericUi(
+                    uiType: GenericUiGlyphType.d20,
+                    glyphColor: Colors.orangeAccent,
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DmDashboardScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
+            label: 'Rules Compendium',
+            glyph: RepaintBoundary(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: DndGlyph.item(
+                    category: ItemCategory.armor,
+                    rarity: ItemRarity.rare,
+                    glyphColor: Colors.amberAccent,
+                    size: 24,
+                    isDarkMode: isDark,
+                  ),
+                ),
+              ),
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RulesCompendiumScreen()),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildQuickGlyphBadge(
+            context,
             label: 'Spellbook',
             glyph: RepaintBoundary(
               child: SizedBox(
@@ -909,7 +959,19 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
+        case 'dm_dashboard':
+          glyphWidget = DndGlyph.genericUi(
+            uiType: GenericUiGlyphType.d20,
+            glyphColor: item.accentColor,
+            actionRings: const [
+              ActionTraitRing(ringType: ActionRingType.legendary, label: 'Tactical DM HUD'),
+              ActionTraitRing(ringType: ActionRingType.resource, label: 'Initiative & Notes'),
+            ],
+            size: 42,
+            isDarkMode: isDark,
+          );
         case 'party_room':
+        case 'party_room_vault':
           glyphWidget = DndGlyph.species(
             speciesType: SpeciesType.human,
             glyphColor: item.accentColor,
@@ -926,6 +988,7 @@ class _LandingScreenState extends State<LandingScreen> {
             size: 42,
             isDarkMode: isDark,
           );
+        case 'rules_compendium':
         case 'dm_screen':
           glyphWidget = DndGlyph.item(
             category: ItemCategory.armor,

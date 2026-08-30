@@ -16,6 +16,7 @@ import '../utils/secure_random.dart';
 import '../widgets/dm_reference/dm_interactive_tools.dart';
 import '../widgets/dm_reference/dm_rule_card.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
+import 'rules_compendium_screen.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
 class DmDashboardScreen extends StatefulWidget {
@@ -1983,6 +1984,29 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                 ),
               )),
             ],
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                icon: const Icon(Icons.menu_book, size: 16),
+                label: const Text('Browse Full 5e Rules Compendium...', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  HapticService.selectionTick(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RulesCompendiumScreen(
+                        initialEdition: profile.edition,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/characters/srd_feats_library.dart';
-import '../models/characters/srd_skills_library.dart';
 import '../models/characters/srd_classes_library.dart';
 import '../models/characters/srd_species_library.dart';
 import '../models/characters/srd_backgrounds_library.dart';
@@ -11,7 +10,6 @@ import '../models/domain/core_types.dart';
 import '../models/domain/character_models.dart';
 import '../models/domain/entity_reference.dart';
 import '../models/domain/homebrew_extended_entities.dart';
-import '../models/domain/loot_models.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../models/party/party_purse.dart';
 import '../services/haptic_service.dart';
@@ -21,7 +19,6 @@ import '../services/rules/character_factory.dart';
 import '../services/rules/character_stat_calculator.dart';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
-import '../services/rules/level_up_pipeline.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
 import '../providers/settings_provider.dart';
@@ -29,6 +26,12 @@ import '../widgets/common/formatted_markdown_text.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
 import '../widgets/room_banner_widget.dart';
+import '../widgets/character_builder/level_up_wizard_dialog.dart';
+import '../providers/character_sheet_controller.dart';
+import '../widgets/character_sheet/character_header_banner.dart';
+import '../widgets/character_sheet/character_vitals_hud.dart';
+import '../widgets/character_sheet/ability_scores_ribbon.dart';
+import '../widgets/character_sheet/character_sheet_tabs.dart';
 
 /// Interactive Character Generator, Live State Sheet, and Multiclassing Studio
 class CharacterBuilderScreen extends StatefulWidget {
@@ -57,19 +60,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   // Active Character & State
   Character? _character;
-  ComputedCharacterStats? _computedStats;
-  int _currentHp = 12;
-  int _tempHp = 0;
-  int _deathSaveSuccesses = 0;
-  int _deathSaveFailures = 0;
-  bool _hasHeroicInspiration = false;
-
-  // Live Sheet Filter
-  String _skillSearchQuery = '';
-  AbilityType? _selectedAbilityFilter;
-
-  // Sample Room Loot Container
-  late LootContainer _roomChest;
+  CharacterSheetController? _sheetController;
 
   // Guided Character Creation Wizard State
   int _wizardStep = 0;
@@ -122,14 +113,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   AbilityType _backgroundPrimaryBonus = AbilityType.strength; // +2 in 2024
   AbilityType _backgroundSecondaryBonus = AbilityType.constitution; // +1 in 2024
 
-  // Level Up Wizard State
-  String _levelUpTargetClass = 'fighter';
-  bool _levelUpUseAverage = true;
-  int _levelUpRolledHp = 6;
-  bool _levelUpIsAsi = true;
-  AbilityType _asiAbility1 = AbilityType.strength;
-  AbilityType _asiAbility2 = AbilityType.constitution;
-
   final List<String> _suggestedNames = [
     'Valeros Ironclad',
     'Eldrin Shadowbane',
@@ -172,7 +155,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
     _initSampleRepository();
     _initDefaultCharacter();
-    _initSampleChest();
   }
 
   void _initSampleRepository() {
@@ -363,7 +345,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             _character = _characterRoster.first;
           }
           _recalculateStats();
-          _currentHp = _computedStats?.maxHp ?? 10;
         } else {
           _character = null;
           _isSelectorView = true;
@@ -377,8 +358,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     HapticService.selectionTick(context);
     setState(() {
       _character = char;
-      _currentHp = char.resources.currentHp > 0 ? char.resources.currentHp : 1;
-      _tempHp = char.resources.tempHp;
       _rulesEdition = char.ruleset == RulesetVersion.v2024
           ? DmRulesEdition.v2024
           : DmRulesEdition.v2014;
@@ -450,49 +429,37 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     }
   }
 
-  void _initSampleChest() {
-    _roomChest = const LootContainer(
-      containerId: 'chest-dungeon-1',
-      name: 'Crypt Sarcophagus Chest',
-      items: [
-        InventoryItemInstance(
-          instanceId: 'chest-loot-greatsword',
-          itemRef: EntityReference(
-            refType: EntityType.equipment,
-            slug: 'greatsword',
-            displayName: 'Greatsword',
-          ),
-          quantity: 1,
-        ),
-        InventoryItemInstance(
-          instanceId: 'chest-loot-gauntlets',
-          itemRef: EntityReference(
-            refType: EntityType.equipment,
-            slug: 'gauntlets-of-ogre-power',
-            displayName: 'Gauntlets of Ogre Power',
-          ),
-          requiresAttunement: true,
-          quantity: 1,
-        ),
-        InventoryItemInstance(
-          instanceId: 'chest-loot-potion',
-          itemRef: EntityReference(
-            refType: EntityType.equipment,
-            slug: 'potion-of-healing',
-            displayName: 'Potion of Healing',
-          ),
-          quantity: 3,
-        ),
-      ],
-      purse: PartyPurse(gp: 150, sp: 75),
-    );
-  }
-
   void _recalculateStats() {
     final char = _character;
     if (char != null) {
+      _syncSheetController();
+    }
+  }
+
+  void _syncSheetController() {
+    final char = _character;
+    if (char != null) {
+      if (_sheetController == null) {
+        _sheetController = CharacterSheetController(
+          character: char,
+          persistenceService: _persistenceService,
+          resolver: _resolver,
+        );
+        _sheetController!.addListener(_onSheetControllerUpdated);
+      } else if (_sheetController!.character.id != char.id || _sheetController!.character != char) {
+        _sheetController!.setCharacter(char);
+      }
+    } else {
+      _sheetController?.removeListener(_onSheetControllerUpdated);
+      _sheetController?.dispose();
+      _sheetController = null;
+    }
+  }
+
+  void _onSheetControllerUpdated() {
+    if (_sheetController != null && mounted) {
       setState(() {
-        _computedStats = CharacterStatCalculator.compute(char, _resolver);
+        _character = _sheetController!.character;
       });
     }
   }
@@ -516,83 +483,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
   }
 
-  void _rollDie({
-    required String title,
-    required int modifier,
-    bool advantage = false,
-    bool disadvantage = false,
-  }) {
-    HapticService.heavyImpact(context);
-    final d1 = math.Random().nextInt(20) + 1;
-    final d2 = math.Random().nextInt(20) + 1;
-    int d20 = d1;
-    String rollDesc = '$d1';
-    if (advantage) {
-      d20 = math.max(d1, d2);
-      rollDesc = 'max($d1, $d2) = $d20 [ADV]';
-    } else if (disadvantage) {
-      d20 = math.min(d1, d2);
-      rollDesc = 'min($d1, $d2) = $d20 [DIS]';
-    }
-
-    final total = d20 + modifier;
-    final isCrit = d20 == 20;
-    final isFumble = d20 == 1;
-
-    final sign = modifier >= 0 ? '+$modifier' : '$modifier';
-    final resultSummary = isCrit
-        ? 'NATURAL 20! Total: $total ($rollDesc $sign)'
-        : (isFumble
-            ? 'NATURAL 1! Total: $total ($rollDesc $sign)'
-            : 'Result: $total (d20: $rollDesc $sign)');
-
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: isCrit
-            ? Colors.green.shade900
-            : (isFumble ? Colors.red.shade900 : const Color(0xFF1E293B)),
-        duration: const Duration(seconds: 3),
-        content: Row(
-          children: [
-            Icon(
-              isCrit
-                  ? Icons.stars
-                  : (isFumble ? Icons.warning_amber : Icons.casino),
-              color: isCrit
-                  ? Colors.greenAccent
-                  : (isFumble ? Colors.redAccent : Colors.cyanAccent),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  Text(
-                    resultSummary,
-                    style: TextStyle(
-                      color: isCrit
-                          ? Colors.greenAccent
-                          : (isFumble ? Colors.redAccent : Colors.white70),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
+    _sheetController?.removeListener(_onSheetControllerUpdated);
+    _sheetController?.dispose();
     _tabController.dispose();
     _nameController.dispose();
     super.dispose();
@@ -616,7 +510,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         _character = char.copyWith(
           id: EntityId(slug: char.id.slug, ruleset: _selectedRuleset),
         );
-        _computedStats = CharacterStatCalculator.compute(_character!, _resolver);
+        _syncSheetController();
       }
     }
 
@@ -1051,815 +945,87 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   Widget _buildActiveLiveSheetView(ThemeData theme) {
     final char = _character;
-    final stats = _computedStats;
-    if (char == null || stats == null) {
+    if (char == null) {
       return _buildCharacterSelectorView(theme);
     }
-    final curClass = char.progression.classes.firstOrNull;
-    final srdClass = curClass != null
-        ? SrdClassesLibrary.findBySlug(curClass.classRef.slug)
-        : null;
-    final srdSpecies =
-        SrdSpeciesLibrary.findBySlug(char.speciesRef.slug);
-    final srdBackground = char.backgroundRef != null
-        ? SrdBackgroundsLibrary.findBySlug(char.backgroundRef!.slug)
-        : null;
 
-    // Filter skills
-    final filteredSkills = SkillType.values.where((sk) {
-      if (_selectedAbilityFilter != null &&
-          sk.defaultAbility != _selectedAbilityFilter) {
-        return false;
-      }
-      if (_skillSearchQuery.isNotEmpty &&
-          !sk.displayName
-              .toLowerCase()
-              .contains(_skillSearchQuery.toLowerCase())) {
-        return false;
-      }
-      return true;
-    }).toList();
+    _syncSheetController();
+    final controller = _sheetController;
+    if (controller == null) return const SizedBox.shrink();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Header Summary Card
-        Card(
-          color: const Color(0xFF1E293B),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.cyanAccent,
-                        side: const BorderSide(color: Colors.cyanAccent),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        minimumSize: Size.zero,
-                      ),
-                      icon: const Icon(Icons.groups_outlined, size: 16),
-                      label: Text(
-                          'Switch Hero (${_characterRoster.length})',
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold)),
-                      onPressed: () {
-                        HapticService.selectionTick(context);
-                        setState(() {
-                          _isSelectorView = true;
-                          _syncTabController();
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline,
-                          color: Colors.redAccent, size: 20),
-                      tooltip: 'Delete ${char.name}',
-                      onPressed: () =>
-                          _confirmDeleteCharacter(char),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (curClass != null && _findClassType(curClass.classRef.slug) != null) ...[
-                      RepaintBoundary(
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: DndGlyph.classFeature(
-                              classType: _findClassType(curClass.classRef.slug)!,
-                              size: 48,
-                              isDarkMode: true,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            char.name,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Level ${char.totalLevel} ${char.progression.classes.map((c) => "${c.classRef.displayName} ${c.level}").join(" / ")} • ${char.speciesRef.displayName} • ${char.backgroundRef?.displayName ?? "Adventurer"}',
-                            style: TextStyle(color: Colors.cyanAccent.shade100, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Chip(
-                      backgroundColor: Colors.cyan.shade900,
-                      label: Text(
-                        char.ruleset == RulesetVersion.v2024 ? '2024 REVISED' : '2014 CLASSIC',
-                        style: const TextStyle(
-                            color: Colors.cyanAccent,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11),
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(height: 24, color: Colors.white24),
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 900;
 
-                // Core Quick Vitals
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatPill('ARMOR CLASS', '${stats.armorClass}', Colors.amberAccent, Icons.shield),
-                    _buildHpPill('HIT POINTS', '$_currentHp / ${stats.maxHp}', Colors.redAccent, Icons.favorite),
-                    _buildStatPill('PROF BONUS', '+${stats.proficiencyBonus}', Colors.cyanAccent, Icons.star),
-                    _buildStatPill('SPEED', '${stats.speedFeet} ft', Colors.greenAccent, Icons.directions_run),
-                    _buildStatPill('INITIATIVE', stats.initiativeBonus >= 0 ? '+${stats.initiativeBonus}' : '${stats.initiativeBonus}', Colors.deepOrangeAccent, Icons.flash_on),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            if (isWide) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        'AC Formula: ${stats.armorClassBreakdown}',
-                        style: const TextStyle(fontSize: 11.5, color: Colors.white60, fontStyle: FontStyle.italic),
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange.shade800,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        minimumSize: Size.zero,
-                      ),
-                      icon: const Icon(Icons.flash_on, size: 14),
-                      label: const Text('Roll Init', style: TextStyle(fontSize: 11)),
-                      onPressed: () => _rollDie(
-                        title: 'Initiative Roll',
-                        modifier: stats.initiativeBonus,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // HP, Temp HP & Interactive Adjustments
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.black26,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'HP Tracker: $_currentHp / ${stats.maxHp}${_tempHp > 0 ? " (+$_tempHp Temp)" : ""}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.remove, size: 16, color: Colors.redAccent),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () {
-                                  if (_currentHp > 0) {
-                                    setState(() => _currentHp = math.max(0, _currentHp - 1));
-                                  }
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add, size: 16, color: Colors.greenAccent),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () {
-                                  if (_currentHp < stats.maxHp) {
-                                    setState(() => _currentHp = math.min(stats.maxHp, _currentHp + 1));
-                                  }
-                                },
-                              ),
-                              TextButton(
-                                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                                child: const Text('Short/Long Rest', style: TextStyle(fontSize: 11)),
-                                onPressed: () {
-                                  setState(() {
-                                    _currentHp = stats.maxHp;
-                                    _tempHp = 0;
-                                    _deathSaveSuccesses = 0;
-                                    _deathSaveFailures = 0;
-                                  });
-                                  HapticService.selectionTick(context);
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: stats.maxHp > 0 ? (_currentHp / stats.maxHp).clamp(0.0, 1.0) : 0.0,
-                          backgroundColor: Colors.white12,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _currentHp > (stats.maxHp * 0.5)
-                                ? Colors.greenAccent
-                                : (_currentHp > (stats.maxHp * 0.25)
-                                    ? Colors.amberAccent
-                                    : Colors.redAccent),
-                          ),
-                          minHeight: 6,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    // Hit Dice
-                    Column(
-                      children: [
-                        const Text('HIT DICE', style: TextStyle(fontSize: 10, color: Colors.white60)),
-                        Text('1 / ${char.totalLevel} (${char.progression.classes.firstOrNull?.hitDie ?? "d10"})',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent)),
-                      ],
-                    ),
-                    // Death Saves
-                    Column(
-                      children: [
-                        const Text('DEATH SAVES', style: TextStyle(fontSize: 10, color: Colors.white60)),
-                        Row(
-                          children: [
-                            const Text('S: ', style: TextStyle(fontSize: 10, color: Colors.greenAccent)),
-                            ...List.generate(3, (i) => Icon(
-                              i < _deathSaveSuccesses ? Icons.check_circle : Icons.radio_button_unchecked,
-                              size: 14,
-                              color: Colors.greenAccent,
-                            )),
-                            const SizedBox(width: 8),
-                            const Text('F: ', style: TextStyle(fontSize: 10, color: Colors.redAccent)),
-                            ...List.generate(3, (i) => Icon(
-                              i < _deathSaveFailures ? Icons.cancel : Icons.radio_button_unchecked,
-                              size: 14,
-                              color: Colors.redAccent,
-                            )),
-                          ],
-                        ),
-                      ],
-                    ),
-                    // Heroic Inspiration
-                    InkWell(
-                      onTap: () {
-                        HapticService.selectionTick(context);
-                        setState(() => _hasHeroicInspiration = !_hasHeroicInspiration);
-                      },
+                      flex: 5,
                       child: Column(
                         children: [
-                          const Text('HEROIC INSP', style: TextStyle(fontSize: 10, color: Colors.white60)),
-                          Row(
-                            children: [
-                              Icon(
-                                _hasHeroicInspiration ? Icons.star : Icons.star_border,
-                                color: _hasHeroicInspiration ? Colors.amberAccent : Colors.white38,
-                                size: 16,
-                              ),
-                              Text(
-                                _hasHeroicInspiration ? ' Active' : ' None',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: _hasHeroicInspiration ? Colors.amberAccent : Colors.white60,
-                                ),
-                              ),
-                            ],
+                          CharacterHeaderBanner(
+                            controller: controller,
+                            onSwitchHero: () {
+                              setState(() {
+                                _isSelectorView = true;
+                                _syncTabController();
+                              });
+                            },
                           ),
+                          const SizedBox(height: 14),
+                          CharacterVitalsHud(controller: controller),
+                          const SizedBox(height: 14),
+                          AbilityScoresRibbon(controller: controller),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 6,
+                      child: CharacterSheetTabs(controller: controller),
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ),
+              );
+            }
 
-        const SizedBox(height: 16),
-
-        // Ability Scores Row
-        Text('ABILITY SCORES & MODIFIERS',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: AbilityType.values.map((ab) {
-            final score = stats.effectiveScores.getScore(ab);
-            final mod = stats.abilityModifiers[ab]!;
-            final modStr = mod >= 0 ? '+$mod' : '$mod';
-            return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white12),
-                ),
-                child: Column(
-                  children: [
-                    Text(ab.shortName,
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white70)),
-                    const SizedBox(height: 4),
-                    Text(modStr,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-                    Text('$score', style: const TextStyle(fontSize: 12, color: Colors.white60)),
-                  ],
-                ),
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  CharacterHeaderBanner(
+                    controller: controller,
+                    onSwitchHero: () {
+                      setState(() {
+                        _isSelectorView = true;
+                        _syncTabController();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  CharacterVitalsHud(controller: controller),
+                  const SizedBox(height: 12),
+                  AbilityScoresRibbon(controller: controller),
+                  const SizedBox(height: 14),
+                  CharacterSheetTabs(controller: controller),
+                  const SizedBox(height: 24),
+                ],
               ),
             );
-          }).toList(),
-        ),
-
-        const SizedBox(height: 16),
-
-        // SAVING THROWS SECTION
-        Card(
-          color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.shield_outlined, color: Colors.cyanAccent, size: 18),
-                        const SizedBox(width: 8),
-                        Text('SAVING THROWS',
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
-                      ],
-                    ),
-                    const Text('Proficient saves highlighted', style: TextStyle(fontSize: 11, color: Colors.white60)),
-                  ],
-                ),
-                const Divider(height: 16),
-                GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  childAspectRatio: 2.2,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  children: AbilityType.values.map((ab) {
-                    final isProf = char.savingThrowProficiencies.contains(ab);
-                    final mod = stats.savingThrowModifiers[ab] ?? stats.abilityModifiers[ab]!;
-                    final modStr = mod >= 0 ? '+$mod' : '$mod';
-                    return InkWell(
-                      key: ValueKey('save_tile_${ab.name}'),
-                      onTap: () => _rollDie(
-                        title: '${ab.name.toUpperCase()} Saving Throw',
-                        modifier: mod,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isProf ? Colors.cyan.shade900.withValues(alpha: 0.3) : Colors.black26,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isProf ? Colors.cyanAccent.withValues(alpha: 0.6) : Colors.white12,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  isProf ? Icons.check_circle : Icons.circle_outlined,
-                                  size: 14,
-                                  color: isProf ? Colors.cyanAccent : Colors.white38,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(ab.shortName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                              ],
-                            ),
-                            Text(modStr,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: isProf ? Colors.cyanAccent : Colors.white,
-                                )),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // SKILLS SECTION WITH FILTER & SEARCH
-        Card(
-          color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.auto_stories_outlined, color: Colors.cyanAccent, size: 18),
-                        const SizedBox(width: 8),
-                        Text('SKILLS & PROFICIENCIES',
-                            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
-                      ],
-                    ),
-                    Text('${filteredSkills.length} Skills', style: const TextStyle(fontSize: 11, color: Colors.white60)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // Search Box
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search skills...',
-                    prefixIcon: const Icon(Icons.search, size: 16),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  onChanged: (val) => setState(() => _skillSearchQuery = val),
-                ),
-                const SizedBox(height: 8),
-
-                // Ability Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('All', style: TextStyle(fontSize: 11)),
-                        selected: _selectedAbilityFilter == null,
-                        onSelected: (s) => setState(() => _selectedAbilityFilter = null),
-                      ),
-                      const SizedBox(width: 6),
-                      ...AbilityType.values.map((ab) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: FilterChip(
-                              label: Text(ab.shortName, style: const TextStyle(fontSize: 11)),
-                              selected: _selectedAbilityFilter == ab,
-                              onSelected: (s) => setState(() => _selectedAbilityFilter = s ? ab : null),
-                            ),
-                          )),
-                    ],
-                  ),
-                ),
-                const Divider(height: 16),
-
-                // Skills List
-                ...filteredSkills.map((sk) {
-                  final profLevel = char.skillProficiencies[sk] ?? SkillProficiencyLevel.none;
-                  final mod = stats.skillModifiers[sk] ?? 0;
-                  final modStr = mod >= 0 ? '+$mod' : '$mod';
-                  final passive = 10 + mod;
-                  final skillDef = SrdSkillsLibrary.getDefinition(sk);
-
-                  final profColor = switch (profLevel) {
-                    SkillProficiencyLevel.expertise => Colors.amberAccent,
-                    SkillProficiencyLevel.proficient => Colors.cyanAccent,
-                    SkillProficiencyLevel.jackOfAllTrades => Colors.purpleAccent,
-                    SkillProficiencyLevel.none => Colors.white38,
-                  };
-
-                  final profLabel = switch (profLevel) {
-                    SkillProficiencyLevel.expertise => 'Expertise (★)',
-                    SkillProficiencyLevel.proficient => 'Proficient (●)',
-                    SkillProficiencyLevel.jackOfAllTrades => 'Jack (½)',
-                    SkillProficiencyLevel.none => 'None',
-                  };
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: profLevel != SkillProficiencyLevel.none
-                          ? Colors.cyan.shade900.withValues(alpha: 0.15)
-                          : Colors.black12,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: profLevel != SkillProficiencyLevel.none
-                            ? Colors.cyanAccent.withValues(alpha: 0.3)
-                            : Colors.white10,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          profLevel == SkillProficiencyLevel.expertise
-                              ? Icons.star
-                              : (profLevel == SkillProficiencyLevel.proficient
-                                  ? Icons.check_circle
-                                  : Icons.circle_outlined),
-                          size: 14,
-                          color: profColor,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(sk.displayName,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  const SizedBox(width: 6),
-                                  Text('(${sk.defaultAbility.shortName})',
-                                      style: const TextStyle(fontSize: 10, color: Colors.white60)),
-                                ],
-                              ),
-                              Text('$profLabel • Passive: $passive',
-                                  style: TextStyle(fontSize: 10.5, color: profColor.withValues(alpha: 0.8))),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.info_outline, size: 16, color: Colors.white60),
-                          tooltip: 'Skill Info',
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text('${skillDef.name} (${skillDef.defaultAbility.shortName})'),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(skillDef.description),
-                                      const SizedBox(height: 10),
-                                      const Text('Typical Examples:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                      Text(skillDef.examples, style: const TextStyle(color: Colors.white70)),
-                                      const SizedBox(height: 10),
-                                      Text('2024 Action: ${skillDef.actionType2024}',
-                                          style: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 4),
-                                      Text(skillDef.keyChanges2024, style: const TextStyle(fontSize: 12, color: Colors.white60)),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.cyanAccent.shade700,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            minimumSize: Size.zero,
-                          ),
-                          icon: const Icon(Icons.casino, size: 14),
-                          label: Text(modStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                          onPressed: () => _rollDie(
-                            title: '${sk.displayName} (${sk.defaultAbility.shortName}) Check',
-                            modifier: mod,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 16),
-        // ACTIONS & ATTACKS CARD
-        Text('ACTIONS & ATTACKS',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        const SizedBox(height: 8),
-
-        ...stats.attackProfiles.map((atk) => Card(
-              color: const Color(0xFF1E293B),
-              child: ListTile(
-                leading: const Icon(Icons.colorize, color: Colors.redAccent),
-                title: Text(atk.weaponName, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                subtitle: Text('To Hit: ${atk.attackBonusString} • Damage: ${atk.damageFormula} ${atk.damageType.name}',
-                    style: const TextStyle(color: Colors.white70)),
-                trailing: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent.shade700,
-                    foregroundColor: Colors.white,
-                  ),
-                  icon: const Icon(Icons.casino, size: 16),
-                  label: const Text('Roll'),
-                  onPressed: () => _rollDie(
-                    title: '${atk.weaponName} Attack',
-                    modifier: atk.attackBonus,
-                  ),
-                ),
-              ),
-            )),
-
-        const SizedBox(height: 16),
-
-        // FEATURES, TRAITS & FEATS
-        Card(
-          color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.military_tech_outlined, color: Colors.amberAccent, size: 18),
-                    const SizedBox(width: 8),
-                    Text('FEATURES, TRAITS & FEATS',
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
-                  ],
-                ),
-                const Divider(height: 16),
-                if (srdSpecies != null) ...[
-                  Text('Species: ${srdSpecies.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-                  const SizedBox(height: 4),
-                  FormattedMarkdownText(
-                    srdSpecies.traitsMarkdown,
-                    boldColor: Colors.cyanAccent.shade100,
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (srdClass != null) ...[
-                  Text('Class: ${srdClass.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent)),
-                  const SizedBox(height: 4),
-                  FormattedMarkdownText(
-                    srdClass.featuresMarkdown,
-                    boldColor: Colors.amberAccent.shade100,
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (srdBackground != null) ...[
-                  Text('Background: ${srdBackground.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
-                  const SizedBox(height: 4),
-                  FormattedMarkdownText(
-                    srdBackground.descriptionMarkdown,
-                    boldColor: Colors.greenAccent.shade100,
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (char.feats.isNotEmpty) ...[
-                  const Text('Active Feats:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
-                  const SizedBox(height: 4),
-                  ...char.feats.map((fRef) {
-                    final featObj = SrdFeatsLibrary.findBySlug(fRef.slug);
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 4, bottom: 6),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('• ${featObj?.name ?? fRef.displayName}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                          if (featObj != null) ...[
-                            const SizedBox(height: 2),
-                            FormattedMarkdownText(
-                              featObj.descriptionMarkdown,
-                              boldColor: Colors.purpleAccent.shade100,
-                              style: const TextStyle(fontSize: 11.5, color: Colors.white70),
-                            ),
-                          ],
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // PROFICIENCIES & SENSES
-        Card(
-          color: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.remove_red_eye_outlined, color: Colors.cyanAccent, size: 18),
-                    const SizedBox(width: 8),
-                    Text('PASSIVE SENSES & PROFICIENCIES',
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.1)),
-                  ],
-                ),
-                const Divider(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildPassiveBadge('Passive Perception', stats.passivePerception, Colors.cyanAccent),
-                    _buildPassiveBadge('Passive Investigation', stats.passiveInvestigation, Colors.amberAccent),
-                    _buildPassiveBadge('Passive Insight', stats.passiveInsight, Colors.purpleAccent),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (srdClass != null) ...[
-                  Text('Armor Proficiencies: ${srdClass.armorProficiencies.isEmpty ? "None" : srdClass.armorProficiencies.join(", ")}',
-                      style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  const SizedBox(height: 4),
-                  Text('Weapon Proficiencies: ${srdClass.weaponProficiencies.join(", ")}',
-                      style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  const SizedBox(height: 4),
-                ],
-                Text('Languages: ${char.languages.join(", ")}',
-                    style: const TextStyle(fontSize: 12, color: Colors.white70)),
-              ],
-            ),
-          ),
-        ),
-      ],
+          },
+        );
+      },
     );
   }
 
-  Widget _buildStatPill(String label, String value, Color color, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: const TextStyle(fontSize: 9.5, color: Colors.white60)),
-      ],
-    );
-  }
 
-  Widget _buildHpPill(String label, String value, Color color, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: const TextStyle(fontSize: 9.5, color: Colors.white60)),
-      ],
-    );
-  }
-
-  Widget _buildPassiveBadge(String label, int value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        children: [
-          Text('$value', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-          Text(label, style: const TextStyle(fontSize: 10, color: Colors.white70)),
-        ],
-      ),
-    );
-  }
 
   // --------------------------------------------------------------------------
   // TAB 2: GUIDED CHARACTER CREATION WIZARD (STEP-BY-STEP)
@@ -3265,14 +2431,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
 
     final newChar = CharacterFactory.createLevel1Character(request);
-    _persistenceService.saveCharacter(newChar).then((updatedRoster) {
+    _persistenceService.saveCharacter(newChar).then((updated) {
       if (mounted) {
         setState(() {
-          _characterRoster = updatedRoster;
+          _characterRoster = updated;
           _character = newChar;
           _isSelectorView = false;
+          _wizardStep = 0;
           _recalculateStats();
-          _currentHp = _computedStats?.maxHp ?? 10;
           _syncTabController();
           _tabController.animateTo(0);
         });
@@ -3416,80 +2582,19 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           );
         }),
 
-        const SizedBox(height: 24),
-        // Room Chest Section
-        Text('ROOM LOOT POOL: ${_roomChest.name}',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-        const SizedBox(height: 8),
-        Card(
-          color: Colors.amber.shade900.withValues(alpha: 0.15),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.amber.withValues(alpha: 0.4))),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Chest Contents (Gold: ${_roomChest.purse.gp} GP)',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent)),
-                    if (_roomChest.purse.gp > 0)
-                      TextButton.icon(
-                        icon: const Icon(Icons.monetization_on, size: 16),
-                        label: const Text('Take 50 GP'),
-                        onPressed: () {
-                          final res = InventoryTransactionService.transferFromContainerToCharacter(
-                            sourceContainer: _roomChest,
-                            destinationCharacter: char,
-                            instanceId: _roomChest.items.firstOrNull?.instanceId ?? '',
-                            quantity: 0,
-                            currency: const PartyPurse(gp: 50),
-                          );
-                          setState(() {
-                            _roomChest = res.updatedContainer;
-                            _character = res.updatedCharacter;
-                            _recalculateStats();
-                          });
-                        },
-                      ),
-                  ],
+        if (char.inventory.isEmpty)
+          const Card(
+            color: Color(0xFF1E293B),
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  'Inventory is empty. Tap "Add SRD Item" above to add gear and equipment.',
+                  style: TextStyle(color: Colors.white70),
                 ),
-                const Divider(),
-                if (_roomChest.items.isEmpty)
-                  const Text('Chest is empty.', style: TextStyle(fontStyle: FontStyle.italic)),
-                ..._roomChest.items.map((lootItem) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(lootItem.displayName, style: const TextStyle(color: Colors.white)),
-                      subtitle: Text('Qty: ${lootItem.quantity}'),
-                      trailing: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber.shade700,
-                          foregroundColor: Colors.black,
-                        ),
-                        child: const Text('Loot'),
-                        onPressed: () {
-                          HapticService.selectionTick(context);
-                          final res = InventoryTransactionService.transferFromContainerToCharacter(
-                            sourceContainer: _roomChest,
-                            destinationCharacter: char,
-                            instanceId: lootItem.instanceId,
-                            quantity: 1,
-                          );
-                          setState(() {
-                            _roomChest = res.updatedContainer;
-                            _character = res.updatedCharacter;
-                            _recalculateStats();
-                          });
-                        },
-                      ),
-                    )),
-              ],
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -3663,200 +2768,144 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ),
       );
     }
-    final validation = LevelUpPipeline.validateMulticlass(char, _levelUpTargetClass);
+    final primaryClass = char.progression.classes.firstOrNull;
+    final primaryClassName = primaryClass?.classRef.displayName.isNotEmpty == true
+        ? primaryClass!.classRef.displayName
+        : 'Adventurer';
+    final nextLevel = char.totalLevel + 1;
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Card(
-          color: const Color(0xFF1E293B),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Advance Class or Multiclass',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _levelUpTargetClass,
-                  decoration: const InputDecoration(
-                    labelText: 'Target Class to Level Up',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'fighter', child: Text('Fighter (STR 13 or DEX 13)')),
-                    DropdownMenuItem(value: 'wizard', child: Text('Wizard (INT 13)')),
-                    DropdownMenuItem(value: 'rogue', child: Text('Rogue (DEX 13)')),
-                    DropdownMenuItem(value: 'cleric', child: Text('Cleric (WIS 13)')),
-                    DropdownMenuItem(value: 'paladin', child: Text('Paladin (STR 13 & CHA 13)')),
-                    DropdownMenuItem(value: 'barbarian', child: Text('Barbarian (STR 13)')),
-                    DropdownMenuItem(value: 'warlock', child: Text('Warlock (CHA 13)')),
-                  ],
-                  onChanged: (v) => setState(() => _levelUpTargetClass = v!),
-                ),
-                const SizedBox(height: 12),
-                if (!validation.isValid)
+        // Hero Level Up Launchpad Card
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF1E293B),
+                Colors.purple.shade900.withValues(alpha: 0.35),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.5)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withValues(alpha: 0.15),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade900.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(6),
+                      color: Colors.purpleAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
+                    child: const Icon(Icons.upgrade, color: Colors.purpleAccent, size: 32),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.redAccent),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(validation.errors.join('\n'),
-                              style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+                        Text(
+                          'Level Up ${char.name}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Current: Level ${char.totalLevel} $primaryClassName  ➔  Next: Level $nextLevel',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.purpleAccent.shade100,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                const SizedBox(height: 16),
-                const Text('Hit Points Gain', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(value: true, label: Text('Fixed Average')),
-                    ButtonSegment(value: false, label: Text('Manual Roll')),
-                  ],
-                  selected: {_levelUpUseAverage},
-                  onSelectionChanged: (set) {
-                    setState(() => _levelUpUseAverage = set.first);
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.white24),
+              const SizedBox(height: 12),
+              Text(
+                'Ready to advance your character? The 5e Level Up Wizard will guide you step-by-step through:',
+                style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+              ),
+              const SizedBox(height: 10),
+              _buildLevelUpFeatureBullet(Icons.health_and_safety_outlined, 'Hit Points & Hit Die Scaling (Average vs Interactive Roll)'),
+              _buildLevelUpFeatureBullet(Icons.auto_awesome, 'Class Archetypes & Subclass Selection at Milestone Levels'),
+              _buildLevelUpFeatureBullet(Icons.fitness_center, 'Ability Score Improvements (ASI) or Feats (+2 / +1+1 / Feat)'),
+              _buildLevelUpFeatureBullet(Icons.menu_book, 'Spellcasting & Spell Slot Scaling according to 5e rules'),
+              _buildLevelUpFeatureBullet(Icons.alt_route, 'Multiclassing with Prerequisite Verification (13+ stat requirement)'),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.purpleAccent.shade400,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.rocket_launch, size: 20),
+                  label: const Text(
+                    'LAUNCH LEVEL UP WIZARD',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.8),
+                  ),
+                  onPressed: () {
+                    HapticService.selectionTick(context);
+                    LevelUpWizardDialog.show(
+                      context,
+                      character: char,
+                      onLevelUpApplied: (upgraded) {
+                        _persistenceService.saveCharacter(upgraded).then((updatedRoster) {
+                          if (mounted) {
+                            setState(() {
+                              _characterRoster = updatedRoster;
+                              _character = upgraded;
+                              _recalculateStats();
+                              _tabController.animateTo(0);
+                            });
+                          }
+                        });
+                      },
+                    );
                   },
                 ),
-                if (!_levelUpUseAverage) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Text('Rolled Die Value: '),
-                      const SizedBox(width: 8),
-                      DropdownButton<int>(
-                        value: _levelUpRolledHp,
-                        items: List.generate(12, (i) => i + 1)
-                            .map((n) => DropdownMenuItem(value: n, child: Text('$n')))
-                            .toList(),
-                        onChanged: (v) => setState(() => _levelUpRolledHp = v!),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 16),
-                const Text('Ability Score Improvement or Feat', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Ability Score (+2 / +1+1)'),
-                      selected: _levelUpIsAsi,
-                      onSelected: (s) => setState(() => _levelUpIsAsi = true),
-                    ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: const Text('Tough Feat'),
-                      selected: !_levelUpIsAsi,
-                      onSelected: (s) => setState(() => _levelUpIsAsi = false),
-                    ),
-                  ],
-                ),
-                if (_levelUpIsAsi) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<AbilityType>(
-                          initialValue: _asiAbility1,
-                          decoration: const InputDecoration(labelText: '+1 Score 1', border: OutlineInputBorder()),
-                          items: AbilityType.values
-                              .map((a) => DropdownMenuItem(value: a, child: Text(a.shortName)))
-                              .toList(),
-                          onChanged: (v) => setState(() => _asiAbility1 = v!),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: DropdownButtonFormField<AbilityType>(
-                          initialValue: _asiAbility2,
-                          decoration: const InputDecoration(labelText: '+1 Score 2', border: OutlineInputBorder()),
-                          items: AbilityType.values
-                              .map((a) => DropdownMenuItem(value: a, child: Text(a.shortName)))
-                              .toList(),
-                          onChanged: (v) => setState(() => _asiAbility2 = v!),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purpleAccent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    icon: const Icon(Icons.upgrade),
-                    label: const Text('APPLY LEVEL UP', style: TextStyle(fontWeight: FontWeight.bold)),
-                    onPressed: validation.isValid
-                        ? () {
-                            HapticService.selectionTick(context);
-                            _applyLevelUp();
-                          }
-                        : null,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  void _applyLevelUp() {
-    final asiChoice = _levelUpIsAsi
-        ? AsiOrFeatChoice.asi({
-            _asiAbility1: 1,
-            _asiAbility2: 1,
-          })
-        : const AsiOrFeatChoice.feat(EntityReference(
-            refType: EntityType.feat,
-            slug: 'tough',
-            displayName: 'Tough',
-          ));
-
-    final request = LevelUpRequest(
-      targetClassSlug: _levelUpTargetClass,
-      targetClassDisplayName: _levelUpTargetClass.toUpperCase(),
-      hpChoice: _levelUpUseAverage
-          ? const HpProgressionChoice.average()
-          : HpProgressionChoice.rolled(_levelUpRolledHp),
-      asiOrFeat: asiChoice,
-    );
-
-    final char = _character;
-    if (char == null) return;
-
-    final updated = LevelUpPipeline.applyLevelUp(char, request, resolver: _resolver);
-    _persistenceService.saveCharacter(updated).then((updatedRoster) {
-      if (mounted) {
-        setState(() {
-          _characterRoster = updatedRoster;
-          _character = updated;
-          _isSelectorView = false;
-          _recalculateStats();
-          _currentHp = _computedStats?.maxHp ?? 10;
-          _syncTabController();
-          _tabController.animateTo(0);
-        });
-      }
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${updated.name} is now Level ${updated.totalLevel}!')),
+  Widget _buildLevelUpFeatureBullet(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: Colors.purpleAccent.shade100),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text, style: const TextStyle(fontSize: 13, color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 }

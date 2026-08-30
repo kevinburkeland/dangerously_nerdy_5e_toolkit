@@ -111,26 +111,20 @@ void main() {
       expect(find.text('Live Sheet'), findsOneWidget);
       expect(find.text('Guided Builder'), findsOneWidget);
       expect(find.text('Inventory & Loot'), findsOneWidget);
-      expect(find.text('Level Up'), findsOneWidget);
+      expect(find.text('Level Up'), findsWidgets);
 
       // Vitals
       expect(find.text('ARMOR CLASS'), findsOneWidget);
-      expect(find.text('PROF BONUS'), findsOneWidget);
       expect(find.text('SPEED'), findsOneWidget);
+      expect(find.text('PB +2'), findsOneWidget);
 
-      // Saving Throws Card
-      expect(find.text('SAVING THROWS'), findsOneWidget);
+      // Ability Scores Ribbon
       expect(find.text('STR'), findsWidgets);
       expect(find.text('DEX'), findsWidgets);
       expect(find.text('CON'), findsWidgets);
 
-      // Skills Card
-      expect(find.text('SKILLS & PROFICIENCIES'), findsOneWidget);
-      expect(find.text('Athletics'), findsOneWidget);
-      expect(find.text('Stealth'), findsOneWidget);
-
-      // Switch Hero button exists in active header
-      expect(find.textContaining('Switch Hero'), findsOneWidget);
+      // Roster button exists in active header
+      expect(find.byKey(const Key('character_sheet_roster_button')), findsOneWidget);
     });
 
     testWidgets('Tapping Switch Hero in Live Sheet returns to Character Selector', (tester) async {
@@ -149,9 +143,9 @@ void main() {
       await tester.tap(openSheetBtn);
       await tester.pumpAndSettle();
 
-      // Tap Switch Hero
-      final switchHeroBtn = find.textContaining('Switch Hero');
-      await tester.tap(switchHeroBtn);
+      // Tap Roster
+      final rosterBtn = find.byKey(const Key('character_sheet_roster_button'));
+      await tester.tap(rosterBtn);
       await tester.pumpAndSettle();
 
       // Back to roster
@@ -190,7 +184,7 @@ void main() {
       expect(find.text('Valeros Ironclad'), findsOneWidget);
     });
 
-    testWidgets('Tapping a saving throw triggers roll feedback', (tester) async {
+    testWidgets('Tapping an ability score triggers roll feedback', (tester) async {
       tester.view.physicalSize = const Size(1200, 1600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -206,14 +200,14 @@ void main() {
       await tester.tap(openSheetBtn);
       await tester.pumpAndSettle();
 
-      // Tap STR saving throw tile
-      final strSaveTile = find.byKey(const ValueKey('save_tile_strength'));
-      await tester.tap(strSaveTile);
+      // Tap STR ability card
+      final strTile = find.text('STR').first;
+      await tester.tap(strTile);
       await tester.pump(const Duration(milliseconds: 500));
 
       // Verify SnackBar with roll result appeared
       expect(find.byType(SnackBar), findsOneWidget);
-      expect(find.textContaining('Saving Throw'), findsOneWidget);
+      expect(find.textContaining('Rolling STR Check'), findsOneWidget);
     });
 
     testWidgets('Switching to Guided Builder tab displays 8-step wizard', (tester) async {

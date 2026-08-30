@@ -9,10 +9,12 @@ import '../character_builder/level_up_wizard_dialog.dart';
 /// and interactive Inspiration toggle.
 class CharacterHeaderBanner extends StatelessWidget {
   final CharacterSheetController controller;
+  final VoidCallback? onSwitchHero;
 
   const CharacterHeaderBanner({
     super.key,
     required this.controller,
+    this.onSwitchHero,
   });
 
   @override
@@ -171,6 +173,45 @@ class CharacterHeaderBanner extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (onSwitchHero != null) ...[
+                          const SizedBox(width: 8),
+                          InkWell(
+                            key: const Key('character_sheet_roster_button'),
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              HapticService.selectionTick(context);
+                              onSwitchHero!();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: theme.colorScheme.secondary.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.groups_outlined,
+                                    size: 16,
+                                    color: theme.colorScheme.secondary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Roster',
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: theme.colorScheme.secondary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 4),
