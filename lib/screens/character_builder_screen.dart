@@ -24,6 +24,7 @@ import '../services/rules/level_up_pipeline.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
 import '../providers/settings_provider.dart';
+import '../widgets/common/formatted_markdown_text.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
 import '../widgets/glyphs/glyph_tokens.dart';
@@ -1652,31 +1653,53 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 const Divider(height: 16),
                 if (srdSpecies != null) ...[
                   Text('Species: ${srdSpecies.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-                  Text(srdSpecies.traitsMarkdown, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
+                  FormattedMarkdownText(
+                    srdSpecies.traitsMarkdown,
+                    boldColor: Colors.cyanAccent.shade100,
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 12),
                 ],
                 if (srdClass != null) ...[
                   Text('Class: ${srdClass.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent)),
-                  Text(srdClass.featuresMarkdown, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
+                  FormattedMarkdownText(
+                    srdClass.featuresMarkdown,
+                    boldColor: Colors.amberAccent.shade100,
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 12),
                 ],
                 if (srdBackground != null) ...[
                   Text('Background: ${srdBackground.name}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
-                  Text(srdBackground.descriptionMarkdown, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
+                  FormattedMarkdownText(
+                    srdBackground.descriptionMarkdown,
+                    boldColor: Colors.greenAccent.shade100,
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 12),
                 ],
                 if (char.feats.isNotEmpty) ...[
                   const Text('Active Feats:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+                  const SizedBox(height: 4),
                   ...char.feats.map((fRef) {
                     final featObj = SrdFeatsLibrary.findBySlug(fRef.slug);
                     return Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: 4, bottom: 6),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('• ${featObj?.name ?? fRef.displayName}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          if (featObj != null)
-                            Text(featObj.descriptionMarkdown, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+                          Text('• ${featObj?.name ?? fRef.displayName}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                          if (featObj != null) ...[
+                            const SizedBox(height: 2),
+                            FormattedMarkdownText(
+                              featObj.descriptionMarkdown,
+                              boldColor: Colors.purpleAccent.shade100,
+                              style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                            ),
+                          ],
                         ],
                       ),
                     );
@@ -2386,7 +2409,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   ],
                 ),
                 title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(feat.descriptionMarkdown, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: FormattedMarkdownText(
+                    feat.descriptionMarkdown,
+                    style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                  ),
+                ),
                 onTap: () {
                   HapticService.selectionTick(context);
                   setState(() => _selectedFeat = feat.id.slug);
