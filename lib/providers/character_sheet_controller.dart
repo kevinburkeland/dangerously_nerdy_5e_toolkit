@@ -5,6 +5,8 @@ import '../services/persistence/character_persistence_service.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
 
+import '../services/rules/character_progression_engine.dart';
+
 /// State controller for managing an active Character sheet, handling live stat recalculation,
 /// resource management, equipment/attunement toggles, and persistence.
 class CharacterSheetController extends ChangeNotifier {
@@ -44,6 +46,19 @@ class CharacterSheetController extends ChangeNotifier {
     _character = newCharacter;
     _recalculateStats();
     notifyListeners();
+  }
+
+  /// Advances character level via [CharacterProgressionEngine] and persists the result.
+  Future<void> applyLevelUp(LevelUpRequest request) async {
+    final updated = CharacterProgressionEngine.applyLevelUp(
+      _character,
+      request,
+      resolver: _resolver,
+    );
+    _character = updated;
+    _recalculateStats();
+    notifyListeners();
+    await _persist();
   }
 
   /// Persists the active character asynchronously.

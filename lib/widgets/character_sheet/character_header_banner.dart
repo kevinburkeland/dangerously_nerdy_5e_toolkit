@@ -3,6 +3,8 @@ import '../../providers/character_sheet_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 
+import '../character_builder/level_up_wizard_dialog.dart';
+
 /// Header banner displaying character identity, classes, species, level, background,
 /// and interactive Inspiration toggle.
 class CharacterHeaderBanner extends StatelessWidget {
@@ -122,6 +124,50 @@ class CharacterHeaderBanner extends StatelessWidget {
                             style: theme.textTheme.labelMedium?.copyWith(
                               color: theme.colorScheme.onPrimaryContainer,
                               fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Level Up Action Chip
+                        InkWell(
+                          key: const Key('character_sheet_level_up_button'),
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            HapticService.selectionTick(context);
+                            LevelUpWizardDialog.show(
+                              context,
+                              character: controller.character,
+                              onLevelUpApplied: (upgraded) {
+                                controller.setCharacter(upgraded);
+                              },
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.6),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.upgrade,
+                                  size: 16,
+                                  color: customColors?.critGold ?? Colors.amber,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Level Up',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: customColors?.critGold ?? Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

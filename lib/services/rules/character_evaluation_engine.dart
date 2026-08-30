@@ -333,16 +333,25 @@ class CharacterEvaluationEngine {
 
     // 5. HP, Speed, and Initiative
     var maxHp = 0;
-    for (final c in character.progression.classes) {
-      final sides = c.hitDieSides;
-      final conMod = abilityMods[AbilityType.constitution]!;
-      if (c.level > 0) {
-        // Level 1: max hit die + CON
-        maxHp += sides + conMod;
+    final conMod = abilityMods[AbilityType.constitution]!;
+    for (int i = 0; i < character.progression.classes.length; i++) {
+      final c = character.progression.classes[i];
+      if (c.isStartingClass || i == 0) {
+        // Starting class level 1 gets max hit die + CON
+        maxHp += c.hitDieSides + conMod;
         // Remaining levels
-        for (int i = 1; i < c.level; i++) {
-          final rolled = (i - 1 < c.hitPointsRolled.length)
-              ? c.hitPointsRolled[i - 1]
+        for (int l = 1; l < c.level; l++) {
+          final rolledIndex = l - 1;
+          final rolled = (rolledIndex < c.hitPointsRolled.length)
+              ? c.hitPointsRolled[rolledIndex]
+              : c.averageHpPerLevel;
+          maxHp += math.max(1, rolled + conMod);
+        }
+      } else {
+        // Multiclass slices: all levels gain rolled/average + CON
+        for (int l = 0; l < c.level; l++) {
+          final rolled = (l < c.hitPointsRolled.length)
+              ? c.hitPointsRolled[l]
               : c.averageHpPerLevel;
           maxHp += math.max(1, rolled + conMod);
         }
