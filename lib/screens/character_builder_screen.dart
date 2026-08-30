@@ -83,7 +83,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   Set<SkillType> _wizardSelectedSkills = {SkillType.athletics, SkillType.intimidation};
 
   // Ability Allocation Mode
-  String _abilityScoreMode = 'standard'; // 'standard', 'pointBuy', 'custom'
+  String _abilityScoreMode = 'standard'; // 'standard', 'pointBuy', 'rolled', 'manual'
+  String _rollMethod = 'standard_4d6'; // 'standard_4d6', 'classic_3d6_down', 'classic_3d6_nice', 'silly_d20'
   AbilityScores _wizardBaseScores = const AbilityScores.standardArray();
   final Map<AbilityType, int> _standardArrayPicks = {
     AbilityType.strength: 15,
@@ -93,6 +94,33 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     AbilityType.wisdom: 10,
     AbilityType.charisma: 8,
   };
+
+  // Rolled dice state
+  List<int> _rolledPool = [15, 14, 13, 12, 10, 8];
+  List<String> _rolledBreakdowns = [];
+  final Map<AbilityType, int> _rolledAssignments = {
+    AbilityType.strength: 15,
+    AbilityType.dexterity: 14,
+    AbilityType.constitution: 13,
+    AbilityType.intelligence: 12,
+    AbilityType.wisdom: 10,
+    AbilityType.charisma: 8,
+  };
+
+  // Manual / Enter Your Own picks
+  final Map<AbilityType, int> _manualPicks = {
+    AbilityType.strength: 10,
+    AbilityType.dexterity: 10,
+    AbilityType.constitution: 10,
+    AbilityType.intelligence: 10,
+    AbilityType.wisdom: 10,
+    AbilityType.charisma: 10,
+  };
+
+  // Lineage / Background Bonus Allocations
+  final Set<AbilityType> _variantHumanBonuses = {AbilityType.strength, AbilityType.constitution};
+  AbilityType _backgroundPrimaryBonus = AbilityType.strength; // +2 in 2024
+  AbilityType _backgroundSecondaryBonus = AbilityType.constitution; // +1 in 2024
 
   // Level Up Wizard State
   String _levelUpTargetClass = 'fighter';
@@ -1800,13 +1828,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   // TAB 2: GUIDED CHARACTER CREATION WIZARD (STEP-BY-STEP)
   // --------------------------------------------------------------------------
   Widget _buildGuidedBuilderTab(ThemeData theme) {
+    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
-    final isVariantHuman = _selectedSpecies == 'human-variant';
-    final hasFeatStep = is2024 || isVariantHuman;
+    final hasFeatStep = is2024 || curSpecies.grantsBonusFeat;
     final maxStepIndex = hasFeatStep ? 7 : 6;
 
     final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
-    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
     final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
     final allowedClassSkills = (curClass.customProperties['allowedSkills'] as List? ?? [])
         .map((s) => SkillType.values.firstWhere((st) => st.name == s.toString(), orElse: () => SkillType.athletics))
@@ -2046,8 +2073,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   setState(() {
                     _selectedSpecies = sp.id.slug;
                     final is2024 = _selectedRuleset == RulesetVersion.v2024;
-                    final isVariantHuman = _selectedSpecies == 'human-variant';
-                    final hasFeatStep = is2024 || isVariantHuman;
+                    final hasFeatStep = is2024 || sp.grantsBonusFeat;
                     final maxStepIndex = hasFeatStep ? 7 : 6;
                     if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
                   });
@@ -2244,6 +2270,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   Widget _buildStep4AbilityScores(ThemeData theme) {
     final pointBuyCost = CharacterFactory.calculatePointBuyCost(_wizardBaseScores);
     final pointsRemaining = 27 - pointBuyCost;
+    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
+    final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
+    final bonusScores = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
+    final is2014 = _selectedRuleset == RulesetVersion.v2014;
+    final flexibleCount = curSpecies.flexibleAbilityChoiceCount;
+    final flexibleBonusValue = curSpecies.flexibleAbilityBonusValue;
+    final hasFlexibleLineageBonus = is2014 && flexibleCount > 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2251,61 +2284,315 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Text('Step 5: Ability Score Allocation',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
         const SizedBox(height: 6),
-        const Text('Assign your 6 core attributes using Standard Array or Point Buy.',
-            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        const Text(
+          'Choose your attribute generation method (Standard Array, Point Buy, Dice Roll, or Manual Entry) and assign your lineage bonuses.',
+          style: TextStyle(fontSize: 12, color: Colors.white70),
+        ),
         const SizedBox(height: 12),
+
+        // Method Selector
         SegmentedButton<String>(
           segments: const [
-            ButtonSegment(value: 'standard', label: Text('Standard Array (15,14,13,12,10,8)')),
-            ButtonSegment(value: 'pointBuy', label: Text('Point Buy (27 pts)')),
+            ButtonSegment(value: 'standard', label: Text('Standard Array', style: TextStyle(fontSize: 10.5))),
+            ButtonSegment(value: 'pointBuy', label: Text('Point Buy', style: TextStyle(fontSize: 10.5))),
+            ButtonSegment(value: 'rolled', label: Text('Dice Roll', style: TextStyle(fontSize: 10.5))),
+            ButtonSegment(value: 'manual', label: Text('Enter Own', style: TextStyle(fontSize: 10.5))),
           ],
           selected: {_abilityScoreMode},
           onSelectionChanged: (set) {
             HapticService.selectionTick(context);
-            setState(() => _abilityScoreMode = set.first);
+            setState(() {
+              _abilityScoreMode = set.first;
+              if (_abilityScoreMode == 'manual') {
+                _syncManualToWizardScores();
+              } else if (_abilityScoreMode == 'rolled') {
+                if (_rolledPool.isEmpty) {
+                  _rollAbilityScores();
+                } else {
+                  _syncRolledToWizardScores();
+                }
+              } else if (_abilityScoreMode == 'standard') {
+                _wizardBaseScores = AbilityScores(
+                  strength: _standardArrayPicks[AbilityType.strength]!,
+                  dexterity: _standardArrayPicks[AbilityType.dexterity]!,
+                  constitution: _standardArrayPicks[AbilityType.constitution]!,
+                  intelligence: _standardArrayPicks[AbilityType.intelligence]!,
+                  wisdom: _standardArrayPicks[AbilityType.wisdom]!,
+                  charisma: _standardArrayPicks[AbilityType.charisma]!,
+                );
+              }
+            });
           },
         ),
         const SizedBox(height: 16),
+
+        // METHOD 1: POINT BUY
         if (_abilityScoreMode == 'pointBuy') ...[
-          Text('Points Remaining: $pointsRemaining / 27',
-              style: TextStyle(
-                color: pointsRemaining >= 0 ? Colors.greenAccent : Colors.redAccent,
-                fontWeight: FontWeight.bold,
-              )),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: pointsRemaining >= 0 ? Colors.green.shade900.withValues(alpha: 0.25) : Colors.red.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: pointsRemaining >= 0 ? Colors.greenAccent : Colors.redAccent, width: 0.8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Point Buy Pool (Cost: 8=0, 9=1, ..., 15=9):', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                Text(
+                  'Points Remaining: $pointsRemaining / 27',
+                  style: TextStyle(color: pointsRemaining >= 0 ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
           ...AbilityType.values.map((ab) {
             final score = _wizardBaseScores.getScore(ab);
             final mod = score.dndModifier;
             final modStr = mod >= 0 ? '+$mod' : '$mod';
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('${ab.name.toUpperCase()} ($modStr)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline, size: 20),
+                        onPressed: score > 8
+                            ? () {
+                                HapticService.selectionTick(context);
+                                setState(() => _wizardBaseScores = _adjustScore(_wizardBaseScores, ab, -1));
+                              }
+                            : null,
+                      ),
+                      Container(
+                        width: 36,
+                        alignment: Alignment.center,
+                        child: Text('$score', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline, size: 20),
+                        onPressed: score < 15
+                            ? () {
+                                HapticService.selectionTick(context);
+                                setState(() => _wizardBaseScores = _adjustScore(_wizardBaseScores, ab, 1));
+                              }
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+        ]
+
+        // METHOD 2: DICE ROLL
+        else if (_abilityScoreMode == 'rolled') ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${ab.name.toUpperCase()} ($modStr)', style: const TextStyle(fontWeight: FontWeight.bold)),
-                Row(
+                const Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: score > 8
-                          ? () {
-                              setState(() => _wizardBaseScores = _adjustScore(_wizardBaseScores, ab, -1));
-                            }
-                          : null,
+                    Icon(Icons.casino, color: Colors.purpleAccent, size: 18),
+                    SizedBox(width: 8),
+                    Text('Dice Rolling Method', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: _rollMethod,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'standard_4d6', child: Text('Standard Roll (4d6 drop lowest)')),
+                    DropdownMenuItem(value: 'classic_3d6_down', child: Text('Old School (3d6 down the line)')),
+                    DropdownMenuItem(value: 'classic_3d6_nice', child: Text('Old School (Nice) (3d6, assignable)')),
+                    DropdownMenuItem(value: 'silly_d20', child: Text('Silly, don\'t use this (1d20 per stat)')),
+                  ],
+                  onChanged: (v) {
+                    if (v == null) return;
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      _rollMethod = v;
+                      _rollAbilityScores();
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.casino_outlined, size: 16),
+                  label: const Text('Roll / Re-roll Dice'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple.shade800,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    HapticService.heavyImpact(context);
+                    _rollAbilityScores();
+                  },
+                ),
+                if (_rolledBreakdowns.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                    Text('$score', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: score < 15
-                          ? () {
-                              setState(() => _wizardBaseScores = _adjustScore(_wizardBaseScores, ab, 1));
-                            }
-                          : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _rolledBreakdowns
+                          .map((b) => Text(b, style: const TextStyle(fontSize: 11, color: Colors.purpleAccent)))
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (_rollMethod == 'classic_3d6_down') ...[
+            const Text(
+              '3d6 Down the Line: scores assigned strictly in sequence (STR, DEX, CON, INT, WIS, CHA):',
+              style: TextStyle(fontSize: 12, color: Colors.white70, fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 8),
+            ...AbilityType.values.map((ab) {
+              final score = _wizardBaseScores.getScore(ab);
+              final mod = score.dndModifier;
+              final modStr = mod >= 0 ? '+$mod' : '$mod';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${ab.name.toUpperCase()} ($modStr)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade900.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.purpleAccent, width: 0.8),
+                      ),
+                      child: Text('$score', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                     ),
                   ],
                 ),
-              ],
+              );
+            }),
+          ] else ...[
+            const Text(
+              'Assign your rolled scores to each ability:',
+              style: TextStyle(fontSize: 12, color: Colors.white70),
+            ),
+            const SizedBox(height: 8),
+            ...AbilityType.values.map((ab) {
+              final score = _rolledAssignments[ab] ?? _rolledPool.first;
+              final mod = score.dndModifier;
+              final modStr = mod >= 0 ? '+$mod' : '$mod';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${ab.name.toUpperCase()} ($modStr)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    DropdownButton<int>(
+                      value: score,
+                      items: _rolledPool.toSet().map((n) => DropdownMenuItem(value: n, child: Text('$n'))).toList(),
+                      onChanged: (v) {
+                        if (v == null) return;
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          _rolledAssignments[ab] = v;
+                          _syncRolledToWizardScores();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ]
+
+        // METHOD 3: ENTER YOUR OWN (MANUAL)
+        else if (_abilityScoreMode == 'manual') ...[
+          const Text(
+            'Enter your own custom attributes (3 to 30):',
+            style: TextStyle(fontSize: 12, color: Colors.white70),
+          ),
+          const SizedBox(height: 10),
+          ...AbilityType.values.map((ab) {
+            final score = _manualPicks[ab] ?? 10;
+            final mod = score.dndModifier;
+            final modStr = mod >= 0 ? '+$mod' : '$mod';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('${ab.name.toUpperCase()} ($modStr)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline, size: 20),
+                        onPressed: score > 3
+                            ? () {
+                                HapticService.selectionTick(context);
+                                setState(() {
+                                  _manualPicks[ab] = score - 1;
+                                  _syncManualToWizardScores();
+                                });
+                              }
+                            : null,
+                      ),
+                      Container(
+                        width: 36,
+                        alignment: Alignment.center,
+                        child: Text('$score', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline, size: 20),
+                        onPressed: score < 30
+                            ? () {
+                                HapticService.selectionTick(context);
+                                setState(() {
+                                  _manualPicks[ab] = score + 1;
+                                  _syncManualToWizardScores();
+                                });
+                              }
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             );
           }),
-        ] else ...[
+        ]
+
+        // METHOD 4: STANDARD ARRAY
+        else ...[
+          const Text(
+            'Assign the standard array values (15, 14, 13, 12, 10, 8) to your attributes:',
+            style: TextStyle(fontSize: 12, color: Colors.white70),
+          ),
+          const SizedBox(height: 10),
           ...AbilityType.values.map((ab) {
             final score = _standardArrayPicks[ab] ?? 10;
             final mod = score.dndModifier;
@@ -2341,11 +2628,217 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             );
           }),
         ],
+
+        const SizedBox(height: 16),
+
+        // LINEAGE / BACKGROUND BONUS SECTION
+        if (hasFlexibleLineageBonus) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.cyan.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.stars, color: Colors.cyanAccent, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${curSpecies.name} Lineage Bonus (+$flexibleBonusValue to $flexibleCount Score${flexibleCount > 1 ? 's' : ''})',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent, fontSize: 13),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Select $flexibleCount different ability score${flexibleCount > 1 ? 's' : ''} to receive a +$flexibleBonusValue bonus:',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: AbilityType.values.map((ab) {
+                    final isSelected = _variantHumanBonuses.contains(ab);
+                    return FilterChip(
+                      label: Text('${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
+                      selected: isSelected,
+                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                      checkmarkColor: Colors.cyanAccent,
+                      onSelected: (selected) {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          if (selected) {
+                            if (_variantHumanBonuses.length >= flexibleCount) {
+                              _variantHumanBonuses.remove(_variantHumanBonuses.first);
+                            }
+                            _variantHumanBonuses.add(ab);
+                          } else {
+                            if (_variantHumanBonuses.length > 1) {
+                              _variantHumanBonuses.remove(ab);
+                            }
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ] else if (!is2014) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.workspace_premium, color: Colors.amberAccent, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Background Ability Score Bonus (+2 / +1)',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent, fontSize: 13),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  '2024 rules grant a +2 bonus to your primary attribute and +1 to your secondary attribute:',
+                  style: TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<AbilityType>(
+                        initialValue: _backgroundPrimaryBonus,
+                        decoration: const InputDecoration(
+                          labelText: '+2 Primary Bonus',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: AbilityType.values
+                            .map((ab) => DropdownMenuItem(value: ab, child: Text('${ab.name.toUpperCase()} (+2)')))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v == null) return;
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            _backgroundPrimaryBonus = v;
+                            if (_backgroundSecondaryBonus == v) {
+                              _backgroundSecondaryBonus = AbilityType.values.firstWhere((a) => a != v);
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<AbilityType>(
+                        initialValue: _backgroundSecondaryBonus,
+                        decoration: const InputDecoration(
+                          labelText: '+1 Secondary Bonus',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: AbilityType.values
+                            .map((ab) => DropdownMenuItem(value: ab, child: Text('${ab.name.toUpperCase()} (+1)')))
+                            .toList(),
+                        onChanged: (v) {
+                          if (v == null) return;
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            _backgroundSecondaryBonus = v;
+                            if (_backgroundPrimaryBonus == v) {
+                              _backgroundPrimaryBonus = AbilityType.values.firstWhere((a) => a != v);
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.cyanAccent, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '2014 Species Racial Bonus: ${curSpecies.abilityScoreSummary}',
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 16),
+
+        // FINAL COMPUTED STATS PREVIEW TABLE
+        Card(
+          color: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'FINAL STARTING ATTRIBUTES PREVIEW',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.1, color: Colors.cyanAccent),
+                ),
+                const Divider(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: AbilityType.values.map((ab) {
+                    final base = _wizardBaseScores.getScore(ab);
+                    final bonus = bonusScores.getScore(ab);
+                    final total = base + bonus;
+                    final mod = total.dndModifier;
+                    final modStr = mod >= 0 ? '+$mod' : '$mod';
+                    return Column(
+                      children: [
+                        Text(ab.name.toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.white60, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 2),
+                        Text('$total', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                        Text(modStr, style: const TextStyle(fontSize: 11, color: Colors.cyanAccent, fontWeight: FontWeight.bold)),
+                        if (bonus > 0)
+                          Text('+$bonus bonus', style: const TextStyle(fontSize: 8.5, color: Colors.amberAccent)),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildStep5Feats(ThemeData theme) {
+    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final availableFeats = is2024
         ? SrdFeatsLibrary.getOriginFeats()
@@ -2357,14 +2850,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Text(
           is2024
               ? 'Step 6: Origin Feat'
-              : 'Step 6: Variant Human Bonus Feat (2014 Optional)',
+              : 'Step 6: ${curSpecies.name} Bonus Feat',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
         ),
         const SizedBox(height: 6),
         Text(
           is2024
               ? 'Choose your 1st-level origin feat granted by your 2024 background.'
-              : 'As a Variant Human, choose your 1st-level bonus feat from the 2014 SRD Feat Library.',
+              : 'As a ${curSpecies.name}, choose your 1st-level bonus feat from the 2014 SRD Feat Library.',
           style: const TextStyle(fontSize: 12, color: Colors.white70),
         ),
         const SizedBox(height: 12),
@@ -2383,39 +2876,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             child: Material(
               color: Colors.transparent,
               child: ListTile(
-                leading: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Colors.purpleAccent : Colors.white54,
-                    ),
-                    const SizedBox(width: 8),
-                    RepaintBoundary(
-                      child: SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: DndGlyph.feat(
-                            category: feat.category == 'Origin' ? FeatCategory.origin : FeatCategory.general,
-                            featId: feat.id.slug,
-                            size: 32,
-                            isDarkMode: true,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
                 title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: FormattedMarkdownText(
-                    feat.descriptionMarkdown,
-                    style: const TextStyle(fontSize: 11.5, color: Colors.white70),
-                  ),
+                subtitle: FormattedMarkdownText(
+                  feat.descriptionMarkdown,
+                  style: const TextStyle(fontSize: 11.5, color: Colors.white70),
                 ),
+                trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.purpleAccent) : null,
                 onTap: () {
                   HapticService.selectionTick(context);
                   setState(() => _selectedFeat = feat.id.slug);
@@ -2435,48 +2901,53 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Text('Step ${hasFeatStep ? 7 : 6}: Starting Equipment Preset',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
         const SizedBox(height: 6),
-        const Text('Choose your starting loadout package based on your class proficiencies.',
+        const Text('Choose an equipment loadout package tailored for your class.',
             style: TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
         _buildEquipmentPresetOption(
           id: 'chain_and_sword',
-          title: 'Heavy Knight Loadout',
-          subtitle: 'Chain Mail (AC 16), Longsword (1d8), Shield (+2 AC)',
+          title: 'Heavy Knight: Chain Mail & Longsword + Shield',
+          subtitle: 'Heavy armor (AC 16) + Versatile longsword + Shield (+2 AC) for front-line defenders.',
+          icon: Icons.shield,
         ),
         _buildEquipmentPresetOption(
           id: 'medium_skirmisher',
-          title: 'Medium Skirmisher Loadout',
-          subtitle: 'Breastplate (AC 14+DEX), Greatsword (2d6), Potion of Healing',
+          title: 'Medium Skirmisher: Breastplate & Greatsword + Potion',
+          subtitle: 'Medium armor (AC 14+Dex) + Heavy two-handed greatsword (2d6) + Potion of Healing.',
+          icon: Icons.sports_kabaddi,
         ),
         _buildEquipmentPresetOption(
           id: 'light_scout',
-          title: 'Light Scout Loadout',
-          subtitle: 'Leather Armor (AC 11+DEX), Shortsword (1d6), Longbow (1d8)',
+          title: 'Light Scout: Leather Armor & Shortsword + Longbow',
+          subtitle: 'Light armor + Finesse shortsword + 150/600 ft ranged Longbow for agile stealth combatants.',
+          icon: Icons.track_changes,
         ),
       ],
     );
   }
 
-  Widget _buildEquipmentPresetOption({required String id, required String title, required String subtitle}) {
+  Widget _buildEquipmentPresetOption({
+    required String id,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
     final isSelected = _selectedStartingEquipmentPreset == id;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.amber.shade900.withValues(alpha: 0.3) : Colors.black26,
+        color: isSelected ? Colors.cyan.shade900.withValues(alpha: 0.3) : Colors.black26,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isSelected ? Colors.amberAccent : Colors.white12,
+          color: isSelected ? Colors.cyanAccent : Colors.white12,
           width: isSelected ? 1.5 : 1.0,
         ),
       ),
       child: Material(
         color: Colors.transparent,
         child: ListTile(
-          leading: Icon(
-            isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-            color: isSelected ? Colors.amberAccent : Colors.white54,
-          ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          leading: Icon(icon, color: isSelected ? Colors.cyanAccent : Colors.white54),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           subtitle: Text(subtitle, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
           onTap: () {
             HapticService.selectionTick(context);
@@ -2490,8 +2961,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   Widget _buildStep7Review(ThemeData theme, Race sp, CharacterClass cls, Background bg) {
     final name = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
-    final isVariantHuman = _selectedSpecies == 'human-variant';
-    final hasFeat = is2024 || isVariantHuman;
+    final hasFeat = is2024 || sp.grantsBonusFeat;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2535,6 +3005,127 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         return scores.copyWith(wisdom: scores.wisdom + delta);
       case AbilityType.charisma:
         return scores.copyWith(charisma: scores.charisma + delta);
+    }
+  }
+
+  void _rollAbilityScores() {
+    final rand = math.Random();
+    final newPool = <int>[];
+    final newBreakdowns = <String>[];
+
+    if (_rollMethod == 'standard_4d6') {
+      for (int i = 0; i < 6; i++) {
+        final dice = List.generate(4, (_) => rand.nextInt(6) + 1)..sort();
+        final dropped = dice.first;
+        final kept = dice.sublist(1);
+        final total = kept.reduce((a, b) => a + b);
+        newPool.add(total);
+        newBreakdowns.add('4d6 (drop $dropped): [${kept.join(", ")}] => $total');
+      }
+    } else if (_rollMethod == 'classic_3d6_down' || _rollMethod == 'classic_3d6_nice') {
+      for (int i = 0; i < 6; i++) {
+        final dice = List.generate(3, (_) => rand.nextInt(6) + 1);
+        final total = dice.reduce((a, b) => a + b);
+        newPool.add(total);
+        newBreakdowns.add('3d6: [${dice.join(", ")}] => $total');
+      }
+    } else if (_rollMethod == 'silly_d20') {
+      for (int i = 0; i < 6; i++) {
+        final d20 = rand.nextInt(20) + 1;
+        newPool.add(d20);
+        newBreakdowns.add('1d20 Chaos: => $d20');
+      }
+    }
+
+    setState(() {
+      _rolledPool = newPool;
+      _rolledBreakdowns = newBreakdowns;
+      if (_rollMethod == 'classic_3d6_down') {
+        _rolledAssignments[AbilityType.strength] = newPool[0];
+        _rolledAssignments[AbilityType.dexterity] = newPool[1];
+        _rolledAssignments[AbilityType.constitution] = newPool[2];
+        _rolledAssignments[AbilityType.intelligence] = newPool[3];
+        _rolledAssignments[AbilityType.wisdom] = newPool[4];
+        _rolledAssignments[AbilityType.charisma] = newPool[5];
+        _wizardBaseScores = AbilityScores(
+          strength: newPool[0],
+          dexterity: newPool[1],
+          constitution: newPool[2],
+          intelligence: newPool[3],
+          wisdom: newPool[4],
+          charisma: newPool[5],
+        );
+      } else {
+        for (int i = 0; i < AbilityType.values.length; i++) {
+          _rolledAssignments[AbilityType.values[i]] = newPool[i];
+        }
+        _syncRolledToWizardScores();
+      }
+    });
+  }
+
+  void _syncRolledToWizardScores() {
+    _wizardBaseScores = AbilityScores(
+      strength: _rolledAssignments[AbilityType.strength] ?? 10,
+      dexterity: _rolledAssignments[AbilityType.dexterity] ?? 10,
+      constitution: _rolledAssignments[AbilityType.constitution] ?? 10,
+      intelligence: _rolledAssignments[AbilityType.intelligence] ?? 10,
+      wisdom: _rolledAssignments[AbilityType.wisdom] ?? 10,
+      charisma: _rolledAssignments[AbilityType.charisma] ?? 10,
+    );
+  }
+
+  void _syncManualToWizardScores() {
+    _wizardBaseScores = AbilityScores(
+      strength: _manualPicks[AbilityType.strength] ?? 10,
+      dexterity: _manualPicks[AbilityType.dexterity] ?? 10,
+      constitution: _manualPicks[AbilityType.constitution] ?? 10,
+      intelligence: _manualPicks[AbilityType.intelligence] ?? 10,
+      wisdom: _manualPicks[AbilityType.wisdom] ?? 10,
+      charisma: _manualPicks[AbilityType.charisma] ?? 10,
+    );
+  }
+
+  AbilityScores _calculateBonusScores(Race curSpecies, Background curBackground, RulesetVersion ruleset) {
+    if (ruleset == RulesetVersion.v2014) {
+      final fixed = curSpecies.fixedAbilityBonuses2014;
+      final flexibleCount = curSpecies.flexibleAbilityChoiceCount;
+      final flexibleBonus = curSpecies.flexibleAbilityBonusValue;
+
+      int str = fixed['strength'] ?? 0;
+      int dex = fixed['dexterity'] ?? 0;
+      int con = fixed['constitution'] ?? 0;
+      int intl = fixed['intelligence'] ?? 0;
+      int wis = fixed['wisdom'] ?? 0;
+      int cha = fixed['charisma'] ?? 0;
+
+      if (flexibleCount > 0) {
+        if (_variantHumanBonuses.contains(AbilityType.strength)) str += flexibleBonus;
+        if (_variantHumanBonuses.contains(AbilityType.dexterity)) dex += flexibleBonus;
+        if (_variantHumanBonuses.contains(AbilityType.constitution)) con += flexibleBonus;
+        if (_variantHumanBonuses.contains(AbilityType.intelligence)) intl += flexibleBonus;
+        if (_variantHumanBonuses.contains(AbilityType.wisdom)) wis += flexibleBonus;
+        if (_variantHumanBonuses.contains(AbilityType.charisma)) cha += flexibleBonus;
+      }
+
+      return AbilityScores(
+        strength: str,
+        dexterity: dex,
+        constitution: con,
+        intelligence: intl,
+        wisdom: wis,
+        charisma: cha,
+      );
+    } else {
+      // 2024 rules: +2 to chosen primary, +1 to secondary
+      return AbilityScores(
+        strength: (_backgroundPrimaryBonus == AbilityType.strength ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.strength ? 1 : 0),
+        dexterity: (_backgroundPrimaryBonus == AbilityType.dexterity ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.dexterity ? 1 : 0),
+        constitution: (_backgroundPrimaryBonus == AbilityType.constitution ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.constitution ? 1 : 0),
+        intelligence: (_backgroundPrimaryBonus == AbilityType.intelligence ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.intelligence ? 1 : 0),
+        wisdom: (_backgroundPrimaryBonus == AbilityType.wisdom ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.wisdom ? 1 : 0),
+        charisma: (_backgroundPrimaryBonus == AbilityType.charisma ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.charisma ? 1 : 0),
+      );
     }
   }
 
@@ -2618,8 +3209,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     }
 
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
-    final isVariantHuman = curSpecies.id.slug == 'human-variant';
-    final hasFeat = is2024 || isVariantHuman;
+    final hasFeat = is2024 || curSpecies.grantsBonusFeat;
+    final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
 
     final request = CharacterCreationRequest(
       characterName: _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim(),
@@ -2638,7 +3229,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       startingClassDisplayName: curClass.name,
       startingClassHitDie: curClass.hitDie,
       baseScores: _wizardBaseScores,
-      bonusScores: const AbilityScores(strength: 2, constitution: 1),
+      bonusScores: calculatedBonuses,
       savingThrowProficiencies: saveProficiencies,
       skillProficiencies: skillMap,
       originFeats: [

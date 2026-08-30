@@ -185,6 +185,72 @@ class Race extends DomainEntity {
   @override
   EntityType get entityType => EntityType.species;
 
+  /// Returns whether this race / lineage grants a starting bonus feat in 2014 (e.g. Variant Human, Custom Lineage, or homebrew).
+  bool get grantsBonusFeat {
+    if (id.slug == 'human-variant' || id.slug == 'custom-lineage') return true;
+    if (customProperties['isVariantHuman'] == true) return true;
+    if (customProperties['isCustomLineage'] == true) return true;
+    final featCount = customProperties['bonusFeatCount'];
+    if (featCount is num && featCount > 0) return true;
+    return false;
+  }
+
+  /// Number of flexible ability score increases player can choose (e.g. 2 for Variant Human, 1 for Custom Lineage).
+  int get flexibleAbilityChoiceCount {
+    if (customProperties['abilityChoiceCount'] is num) {
+      return (customProperties['abilityChoiceCount'] as num).toInt();
+    }
+    if (customProperties['flexibleAbilityCount'] is num) {
+      return (customProperties['flexibleAbilityCount'] as num).toInt();
+    }
+    if (id.slug == 'human-variant' || customProperties['isVariantHuman'] == true) {
+      return 2;
+    }
+    if (id.slug == 'custom-lineage' || customProperties['isCustomLineage'] == true) {
+      return 1;
+    }
+    return 0;
+  }
+
+  /// The bonus value added to each chosen flexible ability score (default 1, or 2 for Custom Lineage).
+  int get flexibleAbilityBonusValue {
+    if (customProperties['abilityChoiceBonus'] is num) {
+      return (customProperties['abilityChoiceBonus'] as num).toInt();
+    }
+    if (customProperties['flexibleAbilityBonus'] is num) {
+      return (customProperties['flexibleAbilityBonus'] as num).toInt();
+    }
+    if (id.slug == 'custom-lineage' || customProperties['isCustomLineage'] == true) {
+      return 2;
+    }
+    return 1;
+  }
+
+  /// Fixed ability score bonuses granted in 2014 rules (e.g. +2 DEX for Elf, +2 CON for Dwarf, +1 to all for Human).
+  Map<String, int> get fixedAbilityBonuses2014 {
+    final raw = customProperties['abilityBonuses2014'] ?? customProperties['abilityBonuses'];
+    if (raw is Map) {
+      final result = <String, int>{};
+      raw.forEach((k, v) {
+        if (v is num) {
+          result[k.toString().toLowerCase()] = v.toInt();
+        }
+      });
+      return result;
+    }
+    if (id.slug == 'human') {
+      return const {
+        'strength': 1,
+        'dexterity': 1,
+        'constitution': 1,
+        'intelligence': 1,
+        'wisdom': 1,
+        'charisma': 1,
+      };
+    }
+    return const {};
+  }
+
   /// Returns the base movement speed formatted for the selected rules edition.
   String getSpeedForEdition(DmRulesEdition edition) {
     if (edition == DmRulesEdition.v2014) {

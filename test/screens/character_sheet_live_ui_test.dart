@@ -435,7 +435,7 @@ void main() {
       // Step 5 -> Step 6 (Variant Human Feat)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 6: Variant Human Bonus Feat (2014 Optional)'), findsOneWidget);
+      expect(find.text('Step 6: Human (Variant) Bonus Feat'), findsOneWidget);
 
       // Step 6 -> Step 7 (Equipment)
       await tester.tap(find.text('Next Step'));

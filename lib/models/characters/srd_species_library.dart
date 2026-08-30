@@ -46,6 +46,31 @@ class SrdSpeciesLibrary {
       'bonusSkillCount': 1,
       'bonusFeatCount': 1,
       'abilityChoiceCount': 2,
+      'abilityChoiceBonus': 1,
+    },
+  );
+
+  static final Race customLineage = Race(
+    id: const EntityId(slug: 'custom-lineage', ruleset: RulesetVersion.v2014),
+    name: 'Custom Lineage',
+    size: 'Medium or Small',
+    speed: '30 ft.',
+    abilityScoreSummary: '+2 to One Score, 1 Feat, Darkvision or 1 Skill (Lineage / Homebrew)',
+    traitsMarkdown:
+        '**Creature Type.** You are a Humanoid.\n\n'
+        '**Size.** You are Medium or Small (your choice).\n\n'
+        '**Speed.** Your base walking speed is 30 feet.\n\n'
+        '**Ability Score Increase.** One ability score of your choice increases by 2.\n\n'
+        '**Feat.** You gain one Feat of your choice from the Feat library.\n\n'
+        '**Variable Trait.** You gain Darkvision with a range of 60 feet or proficiency in one skill of your choice.',
+    customProperties: const {
+      'hasDarkvision': true,
+      'darkvisionFeet': 60,
+      'isCustomLineage': true,
+      'bonusSkillCount': 1,
+      'bonusFeatCount': 1,
+      'abilityChoiceCount': 1,
+      'abilityChoiceBonus': 2,
     },
   );
 
@@ -239,6 +264,7 @@ class SrdSpeciesLibrary {
   static final List<Race> _baseSpecies = [
     human,
     humanVariant,
+    customLineage,
     elf,
     dwarf,
     halfling,
@@ -273,7 +299,7 @@ class SrdSpeciesLibrary {
   static List<Race> getSpeciesForRuleset(RulesetVersion ruleset) {
     if (ruleset == RulesetVersion.v2024) {
       // In 2024, standard Human is used (Resourceful, Skillful, Versatile)
-      return allSpecies.where((r) => r.id.slug != 'human-variant').toList();
+      return allSpecies.where((r) => r.id.slug != 'human-variant' && r.id.slug != 'custom-lineage').toList();
     }
     return allSpecies;
   }
