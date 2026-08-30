@@ -249,6 +249,12 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                 icon: Icons.add_circle_outline,
                 color: Colors.greenAccent,
               ),
+              if (analysis.srdDuplicateCount > 0)
+                _buildMetricChip(
+                  label: '${analysis.srdDuplicateCount} SRD Built-in (Excluded)',
+                  icon: Icons.shield_outlined,
+                  color: Colors.cyanAccent,
+                ),
               _buildMetricChip(
                 label: '${analysis.identicalCount} Already in Library',
                 icon: Icons.check_circle_outline,
@@ -340,6 +346,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
   Widget _buildItemTile<T extends DomainEntity>(ImportAnalysisItem<T> item) {
     final isCollision = item.disposition == ImportDisposition.collision;
     final isIdentical = item.disposition == ImportDisposition.identical;
+    final isSrd = item.isSrdCanon;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -347,14 +354,18 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
       decoration: BoxDecoration(
         color: isCollision
             ? Colors.amberAccent.withValues(alpha: 0.08)
-            : isIdentical
-                ? Colors.white.withValues(alpha: 0.02)
-                : Colors.white.withValues(alpha: 0.05),
+            : isSrd
+                ? Colors.cyanAccent.withValues(alpha: 0.04)
+                : isIdentical
+                    ? Colors.white.withValues(alpha: 0.02)
+                    : Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isCollision
               ? Colors.amberAccent.withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.08),
+              : isSrd
+                  ? Colors.cyanAccent.withValues(alpha: 0.2)
+                  : Colors.white.withValues(alpha: 0.08),
         ),
       ),
       child: Column(
@@ -375,11 +386,13 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
-                    color: isIdentical ? Colors.white54 : Colors.white,
+                    color: isIdentical || isSrd ? Colors.white54 : Colors.white,
                   ),
                 ),
               ),
-              if (item.disposition == ImportDisposition.novel)
+              if (isSrd)
+                _buildBadge('SRD BUILT-IN', Colors.cyanAccent)
+              else if (item.disposition == ImportDisposition.novel)
                 _buildBadge('NEW', Colors.greenAccent)
               else if (isIdentical)
                 _buildBadge('IDENTICAL', Colors.grey)

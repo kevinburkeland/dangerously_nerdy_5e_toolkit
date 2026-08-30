@@ -11,6 +11,51 @@ void main() {
       index.build();
     });
 
+    test('correctly identifies canonical SRD spells', () {
+      expect(
+        index.checkEntity(slug: 'fireball', name: 'Fireball', type: EntityType.spell),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'magic-missile-phb', name: 'Magic Missile', type: EntityType.spell),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'void-blast', name: 'Void Blast', type: EntityType.spell),
+        equals(SrdMatchResult.notSrd),
+      );
+    });
+
+    test('correctly identifies canonical SRD monsters', () {
+      expect(
+        index.checkEntity(slug: 'goblin', name: 'Goblin', type: EntityType.monster),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'ancient-red-dragon-mm', name: 'Ancient Red Dragon', type: EntityType.monster),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'void-crawler', name: 'Void Crawler', type: EntityType.monster),
+        equals(SrdMatchResult.notSrd),
+      );
+    });
+
+    test('correctly identifies canonical SRD equipment and magic items', () {
+      expect(
+        index.checkEntity(slug: 'potion-of-healing', name: 'Potion of Healing', type: EntityType.equipment),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'longsword-dmg', name: 'Longsword', type: EntityType.equipment),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'ring-of-the-void', name: 'Ring of the Void', type: EntityType.equipment),
+        equals(SrdMatchResult.notSrd),
+      );
+    });
+
     test('correctly identifies canonical SRD classes', () {
       expect(
         index.checkEntity(slug: 'fighter', name: 'Fighter', type: EntityType.classDefinition),
@@ -26,13 +71,21 @@ void main() {
       );
     });
 
-    test('correctly identifies canonical SRD species and feats', () {
+    test('correctly identifies canonical SRD species, feats, and backgrounds', () {
       expect(
         index.checkEntity(slug: 'human', name: 'Human', type: EntityType.species),
         equals(SrdMatchResult.exactSrdMatch),
       );
       expect(
+        index.checkEntity(slug: 'high-elf', name: 'High Elf', type: EntityType.species),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
         index.checkEntity(slug: 'alert', name: 'Alert', type: EntityType.feat),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'acolyte', name: 'Acolyte', type: EntityType.background),
         equals(SrdMatchResult.exactSrdMatch),
       );
       expect(
@@ -41,16 +94,11 @@ void main() {
       );
     });
 
-    test('detects SRD name variants with non-canonical slugs', () {
-      expect(
-        index.checkEntity(slug: 'custom-fighter', name: 'Fighter', type: EntityType.classDefinition),
-        equals(SrdMatchResult.srdVariantAdditive),
-      );
-    });
-
-    test('isCanonSrd returns true for exact canonical SRD slugs', () {
+    test('isCanonSrd returns true for exact canonical SRD slugs and stripped slugs', () {
       expect(index.isCanonSrd('rogue', EntityType.classDefinition), isTrue);
+      expect(index.isCanonSrd('rogue-phb', EntityType.classDefinition), isTrue);
       expect(index.isCanonSrd('custom-rogue', EntityType.classDefinition), isFalse);
+      expect(index.isCanonSrd('custom-rogue', EntityType.classDefinition, name: 'Rogue'), isTrue);
     });
   });
 }

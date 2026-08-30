@@ -4,12 +4,13 @@ import '../../models/domain/entity_reference.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import 'srd_equivalence_index.dart';
 
 /// Disposition category for an incoming entity during bundle analysis.
 enum ImportDisposition {
-  novel, // Brand new entity (does not exist locally)
-  identical, // Exactly identical to an existing local entity
-  collision, // Shares an ID/slug with local entity, but content differs
+  novel, // Brand new custom homebrew entity (does not exist locally or in SRD)
+  identical, // Exactly identical to an existing local entity or canonical SRD entry
+  collision, // Shares an ID/slug with a local entity, but custom content differs
 }
 
 /// Action to perform when a collision is detected.
@@ -27,6 +28,7 @@ class ImportAnalysisItem<T extends DomainEntity> {
   CollisionResolution resolution;
   bool isSelected;
   final String diffSummary;
+  final bool isSrdCanon;
 
   ImportAnalysisItem({
     required this.incomingEntity,
@@ -35,14 +37,15 @@ class ImportAnalysisItem<T extends DomainEntity> {
     this.resolution = CollisionResolution.overwrite,
     bool? isSelected,
     this.diffSummary = '',
-  }) : isSelected = isSelected ?? (disposition != ImportDisposition.identical);
+    this.isSrdCanon = false,
+  }) : isSelected = isSelected ?? (disposition != ImportDisposition.identical && !isSrdCanon);
 
   String get displayName => incomingEntity.name;
   String get slug => incomingEntity.id.slug;
   EntityType get entityType => incomingEntity.entityType;
 }
 
-/// Comprehensive analysis result of analyzing an incoming HomebrewBundle against local libraries.
+/// Comprehensive analysis result of analyzing an incoming HomebrewBundle against local libraries & SRD canon.
 class ImportAnalysisResult {
   final List<ImportAnalysisItem<Spell>> spells;
   final List<ImportAnalysisItem<Monster>> monsters;
@@ -81,8 +84,9 @@ class ImportAnalysisResult {
       ];
 
   int get totalIncoming => allItems.length;
-  int get novelCount => allItems.where((i) => i.disposition == ImportDisposition.novel).length;
-  int get identicalCount => allItems.where((i) => i.disposition == ImportDisposition.identical).length;
+  int get novelCount => allItems.where((i) => i.disposition == ImportDisposition.novel && !i.isSrdCanon).length;
+  int get identicalCount => allItems.where((i) => i.disposition == ImportDisposition.identical && !i.isSrdCanon).length;
+  int get srdDuplicateCount => allItems.where((i) => i.isSrdCanon).length;
   int get collisionCount => allItems.where((i) => i.disposition == ImportDisposition.collision).length;
   int get selectedCount => allItems.where((i) => i.isSelected).length;
 
@@ -100,11 +104,11 @@ class ImportAnalysisResult {
 }
 
 /// Deduplication & Conflict Detection Engine.
-/// Compares incoming bundle entities against existing local storage records.
+/// Compares incoming bundle entities against canonical SRD index and existing local storage records.
 class HomebrewMergeResolver {
   const HomebrewMergeResolver();
 
-  /// Analyzes an incoming [HomebrewBundle] against current local homebrew data collections.
+  /// Analyzes an incoming [HomebrewBundle] against current local homebrew data collections and canonical SRD entries.
   ImportAnalysisResult analyzeBundle({
     required HomebrewBundle incomingBundle,
     List<Spell> localSpells = const [],
@@ -117,50 +121,78 @@ class HomebrewMergeResolver {
     List<Background> localBackgrounds = const [],
     List<HomebrewCompendiumEntry> localOtherEntries = const [],
   }) {
+    final srdIndex = SrdEquivalenceIndex();
+
     final spellItems = _analyzeCategory<Spell>(
       incoming: incomingBundle.spells,
       local: localSpells,
+      srdIndex: srdIndex,
     );
 
     final monsterItems = _analyzeCategory<Monster>(
       incoming: incomingBundle.monsters,
       local: localMonsters,
+      srdIndex: srdIndex,
     );
 
     final equipmentItems = _analyzeCategory<EquipmentItem>(
       incoming: incomingBundle.items,
       local: localItems,
+      srdIndex: srdIndex,
     );
 
     final classItems = _analyzeCategory<CharacterClass>(
       incoming: incomingBundle.classes,
       local: localClasses,
+      srdIndex: srdIndex,
     );
 
     final subclassItems = _analyzeCategory<Subclass>(
       incoming: incomingBundle.subclasses,
       local: localSubclasses,
+      srdIndex: srdIndex,
     );
 
     final raceItems = _analyzeCategory<Race>(
       incoming: incomingBundle.races,
       local: localRaces,
+      srdIndex: srdIndex,
     );
 
     final featItems = _analyzeCategory<Feat>(
       incoming: incomingBundle.feats,
       local: localFeats,
+      srdIndex: srdIndex,
     );
 
     final backgroundItems = _analyzeCategory<Background>(
       incoming: incomingBundle.backgrounds,
       local: localBackgrounds,
+      srdIndex: srdIndex,
     );
 
     final otherItems = _analyzeCategory<HomebrewCompendiumEntry>(
       incoming: incomingBundle.otherEntries,
       local: localOtherEntries,
+      srdIndex: srdIndex,
     );
+
+    final warnings = <String>[];
+    final allAnalyzed = [
+      ...spellItems,
+      ...monsterItems,
+      ...equipmentItems,
+      ...classItems,
+      ...subclassItems,
+      ...raceItems,
+      ...featItems,
+      ...backgroundItems,
+      ...otherItems,
+    ];
+    final srdCount = allAnalyzed.where((i) => i.isSrdCanon).length;
+    if (srdCount > 0) {
+      warnings.add('$srdCount canonical SRD entities detected and excluded to prevent duplicate content.');
+    }
 
     return ImportAnalysisResult(
       spells: spellItems,
@@ -172,25 +204,48 @@ class HomebrewMergeResolver {
       feats: featItems,
       backgrounds: backgroundItems,
       otherEntries: otherItems,
+      warnings: warnings,
     );
   }
 
   List<ImportAnalysisItem<T>> _analyzeCategory<T extends DomainEntity>({
     required List<T> incoming,
     required List<T> local,
+    required SrdEquivalenceIndex srdIndex,
   }) {
     final results = <ImportAnalysisItem<T>>[];
     final localMap = <String, T>{};
     for (final l in local) {
       localMap['${l.id.slug}_${l.id.ruleset.name}'] = l;
+      localMap[l.id.slug] = l;
     }
 
     for (final inc in incoming) {
+      // 1. Check if entity matches canonical SRD entry
+      final srdMatch = srdIndex.checkEntity(
+        slug: inc.id.slug,
+        name: inc.name,
+        type: inc.entityType,
+      );
+
+      if (srdMatch != SrdMatchResult.notSrd) {
+        results.add(ImportAnalysisItem<T>(
+          incomingEntity: inc,
+          disposition: ImportDisposition.identical,
+          resolution: CollisionResolution.keepLocal,
+          isSelected: false, // Unselected by default so zero SRD duplicates are imported!
+          isSrdCanon: true,
+          diffSummary: 'Canonical SRD entry (built into toolkit).',
+        ));
+        continue;
+      }
+
+      // 2. Check against local custom library
       final key = '${inc.id.slug}_${inc.id.ruleset.name}';
-      final existing = localMap[key];
+      final existing = localMap[key] ?? localMap[inc.id.slug];
 
       if (existing == null) {
-        // Novel
+        // Novel Homebrew
         results.add(ImportAnalysisItem<T>(
           incomingEntity: inc,
           disposition: ImportDisposition.novel,

@@ -128,6 +128,8 @@ class CompendiumJsonIngestionPipeline {
         return _ingestList(decoded);
       } else if (decoded is Map<String, dynamic>) {
         return _ingestMap(decoded);
+      } else if (decoded is Map) {
+        return _ingestMap(Map<String, dynamic>.from(decoded));
       } else {
         return const IngestionBatchResult(
           errors: ['Invalid JSON format: expected Map or List at root.'],
@@ -154,8 +156,8 @@ class CompendiumJsonIngestionPipeline {
 
     for (int i = 0; i < list.length; i++) {
       final item = list[i];
-      if (item is Map<String, dynamic>) {
-        final subResult = _ingestSingleEntityMap(item);
+      if (item is Map) {
+        final subResult = _ingestSingleEntityMap(Map<String, dynamic>.from(item));
         spells.addAll(subResult.spells);
         monsters.addAll(subResult.monsters);
         items.addAll(subResult.items);
@@ -184,15 +186,17 @@ class CompendiumJsonIngestionPipeline {
   }
 
   IngestionBatchResult _ingestMap(Map<String, dynamic> map) {
+    final lowerKeys = map.keys.map((k) => k.toLowerCase()).toSet();
+
     // 1. Check if it's a native HomebrewBundle envelope
-    if (map.containsKey('schemaVersion') &&
-        (map.containsKey('spells') ||
-            map.containsKey('monsters') ||
-            map.containsKey('items') ||
-            map.containsKey('classes') ||
-            map.containsKey('races') ||
-            map.containsKey('feats') ||
-            map.containsKey('backgrounds'))) {
+    if (lowerKeys.contains('schemaversion') &&
+        (lowerKeys.contains('spells') ||
+            lowerKeys.contains('monsters') ||
+            lowerKeys.contains('items') ||
+            lowerKeys.contains('classes') ||
+            lowerKeys.contains('races') ||
+            lowerKeys.contains('feats') ||
+            lowerKeys.contains('backgrounds'))) {
       try {
         final bundle = HomebrewBundle.fromMap(map);
         return IngestionBatchResult(
@@ -211,6 +215,15 @@ class CompendiumJsonIngestionPipeline {
       }
     }
 
+    // 2. If the map itself represents a single class definition (e.g. has 'hd' and 'name')
+    if ((lowerKeys.contains('hd') || lowerKeys.contains('hitdie') || (lowerKeys.contains('name') && lowerKeys.contains('subclasslevel'))) &&
+        !lowerKeys.contains('class') &&
+        !lowerKeys.contains('classes') &&
+        !lowerKeys.contains('spell') &&
+        !lowerKeys.contains('monster')) {
+      return _ingestSingleEntityMap(map);
+    }
+
     final spells = <Spell>[];
     final monsters = <Monster>[];
     final items = <EquipmentItem>[];
@@ -222,18 +235,27 @@ class CompendiumJsonIngestionPipeline {
     final otherEntries = <HomebrewCompendiumEntry>[];
     final errors = <String>[];
 
-    // If the map itself represents a single class (e.g. contains 'hd' and 'name'), delegate to _ingestSingleEntityMap
-    if (map.containsKey('hd') && map.containsKey('name')) {
-      return _ingestSingleEntityMap(map);
+    // Helper to find key case-insensitively
+    List<dynamic>? findListForKeys(List<String> candidateKeys) {
+      for (final candidate in candidateKeys) {
+        final candLower = candidate.toLowerCase();
+        for (final entry in map.entries) {
+          if (entry.key.toLowerCase() == candLower && entry.value is List) {
+            return entry.value as List;
+          }
+        }
+      }
+      return null;
     }
 
-    // Helper to safely loop over list in map key
-    void ingestArray(String key, void Function(Map<String, dynamic>) handler, String entityLabel) {
-      if (map.containsKey(key) && map[key] is List) {
-        for (final raw in map[key]) {
-          if (raw is Map<String, dynamic>) {
+    // Helper to safely loop over list in matching map keys
+    void ingestKeys(List<String> candidateKeys, void Function(Map<String, dynamic>) handler, String entityLabel) {
+      final list = findListForKeys(candidateKeys);
+      if (list != null) {
+        for (final raw in list) {
+          if (raw is Map) {
             try {
-              handler(raw);
+              handler(Map<String, dynamic>.from(raw));
             } catch (e) {
               errors.add('$entityLabel error (${raw['name'] ?? 'unnamed'}): $e');
             }
@@ -243,40 +265,29 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // Spells
-    ingestArray('spell', (raw) => spells.add(spellParser.parseSpell(raw)), 'Spell');
-    ingestArray('spells', (raw) => spells.add(spellParser.parseSpell(raw)), 'Spell');
+    ingestKeys(['spell', 'spells'], (raw) => spells.add(spellParser.parseSpell(raw)), 'Spell');
 
     // Monsters / Bestiary
-    ingestArray('monster', (raw) => monsters.add(monsterParser.parseMonster(raw)), 'Monster');
-    ingestArray('monsters', (raw) => monsters.add(monsterParser.parseMonster(raw)), 'Monster');
-    ingestArray('bestiary', (raw) => monsters.add(monsterParser.parseMonster(raw)), 'Monster');
+    ingestKeys(['monster', 'monsters', 'bestiary', 'creature', 'creatures', 'npc', 'npcs'],
+        (raw) => monsters.add(monsterParser.parseMonster(raw)), 'Monster');
 
     // Items / Equipment
-    ingestArray('item', (raw) => items.add(itemParser.parseItem(raw)), 'Item');
-    ingestArray('items', (raw) => items.add(itemParser.parseItem(raw)), 'Item');
-    ingestArray('baseitem', (raw) => items.add(itemParser.parseItem(raw)), 'Item');
-    ingestArray('magicitems', (raw) => items.add(itemParser.parseItem(raw)), 'Item');
-    ingestArray('magicvariants', (raw) => items.add(itemParser.parseItem(raw)), 'Item');
+    ingestKeys(['item', 'items', 'baseitem', 'magicitems', 'magicitem', 'magicvariants', 'equipment'],
+        (raw) => items.add(itemParser.parseItem(raw)), 'Item');
 
     // Classes & Subclasses
-    ingestArray('class', (raw) => classes.add(classParser.parseClass(raw)), 'Class');
-    ingestArray('classes', (raw) => classes.add(classParser.parseClass(raw)), 'Class');
-    ingestArray('subclass', (raw) => subclasses.add(classParser.parseSubclass(raw)), 'Subclass');
-    ingestArray('subclasses', (raw) => subclasses.add(classParser.parseSubclass(raw)), 'Subclass');
+    ingestKeys(['class', 'classes'], (raw) => classes.add(classParser.parseClass(raw)), 'Class');
+    ingestKeys(['subclass', 'subclasses'], (raw) => subclasses.add(classParser.parseSubclass(raw)), 'Subclass');
 
     // Races / Species
-    ingestArray('race', (raw) => races.add(raceParser.parseRace(raw)), 'Race');
-    ingestArray('races', (raw) => races.add(raceParser.parseRace(raw)), 'Race');
-    ingestArray('species', (raw) => races.add(raceParser.parseRace(raw)), 'Race');
-    ingestArray('subrace', (raw) {
+    ingestKeys(['race', 'races', 'species', 'lineage', 'lineages'], (raw) => races.add(raceParser.parseRace(raw)), 'Race');
+    ingestKeys(['subrace', 'subraces'], (raw) {
       final sub = raceParser.parseSubrace(raw);
-      // Link subrace to race or standalone
       final match = races.where((r) => r.id.slug == sub.raceSlug).firstOrNull;
       if (match != null) {
         final idx = races.indexOf(match);
         races[idx] = match.copyWith(subraces: [...match.subraces, sub]);
       } else {
-        // Create parent race holder
         races.add(Race(
           id: EntityId(slug: sub.raceSlug, ruleset: sub.id.ruleset),
           name: sub.raceSlug.replaceAll('-', ' '),
@@ -287,21 +298,24 @@ class CompendiumJsonIngestionPipeline {
     }, 'Subrace');
 
     // Feats
-    ingestArray('feat', (raw) => feats.add(featParser.parseFeat(raw)), 'Feat');
-    ingestArray('feats', (raw) => feats.add(featParser.parseFeat(raw)), 'Feat');
+    ingestKeys(['feat', 'feats'], (raw) => feats.add(featParser.parseFeat(raw)), 'Feat');
 
     // Backgrounds
-    ingestArray('background', (raw) => backgrounds.add(backgroundParser.parseBackground(raw)), 'Background');
-    ingestArray('backgrounds', (raw) => backgrounds.add(backgroundParser.parseBackground(raw)), 'Background');
+    ingestKeys(['background', 'backgrounds'], (raw) => backgrounds.add(backgroundParser.parseBackground(raw)), 'Background');
 
     // Other Compendium Entities
-    ingestArray('table', (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Table')), 'Table');
-    ingestArray('tables', (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Table')), 'Table');
-    ingestArray('optionalfeature', (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Optional Feature')), 'Optional Feature');
-    ingestArray('reward', (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Reward')), 'Reward');
-    ingestArray('condition', (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Condition')), 'Condition');
-    ingestArray('hazard', (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Hazard')), 'Hazard');
-    ingestArray('variantrule', (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Rule')), 'Rule');
+    ingestKeys(['table', 'tables'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Table')), 'Table');
+    ingestKeys(['optionalfeature', 'optionalfeatures'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Optional Feature')), 'Optional Feature');
+    ingestKeys(['reward', 'rewards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Reward')), 'Reward');
+    ingestKeys(['condition', 'conditions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Condition')), 'Condition');
+    ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Hazard')), 'Hazard');
+    ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Rule')), 'Rule');
+
+    // Class feature array handling (if separate from class definition)
+    ingestKeys(['classfeature', 'classfeatures', 'subclassfeature', 'subclassfeatures'], (raw) {
+      final className = raw['className']?.toString() ?? '';
+      otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: className.isNotEmpty ? 'Class Feature ($className)' : 'Class Feature'));
+    }, 'Class Feature');
 
     // If no bundle arrays found, attempt single entity map parse
     final hasAny = spells.isNotEmpty ||
@@ -333,8 +347,12 @@ class CompendiumJsonIngestionPipeline {
   }
 
   IngestionBatchResult _ingestSingleEntityMap(Map<String, dynamic> map) {
-    // 1. Identify Spells (has school or level + time)
-    if (map.containsKey('school') || (map.containsKey('level') && map.containsKey('time'))) {
+    final lowerKeys = map.keys.map((k) => k.toLowerCase()).toSet();
+
+    // 1. Identify Spells (has school or level + time/duration/range)
+    if (lowerKeys.contains('school') ||
+        (lowerKeys.contains('level') &&
+            (lowerKeys.contains('time') || lowerKeys.contains('duration') || lowerKeys.contains('range')))) {
       try {
         final spell = spellParser.parseSpell(map);
         return IngestionBatchResult(spells: [spell]);
@@ -343,8 +361,9 @@ class CompendiumJsonIngestionPipeline {
       }
     }
 
-    // 2. Identify Monsters (has cr or hp or ac)
-    if (map.containsKey('cr') || (map.containsKey('hp') && map.containsKey('ac'))) {
+    // 2. Identify Monsters (has cr or hp or ac or statblock)
+    if (lowerKeys.contains('cr') ||
+        (lowerKeys.contains('hp') && (lowerKeys.contains('ac') || lowerKeys.contains('speed')))) {
       try {
         final monster = monsterParser.parseMonster(map);
         return IngestionBatchResult(monsters: [monster]);
@@ -354,7 +373,9 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // 3. Identify Classes (has hd and proficiency or classFeatures)
-    if (map.containsKey('hd') || map.containsKey('classFeatures') || (map.containsKey('proficiency') && map.containsKey('subclasses'))) {
+    if (lowerKeys.contains('hd') ||
+        lowerKeys.contains('classfeatures') ||
+        (lowerKeys.contains('proficiency') && lowerKeys.contains('subclasses'))) {
       try {
         final cl = classParser.parseClass(map);
         return IngestionBatchResult(classes: [cl]);
@@ -364,7 +385,7 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // 4. Identify Subclasses (has className or classSlug)
-    if (map.containsKey('className') || map.containsKey('classSlug') || map.containsKey('subclassFeatures')) {
+    if (lowerKeys.contains('classname') || lowerKeys.contains('classslug') || lowerKeys.contains('subclassfeatures')) {
       try {
         final sub = classParser.parseSubclass(map);
         return IngestionBatchResult(subclasses: [sub]);
@@ -374,7 +395,10 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // 5. Identify Races / Species (has speed or size without ac/hp, or traits)
-    if ((map.containsKey('size') || map.containsKey('speed')) && !map.containsKey('ac') && !map.containsKey('hp')) {
+    if ((lowerKeys.contains('size') || lowerKeys.contains('speed')) &&
+        !lowerKeys.contains('ac') &&
+        !lowerKeys.contains('hp') &&
+        !lowerKeys.contains('school')) {
       try {
         final race = raceParser.parseRace(map);
         return IngestionBatchResult(races: [race]);
@@ -384,7 +408,9 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // 6. Identify Feats (has prerequisite or featType or category)
-    if (map.containsKey('prerequisite') || map.containsKey('featType') || (map['category']?.toString().toLowerCase().contains('feat') ?? false)) {
+    if (lowerKeys.contains('prerequisite') ||
+        lowerKeys.contains('feattype') ||
+        (map['category']?.toString().toLowerCase().contains('feat') ?? false)) {
       try {
         final feat = featParser.parseFeat(map);
         return IngestionBatchResult(feats: [feat]);
@@ -394,7 +420,7 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // 7. Identify Backgrounds (has skillProficiencies or backgroundFeature)
-    if (map.containsKey('skillProficiencies') || map.containsKey('backgroundFeature')) {
+    if (lowerKeys.contains('skillproficiencies') || lowerKeys.contains('backgroundfeature')) {
       try {
         final bg = backgroundParser.parseBackground(map);
         return IngestionBatchResult(backgrounds: [bg]);
@@ -404,7 +430,10 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // 8. Identify Items (has rarity, itemType, reqAttune, or entries)
-    if (map.containsKey('rarity') || map.containsKey('type') || map.containsKey('reqAttune')) {
+    if (lowerKeys.contains('rarity') ||
+        lowerKeys.contains('type') ||
+        lowerKeys.contains('reqattune') ||
+        lowerKeys.contains('weaponcategory')) {
       try {
         final item = itemParser.parseItem(map);
         return IngestionBatchResult(items: [item]);
@@ -414,7 +443,7 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // 9. Generic Fallback (tables, rules, etc.)
-    if (map.containsKey('name')) {
+    if (lowerKeys.contains('name')) {
       try {
         final entry = genericParser.parseGenericEntry(map, defaultCategory: 'Custom');
         return IngestionBatchResult(otherEntries: [entry]);

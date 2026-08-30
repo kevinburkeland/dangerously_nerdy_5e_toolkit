@@ -56,12 +56,7 @@ class CompendiumMonsterParser {
     if (traits != null && traits.isNotEmpty) {
       actionsBuffer.writeln('### Traits');
       for (final trait in traits) {
-        if (trait is Map) {
-          final tName = trait['name'] ?? 'Trait';
-          final parsed = transformer.transformEntries(trait['entries'], defaultRuleset: ruleset);
-          attackMath.addAll(parsed.extractedMath);
-          actionsBuffer.writeln('**$tName**: ${parsed.markdown}\n');
-        }
+        _appendActionOrTrait(trait, actionsBuffer, attackMath, ruleset, defaultTitle: 'Trait');
       }
     }
 
@@ -112,12 +107,7 @@ class CompendiumMonsterParser {
     if (actions != null && actions.isNotEmpty) {
       actionsBuffer.writeln('### Actions');
       for (final action in actions) {
-        if (action is Map) {
-          final aName = action['name'] ?? 'Action';
-          final parsed = transformer.transformEntries(action['entries'], defaultRuleset: ruleset);
-          attackMath.addAll(parsed.extractedMath);
-          actionsBuffer.writeln('**$aName**: ${parsed.markdown}\n');
-        }
+        _appendActionOrTrait(action, actionsBuffer, attackMath, ruleset, defaultTitle: 'Action');
       }
     }
 
@@ -126,12 +116,7 @@ class CompendiumMonsterParser {
     if (bonus != null && bonus.isNotEmpty) {
       actionsBuffer.writeln('### Bonus Actions');
       for (final b in bonus) {
-        if (b is Map) {
-          final bName = b['name'] ?? 'Bonus Action';
-          final parsed = transformer.transformEntries(b['entries'], defaultRuleset: ruleset);
-          attackMath.addAll(parsed.extractedMath);
-          actionsBuffer.writeln('**$bName**: ${parsed.markdown}\n');
-        }
+        _appendActionOrTrait(b, actionsBuffer, attackMath, ruleset, defaultTitle: 'Bonus Action');
       }
     }
 
@@ -140,12 +125,7 @@ class CompendiumMonsterParser {
     if (reactions != null && reactions.isNotEmpty) {
       actionsBuffer.writeln('### Reactions');
       for (final r in reactions) {
-        if (r is Map) {
-          final rName = r['name'] ?? 'Reaction';
-          final parsed = transformer.transformEntries(r['entries'], defaultRuleset: ruleset);
-          attackMath.addAll(parsed.extractedMath);
-          actionsBuffer.writeln('**$rName**: ${parsed.markdown}\n');
-        }
+        _appendActionOrTrait(r, actionsBuffer, attackMath, ruleset, defaultTitle: 'Reaction');
       }
     }
 
@@ -159,62 +139,20 @@ class CompendiumMonsterParser {
         actionsBuffer.writeln('${parsedHeader.markdown}\n');
       } else {
         final count = (raw['legendaryActions'] as num?)?.toInt() ?? 3;
-        actionsBuffer.writeln('The monster can take $count legendary actions, choosing from the options below.\n');
+        actionsBuffer.writeln('The creature can take $count legendary actions, choosing from the options below.\n');
       }
       for (final leg in legendary) {
-        if (leg is Map) {
-          final lName = leg['name'] ?? 'Option';
-          final parsed = transformer.transformEntries(leg['entries'], defaultRuleset: ruleset);
-          attackMath.addAll(parsed.extractedMath);
-          actionsBuffer.writeln('**$lName**: ${parsed.markdown}\n');
-        }
+        _appendActionOrTrait(leg, actionsBuffer, attackMath, ruleset, defaultTitle: 'Option');
       }
     }
 
-    // Mythic Actions
-    final mythic = (raw['mythic'] is List ? raw['mythic'] : raw['mythicActions']) as List?;
-    if (mythic != null && mythic.isNotEmpty) {
-      actionsBuffer.writeln('### Mythic Actions');
-      final mythicHeader = raw['mythicHeader'] as List?;
-      if (mythicHeader != null) {
-        final parsedHeader = transformer.transformEntries(mythicHeader, defaultRuleset: ruleset);
-        actionsBuffer.writeln('${parsedHeader.markdown}\n');
-      }
-      for (final m in mythic) {
-        if (m is Map) {
-          final mName = m['name'] ?? 'Mythic Option';
-          final parsed = transformer.transformEntries(m['entries'], defaultRuleset: ruleset);
-          attackMath.addAll(parsed.extractedMath);
-          actionsBuffer.writeln('**$mName**: ${parsed.markdown}\n');
-        }
-      }
-    }
-
-    // Auxiliary Properties (0% data loss)
+    // Capture auxiliary metadata in customProperties for 0% data loss
     final customProperties = <String, dynamic>{};
     raw.forEach((key, value) {
       if (!_standardMonsterKeys.contains(key)) {
         customProperties[key] = value;
       }
     });
-
-    // Store explicit structured stats in customProperties
-    customProperties['str'] = raw['str'] ?? 10;
-    customProperties['dex'] = raw['dex'] ?? 10;
-    customProperties['con'] = raw['con'] ?? 10;
-    customProperties['int'] = raw['int'] ?? 10;
-    customProperties['wis'] = raw['wis'] ?? 10;
-    customProperties['cha'] = raw['cha'] ?? 10;
-    if (raw.containsKey('save')) customProperties['save'] = raw['save'];
-    if (raw.containsKey('skill')) customProperties['skill'] = raw['skill'];
-    if (raw.containsKey('senses')) customProperties['senses'] = raw['senses'];
-    if (raw.containsKey('passive')) customProperties['passive'] = raw['passive'];
-    if (raw.containsKey('languages')) customProperties['languages'] = raw['languages'];
-    if (raw.containsKey('immune')) customProperties['immune'] = raw['immune'];
-    if (raw.containsKey('resist')) customProperties['resist'] = raw['resist'];
-    if (raw.containsKey('vulnerable')) customProperties['vulnerable'] = raw['vulnerable'];
-    if (raw.containsKey('conditionImmune')) customProperties['conditionImmune'] = raw['conditionImmune'];
-    if (raw.containsKey('spellcasting')) customProperties['spellcasting'] = raw['spellcasting'];
 
     return Monster(
       id: EntityId(slug: slug, ruleset: ruleset),
@@ -223,14 +161,45 @@ class CompendiumMonsterParser {
       monsterType: typeStr,
       alignment: alignment,
       armorClass: ac,
-      hitPoints: hpData.hp,
+      hitPoints: hpData.average,
       hitDieFormula: hpData.formula,
       challengeRating: cr,
       actionsMarkdown: actionsBuffer.toString().trim(),
-      innateSpells: innateSpells,
       attackMath: attackMath,
+      innateSpells: innateSpells,
       customProperties: customProperties,
     );
+  }
+
+  void _appendActionOrTrait(
+    dynamic node,
+    StringBuffer buffer,
+    List<EvaluationMath> attackMath,
+    RulesetVersion ruleset, {
+    required String defaultTitle,
+  }) {
+    if (node is Map) {
+      final aName = node['name'] ?? node['title'] ?? defaultTitle;
+      final entriesData = node['entries'] ?? node['desc'] ?? node['description'] ?? node['text'] ?? node['entry'];
+      final parsed = transformer.transformEntries(entriesData, defaultRuleset: ruleset);
+      attackMath.addAll(parsed.extractedMath);
+      buffer.writeln('**$aName**: ${parsed.markdown}\n');
+    } else if (node is String) {
+      final clean = node.trim();
+      if (clean.isEmpty) return;
+      final splitIdx = clean.indexOf(RegExp(r'[:.]'));
+      if (splitIdx != -1 && splitIdx < 35) {
+        final tTitle = clean.substring(0, splitIdx).trim();
+        final tBody = clean.substring(splitIdx + 1).trim();
+        final parsed = transformer.transformEntries(tBody, defaultRuleset: ruleset);
+        attackMath.addAll(parsed.extractedMath);
+        buffer.writeln('**$tTitle**: ${parsed.markdown}\n');
+      } else {
+        final parsed = transformer.transformEntries(clean, defaultRuleset: ruleset);
+        attackMath.addAll(parsed.extractedMath);
+        buffer.writeln('${parsed.markdown}\n');
+      }
+    }
   }
 
   static const Set<String> _standardMonsterKeys = {
@@ -253,210 +222,230 @@ class CompendiumMonsterParser {
     'reactions',
     'legendary',
     'legendaryActions',
-    'legendaryHeader',
-    'mythic',
-    'mythicActions',
-    'mythicHeader',
+    'spellcasting',
   };
 
   String _parseSize(dynamic sizeData) {
     if (sizeData is List && sizeData.isNotEmpty) {
       return _mapSizeCode(sizeData.first.toString());
-    } else if (sizeData != null) {
-      return _mapSizeCode(sizeData.toString());
+    } else if (sizeData is String) {
+      return _mapSizeCode(sizeData);
     }
     return 'Medium';
   }
 
   String _mapSizeCode(String code) {
-    switch (code.toUpperCase()) {
+    switch (code.toUpperCase().trim()) {
       case 'T':
+      case 'TINY':
         return 'Tiny';
       case 'S':
+      case 'SMALL':
         return 'Small';
       case 'M':
+      case 'MEDIUM':
         return 'Medium';
       case 'L':
+      case 'LARGE':
         return 'Large';
       case 'H':
+      case 'HUGE':
         return 'Huge';
       case 'G':
+      case 'GARGANTUAN':
         return 'Gargantuan';
       default:
-        return code.length > 2 ? code : 'Medium';
+        return code;
     }
   }
 
   String _parseType(dynamic typeData) {
-    if (typeData is String) return typeData;
     if (typeData is Map) {
-      final base = typeData['type']?.toString() ?? 'Humanoid';
-      final tags = (typeData['tags'] as List?)?.map((e) => e.toString()).toList();
+      final t = typeData['type'] ?? 'humanoid';
+      final tags = typeData['tags'] as List?;
       if (tags != null && tags.isNotEmpty) {
-        return '$base (${tags.join(', ')})';
+        return '$t (${tags.join(', ')})';
       }
-      return base;
+      return t.toString();
+    } else if (typeData is String) {
+      return typeData;
     }
-    return 'Humanoid';
+    return 'monstrosity';
   }
 
   String _parseAlignment(dynamic alignData) {
     if (alignData is List) {
-      final parts = alignData.map((e) {
-        switch (e.toString().toUpperCase()) {
-          case 'L':
-            return 'Lawful';
-          case 'C':
-            return 'Chaotic';
-          case 'N':
-            return 'Neutral';
-          case 'G':
-            return 'Good';
-          case 'E':
-            return 'Evil';
-          case 'U':
-            return 'Unaligned';
-          case 'A':
-            return 'Any Alignment';
-          default:
-            return e.toString();
-        }
-      }).toList();
-      return parts.join(' ');
-    } else if (alignData != null) {
-      return alignData.toString();
+      final list = alignData.map((e) => e.toString().toUpperCase().trim()).toList();
+      if (list.contains('U') || list.contains('UNALIGNED')) return 'Unaligned';
+      if (list.contains('A') || list.contains('ANY')) return 'Any alignment';
+      if (list.length == 2 && list[0] == 'N' && list[1] == 'N') return 'Neutral';
+      final mapped = list.map((code) => switch (code) {
+        'L' => 'Lawful',
+        'C' => 'Chaotic',
+        'N' => 'Neutral',
+        'G' => 'Good',
+        'E' => 'Evil',
+        _ => code,
+      }).join(' ');
+      return mapped.isNotEmpty ? mapped : 'Unaligned';
+    } else if (alignData is String) {
+      return alignData;
     }
-    return 'unaligned';
+    return 'Unaligned';
   }
 
   int _parseArmorClass(dynamic acData) {
-    if (acData is num) return acData.toInt();
     if (acData is List && acData.isNotEmpty) {
       final first = acData.first;
-      if (first is num) return first.toInt();
-      if (first is Map) return (first['ac'] as num?)?.toInt() ?? 10;
-      if (first is String) return int.tryParse(first) ?? 10;
+      if (first is Map) {
+        return (first['ac'] as num?)?.toInt() ?? 10;
+      } else if (first is num) {
+        return first.toInt();
+      }
     } else if (acData is Map) {
       return (acData['ac'] as num?)?.toInt() ?? 10;
+    } else if (acData is num) {
+      return acData.toInt();
+    } else if (acData is String) {
+      final match = RegExp(r'\d+').firstMatch(acData);
+      if (match != null) {
+        return int.tryParse(match.group(0)!) ?? 10;
+      }
     }
     return 10;
   }
 
-  ({int hp, String formula}) _parseHitPoints(dynamic hpData) {
-    if (hpData is num) {
-      return (hp: hpData.toInt(), formula: '${hpData}d8');
-    }
+  ({int average, String formula}) _parseHitPoints(dynamic hpData) {
+    int avg = 10;
+    String form = '2d8 + 2';
+
     if (hpData is Map) {
-      final avg = (hpData['average'] as num?)?.toInt() ?? 10;
-      final formula = hpData['formula']?.toString() ?? '${avg}d8';
-      return (hp: avg, formula: formula);
+      avg = (hpData['average'] as num?)?.toInt() ?? (hpData['special'] != null ? 1 : 10);
+      form = hpData['formula']?.toString() ?? '${avg}hp';
+    } else if (hpData is num) {
+      avg = hpData.toInt();
+      form = '${avg}hp';
+    } else if (hpData is String) {
+      final match = RegExp(r'(\d+)\s*\((.*?)\)').firstMatch(hpData);
+      if (match != null) {
+        avg = int.tryParse(match.group(1)!) ?? 10;
+        form = match.group(2)!;
+      } else {
+        avg = int.tryParse(hpData) ?? 10;
+        form = '${avg}hp';
+      }
     }
-    return (hp: 10, formula: '2d8');
+
+    return (average: avg, formula: form);
   }
 
   String _parseChallengeRating(dynamic crData) {
-    if (crData is String) return crData;
-    if (crData is num) return crData.toString();
     if (crData is Map) {
       return crData['cr']?.toString() ?? '1';
+    } else if (crData != null) {
+      return crData.toString();
     }
-    return '1';
+    return '0';
   }
 
   String _parseSpeed(dynamic speedData) {
-    if (speedData is String) return speedData;
     if (speedData is Map) {
       final parts = <String>[];
-      speedData.forEach((k, v) {
-        if (v is bool && v == true && k == 'canHover') {
-          parts.add('(hover)');
-        } else if (v is num) {
-          parts.add('$k ${v}ft.');
-        } else if (v is Map) {
-          final amt = v['number'] ?? 30;
-          parts.add('$k ${amt}ft.');
+      speedData.forEach((mode, val) {
+        if (mode == 'walk' || mode == 'speed') {
+          parts.add('walk ${val}ft.');
+        } else if (val is Map) {
+          final cond = val['condition'] != null ? ', (${val['condition']})' : '';
+          parts.add('$mode ${val['number']}ft.$cond'.trim());
+        } else if (val == true) {
+          if (mode == 'canHover' || mode == 'hover') {
+            parts.add('(hover)');
+          } else {
+            parts.add(mode);
+          }
+        } else {
+          parts.add('$mode ${val}ft.');
         }
       });
-      return parts.join(', ');
+      return parts.isNotEmpty ? parts.join(', ') : '30 ft.';
+    } else if (speedData != null) {
+      return speedData.toString();
     }
     return '30 ft.';
   }
 
   String _formatAbilityScores(Map<String, dynamic> raw) {
-    int str = (raw['str'] as num?)?.toInt() ?? 10;
-    int dex = (raw['dex'] as num?)?.toInt() ?? 10;
-    int con = (raw['con'] as num?)?.toInt() ?? 10;
-    int intl = (raw['int'] as num?)?.toInt() ?? 10;
-    int wis = (raw['wis'] as num?)?.toInt() ?? 10;
-    int cha = (raw['cha'] as num?)?.toInt() ?? 10;
+    final str = raw['str'] ?? 10;
+    final dex = raw['dex'] ?? 10;
+    final con = raw['con'] ?? 10;
+    final intScore = raw['int'] ?? 10;
+    final wis = raw['wis'] ?? 10;
+    final cha = raw['cha'] ?? 10;
 
-    String modStr(int val) {
-      final mod = ((val - 10) / 2).floor();
-      return mod >= 0 ? '+$mod' : '$mod';
+    String mod(num score) {
+      final m = ((score - 10) / 2).floor();
+      return m >= 0 ? '+$m' : '$m';
     }
 
     return '| STR | DEX | CON | INT | WIS | CHA |\n'
         '|:---:|:---:|:---:|:---:|:---:|:---:|\n'
-        '| $str (${modStr(str)}) | $dex (${modStr(dex)}) | $con (${modStr(con)}) | $intl (${modStr(intl)}) | $wis (${modStr(wis)}) | $cha (${modStr(cha)}) |';
+        '| $str (${mod(str as num)}) | $dex (${mod(dex as num)}) | $con (${mod(con as num)}) | $intScore (${mod(intScore as num)}) | $wis (${mod(wis as num)}) | $cha (${mod(cha as num)}) |';
   }
 
   void _appendDefensesAndSenses(Map<String, dynamic> raw, StringBuffer buffer) {
-    if (raw.containsKey('save') && raw['save'] is Map) {
+    if (raw['save'] is Map) {
       final saves = (raw['save'] as Map).entries.map((e) => '${e.key.toString().toUpperCase()} ${e.value}').join(', ');
       buffer.writeln('**Saving Throws:** $saves');
     }
-    if (raw.containsKey('skill') && raw['skill'] is Map) {
+    if (raw['skill'] is Map) {
       final skills = (raw['skill'] as Map).entries.map((e) => '${e.key} ${e.value}').join(', ');
       buffer.writeln('**Skills:** $skills');
     }
-    if (raw.containsKey('vulnerable')) {
-      buffer.writeln('**Damage Vulnerabilities:** ${_formatListOrString(raw['vulnerable'])}');
+    if (raw['vulnerable'] != null) {
+      buffer.writeln('**Damage Vulnerabilities:** ${_formatList(raw['vulnerable'])}');
     }
-    if (raw.containsKey('resist')) {
-      buffer.writeln('**Damage Resistances:** ${_formatListOrString(raw['resist'])}');
+    if (raw['resist'] != null) {
+      buffer.writeln('**Damage Resistances:** ${_formatList(raw['resist'])}');
     }
-    if (raw.containsKey('immune')) {
-      buffer.writeln('**Damage Immunities:** ${_formatListOrString(raw['immune'])}');
+    if (raw['immune'] != null) {
+      buffer.writeln('**Damage Immunities:** ${_formatList(raw['immune'])}');
     }
-    if (raw.containsKey('conditionImmune')) {
-      buffer.writeln('**Condition Immunities:** ${_formatListOrString(raw['conditionImmune'])}');
+    if (raw['conditionImmune'] != null) {
+      buffer.writeln('**Condition Immunities:** ${_formatList(raw['conditionImmune'])}');
     }
-    if (raw.containsKey('senses')) {
-      buffer.writeln('**Senses:** ${_formatListOrString(raw['senses'])}${raw['passive'] != null ? ', passive Perception ${raw['passive']}' : ''}');
+    final senses = raw['senses'] != null ? _formatList(raw['senses']) : '';
+    final passive = raw['passive'] != null ? 'passive Perception ${raw['passive']}' : '';
+    final sensesStr = [if (senses.isNotEmpty) senses, if (passive.isNotEmpty) passive].join(', ');
+    if (sensesStr.isNotEmpty) {
+      buffer.writeln('**Senses:** $sensesStr');
     }
-    if (raw.containsKey('languages')) {
-      buffer.writeln('**Languages:** ${_formatListOrString(raw['languages'])}\n');
+    if (raw['languages'] != null) {
+      buffer.writeln('**Languages:** ${_formatList(raw['languages'])}');
     }
+    buffer.writeln();
   }
 
-  String _formatListOrString(dynamic val) {
+  String _formatList(dynamic val) {
     if (val is List) {
-      return val.map((e) {
-        if (e is Map) return e.toString();
-        return e.toString();
-      }).join(', ');
+      return val.map((e) => e is Map ? (e['note'] != null ? '${e['resist'] ?? e['immune'] ?? ''} (${e['note']})' : e.toString()) : e.toString()).join(', ');
     }
-    return val?.toString() ?? '';
+    return val.toString();
   }
 
-  List<String> _extractSpellNames(
-    List list,
-    List<EntityReference<Spell>> innateSpells,
-    RulesetVersion ruleset,
-  ) {
+  List<String> _extractSpellNames(List list, List<EntityReference<Spell>> innateSpells, RulesetVersion ruleset) {
     final names = <String>[];
     for (final item in list) {
-      final str = item.toString();
-      // Look for {@spell name}
-      final match = RegExp(r'\{@spell\s+([^|}]+)').firstMatch(str);
-      final spellName = match != null ? match.group(1)! : str.replaceAll(RegExp(r'\{@[a-z]+\s+|[\}]'), '');
-      names.add(spellName);
-      innateSpells.add(EntityReference<Spell>(
-        refType: EntityType.spell,
-        slug: _slugify(spellName),
-        displayName: spellName,
-        rulesetPreferred: ruleset,
-      ));
+      if (item is String) {
+        final match = RegExp(r'\{@spell\s+([^|}]+).*?\}').firstMatch(item);
+        final clean = match != null ? match.group(1)!.trim() : item.trim();
+        names.add('*$clean*');
+        innateSpells.add(EntityReference<Spell>(
+          refType: EntityType.spell,
+          slug: _slugify(clean),
+          displayName: clean,
+          rulesetPreferred: ruleset,
+        ));
+      }
     }
     return names;
   }
@@ -472,10 +461,10 @@ class CompendiumMonsterParser {
   RulesetVersion _mapSourceToRuleset(String? source) {
     if (source == null || source.isEmpty) return RulesetVersion.homebrew;
     final s = source.toUpperCase();
-    if (s.contains('XPHB') || s.contains('SRD52') || s.contains('2024')) {
+    if (s.contains('XMM') || s.contains('SRD52') || s.contains('2024')) {
       return RulesetVersion.v2024;
     }
-    if (s.contains('PHB') || s.contains('SRD') || s.contains('2014')) {
+    if (s.contains('MM') || s.contains('SRD') || s.contains('2014')) {
       return RulesetVersion.v2014;
     }
     return RulesetVersion.homebrew;

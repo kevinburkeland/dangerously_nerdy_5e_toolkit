@@ -26,8 +26,9 @@ class CompendiumRaceParser {
     final abilityResult = _parseAbilityScores(raw['ability']);
 
     // Traits Markdown
+    final traitsData = raw['trait'] ?? raw['traits'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
     final parsedEntries = transformer.transformEntries(
-      raw['trait'] ?? raw['entries'],
+      traitsData,
       defaultRuleset: ruleset,
     );
 
@@ -89,8 +90,9 @@ class CompendiumRaceParser {
         ? _slugify(raw['raceName'].toString())
         : (raw['raceSlug']?.toString() ?? defaultRaceSlug ?? '');
 
+    final traitsData = raw['trait'] ?? raw['traits'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
     final parsedEntries = transformer.transformEntries(
-      raw['trait'] ?? raw['entries'],
+      traitsData,
       defaultRuleset: ruleset,
     );
 
@@ -100,9 +102,6 @@ class CompendiumRaceParser {
         customProperties[key] = value;
       }
     });
-
-    if (raw.containsKey('ability')) customProperties['ability'] = raw['ability'];
-    if (raw.containsKey('traitTags')) customProperties['traitTags'] = raw['traitTags'];
 
     return Subrace(
       id: EntityId(slug: slug, ruleset: ruleset),
@@ -120,7 +119,10 @@ class CompendiumRaceParser {
     'speed',
     'ability',
     'trait',
+    'traits',
     'entries',
+    'desc',
+    'description',
     'subraces',
   };
 
@@ -129,129 +131,124 @@ class CompendiumRaceParser {
     'source',
     'raceName',
     'raceSlug',
-    'ability',
     'trait',
+    'traits',
     'entries',
-    'traitTags',
+    'desc',
+    'description',
   };
 
   String _parseSize(dynamic sizeData) {
     if (sizeData is List && sizeData.isNotEmpty) {
-      return _mapSizeCode(sizeData.first.toString());
-    } else if (sizeData != null) {
-      return _mapSizeCode(sizeData.toString());
+      return sizeData.map((s) => _mapSize(s.toString())).join(' or ');
+    } else if (sizeData is String) {
+      return _mapSize(sizeData);
     }
     return 'Medium';
   }
 
-  String _mapSizeCode(String code) {
-    switch (code.toUpperCase()) {
+  String _mapSize(String code) {
+    switch (code.toUpperCase().trim()) {
       case 'T':
+      case 'TINY':
         return 'Tiny';
       case 'S':
+      case 'SMALL':
         return 'Small';
       case 'M':
+      case 'MEDIUM':
         return 'Medium';
       case 'L':
+      case 'LARGE':
         return 'Large';
-      case 'H':
-        return 'Huge';
-      case 'G':
-        return 'Gargantuan';
       default:
-        return code.length > 2 ? code : 'Medium';
+        return code;
     }
   }
 
   String _parseSpeed(dynamic speedData) {
-    if (speedData is String) {
-      return speedData.contains('ft') ? speedData : '$speedData ft.';
-    }
-    if (speedData is num) {
-      return '$speedData ft.';
-    }
     if (speedData is Map) {
-      final walk = speedData['walk'] ?? 30;
-      final extra = <String>[];
+      final walk = speedData['walk'] ?? speedData['speed'] ?? 30;
+      final other = <String>[];
       speedData.forEach((k, v) {
-        if (k != 'walk' && v != null) {
-          extra.add('$k ${v is num ? '$v ft.' : v}');
+        if (k != 'walk' && k != 'speed') {
+          other.add('$k $v ft.');
         }
       });
-      if (extra.isNotEmpty) {
-        return '$walk ft. (${extra.join(', ')})';
-      }
-      return '$walk ft.';
+      return '$walk ft.${other.isNotEmpty ? " (${other.join(', ')})" : ""}';
+    } else if (speedData is num) {
+      return '$speedData ft.';
+    } else if (speedData != null) {
+      final str = speedData.toString().trim();
+      return str.contains('ft') ? str : '$str ft.';
     }
     return '30 ft.';
   }
 
   ({
     String? summary,
-    Map<String, int> fixedBonuses,
+    int bonusFeatCount,
     int flexibleCount,
     int flexibleBonus,
-    int bonusFeatCount,
+    Map<String, int> fixedBonuses,
   }) _parseAbilityScores(dynamic abilityData) {
-    final fixed = <String, int>{};
-    int flexCount = 0;
-    int flexBonus = 1;
-    int bonusFeats = 0;
-    final summaryParts = <String>[];
-
-    if (abilityData is String) {
+    if (abilityData == null) {
       return (
-        summary: abilityData,
-        fixedBonuses: fixed,
-        flexibleCount: 0,
-        flexibleBonus: 1,
+        summary: null,
         bonusFeatCount: 0,
+        flexibleCount: 0,
+        flexibleBonus: 0,
+        fixedBonuses: const {},
       );
     }
 
+    final fixed = <String, int>{};
+    int flexCount = 0;
+    int flexBonus = 1;
+    int featCount = 0;
+    final parts = <String>[];
+
     if (abilityData is List) {
-      for (final item in abilityData) {
-        if (item is Map) {
-          _extractFromAbilityMap(item, fixed, (c) => flexCount = c, (b) => flexBonus = b, summaryParts);
+      for (final ab in abilityData) {
+        if (ab is Map) {
+          ab.forEach((k, v) {
+            final key = k.toString().toLowerCase();
+            if (['str', 'dex', 'con', 'int', 'wis', 'cha'].contains(key) && v is num) {
+              fixed[key.toUpperCase()] = v.toInt();
+              parts.add('${key.toUpperCase()} +$v');
+            } else if (key == 'choose' && v is Map) {
+              final count = (v['count'] as num?)?.toInt() ?? 1;
+              final amount = (v['amount'] as num?)?.toInt() ?? 1;
+              flexCount += count;
+              flexBonus = amount;
+              parts.add('+$amount to any $count abilities');
+            }
+          });
         }
       }
     } else if (abilityData is Map) {
-      _extractFromAbilityMap(abilityData, fixed, (c) => flexCount = c, (b) => flexBonus = b, summaryParts);
+      abilityData.forEach((k, v) {
+        final key = k.toString().toLowerCase();
+        if (['str', 'dex', 'con', 'int', 'wis', 'cha'].contains(key) && v is num) {
+          fixed[key.toUpperCase()] = v.toInt();
+          parts.add('${key.toUpperCase()} +$v');
+        } else if (key == 'choose' && v is Map) {
+          final count = (v['count'] as num?)?.toInt() ?? 1;
+          final amount = (v['amount'] as num?)?.toInt() ?? 1;
+          flexCount += count;
+          flexBonus = amount;
+          parts.add('+$amount to any $count abilities');
+        }
+      });
     }
 
     return (
-      summary: summaryParts.isNotEmpty ? summaryParts.join(', ') : null,
-      fixedBonuses: fixed,
+      summary: parts.isNotEmpty ? parts.join(', ') : null,
+      bonusFeatCount: featCount,
       flexibleCount: flexCount,
       flexibleBonus: flexBonus,
-      bonusFeatCount: bonusFeats,
+      fixedBonuses: fixed,
     );
-  }
-
-  void _extractFromAbilityMap(
-    Map abilityMap,
-    Map<String, int> fixed,
-    void Function(int) setFlexCount,
-    void Function(int) setFlexBonus,
-    List<String> summaryParts,
-  ) {
-    final stats = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-    for (final s in stats) {
-      if (abilityMap[s] is num) {
-        final val = (abilityMap[s] as num).toInt();
-        fixed[s] = val;
-        summaryParts.add('${s.toUpperCase()} ${val >= 0 ? '+$val' : val}');
-      }
-    }
-
-    if (abilityMap['choose'] is Map) {
-      final choose = abilityMap['choose'] as Map;
-      final count = (choose['count'] as num?)?.toInt() ?? 1;
-      final amt = (choose['amount'] as num?)?.toInt() ?? 1;
-      setFlexCount(count);
-      setFlexBonus(amt);
-      summaryParts.add('Choose $count (+$amt)');
-    }
   }
 
   String _slugify(String name) {

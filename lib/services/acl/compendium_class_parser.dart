@@ -17,7 +17,7 @@ class CompendiumClassParser {
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
     // Hit Die
-    final hitDie = _parseHitDie(raw['hd']);
+    final hitDie = _parseHitDie(raw['hd'] ?? raw['hitDie']);
 
     // Saving Throw Proficiencies
     final savingThrows = _parseSavingThrows(raw['proficiency'] ?? raw['savingThrows']);
@@ -131,8 +131,9 @@ class CompendiumClassParser {
         raw['subclassTitle']?.toString() ??
         name;
 
+    final entriesData = raw['subclassFeatures'] ?? raw['features'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
     final parsedEntries = transformer.transformEntries(
-      raw['subclassFeatures'] ?? raw['entries'],
+      entriesData,
       defaultRuleset: ruleset,
     );
 
@@ -143,14 +144,8 @@ class CompendiumClassParser {
       }
     });
 
-    if (raw.containsKey('subclassFeatures')) {
-      customProperties['subclassFeatures'] = raw['subclassFeatures'];
-    }
     if (raw.containsKey('subclassTableGroups')) {
       customProperties['subclassTableGroups'] = raw['subclassTableGroups'];
-    }
-    if (raw.containsKey('spellcastingAbility')) {
-      customProperties['spellcastingAbility'] = raw['spellcastingAbility'];
     }
 
     return Subclass(
@@ -167,12 +162,16 @@ class CompendiumClassParser {
     'name',
     'source',
     'hd',
+    'hitDie',
     'proficiency',
     'savingThrows',
     'primaryAbility',
     'spellcastingAbility',
     'classFeatures',
+    'features',
     'entries',
+    'desc',
+    'description',
     'subclasses',
     'subclassSelectionLevel',
     'subclassLevel',
@@ -187,7 +186,10 @@ class CompendiumClassParser {
     'shortName',
     'subclassTitle',
     'subclassFeatures',
+    'features',
     'entries',
+    'desc',
+    'description',
   };
 
   String _parseHitDie(dynamic hdData) {
@@ -214,22 +216,13 @@ class CompendiumClassParser {
   }
 
   String _parseClassFeatures(Map<String, dynamic> raw, RulesetVersion ruleset) {
-    final features = raw['classFeatures'] ?? raw['entries'];
+    final features = raw['classFeatures'] ?? raw['features'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
     if (features == null) return '';
 
-    // Compendium classFeatures may be:
-    //   - A List<String> of pipe-syntax feature references ("Fighter|classFeature|1|PHB");
-    //     these are cross-references with no description content — drop silently.
-    //   - A List<Map> of inline {type:"entries", name, entries:[...]} blocks with real content.
-    //   - A mixed List combining both.
-    // EntryNodeTransformer handles all cases correctly via its String + Map branches:
-    //   • String branch: emits the raw string (feature refs are just cross-refs — no content).
-    //   • Map branch: recurses fully via _parseMapNode → entries/section handlers.
-    //
-    // We convert pipe-syntax strings to null/empty so they don't litter the output.
+    // Convert pipe-syntax cross references to null while retaining any real description entries
     final cleaned = features is List
         ? features.map((f) {
-            if (f is String && f.contains('|')) return null; // pipe-ref: skip
+            if (f is String && f.contains('|') && !f.contains(' ')) return null;
             return f;
           }).where((f) => f != null).toList()
         : features;

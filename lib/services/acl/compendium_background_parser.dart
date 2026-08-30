@@ -27,9 +27,10 @@ class CompendiumBackgroundParser {
     final toolProficiencies = _parseProficiencies(raw['toolProficiencies']);
     final languages = _parseProficiencies(raw['languageProficiencies']);
 
-    // Markdown description entries
+    // Markdown description entries (support entries, desc, description, text)
+    final entriesData = raw['entries'] ?? raw['desc'] ?? raw['description'] ?? raw['text'];
     final parsedEntries = transformer.transformEntries(
-      raw['entries'],
+      entriesData,
       defaultRuleset: ruleset,
     );
 
@@ -68,6 +69,9 @@ class CompendiumBackgroundParser {
     'toolProficiencies',
     'languageProficiencies',
     'entries',
+    'desc',
+    'description',
+    'text',
   };
 
   String? _parseOriginFeat(dynamic featData) {
@@ -99,7 +103,7 @@ class CompendiumBackgroundParser {
     }
     if (abilityData is Map) {
       final keys = abilityData.keys.map((k) => k.toString().toUpperCase()).toList();
-      return keys.join(', ');
+      return '+2/+1 or +1/+1/+1 (${keys.join(', ')})';
     }
     return null;
   }
@@ -112,18 +116,16 @@ class CompendiumBackgroundParser {
           results.add(item);
         } else if (item is Map) {
           item.forEach((k, v) {
-            if (v == true) {
-              results.add(k.toString());
-            } else if (k == 'choose') {
-              if (v is Map && v['from'] is List) {
-                results.add('Choose from: ${(v['from'] as List).join(', ')}');
-              }
-            } else {
-              results.add(k.toString());
+            if (v == true) results.add(k.toString());
+            if (k == 'choose' && v is Map) {
+              final count = v['count'] ?? 1;
+              results.add('Choose $count');
             }
           });
         }
       }
+    } else if (profData is String) {
+      results.add(profData);
     }
     return results;
   }

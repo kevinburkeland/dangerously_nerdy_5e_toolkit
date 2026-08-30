@@ -23,7 +23,7 @@ class CompendiumSpellParser {
     final school = _mapSchool(rawSchool);
 
     // Casting Time
-    final castingTime = _parseCastingTime(raw['time']);
+    final castingTime = _parseCastingTime(raw['time'] ?? raw['castingTime']);
 
     // Duration
     final duration = _parseDuration(raw['duration']);
@@ -32,19 +32,21 @@ class CompendiumSpellParser {
     final rangeStr = _parseRange(raw['range']);
 
     // Components
-    final components = _parseComponents(raw['components']);
+    final components = _parseComponents(raw['components'] ?? raw['component']);
 
-    // Markdown description entries
+    // Markdown description entries (support entries, desc, description, text)
+    final entriesData = raw['entries'] ?? raw['desc'] ?? raw['description'] ?? raw['text'];
     final transformed = transformer.transformEntries(
-      raw['entries'],
+      entriesData,
       defaultRuleset: ruleset,
     );
 
     // Higher level entries
     String? higherLevelsMarkdown;
-    if (raw['entriesHigherLevel'] != null) {
+    final hlData = raw['entriesHigherLevel'] ?? raw['higherLevel'] ?? raw['higherLevels'];
+    if (hlData != null) {
       final hl = transformer.transformEntries(
-        raw['entriesHigherLevel'],
+        hlData,
         defaultRuleset: ruleset,
       );
       if (hl.markdown.isNotEmpty) {
@@ -117,11 +119,18 @@ class CompendiumSpellParser {
     'level',
     'school',
     'time',
+    'castingTime',
     'duration',
     'range',
     'components',
+    'component',
     'entries',
+    'desc',
+    'description',
+    'text',
     'entriesHigherLevel',
+    'higherLevel',
+    'higherLevels',
     'damageInflict',
   };
 
@@ -137,12 +146,16 @@ class CompendiumSpellParser {
         final unit = first['unit']?.toString().toLowerCase() ?? 'action';
         actionType = _mapActionType(unit);
         triggerCondition = first['condition']?.toString();
+      } else if (first is String) {
+        return _parseCastingTimeString(first);
       }
     } else if (timeData is Map) {
       cost = (timeData['number'] as num?)?.toInt() ?? 1;
       final unit = timeData['unit']?.toString().toLowerCase() ?? 'action';
       actionType = _mapActionType(unit);
       triggerCondition = timeData['condition']?.toString();
+    } else if (timeData is String) {
+      return _parseCastingTimeString(timeData);
     }
 
     return CastingTime(
@@ -152,197 +165,231 @@ class CompendiumSpellParser {
     );
   }
 
+  CastingTime _parseCastingTimeString(String str) {
+    final lower = str.toLowerCase().trim();
+    if (lower.contains('bonus')) {
+      return const CastingTime(cost: 1, actionType: ActionType.bonusAction);
+    }
+    if (lower.contains('reaction')) {
+      return const CastingTime(cost: 1, actionType: ActionType.reaction);
+    }
+    if (lower.contains('minute')) {
+      final match = RegExp(r'\d+').firstMatch(lower);
+      final mins = match != null ? (int.tryParse(match.group(0)!) ?? 1) : 1;
+      return CastingTime(cost: mins, actionType: ActionType.minute);
+    }
+    if (lower.contains('hour')) {
+      final match = RegExp(r'\d+').firstMatch(lower);
+      final hrs = match != null ? (int.tryParse(match.group(0)!) ?? 1) : 1;
+      return CastingTime(cost: hrs, actionType: ActionType.hour);
+    }
+    return const CastingTime(cost: 1, actionType: ActionType.action);
+  }
+
   ActionType _mapActionType(String unit) {
-    switch (unit) {
+    switch (unit.toLowerCase().trim()) {
       case 'bonus':
       case 'bonus action':
         return ActionType.bonusAction;
       case 'reaction':
         return ActionType.reaction;
       case 'minute':
+      case 'minutes':
         return ActionType.minute;
       case 'hour':
+      case 'hours':
         return ActionType.hour;
-      case 'special':
-        return ActionType.special;
-      case 'action':
       default:
         return ActionType.action;
     }
   }
 
   SpellDuration _parseDuration(dynamic durationData) {
-    DurationType durationType = DurationType.instantaneous;
-    int durationSeconds = 0;
-    bool requiresConcentration = false;
-    String? rawText;
-
     if (durationData is List && durationData.isNotEmpty) {
       final first = durationData.first;
       if (first is Map) {
-        final type = first['type']?.toString().toLowerCase() ?? 'instant';
-        requiresConcentration = first['concentration'] == true;
+        final typeStr = first['type']?.toString().toLowerCase() ?? 'instant';
+        final concentration = first['concentration'] == true;
+        final durationObj = first['duration'] as Map?;
 
-        if (type == 'instant') {
-          durationType = DurationType.instantaneous;
-        } else if (type == 'timed' && first['duration'] is Map) {
-          durationType = DurationType.timed;
-          final d = first['duration'] as Map;
-          final amount = (d['amount'] as num?)?.toInt() ?? 1;
-          final unit = d['type']?.toString().toLowerCase() ?? 'minute';
-          durationSeconds = _calculateSeconds(amount, unit);
-          rawText = '$amount $unit${amount > 1 ? 's' : ''}';
-        } else if (type == 'permanent') {
-          durationType = DurationType.permanent;
-          rawText = 'Permanent';
-        } else {
-          durationType = DurationType.special;
-          rawText = 'Special';
+        if (typeStr == 'instant' || typeStr == 'instantaneous') {
+          return const SpellDuration(type: DurationType.instantaneous);
         }
+        if (typeStr == 'timed' && durationObj != null) {
+          final amount = (durationObj['amount'] as num?)?.toInt() ?? 1;
+          final unit = durationObj['type']?.toString().toLowerCase() ?? 'round';
+          int seconds = amount;
+          if (unit.contains('round')) seconds = amount * 6;
+          if (unit.contains('minute')) seconds = amount * 60;
+          if (unit.contains('hour')) seconds = amount * 3600;
+          if (unit.contains('day')) seconds = amount * 86400;
+
+          return SpellDuration(
+            type: DurationType.timed,
+            durationSeconds: seconds,
+            requiresConcentration: concentration,
+            rawText: '$amount $unit',
+          );
+        }
+        if (typeStr == 'permanent') {
+          return const SpellDuration(type: DurationType.permanent);
+        }
+        if (typeStr == 'special') {
+          return const SpellDuration(type: DurationType.special);
+        }
+      } else if (first is String) {
+        return _parseDurationString(first);
       }
-    } else if (durationData is Map) {
-      final type = durationData['type']?.toString().toLowerCase() ?? 'instant';
-      requiresConcentration = durationData['concentration'] == true;
-      if (type == 'timed' && durationData['duration'] is Map) {
-        durationType = DurationType.timed;
-        final d = durationData['duration'] as Map;
-        final amount = (d['amount'] as num?)?.toInt() ?? 1;
-        final unit = d['type']?.toString().toLowerCase() ?? 'minute';
-        durationSeconds = _calculateSeconds(amount, unit);
-      } else if (type == 'permanent') {
-        durationType = DurationType.permanent;
-      }
+    } else if (durationData is String) {
+      return _parseDurationString(durationData);
+    }
+
+    return const SpellDuration(type: DurationType.instantaneous);
+  }
+
+  SpellDuration _parseDurationString(String str) {
+    final lower = str.toLowerCase().trim();
+    final isConcentration = lower.contains('concentration');
+
+    if (lower.contains('instant')) {
+      return const SpellDuration(type: DurationType.instantaneous);
+    }
+    if (lower.contains('permanent')) {
+      return const SpellDuration(type: DurationType.permanent);
+    }
+    if (lower.contains('special')) {
+      return const SpellDuration(type: DurationType.special);
+    }
+
+    final match = RegExp(r'(\d+)\s*(round|minute|hour|day)s?').firstMatch(lower);
+    if (match != null) {
+      final amount = int.tryParse(match.group(1)!) ?? 1;
+      final unit = match.group(2)!;
+      int seconds = amount;
+      if (unit.contains('round')) seconds = amount * 6;
+      if (unit.contains('minute')) seconds = amount * 60;
+      if (unit.contains('hour')) seconds = amount * 3600;
+      if (unit.contains('day')) seconds = amount * 86400;
+
+      return SpellDuration(
+        type: DurationType.timed,
+        durationSeconds: seconds,
+        requiresConcentration: isConcentration,
+        rawText: '$amount $unit',
+      );
     }
 
     return SpellDuration(
-      type: durationType,
-      durationSeconds: durationSeconds,
-      requiresConcentration: requiresConcentration,
-      rawText: rawText,
+      type: DurationType.timed,
+      requiresConcentration: isConcentration,
+      rawText: str,
     );
   }
 
-  int _calculateSeconds(int amount, String unit) {
-    switch (unit) {
-      case 'round':
-        return amount * 6;
-      case 'minute':
-        return amount * 60;
-      case 'hour':
-        return amount * 3600;
-      case 'day':
-        return amount * 86400;
-      default:
-        return amount * 60;
-    }
-  }
-
   String _parseRange(dynamic rangeData) {
-    if (rangeData == null) return 'Self';
-    if (rangeData is String) return rangeData;
-
     if (rangeData is Map) {
-      final type = rangeData['type']?.toString().toLowerCase();
-      final dist = rangeData['distance'] as Map?;
-
-      if (dist != null) {
-        final amount = dist['amount'];
-        final distType = dist['type']?.toString().toLowerCase();
-        if (distType == 'feet' || distType == 'miles' || distType == 'yards') {
-          return '$amount $distType${type != null && type != 'point' ? ' ($type)' : ''}';
-        } else if (distType == 'touch') {
-          return 'Touch';
-        } else if (distType == 'self') {
-          return 'Self';
-        } else if (distType == 'sight') {
-          return 'Sight';
-        } else if (distType == 'unlimited') {
-          return 'Unlimited';
+      final type = rangeData['type']?.toString().toLowerCase() ?? 'point';
+      final distance = rangeData['distance'] as Map?;
+      if (distance != null) {
+        final amount = distance['amount'] ?? '';
+        final unit = distance['type']?.toString() ?? 'feet';
+        if (type == 'point') {
+          return '$amount $unit'.trim();
         }
+        return '$type ($amount $unit)'.trim();
       }
-
-      switch (type) {
-        case 'point':
-          return 'Point';
-        case 'touch':
-          return 'Touch';
-        case 'self':
-          return 'Self';
-        case 'special':
-          return 'Special';
-        default:
-          return type != null ? type[0].toUpperCase() + type.substring(1) : 'Self';
-      }
+      return type;
+    } else if (rangeData is String) {
+      return rangeData;
     }
-
     return 'Self';
   }
 
   SpellComponents _parseComponents(dynamic compData) {
-    if (compData == null) {
-      return const SpellComponents();
-    }
+    bool v = false;
+    bool s = false;
+    bool m = false;
+    String? matDesc;
+    int cost = 0;
+    bool consumed = false;
 
     if (compData is Map) {
-      final v = compData['v'] == true;
-      final s = compData['s'] == true;
-      final mRaw = compData['m'];
-
-      bool m = mRaw != null && mRaw != false;
-      String? materialDesc;
-      int materialCostGp = 0;
-      bool consumes = false;
-
-      if (mRaw is String) {
-        materialDesc = mRaw;
-      } else if (mRaw is Map) {
-        materialDesc = mRaw['text']?.toString();
-        consumes = mRaw['consume'] == true;
-        final costRaw = mRaw['cost'];
-        if (costRaw is num) {
-          materialCostGp = (costRaw / 100).round(); // Compendium standard uses cp for cost integer or direct gp
-          if (materialCostGp == 0 && costRaw > 0) {
-            materialCostGp = costRaw.toInt();
-          }
+      v = compData['v'] == true;
+      s = compData['s'] == true;
+      final rawM = compData['m'];
+      if (rawM is String) {
+        m = true;
+        matDesc = rawM;
+      } else if (rawM is Map) {
+        m = true;
+        matDesc = rawM['text']?.toString();
+        final rawCost = rawM['cost'] as num?;
+        cost = rawCost != null
+            ? (rawCost >= 100 ? rawCost ~/ 100 : rawCost.toInt())
+            : 0;
+        consumed = rawM['consume'] == true;
+      } else if (rawM == true) {
+        m = true;
+        matDesc = 'Material components';
+      }
+    } else if (compData is List) {
+      for (final item in compData) {
+        final str = item.toString().toUpperCase().trim();
+        if (str.startsWith('V')) v = true;
+        if (str.startsWith('S')) s = true;
+        if (str.startsWith('M')) {
+          m = true;
+          matDesc = item.toString();
         }
       }
-
-      return SpellComponents(
-        v: v,
-        s: s,
-        m: m,
-        materialDescription: materialDesc,
-        materialCostGp: materialCostGp,
-        consumesMaterial: consumes,
-      );
+    } else if (compData is String) {
+      final upper = compData.toUpperCase();
+      if (upper.contains('V')) v = true;
+      if (upper.contains('S')) s = true;
+      if (upper.contains('M')) {
+        m = true;
+        matDesc = compData;
+      }
     }
 
-    return const SpellComponents();
+    return SpellComponents(
+      v: v,
+      s: s,
+      m: m,
+      materialDescription: matDesc,
+      materialCostGp: cost,
+      consumesMaterial: consumed,
+    );
   }
 
-  String _mapSchool(String code) {
-    switch (code) {
+  String _mapSchool(String rawSchool) {
+    switch (rawSchool.toUpperCase().trim()) {
       case 'A':
+      case 'ABJURATION':
         return 'Abjuration';
       case 'C':
+      case 'CONJURATION':
         return 'Conjuration';
       case 'D':
+      case 'DIVINATION':
         return 'Divination';
       case 'E':
+      case 'ENCHANTMENT':
         return 'Enchantment';
+      case 'V':
+      case 'EVOCATION':
+        return 'Evocation';
       case 'I':
+      case 'ILLUSION':
         return 'Illusion';
       case 'N':
+      case 'NECROMANCY':
         return 'Necromancy';
       case 'T':
+      case 'TRANSMUTATION':
         return 'Transmutation';
-      case 'V':
-        return 'Evocation';
       default:
-        if (code.length > 2) {
-          return code[0].toUpperCase() + code.substring(1).toLowerCase();
-        }
-        return 'Universal';
+        return rawSchool.isNotEmpty ? rawSchool : 'Universal';
     }
   }
 

@@ -1,42 +1,36 @@
 import '../../models/characters/srd_backgrounds_library.dart';
 import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/srd_equipment_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
 import '../../models/domain/core_types.dart';
+import '../../models/magic_items/magic_item_library.dart';
+import '../../models/monster_codex_data.dart';
+import '../../models/spellbook_data.dart';
 
 /// Result of checking whether an incoming entity matches a canonical SRD entry.
 enum SrdMatchResult {
-  /// The entity is not an SRD canon entity — import normally.
+  /// The entity is not an SRD canon entity — import normally as novel homebrew.
   notSrd,
 
-  /// The entity is identical to an SRD entry (same slug + same core name).
-  /// Skip it entirely to avoid duplicating built-in content.
+  /// The entity is an exact canonical SRD entry (same slug or normalized name).
+  /// Excluded by default during import and pruned during reparse to prevent duplicate content.
   exactSrdMatch,
 
-  /// The entity shares an SRD name but has a different slug or additional
-  /// custom content. The additive merge strategy will enrich the SRD entity
-  /// with any extra traits/features from the incoming entity.
+  /// The entity shares an SRD name but has a different variant slug.
   srdVariantAdditive,
 }
 
-/// Comprehensive O(1) slug/name deduplication barrier over all SRD libraries.
-///
-/// The index is built lazily the first time [checkEntity] is called, and can
-/// be explicitly [rebuild]d after any SRD library mutation.
-///
-/// ## Additive Merge Policy (Q1 resolution)
-/// When an incoming entity is [srdVariantAdditive], the ingestion pipeline
-/// enriches the canonical SRD entity with any non-duplicate extra content from
-/// the incoming entity rather than creating a duplicate or rejecting it.
+/// Comprehensive O(1) slug/name deduplication barrier over ALL canonical SRD libraries:
+/// Spells, Monsters, Magic Items & Equipment, Classes, Subclasses, Species/Races, Feats, and Backgrounds.
 class SrdEquivalenceIndex {
-  // Singleton — one index for the lifetime of the app.
   static final SrdEquivalenceIndex _instance = SrdEquivalenceIndex._();
   factory SrdEquivalenceIndex() => _instance;
   SrdEquivalenceIndex._();
 
-  // Slug sets per entity type — exact match: "fighter" == "fighter"
+  // Normalized slug sets per entity type — exact slug match: "fireball" == "fireball"
   final Map<EntityType, Set<String>> _slugsByType = {};
-  // Normalised-name sets for fuzzy name matching
+  // Normalized-name sets per entity type for fuzzy/canonical name matching
   final Map<EntityType, Set<String>> _namesByType = {};
 
   bool _built = false;
@@ -45,8 +39,7 @@ class SrdEquivalenceIndex {
   // Public API
   // ---------------------------------------------------------------------------
 
-  /// Checks whether an incoming [slug]/[name]/[type] triple matches a
-  /// canonical SRD entry. Builds the index on first call.
+  /// Checks whether an incoming [slug]/[name]/[type] triple matches a canonical SRD entry.
   SrdMatchResult checkEntity({
     required String slug,
     required String name,
@@ -57,74 +50,156 @@ class SrdEquivalenceIndex {
     final slugSet = _slugsByType[type] ?? const {};
     final nameSet = _namesByType[type] ?? const {};
 
-    if (slugSet.contains(slug)) return SrdMatchResult.exactSrdMatch;
+    final normSlug = slug.toLowerCase().trim();
+    final normName = _slugify(name);
 
-    final normalizedName = _slugify(name);
-    if (nameSet.contains(normalizedName)) {
-      return SrdMatchResult.srdVariantAdditive;
+    // 1. Direct slug or normalized name match
+    if (slugSet.contains(normSlug) || slugSet.contains(normName)) {
+      return SrdMatchResult.exactSrdMatch;
+    }
+
+    // 2. Normalized name match
+    if (nameSet.contains(normName)) {
+      return SrdMatchResult.exactSrdMatch;
+    }
+
+    // 3. Stripped source suffix match (e.g., "fireball-phb", "fireball-srd", "goblin-mm", "fighter-2024")
+    final stripped = normSlug.replaceAll(
+      RegExp(r'[-_](phb|dmg|mm|xge|tce|srd|srd52|srd51|2014|2024|v2014|v2024|xphb)$'),
+      '',
+    );
+    if (slugSet.contains(stripped) || nameSet.contains(stripped)) {
+      return SrdMatchResult.exactSrdMatch;
     }
 
     return SrdMatchResult.notSrd;
   }
 
-  /// Returns true iff [slug] is a canonical SRD entity of [type].
-  bool isCanonSrd(String slug, EntityType type) {
+  /// Returns true iff [slug] or [name] is a canonical SRD entity of [type].
+  bool isCanonSrd(String slug, EntityType type, {String? name}) {
     if (!_built) build();
-    return (_slugsByType[type] ?? const <String>{}).contains(slug);
+    if (name != null && name.isNotEmpty) {
+      return checkEntity(slug: slug, name: name, type: type) != SrdMatchResult.notSrd;
+    }
+    final slugSet = _slugsByType[type] ?? const {};
+    final normSlug = slug.toLowerCase().trim();
+    if (slugSet.contains(normSlug)) return true;
+    final stripped = normSlug.replaceAll(
+      RegExp(r'[-_](phb|dmg|mm|xge|tce|srd|srd52|srd51|2014|2024|v2014|v2024|xphb)$'),
+      '',
+    );
+    return slugSet.contains(stripped);
   }
 
-  /// Rebuilds the index from all SRD libraries.
-  /// Call after SRD library mutations or test reset.
+  /// Rebuilds the index from all SRD libraries across all 8 major categories.
   void build() {
     _slugsByType.clear();
     _namesByType.clear();
 
-    // 1. Classes (SrdClassesLibrary — base SRD only, not custom homebrew)
-    _index(EntityType.classDefinition,
-      SrdClassesLibrary.allClasses.where((c) => c.id.ruleset != RulesetVersion.homebrew).map((c) => c.id.slug).toSet(),
-      SrdClassesLibrary.allClasses.where((c) => c.id.ruleset != RulesetVersion.homebrew).map((c) => _slugify(c.name)).toSet(),
-    );
+    // 1. Spells (SpellbookLibrary — all canonical SRD spells)
+    final spellSlugs = <String>{};
+    final spellNames = <String>{};
+    for (final s in SpellbookLibrary.allSpells) {
+      spellSlugs.add(s.id.toLowerCase().trim());
+      spellSlugs.add(_slugify(s.name));
+      spellNames.add(_slugify(s.name));
+    }
+    _index(EntityType.spell, spellSlugs, spellNames);
 
-    // 2. Subclasses
-    final baseSubclasses = SrdClassesLibrary.allClasses
-        .where((c) => c.id.ruleset != RulesetVersion.homebrew)
-        .expand((c) => c.subclasses);
-    _index(EntityType.subclass,
-      baseSubclasses.map((s) => s.id.slug).toSet(),
-      baseSubclasses.map((s) => _slugify(s.name)).toSet(),
-    );
+    // 2. Monsters (MonsterCodexLibrary — base SRD monsters only)
+    final monsterSlugs = <String>{};
+    final monsterNames = <String>{};
+    for (final m in MonsterCodexLibrary.allMonsters.where((m) => !m.isHomebrew)) {
+      monsterSlugs.add(m.id.toLowerCase().trim());
+      monsterSlugs.add(_slugify(m.name));
+      monsterNames.add(_slugify(m.name));
+    }
+    _index(EntityType.monster, monsterSlugs, monsterNames);
 
-    // 3. Species (SrdSpeciesLibrary — base only)
+    // 3. Equipment & Magic Items (MagicItemLibrary + SrdEquipmentLibrary)
+    final itemSlugs = <String>{};
+    final itemNames = <String>{};
+    for (final item in MagicItemLibrary.allItems) {
+      itemSlugs.add(item.id.toLowerCase().trim());
+      itemSlugs.add(item.id.replaceAll('_', '-').toLowerCase().trim());
+      itemSlugs.add(_slugify(item.name));
+      itemNames.add(_slugify(item.name));
+      if (item.name2014 != null) itemNames.add(_slugify(item.name2014!));
+      if (item.name2024 != null) itemNames.add(_slugify(item.name2024!));
+    }
+    for (final eq in SrdEquipmentLibrary.allEquipmentItems) {
+      itemSlugs.add(eq.id.slug.toLowerCase().trim());
+      itemSlugs.add(_slugify(eq.name));
+      itemNames.add(_slugify(eq.name));
+    }
+    _index(EntityType.equipment, itemSlugs, itemNames);
+
+    // 4. Classes (SrdClassesLibrary — base SRD only)
+    final baseClasses = SrdClassesLibrary.allClasses.where((c) => c.id.ruleset != RulesetVersion.homebrew);
+    final classSlugs = <String>{};
+    final classNames = <String>{};
+    for (final c in baseClasses) {
+      classSlugs.add(c.id.slug.toLowerCase().trim());
+      classSlugs.add(_slugify(c.name));
+      classNames.add(_slugify(c.name));
+    }
+    _index(EntityType.classDefinition, classSlugs, classNames);
+
+    // 5. Subclasses (SrdClassesLibrary)
+    final baseSubclasses = baseClasses.expand((c) => c.subclasses);
+    final subSlugs = <String>{};
+    final subNames = <String>{};
+    for (final s in baseSubclasses) {
+      subSlugs.add(s.id.slug.toLowerCase().trim());
+      subSlugs.add(_slugify(s.name));
+      subSlugs.add(_slugify(s.shortName));
+      subNames.add(_slugify(s.name));
+      subNames.add(_slugify(s.shortName));
+    }
+    _index(EntityType.subclass, subSlugs, subNames);
+
+    // 6. Species & Races (SrdSpeciesLibrary)
     final baseSpecies = SrdSpeciesLibrary.allSpecies.where((r) => r.id.ruleset != RulesetVersion.homebrew);
-    _index(EntityType.species,
-      baseSpecies.map((r) => r.id.slug).toSet(),
-      baseSpecies.map((r) => _slugify(r.name)).toSet(),
-    );
+    final raceSlugs = <String>{};
+    final raceNames = <String>{};
+    for (final r in baseSpecies) {
+      raceSlugs.add(r.id.slug.toLowerCase().trim());
+      raceSlugs.add(_slugify(r.name));
+      raceNames.add(_slugify(r.name));
+      for (final sub in r.subraces) {
+        raceSlugs.add(sub.id.slug.toLowerCase().trim());
+        raceSlugs.add(_slugify(sub.name));
+        raceNames.add(_slugify(sub.name));
+      }
+    }
+    _index(EntityType.species, raceSlugs, raceNames);
 
-    // 4. Feats (SrdFeatsLibrary — base only)
+    // 7. Feats (SrdFeatsLibrary)
     final baseFeats = SrdFeatsLibrary.allFeats.where((f) => f.id.ruleset != RulesetVersion.homebrew);
-    _index(EntityType.feat,
-      baseFeats.map((f) => f.id.slug).toSet(),
-      baseFeats.map((f) => _slugify(f.name)).toSet(),
-    );
+    final featSlugs = <String>{};
+    final featNames = <String>{};
+    for (final f in baseFeats) {
+      featSlugs.add(f.id.slug.toLowerCase().trim());
+      featSlugs.add(_slugify(f.name));
+      featNames.add(_slugify(f.name));
+    }
+    _index(EntityType.feat, featSlugs, featNames);
 
-    // 5. Backgrounds (SrdBackgroundsLibrary — base only)
+    // 8. Backgrounds (SrdBackgroundsLibrary)
     final baseBgs = SrdBackgroundsLibrary.allBackgrounds.where((b) => b.id.ruleset != RulesetVersion.homebrew);
-    _index(EntityType.background,
-      baseBgs.map((b) => b.id.slug).toSet(),
-      baseBgs.map((b) => _slugify(b.name)).toSet(),
-    );
-
-    // Note: Spells and Monsters are excluded from the SRD deduplication scope
-    // per the engineering brief (they are "largely working as intended").
-    // Items (magic + mundane) are not deduplicated since the SRD equipment
-    // library doesn't expose a flat EquipmentItem list (it uses SrdEquipmentPackage).
-    // Both can be added in a future phase if needed.
+    final bgSlugs = <String>{};
+    final bgNames = <String>{};
+    for (final b in baseBgs) {
+      bgSlugs.add(b.id.slug.toLowerCase().trim());
+      bgSlugs.add(_slugify(b.name));
+      bgNames.add(_slugify(b.name));
+    }
+    _index(EntityType.background, bgSlugs, bgNames);
 
     _built = true;
   }
 
-  /// Invalidates the index — it will be rebuilt on the next [checkEntity] call.
+  /// Invalidates the index — it will be rebuilt on the next check call.
   void invalidate() => _built = false;
 
   // ---------------------------------------------------------------------------
@@ -139,7 +214,7 @@ class SrdEquivalenceIndex {
   static String _slugify(String name) {
     return name
         .toLowerCase()
-        .replaceAll(RegExp(r"['']"), '')
+        .replaceAll(RegExp(r"['’]"), '')
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
   }

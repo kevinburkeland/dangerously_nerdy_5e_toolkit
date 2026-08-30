@@ -1528,23 +1528,27 @@ class HomebrewPersistenceService {
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final stored = prefs.getString(rawKey);
-      if (stored == null || stored.isEmpty) return 0;
+      final storedRaw = prefs.getString(rawKey);
+      final rawMap = storedRaw != null && storedRaw.isNotEmpty
+          ? Map<String, dynamic>.from(json.decode(storedRaw) as Map)
+          : <String, dynamic>{};
 
-      final rawMap = Map<String, dynamic>.from(json.decode(stored) as Map);
       final reparsed = <T>[];
+      final slugsToPrune = <String>{};
 
+      // 1. Re-parse from raw JSON payloads where available
       for (final entry in rawMap.entries) {
         final rawPayload = Map<String, dynamic>.from(entry.value as Map);
         try {
           final entity = fromRaw(rawPayload);
-          // SRD exact match — remove from homebrew storage
           final srdResult = srdIndex.checkEntity(
             slug: entity.id.slug,
             name: entity.name,
             type: entityType,
           );
-          if (srdResult == SrdMatchResult.exactSrdMatch) {
+          if (srdResult != SrdMatchResult.notSrd) {
+            slugsToPrune.add(entry.key);
+            slugsToPrune.add(entity.id.slug);
             onSrdRemoved?.call(entity.id.slug);
             continue;
           }
@@ -1552,6 +1556,47 @@ class HomebrewPersistenceService {
         } catch (e, st) {
           LoggingService().logNonFatal(e, st, reason: 'Re-parse failed for ${entry.key}');
         }
+      }
+
+      // 2. Remove pruned SRD keys from rawMap and save back
+      if (slugsToPrune.isNotEmpty) {
+        for (final slug in slugsToPrune) {
+          rawMap.remove(slug);
+        }
+        await prefs.setString(rawKey, json.encode(rawMap));
+      }
+
+      // 3. Check legacy parsed store for any SRD duplicates not in rawMap
+      final existingParsed = prefs.getStringList(parsedKey) ?? [];
+      final allSlugsHandled = <String>{
+        ...reparsed.map((e) => e.id.slug),
+        ...slugsToPrune,
+      };
+
+      for (final jsonStr in existingParsed) {
+        try {
+          final decoded = json.decode(jsonStr) as Map<String, dynamic>;
+          final idObj = decoded['id'];
+          final slug = idObj is Map ? (idObj['slug']?.toString() ?? '') : (decoded['slug']?.toString() ?? '');
+          final name = decoded['name']?.toString() ?? '';
+
+          if (slug.isNotEmpty && !allSlugsHandled.contains(slug)) {
+            final srdResult = srdIndex.checkEntity(
+              slug: slug,
+              name: name,
+              type: entityType,
+            );
+            if (srdResult != SrdMatchResult.notSrd) {
+              onSrdRemoved?.call(slug);
+              allSlugsHandled.add(slug);
+              continue;
+            }
+            // Keep non-SRD legacy entity
+            final legacyEntity = fromRaw(decoded);
+            reparsed.add(legacyEntity);
+            allSlugsHandled.add(slug);
+          }
+        } catch (_) {}
       }
 
       await prefs.setStringList(parsedKey, reparsed.map(toJson).toList());

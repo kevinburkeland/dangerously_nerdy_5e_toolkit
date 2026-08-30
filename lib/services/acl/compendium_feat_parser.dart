@@ -18,8 +18,9 @@ class CompendiumFeatParser {
 
     // Prerequisite
     String? prereq;
-    if (raw['prerequisite'] is List) {
-      prereq = (raw['prerequisite'] as List).map((e) {
+    final rawPrereq = raw['prerequisite'] ?? raw['prereq'];
+    if (rawPrereq is List) {
+      prereq = rawPrereq.map((e) {
         if (e is Map) {
           final parts = <String>[];
           if (e['level'] != null) parts.add('Level ${e['level']}');
@@ -34,16 +35,17 @@ class CompendiumFeatParser {
         }
         return e.toString();
       }).join('; ');
-    } else if (raw['prerequisite'] != null) {
-      prereq = raw['prerequisite'].toString();
+    } else if (rawPrereq != null) {
+      prereq = rawPrereq.toString();
     }
 
     // Category (Origin, General, Fighting Style, Epic Boon)
     final category = _parseCategory(raw);
 
-    // Description Markdown
+    // Description Markdown (support entries, desc, description, text)
+    final entriesData = raw['entries'] ?? raw['desc'] ?? raw['description'] ?? raw['text'];
     final parsedEntries = transformer.transformEntries(
-      raw['entries'],
+      entriesData,
       defaultRuleset: ruleset,
     );
 
@@ -73,9 +75,13 @@ class CompendiumFeatParser {
     'name',
     'source',
     'prerequisite',
+    'prereq',
     'category',
     'featType',
     'entries',
+    'desc',
+    'description',
+    'text',
   };
 
   String _parseCategory(Map<String, dynamic> raw) {

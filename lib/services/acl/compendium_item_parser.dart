@@ -23,10 +23,11 @@ class CompendiumItemParser {
     final rarity = _parseRarity(raw['rarity']);
 
     // Attunement
-    final reqAttune = _parseAttunement(raw['reqAttune']);
+    final reqAttune = _parseAttunement(raw['reqAttune'] ?? raw['attunement']);
 
-    // Transform Markdown Entries
-    final parsed = transformer.transformEntries(raw['entries'], defaultRuleset: ruleset);
+    // Transform Markdown Entries (support entries, desc, description, text)
+    final entriesData = raw['entries'] ?? raw['desc'] ?? raw['description'] ?? raw['text'];
+    final parsed = transformer.transformEntries(entriesData, defaultRuleset: ruleset);
 
     // Auxiliary & Weapon/Armor Metrics (0% data loss)
     final customProperties = <String, dynamic>{};
@@ -72,12 +73,16 @@ class CompendiumItemParser {
     'type',
     'rarity',
     'reqAttune',
+    'attunement',
     'entries',
+    'desc',
+    'description',
+    'text',
   };
 
   String _parseItemType(Map<String, dynamic> raw) {
     if (raw['type'] != null) {
-      final t = raw['type'].toString().toUpperCase();
+      final t = raw['type'].toString().toUpperCase().trim();
       switch (t) {
         case 'M':
         case 'MELEE':
@@ -145,6 +150,7 @@ class CompendiumItemParser {
       case 'unknown':
         return 'Varies';
       default:
+        if (r.isEmpty) return 'None';
         return r[0].toUpperCase() + r.substring(1);
     }
   }
@@ -159,7 +165,14 @@ class CompendiumItemParser {
     if (attuneData is String) {
       return (requiresAttunement: true, prerequisite: attuneData);
     }
-    return (requiresAttunement: true, prerequisite: null);
+    if (attuneData is Map) {
+      final tags = attuneData['tags'] as List?;
+      if (tags != null && tags.isNotEmpty) {
+        return (requiresAttunement: true, prerequisite: tags.join(', '));
+      }
+      return (requiresAttunement: true, prerequisite: null);
+    }
+    return (requiresAttunement: false, prerequisite: null);
   }
 
   String _slugify(String name) {
@@ -173,10 +186,10 @@ class CompendiumItemParser {
   RulesetVersion _mapSourceToRuleset(String? source) {
     if (source == null || source.isEmpty) return RulesetVersion.homebrew;
     final s = source.toUpperCase();
-    if (s.contains('XPHB') || s.contains('SRD52') || s.contains('2024')) {
+    if (s.contains('XDMG') || s.contains('SRD52') || s.contains('2024')) {
       return RulesetVersion.v2024;
     }
-    if (s.contains('PHB') || s.contains('SRD') || s.contains('2014')) {
+    if (s.contains('DMG') || s.contains('SRD') || s.contains('2014')) {
       return RulesetVersion.v2014;
     }
     return RulesetVersion.homebrew;
