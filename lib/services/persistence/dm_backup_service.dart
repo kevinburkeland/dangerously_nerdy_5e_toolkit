@@ -1,5 +1,8 @@
 import 'dart:convert';
 import '../../models/campaign_profile.dart';
+import '../../models/custom_preset.dart';
+import '../../models/domain/dm_backup_models.dart';
+import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/dpr/dpr_serialization.dart';
 import '../../utils/campaign_file_downloader.dart';
 import '../logging_service.dart';
@@ -16,6 +19,82 @@ class DmBackupService {
   static final DmBackupService _instance = DmBackupService._internal();
   factory DmBackupService() => _instance;
   DmBackupService._internal();
+
+  /// Validates a raw JSON payload before attempting hydration.
+  ImportValidationReport validatePayload(String rawJson) {
+    final clean = rawJson.trim();
+    if (clean.isEmpty) {
+      return const ImportValidationReport(
+        status: ImportValidationStatus.corrupt,
+        errors: ['Import payload is empty.'],
+      );
+    }
+
+    if (clean.length > 10000000) {
+      return const ImportValidationReport(
+        status: ImportValidationStatus.corrupt,
+        errors: ['Import payload exceeds 10MB limit.'],
+      );
+    }
+
+    try {
+      final decoded = json.decode(clean);
+      if (decoded is! Map<String, dynamic>) {
+        return const ImportValidationReport(
+          status: ImportValidationStatus.corrupt,
+          errors: ['Root JSON structure must be a JSON object.'],
+        );
+      }
+
+      final schemaVer = (decoded['schemaVersion'] as num?)?.toInt() ?? 1;
+      final appVer = decoded['appVersion']?.toString() ?? '1.0.0';
+      final type = decoded['type']?.toString() ??
+          (decoded.containsKey('campaignProfiles')
+              ? 'full_system_snapshot'
+              : (decoded.containsKey('campaign') || decoded.containsKey('roomState')
+                  ? 'campaign_profile'
+                  : 'unknown'));
+
+      final warnings = <String>[];
+      final errors = <String>[];
+
+      if (schemaVer > currentSchemaVersion) {
+        warnings.add('Payload schema version ($schemaVer) is newer than current ($currentSchemaVersion).');
+      }
+
+      if (type == 'campaign_profile') {
+        if (!decoded.containsKey('campaign') && (!decoded.containsKey('id') || !decoded.containsKey('name'))) {
+          errors.add('Missing campaign payload fields.');
+        }
+      } else if (type == 'full_system_snapshot') {
+        if (!decoded.containsKey('campaignProfiles')) {
+          errors.add('Missing campaignProfiles array in system snapshot.');
+        }
+      } else {
+        warnings.add('Unrecognized payload type "$type". Attempting fallback parsing.');
+      }
+
+      final status = errors.isNotEmpty
+          ? ImportValidationStatus.corrupt
+          : (warnings.isNotEmpty
+              ? ImportValidationStatus.validWithWarnings
+              : ImportValidationStatus.valid);
+
+      return ImportValidationReport(
+        status: status,
+        schemaVersion: schemaVer,
+        appVersion: appVer,
+        payloadType: type,
+        warnings: warnings,
+        errors: errors,
+      );
+    } catch (e) {
+      return ImportValidationReport(
+        status: ImportValidationStatus.corrupt,
+        errors: ['JSON parse error: $e'],
+      );
+    }
+  }
 
   /// Packages a single [CampaignProfile] into a validated envelope format.
   String exportProfileJson(CampaignProfile profile) {
@@ -68,29 +147,32 @@ class DmBackupService {
     return const JsonEncoder.withIndent('  ').convert(payload);
   }
 
+  /// Triggers a 1-click full system master backup download.
+  Future<bool> downloadFullSystemBackup() async {
+    final jsonContent = await exportFullSystemSnapshot();
+    final dateStr = DateTime.now().toIso8601String().split('T').first;
+    final filename = 'dn5e_master_backup_$dateStr.json';
+
+    return await CampaignFileDownloader.downloadJsonFile(jsonContent, filename);
+  }
+
   /// Safely hydrates, validates, and persists an imported campaign profile from raw JSON string.
   /// Returns the imported [CampaignProfile] on success, or `null` if invalid.
   Future<CampaignProfile?> validateAndImportProfile(String rawJson) async {
     try {
-      final clean = rawJson.trim();
-      if (clean.isEmpty || clean.length > 5000000) {
-        LoggingService().logWarning('Import payload empty or exceeds 5MB size limit');
+      final report = validatePayload(rawJson);
+      if (!report.isValid) {
+        LoggingService().logWarning('Validation failed for imported campaign snapshot: ${report.errors}');
         return null;
       }
 
-      final decoded = json.decode(clean);
-      if (decoded is! Map) {
-        LoggingService().logWarning('Invalid JSON root format: Expected object map');
-        return null;
-      }
-
-      final rootMap = Map<String, dynamic>.from(decoded);
+      final decoded = json.decode(rawJson.trim()) as Map<String, dynamic>;
       Map<String, dynamic> campaignMap;
 
-      if (rootMap.containsKey('campaign') && rootMap['campaign'] is Map) {
-        campaignMap = Map<String, dynamic>.from(rootMap['campaign'] as Map);
-      } else if (rootMap.containsKey('id') && rootMap.containsKey('name')) {
-        campaignMap = rootMap;
+      if (decoded.containsKey('campaign') && decoded['campaign'] is Map) {
+        campaignMap = Map<String, dynamic>.from(decoded['campaign'] as Map);
+      } else if (decoded.containsKey('id') && decoded.containsKey('name')) {
+        campaignMap = decoded;
       } else {
         LoggingService().logWarning('Missing valid campaign schema in payload');
         return null;
@@ -117,6 +199,91 @@ class DmBackupService {
         reason: 'Safe hydration error while importing campaign profile snapshot',
       );
       return null;
+    }
+  }
+
+  /// Restores a full system master snapshot bundle into local persistent storage.
+  Future<bool> restoreFullSystemSnapshot(String rawJson) async {
+    try {
+      final report = validatePayload(rawJson);
+      if (!report.isValid || !report.isFullSystemSnapshot) {
+        LoggingService().logWarning('Snapshot validation failed: ${report.errors}');
+        return false;
+      }
+
+      final decoded = json.decode(rawJson.trim()) as Map<String, dynamic>;
+
+      // 1. Restore Campaigns
+      final campaignService = CampaignProfileService();
+      final profilesArr = decoded['campaignProfiles'] as List? ?? [];
+      for (final p in profilesArr) {
+        if (p is Map<String, dynamic>) {
+          try {
+            final profile = CampaignProfile.fromMap(p);
+            await campaignService.saveProfileImmediate(profile);
+          } catch (_) {}
+        }
+      }
+
+      // 2. Restore Custom Presets
+      final presetService = PresetService();
+      final presetsArr = decoded['dicePresets'] as List? ?? [];
+      for (final pr in presetsArr) {
+        if (pr is Map<String, dynamic>) {
+          try {
+            final preset = CustomPreset.fromMap(pr);
+            await presetService.savePreset(preset);
+          } catch (_) {}
+        }
+      }
+
+      // 3. Restore DPR Builds
+      final dprService = DprPersistenceService();
+      final dprArr = decoded['dprProfiles'] as List? ?? [];
+      for (final d in dprArr) {
+        if (d is Map<String, dynamic>) {
+          try {
+            final dprProfile = DprCombatantProfileSerialization.fromMap(d);
+            await dprService.saveProfileToLibrary(dprProfile);
+          } catch (_) {}
+        }
+      }
+
+      // 4. Restore Homebrew Entities
+      final homebrewService = HomebrewPersistenceService();
+      if (decoded['customSpells'] is List) {
+        final spells = (decoded['customSpells'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((m) => Spell.fromMap(m))
+            .toList();
+        await homebrewService.saveCustomSpellsBatch(spells);
+      }
+
+      if (decoded['customMonsters'] is List) {
+        final monsters = (decoded['customMonsters'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((m) => Monster.fromMap(m))
+            .toList();
+        await homebrewService.saveCustomMonstersBatch(monsters);
+      }
+
+      if (decoded['customItems'] is List) {
+        final items = (decoded['customItems'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map((m) => EquipmentItem.fromMap(m))
+            .toList();
+        await homebrewService.saveCustomItemsBatch(items);
+      }
+
+      await homebrewService.syncToLibraries();
+      return true;
+    } catch (e, st) {
+      LoggingService().logNonFatal(
+        e,
+        st,
+        reason: 'Failed to restore full system backup',
+      );
+      return false;
     }
   }
 }

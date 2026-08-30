@@ -46,11 +46,34 @@ class HomebrewPersistenceService {
   /// Saves a custom spell to persistent storage.
   Future<void> saveCustomSpell(Spell spell) async {
     final spells = await loadCustomSpells();
-    final idx = spells.indexWhere((s) => s.id.slug == spell.id.slug);
+    final idx = spells.indexWhere(
+      (s) => s.id.slug == spell.id.slug && s.id.ruleset == spell.id.ruleset,
+    );
     if (idx != -1) {
       spells[idx] = spell;
     } else {
       spells.add(spell);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewSpells,
+      spells.map((s) => json.encode(s.toMap())).toList(),
+    );
+  }
+
+  /// Batch saves multiple custom spells to persistent storage.
+  Future<void> saveCustomSpellsBatch(List<Spell> newSpells) async {
+    if (newSpells.isEmpty) return;
+    final spells = await loadCustomSpells();
+    for (final spell in newSpells) {
+      final idx = spells.indexWhere(
+        (s) => s.id.slug == spell.id.slug && s.id.ruleset == spell.id.ruleset,
+      );
+      if (idx != -1) {
+        spells[idx] = spell;
+      } else {
+        spells.add(spell);
+      }
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
@@ -106,7 +129,9 @@ class HomebrewPersistenceService {
   /// Saves a custom monster to persistent storage and updates MonsterCodexLibrary.
   Future<void> saveCustomMonster(Monster monster) async {
     final monsters = await loadCustomMonsters();
-    final idx = monsters.indexWhere((m) => m.id.slug == monster.id.slug);
+    final idx = monsters.indexWhere(
+      (m) => m.id.slug == monster.id.slug && m.id.ruleset == monster.id.ruleset,
+    );
     if (idx != -1) {
       monsters[idx] = monster;
     } else {
@@ -118,6 +143,28 @@ class HomebrewPersistenceService {
       monsters.map((m) => json.encode(m.toMap())).toList(),
     );
     MonsterCodexLibrary.addHomebrewMonster(monster);
+  }
+
+  /// Batch saves multiple custom monsters to persistent storage and updates MonsterCodexLibrary.
+  Future<void> saveCustomMonstersBatch(List<Monster> newMonsters) async {
+    if (newMonsters.isEmpty) return;
+    final monsters = await loadCustomMonsters();
+    for (final monster in newMonsters) {
+      final idx = monsters.indexWhere(
+        (m) => m.id.slug == monster.id.slug && m.id.ruleset == monster.id.ruleset,
+      );
+      if (idx != -1) {
+        monsters[idx] = monster;
+      } else {
+        monsters.add(monster);
+      }
+      MonsterCodexLibrary.addHomebrewMonster(monster);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewMonsters,
+      monsters.map((m) => json.encode(m.toMap())).toList(),
+    );
   }
 
   /// Deletes a custom monster by slug and updates MonsterCodexLibrary.
@@ -150,11 +197,34 @@ class HomebrewPersistenceService {
   /// Saves a custom item to persistent storage.
   Future<void> saveCustomItem(EquipmentItem item) async {
     final items = await loadCustomItems();
-    final idx = items.indexWhere((i) => i.id.slug == item.id.slug);
+    final idx = items.indexWhere(
+      (i) => i.id.slug == item.id.slug && i.id.ruleset == item.id.ruleset,
+    );
     if (idx != -1) {
       items[idx] = item;
     } else {
       items.add(item);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewItems,
+      items.map((i) => json.encode(i.toMap())).toList(),
+    );
+  }
+
+  /// Batch saves multiple custom items to persistent storage.
+  Future<void> saveCustomItemsBatch(List<EquipmentItem> newItems) async {
+    if (newItems.isEmpty) return;
+    final items = await loadCustomItems();
+    for (final item in newItems) {
+      final idx = items.indexWhere(
+        (i) => i.id.slug == item.id.slug && i.id.ruleset == item.id.ruleset,
+      );
+      if (idx != -1) {
+        items[idx] = item;
+      } else {
+        items.add(item);
+      }
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
@@ -192,7 +262,9 @@ class HomebrewPersistenceService {
   /// Saves a custom class to persistent storage and runtime library.
   Future<void> saveCustomClass(CharacterClass characterClass) async {
     final classes = await loadCustomClasses();
-    final idx = classes.indexWhere((c) => c.id.slug == characterClass.id.slug);
+    final idx = classes.indexWhere(
+      (c) => c.id.slug == characterClass.id.slug && c.id.ruleset == characterClass.id.ruleset,
+    );
     if (idx != -1) {
       classes[idx] = characterClass;
     } else {
@@ -204,6 +276,28 @@ class HomebrewPersistenceService {
       classes.map((c) => json.encode(c.toMap())).toList(),
     );
     SrdClassesLibrary.addCustomClass(characterClass);
+  }
+
+  /// Batch saves multiple custom classes to persistent storage and runtime library.
+  Future<void> saveCustomClassesBatch(List<CharacterClass> newClasses) async {
+    if (newClasses.isEmpty) return;
+    final classes = await loadCustomClasses();
+    for (final c in newClasses) {
+      final idx = classes.indexWhere(
+        (existing) => existing.id.slug == c.id.slug && existing.id.ruleset == c.id.ruleset,
+      );
+      if (idx != -1) {
+        classes[idx] = c;
+      } else {
+        classes.add(c);
+      }
+      SrdClassesLibrary.addCustomClass(c);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewClasses,
+      classes.map((c) => json.encode(c.toMap())).toList(),
+    );
   }
 
   /// Deletes a custom class by slug and runtime library.
@@ -236,11 +330,34 @@ class HomebrewPersistenceService {
   /// Saves a custom subclass to persistent storage.
   Future<void> saveCustomSubclass(Subclass subclass) async {
     final subs = await loadCustomSubclasses();
-    final idx = subs.indexWhere((s) => s.id.slug == subclass.id.slug);
+    final idx = subs.indexWhere(
+      (s) => s.id.slug == subclass.id.slug && s.id.ruleset == subclass.id.ruleset,
+    );
     if (idx != -1) {
       subs[idx] = subclass;
     } else {
       subs.add(subclass);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewSubclasses,
+      subs.map((s) => json.encode(s.toMap())).toList(),
+    );
+  }
+
+  /// Batch saves multiple custom subclasses to persistent storage.
+  Future<void> saveCustomSubclassesBatch(List<Subclass> newSubclasses) async {
+    if (newSubclasses.isEmpty) return;
+    final subs = await loadCustomSubclasses();
+    for (final s in newSubclasses) {
+      final idx = subs.indexWhere(
+        (existing) => existing.id.slug == s.id.slug && existing.id.ruleset == s.id.ruleset,
+      );
+      if (idx != -1) {
+        subs[idx] = s;
+      } else {
+        subs.add(s);
+      }
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
@@ -278,7 +395,9 @@ class HomebrewPersistenceService {
   /// Saves a custom race to persistent storage and runtime library.
   Future<void> saveCustomRace(Race race) async {
     final races = await loadCustomRaces();
-    final idx = races.indexWhere((r) => r.id.slug == race.id.slug);
+    final idx = races.indexWhere(
+      (r) => r.id.slug == race.id.slug && r.id.ruleset == race.id.ruleset,
+    );
     if (idx != -1) {
       races[idx] = race;
     } else {
@@ -290,6 +409,28 @@ class HomebrewPersistenceService {
       races.map((r) => json.encode(r.toMap())).toList(),
     );
     SrdSpeciesLibrary.addCustomSpecies(race);
+  }
+
+  /// Batch saves multiple custom races to persistent storage and runtime library.
+  Future<void> saveCustomRacesBatch(List<Race> newRaces) async {
+    if (newRaces.isEmpty) return;
+    final races = await loadCustomRaces();
+    for (final r in newRaces) {
+      final idx = races.indexWhere(
+        (existing) => existing.id.slug == r.id.slug && existing.id.ruleset == r.id.ruleset,
+      );
+      if (idx != -1) {
+        races[idx] = r;
+      } else {
+        races.add(r);
+      }
+      SrdSpeciesLibrary.addCustomSpecies(r);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewRaces,
+      races.map((r) => json.encode(r.toMap())).toList(),
+    );
   }
 
   /// Deletes a custom race by slug and runtime library.
@@ -322,7 +463,9 @@ class HomebrewPersistenceService {
   /// Saves a custom feat to persistent storage and runtime library.
   Future<void> saveCustomFeat(Feat feat) async {
     final feats = await loadCustomFeats();
-    final idx = feats.indexWhere((f) => f.id.slug == feat.id.slug);
+    final idx = feats.indexWhere(
+      (f) => f.id.slug == feat.id.slug && f.id.ruleset == feat.id.ruleset,
+    );
     if (idx != -1) {
       feats[idx] = feat;
     } else {
@@ -334,6 +477,28 @@ class HomebrewPersistenceService {
       feats.map((f) => json.encode(f.toMap())).toList(),
     );
     SrdFeatsLibrary.addCustomFeat(feat);
+  }
+
+  /// Batch saves multiple custom feats to persistent storage and runtime library.
+  Future<void> saveCustomFeatsBatch(List<Feat> newFeats) async {
+    if (newFeats.isEmpty) return;
+    final feats = await loadCustomFeats();
+    for (final f in newFeats) {
+      final idx = feats.indexWhere(
+        (existing) => existing.id.slug == f.id.slug && existing.id.ruleset == f.id.ruleset,
+      );
+      if (idx != -1) {
+        feats[idx] = f;
+      } else {
+        feats.add(f);
+      }
+      SrdFeatsLibrary.addCustomFeat(f);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewFeats,
+      feats.map((f) => json.encode(f.toMap())).toList(),
+    );
   }
 
   /// Deletes a custom feat by slug and runtime library.
@@ -366,7 +531,9 @@ class HomebrewPersistenceService {
   /// Saves a custom background to persistent storage and runtime library.
   Future<void> saveCustomBackground(Background background) async {
     final backgrounds = await loadCustomBackgrounds();
-    final idx = backgrounds.indexWhere((b) => b.id.slug == background.id.slug);
+    final idx = backgrounds.indexWhere(
+      (b) => b.id.slug == background.id.slug && b.id.ruleset == background.id.ruleset,
+    );
     if (idx != -1) {
       backgrounds[idx] = background;
     } else {
@@ -378,6 +545,28 @@ class HomebrewPersistenceService {
       backgrounds.map((b) => json.encode(b.toMap())).toList(),
     );
     SrdBackgroundsLibrary.addCustomBackground(background);
+  }
+
+  /// Batch saves multiple custom backgrounds to persistent storage and runtime library.
+  Future<void> saveCustomBackgroundsBatch(List<Background> newBackgrounds) async {
+    if (newBackgrounds.isEmpty) return;
+    final backgrounds = await loadCustomBackgrounds();
+    for (final b in newBackgrounds) {
+      final idx = backgrounds.indexWhere(
+        (existing) => existing.id.slug == b.id.slug && existing.id.ruleset == b.id.ruleset,
+      );
+      if (idx != -1) {
+        backgrounds[idx] = b;
+      } else {
+        backgrounds.add(b);
+      }
+      SrdBackgroundsLibrary.addCustomBackground(b);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _keyHomebrewBackgrounds,
+      backgrounds.map((b) => json.encode(b.toMap())).toList(),
+    );
   }
 
   /// Deletes a custom background by slug and runtime library.

@@ -4,6 +4,7 @@ import 'animated_object.dart';
 import 'dm_screen_data.dart';
 import 'domain/character_models.dart';
 import 'domain/session_graph_models.dart';
+import 'party/party_purse.dart';
 
 /// Immutable Campaign Profile representing an isolated campaign / DM workspace state.
 @immutable
@@ -18,6 +19,7 @@ class CampaignProfile {
   final List<AnimatedObjectInstance> activeMinions;
   final Set<String> pinnedRuleIds;
   final String notesMarkdown;
+  final PartyPurse partyPurse;
 
   const CampaignProfile({
     required this.id,
@@ -36,6 +38,7 @@ class CampaignProfile {
       'resting',
     },
     this.notesMarkdown = '',
+    this.partyPurse = const PartyPurse(),
   });
 
   /// Factory creating a fresh default campaign profile.
@@ -73,6 +76,7 @@ class CampaignProfile {
         'resting',
       },
       notesMarkdown: '',
+      partyPurse: const PartyPurse(),
     );
   }
 
@@ -87,6 +91,7 @@ class CampaignProfile {
     List<AnimatedObjectInstance>? activeMinions,
     Set<String>? pinnedRuleIds,
     String? notesMarkdown,
+    PartyPurse? partyPurse,
   }) {
     return CampaignProfile(
       id: id ?? this.id,
@@ -99,6 +104,7 @@ class CampaignProfile {
       activeMinions: activeMinions ?? this.activeMinions,
       pinnedRuleIds: pinnedRuleIds ?? this.pinnedRuleIds,
       notesMarkdown: notesMarkdown ?? this.notesMarkdown,
+      partyPurse: partyPurse ?? this.partyPurse,
     );
   }
 
@@ -114,6 +120,7 @@ class CampaignProfile {
       'activeMinions': activeMinions.map((m) => m.toMap()).toList(),
       'pinnedRuleIds': pinnedRuleIds.toList(),
       'notesMarkdown': notesMarkdown,
+      'partyPurse': partyPurse.toMap(),
     };
   }
 
@@ -164,6 +171,15 @@ class CampaignProfile {
         .whereType<String>()
         .toSet();
 
+    PartyPurse purse = const PartyPurse();
+    if (map['partyPurse'] is Map) {
+      try {
+        purse = PartyPurse.fromMap(Map<String, dynamic>.from(map['partyPurse'] as Map));
+      } catch (_) {
+        purse = const PartyPurse();
+      }
+    }
+
     return CampaignProfile(
       id: map['id']?.toString() ?? 'campaign_${DateTime.now().millisecondsSinceEpoch}',
       name: map['name']?.toString() ?? 'Unnamed Campaign',
@@ -183,6 +199,7 @@ class CampaignProfile {
               'resting',
             },
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
+      partyPurse: purse,
     );
   }
 
@@ -200,6 +217,7 @@ class CampaignProfile {
           name == other.name &&
           edition == other.edition &&
           notesMarkdown == other.notesMarkdown &&
+          partyPurse == other.partyPurse &&
           listEquals(partyRoster, other.partyRoster) &&
           listEquals(activeMinions, other.activeMinions) &&
           setEquals(pinnedRuleIds, other.pinnedRuleIds);
@@ -210,6 +228,7 @@ class CampaignProfile {
       name.hashCode ^
       edition.hashCode ^
       notesMarkdown.hashCode ^
+      partyPurse.hashCode ^
       partyRoster.length ^
       activeMinions.length ^
       pinnedRuleIds.length;

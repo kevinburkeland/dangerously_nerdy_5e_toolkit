@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/campaign_profile.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../app_services.dart';
 import '../logging_service.dart';
@@ -22,6 +23,9 @@ class CampaignProfileService extends ChangeNotifier {
   bool _initialized = false;
 
   String? get activeProfileId => _activeProfileId;
+  CampaignProfile? get activeProfile =>
+      _activeProfileId != null ? _memoryCache[_activeProfileId] : null;
+  List<CampaignProfile> get allProfiles => _memoryCache.values.toList();
 
   /// Loads all saved campaign profiles from persistent storage.
   Future<List<CampaignProfile>> loadAllProfiles() async {
@@ -59,13 +63,16 @@ class CampaignProfileService extends ChangeNotifier {
 
       for (final m in memberships) {
         final alreadyExists = profiles.any(
-          (p) => p.roomState.roomCode.toUpperCase() == m.roomCode.toUpperCase() ||
-                 p.id == 'campaign_${m.roomCode}',
+          (p) =>
+              p.roomState.roomCode.toUpperCase() == m.roomCode.toUpperCase() ||
+              p.id == 'campaign_${m.roomCode}',
         );
         if (!alreadyExists) {
           final prof = CampaignProfile.defaultProfile(
             id: 'campaign_${m.roomCode}',
-            name: m.campaignName.trim().isNotEmpty ? m.campaignName.trim() : 'Campaign ${m.roomCode}',
+            name: m.campaignName.trim().isNotEmpty
+                ? m.campaignName.trim()
+                : 'Campaign ${m.roomCode}',
           ).copyWith(
             partyRoster: savedCharacters,
             roomState: RoomNodeState(
@@ -125,6 +132,20 @@ class CampaignProfileService extends ChangeNotifier {
     return freshDefault;
   }
 
+  /// Creates and activates a fresh campaign profile.
+  Future<CampaignProfile> createProfile({
+    required String name,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  }) async {
+    final newProfile = CampaignProfile.defaultProfile(
+      name: name,
+      edition: edition,
+    );
+    await saveProfileImmediate(newProfile);
+    await switchProfile(newProfile.id);
+    return newProfile;
+  }
+
   /// Saves a campaign profile with debounced asynchronous persistence.
   Future<void> saveProfile(CampaignProfile profile) async {
     final updated = profile.copyWith(lastPlayedAt: DateTime.now());
@@ -137,6 +158,25 @@ class CampaignProfileService extends ChangeNotifier {
       () => _persistProfileToDisk(updated),
       duration: const Duration(milliseconds: 300),
     );
+  }
+
+  /// Alias for debounced profile saving.
+  void saveProfileDebounced(CampaignProfile profile) {
+    saveProfile(profile);
+  }
+
+  /// Atomically updates the active profile in memory and initiates persistence.
+  Future<void> updateActiveProfile(
+    CampaignProfile Function(CampaignProfile current) updater, {
+    bool immediate = false,
+  }) async {
+    final current = await getActiveProfile();
+    final updated = updater(current);
+    if (immediate) {
+      await saveProfileImmediate(updated);
+    } else {
+      await saveProfile(updated);
+    }
   }
 
   /// Saves and flushes a campaign profile directly to disk without debouncing.
@@ -181,7 +221,7 @@ class CampaignProfileService extends ChangeNotifier {
   }
 
   /// Clones an existing campaign profile with an isolated ID and custom title.
-  Future<CampaignProfile> cloneProfile(String profileId, String newName) async {
+  Future<CampaignProfile> cloneProfile(String profileId, [String? newName]) async {
     CampaignProfile? source = _memoryCache[profileId];
     if (source == null) {
       final all = await loadAllProfiles();
@@ -190,7 +230,7 @@ class CampaignProfileService extends ChangeNotifier {
 
     final now = DateTime.now();
     final newId = 'campaign_${now.millisecondsSinceEpoch}';
-    final targetName = newName.trim().isNotEmpty
+    final targetName = (newName != null && newName.trim().isNotEmpty)
         ? newName.trim()
         : '${source?.name ?? "Campaign"} (Copy)';
 

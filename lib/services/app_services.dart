@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'importers/five_tools_importer_service.dart';
 import 'logging_service.dart';
 import 'minion_session_service.dart';
 import 'persistence/app_backup_service.dart';
@@ -6,6 +7,7 @@ import 'persistence/campaign_profile_service.dart';
 import 'persistence/debounced_storage_service.dart';
 import 'persistence/dm_backup_service.dart';
 import 'persistence/dpr_persistence_service.dart';
+import 'persistence/homebrew_persistence_service.dart';
 import 'persistence/storage_migration_service.dart';
 import 'preset_service.dart';
 
@@ -28,6 +30,8 @@ class AppServices {
   final MinionSessionService _minionSession;
   final CampaignProfileService _campaignProfileService;
   final DmBackupService _dmBackupService;
+  final HomebrewPersistenceService _homebrewPersistence;
+  final FiveToolsImporterService _fiveToolsImporter;
 
   AppServices._({
     LoggingService? logger,
@@ -39,6 +43,8 @@ class AppServices {
     MinionSessionService? minionSession,
     CampaignProfileService? campaignProfileService,
     DmBackupService? dmBackupService,
+    HomebrewPersistenceService? homebrewPersistence,
+    FiveToolsImporterService? fiveToolsImporter,
   })  : _logger = logger ?? LoggingService(),
         _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
         _migrationService = migrationService ?? StorageMigrationService(),
@@ -47,7 +53,9 @@ class AppServices {
         _presetService = presetService ?? PresetService(),
         _minionSession = minionSession ?? MinionSessionService(),
         _campaignProfileService = campaignProfileService ?? CampaignProfileService(),
-        _dmBackupService = dmBackupService ?? DmBackupService();
+        _dmBackupService = dmBackupService ?? DmBackupService(),
+        _homebrewPersistence = homebrewPersistence ?? HomebrewPersistenceService(),
+        _fiveToolsImporter = fiveToolsImporter ?? FiveToolsImporterService();
 
   /// Core logging and crash reporting service
   LoggingService get logger => _logger;
@@ -76,6 +84,12 @@ class AppServices {
   /// DM snapshot import/export service
   DmBackupService get dmBackupService => _dmBackupService;
 
+  /// Homebrew and custom compendium persistence service
+  HomebrewPersistenceService get homebrewPersistence => _homebrewPersistence;
+
+  /// 5eTools community compendium ingestion service
+  FiveToolsImporterService get fiveToolsImporter => _fiveToolsImporter;
+
   /// Registers service overrides for unit or widget testing.
   @visibleForTesting
   static void registerOverrides({
@@ -88,6 +102,8 @@ class AppServices {
     MinionSessionService? minionSession,
     CampaignProfileService? campaignProfileService,
     DmBackupService? dmBackupService,
+    HomebrewPersistenceService? homebrewPersistence,
+    FiveToolsImporterService? fiveToolsImporter,
   }) {
     _instance = AppServices._(
       logger: logger ?? _instance._logger,
@@ -99,6 +115,8 @@ class AppServices {
       minionSession: minionSession ?? _instance._minionSession,
       campaignProfileService: campaignProfileService ?? _instance._campaignProfileService,
       dmBackupService: dmBackupService ?? _instance._dmBackupService,
+      homebrewPersistence: homebrewPersistence ?? _instance._homebrewPersistence,
+      fiveToolsImporter: fiveToolsImporter ?? _instance._fiveToolsImporter,
     );
   }
 
