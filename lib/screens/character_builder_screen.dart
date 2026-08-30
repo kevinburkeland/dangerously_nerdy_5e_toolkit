@@ -12,6 +12,7 @@ import '../models/domain/entity_reference.dart';
 import '../models/domain/homebrew_extended_entities.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../models/party/party_purse.dart';
+import '../models/spellbook_data.dart';
 import '../services/haptic_service.dart';
 import '../services/repository/layered_priority_repository.dart';
 import '../services/repository/reference_resolver.dart';
@@ -69,7 +70,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   String _selectedSpecies = 'human';
   String _selectedClass = 'fighter';
   String _selectedBackground = 'soldier';
-  String _selectedFeat = 'savage-attacker';
+  String _selectedFeat = 'tough';
+  final Set<String> _selectedWizardCantrips = {};
+  final Set<String> _selectedWizardSpells = {};
   String _selectedStartingEquipmentPreset = 'chain_and_sword';
   Set<SkillType> _wizardSelectedSkills = {SkillType.athletics, SkillType.intimidation};
 
@@ -1027,14 +1030,66 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
 
 
+  bool _isSpellcasterClass(String classSlug, RulesetVersion ruleset) {
+    final slug = classSlug.toLowerCase();
+    if (slug == 'wizard' ||
+        slug == 'cleric' ||
+        slug == 'druid' ||
+        slug == 'bard' ||
+        slug == 'sorcerer' ||
+        slug == 'warlock' ||
+        slug == 'artificer') {
+      return true;
+    }
+    if (ruleset == RulesetVersion.v2024 && slug == 'ranger') {
+      return true;
+    }
+    return false;
+  }
+
+  SpellClass? _findSpellClass(String slug) {
+    return switch (slug.toLowerCase()) {
+      'wizard' => SpellClass.wizard,
+      'cleric' => SpellClass.cleric,
+      'druid' => SpellClass.druid,
+      'bard' => SpellClass.bard,
+      'sorcerer' => SpellClass.sorcerer,
+      'warlock' => SpellClass.warlock,
+      'artificer' => SpellClass.artificer,
+      'ranger' => SpellClass.ranger,
+      'paladin' => SpellClass.paladin,
+      _ => null,
+    };
+  }
+
+  List<String> _getWizardStepTypes() {
+    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
+    final is2024 = _selectedRuleset == RulesetVersion.v2024;
+    final hasFeatStep = is2024 || curSpecies.grantsBonusFeat;
+    final isCaster = _isSpellcasterClass(_selectedClass, _selectedRuleset);
+
+    final steps = <String>[
+      'basics',
+      'species',
+      'class',
+      'background',
+      'scores',
+    ];
+    if (hasFeatStep) steps.add('feats');
+    if (isCaster) steps.add('spells');
+    steps.add('equipment');
+    steps.add('review');
+    return steps;
+  }
+
   // --------------------------------------------------------------------------
   // TAB 2: GUIDED CHARACTER CREATION WIZARD (STEP-BY-STEP)
   // --------------------------------------------------------------------------
   Widget _buildGuidedBuilderTab(ThemeData theme) {
     final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
-    final is2024 = _selectedRuleset == RulesetVersion.v2024;
-    final hasFeatStep = is2024 || curSpecies.grantsBonusFeat;
-    final maxStepIndex = hasFeatStep ? 7 : 6;
+    final steps = _getWizardStepTypes();
+    final maxStepIndex = steps.length - 1;
+    if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
 
     final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
     final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
@@ -1043,12 +1098,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         .toList();
     final allowedSkillCount = (curClass.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
 
+    final currentStepKey = steps[_wizardStep];
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         // Stepper Progress Header
         Row(
-          children: List.generate(hasFeatStep ? 8 : 7, (i) {
+          children: List.generate(steps.length, (i) {
             final isDone = i < _wizardStep;
             final isCur = i == _wizardStep;
             return Expanded(
@@ -1072,28 +1129,17 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: () {
-              if (hasFeatStep) {
-                return switch (_wizardStep) {
-                  0 => _buildStep0Basics(theme),
-                  1 => _buildStep1Species(theme),
-                  2 => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
-                  3 => _buildStep3Background(theme, curBackground),
-                  4 => _buildStep4AbilityScores(theme),
-                  5 => _buildStep5Feats(theme),
-                  6 => _buildStep6Equipment(theme, hasFeatStep: true),
-                  _ => _buildStep7Review(theme, curSpecies, curClass, curBackground),
-                };
-              } else {
-                return switch (_wizardStep) {
-                  0 => _buildStep0Basics(theme),
-                  1 => _buildStep1Species(theme),
-                  2 => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
-                  3 => _buildStep3Background(theme, curBackground),
-                  4 => _buildStep4AbilityScores(theme),
-                  5 => _buildStep6Equipment(theme, hasFeatStep: false),
-                  _ => _buildStep7Review(theme, curSpecies, curClass, curBackground),
-                };
-              }
+              return switch (currentStepKey) {
+                'basics' => _buildStep0Basics(theme),
+                'species' => _buildStep1Species(theme),
+                'class' => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
+                'background' => _buildStep3Background(theme, curBackground),
+                'scores' => _buildStep4AbilityScores(theme),
+                'feats' => _buildStep5Feats(theme),
+                'spells' => _buildStepSpells(theme, curClass),
+                'equipment' => _buildStep6Equipment(theme),
+                _ => _buildStep7Review(theme, curSpecies, curClass, curBackground),
+              };
             }(),
           ),
         ),
@@ -2097,9 +2143,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  Widget _buildStep6Equipment(ThemeData theme, {bool hasFeatStep = true}) {
+  Widget _buildStep6Equipment(ThemeData theme) {
     final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
     final packages = SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
+    final stepNumber = _getWizardStepTypes().indexOf('equipment') + 1;
 
     if (!packages.any((p) => p.id == _selectedStartingEquipmentPreset)) {
       _selectedStartingEquipmentPreset = packages.first.id;
@@ -2109,7 +2156,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Step ${hasFeatStep ? 7 : 6}: Starting Equipment & Inventory (SRD)',
+          'Step $stepNumber: Starting Equipment & Inventory (SRD)',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
         ),
         const SizedBox(height: 6),
@@ -2184,17 +2231,165 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
+  Widget _buildStepSpells(ThemeData theme, CharacterClass curClass) {
+    final edition = _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014;
+    final spellClass = _findSpellClass(curClass.id.slug);
+
+    final allClassSpells = SpellbookLibrary.allSpells.where((s) {
+      if (spellClass == null) return s.level <= 1;
+      final rules = s.getRules(edition);
+      return rules.classes.contains(spellClass);
+    }).toList();
+
+    final cantrips = allClassSpells.where((s) => s.level == 0).toList();
+    final level1Spells = allClassSpells.where((s) => s.level == 1).toList();
+    final stepNumber = _getWizardStepTypes().indexOf('spells') + 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Step $stepNumber: Spells & Cantrips',
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+        const SizedBox(height: 6),
+        Text('Select your starting cantrips and 1st-level spells for ${curClass.name}.',
+            style: const TextStyle(fontSize: 12, color: Colors.white70)),
+        const SizedBox(height: 12),
+
+        // Quick Auto-Fill Recommended Spells
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            icon: const Icon(Icons.auto_fix_high, size: 16),
+            label: const Text('Select Recommended Spells', style: TextStyle(fontSize: 12)),
+            onPressed: () {
+              HapticService.selectionTick(context);
+              setState(() {
+                if (cantrips.isNotEmpty) {
+                  _selectedWizardCantrips.addAll(cantrips.take(3).map((c) => c.id));
+                }
+                if (level1Spells.isNotEmpty) {
+                  _selectedWizardSpells.addAll(level1Spells.take(4).map((s) => s.id));
+                }
+              });
+            },
+          ),
+        ),
+
+        // Section 1: Cantrips
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.purple.shade900.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('CANTRIPS (Level 0)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+                  Text('${_selectedWizardCantrips.length} selected', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (cantrips.isEmpty)
+                const Text('No class-specific cantrips found.', style: TextStyle(fontSize: 12, color: Colors.white54))
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: cantrips.map((c) {
+                    final isSelected = _selectedWizardCantrips.contains(c.id);
+                    return FilterChip(
+                      selected: isSelected,
+                      selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
+                      label: Text(c.getName(edition)),
+                      avatar: Icon(Icons.star, size: 14, color: isSelected ? Colors.purpleAccent : Colors.white54),
+                      onSelected: (selected) {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          if (selected) {
+                            _selectedWizardCantrips.add(c.id);
+                          } else {
+                            _selectedWizardCantrips.remove(c.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Section 2: 1st-Level Spells
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.cyan.shade900.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('1ST-LEVEL SPELLS', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+                  Text('${_selectedWizardSpells.length} selected', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (level1Spells.isEmpty)
+                const Text('No class-specific 1st-level spells found.', style: TextStyle(fontSize: 12, color: Colors.white54))
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: level1Spells.map((s) {
+                    final isSelected = _selectedWizardSpells.contains(s.id);
+                    return FilterChip(
+                      selected: isSelected,
+                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                      label: Text(s.getName(edition)),
+                      avatar: Icon(Icons.auto_awesome, size: 14, color: isSelected ? Colors.cyanAccent : Colors.white54),
+                      onSelected: (selected) {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          if (selected) {
+                            _selectedWizardSpells.add(s.id);
+                          } else {
+                            _selectedWizardSpells.remove(s.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildStep7Review(ThemeData theme, Race sp, CharacterClass cls, Background bg) {
     final name = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final hasFeat = is2024 || sp.grantsBonusFeat;
     final selectedPkg = SrdEquipmentLibrary.findPackageById(_selectedStartingEquipmentPreset) ??
         SrdEquipmentLibrary.getPackagesForClass(cls.id.slug).first;
+    final stepNumber = _getWizardStepTypes().length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Step ${hasFeat ? 8 : 7}: Review & Finalize',
+        Text('Step $stepNumber: Review & Finalize',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
         const SizedBox(height: 6),
         const Text('Review your generated character summary before launching the live sheet.',
@@ -2212,6 +2407,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         if (hasFeat)
           Text(is2024 ? 'Origin Feat: ${_selectedFeat.toUpperCase()}' : 'Feat: ${_selectedFeat.toUpperCase()}',
               style: const TextStyle(fontSize: 12, color: Colors.purpleAccent)),
+        if (_selectedWizardCantrips.isNotEmpty || _selectedWizardSpells.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            'Spells: ${_selectedWizardCantrips.length} Cantrips, ${_selectedWizardSpells.length} 1st-Level Spells',
+            style: const TextStyle(fontSize: 12, color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+          ),
+        ],
         const SizedBox(height: 4),
         Text('Starting Inventory: ${selectedPkg.name} (${selectedPkg.startingGold} GP)',
             style: const TextStyle(fontSize: 12, color: Colors.cyanAccent)),
@@ -2396,6 +2598,24 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final hasFeat = is2024 || curSpecies.grantsBonusFeat;
+    final cantripRefs = _selectedWizardCantrips.map((id) {
+      final spell = SpellbookLibrary.getSpellById(id);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: id,
+        displayName: spell?.name ?? id,
+      );
+    }).toList();
+
+    final spellRefs = _selectedWizardSpells.map((id) {
+      final spell = SpellbookLibrary.getSpellById(id);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: id,
+        displayName: spell?.name ?? id,
+      );
+    }).toList();
+
     final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
 
     final request = CharacterCreationRequest(
@@ -2428,6 +2648,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       ],
       startingEquipment: equipRequests,
       startingPurse: startingPurse,
+      cantrips: cantripRefs,
+      spellsKnown: spellRefs,
+      spellsPrepared: spellRefs,
     );
 
     final newChar = CharacterFactory.createLevel1Character(request);

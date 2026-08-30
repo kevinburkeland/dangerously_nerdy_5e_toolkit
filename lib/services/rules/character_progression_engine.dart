@@ -328,9 +328,33 @@ class CharacterProgressionEngine {
       }
     }
 
-    // 3. Update Spells Known & Cantrips
-    final updatedCantrips = List<EntityReference<Spell>>.from(character.cantrips)..addAll(request.newCantrips);
-    final updatedSpellsKnown = List<EntityReference<Spell>>.from(character.spellsKnown)..addAll(request.newSpells);
+    // 3. Update Spells Known, Spells Prepared & Cantrips
+    final existingCantripSlugs = character.cantrips.map((c) => c.slug).toSet();
+    final updatedCantrips = List<EntityReference<Spell>>.from(character.cantrips);
+    for (final c in request.newCantrips) {
+      if (!existingCantripSlugs.contains(c.slug)) {
+        updatedCantrips.add(c);
+        existingCantripSlugs.add(c.slug);
+      }
+    }
+
+    final existingKnownSlugs = character.spellsKnown.map((s) => s.slug).toSet();
+    final updatedSpellsKnown = List<EntityReference<Spell>>.from(character.spellsKnown);
+    for (final s in request.newSpells) {
+      if (!existingKnownSlugs.contains(s.slug)) {
+        updatedSpellsKnown.add(s);
+        existingKnownSlugs.add(s.slug);
+      }
+    }
+
+    final updatedSpellsPrepared = List<EntityReference<Spell>>.from(character.spellsPrepared);
+    final existingPrepSlugs = character.spellsPrepared.map((s) => s.slug).toSet();
+    for (final s in request.newSpells) {
+      if (!existingPrepSlugs.contains(s.slug)) {
+        updatedSpellsPrepared.add(s);
+        existingPrepSlugs.add(s.slug);
+      }
+    }
 
     // 4. Update Hit Dice Resource Pool (increment pool for gained hit die)
     final updatedHitDice = Map<String, int>.from(character.resources.currentHitDice);
@@ -343,6 +367,7 @@ class CharacterProgressionEngine {
       feats: newFeats,
       cantrips: updatedCantrips,
       spellsKnown: updatedSpellsKnown,
+      spellsPrepared: updatedSpellsPrepared,
       resources: character.resources.copyWith(
         currentHitDice: updatedHitDice,
       ),
@@ -350,7 +375,22 @@ class CharacterProgressionEngine {
 
     // 6. Recalculate derived combat stats (HP, Spell Slots) using RAW calculation
     int newMaxHp = _computeMaxHp(candidate);
-    final newSlots = _computeSpellSlots(candidate.progression.classes);
+    final newSlotPool = computeSpellSlots(candidate.progression.classes);
+
+    // Preserve expended slot delta if possible, or initialize up to new max
+    final currentSlotMap = Map<int, int>.from(character.resources.spellSlots.currentSlots);
+    final maxSlotMap = Map<int, int>.from(newSlotPool.maxSlots);
+    final mergedCurrentSlots = <int, int>{};
+
+    maxSlotMap.forEach((level, maxCount) {
+      final prevCur = currentSlotMap[level] ?? maxCount;
+      mergedCurrentSlots[level] = math.min(prevCur, maxCount);
+    });
+
+    final updatedSlots = newSlotPool.copyWith(
+      currentSlots: mergedCurrentSlots,
+      pactMagicCurrent: math.min(character.resources.spellSlots.pactMagicCurrent, newSlotPool.pactMagicMax),
+    );
 
     // If resolver is provided, use full CharacterStatCalculator
     if (resolver != null) {
@@ -368,7 +408,7 @@ class CharacterProgressionEngine {
     return candidate.copyWith(
       resources: candidate.resources.copyWith(
         currentHp: updatedCurrentHp,
-        spellSlots: newSlots,
+        spellSlots: updatedSlots,
       ),
     );
   }
@@ -418,7 +458,7 @@ class CharacterProgressionEngine {
   }
 
   /// Computes composite Multiclass and Pact Magic spell slots.
-  static SpellSlotPool _computeSpellSlots(List<ClassLevelProgression> classes) {
+  static SpellSlotPool computeSpellSlots(List<ClassLevelProgression> classes) {
     int fullCasterLevels = 0;
     int paladinLevels = 0;
     int rangerLevels = 0;

@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/domain/character_models.dart';
+import '../models/domain/entity_reference.dart';
+import '../models/domain/spell_monster_equipment.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
-
 import '../services/rules/character_progression_engine.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,
@@ -98,19 +99,22 @@ class CharacterSheetController extends ChangeNotifier {
   Future<bool> toggleAttuneItem(String instanceId) async {
     final targetItem = _character.inventory.firstWhere(
       (item) => item.instanceId == instanceId,
-      orElse: () => throw ArgumentError('Item with instanceId $instanceId not found'),
+      orElse: () => throw ArgumentError('Item instance $instanceId not found'),
     );
 
-    // If attempting to attune, verify attunement slot availability
-    if (!targetItem.isAttuned) {
-      if (_stats.attunedItemCount >= _stats.effectiveMaxAttunementSlots) {
-        return false; // Limit reached
+    final isCurrentlyAttuned = targetItem.isAttuned;
+    if (!isCurrentlyAttuned) {
+      // Check attunement capacity
+      final currentAttunedCount = _character.inventory.where((i) => i.isAttuned).length;
+      final maxSlots = _stats.effectiveMaxAttunementSlots;
+      if (currentAttunedCount >= maxSlots) {
+        return false;
       }
     }
 
     final updatedInventory = _character.inventory.map((item) {
       if (item.instanceId == instanceId) {
-        return item.copyWith(isAttuned: !item.isAttuned);
+        return item.copyWith(isAttuned: !isCurrentlyAttuned);
       }
       return item;
     }).toList();
@@ -122,8 +126,8 @@ class CharacterSheetController extends ChangeNotifier {
     return true;
   }
 
-  /// Modifies HP: damage (negative delta) absorbs from Temp HP first, then current HP.
-  /// Healing (positive delta) adds to current HP (clamped to max HP).
+  /// Modifies current HP by [delta] (positive for healing, negative for damage).
+  /// Damage is absorbed by temporary HP first before depleting current HP.
   Future<void> modifyHp(int delta) async {
     final curHp = _character.resources.currentHp;
     final curTemp = _character.resources.tempHp;
@@ -236,11 +240,122 @@ class CharacterSheetController extends ChangeNotifier {
     await _persist();
   }
 
+  /// Consumes or recovers a Pact Magic spell slot.
+  Future<void> togglePactSlot(bool isExpending) async {
+    final pool = _character.resources.spellSlots;
+    final cur = pool.pactMagicCurrent;
+    final max = pool.pactMagicMax;
+
+    int newCur = cur;
+    if (isExpending && cur > 0) {
+      newCur = cur - 1;
+    } else if (!isExpending && cur < max) {
+      newCur = cur + 1;
+    }
+
+    _character = _copyCharacterWith(
+      resources: _character.resources.copyWith(
+        spellSlots: pool.copyWith(pactMagicCurrent: newCur),
+      ),
+    );
+    notifyListeners();
+    await _persist();
+  }
+
+  /// Restores all spell slots (including Pact Magic) to maximum (Long Rest).
+  Future<void> restoreAllSpellSlots() async {
+    final pool = _character.resources.spellSlots;
+    final restoredMap = Map<int, int>.from(pool.maxSlots);
+
+    _character = _copyCharacterWith(
+      resources: _character.resources.copyWith(
+        spellSlots: pool.copyWith(
+          currentSlots: restoredMap,
+          pactMagicCurrent: pool.pactMagicMax,
+        ),
+      ),
+    );
+    notifyListeners();
+    await _persist();
+  }
+
+  /// Toggles whether a known spell is currently prepared.
+  Future<void> togglePreparedSpell(EntityReference<Spell> spellRef) async {
+    final curPrep = List<EntityReference<Spell>>.from(_character.spellsPrepared);
+    final isAlreadyPrep = curPrep.any((s) => s.slug == spellRef.slug);
+
+    if (isAlreadyPrep) {
+      curPrep.removeWhere((s) => s.slug == spellRef.slug);
+    } else {
+      curPrep.add(spellRef);
+    }
+
+    _character = _copyCharacterWith(spellsPrepared: curPrep);
+    notifyListeners();
+    await _persist();
+  }
+
+  /// Adds a new spell or cantrip to the character sheet.
+  Future<void> addSpell(
+    EntityReference<Spell> spellRef, {
+    bool isCantrip = false,
+    bool isPrepared = false,
+  }) async {
+    if (isCantrip) {
+      final curCantrips = List<EntityReference<Spell>>.from(_character.cantrips);
+      if (!curCantrips.any((c) => c.slug == spellRef.slug)) {
+        curCantrips.add(spellRef);
+        _character = _copyCharacterWith(cantrips: curCantrips);
+      }
+    } else {
+      final curKnown = List<EntityReference<Spell>>.from(_character.spellsKnown);
+      if (!curKnown.any((s) => s.slug == spellRef.slug)) {
+        curKnown.add(spellRef);
+      }
+      final curPrep = List<EntityReference<Spell>>.from(_character.spellsPrepared);
+      if (isPrepared && !curPrep.any((s) => s.slug == spellRef.slug)) {
+        curPrep.add(spellRef);
+      }
+      _character = _copyCharacterWith(
+        spellsKnown: curKnown,
+        spellsPrepared: curPrep,
+      );
+    }
+    notifyListeners();
+    await _persist();
+  }
+
+  /// Removes a spell or cantrip from the character sheet.
+  Future<void> removeSpell(
+    EntityReference<Spell> spellRef, {
+    bool isCantrip = false,
+  }) async {
+    if (isCantrip) {
+      final curCantrips = List<EntityReference<Spell>>.from(_character.cantrips)
+        ..removeWhere((c) => c.slug == spellRef.slug);
+      _character = _copyCharacterWith(cantrips: curCantrips);
+    } else {
+      final curKnown = List<EntityReference<Spell>>.from(_character.spellsKnown)
+        ..removeWhere((s) => s.slug == spellRef.slug);
+      final curPrep = List<EntityReference<Spell>>.from(_character.spellsPrepared)
+        ..removeWhere((s) => s.slug == spellRef.slug);
+      _character = _copyCharacterWith(
+        spellsKnown: curKnown,
+        spellsPrepared: curPrep,
+      );
+    }
+    notifyListeners();
+    await _persist();
+  }
+
   /// Helper to recreate a Character with updated fields since Character does not implement copyWith directly.
   Character _copyCharacterWith({
     String? name,
     CharacterResourcePool? resources,
     List<InventoryItemInstance>? inventory,
+    List<EntityReference<Spell>>? cantrips,
+    List<EntityReference<Spell>>? spellsKnown,
+    List<EntityReference<Spell>>? spellsPrepared,
     Map<String, dynamic>? customProperties,
   }) {
     return Character(
@@ -257,9 +372,9 @@ class CharacterSheetController extends ChangeNotifier {
       languages: _character.languages,
       inventory: inventory ?? _character.inventory,
       purse: _character.purse,
-      cantrips: _character.cantrips,
-      spellsKnown: _character.spellsKnown,
-      spellsPrepared: _character.spellsPrepared,
+      cantrips: cantrips ?? _character.cantrips,
+      spellsKnown: spellsKnown ?? _character.spellsKnown,
+      spellsPrepared: spellsPrepared ?? _character.spellsPrepared,
       feats: _character.feats,
       resources: resources ?? _character.resources,
       conditions: _character.conditions,

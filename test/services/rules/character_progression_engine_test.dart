@@ -4,6 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/reference_resolver.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_factory.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_progression_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_stat_calculator.dart';
 
@@ -382,6 +383,61 @@ void main() {
       // Rogue requires DEX 13 (current DEX 12)
       final rogueValidation = CharacterProgressionEngine.validateMulticlass(weakMage, 'rogue');
       expect(rogueValidation.isValid, isFalse);
+    });
+
+    test('Level 1 Character creation populates starting spell slots for spellcasters', () {
+      const wizardCreation = CharacterCreationRequest(
+        characterName: 'Elminster',
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        startingClassSlug: 'wizard',
+        startingClassDisplayName: 'Wizard',
+        startingClassHitDie: 'd6',
+        baseScores: AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 16, wisdom: 12, charisma: 10),
+        bonusScores: AbilityScores(),
+        cantrips: [
+          EntityReference(refType: EntityType.spell, slug: 'fire_bolt', displayName: 'Fire Bolt'),
+          EntityReference(refType: EntityType.spell, slug: 'mage_hand', displayName: 'Mage Hand'),
+        ],
+        spellsKnown: [
+          EntityReference(refType: EntityType.spell, slug: 'magic_missile', displayName: 'Magic Missile'),
+          EntityReference(refType: EntityType.spell, slug: 'shield', displayName: 'Shield'),
+        ],
+        spellsPrepared: [
+          EntityReference(refType: EntityType.spell, slug: 'magic_missile', displayName: 'Magic Missile'),
+          EntityReference(refType: EntityType.spell, slug: 'shield', displayName: 'Shield'),
+        ],
+      );
+
+      final wizard = CharacterFactory.createLevel1Character(wizardCreation);
+      expect(wizard.cantrips.length, equals(2));
+      expect(wizard.spellsKnown.length, equals(2));
+      expect(wizard.spellsPrepared.length, equals(2));
+      // Full caster Level 1 has 2 Level-1 spell slots
+      expect(wizard.resources.spellSlots.maxSlots[1], equals(2));
+      expect(wizard.resources.spellSlots.currentSlots[1], equals(2));
+
+      // Level up to Level 3 (gains 2nd level slots: 4 Level-1, 2 Level-2)
+      final leveledWizard = CharacterProgressionEngine.applyLevelUp(
+        wizard,
+        const LevelUpRequest(
+          targetClassSlug: 'wizard',
+          newSpells: [
+            EntityReference(refType: EntityType.spell, slug: 'misty_step', displayName: 'Misty Step'),
+            EntityReference(refType: EntityType.spell, slug: 'scorching_ray', displayName: 'Scorching Ray'),
+          ],
+        ),
+      );
+
+      final level3Wizard = CharacterProgressionEngine.applyLevelUp(
+        leveledWizard,
+        const LevelUpRequest(targetClassSlug: 'wizard'),
+      );
+
+      expect(level3Wizard.totalLevel, equals(3));
+      expect(level3Wizard.spellsKnown.length, equals(4));
+      expect(level3Wizard.spellsPrepared.length, equals(4));
+      expect(level3Wizard.resources.spellSlots.maxSlots[1], equals(4));
+      expect(level3Wizard.resources.spellSlots.maxSlots[2], equals(2));
     });
   });
 }

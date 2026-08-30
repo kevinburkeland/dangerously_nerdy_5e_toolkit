@@ -21,6 +21,10 @@ void main() {
   }
 
   testWidgets('Upcasting spell level and adding minions persists when navigating to Dice Roller and back', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1200, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
     await tester.pumpWidget(createTestableApp());
 
     // 1. Launch Conjure Animals

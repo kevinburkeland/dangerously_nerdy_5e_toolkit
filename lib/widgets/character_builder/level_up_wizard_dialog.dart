@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/character_progression_engine.dart';
 import '../../services/rules/character_evaluation_engine.dart';
@@ -67,6 +69,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   // Step 5: Spells
   final List<String> _newCantrips = [];
   final List<String> _newSpells = [];
+  String _spellSearchQuery = '';
   final TextEditingController _customCantripController = TextEditingController();
   final TextEditingController _customSpellController = TextEditingController();
 
@@ -295,17 +298,27 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       );
     }
 
-    final cantripRefs = _newCantrips.map((c) => EntityReference<Spell>(
-      refType: EntityType.spell,
-      slug: c.toLowerCase().replaceAll(' ', '_'),
-      displayName: c,
-    )).toList();
+    final edition = widget.character.id.ruleset == RulesetVersion.v2024
+        ? DmRulesEdition.v2024
+        : DmRulesEdition.v2014;
 
-    final spellRefs = _newSpells.map((s) => EntityReference<Spell>(
-      refType: EntityType.spell,
-      slug: s.toLowerCase().replaceAll(' ', '_'),
-      displayName: s,
-    )).toList();
+    final cantripRefs = _newCantrips.map((c) {
+      final spell = SpellbookLibrary.getSpellById(c);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: spell?.id ?? c.toLowerCase().replaceAll(' ', '_'),
+        displayName: spell?.getName(edition) ?? c,
+      );
+    }).toList();
+
+    final spellRefs = _newSpells.map((s) {
+      final spell = SpellbookLibrary.getSpellById(s);
+      return EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: spell?.id ?? s.toLowerCase().replaceAll(' ', '_'),
+        displayName: spell?.getName(edition) ?? s,
+      );
+    }).toList();
 
     return LevelUpRequest(
       targetClassSlug: _selectedClassSlug,
@@ -947,67 +960,221 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     );
   }
 
+  int get _maxAccessibleSpellLevel {
+    final slug = _selectedClassSlug.toLowerCase();
+    final lvl = _targetClassNewLevel;
+    if (['wizard', 'cleric', 'druid', 'bard', 'sorcerer'].contains(slug)) {
+      return ((lvl + 1) ~/ 2).clamp(1, 9);
+    }
+    if (slug == 'warlock') {
+      return ((lvl + 1) ~/ 2).clamp(1, 5);
+    }
+    if (['paladin', 'ranger'].contains(slug)) {
+      return (lvl ~/ 2).clamp(1, 5);
+    }
+    if (slug == 'artificer') {
+      return ((lvl + 1) ~/ 2).clamp(1, 5);
+    }
+    if (_selectedSubclass != null &&
+        (_selectedSubclass!.contains('eldritch_knight') || _selectedSubclass!.contains('arcane_trickster'))) {
+      return ((lvl + 1) ~/ 3).clamp(1, 4);
+    }
+    return 1;
+  }
+
+  SpellClass? get _targetSpellClass {
+    return switch (_selectedClassSlug.toLowerCase()) {
+      'wizard' => SpellClass.wizard,
+      'cleric' => SpellClass.cleric,
+      'druid' => SpellClass.druid,
+      'bard' => SpellClass.bard,
+      'sorcerer' => SpellClass.sorcerer,
+      'warlock' => SpellClass.warlock,
+      'artificer' => SpellClass.artificer,
+      'ranger' => SpellClass.ranger,
+      'paladin' => SpellClass.paladin,
+      _ => null,
+    };
+  }
+
   // --------------------------------------------------------------------------
   // STEP 5: SPELLS
   // --------------------------------------------------------------------------
   Widget _buildStep5Spells(ThemeData theme, TabletopColors? customColors) {
+    final edition = widget.character.id.ruleset == RulesetVersion.v2024
+        ? DmRulesEdition.v2024
+        : DmRulesEdition.v2014;
+    final spellClass = _targetSpellClass;
+    final maxLvl = _maxAccessibleSpellLevel;
+
+    final allClassSpells = SpellbookLibrary.allSpells.where((s) {
+      if (spellClass == null) return s.level <= maxLvl;
+      final rules = s.getRules(edition);
+      return rules.classes.contains(spellClass) && s.level <= maxLvl;
+    }).toList();
+
+    final filtered = allClassSpells.where((s) {
+      if (_spellSearchQuery.isEmpty) return true;
+      final q = _spellSearchQuery.toLowerCase();
+      return s.getName(edition).toLowerCase().contains(q) ||
+          s.id.toLowerCase().contains(q);
+    }).toList();
+
+    final availableCantrips = filtered.where((s) => s.level == 0).toList();
+    final availableLeveled = filtered.where((s) => s.level > 0).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Spells & Cantrips Management', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+        Text('Spells & Cantrips Advancement',
+            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
         const SizedBox(height: 4),
-        Text('Add newly learned or prepared spells and cantrips to your character.', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-        const SizedBox(height: 16),
-
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _customCantripController,
-                decoration: const InputDecoration(labelText: 'Add New Cantrip', border: OutlineInputBorder()),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton.filled(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                if (_customCantripController.text.trim().isNotEmpty) {
-                  setState(() {
-                    _newCantrips.add(_customCantripController.text.trim());
-                    _customCantripController.clear();
-                  });
-                }
-              },
-            ),
-          ],
+        Text(
+          'Select newly learned, prepared, or subclass spells for $_selectedClassSlug (Max Spell Level: $maxLvl).',
+          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
-        if (_newCantrips.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: _newCantrips.map((c) => Chip(
-              label: Text(c),
-              onDeleted: () => setState(() => _newCantrips.remove(c)),
-            )).toList(),
-          ),
-        ],
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
+        // Selected Spells Summary Chips
+        if (_newCantrips.isNotEmpty || _newSpells.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Selected for this Level Up:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    ..._newCantrips.map((c) {
+                      final spell = SpellbookLibrary.getSpellById(c);
+                      return Chip(
+                        label: Text('Cantrip: ${spell?.getName(edition) ?? c}'),
+                        backgroundColor: Colors.purple.shade800.withValues(alpha: 0.5),
+                        onDeleted: () => setState(() => _newCantrips.remove(c)),
+                      );
+                    }),
+                    ..._newSpells.map((s) {
+                      final spell = SpellbookLibrary.getSpellById(s);
+                      return Chip(
+                        label: Text('${spell?.levelLabel ?? "Spell"}: ${spell?.getName(edition) ?? s}'),
+                        backgroundColor: Colors.cyan.shade800.withValues(alpha: 0.5),
+                        onDeleted: () => setState(() => _newSpells.remove(s)),
+                      );
+                    }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Search Bar
+        TextField(
+          decoration: const InputDecoration(
+            labelText: 'Search Available Class Spells',
+            prefixIcon: Icon(Icons.search, size: 20),
+            border: OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (v) => setState(() => _spellSearchQuery = v.trim()),
+        ),
+        const SizedBox(height: 12),
+
+        // Available Cantrips Grid
+        if (availableCantrips.isNotEmpty) ...[
+          Text('Available Cantrips (${availableCantrips.length})',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: availableCantrips.map((c) {
+              final isChosen = _newCantrips.contains(c.id);
+              return FilterChip(
+                selected: isChosen,
+                selectedColor: Colors.purpleAccent.withValues(alpha: 0.35),
+                label: Text(c.getName(edition)),
+                avatar: Icon(Icons.star, size: 14, color: isChosen ? Colors.purpleAccent : Colors.white54),
+                onSelected: (selected) {
+                  HapticService.selectionTick(context);
+                  setState(() {
+                    if (selected) {
+                      _newCantrips.add(c.id);
+                    } else {
+                      _newCantrips.remove(c.id);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Available Leveled Spells Grid
+        if (availableLeveled.isNotEmpty) ...[
+          Text('Available Leveled Spells (Up to Level $maxLvl)',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.cyanAccent)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: availableLeveled.map((s) {
+              final isChosen = _newSpells.contains(s.id);
+              return FilterChip(
+                selected: isChosen,
+                selectedColor: Colors.cyanAccent.withValues(alpha: 0.35),
+                label: Text('${s.getName(edition)} (L${s.level})'),
+                avatar: Icon(Icons.auto_awesome, size: 14, color: isChosen ? Colors.cyanAccent : Colors.white54),
+                onSelected: (selected) {
+                  HapticService.selectionTick(context);
+                  setState(() {
+                    if (selected) {
+                      _newSpells.add(s.id);
+                    } else {
+                      _newSpells.remove(s.id);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        // Custom Spell Entry Option
         Row(
           children: [
             Expanded(
               child: TextField(
                 controller: _customSpellController,
-                decoration: const InputDecoration(labelText: 'Add New Spell', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Add Custom Spell / Cantrip',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
               ),
             ),
             const SizedBox(width: 8),
             IconButton.filled(
               icon: const Icon(Icons.add),
+              tooltip: 'Add Custom Spell',
               onPressed: () {
-                if (_customSpellController.text.trim().isNotEmpty) {
+                final txt = _customSpellController.text.trim();
+                if (txt.isNotEmpty) {
+                  HapticService.selectionTick(context);
                   setState(() {
-                    _newSpells.add(_customSpellController.text.trim());
+                    _newSpells.add(txt);
                     _customSpellController.clear();
                   });
                 }
@@ -1015,16 +1182,6 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
             ),
           ],
         ),
-        if (_newSpells.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: _newSpells.map((s) => Chip(
-              label: Text(s),
-              onDeleted: () => setState(() => _newSpells.remove(s)),
-            )).toList(),
-          ),
-        ],
       ],
     );
   }

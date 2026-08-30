@@ -65,11 +65,16 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 6 Feats -> Step 7 Equipment
+      // Step 6 Feats -> Step 7 Spells & Cantrips
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Spells & Cantrips'), findsOneWidget);
+
+      // Step 7 Spells -> Step 8 Equipment
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Step 7: Starting Equipment & Inventory (SRD)'), findsOneWidget);
+      expect(find.textContaining('Starting Equipment & Inventory (SRD)'), findsOneWidget);
       expect(find.text('Spellweaver: Quarterstaff, Arcane Focus & Spellbook'), findsOneWidget);
       expect(find.text('Arcane Explorer: Dagger, Component Pouch & Spellbook'), findsOneWidget);
       expect(find.text('Starting Wealth (Gold Only Option)'), findsOneWidget);
