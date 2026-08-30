@@ -100,9 +100,9 @@ class CampaignProfile {
       createdAt: createdAt ?? this.createdAt,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
       roomState: roomState ?? this.roomState,
-      partyRoster: partyRoster ?? this.partyRoster,
-      activeMinions: activeMinions ?? this.activeMinions,
-      pinnedRuleIds: pinnedRuleIds ?? this.pinnedRuleIds,
+      partyRoster: partyRoster != null ? List<Character>.from(partyRoster) : this.partyRoster,
+      activeMinions: activeMinions != null ? List<AnimatedObjectInstance>.from(activeMinions) : this.activeMinions,
+      pinnedRuleIds: pinnedRuleIds != null ? Set<String>.from(pinnedRuleIds) : this.pinnedRuleIds,
       notesMarkdown: notesMarkdown ?? this.notesMarkdown,
       partyPurse: partyPurse ?? this.partyPurse,
     );

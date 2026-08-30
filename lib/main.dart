@@ -125,9 +125,18 @@ class _DangerouslyNerdy5eToolkitAppState extends State<DangerouslyNerdy5eToolkit
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.detached) {
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
       // Immediately flush all debounced disk writes to avoid data loss on background kill
-      AppServices.instance.debouncedStorage.flushAll();
+      unawaited(
+        AppServices.instance.debouncedStorage.flushAll().catchError((e, stackTrace) {
+          AppServices.instance.logger.logNonFatal(
+            e,
+            stackTrace,
+            reason: 'Lifecycle flushAll failed during state: $state',
+          );
+        }),
+      );
     }
   }
 

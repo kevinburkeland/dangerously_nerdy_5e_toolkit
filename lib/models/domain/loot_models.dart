@@ -65,10 +65,10 @@ class LootContainer {
       type: type ?? this.type,
       isLocked: isLocked ?? this.isLocked,
       capacityWeightLbs: capacityWeightLbs ?? this.capacityWeightLbs,
-      items: items ?? this.items,
+      items: items != null ? List<InventoryItemInstance>.from(items) : this.items,
       purse: purse ?? this.purse,
-      permissions: permissions ?? this.permissions,
-      customProperties: customProperties ?? this.customProperties,
+      permissions: permissions != null ? Map<String, dynamic>.from(permissions) : this.permissions,
+      customProperties: customProperties != null ? Map<String, dynamic>.from(customProperties) : this.customProperties,
     );
   }
 

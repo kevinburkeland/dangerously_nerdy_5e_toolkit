@@ -59,12 +59,32 @@ class DebouncedStorageService {
   }
 
   /// Immediately flushes all pending write tasks across the entire application.
-  /// Essential when the app pauses or detaches (e.g. `AppLifecycleState.paused`).
+  /// Cancels all active timers immediately, snapshots all tasks, and executes
+  /// writes concurrently with individual error isolation.
   Future<void> flushAll() async {
-    final keys = List<String>.from(_pendingTasks.keys);
-    for (final key in keys) {
-      await flushKey(key);
+    for (final timer in _debounceTimers.values) {
+      timer.cancel();
     }
+    _debounceTimers.clear();
+
+    final tasksToFlush = Map<String, AsyncWriteTask>.from(_pendingTasks);
+    _pendingTasks.clear();
+
+    if (tasksToFlush.isEmpty) return;
+
+    final futures = tasksToFlush.entries.map((entry) async {
+      try {
+        await entry.value();
+      } catch (e, stackTrace) {
+        _logger.logNonFatal(
+          e,
+          stackTrace,
+          reason: 'Failed to execute debounced write task during flushAll: ${entry.key}',
+        );
+      }
+    });
+
+    await Future.wait(futures);
   }
 
   /// Cancels all pending tasks without writing (used for test teardown).

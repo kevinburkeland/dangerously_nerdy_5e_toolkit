@@ -19,7 +19,6 @@ import '../widgets/room_banner_widget.dart';
 import 'character_builder_screen.dart';
 import 'dice_roller_screen.dart';
 import 'dm_dashboard_screen.dart';
-import 'dm_reference_screen.dart';
 import 'dpr_calculator_screen.dart';
 import 'glyph_showcase_screen.dart';
 import 'item_compendium_screen.dart';
@@ -99,20 +98,6 @@ class _LandingScreenState extends State<LandingScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.menu_book, color: theme.colorScheme.secondary),
-            tooltip: 'Spellbook Companion',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SpellbookScreen()),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.menu_book_rounded, color: theme.colorScheme.primary),
-            tooltip: "Rules Compendium (2014 / 2024)",
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const RulesCompendiumScreen()),
-            ),
-          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: 'Preferences & Theme Settings',

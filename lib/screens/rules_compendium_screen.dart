@@ -138,16 +138,6 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.table_chart_outlined, color: Color(0xFFF59E0B)),
-            tooltip: 'Open Table Roller & Loot Index',
-            onPressed: () {
-              HapticService.selectionTick(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TableIndexScreen()),
-              );
-            },
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
             child: RulesEditionToggle(

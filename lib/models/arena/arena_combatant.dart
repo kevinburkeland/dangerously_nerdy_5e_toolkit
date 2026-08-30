@@ -61,6 +61,7 @@ class ArenaCombatant {
   final List<String> knownSpellIds;
   final int spellSaveDc;
   final int spellAttackBonus;
+  final Map<String, int> savingThrowBonuses;
   String? activeConcentrationSpellId;
   bool usedReactionThisRound;
   bool castBonusActionSpellThisTurn;
@@ -103,6 +104,7 @@ class ArenaCombatant {
     List<String>? knownSpellIds,
     this.spellSaveDc = 10,
     this.spellAttackBonus = 0,
+    Map<String, int>? savingThrowBonuses,
     this.activeConcentrationSpellId,
     this.usedReactionThisRound = false,
     this.castBonusActionSpellThisTurn = false,
@@ -132,6 +134,7 @@ class ArenaCombatant {
             ? Map<int, int>.from(currentSpellSlots)
             : (maxSpellSlots != null ? Map<int, int>.from(maxSpellSlots) : {}),
         knownSpellIds = knownSpellIds != null ? List<String>.from(knownSpellIds) : [],
+        savingThrowBonuses = savingThrowBonuses != null ? Map<String, int>.from(savingThrowBonuses) : const {},
         legendaryActionsRemaining = legendaryActionsRemaining ?? maxLegendaryActions,
         legendaryResistancesRemaining = legendaryResistancesRemaining ?? maxLegendaryResistances;
 
@@ -203,6 +206,12 @@ class ArenaCombatant {
     final parsedLegendaryActions = _parseMonsterLegendaryActions(sb);
     final parsedLegendaryResistances = _parseMonsterLegendaryResistances(sb);
 
+    // Precalculate finite ability saving throws once
+    final parsedSaves = <String, int>{};
+    for (final ab in const ['str', 'dex', 'con', 'int', 'wis', 'cha']) {
+      parsedSaves[ab] = _computeSavingThrowBonus(sb, ab);
+    }
+
     return ArenaCombatant(
       id: id,
       monster: monster,
@@ -223,6 +232,7 @@ class ArenaCombatant {
       knownSpellIds: parsedKnownSpells,
       spellSaveDc: parsedDc,
       spellAttackBonus: parsedAttackBonus,
+      savingThrowBonuses: parsedSaves,
       activeConcentrationSpellId: null,
       usedReactionThisRound: false,
       castBonusActionSpellThisTurn: false,
@@ -407,6 +417,7 @@ class ArenaCombatant {
       knownSpellIds: List<String>.from(knownSpellIds),
       spellSaveDc: spellSaveDc,
       spellAttackBonus: spellAttackBonus,
+      savingThrowBonuses: Map<String, int>.from(savingThrowBonuses),
       activeConcentrationSpellId: null,
       usedReactionThisRound: false,
       castBonusActionSpellThisTurn: false,
@@ -449,6 +460,7 @@ class ArenaCombatant {
       knownSpellIds: List<String>.from(knownSpellIds),
       spellSaveDc: spellSaveDc,
       spellAttackBonus: spellAttackBonus,
+      savingThrowBonuses: Map<String, int>.from(savingThrowBonuses),
       activeConcentrationSpellId: activeConcentrationSpellId,
       usedReactionThisRound: usedReactionThisRound,
       castBonusActionSpellThisTurn: castBonusActionSpellThisTurn,
@@ -514,7 +526,14 @@ class ArenaCombatant {
     caseSensitive: false,
   );
   static final Map<String, RegExp> _spellWordPatterns = {};
-  static final Map<String, RegExp> _abilitySavePatterns = {};
+  static final Map<String, RegExp> _staticAbilitySavePatterns = {
+    'str': RegExp(r'\b(?:str|strength)\s*([+-]?\s*\d+)', caseSensitive: false),
+    'dex': RegExp(r'\b(?:dex|dexterity)\s*([+-]?\s*\d+)', caseSensitive: false),
+    'con': RegExp(r'\b(?:con|constitution)\s*([+-]?\s*\d+)', caseSensitive: false),
+    'int': RegExp(r'\b(?:int|intelligence)\s*([+-]?\s*\d+)', caseSensitive: false),
+    'wis': RegExp(r'\b(?:wis|wisdom)\s*([+-]?\s*\d+)', caseSensitive: false),
+    'cha': RegExp(r'\b(?:cha|charisma)\s*([+-]?\s*\d+)', caseSensitive: false),
+  };
 
   // --- Static Pre-Parsing Helpers ---
 
@@ -678,12 +697,11 @@ class ArenaCombatant {
 
   static bool _containsSpellWord(String corpus, String spellName) {
     final lowerName = spellName.toLowerCase();
-    final cleanCorpus = corpus.replaceAll('_', ' ').replaceAll('*', ' ');
     final pattern = _spellWordPatterns.putIfAbsent(
       lowerName,
       () => RegExp('\\b${RegExp.escape(lowerName)}\\b', caseSensitive: false),
     );
-    return pattern.hasMatch(cleanCorpus);
+    return pattern.hasMatch(corpus);
   }
 
   /// Applies damage with temporary HP buffering.
@@ -751,24 +769,26 @@ class ArenaCombatant {
   }
 
   /// Calculates saving throw modifier for a given ability (e.g. 'dex', 'str', 'con', 'wis', 'int', 'cha').
+  /// Uses cached pre-parsed bonuses if available to eliminate regex evaluations during Monte Carlo simulation.
   int getSavingThrowBonus(String ability, [DmRulesEdition edition = DmRulesEdition.v2024]) {
-    final sb = getStatBlock(edition);
     final abLower = ability.toLowerCase().trim();
+    final cached = savingThrowBonuses[abLower];
+    if (cached != null) return cached;
+    final sb = getStatBlock(edition);
+    return _computeSavingThrowBonus(sb, abLower);
+  }
 
-    // Check explicit saving throw text like "Dex +5, Con +8"
+  /// Evaluates explicit saving throw text like "Dex +5, Con +8" with fallback to raw modifier.
+  static int _computeSavingThrowBonus(MinionStatBlock sb, String abLower) {
     final rawSaves = sb.savingThrows;
     if (rawSaves != null && rawSaves.isNotEmpty) {
-      final pattern = _abilitySavePatterns.putIfAbsent(
-        abLower,
-        () => RegExp(
-          '\\b(?:${RegExp.escape(abLower)}|${_expandAbilityName(abLower)})\\s*([+-]?\\s*\\d+)',
-          caseSensitive: false,
-        ),
-      );
-      final match = pattern.firstMatch(rawSaves);
-      if (match != null) {
-        final parsed = int.tryParse(match.group(1)!.replaceAll(' ', ''));
-        if (parsed != null) return parsed;
+      final pattern = _staticAbilitySavePatterns[abLower];
+      if (pattern != null) {
+        final match = pattern.firstMatch(rawSaves);
+        if (match != null) {
+          final parsed = int.tryParse(match.group(1)!.replaceAll(' ', ''));
+          if (parsed != null) return parsed;
+        }
       }
     }
 
@@ -783,14 +803,4 @@ class ArenaCombatant {
       _ => sb.dexMod,
     };
   }
-
-  static String _expandAbilityName(String ab) => switch (ab.toLowerCase()) {
-        'str' => 'strength',
-        'dex' => 'dexterity',
-        'con' => 'constitution',
-        'int' => 'intelligence',
-        'wis' => 'wisdom',
-        'cha' => 'charisma',
-        _ => ab,
-      };
 }
