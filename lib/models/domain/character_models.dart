@@ -22,6 +22,27 @@ enum AbilityType {
         AbilityType.wisdom => 'WIS',
         AbilityType.charisma => 'CHA',
       };
+
+  /// Safely resolves a loose or unstructured string into a canonical [AbilityType].
+  static AbilityType fromLooseString(
+    String? key, [
+    AbilityType fallback = AbilityType.strength,
+  ]) {
+    if (key == null) return fallback;
+    final clean = key.trim().toLowerCase();
+    return switch (clean) {
+      'str' || 'strength' => AbilityType.strength,
+      'dex' || 'dexterity' => AbilityType.dexterity,
+      'con' || 'constitution' => AbilityType.constitution,
+      'int' || 'intelligence' => AbilityType.intelligence,
+      'wis' || 'wisdom' => AbilityType.wisdom,
+      'cha' || 'charisma' => AbilityType.charisma,
+      _ => AbilityType.values.firstWhere(
+          (a) => a.name.toLowerCase() == clean,
+          orElse: () => fallback,
+        ),
+    };
+  }
 }
 
 /// Immutable collection of the 6 core 5e Ability Scores

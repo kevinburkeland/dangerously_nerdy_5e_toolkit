@@ -1,6 +1,9 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
+import '../../models/domain/character_models.dart';
+import '../../models/domain/core_types.dart';
 
 /// 5e Area of Effect geometric shapes (DMG p. 249).
 enum AoeShape {
@@ -13,6 +16,24 @@ enum AoeShape {
   final String label;
   final double divisor;
   const AoeShape(this.label, this.divisor);
+}
+
+/// Strongly typed domain specification for Area of Effect spells and actions.
+@immutable
+class AoeSpecification {
+  final AoeShape shape;
+  final double sizeInFeet;
+  final DamageType damageType;
+  final AbilityType saveAbility;
+  final int saveDc;
+
+  const AoeSpecification({
+    required this.shape,
+    required this.sizeInFeet,
+    this.damageType = DamageType.untyped,
+    this.saveAbility = AbilityType.dexterity,
+    this.saveDc = 10,
+  });
 }
 
 /// DMG p.249 Theater-of-the-Mind AoE Target Resolution with Box-Muller Gaussian clustering.

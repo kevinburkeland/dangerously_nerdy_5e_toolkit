@@ -3,6 +3,8 @@ import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../utils/dice_formatters.dart';
 import '../../widgets/glyphs/glyph_tokens.dart';
 
+import '../domain/character_models.dart';
+
 enum SummonCategory { spell, magicItem }
 
 class CreatureTrait {
@@ -65,6 +67,15 @@ class MinionStatBlock {
   final List<CreatureAction> reactions;
   final List<CreatureAction> legendaryActions;
 
+  // Pre-calculated & Strongly-Typed Ingestion Fields
+  final Map<int, int>? explicitSpellSlots;
+  final int? explicitMeleeReachFt;
+  final Map<AbilityType, int>? explicitSavingThrows;
+  final bool? canFly;
+  final bool? hasHover;
+  final int? spellSaveDc;
+  final int? spellAttackBonus;
+
   // Rapid Batch Dice Roller Fields
   final int attackBonus;
   final int damageDiceCount;
@@ -109,6 +120,13 @@ class MinionStatBlock {
     this.actions = const [],
     this.reactions = const [],
     this.legendaryActions = const [],
+    this.explicitSpellSlots,
+    this.explicitMeleeReachFt,
+    this.explicitSavingThrows,
+    this.canFly,
+    this.hasHover,
+    this.spellSaveDc,
+    this.spellAttackBonus,
     required this.attackBonus,
     required this.damageDiceCount,
     required this.damageDiceSides,

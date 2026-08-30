@@ -176,15 +176,7 @@ class AnimatedObjectInstance {
   static int? _extractColorValue(Object? c) {
     if (c == null) return null;
     if (c is int) return c;
-    try {
-      return (c as dynamic).toARGB32() as int?;
-    } catch (_) {
-      try {
-        return (c as dynamic).value as int?;
-      } catch (_) {
-        return null;
-      }
-    }
+    return null;
   }
 
   int get currentHp => _currentHp;

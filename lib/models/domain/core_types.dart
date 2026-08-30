@@ -56,7 +56,17 @@ enum DamageType {
   radiant,
   slashing,
   thunder,
-  untyped,
+  untyped;
+
+  /// Safely resolves a loose or unstructured string into a canonical [DamageType].
+  static DamageType fromLooseString(String? key) {
+    if (key == null) return DamageType.untyped;
+    final clean = key.trim().toLowerCase();
+    for (final val in DamageType.values) {
+      if (val.name.toLowerCase() == clean) return val;
+    }
+    return DamageType.untyped;
+  }
 }
 
 /// Composite Entity Identifier supporting multi-ruleset coexistence.

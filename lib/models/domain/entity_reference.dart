@@ -15,6 +15,26 @@ abstract class DomainEntity {
 /// Typed Lazy Pointer for Cross-Entity References.
 typedef EntityRef<T extends DomainEntity> = EntityReference<T>;
 
+/// Modern Dart Record representation for resolved or pending entity lookups.
+typedef EntityLookup<T extends DomainEntity> = ({
+  T? entity,
+  String slug,
+  EntityType refType,
+  RulesetVersion? rulesetPreferred,
+  String displayName,
+  bool isResolved,
+});
+
+extension EntityLookupExtension<T extends DomainEntity> on EntityLookup<T> {
+  String get resolvedName => entity?.name ?? displayName;
+  T get requiredEntity {
+    if (entity == null) {
+      throw StateError('Unresolved entity lookup for $refType: $slug');
+    }
+    return entity!;
+  }
+}
+
 @immutable
 class EntityReference<T extends DomainEntity> {
   final EntityType refType;

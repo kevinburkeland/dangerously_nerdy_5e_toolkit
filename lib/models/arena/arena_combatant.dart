@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
+import '../domain/character_models.dart';
 import '../srd_summons/minion_stat_block.dart';
 import 'arena_condition.dart';
 import 'monster_combat_profile.dart';
@@ -532,12 +533,25 @@ class ArenaCombatant {
     return monster.getCombatProfile(edition).hasNimbleEscape;
   }
 
+  /// Calculates saving throw modifier for a given [AbilityType].
+  /// Uses pre-calculated bonuses with zero runtime regex evaluations.
+  int getAbilitySavingThrowBonus(AbilityType ability, [DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final key = ability.shortName.toLowerCase();
+    final cached = savingThrowBonuses[key];
+    if (cached != null) return cached;
+    return monster.getCombatProfile(edition).savingThrowBonuses[key] ?? switch (ability) {
+      AbilityType.strength => getStatBlock(edition).strMod,
+      AbilityType.dexterity => getStatBlock(edition).dexMod,
+      AbilityType.constitution => getStatBlock(edition).conMod,
+      AbilityType.intelligence => getStatBlock(edition).intMod,
+      AbilityType.wisdom => getStatBlock(edition).wisMod,
+      AbilityType.charisma => getStatBlock(edition).chaMod,
+    };
+  }
+
   /// Calculates saving throw modifier for a given ability (e.g. 'dex', 'str', 'con', 'wis', 'int', 'cha').
   /// Uses pre-parsed bonuses to eliminate regex evaluations during Monte Carlo simulation.
   int getSavingThrowBonus(String ability, [DmRulesEdition edition = DmRulesEdition.v2024]) {
-    final abLower = ability.toLowerCase().trim();
-    final cached = savingThrowBonuses[abLower];
-    if (cached != null) return cached;
-    return monster.getCombatProfile(edition).savingThrowBonuses[abLower] ?? getStatBlock(edition).dexMod;
+    return getAbilitySavingThrowBonus(AbilityType.fromLooseString(ability), edition);
   }
 }
