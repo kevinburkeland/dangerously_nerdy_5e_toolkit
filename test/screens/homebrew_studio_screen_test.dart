@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/homebrew_studio_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
@@ -167,6 +169,123 @@ void main() {
 
       expect(find.text('Bundle Generated'), findsOneWidget);
       expect(find.text('Copy to Clipboard'), findsOneWidget);
+    });
+
+    testWidgets('opens HomebrewRefresherDialog and executes reparse', (tester) async {
+      // Pre-populate with a custom spell having raw JSON
+      final persistence = HomebrewPersistenceService();
+      await persistence.saveCustomSpellsBatch(
+        [],
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomebrewStudioScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap JSON Refresher icon button in AppBar
+      await tester.tap(find.byIcon(Icons.auto_fix_high));
+      await tester.pumpAndSettle();
+
+      expect(find.text('JSON Refresher & AST Upgrade'), findsOneWidget);
+      expect(find.text('Storage Overview'), findsOneWidget);
+
+      // Tap Cancel to close
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('JSON Refresher & AST Upgrade'), findsNothing);
+    });
+
+    testWidgets('opens HomebrewBulkDeleterDialog and executes category deletion', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomebrewStudioScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap Bulk Deleter icon button in AppBar
+      await tester.tap(find.byIcon(Icons.delete_sweep_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bulk Homebrew Deleter'), findsOneWidget);
+      expect(find.text('Spells & Cantrips'), findsOneWidget);
+      expect(find.text('Monsters & NPCs'), findsOneWidget);
+
+      // Tap Cancel to close
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bulk Homebrew Deleter'), findsNothing);
+    });
+
+    testWidgets('supports in-tab multi-select mode and batch item deletion', (tester) async {
+      // Pre-populate 2 custom spells
+      final persistence = HomebrewPersistenceService();
+      await persistence.saveCustomSpellsBatch(
+        [
+          Spell(
+            id: const EntityId(slug: 'spell-a', ruleset: RulesetVersion.homebrew),
+            name: 'Spell Alpha',
+            level: 1,
+            school: 'Evocation',
+            castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+            duration: const SpellDuration(type: DurationType.instantaneous),
+            range: '30 ft',
+            components: const SpellComponents(),
+            descriptionMarkdown: 'Alpha',
+          ),
+          Spell(
+            id: const EntityId(slug: 'spell-b', ruleset: RulesetVersion.homebrew),
+            name: 'Spell Beta',
+            level: 2,
+            school: 'Abjuration',
+            castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+            duration: const SpellDuration(type: DurationType.instantaneous),
+            range: '60 ft',
+            components: const SpellComponents(),
+            descriptionMarkdown: 'Beta',
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomebrewStudioScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Spell Alpha'), findsOneWidget);
+      expect(find.text('Spell Beta'), findsOneWidget);
+
+      // Enter Select Mode
+      await tester.tap(find.text('Select Mode'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Selected: 0 / 2'), findsOneWidget);
+
+      // Tap Spell Alpha to select it
+      await tester.tap(find.text('Spell Alpha'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Selected: 1 / 2'), findsOneWidget);
+      expect(find.text('Delete (1)'), findsOneWidget);
+
+      // Tap Delete (1)
+      await tester.tap(find.text('Delete (1)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete Selected Items?'), findsOneWidget);
+
+      // Confirm deletion
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete 1 Items'));
+      await tester.pumpAndSettle();
+
+      // Verify Spell Alpha was deleted and Spell Beta remains
+      expect(find.text('Spell Alpha'), findsNothing);
+      expect(find.text('Spell Beta'), findsOneWidget);
     });
   });
 }

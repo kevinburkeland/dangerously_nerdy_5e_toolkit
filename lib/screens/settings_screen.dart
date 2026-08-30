@@ -6,8 +6,10 @@ import '../services/haptic_service.dart';
 import '../services/persistence/app_backup_service.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/fx/critical_effect_overlay.dart';
+import '../widgets/homebrew/homebrew_bulk_deleter_dialog.dart';
 import '../widgets/homebrew/homebrew_export_dialog.dart';
 import '../widgets/homebrew/homebrew_import_preview_dialog.dart';
+import '../widgets/homebrew/homebrew_refresher_dialog.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/meters/animated_resource_meter.dart';
 
@@ -386,6 +388,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           icon: const Icon(Icons.upload_file_outlined, size: 18),
                           label: const Text('Export Homebrew Pack'),
+                        ),
+                        FilledButton.tonalIcon(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (_) => const HomebrewRefresherDialog(),
+                          ),
+                          icon: const Icon(Icons.auto_fix_high, size: 18),
+                          label: const Text('Refresh / Reparse JSON'),
+                        ),
+                        FilledButton.tonalIcon(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (_) => const HomebrewBulkDeleterDialog(),
+                          ),
+                          icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+                          label: const Text('Bulk Delete Homebrew'),
                         ),
                         FilledButton.tonalIcon(
                           onPressed: _exportAppBackup,
