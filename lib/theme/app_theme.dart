@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/app_settings.dart';
+export 'domain_ui_extensions.dart';
 
 @immutable
 class TabletopColors extends ThemeExtension<TabletopColors> {

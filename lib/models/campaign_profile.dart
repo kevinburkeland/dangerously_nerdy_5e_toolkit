@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import '../services/logging_service.dart';
 import 'animated_object.dart';
 import 'dm_screen_data.dart';
 import 'domain/character_models.dart';
@@ -21,6 +22,11 @@ class CampaignProfile {
   final String notesMarkdown;
   final PartyPurse partyPurse;
 
+  /// Fallback storage preserving raw unparsed child entity payloads
+  /// to guarantee 0% data loss across serialization cycles if a child fails parsing.
+  final List<Map<String, dynamic>> unparsedPartyRoster;
+  final List<Map<String, dynamic>> unparsedMinions;
+
   const CampaignProfile({
     required this.id,
     required this.name,
@@ -39,6 +45,8 @@ class CampaignProfile {
     },
     this.notesMarkdown = '',
     this.partyPurse = const PartyPurse(),
+    this.unparsedPartyRoster = const [],
+    this.unparsedMinions = const [],
   });
 
   /// Factory creating a fresh default campaign profile.
@@ -92,6 +100,8 @@ class CampaignProfile {
     Set<String>? pinnedRuleIds,
     String? notesMarkdown,
     PartyPurse? partyPurse,
+    List<Map<String, dynamic>>? unparsedPartyRoster,
+    List<Map<String, dynamic>>? unparsedMinions,
   }) {
     return CampaignProfile(
       id: id ?? this.id,
@@ -105,6 +115,12 @@ class CampaignProfile {
       pinnedRuleIds: pinnedRuleIds != null ? Set<String>.from(pinnedRuleIds) : this.pinnedRuleIds,
       notesMarkdown: notesMarkdown ?? this.notesMarkdown,
       partyPurse: partyPurse ?? this.partyPurse,
+      unparsedPartyRoster: unparsedPartyRoster != null
+          ? List<Map<String, dynamic>>.from(unparsedPartyRoster)
+          : this.unparsedPartyRoster,
+      unparsedMinions: unparsedMinions != null
+          ? List<Map<String, dynamic>>.from(unparsedMinions)
+          : this.unparsedMinions,
     );
   }
 
@@ -116,8 +132,14 @@ class CampaignProfile {
       'createdAt': createdAt.toIso8601String(),
       'lastPlayedAt': lastPlayedAt.toIso8601String(),
       'roomState': roomState.toMap(),
-      'partyRoster': partyRoster.map((c) => c.toMap()).toList(),
-      'activeMinions': activeMinions.map((m) => m.toMap()).toList(),
+      'partyRoster': [
+        ...partyRoster.map((c) => c.toMap()),
+        ...unparsedPartyRoster,
+      ],
+      'activeMinions': [
+        ...activeMinions.map((m) => m.toMap()),
+        ...unparsedMinions,
+      ],
       'pinnedRuleIds': pinnedRuleIds.toList(),
       'notesMarkdown': notesMarkdown,
       'partyPurse': partyPurse.toMap(),
@@ -143,29 +165,43 @@ class CampaignProfile {
             title: '${map['name']?.toString() ?? "Campaign"} Staging',
           );
 
-    final rosterList = (map['partyRoster'] as List? ?? [])
-        .whereType<Map>()
-        .map((m) {
-          try {
-            return Character.fromMap(Map<String, dynamic>.from(m));
-          } catch (_) {
-            return null;
-          }
-        })
-        .whereType<Character>()
-        .toList();
+    final rosterList = <Character>[];
+    final unparsedRoster = <Map<String, dynamic>>[];
 
-    final minionsList = (map['activeMinions'] as List? ?? [])
-        .whereType<Map>()
-        .map((m) {
-          try {
-            return AnimatedObjectInstance.fromMap(Map<String, dynamic>.from(m));
-          } catch (_) {
-            return null;
-          }
-        })
-        .whereType<AnimatedObjectInstance>()
-        .toList();
+    for (final raw in (map['partyRoster'] as List? ?? [])) {
+      if (raw is Map) {
+        final itemMap = Map<String, dynamic>.from(raw);
+        try {
+          rosterList.add(Character.fromMap(itemMap));
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to deserialize Character in CampaignProfile. Preserving raw payload to prevent data loss.',
+          );
+          unparsedRoster.add(itemMap);
+        }
+      }
+    }
+
+    final minionsList = <AnimatedObjectInstance>[];
+    final unparsedMinionList = <Map<String, dynamic>>[];
+
+    for (final raw in (map['activeMinions'] as List? ?? [])) {
+      if (raw is Map) {
+        final itemMap = Map<String, dynamic>.from(raw);
+        try {
+          minionsList.add(AnimatedObjectInstance.fromMap(itemMap));
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Failed to deserialize AnimatedObjectInstance in CampaignProfile. Preserving raw payload to prevent data loss.',
+          );
+          unparsedMinionList.add(itemMap);
+        }
+      }
+    }
 
     final pinned = (map['pinnedRuleIds'] as List? ?? [])
         .whereType<String>()
@@ -189,6 +225,8 @@ class CampaignProfile {
       roomState: roomState,
       partyRoster: rosterList,
       activeMinions: minionsList,
+      unparsedPartyRoster: unparsedRoster,
+      unparsedMinions: unparsedMinionList,
       pinnedRuleIds: pinned.isNotEmpty
           ? pinned
           : const {
@@ -220,6 +258,8 @@ class CampaignProfile {
           partyPurse == other.partyPurse &&
           listEquals(partyRoster, other.partyRoster) &&
           listEquals(activeMinions, other.activeMinions) &&
+          listEquals(unparsedPartyRoster, other.unparsedPartyRoster) &&
+          listEquals(unparsedMinions, other.unparsedMinions) &&
           setEquals(pinnedRuleIds, other.pinnedRuleIds);
 
   @override
@@ -231,6 +271,8 @@ class CampaignProfile {
       partyPurse.hashCode ^
       partyRoster.length ^
       activeMinions.length ^
+      unparsedPartyRoster.length ^
+      unparsedMinions.length ^
       pinnedRuleIds.length;
 
   @override

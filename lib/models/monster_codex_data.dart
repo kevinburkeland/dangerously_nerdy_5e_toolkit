@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'arena/monster_combat_profile.dart';
 import 'dm_screen_data.dart';
 import 'domain/spell_monster_equipment.dart';
 import 'dpr/dpr_models.dart';
@@ -137,11 +138,17 @@ class MonsterItem {
   List<CreatureAction> get reactions => sourceStatBlock.reactions;
   int? get xp => sourceStatBlock.xp;
 
-  static final Map<String, String> _corpusCache = {};
+  /// Retrieves the pre-calculated, strongly typed [MonsterCombatProfile] for the specified rules edition.
+  MonsterCombatProfile getCombatProfile([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    return MonsterCombatProfile.fromStatBlock(
+      getStatBlock(edition),
+      challengeRating: challengeRating,
+    );
+  }
+
   static final Map<String, double> _dprCache = {};
 
   static void clearCaches() {
-    _corpusCache.clear();
     _dprCache.clear();
   }
 
@@ -240,10 +247,6 @@ class MonsterItem {
   }
 
   String _getCorpus([DmRulesEdition edition = DmRulesEdition.v2024]) {
-    final cacheKey = '${id}_${edition.name}';
-    final cached = _corpusCache[cacheKey];
-    if (cached != null) return cached;
-
     final sb = getStatBlock(edition);
     final buffer = StringBuffer()
       ..write('${getName(edition)} ')
@@ -285,9 +288,7 @@ class MonsterItem {
         ..write('${reaction.description} ');
     }
 
-    final corpus = buffer.toString().toLowerCase();
-    _corpusCache[cacheKey] = corpus;
-    return corpus;
+    return buffer.toString().toLowerCase();
   }
 
   bool matches(

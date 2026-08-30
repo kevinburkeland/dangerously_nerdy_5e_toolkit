@@ -13,6 +13,8 @@ abstract class DomainEntity {
 }
 
 /// Typed Lazy Pointer for Cross-Entity References.
+typedef EntityRef<T extends DomainEntity> = EntityReference<T>;
+
 @immutable
 class EntityReference<T extends DomainEntity> {
   final EntityType refType;

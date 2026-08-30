@@ -910,17 +910,9 @@ class MagicItem {
     return edition == DmRulesEdition.v2014 ? rules2014 : rules2024;
   }
 
-  static final Map<String, String> _corpusCache = {};
-
-  static void clearCacheForTesting() {
-    _corpusCache.clear();
-  }
+  static void clearCacheForTesting() {}
 
   String _getCorpus(DmRulesEdition edition) {
-    final cacheKey = '${id}_${edition.name}';
-    final cached = _corpusCache[cacheKey];
-    if (cached != null) return cached;
-
     final effectiveName = getName(edition);
     final effectiveRules = getRules(edition);
     final priceStr = getEffectivePrice(edition);
@@ -947,9 +939,7 @@ class MagicItem {
         ..write('${r.label ?? ""} ');
     }
 
-    final corpus = buffer.toString().toLowerCase();
-    _corpusCache[cacheKey] = corpus;
-    return corpus;
+    return buffer.toString().toLowerCase();
   }
 
   /// Checks if this item matches search and filter criteria.

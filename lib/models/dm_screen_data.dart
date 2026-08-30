@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 enum DmRulesEdition {
   v2014,
   v2024,
@@ -13,32 +11,15 @@ enum DmRulesEdition {
 }
 
 enum DmCategory {
-  actions('Actions & Combat', Icons.sports_kabaddi, Colors.amber),
-  conditions('Conditions & Statuses', Icons.medical_information_outlined, Colors.cyanAccent),
-  environment('Environment & Hazards', Icons.landscape_outlined, Colors.lightGreenAccent),
-  exploration('Exploration & DCs', Icons.explore_outlined, Colors.orangeAccent),
-  magicAndResting('Magic & Resting', Icons.auto_awesome, Colors.purpleAccent),
-  tables('Quick Reference Tables', Icons.table_chart_outlined, Colors.pinkAccent);
+  actions('Actions & Combat'),
+  conditions('Conditions & Statuses'),
+  environment('Environment & Hazards'),
+  exploration('Exploration & DCs'),
+  magicAndResting('Magic & Resting'),
+  tables('Quick Reference Tables');
 
   final String label;
-  final IconData icon;
-  final Color color;
-
-  const DmCategory(this.label, this.icon, this.color);
-
-  Color getLegibleColor(bool isDarkMode) {
-    if (!isDarkMode) {
-      return switch (this) {
-        DmCategory.actions => const Color(0xFFB45309),
-        DmCategory.conditions => const Color(0xFF0E7490),
-        DmCategory.environment => const Color(0xFF15803D),
-        DmCategory.exploration => const Color(0xFFC2410C),
-        DmCategory.magicAndResting => const Color(0xFF7E22CE),
-        DmCategory.tables => const Color(0xFFBE185D),
-      };
-    }
-    return color;
-  }
+  const DmCategory(this.label);
 }
 
 class DmReferenceItem {
@@ -51,9 +32,7 @@ class DmReferenceItem {
   final String? cost;
   final String? cost2014;
   final String? cost2024;
-  final IconData icon;
-  final Color color;
-  final String summary;
+final String summary;
   final List<String> rules2014;
   final List<String> rules2024;
   final String? diffSummary;
@@ -75,9 +54,7 @@ class DmReferenceItem {
     this.cost,
     this.cost2014,
     this.cost2024,
-    required this.icon,
-    required this.color,
-    required this.summary,
+required this.summary,
     required this.rules2014,
     required this.rules2024,
     this.diffSummary,
@@ -105,25 +82,7 @@ class DmReferenceItem {
   List<String> getRules(DmRulesEdition edition) {
     return edition == DmRulesEdition.v2014 ? rules2014 : rules2024;
   }
-
-  Color getLegibleColor(bool isDarkMode) {
-    if (!isDarkMode) {
-      if (color == Colors.amber) return const Color(0xFFB45309);
-      if (color == Colors.cyanAccent) return const Color(0xFF0E7490);
-      if (color == Colors.lightGreenAccent) return const Color(0xFF15803D);
-      if (color == Colors.orangeAccent) return const Color(0xFFC2410C);
-      if (color == Colors.purpleAccent) return const Color(0xFF7E22CE);
-      if (color == Colors.pinkAccent) return const Color(0xFFBE185D);
-      return category.getLegibleColor(isDarkMode);
-    }
-    return color;
-  }
-
-  static final Map<String, String> _corpusCache = {};
-
-  String _getCorpus() {
-    final cached = _corpusCache[id];
-    if (cached != null) return cached;
+String _getCorpus() {
     final buffer = StringBuffer()
       ..write('$id ')
       ..write('$title ')
@@ -147,7 +106,6 @@ class DmReferenceItem {
       buffer.write('$r ');
     }
     final corpus = buffer.toString().toLowerCase();
-    _corpusCache[id] = corpus;
     return corpus;
   }
 
@@ -235,9 +193,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.sports_kabaddi,
-      color: Colors.amber,
-      summary: 'Make one melee or ranged weapon/unarmed attack.',
+summary: 'Make one melee or ranged weapon/unarmed attack.',
       tags: ['attack', 'melee', 'ranged', 'extra attack', 'weapon', 'unarmed', 'standard_action', 'combat'],
       isChangedIn2024: true,
       diffSummary: '2024 lets you draw/stow a weapon before or after EACH attack, and Unarmed Strikes now offer Damage, Grapple, or Shove options directly.',
@@ -261,9 +217,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action (or Bonus Action / Reaction)',
-      icon: Icons.auto_awesome,
-      color: Colors.purpleAccent,
-      summary: 'Cast a spell or activate a magic item with slot restrictions.',
+summary: 'Cast a spell or activate a magic item with slot restrictions.',
       tags: ['cast a spell', 'magic action', 'spell', 'magic', 'cantrip', 'spell slot', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2024 codifies this as the "Magic Action" and limits you to expending only ONE spell slot on your turn (allowing Cantrip + Leveled, but preventing Double Leveled Slots).',
@@ -284,9 +238,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.directions_run,
-      color: Colors.cyanAccent,
-      summary: 'Gain extra movement equal to your Speed for the current turn.',
+summary: 'Gain extra movement equal to your Speed for the current turn.',
       tags: ['dash', 'speed', 'movement', 'standard_action'],
       isChangedIn2024: false,
       rules2014: [
@@ -302,9 +254,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.transit_enterexit,
-      color: Colors.greenAccent,
-      summary: 'Movement does not provoke opportunity attacks for the rest of your turn.',
+summary: 'Movement does not provoke opportunity attacks for the rest of your turn.',
       tags: ['disengage', 'movement', 'opportunity attack', 'standard_action'],
       isChangedIn2024: false,
       rules2014: [
@@ -320,9 +270,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.shield,
-      color: Colors.blueAccent,
-      summary: 'Focus entirely on evading incoming attacks and hazard reflex saves.',
+summary: 'Focus entirely on evading incoming attacks and hazard reflex saves.',
       tags: ['dodge', 'defense', 'advantage', 'disadvantage', 'dex save', 'standard_action'],
       isChangedIn2024: false,
       rules2014: [
@@ -340,9 +288,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.handshake,
-      color: Colors.tealAccent,
-      summary: 'Give an ally Advantage on an ability check or their next attack roll.',
+summary: 'Give an ally Advantage on an ability check or their next attack roll.',
       tags: ['help', 'assist', 'advantage', 'feint', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2024 specifies that helping on an ability check requires proficiency in the relevant skill.',
@@ -361,9 +307,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      summary: 'Conceal yourself from enemies.',
+summary: 'Conceal yourself from enemies.',
       tags: ['hide', 'stealth', 'invisible', 'passive perception', 'dc 15', 'unseen', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2014 was a contested check against enemy Passive Perception. 2024 sets a standardized DC 15 Dexterity (Stealth) check to immediately gain the Invisible condition!',
@@ -384,9 +328,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action + Reaction',
-      icon: Icons.hourglass_top,
-      color: Colors.orangeAccent,
-      summary: 'Specify a perceivable trigger and an action to execute as a Reaction.',
+summary: 'Specify a perceivable trigger and an action to execute as a Reaction.',
       tags: ['ready', 'reaction', 'trigger', 'concentration', 'standard_action'],
       isChangedIn2024: false,
       rules2014: [
@@ -405,9 +347,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.search,
-      color: Colors.lightGreenAccent,
-      summary: 'Devote attention to finding something or tracking hidden creatures.',
+summary: 'Devote attention to finding something or tracking hidden creatures.',
       tags: ['search', 'perception', 'investigation', 'survival', 'insight', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2024 codifies Search under Wisdom checks (Insight, Perception, Survival) to discern motives or locate concealed creatures/items.',
@@ -424,9 +364,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.menu_book,
-      color: Colors.teal,
-      summary: 'Deduce monster traits, weaknesses, or historical/arcane lore.',
+summary: 'Deduce monster traits, weaknesses, or historical/arcane lore.',
       tags: ['study', 'arcana', 'history', 'nature', 'religion', 'investigation', 'monster lore', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2024 introduces a codified Study action using Intelligence checks to deduce monster stats and weaknesses.',
@@ -443,9 +381,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.record_voice_over,
-      color: Colors.pinkAccent,
-      summary: 'Social interaction to adjust NPC attitudes and request favors.',
+summary: 'Social interaction to adjust NPC attitudes and request favors.',
       tags: ['influence', 'persuasion', 'deception', 'intimidation', 'animal handling', 'social', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2024 standardizes DCs for social influence: Friendly DC 10, Indifferent DC 15, Hostile DC 20.',
@@ -464,9 +400,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.touch_app,
-      color: Colors.pinkAccent,
-      summary: 'Interact with a second object or operate complex mechanical apparatuses.',
+summary: 'Interact with a second object or operate complex mechanical apparatuses.',
       tags: ['use an object', 'utilize', 'interact', 'item', 'mechanism', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: '2024 renames Use an Object to Utilize and standardizes equipping/using non-magic gear and apparatuses.',
@@ -483,9 +417,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Action',
-      icon: Icons.lightbulb_outline,
-      color: Colors.amber,
-      summary: 'Perform unlisted stunts, tricks, or environmental maneuvers.',
+summary: 'Perform unlisted stunts, tricks, or environmental maneuvers.',
       tags: ['improvise', 'stunt', 'dm ruling', 'action', 'standard_action'],
       isChangedIn2024: false,
       rules2014: [
@@ -503,9 +435,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: '1 Attack (Part of Attack Action)',
-      icon: Icons.sports_mma,
-      color: Colors.deepOrangeAccent,
-      summary: 'Grab or knock down / push a creature.',
+summary: 'Grab or knock down / push a creature.',
       tags: ['grapple', 'shove', 'push', 'prone', 'unarmed strike', 'athletics', 'save dc', 'standard_action', 'calculator'],
       isChangedIn2024: true,
       interactiveTool: 'grapple_shove',
@@ -531,9 +461,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Per Attack',
-      icon: Icons.gps_fixed,
-      color: Colors.redAccent,
-      summary: 'd20 + modifier + PB vs AC, natural 20 critical hits, natural 1 automatic miss.',
+summary: 'd20 + modifier + PB vs AC, natural 20 critical hits, natural 1 automatic miss.',
       tags: ['attack roll', 'ac', 'advantage', 'disadvantage', 'critical hit', 'nat 20', 'nat 1', 'fumble', 'combat'],
       isChangedIn2024: false,
       rules2014: [
@@ -555,9 +483,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Damage Resolution',
-      icon: Icons.whatshot,
-      color: Colors.orangeAccent,
-      summary: 'Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder.',
+summary: 'Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder.',
       tags: ['damage types', 'resistance', 'vulnerability', 'immunity', 'acid', 'fire', 'force', 'radiant', 'necrotic', 'psychic'],
       isChangedIn2024: false,
       rules2014: [
@@ -579,9 +505,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Continuous',
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      summary: 'Advantage on attacks when unseen; disadvantage against unseen targets.',
+summary: 'Advantage on attacks when unseen; disadvantage against unseen targets.',
       tags: ['unseen', 'hidden', 'invisible', 'advantage', 'disadvantage', 'combat'],
       isChangedIn2024: false,
       rules2014: [
@@ -601,9 +525,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Within 5 ft',
-      icon: Icons.crisis_alert,
-      color: Colors.deepOrange,
-      summary: 'Disadvantage on ranged attack rolls when a hostile creature is within 5 ft.',
+summary: 'Disadvantage on ranged attack rolls when a hostile creature is within 5 ft.',
       tags: ['ranged', 'melee range', '5 ft', 'disadvantage', 'bow', 'spell attack', 'combat'],
       isChangedIn2024: false,
       rules2014: [
@@ -623,9 +545,7 @@ class DmScreenLibrary {
       cost: '1 Action (2014) / 1 Bonus Action (2024)',
       cost2014: '1 Action',
       cost2024: '1 Bonus Action',
-      icon: Icons.liquor,
-      color: Colors.redAccent,
-      summary: 'Using healing potions and magical elixirs.',
+summary: 'Using healing potions and magical elixirs.',
       tags: ['potion', 'healing', 'bonus action', 'action', 'magic item', 'elixir'],
       isChangedIn2024: true,
       diffSummary: '2014 required a full Action to drink or administer a potion. 2024 makes drinking or administering a potion a Bonus Action!',
@@ -644,9 +564,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Standard Action',
       cost: 'At Start of Turn',
-      icon: Icons.favorite_border,
-      color: Colors.red,
-      summary: 'Dying, death saves, criticals, and stabilization.',
+summary: 'Dying, death saves, criticals, and stabilization.',
       tags: ['death saves', 'dying', 'unconscious', 'stabilize', 'medicine', 'nat 20', 'nat 1', '0 hp', 'standard_action'],
       isChangedIn2024: true,
       diffSummary: 'In 2024, rolling a Natural 20 on a death save lets you regain 1 HP AND immediately stand up / act without losing your turn.',
@@ -674,9 +592,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Upon Dropping to 0 HP',
-      icon: Icons.bedtime_outlined,
-      color: Colors.indigoAccent,
-      summary: 'Declare nonlethal damage with melee attacks to knock unconscious instead of killing.',
+summary: 'Declare nonlethal damage with melee attacks to knock unconscious instead of killing.',
       tags: ['knockout', 'nonlethal', 'unconscious', 'stable', '0 hp', 'melee'],
       isChangedIn2024: false,
       rules2014: [
@@ -694,9 +610,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Continuous',
-      icon: Icons.shield_outlined,
-      color: Colors.cyanAccent,
-      summary: 'Buffer HP that absorbs damage; do not stack, cannot be healed.',
+summary: 'Buffer HP that absorbs damage; do not stack, cannot be healed.',
       tags: ['temporary hp', 'thp', 'buffer', 'healing', 'stacking', 'combat'],
       isChangedIn2024: false,
       rules2014: [
@@ -717,9 +631,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Movement Rule',
       cost: 'During Your Turn',
-      icon: Icons.alt_route,
-      color: Colors.tealAccent,
-      summary: 'Splitting movement, double cost terrain, and squeezing through small openings.',
+summary: 'Splitting movement, double cost terrain, and squeezing through small openings.',
       tags: ['movement', 'difficult terrain', 'squeezing', 'half speed', 'climbing', 'swimming'],
       isChangedIn2024: false,
       rules2014: [
@@ -741,9 +653,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Movement Rule',
       cost: 'Part of Movement',
-      icon: Icons.nordic_walking,
-      color: Colors.greenAccent,
-      summary: 'Long Jump (STR score ft) & High Jump (3 + STR mod ft) with 10ft running start.',
+summary: 'Long Jump (STR score ft) & High Jump (3 + STR mod ft) with 10ft running start.',
       tags: ['jumping', 'long jump', 'high jump', 'strength', 'athletics', 'movement'],
       isChangedIn2024: true,
       diffSummary: '2024 makes Jumping an active check (DC 10 Athletics/Acrobatics) to clear obstacles or gain extra height beyond standard baseline.',
@@ -763,9 +673,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Movement Rule',
       cost: 'Continuous',
-      icon: Icons.flight,
-      color: Colors.lightBlueAccent,
-      summary: 'Hover capability, falling when speed is 0 or knocked prone.',
+summary: 'Hover capability, falling when speed is 0 or knocked prone.',
       tags: ['flying', 'fly speed', 'hover', 'aerial', 'falling', 'prone', 'movement'],
       isChangedIn2024: false,
       rules2014: [
@@ -782,9 +690,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Continuous',
-      icon: Icons.water,
-      color: Colors.cyan,
-      summary: 'Weapon restrictions, movement penalties, and fire resistance submerged.',
+summary: 'Weapon restrictions, movement penalties, and fire resistance submerged.',
       tags: ['underwater', 'submerged', 'swimming', 'dagger', 'javelin', 'trident', 'spear', 'crossbow', 'fire resistance', 'combat'],
       isChangedIn2024: false,
       rules2014: [
@@ -804,9 +710,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Half Speed to Mount/Dismount',
-      icon: Icons.cruelty_free,
-      color: Colors.brown,
-      summary: 'Mounting, dismounting, controlled vs independent mounts.',
+summary: 'Mounting, dismounting, controlled vs independent mounts.',
       tags: ['mounted', 'horse', 'mount', 'dismount', 'controlled mount', 'independent mount', 'combat'],
       isChangedIn2024: false,
       rules2014: [
@@ -826,9 +730,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Combat Rule',
       cost: 'Tactical Positioning',
-      icon: Icons.join_inner,
-      color: Colors.amber,
-      summary: 'Advantage on melee attacks when ally is on direct opposite side of enemy.',
+summary: 'Advantage on melee attacks when ally is on direct opposite side of enemy.',
       tags: ['flanking', 'optional', 'advantage', 'positioning', 'grid', 'combat'],
       isChangedIn2024: false,
       rules2014: [
@@ -851,9 +753,7 @@ class DmScreenLibrary {
       subCategory: 'Bonus Action',
       cost: '1 Bonus Action',
       cost2024: '1 Bonus Action (or Part of Attack with Nick)',
-      icon: Icons.content_cut,
-      color: Colors.amber,
-      summary: 'Attacking with dual-wielded light weapons.',
+summary: 'Attacking with dual-wielded light weapons.',
       tags: ['dual wield', 'light weapon', 'off-hand', 'bonus action', 'nick mastery', 'two-weapon', 'bonus_action'],
       isChangedIn2024: true,
       diffSummary: '2014 strictly required a Bonus Action for the off-hand attack. 2024 codifies this in the Light weapon property (and weapon masteries like Nick can make it part of the Attack action with no Bonus Action used).',
@@ -874,9 +774,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Bonus Action',
       cost: '1 Bonus Action',
-      icon: Icons.bolt,
-      color: Colors.purpleAccent,
-      summary: 'Casting swift bonus action spells.',
+summary: 'Casting swift bonus action spells.',
       tags: ['bonus action spell', 'healing word', 'misty step', 'slot limit', 'bonus_action'],
       isChangedIn2024: true,
       diffSummary: '2014 Bonus Action spell rule limited your Action to Cantrips. 2024 limits you to 1 spell slot per turn.',
@@ -895,9 +793,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Bonus Action',
       cost: '1 Bonus Action',
-      icon: Icons.star,
-      color: Colors.cyanAccent,
-      summary: 'Features explicitly designated as Bonus Actions.',
+summary: 'Features explicitly designated as Bonus Actions.',
       tags: ['cunning action', 'bardic inspiration', 'rage', 'second wind', 'command minions', 'bonus_action'],
       isChangedIn2024: false,
       rules2014: [
@@ -917,9 +813,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Reaction',
       cost: '1 Reaction',
-      icon: Icons.front_hand,
-      color: Colors.redAccent,
-      summary: 'Melee weapon strike when an enemy leaves your reach without Disengaging.',
+summary: 'Melee weapon strike when an enemy leaves your reach without Disengaging.',
       tags: ['opportunity attack', 'reach', 'disengage', 'melee', 'reaction'],
       isChangedIn2024: false,
       rules2014: [
@@ -935,9 +829,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Reaction',
       cost: '1 Reaction',
-      icon: Icons.security,
-      color: Colors.purpleAccent,
-      summary: 'Triggered magical defenses like Shield, Absorb Elements, or Counterspell.',
+summary: 'Triggered magical defenses like Shield, Absorb Elements, or Counterspell.',
       tags: ['shield', 'absorb elements', 'counterspell', 'feather fall', 'reaction', 'spells'],
       isChangedIn2024: false,
       rules2014: [
@@ -953,9 +845,7 @@ class DmScreenLibrary {
       category: DmCategory.actions,
       subCategory: 'Reaction',
       cost: '1 Reaction',
-      icon: Icons.alarm_on,
-      color: Colors.orangeAccent,
-      summary: 'Execute your previously Readied action when its designated trigger condition occurs.',
+summary: 'Execute your previously Readied action when its designated trigger condition occurs.',
       tags: ['readied trigger', 'trigger', 'reaction'],
       isChangedIn2024: false,
       rules2014: [
@@ -974,9 +864,7 @@ class DmScreenLibrary {
       title: 'Blinded',
       category: DmCategory.conditions,
       subCategory: 'Combat / Checks',
-      icon: Icons.visibility_off,
-      color: Colors.blueGrey,
-      summary: 'Cannot see and auto-fails checks requiring sight.',
+summary: 'Cannot see and auto-fails checks requiring sight.',
       tags: ['blinded', 'sight', 'advantage', 'disadvantage', 'combat / checks'],
       isChangedIn2024: false,
       rules2014: [
@@ -995,9 +883,7 @@ class DmScreenLibrary {
       title: 'Charmed',
       category: DmCategory.conditions,
       subCategory: 'Combat / Checks',
-      icon: Icons.favorite,
-      color: Colors.pinkAccent,
-      summary: 'Cannot harm charmer; charmer has social advantage.',
+summary: 'Cannot harm charmer; charmer has social advantage.',
       tags: ['charmed', 'social', 'charmer', 'combat / checks'],
       isChangedIn2024: false,
       rules2014: [
@@ -1014,9 +900,7 @@ class DmScreenLibrary {
       title: 'Deafened',
       category: DmCategory.conditions,
       subCategory: 'Combat / Checks',
-      icon: Icons.hearing_disabled,
-      color: Colors.tealAccent,
-      summary: 'Cannot hear and auto-fails checks requiring hearing.',
+summary: 'Cannot hear and auto-fails checks requiring hearing.',
       tags: ['deafened', 'hearing', 'auditory', 'combat / checks'],
       isChangedIn2024: false,
       rules2014: [
@@ -1031,9 +915,7 @@ class DmScreenLibrary {
       title: 'Frightened',
       category: DmCategory.conditions,
       subCategory: 'Combat / Checks',
-      icon: Icons.sentiment_very_dissatisfied,
-      color: Colors.deepOrangeAccent,
-      summary: 'Disadvantage while source is in sight; cannot willingly move closer.',
+summary: 'Disadvantage while source is in sight; cannot willingly move closer.',
       tags: ['frightened', 'fear', 'disadvantage', 'line of sight', 'combat / checks'],
       isChangedIn2024: false,
       rules2014: [
@@ -1050,9 +932,7 @@ class DmScreenLibrary {
       title: 'Grappled',
       category: DmCategory.conditions,
       subCategory: 'Movement',
-      icon: Icons.sports_mma,
-      color: Colors.amber,
-      summary: 'Speed is 0 and held in place by opponent.',
+summary: 'Speed is 0 and held in place by opponent.',
       tags: ['grappled', 'speed 0', 'escape', 'disadvantage', 'movement', 'calculator'],
       isChangedIn2024: true,
       interactiveTool: 'grapple_shove',
@@ -1075,9 +955,7 @@ class DmScreenLibrary {
       title: 'Incapacitated',
       category: DmCategory.conditions,
       subCategory: 'Incapacitating',
-      icon: Icons.do_not_disturb_on,
-      color: Colors.redAccent,
-      summary: 'Cannot take actions, bonus actions, or reactions.',
+summary: 'Cannot take actions, bonus actions, or reactions.',
       tags: ['incapacitated', 'actions', 'reactions', 'bonus actions', 'initiative', 'concentration', 'incapacitating'],
       isChangedIn2024: true,
       diffSummary: '2024 explicitly mentions Bonus Actions, gives incoming attacks Advantage, and gives Disadvantage on Initiative rolls!',
@@ -1098,9 +976,7 @@ class DmScreenLibrary {
       title: 'Invisible',
       category: DmCategory.conditions,
       subCategory: 'Combat / Checks',
-      icon: Icons.blur_on,
-      color: Colors.cyanAccent,
-      summary: 'Unseen by ordinary vision, advantage on attacks & initiative.',
+summary: 'Unseen by ordinary vision, advantage on attacks & initiative.',
       tags: ['invisible', 'advantage', 'disadvantage', 'stealth', 'initiative', 'concealed', 'combat / checks'],
       isChangedIn2024: true,
       diffSummary: '2024 clarifies that Invisible grants Advantage on Initiative rolls, and you are Concealed from standard sight and darkvision.',
@@ -1120,9 +996,7 @@ class DmScreenLibrary {
       title: 'Paralyzed',
       category: DmCategory.conditions,
       subCategory: 'Incapacitating',
-      icon: Icons.offline_bolt,
-      color: Colors.yellowAccent,
-      summary: 'Incapacitated, cannot move or speak, auto-fails STR/DEX saves, melee hits are crits.',
+summary: 'Incapacitated, cannot move or speak, auto-fails STR/DEX saves, melee hits are crits.',
       tags: ['paralyzed', 'incapacitated', 'auto-fail', 'critical hit', '5 ft', 'incapacitating'],
       isChangedIn2024: false,
       rules2014: [
@@ -1143,9 +1017,7 @@ class DmScreenLibrary {
       title: 'Petrified',
       category: DmCategory.conditions,
       subCategory: 'Incapacitating',
-      icon: Icons.terrain,
-      color: Colors.brown,
-      summary: 'Transformed into solid stone (weight ×10), damage resistance, poison immunity.',
+summary: 'Transformed into solid stone (weight ×10), damage resistance, poison immunity.',
       tags: ['petrified', 'stone', 'resistance', 'immune', 'incapacitated', 'incapacitating'],
       isChangedIn2024: false,
       rules2014: [
@@ -1167,9 +1039,7 @@ class DmScreenLibrary {
       title: 'Poisoned',
       category: DmCategory.conditions,
       subCategory: 'Combat / Checks',
-      icon: Icons.science,
-      color: Colors.greenAccent,
-      summary: 'Disadvantage on attack rolls and ability checks.',
+summary: 'Disadvantage on attack rolls and ability checks.',
       tags: ['poisoned', 'toxicity', 'disadvantage', 'combat / checks'],
       isChangedIn2024: false,
       rules2014: [
@@ -1184,9 +1054,7 @@ class DmScreenLibrary {
       title: 'Prone',
       category: DmCategory.conditions,
       subCategory: 'Movement',
-      icon: Icons.airline_seat_flat,
-      color: Colors.lightGreenAccent,
-      summary: 'Lying on ground; crawling costs extra, standing costs half speed.',
+summary: 'Lying on ground; crawling costs extra, standing costs half speed.',
       tags: ['prone', 'crawl', 'stand up', 'melee advantage', 'ranged disadvantage', 'movement'],
       isChangedIn2024: false,
       rules2014: [
@@ -1206,9 +1074,7 @@ class DmScreenLibrary {
       title: 'Restrained',
       category: DmCategory.conditions,
       subCategory: 'Movement',
-      icon: Icons.lock,
-      color: Colors.orangeAccent,
-      summary: 'Speed is 0, attacks against have advantage, disadvantage on DEX saves.',
+summary: 'Speed is 0, attacks against have advantage, disadvantage on DEX saves.',
       tags: ['restrained', 'speed 0', 'dex save', 'disadvantage', 'movement'],
       isChangedIn2024: false,
       rules2014: [
@@ -1227,9 +1093,7 @@ class DmScreenLibrary {
       title: 'Stunned',
       category: DmCategory.conditions,
       subCategory: 'Incapacitating',
-      icon: Icons.flash_on,
-      color: Colors.purpleAccent,
-      summary: 'Incapacitated, faltering speech, auto-fails STR/DEX saves, attacks have advantage.',
+summary: 'Incapacitated, faltering speech, auto-fails STR/DEX saves, attacks have advantage.',
       tags: ['stunned', 'incapacitated', 'auto-fail', 'incapacitating'],
       isChangedIn2024: false,
       rules2014: [
@@ -1248,9 +1112,7 @@ class DmScreenLibrary {
       title: 'Unconscious',
       category: DmCategory.conditions,
       subCategory: 'Incapacitating',
-      icon: Icons.bedtime,
-      color: Colors.indigoAccent,
-      summary: 'Knocked out, asleep, or reduced to 0 HP; hits within 5 ft are criticals.',
+summary: 'Knocked out, asleep, or reduced to 0 HP; hits within 5 ft are criticals.',
       tags: ['unconscious', 'asleep', 'incapacitated', 'critical hit', '0 hp', 'prone', 'incapacitating'],
       isChangedIn2024: true,
       diffSummary: '2024 clarifies that unconscious creatures roll Initiative with Disadvantage if asleep when combat starts.',
@@ -1273,9 +1135,7 @@ class DmScreenLibrary {
       title: 'Exhaustion (Fatigue)',
       category: DmCategory.conditions,
       subCategory: 'Exhaustion',
-      icon: Icons.battery_alert,
-      color: Colors.red,
-      summary: 'Severe physical fatigue and magical drain.',
+summary: 'Severe physical fatigue and magical drain.',
       tags: ['exhaustion', 'levels', 'death', 'speed', 'd20 test', 'penalty', 'long rest', 'fatigue'],
       isChangedIn2024: true,
       diffSummary: 'MASSIVE CHANGE: 2014 had 6 rigid tiers (disadvantage, half speed, death). 2024 uses 10 levels with a uniform -2 penalty to D20 tests and -5 ft speed reduction per level!',
@@ -1301,9 +1161,7 @@ class DmScreenLibrary {
       title: 'Surprise / Surprised',
       category: DmCategory.conditions,
       subCategory: 'Combat / Checks',
-      icon: Icons.priority_high,
-      color: Colors.deepPurpleAccent,
-      summary: 'Caught off-guard at the start of combat.',
+summary: 'Caught off-guard at the start of combat.',
       tags: ['surprise', 'surprised', 'initiative', 'disadvantage', 'ambush', 'round 1', 'combat / checks'],
       isChangedIn2024: true,
       diffSummary: '2014: Skipped whole turn on round 1. 2024: No "surprised condition" — surprised creatures simply roll Initiative with Disadvantage!',
@@ -1322,9 +1180,7 @@ class DmScreenLibrary {
       title: 'Poisons & Diseases (SRD)',
       category: DmCategory.conditions,
       subCategory: 'Hazards',
-      icon: Icons.coronavirus_outlined,
-      color: Colors.green,
-      summary: 'Contact, Ingested, Inhaled, and Injury poison mechanics and sample afflictions.',
+summary: 'Contact, Ingested, Inhaled, and Injury poison mechanics and sample afflictions.',
       tags: ['poison', 'disease', 'toxic', 'cackle fever', 'sewer plague', 'sight rot', 'paralysis'],
       isChangedIn2024: false,
       rules2014: [
@@ -1348,9 +1204,7 @@ class DmScreenLibrary {
       title: 'Cover Rules (+2, +5, Total)',
       category: DmCategory.environment,
       subCategory: 'Cover',
-      icon: Icons.shield,
-      color: Colors.tealAccent,
-      summary: 'AC and Dexterity saving throw modifiers from physical obstacles.',
+summary: 'AC and Dexterity saving throw modifiers from physical obstacles.',
       tags: ['cover', 'half cover', 'three-quarters', 'total cover', 'ac bonus', 'dex save', 'cover_rule'],
       isChangedIn2024: false,
       diffSummary: 'Cover bonuses (+2, +5, Total) remain identical in 2014 and 2024.',
@@ -1371,9 +1225,7 @@ class DmScreenLibrary {
       category: DmCategory.environment,
       subCategory: 'Cover',
       cost: 'Environmental',
-      icon: Icons.table_restaurant,
-      color: Colors.lightGreenAccent,
-      summary: 'Target has half cover if an obstacle blocks at least half of its body.',
+summary: 'Target has half cover if an obstacle blocks at least half of its body.',
       tags: ['half cover', 'ac +2', 'dex save +2', 'obstacle', 'cover_rule'],
       isChangedIn2024: false,
       rules2014: [
@@ -1389,9 +1241,7 @@ class DmScreenLibrary {
       category: DmCategory.environment,
       subCategory: 'Cover',
       cost: 'Environmental',
-      icon: Icons.fence,
-      color: Colors.amber,
-      summary: 'Target has three-quarters cover if about three-quarters of its body is covered.',
+summary: 'Target has three-quarters cover if about three-quarters of its body is covered.',
       tags: ['three-quarters cover', 'ac +5', 'dex save +5', 'portcullis', 'arrow slit', 'cover_rule'],
       isChangedIn2024: false,
       rules2014: [
@@ -1407,9 +1257,7 @@ class DmScreenLibrary {
       category: DmCategory.environment,
       subCategory: 'Cover',
       cost: 'Environmental',
-      icon: Icons.door_front_door,
-      color: Colors.redAccent,
-      summary: 'Target completely concealed by obstacle; cannot be targeted directly.',
+summary: 'Target completely concealed by obstacle; cannot be targeted directly.',
       tags: ['total cover', 'untargetable', 'barrier', 'cover_rule'],
       isChangedIn2024: false,
       rules2014: [
@@ -1423,9 +1271,7 @@ class DmScreenLibrary {
       id: 'env_falling',
       title: 'Falling Damage & Falling on Creatures',
       category: DmCategory.environment,
-      icon: Icons.south,
-      color: Colors.deepOrange,
-      summary: 'Impact bludgeoning damage and landing on other creatures.',
+summary: 'Impact bludgeoning damage and landing on other creatures.',
       tags: ['falling', 'bludgeoning', '1d6 per 10ft', 'max 20d6', 'landing on creature', 'hazard', 'calculator'],
       isChangedIn2024: true,
       interactiveTool: 'falling',
@@ -1445,9 +1291,7 @@ class DmScreenLibrary {
       id: 'env_vision_lighting',
       title: 'Vision, Lighting & Obscurement',
       category: DmCategory.environment,
-      icon: Icons.lightbulb_outline,
-      color: Colors.amber,
-      summary: 'Bright, Dim Light, Darkness, Darkvision, Blindsight, and Truesight.',
+summary: 'Bright, Dim Light, Darkness, Darkvision, Blindsight, and Truesight.',
       tags: ['vision', 'light', 'dim light', 'darkness', 'darkvision', 'blindsight', 'truesight', 'tremorsense', 'perception'],
       isChangedIn2024: false,
       diffSummary: 'Lighting categories and sight rules remain consistent.',
@@ -1473,9 +1317,7 @@ class DmScreenLibrary {
       id: 'env_suffocation',
       title: 'Suffocation & Holding Breath',
       category: DmCategory.environment,
-      icon: Icons.air,
-      color: Colors.cyan,
-      summary: 'Underwater, vacuum, or choked air duration.',
+summary: 'Underwater, vacuum, or choked air duration.',
       tags: ['suffocation', 'breath', 'con modifier', 'choking', '0 hp', 'drowning'],
       isChangedIn2024: false,
       diffSummary: 'Holding breath duration and drowning countdown remain identical.',
@@ -1492,9 +1334,7 @@ class DmScreenLibrary {
       id: 'env_extreme_temperatures',
       title: 'Extreme Heat & Extreme Cold',
       category: DmCategory.environment,
-      icon: Icons.thermostat,
-      color: Colors.deepOrangeAccent,
-      summary: 'Environmental temperature hazards and exhaustion saves.',
+summary: 'Environmental temperature hazards and exhaustion saves.',
       tags: ['extreme heat', 'extreme cold', 'con save', 'exhaustion', 'freezing', 'heatstroke', 'environment'],
       isChangedIn2024: false,
       rules2014: [
@@ -1511,9 +1351,7 @@ class DmScreenLibrary {
       id: 'env_weather_hazards',
       title: 'Severe Weather (Precipitation, Wind, Altitude)',
       category: DmCategory.environment,
-      icon: Icons.storm,
-      color: Colors.blueAccent,
-      summary: 'Heavy rain/snow, strong winds, and high altitude thin air penalties.',
+summary: 'Heavy rain/snow, strong winds, and high altitude thin air penalties.',
       tags: ['weather', 'heavy rain', 'snow', 'strong wind', 'altitude', 'visibility', 'hazard'],
       isChangedIn2024: false,
       rules2014: [
@@ -1531,9 +1369,7 @@ class DmScreenLibrary {
       id: 'env_wilderness_hazards',
       title: 'Wilderness Hazards (Quicksand, Ice, Desecrated Ground)',
       category: DmCategory.environment,
-      icon: Icons.warning_amber_rounded,
-      color: Colors.lime,
-      summary: 'Quicksand sinking DCs, slippery ice acrobatics, and unholy ground buffs.',
+summary: 'Quicksand sinking DCs, slippery ice acrobatics, and unholy ground buffs.',
       tags: ['quicksand', 'slippery ice', 'desecrated ground', 'razorvine', 'hazard', 'environment'],
       isChangedIn2024: false,
       rules2014: [
@@ -1552,9 +1388,7 @@ class DmScreenLibrary {
       id: 'env_survival_foraging',
       title: 'Wilderness Survival & Foraging',
       category: DmCategory.environment,
-      icon: Icons.eco,
-      color: Colors.green,
-      summary: 'Food and water requirements, foraging DCs, and starvation.',
+summary: 'Food and water requirements, foraging DCs, and starvation.',
       tags: ['foraging', 'survival', 'food', 'water', 'starvation', 'dehydration', 'environment'],
       isChangedIn2024: false,
       rules2014: [
@@ -1575,9 +1409,7 @@ class DmScreenLibrary {
       id: 'exp_dc_scale',
       title: 'Difficulty Class (DC) Benchmarks',
       category: DmCategory.exploration,
-      icon: Icons.speed,
-      color: Colors.lightGreenAccent,
-      summary: 'Standard task difficulty ratings from Very Easy to Impossible.',
+summary: 'Standard task difficulty ratings from Very Easy to Impossible.',
       tags: ['dc', 'difficulty', 'checks', 'very easy', 'easy', 'medium', 'hard', 'very hard', 'nearly impossible', 'calculator'],
       isChangedIn2024: false,
       interactiveTool: 'dc_benchmark',
@@ -1603,9 +1435,7 @@ class DmScreenLibrary {
       id: 'exp_ability_scores_skills',
       title: '6 Ability Scores & 18 Skills Matrix',
       category: DmCategory.exploration,
-      icon: Icons.psychology_alt,
-      color: Colors.cyanAccent,
-      summary: 'STR (Athletics), DEX (Acrobatics, Sleight of Hand, Stealth), INT (Arcana, History, Investigation, Nature, Religion), WIS (Animal Handling, Insight, Medicine, Perception, Survival), CHA (Deception, Intimidation, Performance, Persuasion).',
+summary: 'STR (Athletics), DEX (Acrobatics, Sleight of Hand, Stealth), INT (Arcana, History, Investigation, Nature, Religion), WIS (Animal Handling, Insight, Medicine, Perception, Survival), CHA (Deception, Intimidation, Performance, Persuasion).',
       tags: ['skills', 'ability check', 'athletics', 'acrobatics', 'stealth', 'perception', 'investigation', 'insight', 'persuasion', 'arcana'],
       isChangedIn2024: false,
       rules2014: [
@@ -1625,9 +1455,7 @@ class DmScreenLibrary {
       id: 'exp_passive_checks',
       title: 'Passive Checks & Contested Rolls',
       category: DmCategory.exploration,
-      icon: Icons.remove_red_eye_outlined,
-      color: Colors.teal,
-      summary: 'Formula: 10 + all modifiers (+5 with advantage, -5 with disadvantage).',
+summary: 'Formula: 10 + all modifiers (+5 with advantage, -5 with disadvantage).',
       tags: ['passive check', 'passive perception', 'contested roll', 'stealth vs perception', 'exploration'],
       isChangedIn2024: false,
       rules2014: [
@@ -1645,9 +1473,7 @@ class DmScreenLibrary {
       id: 'exp_travel_pace',
       title: 'Travel Pace & Exploration Speed',
       category: DmCategory.exploration,
-      icon: Icons.directions_walk,
-      color: Colors.orangeAccent,
-      summary: 'Overland travel speed, stealth capability, and passive perception penalties.',
+summary: 'Overland travel speed, stealth capability, and passive perception penalties.',
       tags: ['travel', 'pace', 'fast', 'normal', 'slow', 'overland', 'miles per day', 'stealth'],
       isChangedIn2024: false,
       diffSummary: 'Travel rates (30, 24, 18 miles/day) and stealth penalties match in both editions.',
@@ -1668,9 +1494,7 @@ class DmScreenLibrary {
       id: 'exp_forced_march',
       title: 'Forced March & Travel Exhaustion',
       category: DmCategory.exploration,
-      icon: Icons.hiking,
-      color: Colors.deepOrangeAccent,
-      summary: 'Traveling beyond 8 hours daily requires progressive Constitution saving throws.',
+summary: 'Traveling beyond 8 hours daily requires progressive Constitution saving throws.',
       tags: ['forced march', 'travel', 'exhaustion', 'con save', 'overland', 'exploration'],
       isChangedIn2024: false,
       rules2014: [
@@ -1687,9 +1511,7 @@ class DmScreenLibrary {
       id: 'exp_marching_order_nav',
       title: 'Marching Order & Navigation DCs',
       category: DmCategory.exploration,
-      icon: Icons.navigation,
-      color: Colors.deepPurpleAccent,
-      summary: 'Ranks (front, middle, rear) and navigation checks.',
+summary: 'Ranks (front, middle, rear) and navigation checks.',
       tags: ['marching order', 'ranks', 'navigation', 'lost', 'wilderness', 'exploration'],
       isChangedIn2024: false,
       rules2014: [
@@ -1707,9 +1529,7 @@ class DmScreenLibrary {
       id: 'exp_social_influence',
       title: 'Social Interaction & NPC Attitudes',
       category: DmCategory.exploration,
-      icon: Icons.record_voice_over,
-      color: Colors.pinkAccent,
-      summary: 'Friendly, Indifferent, and Hostile DC resolution.',
+summary: 'Friendly, Indifferent, and Hostile DC resolution.',
       tags: ['social', 'attitude', 'friendly', 'indifferent', 'hostile', 'persuasion', 'deception', 'intimidation'],
       isChangedIn2024: true,
       diffSummary: '2024 codifies exact DC thresholds for the Influence action: Friendly DC 10, Indifferent DC 15, Hostile DC 20.',
@@ -1730,9 +1550,7 @@ class DmScreenLibrary {
       id: 'exp_traps_detection',
       title: 'Traps: Spotting, Disarming & Triggering',
       category: DmCategory.exploration,
-      icon: Icons.dangerous_outlined,
-      color: Colors.redAccent,
-      summary: 'Perception / Investigation DCs to find traps; Thieves\' Tools to disarm.',
+summary: 'Perception / Investigation DCs to find traps; Thieves\' Tools to disarm.',
       tags: ['traps', 'spotting', 'disarming', 'thieves tools', 'perception', 'investigation', 'hazard'],
       isChangedIn2024: false,
       rules2014: [
@@ -1753,9 +1571,7 @@ class DmScreenLibrary {
       id: 'magic_concentration',
       title: 'Concentration Rules & Damage Checks',
       category: DmCategory.magicAndResting,
-      icon: Icons.psychology,
-      color: Colors.purpleAccent,
-      summary: 'Maintaining active spells, saving throws, and simultaneous spell rules.',
+summary: 'Maintaining active spells, saving throws, and simultaneous spell rules.',
       tags: ['concentration', 'save', 'con save', 'damage', 'dc 10', 'incapacitated', 'spellcasting', 'calculator'],
       isChangedIn2024: false,
       interactiveTool: 'concentration',
@@ -1776,9 +1592,7 @@ class DmScreenLibrary {
       id: 'magic_spell_components',
       title: 'Spell Components (V, S, M & GP Costs)',
       category: DmCategory.magicAndResting,
-      icon: Icons.grain,
-      color: Colors.tealAccent,
-      summary: 'Verbal, Somatic, and Material component requirements.',
+summary: 'Verbal, Somatic, and Material component requirements.',
       tags: ['components', 'verbal', 'somatic', 'material', 'focus', 'component pouch', 'gp cost', 'magic'],
       isChangedIn2024: false,
       rules2014: [
@@ -1797,9 +1611,7 @@ class DmScreenLibrary {
       id: 'magic_casting_times_rituals',
       title: 'Casting Times, Areas of Effect & Rituals',
       category: DmCategory.magicAndResting,
-      icon: Icons.hourglass_bottom,
-      color: Colors.deepPurpleAccent,
-      summary: 'Action, Bonus Action, Reaction, Areas (Cone, Cube, Cylinder, Line, Sphere), and Rituals.',
+summary: 'Action, Bonus Action, Reaction, Areas (Cone, Cube, Cylinder, Line, Sphere), and Rituals.',
       tags: ['casting time', 'ritual', 'aoe', 'cone', 'cube', 'cylinder', 'line', 'sphere', 'magic'],
       isChangedIn2024: false,
       rules2014: [
@@ -1818,9 +1630,7 @@ class DmScreenLibrary {
       id: 'magic_combining_effects',
       title: 'Combining Magical Effects & Spell Stacking',
       category: DmCategory.magicAndResting,
-      icon: Icons.layers,
-      color: Colors.indigoAccent,
-      summary: 'Stacking spells and resolving identical magical effects.',
+summary: 'Stacking spells and resolving identical magical effects.',
       tags: ['combining', 'stacking', 'spells', 'buffs', 'magic effects', 'magic'],
       isChangedIn2024: false,
       rules2014: [
@@ -1836,9 +1646,7 @@ class DmScreenLibrary {
       id: 'magic_spell_limits',
       title: 'Multiple Spells on a Turn (Bonus Action Spells)',
       category: DmCategory.magicAndResting,
-      icon: Icons.bolt,
-      color: Colors.deepPurpleAccent,
-      summary: 'Restrictions on casting more than one leveled spell per turn.',
+summary: 'Restrictions on casting more than one leveled spell per turn.',
       tags: ['bonus action spell', 'cantrip', 'leveled spell', 'action surge', 'reaction', 'slot limit'],
       isChangedIn2024: true,
       diffSummary: '2014 Bonus Action spell rule strictly limited your Action to Cantrips. 2024 limits you to expending only ONE spell slot on your turn (allowing Cantrip + Leveled, but preventing Double Leveled Slots).',
@@ -1857,9 +1665,7 @@ class DmScreenLibrary {
       id: 'magic_counterspell_dispel',
       title: 'Counterspelling & Dispelling Magic',
       category: DmCategory.magicAndResting,
-      icon: Icons.flash_off,
-      color: Colors.purple,
-      summary: 'Resolving spell counter attempts and removing magical effects.',
+summary: 'Resolving spell counter attempts and removing magical effects.',
       tags: ['counterspell', 'dispel magic', 'abjuration', 'dc 10 + level', 'reaction', 'magic'],
       isChangedIn2024: true,
       diffSummary: '2014 Counterspell used an ability check (DC 10 + spell level). 2024 makes Counterspell force a Constitution saving throw from the caster to prevent the slot from being wasted.',
@@ -1876,9 +1682,7 @@ class DmScreenLibrary {
       id: 'magic_attunement',
       title: 'Magic Item Attunement & Identification',
       category: DmCategory.magicAndResting,
-      icon: Icons.auto_fix_high,
-      color: Colors.cyanAccent,
-      summary: '3-item attunement limit, Short Rest attunement/identification rules.',
+summary: '3-item attunement limit, Short Rest attunement/identification rules.',
       tags: ['attunement', 'identify', 'magic items', 'short rest', '3 items', 'magic'],
       isChangedIn2024: false,
       rules2014: [
@@ -1897,9 +1701,7 @@ class DmScreenLibrary {
       id: 'magic_resting',
       title: 'Short Rest & Long Rest Rules',
       category: DmCategory.magicAndResting,
-      icon: Icons.bed,
-      color: Colors.indigoAccent,
-      summary: 'Hit Dice recovery, HP restoration, and interruption rules.',
+summary: 'Hit Dice recovery, HP restoration, and interruption rules.',
       tags: ['short rest', 'long rest', 'hit dice', 'recovery', 'exhaustion', 'interruption', 'resting'],
       isChangedIn2024: false,
       diffSummary: 'Short Rest (1 hr) and Long Rest (8 hrs, regain all HP, half Hit Dice, 1 Exhaustion level) are consistent.',
@@ -1918,9 +1720,7 @@ class DmScreenLibrary {
       id: 'magic_downtime_expenses',
       title: 'Lifestyle Expenses & Downtime',
       category: DmCategory.magicAndResting,
-      icon: Icons.monetization_on,
-      color: Colors.amber,
-      summary: 'Daily living expenses from Wretched to Aristocratic.',
+summary: 'Daily living expenses from Wretched to Aristocratic.',
       tags: ['lifestyle', 'expenses', 'gp per day', 'wretched', 'squalid', 'poor', 'modest', 'comfortable', 'wealthy', 'aristocratic', 'downtime'],
       isChangedIn2024: false,
       rules2014: [
@@ -1941,9 +1741,7 @@ class DmScreenLibrary {
       id: 'magic_downtime_activities',
       title: 'Downtime Activities & Crafting',
       category: DmCategory.magicAndResting,
-      icon: Icons.construction,
-      color: Colors.tealAccent,
-      summary: 'Crafting non-magic items, potions, scrolls, training languages, and recuperating.',
+summary: 'Crafting non-magic items, potions, scrolls, training languages, and recuperating.',
       tags: ['downtime', 'crafting', 'training', 'recuperating', 'research', 'professions', 'magic'],
       isChangedIn2024: false,
       rules2014: [
@@ -1964,9 +1762,7 @@ class DmScreenLibrary {
       id: 'table_improvised_damage',
       title: 'Improvised Damage Table',
       category: DmCategory.tables,
-      icon: Icons.local_fire_department,
-      color: Colors.deepOrangeAccent,
-      summary: 'DM reference for environmental and trap damage on the fly.',
+summary: 'DM reference for environmental and trap damage on the fly.',
       tags: ['improvised damage', 'traps', 'fire', 'lava', 'lightning', 'acid', 'fall', 'table'],
       isChangedIn2024: false,
       linkedTableTabIndex: 1,
@@ -1993,9 +1789,7 @@ class DmScreenLibrary {
       id: 'table_object_ac_hp',
       title: 'Object Armor Class & Hit Points',
       category: DmCategory.tables,
-      icon: Icons.crop_square,
-      color: Colors.brown,
-      summary: 'AC and HP for doors, chests, barriers, and inanimate structures.',
+summary: 'AC and HP for doors, chests, barriers, and inanimate structures.',
       tags: ['object ac', 'object hp', 'wood', 'stone', 'iron', 'fragile', 'resilient', 'table'],
       isChangedIn2024: false,
       linkedTableTabIndex: 1,
@@ -2021,9 +1815,7 @@ class DmScreenLibrary {
       id: 'table_size_space_carrying',
       title: 'Creature Sizes, Space & Carrying Capacity',
       category: DmCategory.tables,
-      icon: Icons.aspect_ratio,
-      color: Colors.blueAccent,
-      summary: 'Grid space control, carrying capacity, push/drag/lift formulas.',
+summary: 'Grid space control, carrying capacity, push/drag/lift formulas.',
       tags: ['size', 'space', 'carrying capacity', 'push', 'drag', 'lift', 'tiny', 'small', 'medium', 'large', 'huge', 'gargantuan', 'table'],
       isChangedIn2024: false,
       linkedTableTabIndex: 1,
@@ -2047,9 +1839,7 @@ class DmScreenLibrary {
       id: 'table_weapon_properties_masteries',
       title: 'Weapon Properties & 2024 Masteries Matrix',
       category: DmCategory.tables,
-      icon: Icons.colorize,
-      color: Colors.redAccent,
-      summary: 'Standard properties (Finesse, Light, Heavy, Reach) & 2024 Masteries (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).',
+summary: 'Standard properties (Finesse, Light, Heavy, Reach) & 2024 Masteries (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).',
       tags: ['weapon properties', 'finesse', 'heavy', 'light', 'masteries', 'cleave', 'graze', 'nick', 'push', 'sap', 'slow', 'topple', 'vex', 'table'],
       isChangedIn2024: true,
       linkedTableTabIndex: 1,
@@ -2083,9 +1873,7 @@ class DmScreenLibrary {
       id: 'table_armor_don_doff',
       title: 'Armor Table & Donning / Doffing Times',
       category: DmCategory.tables,
-      icon: Icons.shield,
-      color: Colors.amber,
-      summary: 'AC formulas, stealth penalties, Strength minimums, and equip times.',
+summary: 'AC formulas, stealth penalties, Strength minimums, and equip times.',
       tags: ['armor', 'shield', 'don', 'doff', 'light armor', 'medium armor', 'heavy armor', 'stealth disadvantage', 'table'],
       isChangedIn2024: false,
       linkedTableTabIndex: 1,
@@ -2108,9 +1896,7 @@ class DmScreenLibrary {
       id: 'table_currency_exchange',
       title: 'Standard Currency Exchange & Coin Weight',
       category: DmCategory.tables,
-      icon: Icons.paid_outlined,
-      color: Colors.amberAccent,
-      summary: '1 PP = 10 GP = 20 EP = 100 SP = 1,000 CP; 50 coins weigh 1 lb.',
+summary: '1 PP = 10 GP = 20 EP = 100 SP = 1,000 CP; 50 coins weigh 1 lb.',
       tags: ['currency', 'gold', 'silver', 'copper', 'electrum', 'platinum', 'coins', 'weight', 'table'],
       isChangedIn2024: false,
       linkedTableTabIndex: 0,
@@ -2132,9 +1918,7 @@ class DmScreenLibrary {
       id: 'table_standard_languages',
       title: 'Standard & Exotic Languages Matrix',
       category: DmCategory.tables,
-      icon: Icons.translate,
-      color: Colors.lightGreenAccent,
-      summary: 'Common, Dwarvish, Elvish, Draconic, Undercommon, Sylvan, Celestial, Abyssal, Infernal.',
+summary: 'Common, Dwarvish, Elvish, Draconic, Undercommon, Sylvan, Celestial, Abyssal, Infernal.',
       tags: ['languages', 'common', 'elvish', 'dwarvish', 'draconic', 'celestial', 'infernal', 'abyssal', 'undercommon'],
       isChangedIn2024: false,
       rules2014: [
@@ -2149,9 +1933,7 @@ class DmScreenLibrary {
       id: 'table_adventuring_gear_lighting',
       title: 'Adventuring Gear & Light Sources',
       category: DmCategory.tables,
-      icon: Icons.flashlight_on_outlined,
-      color: Colors.orangeAccent,
-      summary: 'Torches, Lanterns, Flasks, Ropes, and Container capacities.',
+summary: 'Torches, Lanterns, Flasks, Ropes, and Container capacities.',
       tags: ['lighting', 'torch', 'lantern', 'bullseye', 'hooded lantern', 'backpack', 'pouch', 'gear'],
       isChangedIn2024: false,
       rules2014: [

@@ -127,12 +127,7 @@ class SpellItem {
   String getFullTypeLabel(DmRulesEdition edition) =>
       '$levelLabel ${getSchool(edition).label}';
 
-  static final Map<String, String> _corpusCache = {};
-
   String _getCorpus(DmRulesEdition edition) {
-    final key = '${id}_${edition.name}';
-    final cached = _corpusCache[key];
-    if (cached != null) return cached;
     final currentRules = getRules(edition);
     final effectiveSchool = currentRules.schoolOverride ?? school;
     final buffer = StringBuffer()
@@ -159,9 +154,7 @@ class SpellItem {
     for (final line in currentRules.description) {
       buffer.write('$line ');
     }
-    final corpus = buffer.toString().toLowerCase();
-    _corpusCache[key] = corpus;
-    return corpus;
+    return buffer.toString().toLowerCase();
   }
 
   bool matches(

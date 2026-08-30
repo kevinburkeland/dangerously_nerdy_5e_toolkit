@@ -168,6 +168,10 @@ class Race extends DomainEntity {
   final String? abilityScoreSummary;
   final String traitsMarkdown;
   final List<Subrace> subraces;
+  final int bonusFeatCount;
+  final int flexibleAbilityCount;
+  final int flexibleAbilityBonus;
+  final Map<String, int> fixedAbilityBonuses;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -179,56 +183,41 @@ class Race extends DomainEntity {
     this.abilityScoreSummary,
     required this.traitsMarkdown,
     this.subraces = const [],
+    int? bonusFeatCount,
+    int? flexibleAbilityCount,
+    int? flexibleAbilityBonus,
+    Map<String, int>? fixedAbilityBonuses,
     this.customProperties = const {},
-  });
+  })  : bonusFeatCount = bonusFeatCount ?? _resolveBonusFeatCount(id.slug, customProperties),
+        flexibleAbilityCount = flexibleAbilityCount ?? _resolveFlexibleAbilityCount(id.slug, customProperties),
+        flexibleAbilityBonus = flexibleAbilityBonus ?? _resolveFlexibleAbilityBonus(id.slug, customProperties),
+        fixedAbilityBonuses = fixedAbilityBonuses ?? _resolveFixedAbilityBonuses(id.slug, customProperties);
 
-  @override
-  EntityType get entityType => EntityType.species;
-
-  /// Returns whether this race / lineage grants a starting bonus feat in 2014 (e.g. Variant Human, Custom Lineage, or homebrew).
-  bool get grantsBonusFeat {
-    if (id.slug == 'human-variant' || id.slug == 'custom-lineage') return true;
-    if (customProperties['isVariantHuman'] == true) return true;
-    if (customProperties['isCustomLineage'] == true) return true;
-    final featCount = customProperties['bonusFeatCount'];
-    if (featCount is num && featCount > 0) return true;
-    return false;
-  }
-
-  /// Number of flexible ability score increases player can choose (e.g. 2 for Variant Human, 1 for Custom Lineage).
-  int get flexibleAbilityChoiceCount {
-    if (customProperties['abilityChoiceCount'] is num) {
-      return (customProperties['abilityChoiceCount'] as num).toInt();
-    }
-    if (customProperties['flexibleAbilityCount'] is num) {
-      return (customProperties['flexibleAbilityCount'] as num).toInt();
-    }
-    if (id.slug == 'human-variant' || customProperties['isVariantHuman'] == true) {
-      return 2;
-    }
-    if (id.slug == 'custom-lineage' || customProperties['isCustomLineage'] == true) {
-      return 1;
-    }
+  static int _resolveBonusFeatCount(String slug, Map<String, dynamic> custom) {
+    if (slug == 'human-variant' || slug == 'custom-lineage') return 1;
+    if (custom['isVariantHuman'] == true || custom['isCustomLineage'] == true) return 1;
+    final featCount = custom['bonusFeatCount'];
+    if (featCount is num && featCount > 0) return featCount.toInt();
     return 0;
   }
 
-  /// The bonus value added to each chosen flexible ability score (default 1, or 2 for Custom Lineage).
-  int get flexibleAbilityBonusValue {
-    if (customProperties['abilityChoiceBonus'] is num) {
-      return (customProperties['abilityChoiceBonus'] as num).toInt();
-    }
-    if (customProperties['flexibleAbilityBonus'] is num) {
-      return (customProperties['flexibleAbilityBonus'] as num).toInt();
-    }
-    if (id.slug == 'custom-lineage' || customProperties['isCustomLineage'] == true) {
-      return 2;
-    }
+  static int _resolveFlexibleAbilityCount(String slug, Map<String, dynamic> custom) {
+    if (custom['abilityChoiceCount'] is num) return (custom['abilityChoiceCount'] as num).toInt();
+    if (custom['flexibleAbilityCount'] is num) return (custom['flexibleAbilityCount'] as num).toInt();
+    if (slug == 'human-variant' || custom['isVariantHuman'] == true) return 2;
+    if (slug == 'custom-lineage' || custom['isCustomLineage'] == true) return 1;
+    return 0;
+  }
+
+  static int _resolveFlexibleAbilityBonus(String slug, Map<String, dynamic> custom) {
+    if (custom['abilityChoiceBonus'] is num) return (custom['abilityChoiceBonus'] as num).toInt();
+    if (custom['flexibleAbilityBonus'] is num) return (custom['flexibleAbilityBonus'] as num).toInt();
+    if (slug == 'custom-lineage' || custom['isCustomLineage'] == true) return 2;
     return 1;
   }
 
-  /// Fixed ability score bonuses granted in 2014 rules (e.g. +2 DEX for Elf, +2 CON for Dwarf, +1 to all for Human).
-  Map<String, int> get fixedAbilityBonuses2014 {
-    final raw = customProperties['abilityBonuses2014'] ?? customProperties['abilityBonuses'];
+  static Map<String, int> _resolveFixedAbilityBonuses(String slug, Map<String, dynamic> custom) {
+    final raw = custom['abilityBonuses2014'] ?? custom['abilityBonuses'];
     if (raw is Map) {
       final result = <String, int>{};
       raw.forEach((k, v) {
@@ -238,7 +227,7 @@ class Race extends DomainEntity {
       });
       return result;
     }
-    if (id.slug == 'human') {
+    if (slug == 'human') {
       return const {
         'strength': 1,
         'dexterity': 1,
@@ -250,6 +239,21 @@ class Race extends DomainEntity {
     }
     return const {};
   }
+
+  @override
+  EntityType get entityType => EntityType.species;
+
+  /// Returns whether this race / lineage grants a starting bonus feat in 2014 (e.g. Variant Human, Custom Lineage, or homebrew).
+  bool get grantsBonusFeat => bonusFeatCount > 0;
+
+  /// Number of flexible ability score increases player can choose (e.g. 2 for Variant Human, 1 for Custom Lineage).
+  int get flexibleAbilityChoiceCount => flexibleAbilityCount;
+
+  /// The bonus value added to each chosen flexible ability score (default 1, or 2 for Custom Lineage).
+  int get flexibleAbilityBonusValue => flexibleAbilityBonus;
+
+  /// Fixed ability score bonuses granted in 2014 rules (e.g. +2 DEX for Elf, +2 CON for Dwarf, +1 to all for Human).
+  Map<String, int> get fixedAbilityBonuses2014 => fixedAbilityBonuses;
 
   /// Returns the base movement speed formatted for the selected rules edition.
   String getSpeedForEdition(DmRulesEdition edition) {
@@ -277,10 +281,15 @@ class Race extends DomainEntity {
         'abilityScoreSummary': abilityScoreSummary,
         'traitsMarkdown': traitsMarkdown,
         'subraces': subraces.map((s) => s.toMap()).toList(),
+        'bonusFeatCount': bonusFeatCount,
+        'flexibleAbilityCount': flexibleAbilityCount,
+        'flexibleAbilityBonus': flexibleAbilityBonus,
+        'fixedAbilityBonuses': fixedAbilityBonuses,
         'customProperties': customProperties,
       };
 
   factory Race.fromMap(Map<String, dynamic> map) {
+    final custom = Map<String, dynamic>.from(map['customProperties'] as Map? ?? {});
     return Race(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
@@ -292,8 +301,13 @@ class Race extends DomainEntity {
           .whereType<Map>()
           .map((e) => Subrace.fromMap(Map<String, dynamic>.from(e)))
           .toList(),
-      customProperties:
-          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+      bonusFeatCount: (map['bonusFeatCount'] as num?)?.toInt(),
+      flexibleAbilityCount: (map['flexibleAbilityCount'] as num?)?.toInt(),
+      flexibleAbilityBonus: (map['flexibleAbilityBonus'] as num?)?.toInt(),
+      fixedAbilityBonuses: map['fixedAbilityBonuses'] is Map
+          ? (map['fixedAbilityBonuses'] as Map).map((k, v) => MapEntry(k.toString(), (v as num).toInt()))
+          : null,
+      customProperties: custom,
     );
   }
 
@@ -305,6 +319,10 @@ class Race extends DomainEntity {
     String? abilityScoreSummary,
     String? traitsMarkdown,
     List<Subrace>? subraces,
+    int? bonusFeatCount,
+    int? flexibleAbilityCount,
+    int? flexibleAbilityBonus,
+    Map<String, int>? fixedAbilityBonuses,
     Map<String, dynamic>? customProperties,
   }) {
     return Race(
@@ -315,6 +333,10 @@ class Race extends DomainEntity {
       abilityScoreSummary: abilityScoreSummary ?? this.abilityScoreSummary,
       traitsMarkdown: traitsMarkdown ?? this.traitsMarkdown,
       subraces: subraces ?? this.subraces,
+      bonusFeatCount: bonusFeatCount ?? this.bonusFeatCount,
+      flexibleAbilityCount: flexibleAbilityCount ?? this.flexibleAbilityCount,
+      flexibleAbilityBonus: flexibleAbilityBonus ?? this.flexibleAbilityBonus,
+      fixedAbilityBonuses: fixedAbilityBonuses ?? this.fixedAbilityBonuses,
       customProperties: customProperties ?? this.customProperties,
     );
   }

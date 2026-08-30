@@ -1,9 +1,9 @@
-import 'dart:ui';
 import '../services/rules/dnd_5e_rules_engine.dart';
 import '../utils/dice_formatters.dart';
 import 'srd_summons/srd_summons_library.dart';
 
 /// Represents standard 5e animated object size classifications and combat metrics.
+/// Pure Dart domain model decoupled from Flutter UI dependencies.
 enum ObjectSize {
   tiny(
     displayName: 'Tiny',
@@ -16,7 +16,6 @@ enum ObjectSize {
     damageBonus: 4,
     strScore: 4,
     dexScore: 18,
-    accentColor: Color(0xFF4CAF50),
     defaultExample: 'Silver Coin / Needle',
   ),
   small(
@@ -30,7 +29,6 @@ enum ObjectSize {
     damageBonus: 2,
     strScore: 6,
     dexScore: 14,
-    accentColor: Color(0xFF03A9F4),
     defaultExample: 'Dagger / Chair',
   ),
   medium(
@@ -44,7 +42,6 @@ enum ObjectSize {
     damageBonus: 1,
     strScore: 10,
     dexScore: 12,
-    accentColor: Color(0xFFFF9800),
     defaultExample: 'Sword / Table',
   ),
   large(
@@ -58,7 +55,6 @@ enum ObjectSize {
     damageBonus: 2,
     strScore: 14,
     dexScore: 10,
-    accentColor: Color(0xFFE91E63),
     defaultExample: 'Cart / Statue',
   ),
   huge(
@@ -72,7 +68,6 @@ enum ObjectSize {
     damageBonus: 4,
     strScore: 18,
     dexScore: 6,
-    accentColor: Color(0xFF9C27B0),
     defaultExample: 'Bouldering Pillar / Wagon',
   );
 
@@ -86,7 +81,6 @@ enum ObjectSize {
   final int damageBonus;
   final int strScore;
   final int dexScore;
-  final Color accentColor;
   final String defaultExample;
 
   const ObjectSize({
@@ -100,10 +94,8 @@ enum ObjectSize {
     required this.damageBonus,
     required this.strScore,
     required this.dexScore,
-    required this.accentColor,
     required this.defaultExample,
   });
-
 
   String get damageFormula => DiceFormatters.formatFormula(
         count: damageDiceCount,
@@ -151,7 +143,7 @@ class AnimatedObjectInstance {
   final String? specialTrait;
   final String? statBlockId;
   final MinionStatBlock? originalStatBlock;
-  final Color? customAccentColor;
+  final int? customAccentColorValue;
 
   AnimatedObjectInstance({
     required this.id,
@@ -174,10 +166,26 @@ class AnimatedObjectInstance {
     this.secondaryDamageType,
     this.hasPackTactics = false,
     this.specialTrait,
-    this.customAccentColor,
-  })  : maxHp = maxHp < 1 ? 1 : maxHp,
+    int? customAccentColorValue,
+    Object? customAccentColor,
+  })  : customAccentColorValue = customAccentColorValue ?? _extractColorValue(customAccentColor),
+        maxHp = maxHp < 1 ? 1 : maxHp,
         _currentHp = currentHp.clamp(0, maxHp < 1 ? 1 : maxHp),
         _tempHp = tempHp < 0 ? 0 : tempHp;
+
+  static int? _extractColorValue(Object? c) {
+    if (c == null) return null;
+    if (c is int) return c;
+    try {
+      return (c as dynamic).toARGB32() as int?;
+    } catch (_) {
+      try {
+        return (c as dynamic).value as int?;
+      } catch (_) {
+        return null;
+      }
+    }
+  }
 
   int get currentHp => _currentHp;
   set currentHp(int value) {
@@ -236,7 +244,7 @@ class AnimatedObjectInstance {
       secondaryDamageType: statBlock.secondaryDamageType,
       hasPackTactics: statBlock.hasPackTactics,
       specialTrait: statBlock.specialTrait,
-      customAccentColor: statBlock.accentColor,
+      customAccentColorValue: statBlock.accentColor.toARGB32(),
     );
   }
 
@@ -246,7 +254,6 @@ class AnimatedObjectInstance {
   int get damageDiceCount => customDamageDiceCount ?? size.damageDiceCount;
   int get damageDiceSides => customDamageDiceSides ?? size.damageDiceSides;
   int get damageBonus => customDamageBonus ?? size.damageBonus;
-  Color get accentColor => customAccentColor ?? size.accentColor;
 
   /// Formatted damage formula string (e.g., "1d4+4 Bludgeoning").
   String get damageFormula => DiceFormatters.formatCompositeFormula(
@@ -310,7 +317,8 @@ class AnimatedObjectInstance {
     String? secondaryDamageType,
     bool? hasPackTactics,
     String? specialTrait,
-    Color? customAccentColor,
+    int? customAccentColorValue,
+    Object? customAccentColor,
   }) {
     return AnimatedObjectInstance(
       id: id ?? this.id,
@@ -331,7 +339,8 @@ class AnimatedObjectInstance {
       secondaryDamageType: secondaryDamageType ?? this.secondaryDamageType,
       hasPackTactics: hasPackTactics ?? this.hasPackTactics,
       specialTrait: specialTrait ?? this.specialTrait,
-      customAccentColor: customAccentColor ?? this.customAccentColor,
+      customAccentColorValue: customAccentColorValue ??
+          (customAccentColor != null ? _extractColorValue(customAccentColor) : this.customAccentColorValue),
     );
   }
 
@@ -355,7 +364,7 @@ class AnimatedObjectInstance {
       'secondaryDamageType': secondaryDamageType,
       'hasPackTactics': hasPackTactics,
       'specialTrait': specialTrait,
-      'customAccentColor': customAccentColor?.toARGB32(),
+      'customAccentColor': customAccentColorValue,
     };
   }
 
@@ -387,9 +396,7 @@ class AnimatedObjectInstance {
       secondaryDamageType: map['secondaryDamageType']?.toString(),
       hasPackTactics: map['hasPackTactics'] as bool? ?? false,
       specialTrait: map['specialTrait']?.toString(),
-      customAccentColor: map['customAccentColor'] != null
-          ? Color((map['customAccentColor'] as num).toInt())
-          : null,
+      customAccentColorValue: (map['customAccentColor'] as num?)?.toInt(),
     );
   }
 
@@ -398,10 +405,48 @@ class AnimatedObjectInstance {
       identical(this, other) ||
       other is AnimatedObjectInstance &&
           runtimeType == other.runtimeType &&
-          id == other.id;
+          id == other.id &&
+          name == other.name &&
+          size == other.size &&
+          _currentHp == other._currentHp &&
+          maxHp == other.maxHp &&
+          _tempHp == other._tempHp &&
+          damageType == other.damageType &&
+          isSilvered == other.isSilvered &&
+          customAc == other.customAc &&
+          customAttackBonus == other.customAttackBonus &&
+          customDamageDiceCount == other.customDamageDiceCount &&
+          customDamageDiceSides == other.customDamageDiceSides &&
+          customDamageBonus == other.customDamageBonus &&
+          secondaryDamageDiceCount == other.secondaryDamageDiceCount &&
+          secondaryDamageDiceSides == other.secondaryDamageDiceSides &&
+          secondaryDamageType == other.secondaryDamageType &&
+          hasPackTactics == other.hasPackTactics &&
+          specialTrait == other.specialTrait &&
+          customAccentColorValue == other.customAccentColorValue;
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hashAll([
+        id,
+        name,
+        size,
+        _currentHp,
+        maxHp,
+        _tempHp,
+        damageType,
+        isSilvered,
+        customAc,
+        customAttackBonus,
+        customDamageDiceCount,
+        customDamageDiceSides,
+        customDamageBonus,
+        secondaryDamageDiceCount,
+        secondaryDamageDiceSides,
+        secondaryDamageType,
+        hasPackTactics,
+        specialTrait,
+        customAccentColorValue,
+      ]);
 
   @override
   String toString() =>
