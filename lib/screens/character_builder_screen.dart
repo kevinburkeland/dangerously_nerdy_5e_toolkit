@@ -2721,6 +2721,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             ? 'Prepared limit: Level 1 + ${castingAbility.shortName} mod (${castingMod >= 0 ? "+$castingMod" : "$castingMod"}) = $maxSpells spells.'
             : 'Spells known limit: $maxSpells spells.');
 
+    final alwaysPreparedSpells = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: curClass.id.slug,
+      subclassSlug: _wizardSelectedSubclass,
+      classLevel: 1,
+      edition: edition,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2730,6 +2737,49 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Text('Select starting cantrips and 1st-level spells for ${curClass.name} (${castingAbility.shortName} mod: ${castingMod >= 0 ? "+$castingMod" : "$castingMod"}).',
             style: const TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
+
+        // Subclass Always-Prepared Spells Alert Card
+        if (alwaysPreparedSpells.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.teal.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.tealAccent.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.verified, size: 14, color: Colors.tealAccent),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Subclass Granted Spells (Always Prepared, Free Quota):',
+                        style: theme.textTheme.labelSmall?.copyWith(color: Colors.tealAccent, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: alwaysPreparedSpells.map((s) {
+                    return Chip(
+                      visualDensity: VisualDensity.compact,
+                      label: Text('${s.getName(edition)} (L${s.level})', style: const TextStyle(fontSize: 11)),
+                      backgroundColor: Colors.teal.shade800.withValues(alpha: 0.4),
+                      side: BorderSide(color: Colors.tealAccent.withValues(alpha: 0.3)),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
 
         // Quick Auto-Fill Recommended Spells
         Align(
@@ -3131,7 +3181,20 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       );
     }).toList();
 
-    final spellRefs = _selectedWizardSpells.map((id) {
+    final allSelectedSpells = List<String>.from(_selectedWizardSpells);
+    final autoGrantedSubclassSpells = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
+      classSlug: curClass.id.slug,
+      subclassSlug: _wizardSelectedSubclass,
+      classLevel: 1,
+      edition: _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014,
+    );
+    for (final s in autoGrantedSubclassSpells) {
+      if (!allSelectedSpells.contains(s.id)) {
+        allSelectedSpells.add(s.id);
+      }
+    }
+
+    final spellRefs = allSelectedSpells.map((id) {
       final spell = SpellbookLibrary.getSpellById(id);
       return EntityReference<Spell>(
         refType: EntityType.spell,

@@ -9,6 +9,8 @@ enum FeatureChoiceType {
   subclassSelection,
   fightingStyle,
   invocations,
+  infusions,
+  metamagic,
   primalOrder,
   divineOrder,
   expertise,
@@ -24,6 +26,10 @@ enum FeatureChoiceType {
         return 'Fighting Style';
       case FeatureChoiceType.invocations:
         return 'Eldritch Invocations';
+      case FeatureChoiceType.infusions:
+        return 'Infusions';
+      case FeatureChoiceType.metamagic:
+        return 'Metamagic';
       case FeatureChoiceType.primalOrder:
         return 'Primal Order';
       case FeatureChoiceType.divineOrder:
