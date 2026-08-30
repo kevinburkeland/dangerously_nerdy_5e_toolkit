@@ -1,11 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../models/dm_screen_data.dart';
 import '../models/characters/srd_feats_library.dart';
 import '../models/characters/srd_skills_library.dart';
 import '../models/characters/srd_classes_library.dart';
 import '../models/characters/srd_species_library.dart';
 import '../models/characters/srd_backgrounds_library.dart';
+import '../models/characters/srd_equipment_library.dart';
+import '../models/magic_items/magic_item_library.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/character_models.dart';
 import '../models/domain/entity_reference.dart';
@@ -27,7 +28,6 @@ import '../providers/settings_provider.dart';
 import '../widgets/common/formatted_markdown_text.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/glyphs/dnd_glyph.dart';
-import '../widgets/glyphs/glyph_tokens.dart';
 import '../widgets/room_banner_widget.dart';
 
 /// Interactive Character Generator, Live State Sheet, and Multiclassing Studio
@@ -313,6 +313,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     }
     for (final bg in SrdBackgroundsLibrary.allBackgrounds) {
       baseLayer.registerEntity(bg);
+    }
+    for (final eq in SrdEquipmentLibrary.allEquipmentItems) {
+      baseLayer.registerEntity(eq);
     }
 
     _repository.addLayer(baseLayer);
@@ -2895,33 +2898,35 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep6Equipment(ThemeData theme, {bool hasFeatStep = true}) {
+    final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
+    final packages = SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
+
+    if (!packages.any((p) => p.id == _selectedStartingEquipmentPreset)) {
+      _selectedStartingEquipmentPreset = packages.first.id;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Step ${hasFeatStep ? 7 : 6}: Starting Equipment Preset',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+        Text(
+          'Step ${hasFeatStep ? 7 : 6}: Starting Equipment & Inventory (SRD)',
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
         const SizedBox(height: 6),
-        const Text('Choose an equipment loadout package tailored for your class.',
-            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        Text(
+          'Choose an official 5e SRD starting inventory package or starting wealth for your ${curClass.name}.',
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
         const SizedBox(height: 12),
-        _buildEquipmentPresetOption(
-          id: 'chain_and_sword',
-          title: 'Heavy Knight: Chain Mail & Longsword + Shield',
-          subtitle: 'Heavy armor (AC 16) + Versatile longsword + Shield (+2 AC) for front-line defenders.',
-          icon: Icons.shield,
-        ),
-        _buildEquipmentPresetOption(
-          id: 'medium_skirmisher',
-          title: 'Medium Skirmisher: Breastplate & Greatsword + Potion',
-          subtitle: 'Medium armor (AC 14+Dex) + Heavy two-handed greatsword (2d6) + Potion of Healing.',
-          icon: Icons.sports_kabaddi,
-        ),
-        _buildEquipmentPresetOption(
-          id: 'light_scout',
-          title: 'Light Scout: Leather Armor & Shortsword + Longbow',
-          subtitle: 'Light armor + Finesse shortsword + 150/600 ft ranged Longbow for agile stealth combatants.',
-          icon: Icons.track_changes,
-        ),
+        ...packages.map((pkg) {
+          return _buildEquipmentPresetOption(
+            id: pkg.id,
+            title: pkg.name,
+            subtitle: pkg.subtitle,
+            icon: pkg.icon,
+            gold: pkg.startingGold,
+          );
+        }),
       ],
     );
   }
@@ -2931,6 +2936,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     required String title,
     required String subtitle,
     required IconData icon,
+    int? gold,
   }) {
     final isSelected = _selectedStartingEquipmentPreset == id;
     return Container(
@@ -2946,9 +2952,29 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       child: Material(
         color: Colors.transparent,
         child: ListTile(
-          leading: Icon(icon, color: isSelected ? Colors.cyanAccent : Colors.white54),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.cyanAccent.withValues(alpha: 0.2) : Colors.white10,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: isSelected ? Colors.cyanAccent : Colors.white70, size: 22),
+          ),
           title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-          subtitle: Text(subtitle, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(subtitle, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+          ),
+          trailing: isSelected
+              ? const Icon(Icons.check_circle, color: Colors.cyanAccent)
+              : (gold != null && gold > 0
+                  ? Chip(
+                      label: Text('$gold GP', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amberAccent)),
+                      backgroundColor: Colors.amber.shade900.withValues(alpha: 0.25),
+                      side: BorderSide(color: Colors.amber.withValues(alpha: 0.5)),
+                      padding: EdgeInsets.zero,
+                    )
+                  : null),
           onTap: () {
             HapticService.selectionTick(context);
             setState(() => _selectedStartingEquipmentPreset = id);
@@ -2962,6 +2988,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final name = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final hasFeat = is2024 || sp.grantsBonusFeat;
+    final selectedPkg = SrdEquipmentLibrary.findPackageById(_selectedStartingEquipmentPreset) ??
+        SrdEquipmentLibrary.getPackagesForClass(cls.id.slug).first;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2984,6 +3012,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         if (hasFeat)
           Text(is2024 ? 'Origin Feat: ${_selectedFeat.toUpperCase()}' : 'Feat: ${_selectedFeat.toUpperCase()}',
               style: const TextStyle(fontSize: 12, color: Colors.purpleAccent)),
+        const SizedBox(height: 4),
+        Text('Starting Inventory: ${selectedPkg.name} (${selectedPkg.startingGold} GP)',
+            style: const TextStyle(fontSize: 12, color: Colors.cyanAccent)),
         const SizedBox(height: 8),
         Text('Scores: STR ${_wizardBaseScores.strength}, DEX ${_wizardBaseScores.dexterity}, CON ${_wizardBaseScores.constitution}, INT ${_wizardBaseScores.intelligence}, WIS ${_wizardBaseScores.wisdom}, CHA ${_wizardBaseScores.charisma}',
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amberAccent)),
@@ -3157,56 +3188,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       skillMap[bgSk] = SkillProficiencyLevel.proficient;
     }
 
-    // Starting equipment
-    final equipRequests = <StartingEquipmentItemRequest>[];
-    if (_selectedStartingEquipmentPreset == 'chain_and_sword') {
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'chain-mail', displayName: 'Chain Mail'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.armor,
-      ));
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'longsword', displayName: 'Longsword'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.mainHand,
-      ));
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'shield', displayName: 'Shield'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.offHand,
-      ));
-    } else if (_selectedStartingEquipmentPreset == 'medium_skirmisher') {
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'breastplate', displayName: 'Breastplate'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.armor,
-      ));
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'greatsword', displayName: 'Greatsword'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.mainHand,
-      ));
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'potion-of-healing', displayName: 'Potion of Healing'),
-        quantity: 1,
-      ));
-    } else {
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'leather-armor', displayName: 'Leather Armor'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.armor,
-      ));
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'shortsword', displayName: 'Shortsword'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.mainHand,
-      ));
-      equipRequests.add(const StartingEquipmentItemRequest(
-        itemRef: EntityReference(refType: EntityType.equipment, slug: 'longbow', displayName: 'Longbow'),
-        equipImmediately: true,
-        defaultSlot: EquipmentSlot.twoHand,
-      ));
-    }
+    // Starting equipment and purse from chosen SRD package
+    final classPackages = SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
+    final selectedPkg = SrdEquipmentLibrary.findPackageById(_selectedStartingEquipmentPreset) ?? classPackages.first;
+    final equipRequests = List<StartingEquipmentItemRequest>.from(selectedPkg.items);
+    final startingPurse = PartyPurse(gp: selectedPkg.startingGold);
 
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final hasFeat = is2024 || curSpecies.grantsBonusFeat;
@@ -3241,7 +3227,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           ),
       ],
       startingEquipment: equipRequests,
-      startingPurse: const PartyPurse(gp: 20),
+      startingPurse: startingPurse,
     );
 
     final newChar = CharacterFactory.createLevel1Character(request);
@@ -3328,8 +3314,18 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ),
 
         const SizedBox(height: 12),
-        Text('CHARACTER INVENTORY',
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('CHARACTER INVENTORY',
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            FilledButton.tonalIcon(
+              icon: const Icon(Icons.add_shopping_cart, size: 16),
+              label: const Text('Add SRD Item'),
+              onPressed: () => _showAddSrdItemDialog(char),
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
 
         ...char.inventory.map((item) {
@@ -3459,6 +3455,138 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           ),
         ),
       ],
+    );
+  }
+
+  void _showAddSrdItemDialog(Character char) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        String searchQuery = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final allItems = MagicItemLibrary.allItems;
+            final filtered = searchQuery.trim().isEmpty
+                ? allItems.take(50).toList()
+                : allItems
+                    .where((item) =>
+                        item.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                        item.category.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                        item.tags.any((t) => t.toLowerCase().contains(searchQuery.toLowerCase())))
+                    .toList();
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.8,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (context, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.inventory_2, color: Colors.cyanAccent),
+                              SizedBox(width: 8),
+                              Text('SRD Equipment & Magic Items',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white70),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search SRD weapons, armor, potions, gear...',
+                          prefixIcon: const Icon(Icons.search, color: Colors.cyanAccent),
+                          filled: true,
+                          fillColor: const Color(0xFF1E293B),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onChanged: (val) {
+                          setModalState(() => searchQuery = val);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final item = filtered[index];
+                            return Card(
+                              color: const Color(0xFF1E293B),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              child: ListTile(
+                                title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                subtitle: Text(
+                                  '${item.category.name.toUpperCase()} • ${item.rarity.name}${item.cost != null ? " • ${item.cost}" : ""}\n${item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                                ),
+                                trailing: ElevatedButton.icon(
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('Add'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.cyan.shade800,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () {
+                                    final newInstance = InventoryItemInstance(
+                                      instanceId: 'srd-${item.id}-${DateTime.now().millisecondsSinceEpoch}',
+                                      itemRef: EntityReference(
+                                        refType: EntityType.equipment,
+                                        slug: item.id.replaceAll('_', '-'),
+                                        displayName: item.name,
+                                      ),
+                                      quantity: 1,
+                                      requiresAttunement: item.requiresAttunement,
+                                    );
+                                    final updatedInventory = List<InventoryItemInstance>.from(char.inventory)..add(newInstance);
+                                    final updatedChar = char.copyWith(inventory: updatedInventory);
+                                    _persistenceService.saveCharacter(updatedChar).then((_) {
+                                      if (mounted) {
+                                        setState(() {
+                                          _character = updatedChar;
+                                          _recalculateStats();
+                                        });
+                                      }
+                                    });
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(this.context).showSnackBar(
+                                      SnackBar(content: Text('Added ${item.name} to inventory!')),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 

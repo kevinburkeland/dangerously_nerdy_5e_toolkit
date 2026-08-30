@@ -368,7 +368,7 @@ void main() {
       // Step 5 -> Step 6 (Equipment - Feats step was skipped!)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 6: Starting Equipment Preset'), findsOneWidget);
+      expect(find.textContaining('Step 6: Starting Equipment'), findsOneWidget);
 
       // Step 6 -> Step 7 (Review)
       await tester.tap(find.text('Next Step'));
@@ -440,7 +440,7 @@ void main() {
       // Step 6 -> Step 7 (Equipment)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
-      expect(find.text('Step 7: Starting Equipment Preset'), findsOneWidget);
+      expect(find.textContaining('Step 7: Starting Equipment'), findsOneWidget);
 
       // Step 7 -> Step 8 (Review)
       await tester.tap(find.text('Next Step'));
