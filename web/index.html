@@ -63,7 +63,28 @@
         alert('To install DangerouslyNerdy 5e Toolkit on Desktop Chrome:\n\n1. Look at the right side of your Chrome address bar for the Install computer icon.\n2. Or open Chrome Menu (⋮) -> "Save and share" -> "Install 5e Toolkit...".');
       }
     }
+
+    // Auto-reload on ServiceWorker controller change to ensure fresh version renders immediately
+    if ('serviceWorker' in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          console.log('[PWA] ServiceWorker updated. Refreshing page for latest release...');
+          window.location.reload();
+        }
+      });
+    }
+
+    // Dynamic cache-busted Flutter bootstrap script loader
+    (function() {
+      const buildVersion = 'BUILD_TIMESTAMP_PLACEHOLDER';
+      const versionTag = buildVersion.includes('PLACEHOLDER') ? Date.now() : buildVersion;
+      const script = document.createElement('script');
+      script.src = 'flutter_bootstrap.js?v=' + versionTag;
+      script.async = true;
+      document.body.appendChild(script);
+    })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

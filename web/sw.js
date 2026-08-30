@@ -84,9 +84,9 @@ self.addEventListener('fetch', (event) => {
                             url.pathname.endsWith('.woff2');
 
   if (isNavigation || isCodeOrFontAsset) {
-    // Network-First strategy
+    // Network-First strategy with explicit cache bypass to ensure fresh deployments are loaded
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-cache' })
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();

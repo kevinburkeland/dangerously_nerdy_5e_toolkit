@@ -58,7 +58,7 @@ jobs:
         run: flutter test --coverage
 
       - name: 🌐 Compile Web Release Bundle
-        run: flutter build web --release --no-tree-shake-icons
+        run: ./scripts/build_web.sh
 
       - name: 📊 Upload Test Coverage Report
         uses: actions/upload-artifact@v4
