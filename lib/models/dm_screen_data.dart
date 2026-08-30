@@ -60,6 +60,9 @@ class DmReferenceItem {
   final List<String> tags;
   final bool isChangedIn2024;
   final String? interactiveTool;
+  final int? linkedTableTabIndex;
+  final String? linkedTableQuery;
+  final String? linkedTableLabel;
   final Map<String, dynamic>? extraData;
 
   const DmReferenceItem({
@@ -81,6 +84,9 @@ class DmReferenceItem {
     required this.tags,
     this.isChangedIn2024 = false,
     this.interactiveTool,
+    this.linkedTableTabIndex,
+    this.linkedTableQuery,
+    this.linkedTableLabel,
     this.extraData,
   });
 
@@ -1961,8 +1967,11 @@ class DmScreenLibrary {
       icon: Icons.local_fire_department,
       color: Colors.deepOrangeAccent,
       summary: 'DM reference for environmental and trap damage on the fly.',
-      tags: ['improvised damage', 'traps', 'fire', 'lava', 'lightning', 'acid', 'fall'],
+      tags: ['improvised damage', 'traps', 'fire', 'lava', 'lightning', 'acid', 'fall', 'table'],
       isChangedIn2024: false,
+      linkedTableTabIndex: 1,
+      linkedTableQuery: 'trap',
+      linkedTableLabel: 'Roll on Trap Severity & Damage Table',
       rules2014: [
         '1d10: Burned by coals, hit by falling bookcase, stepped in bear trap.',
         '2d10: Struck by lightning, crushed by collapsing tunnel wall.',
@@ -1987,8 +1996,10 @@ class DmScreenLibrary {
       icon: Icons.crop_square,
       color: Colors.brown,
       summary: 'AC and HP for doors, chests, barriers, and inanimate structures.',
-      tags: ['object ac', 'object hp', 'wood', 'stone', 'iron', 'fragile', 'resilient'],
+      tags: ['object ac', 'object hp', 'wood', 'stone', 'iron', 'fragile', 'resilient', 'table'],
       isChangedIn2024: false,
+      linkedTableTabIndex: 1,
+      linkedTableLabel: 'Open Table Roller & Index',
       rules2014: [
         'Object AC: Cloth/Paper (11) • Glass/Crystal (13) • Wood/Bone (15) • Stone (17) • Iron/Steel (19) • Mithral (21) • Adamantine (23).',
         'Tiny Object (Bottle, lock): Fragile 2 (1d4) • Resilient 5 (2d4).',
@@ -2013,8 +2024,10 @@ class DmScreenLibrary {
       icon: Icons.aspect_ratio,
       color: Colors.blueAccent,
       summary: 'Grid space control, carrying capacity, push/drag/lift formulas.',
-      tags: ['size', 'space', 'carrying capacity', 'push', 'drag', 'lift', 'tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'],
+      tags: ['size', 'space', 'carrying capacity', 'push', 'drag', 'lift', 'tiny', 'small', 'medium', 'large', 'huge', 'gargantuan', 'table'],
       isChangedIn2024: false,
+      linkedTableTabIndex: 1,
+      linkedTableLabel: 'Open Table Roller & Index',
       rules2014: [
         'Tiny: 2½ by 2½ ft (Space) • Carrying Capacity = STR × 15 × 0.5 lbs.',
         'Small: 5 by 5 ft (Space) • Carrying Capacity = STR × 15 lbs.',
@@ -2037,8 +2050,11 @@ class DmScreenLibrary {
       icon: Icons.colorize,
       color: Colors.redAccent,
       summary: 'Standard properties (Finesse, Light, Heavy, Reach) & 2024 Masteries (Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex).',
-      tags: ['weapon properties', 'finesse', 'heavy', 'light', 'masteries', 'cleave', 'graze', 'nick', 'push', 'sap', 'slow', 'topple', 'vex'],
+      tags: ['weapon properties', 'finesse', 'heavy', 'light', 'masteries', 'cleave', 'graze', 'nick', 'push', 'sap', 'slow', 'topple', 'vex', 'table'],
       isChangedIn2024: true,
+      linkedTableTabIndex: 1,
+      linkedTableQuery: 'magic item',
+      linkedTableLabel: 'Roll on Magic Item Tables (Weapons & Armor)',
       diffSummary: '2024 adds codified Weapon Masteries: Cleave (extra attack on adjacent), Graze (damage on miss), Nick (extra light attack without bonus action), Push (10ft knockback), Sap (enemy disadvantage), Slow (-10ft speed), Topple (Prone save), Vex (advantage on next attack).',
       rules2014: [
         'Ammunition: Requires projectiles and free hand to load.',
@@ -2070,8 +2086,11 @@ class DmScreenLibrary {
       icon: Icons.shield,
       color: Colors.amber,
       summary: 'AC formulas, stealth penalties, Strength minimums, and equip times.',
-      tags: ['armor', 'shield', 'don', 'doff', 'light armor', 'medium armor', 'heavy armor', 'stealth disadvantage'],
+      tags: ['armor', 'shield', 'don', 'doff', 'light armor', 'medium armor', 'heavy armor', 'stealth disadvantage', 'table'],
       isChangedIn2024: false,
+      linkedTableTabIndex: 1,
+      linkedTableQuery: 'magic item',
+      linkedTableLabel: 'Roll on Magic Item Tables (Armor & Shields)',
       rules2014: [
         'Light Armor: Padded (11+DEX, Disadv Stealth), Leather (11+DEX), Studded Leather (12+DEX). Don: 1 min • Doff: 1 min.',
         'Medium Armor: Hide (12+DEX max 2), Chain Shirt (13+DEX max 2), Scale Mail (14+DEX max 2, Disadv), Breastplate (14+DEX max 2), Half Plate (15+DEX max 2, Disadv). Don: 5 min • Doff: 1 min.',
@@ -2092,8 +2111,10 @@ class DmScreenLibrary {
       icon: Icons.paid_outlined,
       color: Colors.amberAccent,
       summary: '1 PP = 10 GP = 20 EP = 100 SP = 1,000 CP; 50 coins weigh 1 lb.',
-      tags: ['currency', 'gold', 'silver', 'copper', 'electrum', 'platinum', 'coins', 'weight'],
+      tags: ['currency', 'gold', 'silver', 'copper', 'electrum', 'platinum', 'coins', 'weight', 'table'],
       isChangedIn2024: false,
+      linkedTableTabIndex: 0,
+      linkedTableLabel: 'Open Treasure Hoard & Coin Roller',
       rules2014: [
         'Copper Piece (CP): 1/100 GP.',
         'Silver Piece (SP): 1/10 GP (10 CP).',

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/rules_compendium_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/screens/table_index_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/dm_reference/dm_interactive_tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -278,6 +279,39 @@ void main() {
 
       expect(find.text('Concentration DC Calculator'), findsOneWidget);
       expect(find.text('Hide Interactive Calculator'), findsOneWidget);
+    });
+
+    testWidgets('Quick Reference Tables category displays Table Roller banner and launches TableIndexScreen', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(createTestableWidget(const RulesCompendiumScreen()));
+
+      // Select Quick Reference Tables chip
+      final tablesChip = find.widgetWithText(ChoiceChip, 'Quick Reference Tables');
+      expect(tablesChip, findsOneWidget);
+      await tester.ensureVisible(tablesChip);
+      await tester.tap(tablesChip);
+      await tester.pumpAndSettle();
+
+      // Banner should be visible
+      expect(find.text('Interactive Table Roller & Generators'), findsOneWidget);
+      expect(find.text('Open Roller'), findsOneWidget);
+
+      // Verify rule card has linked Table Roller button
+      final rollBtn = find.text('Roll on Trap Severity & Damage Table');
+      expect(rollBtn, findsOneWidget);
+
+      await tester.ensureVisible(rollBtn);
+      await tester.tap(rollBtn);
+      await tester.pumpAndSettle();
+
+      // TableIndexScreen should be launched
+      expect(find.byType(TableIndexScreen), findsOneWidget);
     });
   });
 }

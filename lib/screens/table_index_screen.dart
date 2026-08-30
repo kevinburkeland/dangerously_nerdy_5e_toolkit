@@ -10,10 +10,14 @@ import '../widgets/tables/treasure_hoard_view.dart';
 /// Main screen for the Table Index: 5e SRD Rollable Tables, Treasure Hoards & Chaos Generators.
 class TableIndexScreen extends StatefulWidget {
   final int initialTabIndex;
+  final String? initialSearchQuery;
+  final TableCategory? initialCategory;
 
   const TableIndexScreen({
     super.key,
     this.initialTabIndex = 0,
+    this.initialSearchQuery,
+    this.initialCategory,
   });
 
   @override
@@ -23,8 +27,8 @@ class TableIndexScreen extends StatefulWidget {
 class _TableIndexScreenState extends State<TableIndexScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+  late final TextEditingController _searchController;
+  late String _searchQuery;
   TableCategory? _selectedCategory;
 
   @override
@@ -35,6 +39,9 @@ class _TableIndexScreenState extends State<TableIndexScreen>
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
+    _searchQuery = widget.initialSearchQuery?.trim() ?? '';
+    _searchController = TextEditingController(text: _searchQuery);
+    _selectedCategory = widget.initialCategory;
   }
 
   @override

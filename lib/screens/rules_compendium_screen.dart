@@ -10,6 +10,7 @@ import '../widgets/dm_reference/dm_rule_card.dart';
 import '../widgets/dm_reference/dm_rule_comparison_dialog.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/room_banner_widget.dart';
+import 'table_index_screen.dart';
 
 /// High-speed SRD 5.1 (2014) & SRD 5.2 (2024) Rules Compendium Screen.
 class RulesCompendiumScreen extends StatefulWidget {
@@ -137,6 +138,16 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.table_chart_outlined, color: Color(0xFFF59E0B)),
+            tooltip: 'Open Table Roller & Loot Index',
+            onPressed: () {
+              HapticService.selectionTick(context);
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TableIndexScreen()),
+              );
+            },
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
             child: RulesEditionToggle(
@@ -169,6 +180,65 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
                         const SizedBox(height: 16),
                         _buildCategoryChips(theme, allItems),
                         const SizedBox(height: 16),
+                        if (_selectedCategory == DmCategory.tables) ...[
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.casino_outlined, color: Color(0xFFF59E0B), size: 24),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Interactive Table Roller & Generators',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13.5,
+                                          color: Color(0xFFF59E0B),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Roll on SRD treasure hoards, magic items A-I, trinkets, wild magic, and madness tables.',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF59E0B),
+                                    foregroundColor: Colors.black,
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  ),
+                                  onPressed: () {
+                                    HapticService.selectionTick(context);
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const TableIndexScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.table_chart, size: 14),
+                                  label: const Text('Open Roller', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         Wrap(
                           alignment: WrapAlignment.spaceBetween,
                           crossAxisAlignment: WrapCrossAlignment.center,

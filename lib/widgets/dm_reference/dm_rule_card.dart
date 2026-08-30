@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
+import '../../screens/table_index_screen.dart';
+import '../../services/haptic_service.dart';
 import '../common/edition_diff_badge.dart';
 import '../interactive/pressable_card.dart';
 import 'dm_interactive_tools.dart';
@@ -240,6 +242,51 @@ class _DmRuleCardState extends State<DmRuleCard> {
               const SizedBox(height: 8),
               _buildToolWidget(item.interactiveTool!),
             ],
+          ],
+
+          // Linked Table Roller Button (if table item or has linked table data)
+          if (item.linkedTableTabIndex != null || item.linkedTableQuery != null || item.category == DmCategory.tables) ...[
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: () {
+                HapticService.selectionTick(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => TableIndexScreen(
+                      initialTabIndex: item.linkedTableTabIndex ?? 1,
+                      initialSearchQuery: item.linkedTableQuery,
+                    ),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.table_chart, size: 14, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        item.linkedTableLabel ?? 'Open in Table Roller',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFF59E0B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 11, color: Color(0xFFF59E0B)),
+                  ],
+                ),
+              ),
+            ),
           ],
 
           const SizedBox(height: 8),
