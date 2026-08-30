@@ -351,7 +351,12 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
                             setState(() => _selectedFeatCategory = null),
                       ),
                       const SizedBox(width: 6),
-                      ...FeatCategory.values.map(
+                      ...FeatCategory.values.where((fc) {
+                        if (edition == DmRulesEdition.v2014 && fc == FeatCategory.origin) {
+                          return false;
+                        }
+                        return true;
+                      }).map(
                         (fc) => Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: FilterChip(
@@ -1035,6 +1040,9 @@ class _GlyphShowcaseScreenState extends State<GlyphShowcaseScreen>
 
   Widget _buildFeatsGallery(bool isDark, DmRulesEdition edition) {
     var feats = GlyphGalleryData.allFeats.where((f) {
+      if (edition == DmRulesEdition.v2014 && f.featCategory == FeatCategory.origin) {
+        return false;
+      }
       if (_selectedFeatCategory != null &&
           f.featCategory != _selectedFeatCategory) {
         return false;

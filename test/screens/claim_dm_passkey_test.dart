@@ -26,6 +26,24 @@ HostKey: c4974958-3d12-4217-bf45-ee77e9b0ab83
 ''';
       expect(CryptoUtils.extractHostKey(snippet), equals('c4974958-3d12-4217-bf45-ee77e9b0ab83'));
     });
+
+    test('encodeHostKeyToMnemonic produces 6 distinct non-repeating words for any input', () {
+      final inputs = [
+        'c4974958-3d12-4217-bf45-ee77e9b0ab83',
+        '00000000-0000-0000-0000-000000000000',
+        'sample-passkey-test',
+        'dragon',
+        'ROOM-123456',
+      ];
+
+      for (final input in inputs) {
+        final phrase = CryptoUtils.encodeHostKeyToMnemonic(input);
+        final words = phrase.split(' ');
+        expect(words.length, equals(6), reason: 'Must have 6 words for $input');
+        expect(words.toSet().length, equals(6), reason: 'Words in $phrase must be distinct without repeating');
+        expect(CryptoUtils.isValidMnemonic(phrase), isTrue);
+      }
+    });
   });
 
   group('ClaimDmPasskeyDialog Widget Tests', () {

@@ -140,48 +140,72 @@ class CryptoUtils {
   // 6-WORD MNEMONIC PASSKEY CODEC
   // =========================================================================
   static const List<String> _dndWordList = [
+    // 0-31
     'dragon', 'wizard', 'shield', 'potion', 'goblin', 'scroll', 'tavern', 'shadow',
     'paladin', 'dagger', 'cleric', 'phoenix', 'dungeon', 'temple', 'rogue', 'knight',
     'arcane', 'flame', 'silver', 'crown', 'hammer', 'portal', 'relic', 'sorcerer',
     'bard', 'druid', 'monk', 'ranger', 'warlock', 'castle', 'forest', 'glory',
+    // 32-63
     'citadel', 'crystal', 'emerald', 'falcon', 'griffin', 'harbor', 'island', 'jewel',
     'kraken', 'lantern', 'mystic', 'nebula', 'oracle', 'prism', 'quest', 'raven',
     'scepter', 'titan', 'unicorn', 'vortex', 'wyvern', 'zenith', 'amber', 'blade',
     'cavern', 'domain', 'elixir', 'fathom', 'granite', 'haven', 'iron', 'jasper',
+    // 64-95
     'keep', 'legend', 'mantle', 'nexus', 'oasis', 'parchment', 'quartz', 'realm',
     'sanctuary', 'tome', 'umbra', 'valiant', 'warden', 'yonder', 'zephyr', 'aurora',
     'beacon', 'compass', 'dynasty', 'enigma', 'forge', 'gargoyle', 'horizon', 'illusion',
     'javelin', 'kindred', 'lore', 'mirage', 'nomad', 'obsidian', 'pyre', 'quiver',
+    // 96-127
     'runic', 'sigil', 'talon', 'unity', 'valor', 'weaver', 'yearling', 'zodiac',
     'abyss', 'basilisk', 'cinder', 'dire', 'elemental', 'fey', 'golem', 'hydra',
     'infernal', 'kobold', 'lich', 'medusa', 'necromancer', 'owlbear', 'pegasus', 'quasit',
     'specter', 'troll', 'undead', 'vampire', 'wraith', 'xorn', 'yeti', 'zombie',
+    // 128-159
     'anvil', 'bravery', 'chalice', 'destiny', 'echo', 'fortune', 'grimoire', 'herald',
     'insight', 'journey', 'karma', 'legacy', 'monolith', 'noble', 'omen', 'passage',
     'radiance', 'sanctum', 'triumph', 'vault', 'wisdom', 'alchemy', 'bastion', 'covenant',
-    'dawn', 'eclipse', 'frost', 'glyph', 'honor', 'infinite', 'judgment', 'legacy',
-    'mastery', 'nexus', 'outpost', 'prowess', 'quintessence', 'rune', 'sovereign', 'tribute',
+    'dawn', 'eclipse', 'frost', 'glyph', 'honor', 'infinite', 'judgment', 'solitude',
+    // 160-191
+    'mastery', 'bastille', 'outpost', 'prowess', 'quintessence', 'rune', 'sovereign', 'tribute',
     'unbroken', 'vow', 'whisper', 'zeal', 'astral', 'bone', 'chaos', 'divine',
-    'ether', 'fang', 'ghost', 'haunt', 'idol', 'judge', 'karma', 'lightning',
-    'memory', 'night', 'oath', 'phantom', 'spirit', 'thunder', 'universe', 'vision',
+    'ether', 'fang', 'ghost', 'haunt', 'idol', 'judge', 'spirit', 'lightning',
+    'memory', 'night', 'oath', 'phantom', 'tempest', 'thunder', 'universe', 'vision',
+    // 192-223
     'wild', 'yearn', 'zealot', 'armor', 'battle', 'crest', 'deliverance', 'emblem',
     'frontier', 'guild', 'hero', 'immortal', 'justice', 'kingdom', 'legendary', 'myth',
-    'noble', 'order', 'praise', 'questing', 'royal', 'sanction', 'throne', 'unity',
-    'victory', 'warrior', 'crusade', 'zenith', 'aegis', 'bolt', 'champion', 'dragonfire',
-    'empower', 'flameheart', 'guardian', 'haven', 'infinity', 'justice', 'keep', 'luminary',
+    'majesty', 'order', 'praise', 'questing', 'royal', 'sanction', 'throne', 'harmony',
+    'victory', 'warrior', 'crusade', 'apogee', 'aegis', 'bolt', 'champion', 'dragonfire',
+    // 224-255
+    'empower', 'flameheart', 'guardian', 'refuge', 'infinity', 'verdict', 'fortress', 'luminary',
+    'maelstrom', 'chronicle', 'summit', 'paragon', 'spellcraft', 'vanguard', 'sentinel', 'watchtower',
+    'wyrm', 'sentry', 'starfall', 'celestial', 'beaconlight', 'sunblade', 'moonshadow', 'bloodline',
+    'crossroad', 'sanctity', 'truename', 'elderwood', 'highland', 'drakefire', 'deepstone', 'everlight',
   ];
 
-  /// Encodes a UUID hostKey into a 6-word human-friendly mnemonic phrase
+  /// Encodes a UUID or hostKey string into a deterministic 6-word human-friendly mnemonic passkey.
   static String encodeHostKeyToMnemonic(String hostKey) {
-    final clean = hostKey.replaceAll('-', '').toLowerCase();
-    if (clean.length < 12) return 'dragon shield potion wizard goblin scroll';
+    final trimmed = hostKey.trim();
+    if (trimmed.isEmpty) return 'dragon wizard shield potion goblin scroll';
 
+    // Hash the input with SHA-256 to ensure uniform cryptographic entropy.
+    // This guarantees that any string (UUID, custom passkey, or text) maps deterministically
+    // to a diverse 6-word mnemonic without fallback collisions to index 0.
+    final hashHex = sha256Hex(trimmed);
     final words = <String>[];
+    final usedIndices = <int>{};
+
     for (int i = 0; i < 6; i++) {
-      final hexChunk = clean.substring(i * 2, (i + 1) * 2);
-      final byteVal = int.tryParse(hexChunk, radix: 16) ?? 0;
-      final wordIndex = byteVal % _dndWordList.length;
-      words.add(_dndWordList[wordIndex]);
+      final chunkHex = hashHex.substring(i * 4, (i + 1) * 4);
+      final val = int.tryParse(chunkHex, radix: 16) ?? (i * 37);
+      final index = val % _dndWordList.length;
+
+      int offset = 0;
+      while (usedIndices.contains((index + offset) % _dndWordList.length)) {
+        offset++;
+      }
+      final chosenIndex = (index + offset) % _dndWordList.length;
+      usedIndices.add(chosenIndex);
+      words.add(_dndWordList[chosenIndex]);
     }
     return words.join(' ');
   }

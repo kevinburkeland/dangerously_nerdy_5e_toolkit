@@ -77,6 +77,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   String _selectedClass = 'fighter';
   String _selectedBackground = 'soldier';
   String _selectedFeat = 'savage-attacker';
+  bool _enable2014BonusFeat = false;
   String _selectedStartingEquipmentPreset = 'chain_and_sword';
   Set<SkillType> _wizardSelectedSkills = {SkillType.athletics, SkillType.intimidation};
 
@@ -630,6 +631,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   static SpeciesType? _findSpeciesType(String slug) {
     final s = slug.toLowerCase();
+    if (s.contains('human')) return SpeciesType.human;
     for (final sp in SpeciesType.values) {
       if (sp.name.toLowerCase() == s || sp.displayName.toLowerCase() == s) return sp;
     }
@@ -1942,6 +1944,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep1Species(ThemeData theme) {
+    final is2024 = _rulesEdition == DmRulesEdition.v2024;
+    final speciesList = SrdSpeciesLibrary.getSpeciesForRuleset(is2024 ? RulesetVersion.v2024 : RulesetVersion.v2014);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1951,7 +1956,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const Text('Select your character lineage from standard SRD species.',
             style: TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
-        ...SrdSpeciesLibrary.allSpecies.map((sp) {
+        ...speciesList.map((sp) {
           final isSelected = _selectedSpecies == sp.id.slug;
           final spType = _findSpeciesType(sp.id.slug) ?? SpeciesType.human;
           return Container(
@@ -2125,14 +2130,20 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep3Background(ThemeData theme, Background curBackground) {
+    final is2024 = _rulesEdition == DmRulesEdition.v2024;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Step 4: Choose Background Origin',
+        Text(is2024 ? 'Step 4: Choose Background Origin' : 'Step 4: Choose Background',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
         const SizedBox(height: 6),
-        const Text('Your background grants starting skills, tool proficiencies, and an Origin Feat.',
-            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        Text(
+          is2024
+              ? 'Your background grants starting skills, tool proficiencies, and an Origin Feat.'
+              : 'Your background grants starting skills, tool proficiencies, and starting equipment.',
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
         const SizedBox(height: 12),
         ...SrdBackgroundsLibrary.allBackgrounds.map((bg) {
           final isSelected = _selectedBackground == bg.id.slug;
@@ -2155,15 +2166,17 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 ),
                 title: Text(bg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text(
-                  'Skills: ${bg.skillProficiencies.join(", ")}\nOrigin Feat: ${bg.originFeat ?? "General"}',
+                  is2024
+                      ? 'Skills: ${bg.skillProficiencies.join(", ")}\nOrigin Feat: ${bg.originFeat ?? "General"}'
+                      : 'Skills: ${bg.skillProficiencies.join(", ")}${bg.toolProficiencies.isNotEmpty ? "\nTools: ${bg.toolProficiencies.join(', ')}" : ""}',
                   style: const TextStyle(fontSize: 11.5, color: Colors.white70),
                 ),
                 onTap: () {
                   HapticService.selectionTick(context);
                   setState(() {
                     _selectedBackground = bg.id.slug;
-                    // Auto-set origin feat recommendation
-                    if (bg.originFeat != null) {
+                    // Auto-set origin feat recommendation in 2024 mode
+                    if (is2024 && bg.originFeat != null) {
                       final fSlug = bg.originFeat!.toLowerCase().replaceAll(' ', '-').replaceAll('(', '').replaceAll(')', '');
                       if (SrdFeatsLibrary.findBySlug(fSlug) != null) {
                         _selectedFeat = fSlug;
@@ -2284,65 +2297,118 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep5Feats(ThemeData theme) {
+    final is2024 = _rulesEdition == DmRulesEdition.v2024;
+    final isVariantHuman = _selectedSpecies == 'human-variant';
+    final availableFeats = is2024
+        ? SrdFeatsLibrary.getOriginFeats()
+        : SrdFeatsLibrary.getFeatsForRuleset(RulesetVersion.v2014);
+
+    final showFeatSelector = is2024 || isVariantHuman || _enable2014BonusFeat;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Step 6: Origin Feat / Starting Feat',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+        Text(
+          is2024
+              ? 'Step 6: Origin Feat / Starting Feat'
+              : (isVariantHuman ? 'Step 6: Variant Human Feat (2014 Optional)' : 'Step 6: Feats (2014 Rules)'),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
         const SizedBox(height: 6),
-        const Text('Choose your 1st-level origin feat from the SRD Feat Library.',
-            style: TextStyle(fontSize: 12, color: Colors.white70)),
+        Text(
+          is2024
+              ? 'Choose your 1st-level origin feat from the SRD Feat Library.'
+              : (isVariantHuman
+                  ? 'As a Variant Human, choose your 1st-level bonus feat from the SRD Feat Library.'
+                  : 'In the 2014 5e rules, 1st-level characters do not gain an Origin Feat by default.'),
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
         const SizedBox(height: 12),
-        ...SrdFeatsLibrary.getOriginFeats().map((feat) {
-          final isSelected = _selectedFeat == feat.id.slug;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
+        if (!is2024 && !isVariantHuman) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.purple.shade900.withValues(alpha: 0.3) : Colors.black26,
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isSelected ? Colors.purpleAccent : Colors.white12,
-                width: isSelected ? 1.5 : 1.0,
-              ),
+              border: Border.all(color: Colors.white24),
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: ListTile(
-                leading: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Colors.purpleAccent : Colors.white54,
-                    ),
-                    const SizedBox(width: 8),
-                    RepaintBoundary(
-                      child: SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: DndGlyph.feat(
-                            category: FeatCategory.origin,
-                            featId: feat.id.slug,
-                            size: 32,
-                            isDarkMode: true,
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.amberAccent, size: 20),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'In 2014 rules, feats are an optional rule chosen at Level 4+ instead of an ASI. Only Variant Humans gain a starting feat at Level 1.',
+                    style: TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Enable DM House Rule Bonus Feat', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+            subtitle: const Text('Allow picking a 1st-level starting feat for non-variant characters.', style: TextStyle(fontSize: 11, color: Colors.white60)),
+            value: _enable2014BonusFeat,
+            onChanged: (val) {
+              HapticService.selectionTick(context);
+              setState(() => _enable2014BonusFeat = val);
+            },
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (showFeatSelector)
+          ...availableFeats.map((feat) {
+            final isSelected = _selectedFeat == feat.id.slug;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.purple.shade900.withValues(alpha: 0.3) : Colors.black26,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isSelected ? Colors.purpleAccent : Colors.white12,
+                  width: isSelected ? 1.5 : 1.0,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  leading: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                        color: isSelected ? Colors.purpleAccent : Colors.white54,
+                      ),
+                      const SizedBox(width: 8),
+                      RepaintBoundary(
+                        child: SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: DndGlyph.feat(
+                              category: feat.category == 'Origin' ? FeatCategory.origin : FeatCategory.general,
+                              featId: feat.id.slug,
+                              size: 32,
+                              isDarkMode: true,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(feat.descriptionMarkdown, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+                  onTap: () {
+                    HapticService.selectionTick(context);
+                    setState(() => _selectedFeat = feat.id.slug);
+                  },
                 ),
-                title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(feat.descriptionMarkdown, style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
-                onTap: () {
-                  HapticService.selectionTick(context);
-                  setState(() => _selectedFeat = feat.id.slug);
-                },
               ),
-            ),
-          );
-        }),
+            );
+          }),
       ],
     );
   }
@@ -2408,6 +2474,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   Widget _buildStep7Review(ThemeData theme, Race sp, CharacterClass cls, Background bg) {
     final name = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
+    final is2024 = _rulesEdition == DmRulesEdition.v2024;
+    final isVariantHuman = _selectedSpecies == 'human-variant';
+    final hasFeat = is2024 || isVariantHuman || _enable2014BonusFeat;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2426,7 +2496,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const SizedBox(height: 8),
         Text('Class Saving Throws: ${cls.savingThrows.join(", ")}', style: const TextStyle(fontSize: 12)),
         Text('Skill Proficiencies: ${_wizardSelectedSkills.map((s) => s.displayName).join(", ")}', style: const TextStyle(fontSize: 12)),
-        Text('Origin Feat: ${_selectedFeat.toUpperCase()}', style: const TextStyle(fontSize: 12, color: Colors.purpleAccent)),
+        if (hasFeat)
+          Text(is2024 ? 'Origin Feat: ${_selectedFeat.toUpperCase()}' : 'Feat: ${_selectedFeat.toUpperCase()}',
+              style: const TextStyle(fontSize: 12, color: Colors.purpleAccent)),
         const SizedBox(height: 8),
         Text('Scores: STR ${_wizardBaseScores.strength}, DEX ${_wizardBaseScores.dexterity}, CON ${_wizardBaseScores.constitution}, INT ${_wizardBaseScores.intelligence}, WIS ${_wizardBaseScores.wisdom}, CHA ${_wizardBaseScores.charisma}',
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amberAccent)),
@@ -2551,11 +2623,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       savingThrowProficiencies: saveProficiencies,
       skillProficiencies: skillMap,
       originFeats: [
-        EntityReference(
-          refType: EntityType.feat,
-          slug: _selectedFeat,
-          displayName: SrdFeatsLibrary.findBySlug(_selectedFeat)?.name ?? 'Feat',
-        ),
+        if (_rulesEdition == DmRulesEdition.v2024 || curSpecies.id.slug == 'human-variant' || _enable2014BonusFeat)
+          EntityReference(
+            refType: EntityType.feat,
+            slug: _selectedFeat,
+            displayName: SrdFeatsLibrary.findBySlug(_selectedFeat)?.name ?? 'Feat',
+          ),
       ],
       startingEquipment: equipRequests,
       startingPurse: const PartyPurse(gp: 20),

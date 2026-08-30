@@ -332,11 +332,22 @@ class SrdFeatsLibrary {
 
   /// Filter feats by category
   static List<Feat> getOriginFeats({RulesetVersion ruleset = RulesetVersion.v2024}) {
+    if (ruleset == RulesetVersion.v2014) {
+      return const []; // 2014 rules have no Origin Feats
+    }
     return allFeats.where((f) => f.category == 'Origin').toList();
   }
 
   static List<Feat> getGeneralFeats() {
     return allFeats.where((f) => f.category == 'General').toList();
+  }
+
+  static List<Feat> getFeatsForRuleset(RulesetVersion ruleset) {
+    if (ruleset == RulesetVersion.v2014) {
+      // In 2014, feats are General (combat / utility) feats; no Origin feats
+      return allFeats.where((f) => f.category != 'Origin').toList();
+    }
+    return allFeats;
   }
 
   static Feat? findBySlug(String slug) {

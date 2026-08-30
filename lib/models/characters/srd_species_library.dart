@@ -30,6 +30,25 @@ class SrdSpeciesLibrary {
     },
   );
 
+  static final Race humanVariant = Race(
+    id: const EntityId(slug: 'human-variant', ruleset: RulesetVersion.v2014),
+    name: 'Human (Variant)',
+    size: 'Medium',
+    speed: '30 ft.',
+    abilityScoreSummary: '+1 to Two Different Scores, 1 Skill, 1 Feat (2014 Optional)',
+    traitsMarkdown:
+        '**Ability Score Increase.** Two different ability scores of your choice increase by 1.\n\n'
+        '**Skills.** You gain proficiency in one skill of your choice.\n\n'
+        '**Feat.** You gain one Feat of your choice from the Feat library.',
+    customProperties: const {
+      'hasDarkvision': false,
+      'isVariantHuman': true,
+      'bonusSkillCount': 1,
+      'bonusFeatCount': 1,
+      'abilityChoiceCount': 2,
+    },
+  );
+
   static final Race elf = Race(
     id: const EntityId(slug: 'elf', ruleset: RulesetVersion.v2024),
     name: 'Elf',
@@ -219,6 +238,7 @@ class SrdSpeciesLibrary {
   /// All SRD Species / Races
   static final List<Race> allSpecies = [
     human,
+    humanVariant,
     elf,
     dwarf,
     halfling,
@@ -228,6 +248,14 @@ class SrdSpeciesLibrary {
     halfOrc,
     tiefling,
   ];
+
+  static List<Race> getSpeciesForRuleset(RulesetVersion ruleset) {
+    if (ruleset == RulesetVersion.v2024) {
+      // In 2024, standard Human is used (Resourceful, Skillful, Versatile)
+      return allSpecies.where((r) => r.id.slug != 'human-variant').toList();
+    }
+    return allSpecies;
+  }
 
   static Race? findBySlug(String slug) {
     final clean = slug.toLowerCase().trim();
