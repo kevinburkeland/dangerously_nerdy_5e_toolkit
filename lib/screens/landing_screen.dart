@@ -1349,6 +1349,18 @@ class _LandingScreenState extends State<LandingScreen> {
             ),
           );
         },
+        onLongPress: () {
+          HapticService.selectionTick(context);
+          if (m.role == CampaignRole.player) {
+            ClaimDmPasskeyDialog.show(
+              context,
+              initialRoomCode: m.roomCode,
+              initialPlayerName: m.characterId,
+            );
+          } else if (m.hasHostKey) {
+            ShareDmPasskeyDialog.show(context, m);
+          }
+        },
         child: Container(
           width: 220,
           padding: const EdgeInsets.all(12),

@@ -486,5 +486,106 @@ void main() {
       expect(live.partyPurse.gp, equals(50));
       expect(live.getMemberPurse('Frodo').gp, equals(10));
     });
+
+    test('Join Campaign with DM hostKey promotes player to Host role upon joining', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Dragonlance Campaign',
+        playerName: 'DM Fizban',
+      );
+
+      final dmMembership = registry.getMembership(session.roomCode);
+      final rawKey = dmMembership!.hostKey!;
+
+      // Clear local registry to simulate joining from a new player client
+      registry.membershipsNotifier.value = [];
+
+      // Join with passkey
+      final joined = await partyService.joinCampaign(
+        roomCode: session.roomCode,
+        playerName: 'Co-DM Raistlin',
+        hostKey: rawKey,
+      );
+
+      expect(joined.roomCode, equals(session.roomCode));
+      final playerMembership = registry.getMembership(session.roomCode);
+      expect(playerMembership, isNotNull);
+      expect(playerMembership!.isHost, isTrue);
+      expect(playerMembership.hasHostKey, isTrue);
+      expect(playerMembership.hostKey, equals(rawKey));
+    });
+
+    test('Join Campaign with invalid DM hostKey rejects with UnauthorizedHostActionException', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Dragonlance Campaign 2',
+        playerName: 'DM Fizban',
+      );
+
+      expect(
+        () => partyService.joinCampaign(
+          roomCode: session.roomCode,
+          playerName: 'Hacker',
+          hostKey: 'invalid-secret-key',
+        ),
+        throwsA(isA<UnauthorizedHostActionException>()),
+      );
+    });
+
+    test('claimDmRole verifies passkey and promotes existing player membership to DM/Co-DM', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Baldur Gate Campaign',
+        playerName: 'DM Kevin',
+      );
+
+      final dmMembership = registry.getMembership(session.roomCode);
+      final hostKey = dmMembership!.hostKey!;
+
+      // Player joins first as normal player (resetting membership to player role)
+      final playerMembership = CampaignMembership(
+        roomCode: session.roomCode,
+        campaignName: session.campaignName,
+        role: CampaignRole.player,
+        characterId: 'Astarion',
+        lastPlayed: DateTime.now(),
+      );
+      await registry.saveMembership(playerMembership);
+
+      var mem = registry.getMembership(session.roomCode);
+      expect(mem!.role, equals(CampaignRole.player));
+      expect(mem.hasHostKey, isFalse);
+
+      // Player claims DM role with full copied passkey text snippet
+      final snippet = 'Room: ${session.roomCode}\nPasskey Mnemonic: dragon wizard shield potion goblin scroll\nHostKey: $hostKey';
+      final claimed = await partyService.claimDmRole(
+        roomCode: session.roomCode,
+        hostKeyOrPasskey: snippet,
+        targetRole: CampaignRole.coDm,
+        playerName: 'Co-DM Astarion',
+      );
+
+      expect(claimed.role, equals(CampaignRole.coDm));
+      expect(claimed.isCoDm, isTrue);
+      expect(claimed.isDmOrCoDm, isTrue);
+      expect(claimed.hostKey, equals(hostKey));
+      expect(claimed.characterId, equals('Co-DM Astarion'));
+
+      mem = registry.getMembership(session.roomCode);
+      expect(mem!.role, equals(CampaignRole.coDm));
+      expect(mem.hostKey, equals(hostKey));
+    });
+
+    test('claimDmRole throws UnauthorizedHostActionException when passkey is invalid', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Baldur Gate Campaign 2',
+        playerName: 'DM Kevin',
+      );
+
+      expect(
+        () => partyService.claimDmRole(
+          roomCode: session.roomCode,
+          hostKeyOrPasskey: 'bad-key-12345',
+        ),
+        throwsA(isA<UnauthorizedHostActionException>()),
+      );
+    });
   });
 }

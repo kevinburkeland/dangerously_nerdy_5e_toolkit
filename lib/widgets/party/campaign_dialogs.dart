@@ -169,6 +169,8 @@ class JoinCampaignDialog extends StatefulWidget {
 class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
   late final TextEditingController _roomController;
   final _nameController = TextEditingController();
+  final _passkeyController = TextEditingController();
+  bool _isDmJoin = false;
   bool _isLoading = false;
   final PartyRoomService _partyService = PartyRoomService();
 
@@ -182,12 +184,41 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
   void dispose() {
     _roomController.dispose();
     _nameController.dispose();
+    _passkeyController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text ?? '';
+    if (text.isEmpty) return;
+
+    final extractedKey = CryptoUtils.extractHostKey(text);
+    if (extractedKey.isNotEmpty) {
+      _passkeyController.text = extractedKey;
+    } else {
+      _passkeyController.text = text.trim();
+    }
+
+    // If room code is also present in copied block
+    final roomMatch = RegExp(r'Room\s*:\s*([^\s\n\r]+)', caseSensitive: false).firstMatch(text);
+    if (roomMatch != null && _roomController.text.trim().isEmpty) {
+      _roomController.text = roomMatch.group(1)!.trim().toUpperCase();
+    }
+
+    setState(() => _isDmJoin = true);
+    if (mounted) {
+      HapticService.selectionTick(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('DM Passkey pasted from clipboard!'), duration: Duration(seconds: 1)),
+      );
+    }
   }
 
   Future<void> _submit() async {
     final roomCode = _roomController.text.trim().toUpperCase();
     final playerName = _nameController.text.trim();
+    final passkey = _isDmJoin ? _passkeyController.text.trim() : '';
 
     if (roomCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -202,16 +233,33 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
     try {
       final session = await _partyService.joinCampaign(
         roomCode: roomCode,
-        playerName: playerName.isEmpty ? 'Adventurer' : playerName,
+        playerName: playerName.isEmpty ? (_isDmJoin ? 'DM' : 'Adventurer') : playerName,
+        hostKey: passkey.isNotEmpty ? passkey : null,
       );
 
       if (mounted) {
         Navigator.pop(context);
         widget.onJoined?.call(session.roomCode);
+        final isDm = passkey.isNotEmpty;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Joined "${session.campaignName}" (${session.roomCode})!'),
+            content: Text(
+              isDm
+                  ? 'Joined "${session.campaignName}" (${session.roomCode}) with DM privileges!'
+                  : 'Joined "${session.campaignName}" (${session.roomCode})!',
+            ),
             backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
+    } on UnauthorizedHostActionException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -284,12 +332,64 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
-                labelText: 'Your Character / Player Name',
-                hintText: 'e.g. Rogar the Barbarian',
+                labelText: _isDmJoin ? 'Your DM / Display Name' : 'Your Character / Player Name',
+                hintText: _isDmJoin ? 'e.g. Dungeon Master' : 'e.g. Rogar the Barbarian',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 counterText: '',
               ),
             ),
+            const SizedBox(height: 10),
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () {
+                setState(() => _isDmJoin = !_isDmJoin);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isDmJoin ? Icons.check_box : Icons.check_box_outline_blank,
+                      size: 20,
+                      color: _isDmJoin ? Colors.amber.shade700 : colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'I have a DM Passkey / Host Code',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _isDmJoin ? Colors.amber.shade800 : colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_isDmJoin) ...[
+              const SizedBox(height: 10),
+              TextField(
+                controller: _passkeyController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'DM Passkey / Host Key',
+                  hintText: 'Paste UUID or 6-word passkey',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.paste, size: 20),
+                    tooltip: 'Paste from clipboard',
+                    onPressed: _pasteFromClipboard,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Grants full DM administrative privileges upon joining.',
+                style: TextStyle(fontSize: 11, color: Colors.amber.shade800),
+              ),
+            ],
           ],
         ),
       ),
@@ -302,8 +402,8 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
           onPressed: _isLoading ? null : _submit,
           icon: _isLoading
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.login, size: 18),
-          label: const Text('Join Room'),
+              : Icon(_isDmJoin ? Icons.vpn_key : Icons.login, size: 18),
+          label: Text(_isDmJoin ? 'Join as DM' : 'Join Room'),
         ),
       ],
     );
@@ -410,95 +510,201 @@ class ShareDmPasskeyDialog extends StatelessWidget {
   }
 }
 
-/// Dialog to Import a DM Passkey for Co-DM rights
-class ImportDmPasskeyDialog extends StatefulWidget {
+/// Dialog to Enter a DM Passkey / Host Key to Claim DM or Co-DM Rights
+class ClaimDmPasskeyDialog extends StatefulWidget {
   final String? initialRoomCode;
+  final String? initialPlayerName;
+  final Function(CampaignMembership membership)? onClaimed;
   final Function(CampaignMembership membership)? onImported;
 
-  const ImportDmPasskeyDialog({super.key, this.initialRoomCode, this.onImported});
+  const ClaimDmPasskeyDialog({
+    super.key,
+    this.initialRoomCode,
+    this.initialPlayerName,
+    this.onClaimed,
+    this.onImported,
+  });
 
-  static Future<void> show(BuildContext context, {String? initialRoomCode, Function(CampaignMembership)? onImported}) {
+  static Future<void> show(
+    BuildContext context, {
+    String? initialRoomCode,
+    String? initialPlayerName,
+    Function(CampaignMembership)? onClaimed,
+    Function(CampaignMembership)? onImported,
+  }) {
     return showDialog<void>(
       context: context,
-      builder: (ctx) => ImportDmPasskeyDialog(initialRoomCode: initialRoomCode, onImported: onImported),
+      builder: (ctx) => ClaimDmPasskeyDialog(
+        initialRoomCode: initialRoomCode,
+        initialPlayerName: initialPlayerName,
+        onClaimed: onClaimed ?? onImported,
+      ),
     );
   }
 
   @override
-  State<ImportDmPasskeyDialog> createState() => _ImportDmPasskeyDialogState();
+  State<ClaimDmPasskeyDialog> createState() => _ClaimDmPasskeyDialogState();
 }
 
-class _ImportDmPasskeyDialogState extends State<ImportDmPasskeyDialog> {
+/// Backward-compatible alias for ClaimDmPasskeyDialog
+typedef ImportDmPasskeyDialog = ClaimDmPasskeyDialog;
+
+class _ClaimDmPasskeyDialogState extends State<ClaimDmPasskeyDialog> {
   late final TextEditingController _roomController;
-  final _campaignController = TextEditingController();
+  late final TextEditingController _nameController;
   final _passkeyController = TextEditingController();
-  final _nameController = TextEditingController();
-  final CampaignRegistryService _registry = CampaignRegistryService();
+  CampaignRole _selectedRole = CampaignRole.host;
+  bool _isLoading = false;
+  final PartyRoomService _partyService = PartyRoomService();
 
   @override
   void initState() {
     super.initState();
     _roomController = TextEditingController(text: widget.initialRoomCode ?? '');
+    _nameController = TextEditingController(text: widget.initialPlayerName ?? '');
   }
 
   @override
   void dispose() {
     _roomController.dispose();
-    _campaignController.dispose();
-    _passkeyController.dispose();
     _nameController.dispose();
+    _passkeyController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text ?? '';
+    if (text.isEmpty) return;
+
+    final extractedKey = CryptoUtils.extractHostKey(text);
+    if (extractedKey.isNotEmpty) {
+      _passkeyController.text = extractedKey;
+    } else {
+      _passkeyController.text = text.trim();
+    }
+
+    final roomMatch = RegExp(r'Room\s*:\s*([^\s\n\r]+)', caseSensitive: false).firstMatch(text);
+    if (roomMatch != null && _roomController.text.trim().isEmpty) {
+      _roomController.text = roomMatch.group(1)!.trim().toUpperCase();
+    }
+
+    if (mounted) {
+      HapticService.selectionTick(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('DM Passkey pasted from clipboard!'), duration: Duration(seconds: 1)),
+      );
+    }
   }
 
   Future<void> _submit() async {
     final roomCode = _roomController.text.trim().toUpperCase();
-    final campaignName = _campaignController.text.trim();
     final passkey = _passkeyController.text.trim();
     final playerName = _nameController.text.trim();
 
-    if (roomCode.isEmpty || passkey.isEmpty) {
+    if (roomCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter both Room Code and Passkey.')),
+        const SnackBar(content: Text('Please enter a room code.')),
       );
       return;
     }
 
-    final membership = await _registry.importPasskey(
-      roomCode: roomCode,
-      campaignName: campaignName.isEmpty ? 'Imported DM Campaign' : campaignName,
-      passkeyOrMnemonic: passkey,
-      playerName: playerName.isEmpty ? 'Co-DM' : playerName,
-    );
-
-    if (mounted) {
-      Navigator.pop(context);
-      widget.onImported?.call(membership);
+    if (passkey.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Imported Co-DM rights for ${membership.roomCode}!'),
-          backgroundColor: Colors.green.shade700,
-        ),
+        const SnackBar(content: Text('Please enter the DM passkey.')),
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    HapticService.selectionTick(context);
+
+    try {
+      final membership = await _partyService.claimDmRole(
+        roomCode: roomCode,
+        hostKeyOrPasskey: passkey,
+        targetRole: _selectedRole,
+        playerName: playerName.isNotEmpty ? playerName : null,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onClaimed?.call(membership);
+        widget.onImported?.call(membership);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${_selectedRole == CampaignRole.host ? "Dungeon Master" : "Co-DM"} privileges activated for "${membership.campaignName}" (${membership.roomCode})!',
+            ),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
+    } on UnauthorizedHostActionException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on CampaignNotFoundException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Verification failed: $e'),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
           Icon(Icons.vpn_key, color: Colors.amber.shade700),
           const SizedBox(width: 10),
-          const Text('Import DM Passkey', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const Flexible(
+            child: Text('Claim DM / Co-DM Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ),
         ],
       ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'Enter the private DM passkey or host key provided by the campaign creator to unlock administrative authority (restoring deleted loot, resetting party funds, resolving cloud sync conflicts, and delegating passkeys).',
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: _roomController,
+              autofocus: widget.initialRoomCode == null || widget.initialRoomCode!.isEmpty,
               maxLength: 30,
               textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
@@ -508,40 +714,68 @@ class _ImportDmPasskeyDialogState extends State<ImportDmPasskeyDialog> {
                 counterText: '',
               ),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _campaignController,
-              decoration: InputDecoration(
-                labelText: 'Campaign Name (Optional)',
-                hintText: 'e.g. Curse of Strahd',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             TextField(
               controller: _passkeyController,
+              autofocus: widget.initialRoomCode != null && widget.initialRoomCode!.isNotEmpty,
               maxLines: 2,
               decoration: InputDecoration(
-                labelText: '6-Word Mnemonic or UUID Passkey',
-                hintText: 'e.g. dragon wizard shield potion goblin scroll',
+                labelText: 'DM Passkey / Host Key',
+                hintText: 'Paste UUID or 6-word mnemonic passkey',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.paste, size: 20),
+                  tooltip: 'Paste from clipboard',
+                  onPressed: _pasteFromClipboard,
+                ),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Your Name (Optional)',
-                hintText: 'e.g. Co-DM Kevin',
+                labelText: 'Your DM / Display Name (Optional)',
+                hintText: 'e.g. Dungeon Master Kevin',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Text('Role: ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('DM / Host'),
+                  selected: _selectedRole == CampaignRole.host,
+                  onSelected: (selected) {
+                    if (selected) setState(() => _selectedRole = CampaignRole.host);
+                  },
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('Co-DM'),
+                  selected: _selectedRole == CampaignRole.coDm,
+                  onSelected: (selected) {
+                    if (selected) setState(() => _selectedRole = CampaignRole.coDm);
+                  },
+                ),
+              ],
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ElevatedButton(onPressed: _submit, child: const Text('Import Co-DM Rights')),
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton.icon(
+          onPressed: _isLoading ? null : _submit,
+          icon: _isLoading
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.vpn_key, size: 18),
+          label: const Text('Claim DM Role'),
+        ),
       ],
     );
   }

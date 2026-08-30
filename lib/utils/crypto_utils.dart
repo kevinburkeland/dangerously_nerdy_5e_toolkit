@@ -191,4 +191,25 @@ class CryptoUtils {
     final words = phrase.trim().toLowerCase().split(RegExp(r'\s+'));
     return words.length == 6 && words.every((w) => _dndWordList.contains(w));
   }
+
+  /// Extracts a raw host key / UUID from user input or formatted text.
+  /// Handles raw UUIDs, `"HostKey: <uuid>"`, or copied passkey text blocks.
+  static String extractHostKey(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return '';
+
+    // If text contains "HostKey:" or "Host Key:"
+    final hostKeyMatch = RegExp(r'Host\s*Key\s*:\s*([^\s\n\r]+)', caseSensitive: false).firstMatch(trimmed);
+    if (hostKeyMatch != null) {
+      return hostKeyMatch.group(1)!.trim();
+    }
+
+    // Match standard UUID v4 format if present in text
+    final uuidMatch = RegExp(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').firstMatch(trimmed);
+    if (uuidMatch != null) {
+      return uuidMatch.group(0)!.trim();
+    }
+
+    return trimmed;
+  }
 }

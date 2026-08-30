@@ -219,15 +219,19 @@ class PartyRoomService {
   }
 
   /// Explicit Room Join:
-  /// 1. If exists in Firestore -> Join session, register as player (or preserve DM role).
-  /// 2. If NOT in Firestore BUT exists in local registry with valid hostKey -> Rehydrate.
-  /// 3. If NOT in Firestore AND NO local record -> Throw CampaignNotFoundException (Zero Ghost Documents).
+  /// 1. If exists in Firestore -> Join session, register as player (or preserve/claim DM role if hostKey provided).
+  /// 2. If NOT in Firestore BUT exists with valid hostKey -> Rehydrate.
+  /// 3. If NOT in Firestore AND NO valid key/record -> Throw CampaignNotFoundException (Zero Ghost Documents).
   Future<PartySessionState> joinCampaign({
     required String roomCode,
     required String playerName,
+    String? hostKey,
   }) async {
     final cleanCode = roomCode.trim().toUpperCase().replaceAll(' ', '');
     final cleanPlayer = playerName.trim().isEmpty ? 'Adventurer' : playerName.trim();
+    final providedHostKey = hostKey != null && hostKey.trim().isNotEmpty
+        ? CryptoUtils.extractHostKey(hostKey)
+        : null;
 
     if (cleanCode.isEmpty) {
       throw CampaignNotFoundException('Please enter a valid room code.');
@@ -277,14 +281,27 @@ class PartyRoomService {
     // Case 1: Room exists in Cloud / In-Memory
     if (cloudSession != null) {
       final existingMembership = _registry.getMembership(matchedCode);
-      final role = existingMembership?.role ?? CampaignRole.player;
-      final hostKey = existingMembership?.hostKey;
+
+      CampaignRole role = existingMembership?.role ?? CampaignRole.player;
+      String? savedHostKey = existingMembership?.hostKey;
+
+      if (providedHostKey != null && providedHostKey.isNotEmpty) {
+        final expectedHash = cloudSession.hostKeyHash;
+        if (expectedHash.isNotEmpty) {
+          final actualHash = CryptoUtils.sha256Hex(providedHostKey);
+          if (actualHash != expectedHash) {
+            throw UnauthorizedHostActionException('Invalid DM passkey. Please check the code provided by your Dungeon Master.');
+          }
+        }
+        role = CampaignRole.host;
+        savedHostKey = providedHostKey;
+      }
 
       final membership = CampaignMembership(
         roomCode: matchedCode,
         campaignName: cloudSession.campaignName,
         role: role,
-        hostKey: hostKey,
+        hostKey: savedHostKey,
         characterId: cleanPlayer,
         lastPlayed: DateTime.now(),
       );
@@ -327,7 +344,15 @@ class PartyRoomService {
       return cloudSession;
     }
 
-    // Case 2: Room not found in Cloud, BUT exists locally with a valid hostKey (Dormant TTL expired)
+    // Case 2: Room not found in Cloud, BUT exists locally with a valid hostKey (or provided hostKey)
+    if (providedHostKey != null && providedHostKey.isNotEmpty) {
+      return await rehydrateCampaign(
+        roomCode: matchedCode,
+        hostKey: providedHostKey,
+        playerName: cleanPlayer,
+      );
+    }
+
     for (final code in codeCandidates) {
       final localRecord = _registry.getMembership(code);
       if (localRecord != null && localRecord.hasHostKey) {
@@ -342,6 +367,116 @@ class PartyRoomService {
 
     // Case 3: Does NOT exist anywhere -> Reject without creating documents
     throw CampaignNotFoundException('Campaign not found. Please check code with your DM.');
+  }
+
+  /// Validates a DM passkey / host key against a room session and promotes local membership to DM / Co-DM
+  Future<CampaignMembership> claimDmRole({
+    required String roomCode,
+    required String hostKeyOrPasskey,
+    CampaignRole targetRole = CampaignRole.host,
+    String? playerName,
+  }) async {
+    final cleanCode = roomCode.trim().toUpperCase().replaceAll(' ', '');
+    final cleanKey = CryptoUtils.extractHostKey(hostKeyOrPasskey);
+
+    if (cleanCode.isEmpty) {
+      throw CampaignNotFoundException('Please enter a valid room code.');
+    }
+    if (cleanKey.isEmpty) {
+      throw Exception('Please enter a valid DM passkey.');
+    }
+
+    final codeCandidates = <String>{
+      cleanCode,
+      if (cleanCode.startsWith('ROOM-')) cleanCode.replaceFirst('ROOM-', '') else 'ROOM-$cleanCode',
+      if (cleanCode.startsWith('ROOM_')) cleanCode.replaceFirst('ROOM_', '') else 'ROOM_$cleanCode',
+    }.toList();
+
+    PartySessionState? session;
+    String matchedCode = cleanCode;
+
+    if (isFirebaseAvailable) {
+      for (final code in codeCandidates) {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('rooms').doc(code);
+          final snapshot = await docRef.get();
+          if (snapshot.exists && snapshot.data() != null) {
+            session = PartySessionState.fromMap(snapshot.data()!);
+            matchedCode = code;
+            break;
+          }
+        } catch (e, stackTrace) {
+          LoggingService().logNonFatal(e, stackTrace, reason: 'Firestore check failed for room $code');
+        }
+      }
+    }
+
+    if (session == null) {
+      for (final code in codeCandidates) {
+        if (_localRooms.containsKey(code)) {
+          session = _localRooms[code];
+          matchedCode = code;
+          break;
+        }
+      }
+    }
+
+    if (session != null) {
+      final expectedHash = session.hostKeyHash;
+      if (expectedHash.isNotEmpty) {
+        final actualHash = CryptoUtils.sha256Hex(cleanKey);
+        if (actualHash != expectedHash) {
+          throw UnauthorizedHostActionException('Invalid DM passkey. Please check the code provided by your Dungeon Master.');
+        }
+      }
+
+      final existing = _registry.getMembership(matchedCode);
+      final charName = (playerName != null && playerName.trim().isNotEmpty)
+          ? playerName.trim()
+          : (existing?.characterId ?? 'DM');
+
+      final updated = (existing ?? CampaignMembership(
+        roomCode: matchedCode,
+        campaignName: session.campaignName,
+        lastPlayed: DateTime.now(),
+      )).copyWith(
+        campaignName: session.campaignName,
+        role: targetRole,
+        hostKey: cleanKey,
+        characterId: charName,
+        lastPlayed: DateTime.now(),
+      );
+
+      await _registry.saveMembership(updated);
+      await _registry.setActiveCampaign(updated);
+      _emitSession(matchedCode);
+      return updated;
+    }
+
+    // If not in cloud/memory, attempt rehydration with this hostKey
+    final localRecord = _registry.getMembership(matchedCode);
+    final charName = (playerName != null && playerName.trim().isNotEmpty)
+        ? playerName.trim()
+        : (localRecord?.characterId ?? 'DM');
+
+    final rehydrated = await rehydrateCampaign(
+      roomCode: matchedCode,
+      hostKey: cleanKey,
+      playerName: charName,
+      campaignName: localRecord?.campaignName,
+    );
+
+    final membership = CampaignMembership(
+      roomCode: matchedCode,
+      campaignName: rehydrated.campaignName,
+      role: targetRole,
+      hostKey: cleanKey,
+      characterId: charName,
+      lastPlayed: DateTime.now(),
+    );
+    await _registry.saveMembership(membership);
+    await _registry.setActiveCampaign(membership);
+    return membership;
   }
 
   // =========================================================================

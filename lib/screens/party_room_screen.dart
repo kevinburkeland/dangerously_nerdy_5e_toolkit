@@ -137,218 +137,242 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     final colorScheme = theme.colorScheme;
     final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
 
-    return StreamBuilder<PartySessionState?>(
-      stream: _partyService.streamSession(_roomCode),
-      builder: (context, sessionSnap) {
-        final session = sessionSnap.data;
-        final campaignName = session?.campaignName ?? _currentMembership?.campaignName ?? 'Party Room';
+    return ValueListenableBuilder<List<CampaignMembership>>(
+      valueListenable: _registry.membershipsNotifier,
+      builder: (context, _, __) {
+        return StreamBuilder<PartySessionState?>(
+          stream: _partyService.streamSession(_roomCode),
+          builder: (context, sessionSnap) {
+            final session = sessionSnap.data;
+            final campaignName = session?.campaignName ?? _currentMembership?.campaignName ?? 'Party Room';
 
-        return Scaffold(
-          appBar: AppBar(
-            elevation: 2,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+            return Scaffold(
+              appBar: AppBar(
+                elevation: 2,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        campaignName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        overflow: TextOverflow.ellipsis,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            campaignName,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (_isDmOrCoDm) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.shade700,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _currentMembership?.role == CampaignRole.host ? 'DM' : 'Co-DM',
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    InkWell(
+                      onTap: _copyRoomCode,
+                      borderRadius: BorderRadius.circular(4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _roomCode,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.0,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.copy, size: 12, color: colorScheme.primary),
+                        ],
                       ),
                     ),
-                    if (_isDmOrCoDm) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.shade700,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          _currentMembership?.role == CampaignRole.host ? 'DM' : 'Co-DM',
-                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
-                InkWell(
-                  onTap: _copyRoomCode,
-                  borderRadius: BorderRadius.circular(4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _roomCode,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.0,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.copy, size: 12, color: colorScheme.primary),
-                    ],
+                actions: [
+                  // Connection / Outbox Sync Status Badge
+                  ValueListenableBuilder<int>(
+                    valueListenable: _partyService.pendingOutboxCount,
+                    builder: (context, count, _) {
+                      if (count > 0) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: ActionChip(
+                            avatar: const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            label: Text('Syncing ($count)', style: const TextStyle(fontSize: 11)),
+                            onPressed: () => _partyService.flushOutbox(_roomCode),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
-                ),
-              ],
-            ),
-            actions: [
-              // Connection / Outbox Sync Status Badge
-              ValueListenableBuilder<int>(
-                valueListenable: _partyService.pendingOutboxCount,
-                builder: (context, count, _) {
-                  if (count > 0) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ActionChip(
-                        avatar: const SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        label: Text('Syncing ($count)', style: const TextStyle(fontSize: 11)),
-                        onPressed: () => _partyService.flushOutbox(_roomCode),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-              // Party Roster & Character Management Button
-              IconButton(
-                icon: const Icon(Icons.groups, color: Colors.blueAccent),
-                tooltip: 'Party Roster & Characters',
-                onPressed: () => ManagePartyRosterDialog.show(
-                  context,
-                  roomCode: _roomCode,
-                  currentName: _playerName,
-                  initialRoster: session?.characterRoster ?? const [],
-                  onActiveCharacterChanged: (newName) {
-                    setState(() => _playerName = newName);
-                  },
-                ),
-              ),
-              // DM Passkey Export Button
-              if (_isDmOrCoDm && _currentMembership != null)
-                IconButton(
-                  icon: const Icon(Icons.key, color: Colors.amber),
-                  tooltip: 'Share DM Passkey',
-                  onPressed: () => ShareDmPasskeyDialog.show(context, _currentMembership!),
-                ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (val) {
-                  if (val == 'switchChar') {
-                    SwitchActiveCharacterDialog.show(
-                      context,
-                      roomCode: _roomCode,
-                      currentName: _playerName,
-                      roster: session?.characterRoster ?? const [],
-                      onCharacterSelected: (name) => setState(() => _playerName = name),
-                    );
-                  } else if (val == 'roster') {
-                    ManagePartyRosterDialog.show(
+                  // Party Roster & Character Management Button
+                  IconButton(
+                    icon: const Icon(Icons.groups, color: Colors.blueAccent),
+                    tooltip: 'Party Roster & Characters',
+                    onPressed: () => ManagePartyRosterDialog.show(
                       context,
                       roomCode: _roomCode,
                       currentName: _playerName,
                       initialRoster: session?.characterRoster ?? const [],
-                      onActiveCharacterChanged: (name) => setState(() => _playerName = name),
-                    );
-                  } else if (val == 'addLoot') {
-                    AddLootItemDialog.show(context, roomCode: _roomCode, playerName: _playerName);
-                  } else if (val == 'diceRoller') {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const DiceRollerScreen()));
-                  } else if (val == 'passkey' && _currentMembership != null) {
-                    ShareDmPasskeyDialog.show(context, _currentMembership!);
-                  }
-                },
-                itemBuilder: (ctx) => [
-                  const PopupMenuItem(
-                    value: 'switchChar',
-                    child: Row(
-                      children: [
-                        Icon(Icons.badge_outlined, size: 18, color: Colors.blueAccent),
-                        SizedBox(width: 8),
-                        Text('Switch Active Character'),
-                      ],
+                      onActiveCharacterChanged: (newName) {
+                        setState(() => _playerName = newName);
+                      },
                     ),
                   ),
-                  const PopupMenuItem(
-                    value: 'roster',
-                    child: Row(
-                      children: [
-                        Icon(Icons.groups_outlined, size: 18, color: Colors.indigoAccent),
-                        SizedBox(width: 8),
-                        Text('Party Character Roster'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'addLoot',
-                    child: Row(
-                      children: [
-                        Icon(Icons.add_box_outlined, size: 18),
-                        SizedBox(width: 8),
-                        Text('Add Custom Loot Item'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'diceRoller',
-                    child: Row(
-                      children: [
-                        Icon(Icons.casino_outlined, size: 18),
-                        SizedBox(width: 8),
-                        Text('Open Full Dice Roller'),
-                      ],
-                    ),
-                  ),
-                  if (_isDmOrCoDm)
-                    const PopupMenuItem(
-                      value: 'passkey',
-                      child: Row(
-                        children: [
-                          Icon(Icons.key_outlined, size: 18, color: Colors.amber),
-                          SizedBox(width: 8),
-                          Text('Share DM Passkey'),
-                        ],
+                  // Claim DM Passkey Button (if player)
+                  if (!_isDmOrCoDm)
+                    IconButton(
+                      icon: const Icon(Icons.vpn_key_outlined, color: Colors.amber),
+                      tooltip: 'Claim DM / Enter Passkey',
+                      onPressed: () => ClaimDmPasskeyDialog.show(
+                        context,
+                        initialRoomCode: _roomCode,
+                        initialPlayerName: _playerName,
                       ),
                     ),
+                  // DM Passkey Export Button (if DM)
+                  if (_isDmOrCoDm && _currentMembership != null)
+                    IconButton(
+                      icon: const Icon(Icons.key, color: Colors.amber),
+                      tooltip: 'Share DM Passkey',
+                      onPressed: () => ShareDmPasskeyDialog.show(context, _currentMembership!),
+                    ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (val) {
+                      if (val == 'switchChar') {
+                        SwitchActiveCharacterDialog.show(
+                          context,
+                          roomCode: _roomCode,
+                          currentName: _playerName,
+                          roster: session?.characterRoster ?? const [],
+                          onCharacterSelected: (name) => setState(() => _playerName = name),
+                        );
+                      } else if (val == 'roster') {
+                        ManagePartyRosterDialog.show(
+                          context,
+                          roomCode: _roomCode,
+                          currentName: _playerName,
+                          initialRoster: session?.characterRoster ?? const [],
+                          onActiveCharacterChanged: (name) => setState(() => _playerName = name),
+                        );
+                      } else if (val == 'addLoot') {
+                        AddLootItemDialog.show(context, roomCode: _roomCode, playerName: _playerName);
+                      } else if (val == 'diceRoller') {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const DiceRollerScreen()));
+                      } else if (val == 'claimDm') {
+                        ClaimDmPasskeyDialog.show(
+                          context,
+                          initialRoomCode: _roomCode,
+                          initialPlayerName: _playerName,
+                        );
+                      } else if (val == 'passkey' && _currentMembership != null) {
+                        ShareDmPasskeyDialog.show(context, _currentMembership!);
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      const PopupMenuItem(
+                        value: 'switchChar',
+                        child: Row(
+                          children: [
+                            Icon(Icons.badge_outlined, size: 18, color: Colors.blueAccent),
+                            SizedBox(width: 8),
+                            Text('Switch Active Character'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'roster',
+                        child: Row(
+                          children: [
+                            Icon(Icons.groups_outlined, size: 18, color: Colors.indigoAccent),
+                            SizedBox(width: 8),
+                            Text('Party Character Roster'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'addLoot',
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_box_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Add Custom Loot Item'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'diceRoller',
+                        child: Row(
+                          children: [
+                            Icon(Icons.casino_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Open Full Dice Roller'),
+                          ],
+                        ),
+                      ),
+                      if (!_isDmOrCoDm)
+                        const PopupMenuItem(
+                          value: 'claimDm',
+                          child: Row(
+                            children: [
+                              Icon(Icons.vpn_key_outlined, size: 18, color: Colors.amber),
+                              SizedBox(width: 8),
+                              Text('Claim DM / Enter Passkey'),
+                            ],
+                          ),
+                        ),
+                      if (_isDmOrCoDm)
+                        const PopupMenuItem(
+                          value: 'passkey',
+                          child: Row(
+                            children: [
+                              Icon(Icons.key_outlined, size: 18, color: Colors.amber),
+                              SizedBox(width: 8),
+                              Text('Share DM Passkey'),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+                bottom: TabBar(
+                  controller: _tabController,
+                  indicatorColor: colorScheme.primary,
+                  tabs: const [
+                    Tab(icon: Icon(Icons.shield_moon_outlined), text: 'Party Vault'),
+                    Tab(icon: Icon(Icons.casino_outlined), text: 'Dice Feed'),
+                    Tab(icon: Icon(Icons.history_edu), text: 'Loot & Trash Log'),
+                  ],
+                ),
+              ),
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildVaultTab(session, tabletop, isDark),
+                  _buildDiceFeedTab(tabletop, isDark),
+                  _buildHistoryAndTrashTab(tabletop, isDark),
                 ],
               ),
-            ],
-            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: colorScheme.primary,
-              tabs: const [
-                Tab(icon: Icon(Icons.shield_moon_outlined), text: 'Party Vault'),
-                Tab(icon: Icon(Icons.casino_outlined), text: 'Dice Feed'),
-                Tab(icon: Icon(Icons.history_edu), text: 'Loot & Trash Log'),
-              ],
-            ),
-          ),
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildVaultTab(session, tabletop, isDark),
-              _buildDiceFeedTab(tabletop, isDark),
-              _buildHistoryAndTrashTab(tabletop, isDark),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => AddLootItemDialog.show(
-              context,
-              roomCode: _roomCode,
-              playerName: _playerName,
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text('Add Vault Item'),
-          ),
+            );
+          },
         );
       },
     );
@@ -531,6 +555,23 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                   },
                 ),
               ),
+              if (!_isDmOrCoDm) ...[
+                const SizedBox(width: 4),
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    foregroundColor: Colors.amber.shade800,
+                  ),
+                  icon: const Icon(Icons.vpn_key_outlined, size: 14),
+                  label: const Text('Claim DM', style: TextStyle(fontSize: 12)),
+                  onPressed: () => ClaimDmPasskeyDialog.show(
+                    context,
+                    initialRoomCode: _roomCode,
+                    initialPlayerName: _playerName,
+                  ),
+                ),
+              ],
               const SizedBox(width: 4),
               IconButton(
                 icon: const Icon(Icons.groups_outlined, size: 20),
