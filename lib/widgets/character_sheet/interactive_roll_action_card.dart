@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/domain/core_types.dart';
-import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/room_roll.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';

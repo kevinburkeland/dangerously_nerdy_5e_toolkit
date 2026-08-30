@@ -25,9 +25,9 @@ void main() {
 
     test('Wizard Level 1 validates exactly 6 spellbook spells', () {
       final cantrips = [
-        EntityReference<Spell>(refType: EntityType.spell, slug: 'fire-bolt', displayName: 'Fire Bolt'),
-        EntityReference<Spell>(refType: EntityType.spell, slug: 'mage-hand', displayName: 'Mage Hand'),
-        EntityReference<Spell>(refType: EntityType.spell, slug: 'light', displayName: 'Light'),
+        const EntityReference<Spell>(refType: EntityType.spell, slug: 'fire-bolt', displayName: 'Fire Bolt'),
+        const EntityReference<Spell>(refType: EntityType.spell, slug: 'mage-hand', displayName: 'Mage Hand'),
+        const EntityReference<Spell>(refType: EntityType.spell, slug: 'light', displayName: 'Light'),
       ];
 
       final spellbookValid = List.generate(

@@ -80,16 +80,16 @@ void main() {
     });
 
     test('Light Armor: Leather base 11 + full DEX mod', () {
-      final leatherArmor = InventoryItemInstance(
+      const leatherArmor = InventoryItemInstance(
         instanceId: 'armor-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'leather-armor',
           displayName: 'Leather Armor',
         ),
         isEquipped: true,
         equippedSlot: EquipmentSlot.armor,
-        customProperties: const {
+        customProperties: {
           'armorType': 'light',
           'baseAc': 11,
         },
@@ -101,16 +101,16 @@ void main() {
     });
 
     test('Medium Armor: Scale Mail base 14 + DEX capped at +2', () {
-      final scaleMail = InventoryItemInstance(
+      const scaleMail = InventoryItemInstance(
         instanceId: 'armor-2',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'scale-mail',
           displayName: 'Scale Mail',
         ),
         isEquipped: true,
         equippedSlot: EquipmentSlot.armor,
-        customProperties: const {
+        customProperties: {
           'armorType': 'medium',
           'baseAc': 14,
           'maxDexBonus': 2,
@@ -123,16 +123,16 @@ void main() {
     });
 
     test('Heavy Armor: Plate base 18 ignores DEX mod', () {
-      final plate = InventoryItemInstance(
+      const plate = InventoryItemInstance(
         instanceId: 'armor-3',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'plate-armor',
           displayName: 'Plate Armor',
         ),
         isEquipped: true,
         equippedSlot: EquipmentSlot.armor,
-        customProperties: const {
+        customProperties: {
           'armorType': 'heavy',
           'baseAc': 18,
         },
@@ -144,31 +144,31 @@ void main() {
     });
 
     test('Shield adds +2 to AC', () {
-      final plate = InventoryItemInstance(
+      const plate = InventoryItemInstance(
         instanceId: 'armor-3',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'plate-armor',
           displayName: 'Plate Armor',
         ),
         isEquipped: true,
         equippedSlot: EquipmentSlot.armor,
-        customProperties: const {
+        customProperties: {
           'armorType': 'heavy',
           'baseAc': 18,
         },
       );
 
-      final shield = InventoryItemInstance(
+      const shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: const EntityReference<EquipmentItem>(
+        itemRef: EntityReference<EquipmentItem>(
           refType: EntityType.equipment,
           slug: 'shield',
           displayName: 'Shield',
         ),
         isEquipped: true,
         equippedSlot: EquipmentSlot.shield,
-        customProperties: const {
+        customProperties: {
           'isShield': true,
           'shieldBonus': 2,
         },
@@ -180,23 +180,23 @@ void main() {
     });
 
     test('Equipping two-handed weapon auto-unequips shield and offhand', () {
-      final longsword = InventoryItemInstance(
+      const longsword = InventoryItemInstance(
         instanceId: 'weapon-1',
-        itemRef: const EntityReference<EquipmentItem>(refType: EntityType.equipment, slug: 'longsword', displayName: 'Longsword'),
+        itemRef: EntityReference<EquipmentItem>(refType: EntityType.equipment, slug: 'longsword', displayName: 'Longsword'),
         isEquipped: true,
         equippedSlot: EquipmentSlot.mainHand,
       );
 
-      final shield = InventoryItemInstance(
+      const shield = InventoryItemInstance(
         instanceId: 'shield-1',
-        itemRef: const EntityReference<EquipmentItem>(refType: EntityType.equipment, slug: 'shield', displayName: 'Shield'),
+        itemRef: EntityReference<EquipmentItem>(refType: EntityType.equipment, slug: 'shield', displayName: 'Shield'),
         isEquipped: true,
         equippedSlot: EquipmentSlot.shield,
       );
 
-      final greatsword = InventoryItemInstance(
+      const greatsword = InventoryItemInstance(
         instanceId: 'weapon-2',
-        itemRef: const EntityReference<EquipmentItem>(refType: EntityType.equipment, slug: 'greatsword', displayName: 'Greatsword'),
+        itemRef: EntityReference<EquipmentItem>(refType: EntityType.equipment, slug: 'greatsword', displayName: 'Greatsword'),
         isEquipped: false,
       );
 

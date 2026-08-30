@@ -8,7 +8,6 @@ import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
-import '../../services/rules/character_evaluation_engine.dart';
 import '../spellbook/spell_quick_roll_dialog.dart';
 import 'interactive_roll_action_card.dart';
 
@@ -192,80 +191,6 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
     );
   }
 
-  Widget _buildAttackCard(BuildContext context, ComputedAttackProfile atk) {
-    final theme = Theme.of(context);
-    final customColors = theme.extension<TabletopColors>();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  atk.weaponName,
-                  style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '${atk.range} • ${atk.damageType.name}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              // To-Hit Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  atk.attackBonusString,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Damage Formula Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Text(
-                  atk.damageFormula,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: customColors?.critGold ?? Colors.amber,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSpellSlotsMatrix(BuildContext context) {
     final theme = Theme.of(context);

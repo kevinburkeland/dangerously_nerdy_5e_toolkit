@@ -183,21 +183,21 @@ class SkillTraitResolver {
 
     // Tiefling
     if (slug.contains('tiefling')) {
-      spells.add(InnateSpeciesSpell(
+      spells.add(const InnateSpeciesSpell(
         spellRef: EntityReference<Spell>(refType: EntityType.spell, slug: 'thaumaturgy', displayName: 'Thaumaturgy'),
         minCharacterLevel: 1,
         isCantrip: true,
         chargesPerLongRest: 0,
       ));
       if (totalCharacterLevel >= 3) {
-        spells.add(InnateSpeciesSpell(
+        spells.add(const InnateSpeciesSpell(
           spellRef: EntityReference<Spell>(refType: EntityType.spell, slug: 'hellish-rebuke', displayName: 'Hellish Rebuke'),
           minCharacterLevel: 3,
           chargesPerLongRest: 1,
         ));
       }
       if (totalCharacterLevel >= 5) {
-        spells.add(InnateSpeciesSpell(
+        spells.add(const InnateSpeciesSpell(
           spellRef: EntityReference<Spell>(refType: EntityType.spell, slug: 'darkness', displayName: 'Darkness'),
           minCharacterLevel: 5,
           chargesPerLongRest: 1,
@@ -207,21 +207,21 @@ class SkillTraitResolver {
 
     // Drow / Dark Elf
     if (subSlug.contains('drow') || slug.contains('drow')) {
-      spells.add(InnateSpeciesSpell(
+      spells.add(const InnateSpeciesSpell(
         spellRef: EntityReference<Spell>(refType: EntityType.spell, slug: 'dancing-lights', displayName: 'Dancing Lights'),
         minCharacterLevel: 1,
         isCantrip: true,
         chargesPerLongRest: 0,
       ));
       if (totalCharacterLevel >= 3) {
-        spells.add(InnateSpeciesSpell(
+        spells.add(const InnateSpeciesSpell(
           spellRef: EntityReference<Spell>(refType: EntityType.spell, slug: 'faerie-fire', displayName: 'Faerie Fire'),
           minCharacterLevel: 3,
           chargesPerLongRest: 1,
         ));
       }
       if (totalCharacterLevel >= 5) {
-        spells.add(InnateSpeciesSpell(
+        spells.add(const InnateSpeciesSpell(
           spellRef: EntityReference<Spell>(refType: EntityType.spell, slug: 'darkness', displayName: 'Darkness'),
           minCharacterLevel: 5,
           chargesPerLongRest: 1,
@@ -231,7 +231,7 @@ class SkillTraitResolver {
 
     // Forest Gnome
     if (subSlug.contains('forest') && slug.contains('gnome')) {
-      spells.add(InnateSpeciesSpell(
+      spells.add(const InnateSpeciesSpell(
         spellRef: EntityReference<Spell>(refType: EntityType.spell, slug: 'minor-illusion', displayName: 'Minor Illusion'),
         minCharacterLevel: 1,
         isCantrip: true,

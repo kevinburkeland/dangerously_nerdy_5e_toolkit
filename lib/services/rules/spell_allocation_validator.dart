@@ -1,12 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
-import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
-import '../../models/spellbook_data.dart';
 import '../repository/reference_resolver.dart';
-import 'spellcasting_rules_engine.dart';
 
 /// Specification of spell quota limits for a given class slice at a specific level.
 @immutable
@@ -219,7 +216,7 @@ class SpellAllocationValidator {
 
       case 'ranger':
         if (edition == DmRulesEdition.v2024) {
-          final cantrips = 2;
+          const cantrips = 2;
           final maxPrepared = math.max(1, ((lvl + 1) ~/ 2) + abilityModifier);
           return SpellAllocationLimits(
             maxCantrips: cantrips,
