@@ -9,10 +9,13 @@ import '../models/domain/core_types.dart';
 import '../models/domain/entity_reference.dart';
 import '../models/domain/session_graph_models.dart';
 import '../models/party/party_purse.dart';
+import '../providers/settings_provider.dart';
 import '../services/app_services.dart';
 import '../services/haptic_service.dart';
 import '../utils/secure_random.dart';
 import '../widgets/dm_reference/dm_interactive_tools.dart';
+import '../widgets/dm_reference/dm_rule_card.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
 class DmDashboardScreen extends StatefulWidget {
@@ -88,6 +91,19 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     } else {
       service.saveProfile(updated);
     }
+  }
+
+  void _onEditionChanged(DmRulesEdition newEdition) {
+    if (_activeProfile == null) return;
+    if (_activeProfile!.edition == newEdition) return;
+    HapticService.selectionTick(context);
+    final updated = _activeProfile!.copyWith(edition: newEdition);
+    setState(() {
+      _activeProfile = updated;
+    });
+    SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
+    final service = AppServices.instance.campaignProfileService;
+    service.saveProfile(updated);
   }
 
   // --- Campaign Switching & Lifecycle Actions ---
@@ -274,14 +290,13 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   ),
                   const SizedBox(height: 16),
                   const Text('Rules Edition:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  SegmentedButton<DmRulesEdition>(
-                    segments: const [
-                      ButtonSegment(value: DmRulesEdition.v2024, label: Text('2024 SRD')),
-                      ButtonSegment(value: DmRulesEdition.v2014, label: Text('2014 RAW')),
-                    ],
-                    selected: {edition},
-                    onSelectionChanged: (set) => setDlgState(() => edition = set.first),
+                  const SizedBox(height: 8),
+                  RulesEditionToggle(
+                    currentEdition: edition,
+                    isExpanded: true,
+                    showIcons: true,
+                    showSubtext: true,
+                    onEditionChanged: (newEdition) => setDlgState(() => edition = newEdition),
                   ),
                 ],
               ),
@@ -1038,7 +1053,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryAccent = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
 
     if (_isLoading || _activeProfile == null) {
       return Scaffold(
@@ -1074,29 +1089,14 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
           ),
         ),
         actions: [
-          // Rules Edition Toggle Pill
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: primaryAccent.withValues(alpha: 0.4)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  profile.edition.label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: primaryAccent,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.auto_stories, size: 14, color: primaryAccent),
-              ],
+          // Interactive Rules Edition Toggle (2014 RAW / 2024 Revised)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: RulesEditionToggle(
+              currentEdition: profile.edition,
+              isDense: true,
+              showIcons: true,
+              onEditionChanged: _onEditionChanged,
             ),
           ),
           IconButton(
@@ -1124,14 +1124,18 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          if (width >= 1200) {
-            // 3-Column Tactical HUD
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      body: Column(
+        children: [
+          _buildUnderConstructionBanner(theme, isDark),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                if (width >= 1200) {
+                  // 3-Column Tactical HUD
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                 Expanded(flex: 4, child: _buildCombatInitiativeColumn()),
                 const VerticalDivider(width: 1),
                 Expanded(flex: 4, child: _buildPartyAndMinionsColumn()),
@@ -1198,6 +1202,87 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
             );
           }
         },
+      ),
+    ),
+  ],
+),
+);
+  }
+
+  Widget _buildUnderConstructionBanner(ThemeData theme, bool isDark) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2E2005) : const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.amber.shade700,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withValues(alpha: isDark ? 0.2 : 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Text(
+            '🚧',
+            style: TextStyle(fontSize: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'UNDER CONSTRUCTION / PREVIEW MODE',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
+                        color: isDark ? Colors.amberAccent : const Color(0xFFB45309),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'WIP',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.amberAccent : const Color(0xFFB45309),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'The DM Command Console is undergoing active overhaul. Core character sheet systems and combat linking are currently in progress.',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: isDark ? Colors.amber.shade100 : const Color(0xFF78350F),
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1815,11 +1900,10 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     );
   }
 
-  // --- Widget 4: Quick-Pinned DM Rules & Embedded Tools ---
-
   Widget _buildPinnedRulesCard() {
     final theme = Theme.of(context);
-    final pinned = _activeProfile!.pinnedRuleIds;
+    final profile = _activeProfile!;
+    final pinned = profile.pinnedRuleIds;
     const allItems = DmScreenLibrary.allItems;
     final pinnedItems = allItems.where((i) => pinned.contains(i.id)).toList();
 
@@ -1847,7 +1931,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   ),
                 ),
                 Text(
-                  '${pinnedItems.length} Pinned',
+                  '${pinnedItems.length} Pinned (${profile.edition.label})',
                   style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
@@ -1859,6 +1943,46 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
             const FallingDamageCalculatorWidget(),
             const SizedBox(height: 10),
             const GrappleShoveCalculatorWidget(),
+            if (pinnedItems.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.menu_book, size: 16, color: theme.colorScheme.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'PINNED RULEBOOK ENTRIES (${profile.edition.label})',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ...pinnedItems.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: DmRuleCard(
+                  item: item,
+                  edition: profile.edition,
+                  isPinned: true,
+                  onTogglePin: () {
+                    final set = Set<String>.from(_activeProfile!.pinnedRuleIds);
+                    if (set.contains(item.id)) {
+                      set.remove(item.id);
+                    } else {
+                      set.add(item.id);
+                    }
+                    setState(() {
+                      _activeProfile = _activeProfile!.copyWith(pinnedRuleIds: set);
+                    });
+                    _persistActiveProfile();
+                  },
+                  onTap: () {},
+                ),
+              )),
+            ],
           ],
         ),
       ),

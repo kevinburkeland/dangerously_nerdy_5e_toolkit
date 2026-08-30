@@ -106,12 +106,12 @@ class LandingToolRegistry {
           id: 'dm_dashboard',
           title: 'DM Dashboard & Command Console',
           category: 'Core Utilities',
-          badgeText: 'Multi-Campaign HUD',
-          badgeColor: Colors.amberAccent,
+          badgeText: '🚧 Under Construction',
+          badgeColor: Colors.orangeAccent,
           icon: Icons.dashboard_customize,
-          accentColor: Colors.amberAccent,
+          accentColor: Colors.orangeAccent,
           description:
-              'Integrated Dungeon Master workspace with turn & initiative tracking, party vitality HUD, minion counters, SRD calculators, notes scratchpad, and JSON snapshot backups.',
+              'Integrated Dungeon Master workspace (Preview Mode) with turn & initiative tracking, party vitality HUD, minion counters, SRD calculators, and notes scratchpad.',
           keywords: [
             'dm',
             'dashboard',
