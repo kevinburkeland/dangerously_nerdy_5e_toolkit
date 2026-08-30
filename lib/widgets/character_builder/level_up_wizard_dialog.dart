@@ -1106,6 +1106,26 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     return match.isNotEmpty ? match.first.subclassRef?.slug : null;
   }
 
+  int _getCastingModifier(String classSlug) {
+    final slug = classSlug.toLowerCase();
+    AbilityType ability = AbilityType.intelligence;
+    if (['cleric', 'druid', 'ranger'].contains(slug)) {
+      ability = AbilityType.wisdom;
+    } else if (['bard', 'sorcerer', 'warlock', 'paladin'].contains(slug)) {
+      ability = AbilityType.charisma;
+    }
+
+    var score = widget.character.baseScores.getScore(ability) + widget.character.bonusScores.getScore(ability);
+    if (_isAsiEligible && _isAsiSelected) {
+      if (_isAsiPlusTwo && _asiSingleAbility == ability) {
+        score += 2;
+      } else if (!_isAsiPlusTwo && (_asiDualAbility1 == ability || _asiDualAbility2 == ability)) {
+        score += 1;
+      }
+    }
+    return score.dndModifier;
+  }
+
   int get _maxAccessibleSpellLevel {
     final slug = _selectedClassSlug.toLowerCase();
     final lvl = _targetClassNewLevel;
@@ -1121,7 +1141,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     }
     if (['paladin', 'ranger'].contains(slug)) {
       if (lvl < 2) {
-        return (widget.character.id.ruleset == RulesetVersion.v2024 && slug == 'ranger') ? 1 : 0;
+        return (widget.character.id.ruleset == RulesetVersion.v2024) ? 1 : 0;
       }
       return ((lvl + 3) ~/ 4).clamp(1, 5);
     }
@@ -1184,11 +1204,12 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
         : DmRulesEdition.v2014;
     final defaultSpellClass = _targetSpellClass;
     final maxLvl = _maxAccessibleSpellLevel;
+    final castingMod = _getCastingModifier(_selectedClassSlug);
 
     final limits = SpellAllocationValidator.getLimitsForClass(
       classSlug: _selectedClassSlug,
       classLevel: _targetClassNewLevel,
-      abilityModifier: 3,
+      abilityModifier: castingMod,
       subclassSlug: _effectiveSubclassSlug,
       edition: edition,
     );

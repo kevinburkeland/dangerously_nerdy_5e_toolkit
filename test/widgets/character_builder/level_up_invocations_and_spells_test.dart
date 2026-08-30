@@ -365,7 +365,120 @@ void main() {
       expect(find.textContaining('Bless'), findsWidgets);
       expect(find.textContaining('Cure Wounds'), findsWidgets);
     });
+
+    testWidgets('LevelUpWizardDialog shows Eldritch Invocations for 2014 Warlock leveling to Level 2', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final warlock2014 = Character(
+        id: const EntityId(slug: 'test-warlock-2014', ruleset: RulesetVersion.v2014),
+        name: 'Classic Warlock',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
+              subclassRef: EntityReference(refType: EntityType.subclass, slug: 'the_fiend', displayName: 'The Fiend'),
+              level: 1,
+              hitDie: 'd8',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 16),
+        resources: const CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(character: warlock2014),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Step 1 -> Step 2
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 2 -> Step 3 (Features & Decisions)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Eldritch Invocations'), findsWidgets);
+      expect(find.textContaining('Choose 2 Eldritch Invocations'), findsOneWidget);
+      expect(find.text('Agonizing Blast'), findsOneWidget);
+      expect(find.text('Armor of Shadows'), findsOneWidget);
+    });
+
+    testWidgets('LevelUpWizardDialog unlocks Spellcasting and Fighting Style for 2014 Paladin leveling to Level 2', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final paladin2014 = Character(
+        id: const EntityId(slug: 'test-paladin-2014', ruleset: RulesetVersion.v2014),
+        name: 'Classic Paladin',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'noble', displayName: 'Noble'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'paladin', displayName: 'Paladin'),
+              level: 1,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: const AbilityScores(strength: 16, dexterity: 10, constitution: 14, intelligence: 8, wisdom: 10, charisma: 16),
+        resources: const CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(character: paladin2014),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Step 1 -> Step 2 (HP)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 2 -> Step 3 (Features & Decisions)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Verify Fighting Style decision appears at Level 2 for 2014 Paladin
+      expect(find.text('Fighting Style'), findsWidgets);
+      expect(find.text('Defense'), findsOneWidget);
+
+      // Select Defense style
+      await tester.tap(find.text('Defense'));
+      await tester.pumpAndSettle();
+
+      // Step 3 -> Step 4 (ASI / Feats)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 4 -> Step 5 (Spells)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Verify 2014 Paladin has Spellcasting Advancement at Level 2 (1st-level spells)
+      expect(find.textContaining('No Spellcasting Advancement'), findsNothing);
+      expect(find.text('Spells & Cantrips Advancement'), findsOneWidget);
+      expect(find.textContaining('Available Leveled Spells (Up to Level 1)'), findsOneWidget);
+      expect(find.textContaining('Bless (L1)'), findsOneWidget);
+    });
   });
 }
+
 
 

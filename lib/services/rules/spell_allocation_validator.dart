@@ -4,7 +4,7 @@ import '../../models/characters/subclass_spells_library.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
-import '../../models/spellbook_data.dart' show SpellClass, SpellbookLibrary;
+import '../../models/spellbook_data.dart' show SpellClass;
 import '../repository/reference_resolver.dart';
 
 /// Specification of spell quota limits for a given class slice at a specific level.

@@ -730,7 +730,6 @@ class SrdClassesLibrary {
             grants: {'hasProtectionReaction': true},
           ),
         ],
-        ruleset: RulesetVersion.v2024,
       ),
     ],
     subclasses: [
@@ -809,7 +808,6 @@ class SrdClassesLibrary {
             grants: {'offhandDamageModifier': true},
           ),
         ],
-        ruleset: RulesetVersion.v2024,
       ),
     ],
     subclasses: [

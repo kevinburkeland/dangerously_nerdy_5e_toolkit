@@ -93,7 +93,7 @@ class ClassFeatureDecision {
   final int minSelections;
   final int maxSelections;
   final List<FeatureOption> availableOptions;
-  final RulesetVersion ruleset;
+  final RulesetVersion? ruleset;
   final Map<String, dynamic> customProperties;
 
   const ClassFeatureDecision({
@@ -105,7 +105,7 @@ class ClassFeatureDecision {
     this.minSelections = 1,
     this.maxSelections = 1,
     this.availableOptions = const [],
-    this.ruleset = RulesetVersion.v2024,
+    this.ruleset,
     this.customProperties = const {},
   });
 
@@ -122,7 +122,7 @@ class ClassFeatureDecision {
         'minSelections': minSelections,
         'maxSelections': maxSelections,
         'availableOptions': availableOptions.map((o) => o.toMap()).toList(),
-        'ruleset': ruleset.name,
+        if (ruleset != null) 'ruleset': ruleset!.name,
         'customProperties': customProperties,
       };
 
@@ -133,10 +133,12 @@ class ClassFeatureDecision {
       orElse: () => FeatureChoiceType.customOption,
     );
     final rulesetName = map['ruleset']?.toString();
-    final ruleset = RulesetVersion.values.firstWhere(
-      (r) => r.name == rulesetName,
-      orElse: () => RulesetVersion.v2024,
-    );
+    final ruleset = rulesetName != null
+        ? RulesetVersion.values.firstWhere(
+            (r) => r.name == rulesetName,
+            orElse: () => RulesetVersion.v2024,
+          )
+        : null;
 
     return ClassFeatureDecision(
       id: map['id']?.toString() ?? '',
@@ -156,14 +158,14 @@ class ClassFeatureDecision {
   }
 }
 
-/// Class definition representing a full 5e class progression, hit dice, proficiencies, and declarative feature decisions.
+/// A comprehensive class definition entity supporting dual-ruleset progression and custom extensions.
 @immutable
 class CharacterClass extends DomainEntity {
   @override
   final EntityId id;
   @override
   final String name;
-  final String hitDie; // e.g. "d8", "d10", "d12"
+  final String hitDie;
   final String? primaryAbility;
   final List<String> savingThrows;
   final List<String> armorProficiencies;
@@ -173,7 +175,6 @@ class CharacterClass extends DomainEntity {
   final List<Subclass> subclasses;
   final int subclassSelectionLevel;
   final List<ClassFeatureDecision> featureDecisions;
-  /// Declarative mechanic grants emitted by this class (e.g., Unarmored Defense, Spellcasting).
   final List<FeatureGrant> grants;
   @override
   final Map<String, dynamic> customProperties;
@@ -187,7 +188,7 @@ class CharacterClass extends DomainEntity {
     this.armorProficiencies = const [],
     this.weaponProficiencies = const [],
     this.spellcastingAbility,
-    required this.featuresMarkdown,
+    this.featuresMarkdown = '',
     this.subclasses = const [],
     this.subclassSelectionLevel = 3,
     this.featureDecisions = const [],
@@ -214,7 +215,7 @@ class CharacterClass extends DomainEntity {
   List<ClassFeatureDecision> getDecisionsForLevel(int level, {RulesetVersion? ruleset}) {
     return featureDecisions.where((d) {
       if (d.levelRequired != level) return false;
-      if (ruleset != null && d.ruleset != ruleset && d.ruleset != RulesetVersion.homebrew) {
+      if (ruleset != null && d.ruleset != null && d.ruleset != ruleset && d.ruleset != RulesetVersion.homebrew) {
         return false;
       }
       return true;
