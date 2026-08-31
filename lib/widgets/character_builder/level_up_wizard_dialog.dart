@@ -73,6 +73,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   // Step 5: Spells
   final List<String> _newCantrips = [];
   final List<String> _newSpells = [];
+  String? _replacedSpellId;
   String _spellSearchQuery = '';
   SpellClass? _selectedSpellListSource;
   bool _showAllSpellListsForSecrets = false;
@@ -364,6 +365,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       asiOrFeat: asiChoice,
       newCantrips: cantripRefs,
       newSpells: spellRefs,
+      replacedSpellIds: _replacedSpellId != null ? [_replacedSpellId!] : const [],
       selectedFeatureOptions: Map<String, List<String>>.from(_selectedFeatureOptions),
     );
   }
@@ -1257,6 +1259,34 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final availableCantrips = filtered.where((s) => s.level == 0).toList();
     final availableLeveled = filtered.where((s) => s.level > 0).toList();
 
+    final curCantripsCount = widget.character.cantrips.length;
+    final maxAllowedNewCantrips = math.max(0, limits.maxCantrips - curCantripsCount);
+
+    final isWizard = _selectedClassSlug.toLowerCase() == 'wizard';
+    final isSpontaneous = ['sorcerer', 'bard', 'warlock'].contains(_selectedClassSlug.toLowerCase()) ||
+        (_selectedClassSlug.toLowerCase() == 'ranger' && edition == DmRulesEdition.v2014);
+
+    int maxAllowedNewSpells;
+    if (isWizard) {
+      maxAllowedNewSpells = limits.maxSpellbookLevelUpScribe; // 2
+    } else if (isSpontaneous) {
+      final curKnownCount = widget.character.spellsKnown.length;
+      final delta = math.max(0, limits.maxSpellsKnown - curKnownCount);
+      maxAllowedNewSpells = delta + (_replacedSpellId != null ? 1 : 0);
+      if (maxAllowedNewSpells == 0 && limits.maxSpellsKnown > 0) {
+        maxAllowedNewSpells = _replacedSpellId != null ? 1 : 0;
+      }
+    } else {
+      // Prepared casters
+      final curPrepCount = widget.character.spellsPrepared.length;
+      final delta = math.max(0, limits.maxSpellsPrepared - curPrepCount);
+      maxAllowedNewSpells = math.max(1, delta + (_replacedSpellId != null ? 1 : 0));
+    }
+
+    final replaceableSpells = widget.character.spellsKnown.isNotEmpty
+        ? widget.character.spellsKnown
+        : widget.character.spellsPrepared;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1295,6 +1325,11 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           'Select newly learned, prepared, or subclass spells for $_selectedClassSlug (Max Spell Level: $maxLvl).',
           style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
+        const SizedBox(height: 4),
+        Text(
+          'Quota for Level $_targetClassNewLevel: ${_newSpells.length}/$maxAllowedNewSpells New Leveled Spell(s)${maxAllowedNewCantrips > 0 ? ", ${_newCantrips.length}/$maxAllowedNewCantrips New Cantrip(s)" : ""}.',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+        ),
         const SizedBox(height: 12),
 
         // Subclass Always-Prepared Spells Alert Card
@@ -1331,6 +1366,74 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                       label: Text('${s.getName(edition)} (L${s.level})', style: const TextStyle(fontSize: 11)),
                       backgroundColor: Colors.teal.shade800.withValues(alpha: 0.4),
                       side: BorderSide(color: Colors.tealAccent.withValues(alpha: 0.3)),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Spell Replacement (Spell Swapping) Section for Spontaneous / Known Casters
+        if (isSpontaneous && replaceableSpells.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade900.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.swap_horiz, size: 16, color: Colors.amberAccent),
+                    const SizedBox(width: 6),
+                    const Expanded(
+                      child: Text(
+                        'Replace a Known Spell (Optional - 1 per level-up):',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amberAccent),
+                      ),
+                    ),
+                    if (_replacedSpellId != null)
+                      TextButton(
+                        onPressed: () => setState(() => _replacedSpellId = null),
+                        child: const Text('Cancel Swap', style: TextStyle(fontSize: 11, color: Colors.amberAccent)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _replacedSpellId == null
+                      ? 'You may swap one existing spell you know for a new one from your spell list.'
+                      : 'Selected spell will be forgotten and replaced with your new selection below.',
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: replaceableSpells.map((s) {
+                    final isReplaced = _replacedSpellId == s.slug;
+                    return ChoiceChip(
+                      selected: isReplaced,
+                      selectedColor: Colors.redAccent.withValues(alpha: 0.35),
+                      label: Text(
+                        isReplaced ? 'Replacing: ${s.displayName}' : s.displayName,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isReplaced ? Colors.redAccent : Colors.white,
+                          decoration: isReplaced ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      onSelected: (chosen) {
+                        HapticService.selectionTick(context);
+                        setState(() {
+                          _replacedSpellId = chosen ? s.slug : null;
+                        });
+                      },
                     );
                   }).toList(),
                 ),
@@ -1519,6 +1622,15 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   HapticService.selectionTick(context);
                   setState(() {
                     if (selected) {
+                      if (maxAllowedNewCantrips > 0 && _newCantrips.length >= maxAllowedNewCantrips) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Cannot select more than $maxAllowedNewCantrips new cantrip(s) at Level $_targetClassNewLevel.'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                        return;
+                      }
                       _newCantrips.add(c.id);
                     } else {
                       _newCantrips.remove(c.id);
@@ -1550,6 +1662,15 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   HapticService.selectionTick(context);
                   setState(() {
                     if (selected) {
+                      if (maxAllowedNewSpells > 0 && _newSpells.length >= maxAllowedNewSpells) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Cannot select more than $maxAllowedNewSpells new spell(s) at Level $_targetClassNewLevel.'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                        return;
+                      }
                       _newSpells.add(s.id);
                     } else {
                       _newSpells.remove(s.id);
@@ -1582,6 +1703,15 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               onPressed: () {
                 final txt = _customSpellController.text.trim();
                 if (txt.isNotEmpty) {
+                  if (maxAllowedNewSpells > 0 && _newSpells.length >= maxAllowedNewSpells) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Cannot select more than $maxAllowedNewSpells new spell(s) at Level $_targetClassNewLevel.'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                    return;
+                  }
                   HapticService.selectionTick(context);
                   setState(() {
                     _newSpells.add(txt);

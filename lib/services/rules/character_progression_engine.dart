@@ -51,6 +51,7 @@ class LevelUpRequest {
   final AsiOrFeatChoice? asiOrFeat;
   final List<EntityReference<Spell>> newCantrips;
   final List<EntityReference<Spell>> newSpells;
+  final List<String> replacedSpellIds;
   final Map<String, List<String>> selectedFeatureOptions;
 
   const LevelUpRequest({
@@ -63,6 +64,7 @@ class LevelUpRequest {
     this.asiOrFeat,
     this.newCantrips = const [],
     this.newSpells = const [],
+    this.replacedSpellIds = const [],
     this.selectedFeatureOptions = const {},
   });
 }
@@ -384,6 +386,14 @@ class CharacterProgressionEngine {
         updatedSpellsPrepared.add(s);
         existingPrepSlugs.add(s.slug);
       }
+    }
+
+    // Process Replaced Spells
+    if (request.replacedSpellIds.isNotEmpty) {
+      final toRemove = request.replacedSpellIds.toSet();
+      updatedCantrips.removeWhere((c) => toRemove.contains(c.slug));
+      updatedSpellsKnown.removeWhere((s) => toRemove.contains(s.slug));
+      updatedSpellsPrepared.removeWhere((s) => toRemove.contains(s.slug));
     }
 
     // 4. Update Hit Dice Resource Pool (increment pool for gained hit die)

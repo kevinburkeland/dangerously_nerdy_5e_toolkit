@@ -477,8 +477,185 @@ void main() {
       expect(find.textContaining('Available Leveled Spells (Up to Level 1)'), findsOneWidget);
       expect(find.textContaining('Bless (L1)'), findsOneWidget);
     });
+
+    testWidgets('LevelUpWizardDialog enforces spell quota cap and prevents infinite spell selection', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final wizard = Character(
+        id: const EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
+        name: 'Wizard Scholar',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'wizard', displayName: 'Wizard'),
+              level: 1,
+              hitDie: 'd6',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        cantrips: const [
+          EntityReference(refType: EntityType.spell, slug: 'spell_mage_hand', displayName: 'Mage Hand'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_fire_bolt', displayName: 'Fire Bolt'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_prestidigitation', displayName: 'Prestidigitation'),
+        ],
+        spellsPrepared: const [
+          EntityReference(refType: EntityType.spell, slug: 'spell_shield', displayName: 'Shield'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_magic_missile', displayName: 'Magic Missile'),
+        ],
+        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 16, wisdom: 12, charisma: 10),
+        resources: const CharacterResourcePool(currentHp: 8, currentHitDice: {'d6': 1}),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(character: wizard),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to Step 5 (Spells)
+      await tester.tap(find.text('Next Step')); // Step 2
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 3
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 4
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 5 (Spells)
+      await tester.pumpAndSettle();
+
+      // Wizard gains exactly 2 spells added to spellbook on level up
+      expect(find.textContaining('Quota for Level 2: 0/2 New Leveled Spell(s)'), findsOneWidget);
+
+      // Select 1st spell
+      await tester.ensureVisible(find.textContaining('Burning Hands (L1)').first);
+      await tester.tap(find.textContaining('Burning Hands (L1)').first);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Quota for Level 2: 1/2 New Leveled Spell(s)'), findsOneWidget);
+
+      // Select 2nd spell
+      await tester.ensureVisible(find.textContaining('Charm Person (L1)').first);
+      await tester.tap(find.textContaining('Charm Person (L1)').first);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Quota for Level 2: 2/2 New Leveled Spell(s)'), findsOneWidget);
+
+      // Attempt to select 3rd spell (should be blocked by quota)
+      await tester.ensureVisible(find.textContaining('Detect Magic (L1)').first);
+      await tester.tap(find.textContaining('Detect Magic (L1)').first);
+      await tester.pumpAndSettle();
+
+      // Quota remains 2/2 and SnackBar appears
+      expect(find.textContaining('Quota for Level 2: 2/2 New Leveled Spell(s)'), findsOneWidget);
+      expect(find.textContaining('Cannot select more than 2 new spell(s) at Level 2.'), findsOneWidget);
+    });
+
+    testWidgets('LevelUpWizardDialog supports Spell Replacement (swapping known spell)', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final warlock = Character(
+        id: const EntityId(slug: 'test-warlock-swap', ruleset: RulesetVersion.v2024),
+        name: 'Warlock Swapper',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'charlatan', displayName: 'Charlatan'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
+              subclassRef: EntityReference(refType: EntityType.subclass, slug: 'the_fiend', displayName: 'The Fiend'),
+              level: 1,
+              hitDie: 'd8',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        cantrips: const [
+          EntityReference(refType: EntityType.spell, slug: 'spell_eldritch_blast', displayName: 'Eldritch Blast'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_minor_illusion', displayName: 'Minor Illusion'),
+        ],
+        spellsKnown: const [
+          EntityReference(refType: EntityType.spell, slug: 'spell_witch_bolt', displayName: 'Witch Bolt'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_arms_of_hadar', displayName: 'Arms of Hadar'),
+        ],
+        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 16),
+        resources: const CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
+      );
+
+      Character? leveledResult;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(
+              character: warlock,
+              onLevelUpApplied: (c) => leveledResult = c,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to Step 5 (Spells)
+      await tester.tap(find.text('Next Step')); // Step 2
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 3
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 4
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 5 (Spells)
+      await tester.pumpAndSettle();
+
+      // Verify Replace a Known Spell section is present
+      expect(find.textContaining('Replace a Known Spell (Optional - 1 per level-up):'), findsOneWidget);
+      expect(find.text('Witch Bolt'), findsOneWidget);
+      expect(find.text('Arms of Hadar'), findsOneWidget);
+
+      // Select Witch Bolt to replace
+      await tester.ensureVisible(find.text('Witch Bolt'));
+      await tester.tap(find.text('Witch Bolt'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Replacing: Witch Bolt'), findsOneWidget);
+      // Base delta (3 max known at L2 - 2 known = 1) + 1 for replacement = 2 new spells allowed
+      expect(find.textContaining('Quota for Level 2: 0/2 New Leveled Spell(s)'), findsOneWidget);
+
+      // Select 2 new spells (e.g. Burning Hands and Hellish Rebuke)
+      await tester.ensureVisible(find.textContaining('Burning Hands (L1)').first);
+      await tester.tap(find.textContaining('Burning Hands (L1)').first);
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.textContaining('Hellish Rebuke (L1)').first);
+      await tester.tap(find.textContaining('Hellish Rebuke (L1)').first);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Quota for Level 2: 2/2 New Leveled Spell(s)'), findsOneWidget);
+
+      // Proceed to Step 6 (Summary)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Confirm Level Up
+      await tester.tap(find.text('CONFIRM LEVEL UP'));
+      await tester.pumpAndSettle();
+
+      expect(leveledResult, isNotNull);
+      // Replaced spell 'spell_witch_bolt' must be removed
+      final resultKnownSlugs = leveledResult!.spellsKnown.map((s) => s.slug).toList();
+      expect(resultKnownSlugs.contains('spell_witch_bolt'), isFalse);
+      expect(resultKnownSlugs.contains('spell_arms_of_hadar'), isTrue);
+      expect(resultKnownSlugs.contains('spell_burning_hands'), isTrue);
+      expect(resultKnownSlugs.contains('spell_hellish_rebuke'), isTrue);
+    });
   });
 }
+
 
 
 
