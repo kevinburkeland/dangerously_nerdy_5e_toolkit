@@ -5,6 +5,7 @@ import '../../models/custom_preset.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/dpr/dpr_serialization.dart';
+import '../fluff/entity_fluff_service.dart';
 import '../logging_service.dart';
 import '../minion_session_service.dart';
 import '../preset_service.dart';
@@ -27,6 +28,8 @@ class AppBackupPayload {
   final List<Map<String, dynamic>> customFeats;
   final List<Map<String, dynamic>> customBackgrounds;
   final List<Map<String, dynamic>> customOtherEntries;
+  final Map<String, dynamic> fluffData;
+  final Map<String, dynamic> userNotesData;
 
   AppBackupPayload({
     required this.schemaVersion,
@@ -43,6 +46,8 @@ class AppBackupPayload {
     this.customFeats = const [],
     this.customBackgrounds = const [],
     this.customOtherEntries = const [],
+    this.fluffData = const {},
+    this.userNotesData = const {},
   });
 
   Map<String, dynamic> toMap() => {
@@ -60,6 +65,8 @@ class AppBackupPayload {
         'customFeats': customFeats,
         'customBackgrounds': customBackgrounds,
         'customOtherEntries': customOtherEntries,
+        'fluffData': fluffData,
+        'userNotesData': userNotesData,
       };
 
   factory AppBackupPayload.fromMap(Map<String, dynamic> map) {
@@ -111,6 +118,8 @@ class AppBackupPayload {
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
           .toList(),
+      fluffData: Map<String, dynamic>.from(map['fluffData'] as Map? ?? {}),
+      userNotesData: Map<String, dynamic>.from(map['userNotesData'] as Map? ?? {}),
     );
   }
 }
@@ -201,6 +210,9 @@ class AppBackupService {
         'pinnedSpellIds': currentSettings.pinnedSpellIds.toList(),
         'pinnedMonsterIds': currentSettings.pinnedMonsterIds.toList(),
         'pinnedItemIds': currentSettings.pinnedItemIds.toList(),
+        'pinnedFeatIds': currentSettings.pinnedFeatIds.toList(),
+        'pinnedClassIds': currentSettings.pinnedClassIds.toList(),
+        'pinnedRaceIds': currentSettings.pinnedRaceIds.toList(),
       },
       dicePresets: customPresets.map((p) => p.toMap()).toList(),
       dprProfiles: dprProfiles.map((p) => p.toMap()).toList(),
@@ -213,6 +225,8 @@ class AppBackupService {
       customFeats: customFeats.map((f) => f.toMap()).toList(),
       customBackgrounds: customBackgrounds.map((b) => b.toMap()).toList(),
       customOtherEntries: customOthers.map((o) => o.toMap()).toList(),
+      fluffData: EntityFluffService().exportFluffMap(),
+      userNotesData: EntityFluffService().exportUserNotesMap(),
     );
 
     return const JsonEncoder.withIndent('  ').convert(payload.toMap());
@@ -337,6 +351,12 @@ class AppBackupService {
           othersRestored++;
         } catch (_) {}
       }
+
+      // Restore entity fluff and user notes
+      EntityFluffService().importFromBackup(
+        fluffData: backup.fluffData,
+        userNotesData: backup.userNotesData,
+      );
 
       return BackupRestoreResult(
         success: true,

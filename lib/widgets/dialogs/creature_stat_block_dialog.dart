@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
+import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/dice_formatters.dart';
+import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../monster_codex/creature_dpr_view.dart';
 
@@ -41,6 +43,22 @@ class CreatureStatBlockDialog extends StatefulWidget {
 class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
   bool _isGlyphActive = true;
   int _selectedTabIndex = 0;
+  late TextEditingController _notesController;
+  final EntityFluffService _fluffService = EntityFluffService();
+
+  @override
+  void initState() {
+    super.initState();
+    final slug = widget.statBlock.name.toLowerCase().replaceAll(' ', '-');
+    final existing = _fluffService.getUserNotes('monster', slug) ?? '';
+    _notesController = TextEditingController(text: existing);
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
 
   void _toggleGlyphAnimation() {
     HapticService.selectionTick(context);
@@ -50,6 +68,8 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
   @override
   Widget build(BuildContext context) {
     final sb = widget.statBlock;
+    final slug = sb.name.toLowerCase().replaceAll(' ', '-');
+    final importedFluff = _fluffService.getFluff('monster', slug);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -113,7 +133,7 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                 ),
               ),
 
-              // Navigation Tabs: Stat Block & DPR Calculator
+              // Navigation Tabs: Stat Block, DPR Calculator & Lore/Notes
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
@@ -132,7 +152,7 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                         accent: sb.accentColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: _buildHeaderTabButton(
                         index: 1,
@@ -141,15 +161,26 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                         accent: sb.accentColor,
                       ),
                     ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _buildHeaderTabButton(
+                        index: 2,
+                        label: 'Lore & Notes',
+                        icon: Icons.auto_stories,
+                        accent: sb.accentColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
 
-              // Body: Stat Block or DPR View
+              // Body: Stat Block, DPR View or Lore & Notes View
               Flexible(
                 child: _selectedTabIndex == 1
                     ? CreatureDprView(statBlock: sb)
-                    : SingleChildScrollView(
+                    : _selectedTabIndex == 2
+                        ? _buildLoreNotesTab(sb, slug, importedFluff)
+                        : SingleChildScrollView(
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -621,6 +652,86 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
             Colors.transparent,
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoreNotesTab(MinionStatBlock sb, String slug, EntityFluff? importedFluff) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Imported Lore Section
+          if (importedFluff != null && importedFluff.loreMarkdown.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: sb.accentColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: sb.accentColor.withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.menu_book, size: 16, color: sb.accentColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Compendium Lore${importedFluff.source != null ? " (${importedFluff.source})" : ""}',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: sb.accentColor),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  FormattedMarkdownText(importedFluff.loreMarkdown),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // User Custom DM / Campaign Notes Section
+          Row(
+            children: [
+              Icon(Icons.edit_note, size: 18, color: sb.accentColor),
+              const SizedBox(width: 6),
+              Text(
+                'DM Campaign & Encounter Notes',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: sb.accentColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Encounter tactics, monster personality, lair details, or loot drops. Saved locally automatically.',
+            style: TextStyle(fontSize: 11.5, color: Colors.white70),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _notesController,
+            maxLines: 7,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Add encounter tactics, lair actions, behavioral quirks, loot drops...',
+              hintStyle: const TextStyle(fontSize: 12, color: Colors.white38),
+              filled: true,
+              fillColor: Colors.black.withValues(alpha: 0.3),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: sb.accentColor, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+            onChanged: (val) => _fluffService.setUserNotes('monster', slug, val),
+          ),
+        ],
       ),
     );
   }

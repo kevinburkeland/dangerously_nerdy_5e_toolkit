@@ -23,6 +23,9 @@ class SettingsProvider extends ChangeNotifier {
   static const _kPinnedSpellIds = 'setting_pinned_spell_ids';
   static const _kPinnedMonsterIds = 'setting_pinned_monster_ids';
   static const _kPinnedItemIds = 'setting_pinned_item_ids';
+  static const _kPinnedFeatIds = 'pinned_feat_ids_v1';
+  static const _kPinnedClassIds = 'pinned_class_ids_v1';
+  static const _kPinnedRaceIds = 'pinned_race_ids_v1';
   static const _kBypassedHomebrewSlugs = 'setting_bypassed_homebrew_slugs';
 
   // Legacy v1 keys (for fallback during in-flight upgrades)
@@ -125,7 +128,11 @@ class SettingsProvider extends ChangeNotifier {
       final pinnedSpellList = prefs.getStringList(_kPinnedSpellIds);
       final pinnedMonsterList = prefs.getStringList(_kPinnedMonsterIds);
       final pinnedItemList = prefs.getStringList(_kPinnedItemIds);
-      final bypassedList = prefs.getStringList(_kBypassedHomebrewSlugs);
+      final pinnedFeatList = prefs.getStringList(_kPinnedFeatIds);
+      final pinnedClassList = prefs.getStringList(_kPinnedClassIds);
+      final pinnedRaceList = prefs.getStringList(_kPinnedRaceIds);
+      final bypassedList = prefs.getStringList(_kBypassedHomebrewSlugs) ??
+          prefs.getStringList('bypassed_homebrew_slugs_v1');
 
       return AppSettings(
         themeMode: resolvedTheme,
@@ -143,6 +150,9 @@ class SettingsProvider extends ChangeNotifier {
         pinnedSpellIds: pinnedSpellList?.toSet() ?? const <String>{},
         pinnedMonsterIds: pinnedMonsterList?.toSet() ?? const <String>{},
         pinnedItemIds: pinnedItemList?.toSet() ?? const <String>{},
+        pinnedFeatIds: pinnedFeatList?.toSet() ?? const <String>{},
+        pinnedClassIds: pinnedClassList?.toSet() ?? const <String>{},
+        pinnedRaceIds: pinnedRaceList?.toSet() ?? const <String>{},
         bypassedHomebrewSlugs: bypassedList?.toSet() ?? const <String>{},
       );
     } catch (e, stackTrace) {
@@ -193,6 +203,9 @@ class SettingsProvider extends ChangeNotifier {
         prefs.setStringList(_kPinnedSpellIds, newSettings.pinnedSpellIds.toList()),
         prefs.setStringList(_kPinnedMonsterIds, newSettings.pinnedMonsterIds.toList()),
         prefs.setStringList(_kPinnedItemIds, newSettings.pinnedItemIds.toList()),
+        prefs.setStringList(_kPinnedFeatIds, newSettings.pinnedFeatIds.toList()),
+        prefs.setStringList(_kPinnedClassIds, newSettings.pinnedClassIds.toList()),
+        prefs.setStringList(_kPinnedRaceIds, newSettings.pinnedRaceIds.toList()),
         prefs.setStringList(_kBypassedHomebrewSlugs, newSettings.bypassedHomebrewSlugs.toList()),
       ]);
     } catch (e, stackTrace) {
@@ -262,6 +275,27 @@ class SettingsProvider extends ChangeNotifier {
   void pinItem(String itemId) => updateSettings(_settings.copyWith(pinnedItemIds: _addSetId(_settings.pinnedItemIds, itemId)));
   void unpinItem(String itemId) => updateSettings(_settings.copyWith(pinnedItemIds: _removeSetId(_settings.pinnedItemIds, itemId)));
   void clearPinnedItems() => _settings.pinnedItemIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedItemIds: const <String>{}));
+
+  // --- Feats Pinning ---
+  bool isFeatPinned(String featId) => _settings.pinnedFeatIds.contains(featId);
+  void togglePinFeat(String featId) => updateSettings(_settings.copyWith(pinnedFeatIds: _toggleSetId(_settings.pinnedFeatIds, featId)));
+  void pinFeat(String featId) => updateSettings(_settings.copyWith(pinnedFeatIds: _addSetId(_settings.pinnedFeatIds, featId)));
+  void unpinFeat(String featId) => updateSettings(_settings.copyWith(pinnedFeatIds: _removeSetId(_settings.pinnedFeatIds, featId)));
+  void clearPinnedFeats() => _settings.pinnedFeatIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedFeatIds: const <String>{}));
+
+  // --- Classes Pinning ---
+  bool isClassPinned(String classId) => _settings.pinnedClassIds.contains(classId);
+  void togglePinClass(String classId) => updateSettings(_settings.copyWith(pinnedClassIds: _toggleSetId(_settings.pinnedClassIds, classId)));
+  void pinClass(String classId) => updateSettings(_settings.copyWith(pinnedClassIds: _addSetId(_settings.pinnedClassIds, classId)));
+  void unpinClass(String classId) => updateSettings(_settings.copyWith(pinnedClassIds: _removeSetId(_settings.pinnedClassIds, classId)));
+  void clearPinnedClasses() => _settings.pinnedClassIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedClassIds: const <String>{}));
+
+  // --- Species / Races Pinning ---
+  bool isRacePinned(String raceId) => _settings.pinnedRaceIds.contains(raceId);
+  void togglePinRace(String raceId) => updateSettings(_settings.copyWith(pinnedRaceIds: _toggleSetId(_settings.pinnedRaceIds, raceId)));
+  void pinRace(String raceId) => updateSettings(_settings.copyWith(pinnedRaceIds: _addSetId(_settings.pinnedRaceIds, raceId)));
+  void unpinRace(String raceId) => updateSettings(_settings.copyWith(pinnedRaceIds: _removeSetId(_settings.pinnedRaceIds, raceId)));
+  void clearPinnedRaces() => _settings.pinnedRaceIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedRaceIds: const <String>{}));
 
   // --- Homebrew Override Bypass ---
   bool isHomebrewBypassed(String slug) => _settings.bypassedHomebrewSlugs.contains(slug);

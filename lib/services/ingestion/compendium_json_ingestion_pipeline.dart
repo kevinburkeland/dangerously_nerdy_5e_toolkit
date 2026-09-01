@@ -12,6 +12,7 @@ import '../acl/compendium_monster_parser.dart';
 import '../acl/compendium_race_parser.dart';
 import '../acl/compendium_spell_parser.dart';
 import '../acl/entry_tag_transformer.dart';
+import '../fluff/entity_fluff_service.dart';
 
 /// Diagnostic summary of a JSON compendium ingestion operation.
 class IngestionBatchResult {
@@ -24,6 +25,7 @@ class IngestionBatchResult {
   final List<Feat> feats;
   final List<Background> backgrounds;
   final List<HomebrewCompendiumEntry> otherEntries;
+  final int attachedFluffCount;
   final List<String> errors;
 
   const IngestionBatchResult({
@@ -36,6 +38,7 @@ class IngestionBatchResult {
     this.feats = const [],
     this.backgrounds = const [],
     this.otherEntries = const [],
+    this.attachedFluffCount = 0,
     this.errors = const [],
   });
 
@@ -48,7 +51,8 @@ class IngestionBatchResult {
       races.length +
       feats.length +
       backgrounds.length +
-      otherEntries.length;
+      otherEntries.length +
+      attachedFluffCount;
 
   bool get hasErrors => errors.isNotEmpty;
 
@@ -117,6 +121,11 @@ class CompendiumJsonIngestionPipeline {
             CompendiumBackgroundParser(transformer: transformer ?? EntryTagTransformer()),
         genericParser = genericParser ??
             CompendiumGenericEntryParser(transformer: transformer ?? EntryTagTransformer());
+
+  /// Parses an in-memory Map containing single entity maps, multi-entity bundles, or [HomebrewBundle] envelopes.
+  IngestionBatchResult ingestJsonMap(Map<String, dynamic> map, {RulesetVersion? forceRuleset}) {
+    return _ingestMap(map, forceRuleset: forceRuleset);
+  }
 
   /// Parses arbitrary JSON text containing single entity maps, multi-entity bundles, or [HomebrewBundle] envelopes.
   IngestionBatchResult ingestJsonString(String jsonString, {RulesetVersion? forceRuleset}) {
@@ -228,9 +237,17 @@ class CompendiumJsonIngestionPipeline {
       'invocation', 'invocations', 'eldritchinvocation', 'eldritchinvocations',
       'optionalfeature', 'optionalfeatures', 'table', 'tables', 'reward', 'rewards',
       'condition', 'conditions', 'hazard', 'hazards', 'variantrule', 'variantrules', 'rule', 'rules',
+      'monsterfluff', 'spellfluff', 'itemfluff', 'racefluff', 'classfluff', 'featfluff', 'backgroundfluff', 'fluff',
     }.contains(k) && map[k] is List);
 
-    if (!hasBundleKeys) {
+    final isSingleClass = lowerKeys.contains('hd') && lowerKeys.contains('name');
+    final isSingleMonster = lowerKeys.contains('cr') && lowerKeys.contains('name');
+    final isSingleSpell = lowerKeys.contains('school') && lowerKeys.contains('name');
+    final isSingleFluff = (lowerKeys.contains('entries') || lowerKeys.contains('images')) &&
+        lowerKeys.contains('name') &&
+        (lowerKeys.contains('_fluff') || lowerKeys.contains('flufftype'));
+
+    if (!hasBundleKeys || isSingleClass || isSingleMonster || isSingleSpell || isSingleFluff) {
       final singleResult = _ingestSingleEntityMap(map, forceRuleset: forceRuleset);
       if (singleResult.totalEntities > 0) {
         return singleResult;
@@ -439,6 +456,29 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Hazard')), 'Hazard');
     ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Rule')), 'Rule');
 
+    // Fluff & Lore Ingestion (5etools bestiary / spell / item / race / class / feat fluff)
+    int attachedFluffCount = 0;
+
+    void ingestFluffKeys(List<String> candidateKeys, String defaultEntityType) {
+      final list = findListForKeys(candidateKeys);
+      if (list == null) return;
+      for (final item in list) {
+        if (item is Map) {
+          final count = _ingestFluffEntry(defaultEntityType, Map<String, dynamic>.from(item));
+          attachedFluffCount += count;
+        }
+      }
+    }
+
+    ingestFluffKeys(['monsterfluff', 'bestiaryfluff', 'creaturefluff'], 'monster');
+    ingestFluffKeys(['spellfluff'], 'spell');
+    ingestFluffKeys(['itemfluff', 'magicitemfluff'], 'item');
+    ingestFluffKeys(['racefluff', 'speciesfluff'], 'race');
+    ingestFluffKeys(['classfluff'], 'class');
+    ingestFluffKeys(['featfluff'], 'feat');
+    ingestFluffKeys(['backgroundfluff'], 'background');
+    ingestFluffKeys(['fluff'], 'generic');
+
     // Stitch external subclass features into Subclasses
     if (rawSubclassFeatures.isNotEmpty) {
       final entryTransformer = classParser.transformer;
@@ -545,7 +585,8 @@ class CompendiumJsonIngestionPipeline {
         races.isNotEmpty ||
         feats.isNotEmpty ||
         backgrounds.isNotEmpty ||
-        otherEntries.isNotEmpty;
+        otherEntries.isNotEmpty ||
+        attachedFluffCount > 0;
 
     if (!hasAny) {
       return _ingestSingleEntityMap(map);
@@ -561,12 +602,44 @@ class CompendiumJsonIngestionPipeline {
       feats: feats,
       backgrounds: backgrounds,
       otherEntries: otherEntries,
+      attachedFluffCount: attachedFluffCount,
       errors: errors,
     );
   }
 
   IngestionBatchResult _ingestSingleEntityMap(Map<String, dynamic> map, {RulesetVersion? forceRuleset}) {
     final lowerKeys = map.keys.map((k) => k.toLowerCase()).toSet();
+
+    // 0. Fluff / Lore Single Entry (has _fluff, monsterFluff, spellFluff, etc. or pure lore map)
+    if (lowerKeys.contains('_fluff') ||
+        lowerKeys.contains('fluff') ||
+        lowerKeys.contains('flufftype') ||
+        lowerKeys.contains('monsterfluff') ||
+        lowerKeys.contains('spellfluff') ||
+        lowerKeys.contains('itemfluff') ||
+        lowerKeys.contains('racefluff') ||
+        lowerKeys.contains('classfluff') ||
+        lowerKeys.contains('featfluff')) {
+      String entityType = 'generic';
+      if (lowerKeys.contains('monsterfluff') || map['fluffType'] == 'monster' || map['type'] == 'monster') {
+        entityType = 'monster';
+      } else if (lowerKeys.contains('spellfluff') || map['fluffType'] == 'spell' || map['type'] == 'spell') {
+        entityType = 'spell';
+      } else if (lowerKeys.contains('itemfluff') || map['fluffType'] == 'item' || map['type'] == 'item') {
+        entityType = 'item';
+      } else if (lowerKeys.contains('racefluff') || map['fluffType'] == 'race' || map['type'] == 'race') {
+        entityType = 'race';
+      } else if (lowerKeys.contains('classfluff') || map['fluffType'] == 'class' || map['type'] == 'class') {
+        entityType = 'class';
+      } else if (lowerKeys.contains('featfluff') || map['fluffType'] == 'feat' || map['type'] == 'feat') {
+        entityType = 'feat';
+      }
+
+      final count = _ingestFluffEntry(entityType, map);
+      if (count > 0) {
+        return IngestionBatchResult(attachedFluffCount: count);
+      }
+    }
 
     // 1. Identify Spells (has school or level + time/duration/range)
     if (lowerKeys.contains('school') ||
@@ -682,5 +755,51 @@ class CompendiumJsonIngestionPipeline {
     return const IngestionBatchResult(
       errors: ['Unrecognized compendium schema. Could not categorize entity.'],
     );
+  }
+
+  int _ingestFluffEntry(String entityType, Map<String, dynamic> raw) {
+    final name = raw['name']?.toString().trim() ?? '';
+    if (name.isEmpty) return 0;
+
+    final slug = raw['slug']?.toString().trim() ?? _slugify(name);
+    final source = raw['source']?.toString().trim();
+    final rawEntries = raw['entries'] ?? raw['entry'] ?? raw['fluff'] ?? raw['description'] ?? raw['lore'];
+    final loreMarkdown = rawEntries != null ? transformer.transformEntries(rawEntries).markdown.trim() : '';
+
+    final images = <String>[];
+    if (raw['images'] is List) {
+      for (final img in raw['images'] as List) {
+        if (img is String && img.isNotEmpty) {
+          images.add(img);
+        } else if (img is Map) {
+          final href = img['href'];
+          if (href is Map && href['path'] != null) {
+            images.add(href['path'].toString());
+          } else if (href is String) {
+            images.add(href);
+          }
+        }
+      }
+    }
+
+    if (loreMarkdown.isNotEmpty || images.isNotEmpty) {
+      EntityFluffService().setFluff(
+        entityType,
+        slug,
+        loreMarkdown,
+        images: images,
+        source: source,
+      );
+      return 1;
+    }
+    return 0;
+  }
+
+  String _slugify(String name) {
+    return name
+        .toLowerCase()
+        .trim()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
   }
 }

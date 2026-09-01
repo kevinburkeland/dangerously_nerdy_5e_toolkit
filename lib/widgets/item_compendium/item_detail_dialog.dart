@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../models/magic_items/magic_item_data.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../common/diff_highlight_banner.dart';
+import '../common/formatted_markdown_text.dart';
 import '../dm_reference/rules_edition_toggle.dart';
 import '../glyphs/dnd_glyph.dart';
 
@@ -54,13 +56,15 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
   late TabController _tabController;
   late DmRulesEdition _activeEdition;
   late bool _pinned;
+  late TextEditingController _notesController;
+  final EntityFluffService _fluffService = EntityFluffService();
 
   @override
   void initState() {
     super.initState();
     _activeEdition = widget.edition;
     _pinned = widget.isPinned;
-    final tabCount = widget.item.isChangedIn2024 ? 3 : 2;
+    final tabCount = widget.item.isChangedIn2024 ? 4 : 3;
     final initialIndex = widget.initialTabIndex.clamp(0, tabCount - 1);
     _tabController = TabController(
       length: tabCount,
@@ -72,11 +76,14 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
         HapticService.selectionTick(context);
       }
     });
+    final existing = _fluffService.getUserNotes('item', widget.item.id) ?? '';
+    _notesController = TextEditingController(text: existing);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -243,6 +250,10 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                       icon: Icon(Icons.compare_arrows, size: 17),
                       text: '2024 Diffs',
                     ),
+                  const Tab(
+                    icon: Icon(Icons.auto_stories, size: 17),
+                    text: 'Lore & Notes',
+                  ),
                 ],
               ),
             ),
@@ -257,6 +268,7 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                   _buildCraftingTab(context, item, crafting, isDark, rarityColor, priceColor),
                   if (hasDiff)
                     _buildDiffsTab(context, item, isDark, rarityColor),
+                  _buildLoreNotesTab(context, item, rarityColor),
                 ],
               ),
             ),
@@ -788,6 +800,84 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                 fontWeight: color != null ? FontWeight.bold : FontWeight.normal,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoreNotesTab(BuildContext context, MagicItem item, Color accentColor) {
+    final theme = Theme.of(context);
+    final slug = item.id;
+    final importedFluff = _fluffService.getFluff('item', slug);
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (importedFluff != null && importedFluff.loreMarkdown.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.menu_book, size: 16, color: accentColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Compendium History & Lore${importedFluff.source != null ? " (${importedFluff.source})" : ""}',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: accentColor),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  FormattedMarkdownText(importedFluff.loreMarkdown),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          Row(
+            children: [
+              Icon(Icons.edit_note, size: 18, color: accentColor),
+              const SizedBox(width: 6),
+              Text(
+                'Campaign Loot & Artifact Notes',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: accentColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Found locations, previous owners, curse quirks, or sentient item personalities.',
+            style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _notesController,
+            maxLines: 6,
+            decoration: InputDecoration(
+              hintText: 'Add campaign loot history, attuned owner, sentient item personality...',
+              hintStyle: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: accentColor, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+            onChanged: (val) => _fluffService.setUserNotes('item', slug, val),
           ),
         ],
       ),

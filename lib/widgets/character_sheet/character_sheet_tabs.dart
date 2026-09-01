@@ -978,7 +978,10 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (spellItem != null)
+            if (spellItem != null &&
+                rules?.rollFormula != null &&
+                rules!.rollFormula!.trim().isNotEmpty &&
+                rules.rollFormula!.trim().toLowerCase() != 'none')
               IconButton(
                 icon: const Icon(Icons.casino, size: 18, color: Colors.cyanAccent),
                 tooltip: 'Quick Roll Spell',

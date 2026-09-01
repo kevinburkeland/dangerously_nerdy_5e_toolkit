@@ -71,6 +71,9 @@ class AppSettings {
   final Set<String> pinnedSpellIds;
   final Set<String> pinnedMonsterIds;
   final Set<String> pinnedItemIds;
+  final Set<String> pinnedFeatIds;
+  final Set<String> pinnedClassIds;
+  final Set<String> pinnedRaceIds;
   final Set<String> bypassedHomebrewSlugs;
 
   const AppSettings({
@@ -89,6 +92,9 @@ class AppSettings {
     this.pinnedSpellIds = const <String>{},
     this.pinnedMonsterIds = const <String>{},
     this.pinnedItemIds = const <String>{},
+    this.pinnedFeatIds = const <String>{},
+    this.pinnedClassIds = const <String>{},
+    this.pinnedRaceIds = const <String>{},
     this.bypassedHomebrewSlugs = const <String>{},
   });
 
@@ -117,6 +123,9 @@ class AppSettings {
     Set<String>? pinnedSpellIds,
     Set<String>? pinnedMonsterIds,
     Set<String>? pinnedItemIds,
+    Set<String>? pinnedFeatIds,
+    Set<String>? pinnedClassIds,
+    Set<String>? pinnedRaceIds,
     Set<String>? bypassedHomebrewSlugs,
   }) {
     return AppSettings(
@@ -135,6 +144,9 @@ class AppSettings {
       pinnedSpellIds: pinnedSpellIds ?? this.pinnedSpellIds,
       pinnedMonsterIds: pinnedMonsterIds ?? this.pinnedMonsterIds,
       pinnedItemIds: pinnedItemIds ?? this.pinnedItemIds,
+      pinnedFeatIds: pinnedFeatIds ?? this.pinnedFeatIds,
+      pinnedClassIds: pinnedClassIds ?? this.pinnedClassIds,
+      pinnedRaceIds: pinnedRaceIds ?? this.pinnedRaceIds,
       bypassedHomebrewSlugs: bypassedHomebrewSlugs ?? this.bypassedHomebrewSlugs,
     );
   }
@@ -159,6 +171,9 @@ class AppSettings {
           setEquals(pinnedSpellIds, other.pinnedSpellIds) &&
           setEquals(pinnedMonsterIds, other.pinnedMonsterIds) &&
           setEquals(pinnedItemIds, other.pinnedItemIds) &&
+          setEquals(pinnedFeatIds, other.pinnedFeatIds) &&
+          setEquals(pinnedClassIds, other.pinnedClassIds) &&
+          setEquals(pinnedRaceIds, other.pinnedRaceIds) &&
           setEquals(bypassedHomebrewSlugs, other.bypassedHomebrewSlugs);
 
   @override
@@ -177,6 +192,9 @@ class AppSettings {
         Object.hashAllUnordered(pinnedSpellIds),
         Object.hashAllUnordered(pinnedMonsterIds),
         Object.hashAllUnordered(pinnedItemIds),
+        Object.hashAllUnordered(pinnedFeatIds),
+        Object.hashAllUnordered(pinnedClassIds),
+        Object.hashAllUnordered(pinnedRaceIds),
         Object.hashAllUnordered(bypassedHomebrewSlugs),
       );
 }

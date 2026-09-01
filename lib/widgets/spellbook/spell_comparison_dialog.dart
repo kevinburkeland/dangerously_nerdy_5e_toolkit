@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/spellbook_data.dart';
+import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
 import '../common/diff_highlight_banner.dart';
+import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 
 /// Interactive modal comparing 2014 RAW spell mechanics vs 2024 Revised rules side-by-side.
@@ -48,12 +50,22 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
   late bool _pinned;
   late DmRulesEdition _activeEdition;
   bool _showDiff = false;
+  late TextEditingController _notesController;
+  final EntityFluffService _fluffService = EntityFluffService();
 
   @override
   void initState() {
     super.initState();
     _pinned = widget.isPinned;
     _activeEdition = widget.initialEdition;
+    final existing = _fluffService.getUserNotes('spell', widget.spell.id) ?? '';
+    _notesController = TextEditingController(text: existing);
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
   }
 
   void _handlePinToggle() {
@@ -215,68 +227,152 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
             // Side-by-side or stacked comparison columns
             Expanded(
               child: SingleChildScrollView(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth > 580;
-                    final v2014Color =
-                        isDark ? Colors.blueGrey : const Color(0xFF475569);
-                    final v2024Color = isDark
-                        ? Colors.purpleAccent
-                        : theme.colorScheme.secondary;
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth > 580;
+                        final v2014Color =
+                            isDark ? Colors.blueGrey : const Color(0xFF475569);
+                        final v2024Color = isDark
+                            ? Colors.purpleAccent
+                            : theme.colorScheme.secondary;
 
-                    if (showDualView) {
-                      if (isWide) {
-                        return Row(
+                        if (showDualView) {
+                          if (isWide) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                    child: _buildEditionBox(
+                                        context,
+                                        '2014 (5e RAW)',
+                                        spell.rules2014,
+                                        v2014Color)),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                    child: _buildEditionBox(
+                                        context,
+                                        '2024 (Revised 5e)',
+                                        spell.rules2024,
+                                        v2024Color)),
+                              ],
+                            );
+                          } else {
+                            return Column(
+                              children: [
+                                _buildEditionBox(context, '2014 (5e RAW)',
+                                    spell.rules2014, v2014Color),
+                                const SizedBox(height: 12),
+                                _buildEditionBox(context, '2024 (Revised 5e)',
+                                    spell.rules2024, v2024Color),
+                              ],
+                            );
+                          }
+                        }
+
+                        final visibleRules = currentRules;
+                        final visibleTitle = _activeEdition == DmRulesEdition.v2014
+                            ? '2014 (5e RAW)'
+                            : '2024 (Revised 5e)';
+                        final visibleAccent = _activeEdition == DmRulesEdition.v2014
+                            ? v2014Color
+                            : v2024Color;
+
+                        final displayCard = _buildEditionBox(
+                            context, visibleTitle, visibleRules, visibleAccent);
+
+                        if (isWide) {
+                          return Center(
+                              child: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 650),
+                                  child: displayCard));
+                        }
+
+                        return displayCard;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Lore & Caster Notes
+                    Builder(
+                      builder: (context) {
+                        final slug = spell.id;
+                        final importedFluff = _fluffService.getFluff('spell', slug);
+
+                        return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                                child: _buildEditionBox(
-                                    context,
-                                    '2014 (5e RAW)',
-                                    spell.rules2014,
-                                    v2014Color)),
-                            const SizedBox(width: 14),
-                            Expanded(
-                                child: _buildEditionBox(
-                                    context,
-                                    '2024 (Revised 5e)',
-                                    spell.rules2024,
-                                    v2024Color)),
+                            if (importedFluff != null && importedFluff.loreMarkdown.isNotEmpty) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: schoolColor.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: schoolColor.withValues(alpha: 0.25)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.menu_book, size: 16, color: schoolColor),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'Spell Lore${importedFluff.source != null ? " (${importedFluff.source})" : ""}',
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: schoolColor),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    FormattedMarkdownText(importedFluff.loreMarkdown),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                            ],
+
+                            Row(
+                              children: [
+                                Icon(Icons.edit_note, size: 18, color: schoolColor),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Caster Notes & Upcasting Tips',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.5,
+                                    color: schoolColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Personal spell notes, component tracking, or tactical tips. Saved locally automatically.',
+                              style: TextStyle(fontSize: 11.5, color: theme.colorScheme.onSurfaceVariant),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _notesController,
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                hintText: 'Add caster notes, spell combos, component costs...',
+                                hintStyle: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: schoolColor, width: 1.5),
+                                ),
+                                contentPadding: const EdgeInsets.all(12),
+                              ),
+                              onChanged: (val) => _fluffService.setUserNotes('spell', slug, val),
+                            ),
                           ],
                         );
-                      } else {
-                        return Column(
-                          children: [
-                            _buildEditionBox(context, '2014 (5e RAW)',
-                                spell.rules2014, v2014Color),
-                            const SizedBox(height: 12),
-                            _buildEditionBox(context, '2024 (Revised 5e)',
-                                spell.rules2024, v2024Color),
-                          ],
-                        );
-                      }
-                    }
-
-                    final visibleRules = currentRules;
-                    final visibleTitle = _activeEdition == DmRulesEdition.v2014
-                        ? '2014 (5e RAW)'
-                        : '2024 (Revised 5e)';
-                    final visibleAccent = _activeEdition == DmRulesEdition.v2014
-                        ? v2014Color
-                        : v2024Color;
-
-                    final displayCard = _buildEditionBox(
-                        context, visibleTitle, visibleRules, visibleAccent);
-
-                    if (isWide) {
-                      return Center(
-                          child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 650),
-                              child: displayCard));
-                    }
-
-                    return displayCard;
-                  },
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),

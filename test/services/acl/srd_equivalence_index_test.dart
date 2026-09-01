@@ -66,7 +66,7 @@ void main() {
         equals(SrdMatchResult.exactSrdMatch),
       );
       expect(
-        index.checkEntity(slug: 'blood-hunter', name: 'Blood Hunter', type: EntityType.classDefinition),
+        index.checkEntity(slug: 'custom-warlord', name: 'Custom Warlord', type: EntityType.classDefinition),
         equals(SrdMatchResult.notSrd),
       );
     });

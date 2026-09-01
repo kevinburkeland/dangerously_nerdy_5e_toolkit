@@ -121,9 +121,9 @@ void main() {
 
       const multiBundle = '''
 {
-  "class": [{"name": "Blood Hunter", "hd": {"faces": 10}, "classFeatures": ["Crimson Rite: Enhance weapons"]}],
-  "race": [{"name": "Genasi", "size": "Medium", "trait": ["Elemental Heritage: Innate power"]}],
-  "feat": [{"name": "Fey Touched", "category": "General", "entries": ["Cast Misty Step once per long rest."]}]
+  "class": [{"name": "Custom Warden", "hd": {"faces": 10}, "classFeatures": ["Warden's Aegis: Enhance defense"]}],
+  "race": [{"name": "Custom Celestial", "size": "Medium", "trait": ["Celestial Spark: Radiant light"]}],
+  "feat": [{"name": "Custom Adept", "category": "General", "entries": ["Gain specialized tactical training."]}]
 }
 ''';
 

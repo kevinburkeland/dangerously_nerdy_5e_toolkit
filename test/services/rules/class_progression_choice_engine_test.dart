@@ -182,27 +182,27 @@ void main() {
       test('Community compendium parser extracts custom subclass selection level and feature decisions', () {
         final adapter = CommunityCompendiumAdapters();
         final rawClassJson = {
-          'name': 'Blood Hunter',
+          'name': 'Custom Warden',
           'source': 'HOMEBREW',
           'hd': {'number': 1, 'faces': 10},
           'subclassSelectionLevel': 3,
           'featureDecisions': [
             {
-              'id': 'blood-hunter-order-3',
-              'name': 'Blood Hunter Order',
-              'prompt': 'Select your Order archetype',
+              'id': 'warden-order-3',
+              'name': 'Warden Archetype',
+              'prompt': 'Select your Warden archetype',
               'levelRequired': 3,
               'type': 'subclassSelection',
               'availableOptions': [
-                {'id': 'order-of-the-ghostslayer', 'name': 'Order of the Ghostslayer', 'descriptionMarkdown': 'Ghost hunter'},
-                {'id': 'order-of-the-lycan', 'name': 'Order of the Lycan', 'descriptionMarkdown': 'Werewolf shape'}
+                {'id': 'order-of-the-silver-shield', 'name': 'Order of the Silver Shield', 'descriptionMarkdown': 'Shield guardian'},
+                {'id': 'order-of-the-moon-warden', 'name': 'Order of the Moon Warden', 'descriptionMarkdown': 'Moon guardian'}
               ]
             }
           ]
         };
 
         final parsed = adapter.parseClass(rawClassJson);
-        expect(parsed.name, equals('Blood Hunter'));
+        expect(parsed.name, equals('Custom Warden'));
         expect(parsed.subclassSelectionLevel, equals(3));
         expect(parsed.featureDecisions.length, equals(1));
         expect(parsed.featureDecisions.first.availableOptions.length, equals(2));

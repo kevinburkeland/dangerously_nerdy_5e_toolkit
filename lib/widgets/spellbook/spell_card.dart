@@ -240,7 +240,10 @@ class SpellCard extends StatelessWidget {
               ),
 
               // Quick Roll Action Button (if formula exists)
-              if (rules.rollFormula != null && onOpenQuickRoll != null) ...[
+              if (rules.rollFormula != null &&
+                  rules.rollFormula!.trim().isNotEmpty &&
+                  rules.rollFormula!.trim().toLowerCase() != 'none' &&
+                  onOpenQuickRoll != null) ...[
                 InkWell(
                   onTap: onOpenQuickRoll,
                   borderRadius: BorderRadius.circular(6),

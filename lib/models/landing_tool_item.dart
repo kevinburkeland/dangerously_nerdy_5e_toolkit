@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../screens/arena_simulator_screen.dart';
 import '../screens/character_builder_screen.dart';
+import '../screens/class_catalogue_screen.dart';
 import '../screens/dice_roller_screen.dart';
 import '../screens/dm_dashboard_screen.dart';
 import '../screens/dm_reference_screen.dart';
 import '../screens/dpr_calculator_screen.dart';
+import '../screens/feats_compendium_screen.dart';
 import '../screens/glyph_showcase_screen.dart';
 import '../screens/homebrew_studio_screen.dart';
 import '../screens/item_compendium_screen.dart';
 import '../screens/minion_tool_screen.dart';
 import '../screens/monster_codex_screen.dart';
 import '../screens/party_room_screen.dart';
+import '../screens/species_codex_screen.dart';
 import '../screens/spellbook_screen.dart';
 import '../screens/table_index_screen.dart';
 import '../services/haptic_service.dart';
@@ -521,6 +524,116 @@ class LandingToolRegistry {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ItemCompendiumScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'feats_compendium',
+          title: 'Feats Compendium',
+          category: 'Core Utilities',
+          badgeText: 'SRD Feats & Boons',
+          badgeColor: const Color(0xFF38BDF8),
+          icon: Icons.military_tech,
+          accentColor: const Color(0xFF38BDF8),
+          description:
+              'Explore all 2014 and 2024 SRD Feats, Origin Feats, Fighting Styles, and Epic Boons. Filter by prerequisite and category, inspect mechanic grants, and bookmark favorites.',
+          keywords: [
+            'feat',
+            'feats',
+            'origin',
+            'origin feat',
+            'fighting style',
+            'boon',
+            'epic boon',
+            'prerequisite',
+            'compendium',
+            'ability score improvement',
+            'asi',
+            'srd',
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FeatsCompendiumScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'class_catalogue',
+          title: 'Class Catalogue',
+          category: 'Core Utilities',
+          badgeText: 'SRD Classes',
+          badgeColor: const Color(0xFFFF7043),
+          icon: Icons.shield,
+          accentColor: const Color(0xFFFF7043),
+          description:
+              'Browse all 5e classes, hit dice, primary attributes, saving throws, starting proficiencies, full class progression text, and subclass archetypes under 2014 and 2024 rules.',
+          keywords: [
+            'class',
+            'classes',
+            'subclass',
+            'subclasses',
+            'archetype',
+            'barbarian',
+            'bard',
+            'cleric',
+            'druid',
+            'fighter',
+            'monk',
+            'paladin',
+            'ranger',
+            'rogue',
+            'sorcerer',
+            'warlock',
+            'wizard',
+            'artificer',
+            'hit die',
+            'progression',
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ClassCatalogueScreen()),
+            );
+          },
+        ),
+        LandingToolItem(
+          id: 'species_codex',
+          title: 'Species & Lineages Codex',
+          category: 'Core Utilities',
+          badgeText: 'SRD Species',
+          badgeColor: const Color(0xFF10B981),
+          icon: Icons.people_alt,
+          accentColor: const Color(0xFF10B981),
+          description:
+              'Browse all 2014 and 2024 SRD Species, Races, and Lineages. Inspect base speeds, sizes, darkvision, ability adjustments, subrace traits, and imported lore.',
+          keywords: [
+            'race',
+            'races',
+            'species',
+            'lineage',
+            'lineages',
+            'subrace',
+            'subraces',
+            'human',
+            'elf',
+            'dwarf',
+            'halfling',
+            'gnome',
+            'dragonborn',
+            'tiefling',
+            'aasimar',
+            'goliath',
+            'orc',
+            'darkvision',
+            'speed',
+            'size',
+            'srd',
+          ],
+          onLaunch: (context) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SpeciesCodexScreen()),
             );
           },
         ),
