@@ -149,25 +149,29 @@ class InteractiveRollActionCard extends StatelessWidget {
                 child: InkWell(
                   onTap: () => _rollAttack(context),
                   borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.casino_outlined, size: 14, color: theme.colorScheme.onPrimaryContainer),
-                        const SizedBox(width: 4),
-                        Text(
-                          attack.attackBonusString,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onPrimaryContainer,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.casino_outlined, size: 14, color: theme.colorScheme.onPrimaryContainer),
+                          const SizedBox(width: 4),
+                          Text(
+                            attack.attackBonusString,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -180,28 +184,32 @@ class InteractiveRollActionCard extends StatelessWidget {
                 child: InkWell(
                   onTap: () => _rollDamage(context),
                   borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.local_fire_department_outlined, size: 14, color: customColors?.critGold ?? Colors.amber),
-                        const SizedBox(width: 4),
-                        Text(
-                          attack.damageFormula,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: customColors?.critGold ?? Colors.amber,
-                          ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: (customColors?.critGold ?? Colors.amber).withValues(alpha: 0.5),
                         ),
-                      ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.local_fire_department_outlined, size: 14, color: customColors?.critGold ?? Colors.amber),
+                          const SizedBox(width: 4),
+                          Text(
+                            attack.damageFormula,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: customColors?.critGold ?? Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

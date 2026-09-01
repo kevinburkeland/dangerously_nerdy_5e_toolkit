@@ -38,7 +38,9 @@ class CharacterSheetController extends ChangeNotifier {
   bool get isSaving => _isSaving;
   DmRulesEdition get rulesEdition => _character.rulesEdition;
 
-  bool get hasInspiration => _character.customProperties['hasInspiration'] == true;
+  bool get hasInspiration =>
+      _character.resources.hasHeroicInspiration ||
+      _character.customProperties['hasInspiration'] == true;
 
   String get _debounceTaskKey => 'character_sheet_persist_${_character.id.slug}';
 
@@ -125,17 +127,15 @@ class CharacterSheetController extends ChangeNotifier {
     _schedulePersist();
   }
 
-  /// Toggles the attuned state of an item instance, strictly respecting the dynamic attunement limit.
-  /// Returns `true` if successful, or `false` if the attunement limit prevents attuning.
-  Future<bool> toggleAttuneItem(String instanceId) async {
+  /// Explicitly sets or toggles the attuned state of an item instance, validating capacity against [effectiveMaxAttunementSlots].
+  /// Returns `true` if successful, or `false` if the attunement limit is exceeded.
+  Future<bool> toggleAttunement(String instanceId, bool isAttuned) async {
     final targetItem = _character.inventory.firstWhere(
       (item) => item.instanceId == instanceId,
       orElse: () => throw ArgumentError('Item instance $instanceId not found'),
     );
 
-    final isCurrentlyAttuned = targetItem.isAttuned;
-    if (!isCurrentlyAttuned) {
-      // Check attunement capacity
+    if (isAttuned && !targetItem.isAttuned) {
       final currentAttunedCount = _character.inventory.where((i) => i.isAttuned).length;
       final maxSlots = _stats.effectiveMaxAttunementSlots;
       if (currentAttunedCount >= maxSlots) {
@@ -145,7 +145,7 @@ class CharacterSheetController extends ChangeNotifier {
 
     final updatedInventory = _character.inventory.map((item) {
       if (item.instanceId == instanceId) {
-        return item.copyWith(isAttuned: !isCurrentlyAttuned);
+        return item.copyWith(isAttuned: isAttuned);
       }
       return item;
     }).toList();
@@ -155,6 +155,16 @@ class CharacterSheetController extends ChangeNotifier {
     notifyListeners();
     _schedulePersist();
     return true;
+  }
+
+  /// Toggles the attuned state of an item instance, strictly respecting the dynamic attunement limit.
+  /// Returns `true` if successful, or `false` if the attunement limit prevents attuning.
+  Future<bool> toggleAttuneItem(String instanceId) async {
+    final targetItem = _character.inventory.firstWhere(
+      (item) => item.instanceId == instanceId,
+      orElse: () => throw ArgumentError('Item instance $instanceId not found'),
+    );
+    return toggleAttunement(instanceId, !targetItem.isAttuned);
   }
 
   /// Modifies current HP by [delta] (positive for healing, negative for damage).
@@ -206,9 +216,26 @@ class CharacterSheetController extends ChangeNotifier {
     _schedulePersist();
   }
 
-  /// Sets or updates exhaustion level (0 to 6).
+  /// Sets or updates death save counters (clamped 0 to 3).
+  Future<void> setDeathSaves({int? successes, int? failures}) async {
+    final curSuccesses = _character.resources.deathSaveSuccesses;
+    final curFailures = _character.resources.deathSaveFailures;
+    final newSuccesses = (successes ?? curSuccesses).clamp(0, 3);
+    final newFailures = (failures ?? curFailures).clamp(0, 3);
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        deathSaveSuccesses: newSuccesses,
+        deathSaveFailures: newFailures,
+      ),
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Sets or updates exhaustion level (0 to 10).
   Future<void> setExhaustionLevel(int level) async {
-    final clampedLevel = level.clamp(0, 6);
+    final clampedLevel = level.clamp(0, 10);
     final conditions = List<CharacterCondition>.from(_character.conditions)
       ..removeWhere((c) => c.conditionName.toLowerCase() == 'exhaustion');
 
@@ -219,7 +246,10 @@ class CharacterSheetController extends ChangeNotifier {
       ));
     }
 
-    _character = _character.copyWith(conditions: conditions);
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(exhaustionLevel: clampedLevel),
+      conditions: conditions,
+    );
     _recalculateStats();
     notifyListeners();
     _schedulePersist();
@@ -278,13 +308,132 @@ class CharacterSheetController extends ChangeNotifier {
     _schedulePersist();
   }
 
+  /// Sets heroic inspiration explicitly.
+  Future<void> setHeroicInspiration(bool value) async {
+    final customProps = Map<String, dynamic>.from(_character.customProperties);
+    customProps['hasInspiration'] = value;
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(hasHeroicInspiration: value),
+      customProperties: customProps,
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
   /// Toggles heroic inspiration status.
   Future<void> toggleInspiration() async {
-    final customProps = Map<String, dynamic>.from(_character.customProperties);
-    final current = customProps['hasInspiration'] == true;
-    customProps['hasInspiration'] = !current;
+    final current = hasInspiration;
+    await setHeroicInspiration(!current);
+  }
 
-    _character = _character.copyWith(customProperties: customProps);
+  /// Applies a Short Rest: spends the provided hit dice, applies rolled healing,
+  /// recovers Pact Magic slots, and persists state.
+  Future<void> applyShortRest({
+    required Map<String, int> hitDiceSpent,
+    required int healingRolled,
+  }) async {
+    final currentDice = Map<String, int>.from(_character.resources.currentHitDice);
+    for (final entry in hitDiceSpent.entries) {
+      final cur = currentDice[entry.key] ?? 0;
+      currentDice[entry.key] = math.max(0, cur - entry.value);
+    }
+
+    final maxHp = _stats.maxHp;
+    final curHp = _character.resources.currentHp;
+    final newHp = math.min(maxHp, curHp + healingRolled);
+
+    // Pact Magic slots recharge on short rest
+    final spellSlots = _character.resources.spellSlots;
+    final updatedSpellSlots = spellSlots.copyWith(
+      pactMagicCurrent: spellSlots.pactMagicMax,
+    );
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        currentHp: newHp,
+        currentHitDice: currentDice,
+        spellSlots: updatedSpellSlots,
+      ),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Applies a Long Rest:
+  /// - Resets HP to max
+  /// - Resets Temp HP to 0
+  /// - Clears death save successes and failures
+  /// - Restores all spell slots & pact slots
+  /// - Reduces exhaustion level by 1
+  /// - Restores spent hit dice up to half of character's total hit dice (min 1 if any spent)
+  Future<void> applyLongRest() async {
+    final maxHp = _stats.maxHp;
+    final spellSlots = _character.resources.spellSlots;
+    final restoredSlots = Map<int, int>.from(spellSlots.maxSlots);
+    final restoredSpellSlots = spellSlots.copyWith(
+      currentSlots: restoredSlots,
+      pactMagicCurrent: spellSlots.pactMagicMax,
+    );
+
+    // Calculate max hit dice pool per die type
+    final maxHitDice = <String, int>{};
+    int totalCharacterLevel = 0;
+    for (final c in _character.progression.classes) {
+      maxHitDice[c.hitDie] = (maxHitDice[c.hitDie] ?? 0) + c.level;
+      totalCharacterLevel += c.level;
+    }
+
+    // Regain up to half total level (min 1 if spent)
+    int diceToRegain = math.max(1, (totalCharacterLevel / 2).floor());
+    final currentDice = Map<String, int>.from(_character.resources.currentHitDice);
+
+    // If currentHitDice was empty, initialize from max
+    for (final entry in maxHitDice.entries) {
+      if (!currentDice.containsKey(entry.key)) {
+        currentDice[entry.key] = entry.value;
+      }
+    }
+
+    for (final entry in maxHitDice.entries) {
+      if (diceToRegain <= 0) break;
+      final die = entry.key;
+      final maxCount = entry.value;
+      final curCount = currentDice[die] ?? maxCount;
+      final spent = maxCount - curCount;
+      if (spent > 0) {
+        final recoverAmount = math.min(spent, diceToRegain);
+        currentDice[die] = curCount + recoverAmount;
+        diceToRegain -= recoverAmount;
+      }
+    }
+
+    // Reduce exhaustion by 1
+    final curExhaustion = _character.resources.exhaustionLevel;
+    final newExhaustion = math.max(0, curExhaustion - 1);
+    final conditions = List<CharacterCondition>.from(_character.conditions)
+      ..removeWhere((c) => c.conditionName.toLowerCase() == 'exhaustion');
+    if (newExhaustion > 0) {
+      conditions.add(CharacterCondition(
+        conditionName: 'exhaustion',
+        parameters: {'level': newExhaustion},
+      ));
+    }
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        currentHp: maxHp,
+        tempHp: 0,
+        deathSaveSuccesses: 0,
+        deathSaveFailures: 0,
+        exhaustionLevel: newExhaustion,
+        currentHitDice: currentDice,
+        spellSlots: restoredSpellSlots,
+      ),
+      conditions: conditions,
+    );
+    _recalculateStats();
     notifyListeners();
     _schedulePersist();
   }

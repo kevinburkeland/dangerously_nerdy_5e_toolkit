@@ -10,7 +10,9 @@ import '../../providers/character_sheet_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import '../spellbook/spell_quick_roll_dialog.dart';
+import 'feature_list_item.dart';
 import 'interactive_roll_action_card.dart';
+import 'skills_saves_matrix.dart';
 
 /// 4-Tab Content Area: Actions & Combat, Spells & Magic, Skills & Traits, and Inventory & Reliquary.
 class CharacterSheetTabs extends StatefulWidget {
@@ -268,286 +270,83 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
   // ==========================================
   Widget _buildSkillsTab(BuildContext context) {
     final theme = Theme.of(context);
-    final stats = widget.controller.stats;
     final character = widget.controller.character;
 
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
-        // Passive Senses Bar
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildPassiveItem('Perception', stats.passivePerception),
-              _buildPassiveItem('Insight', stats.passiveInsight),
-              _buildPassiveItem('Investigation', stats.passiveInvestigation),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
+        // Interactive Skills & Saves Matrix with Advantage/Disadvantage
+        SkillsSavesMatrix(controller: widget.controller),
+        const SizedBox(height: 18),
 
-        // Saving Throws Summary
+        // Features & Traits Section (Invocations, Feats, Specializations, Class Features, Species Traits)
         Text(
-          'SAVING THROWS',
+          'FEATURES & TRAITS',
           style: theme.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: AbilityType.values.map((ability) {
-            final mod = stats.savingThrowModifiers[ability] ?? 0;
-            final isProf = character.savingThrowProficiencies.contains(ability);
-            final modStr = mod >= 0 ? '+$mod' : '$mod';
 
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isProf
-                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
-                    : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isProf ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isProf ? Icons.check_circle : Icons.circle_outlined,
-                    size: 12,
-                    color: isProf ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text('${ability.shortName}: ', style: theme.textTheme.labelSmall),
-                  Text(
-                    modStr,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isProf ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+        // Species Traits
+        FeatureListItem(
+          name: '${character.speciesRef.displayName} Traits',
+          source: 'Species Lineage',
+          descriptionMarkdown: 'Inherent physical and biological traits granted by the ${character.speciesRef.displayName} species lineage.',
+          icon: Icons.fingerprint,
+          badgeColor: Colors.tealAccent,
         ),
 
-        const SizedBox(height: 16),
-
-        // 18-Skill Matrix
-        Text(
-          'SKILLS (18)',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...SkillType.values.map((skill) {
-          final mod = stats.skillModifiers[skill] ?? 0;
-          final modStr = mod >= 0 ? '+$mod' : '$mod';
-          final profLevel = character.skillProficiencies[skill] ?? SkillProficiencyLevel.none;
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: profLevel != SkillProficiencyLevel.none
-                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.15)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                _buildProficiencyPip(profLevel),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    skill.displayName,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: profLevel != SkillProficiencyLevel.none
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                ),
-                Text(
-                  skill.defaultAbility.shortName,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 32,
-                  child: Text(
-                    modStr,
-                    textAlign: TextAlign.end,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: profLevel != SkillProficiencyLevel.none
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        // Class Features
+        ...character.progression.classes.map((cls) {
+          return FeatureListItem(
+            name: '${cls.classRef.displayName} Features (Lvl ${cls.level})',
+            source: 'Class Feature',
+            descriptionMarkdown: 'Core class abilities, proficiencies, and subclass powers granted at level ${cls.level} of ${cls.classRef.displayName}.',
+            icon: Icons.shield,
+            badgeColor: theme.colorScheme.primary,
           );
         }),
 
-        // Features & Traits Section (Invocations, Feats, Specializations)
+        // Specializations & Invocations
         Builder(
           builder: (context) {
             final allSelectedOptions = character.progression.getAllSelectedFeatureOptions();
-            if (allSelectedOptions.isEmpty && character.feats.isEmpty) {
-              return const SizedBox.shrink();
-            }
-
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                Text(
-                  'SPECIALIZATIONS, INVOCATIONS & FEATS',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                    color: Colors.cyanAccent,
-                  ),
-                ),
-                const SizedBox(height: 8),
+              children: allSelectedOptions.entries.map((entry) {
+                final decisionId = entry.key;
+                final optionIds = entry.value;
 
-                // Render Selected Feature Options (e.g. Eldritch Invocations, Fighting Style, Divine Order)
-                ...allSelectedOptions.entries.map((entry) {
-                  final decisionId = entry.key;
-                  final optionIds = entry.value;
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.cyan.shade900.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.auto_awesome, size: 14, color: Colors.cyanAccent),
-                            const SizedBox(width: 6),
-                            Text(
-                              decisionId.replaceAll('-', ' ').toUpperCase(),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.cyanAccent),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: optionIds.map((optId) {
-                            final opt = SrdFeatureOptions.allOptions.where((o) => o.id == optId).firstOrNull;
-                            return Chip(
-                              label: Text(opt?.name ?? optId.replaceAll('_', ' ')),
-                              backgroundColor: Colors.cyan.shade900.withValues(alpha: 0.5),
-                              visualDensity: VisualDensity.compact,
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-
-                // Render Feats
-                if (character.feats.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade900.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.military_tech, size: 14, color: Colors.amber),
-                            SizedBox(width: 6),
-                            Text('FEATS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.amber)),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: character.feats.map((f) {
-                            return Chip(
-                              label: Text(f.displayName),
-                              backgroundColor: Colors.amber.shade900.withValues(alpha: 0.4),
-                              visualDensity: VisualDensity.compact,
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+                return Column(
+                  children: optionIds.map((optId) {
+                    final opt = SrdFeatureOptions.allOptions.where((o) => o.id == optId).firstOrNull;
+                    return FeatureListItem(
+                      name: opt?.name ?? optId.replaceAll('_', ' '),
+                      source: decisionId.replaceAll('-', ' ').toUpperCase(),
+                      descriptionMarkdown: opt?.descriptionMarkdown ?? 'Selected character customization option for $decisionId.',
+                      icon: Icons.auto_awesome,
+                      badgeColor: Colors.cyanAccent,
+                    );
+                  }).toList(),
+                );
+              }).toList(),
             );
           },
         ),
+
+        // Feats
+        ...character.feats.map((feat) {
+          return FeatureListItem(
+            name: feat.displayName,
+            source: 'Feat',
+            descriptionMarkdown: 'General or Origin feat granting unique combat or exploration prowess.',
+            icon: Icons.military_tech,
+            badgeColor: Colors.amber,
+          );
+        }),
       ],
     );
-  }
-
-  Widget _buildPassiveItem(String name, int val) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Text(
-          'Passive $name',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          '$val',
-          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProficiencyPip(SkillProficiencyLevel level) {
-    final theme = Theme.of(context);
-    switch (level) {
-      case SkillProficiencyLevel.expertise:
-        return const Icon(Icons.star, size: 14, color: Colors.amber);
-      case SkillProficiencyLevel.proficient:
-        return Icon(Icons.circle, size: 12, color: theme.colorScheme.primary);
-      case SkillProficiencyLevel.jackOfAllTrades:
-        return Icon(Icons.adjust, size: 12, color: theme.colorScheme.tertiary);
-      case SkillProficiencyLevel.none:
-        return const Icon(Icons.circle_outlined, size: 12, color: Colors.grey);
-    }
   }
 
   // ==========================================
@@ -741,8 +540,20 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                   ),
                   onPressed: () async {
                     HapticService.selectionTick(context);
+                    final messenger = ScaffoldMessenger.of(context);
                     final ok = await widget.controller.toggleAttuneItem(item.instanceId);
-                    if (!ok && mounted) {
+                    if (!mounted) return;
+                    if (!ok) {
+                      messenger.hideCurrentSnackBar();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Cannot attune: Character has reached maximum attunement limit (${stats.effectiveMaxAttunementSlots} items).',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: Colors.amber.shade900,
+                        ),
+                      );
                       _showAttunementLimitDialog(this.context, stats.effectiveMaxAttunementSlots);
                     }
                   },

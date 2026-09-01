@@ -683,7 +683,7 @@ class SpellSlotPool {
       pactMagicCurrent.hashCode;
 }
 
-/// Character resource pools (HP, Hit Dice, Spell Slots, Class charges)
+/// Character resource pools (HP, Hit Dice, Spell Slots, Class charges, Death Saves, Exhaustion, Inspiration)
 @immutable
 class CharacterResourcePool {
   final int currentHp;
@@ -692,6 +692,10 @@ class CharacterResourcePool {
   final SpellSlotPool spellSlots;
   final Map<String, int> customResourcesCurrent; // e.g. {"ki": 4, "rage": 2}
   final Map<String, int> customResourcesMax;
+  final int deathSaveSuccesses; // clamped 0-3
+  final int deathSaveFailures; // clamped 0-3
+  final int exhaustionLevel; // clamped 0-10
+  final bool hasHeroicInspiration;
 
   const CharacterResourcePool({
     this.currentHp = 10,
@@ -700,7 +704,13 @@ class CharacterResourcePool {
     this.spellSlots = const SpellSlotPool(),
     this.customResourcesCurrent = const {},
     this.customResourcesMax = const {},
-  });
+    int deathSaveSuccesses = 0,
+    int deathSaveFailures = 0,
+    int exhaustionLevel = 0,
+    this.hasHeroicInspiration = false,
+  })  : deathSaveSuccesses = deathSaveSuccesses < 0 ? 0 : (deathSaveSuccesses > 3 ? 3 : deathSaveSuccesses),
+        deathSaveFailures = deathSaveFailures < 0 ? 0 : (deathSaveFailures > 3 ? 3 : deathSaveFailures),
+        exhaustionLevel = exhaustionLevel < 0 ? 0 : (exhaustionLevel > 10 ? 10 : exhaustionLevel);
 
   CharacterResourcePool copyWith({
     int? currentHp,
@@ -709,6 +719,10 @@ class CharacterResourcePool {
     SpellSlotPool? spellSlots,
     Map<String, int>? customResourcesCurrent,
     Map<String, int>? customResourcesMax,
+    int? deathSaveSuccesses,
+    int? deathSaveFailures,
+    int? exhaustionLevel,
+    bool? hasHeroicInspiration,
   }) {
     return CharacterResourcePool(
       currentHp: currentHp ?? this.currentHp,
@@ -718,6 +732,10 @@ class CharacterResourcePool {
       customResourcesCurrent:
           customResourcesCurrent != null ? Map.unmodifiable(customResourcesCurrent) : this.customResourcesCurrent,
       customResourcesMax: customResourcesMax != null ? Map.unmodifiable(customResourcesMax) : this.customResourcesMax,
+      deathSaveSuccesses: deathSaveSuccesses ?? this.deathSaveSuccesses,
+      deathSaveFailures: deathSaveFailures ?? this.deathSaveFailures,
+      exhaustionLevel: exhaustionLevel ?? this.exhaustionLevel,
+      hasHeroicInspiration: hasHeroicInspiration ?? this.hasHeroicInspiration,
     );
   }
 
@@ -728,6 +746,10 @@ class CharacterResourcePool {
         'spellSlots': spellSlots.toMap(),
         'customResourcesCurrent': customResourcesCurrent,
         'customResourcesMax': customResourcesMax,
+        'deathSaveSuccesses': deathSaveSuccesses,
+        'deathSaveFailures': deathSaveFailures,
+        'exhaustionLevel': exhaustionLevel,
+        'hasHeroicInspiration': hasHeroicInspiration,
       };
 
   factory CharacterResourcePool.fromMap(Map<String, dynamic> map) {
@@ -741,6 +763,10 @@ class CharacterResourcePool {
           Map<String, int>.from(map['customResourcesCurrent'] as Map? ?? {}),
       customResourcesMax:
           Map<String, int>.from(map['customResourcesMax'] as Map? ?? {}),
+      deathSaveSuccesses: (map['deathSaveSuccesses'] as num?)?.toInt() ?? 0,
+      deathSaveFailures: (map['deathSaveFailures'] as num?)?.toInt() ?? 0,
+      exhaustionLevel: (map['exhaustionLevel'] as num?)?.toInt() ?? 0,
+      hasHeroicInspiration: map['hasHeroicInspiration'] == true,
     );
   }
 
@@ -754,7 +780,11 @@ class CharacterResourcePool {
           mapEquals(currentHitDice, other.currentHitDice) &&
           spellSlots == other.spellSlots &&
           mapEquals(customResourcesCurrent, other.customResourcesCurrent) &&
-          mapEquals(customResourcesMax, other.customResourcesMax);
+          mapEquals(customResourcesMax, other.customResourcesMax) &&
+          deathSaveSuccesses == other.deathSaveSuccesses &&
+          deathSaveFailures == other.deathSaveFailures &&
+          exhaustionLevel == other.exhaustionLevel &&
+          hasHeroicInspiration == other.hasHeroicInspiration;
 
   @override
   int get hashCode =>
@@ -763,7 +793,11 @@ class CharacterResourcePool {
       currentHitDice.length.hashCode ^
       spellSlots.hashCode ^
       customResourcesCurrent.length.hashCode ^
-      customResourcesMax.length.hashCode;
+      customResourcesMax.length.hashCode ^
+      deathSaveSuccesses.hashCode ^
+      deathSaveFailures.hashCode ^
+      exhaustionLevel.hashCode ^
+      hasHeroicInspiration.hashCode;
 }
 
 /// Active Condition and Temporary Status Effect
