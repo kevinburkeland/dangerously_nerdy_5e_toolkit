@@ -87,6 +87,38 @@ class DebouncedStorageService {
     await Future.wait(futures);
   }
 
+  /// Synchronously cancels all pending timers and immediately fires all pending write tasks.
+  /// Designed for browser unload and application teardown events where the runtime may terminate abruptly.
+  void flushAllSync() {
+    for (final timer in _debounceTimers.values) {
+      timer.cancel();
+    }
+    _debounceTimers.clear();
+
+    final tasksToFlush = Map<String, AsyncWriteTask>.from(_pendingTasks);
+    _pendingTasks.clear();
+
+    if (tasksToFlush.isEmpty) return;
+
+    for (final entry in tasksToFlush.entries) {
+      try {
+        unawaited(entry.value().catchError((e, stackTrace) {
+          _logger.logNonFatal(
+            e,
+            stackTrace,
+            reason: 'Failed to execute debounced write task during flushAllSync: ${entry.key}',
+          );
+        }));
+      } catch (e, stackTrace) {
+        _logger.logNonFatal(
+          e,
+          stackTrace,
+          reason: 'Synchronous failure initiating debounced task in flushAllSync: ${entry.key}',
+        );
+      }
+    }
+  }
+
   /// Cancels all pending tasks without writing (used for test teardown).
   @visibleForTesting
   void cancelAllForTesting() {

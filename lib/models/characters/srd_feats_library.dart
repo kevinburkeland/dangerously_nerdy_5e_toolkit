@@ -18,7 +18,12 @@ class SrdFeatsLibrary {
         '**Initiative Proficiency.** Add your Proficiency Bonus to Initiative rolls.\n\n'
         '**Initiative Swap.** Immediately after rolling Initiative, you can swap your Initiative with a willing ally who rolled Initiative.',
     grants: [
-      FeatureGrant.passiveBonus(stat: 'initiative', formula: 'profBonus', label: 'Alert: +Prof to Initiative'),
+      FeatureGrant.passiveBonus(
+        grantId: 'feat_alert_initiative',
+        stat: 'initiative',
+        formula: 'profBonus',
+        label: 'Alert: +Prof to Initiative',
+      ),
     ],
     customProperties: const {
       'isOriginFeat': true,
@@ -141,7 +146,11 @@ class SrdFeatsLibrary {
     descriptionMarkdown:
         '**Enduring Vitality.** Your hit point maximum increases by an amount equal to twice your character level when you gain this feat. Whenever you gain a level thereafter, your HP maximum increases by an additional 2 hit points.',
     grants: [
-      FeatureGrant.hpBonus(perLevel: 2, label: 'Tough: +2 HP/level'),
+      FeatureGrant.hpBonus(
+        grantId: 'feat_tough_hp',
+        perLevel: 2,
+        label: 'Tough: +2 HP/level',
+      ),
     ],
     customProperties: const {
       'isOriginFeat': true,

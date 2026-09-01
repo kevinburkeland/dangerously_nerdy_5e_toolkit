@@ -10,7 +10,9 @@ import 'models/app_settings.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
 import 'services/app_services.dart';
+import 'services/persistence/app_database_service.dart';
 import 'services/persistence/homebrew_persistence_service.dart';
+import 'services/persistence/web_lifecycle.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -37,7 +39,19 @@ void main() {
       return true;
     };
 
-    // 1. Synchronously pre-hydrate SharedPreferences & run schema migrations
+    // 1. Initialize local NoSQL database & web lifecycle before rendering Frame 1
+    try {
+      await AppDatabaseService.instance.init();
+      setupWebLifecycle(services.debouncedStorage);
+    } catch (e, stackTrace) {
+      logger.logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to initialize AppDatabaseService or WebLifecycle hooks during startup',
+      );
+    }
+
+    // 2. Synchronously pre-hydrate SharedPreferences & run schema migrations
     // prior to rendering Frame 1 to eliminate any flash-of-unstyled-content (FOUC).
     SharedPreferences? prefs;
     try {

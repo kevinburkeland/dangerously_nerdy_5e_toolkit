@@ -69,7 +69,7 @@ enum GrantType {
 @immutable
 class FeatureGrant {
   final GrantType type;
-  final String? grantId;
+  final String grantId;
 
   /// Type-specific structured data. The expected keys are documented on
   /// each [GrantType] value and enforced by the typed factory constructors.
@@ -80,7 +80,7 @@ class FeatureGrant {
 
   const FeatureGrant({
     required this.type,
-    this.grantId,
+    required this.grantId,
     this.payload = const {},
     this.label,
   });
@@ -90,7 +90,12 @@ class FeatureGrant {
   // ---------------------------------------------------------------------------
 
   /// +[amount] HP flat, or +[perLevel] HP per character level (Tough feat style).
-  factory FeatureGrant.hpBonus({int flat = 0, int perLevel = 0, String? grantId, String? label}) =>
+  factory FeatureGrant.hpBonus({
+    required String grantId,
+    int flat = 0,
+    int perLevel = 0,
+    String? label,
+  }) =>
       FeatureGrant(
         type: GrantType.hpModifier,
         grantId: grantId,
@@ -103,10 +108,10 @@ class FeatureGrant {
 
   /// Unarmored Defense formula: 10 + DEX + [primaryAbility] (+ [secondaryAbility]?).
   factory FeatureGrant.unarmoredDefense({
+    required String grantId,
     required String primaryAbility,
     String? secondaryAbility,
     bool requiresNoShield = false,
-    String? grantId,
     String? label,
   }) =>
       FeatureGrant(
@@ -123,7 +128,11 @@ class FeatureGrant {
       );
 
   /// Draconic Resilience: base AC 13 + DEX (no armor required, no shield restriction).
-  factory FeatureGrant.draconicResilience({String? grantId, String? label}) => FeatureGrant(
+  factory FeatureGrant.draconicResilience({
+    required String grantId,
+    String? label,
+  }) =>
+      FeatureGrant(
         type: GrantType.acFormula,
         grantId: grantId,
         payload: {
@@ -137,10 +146,10 @@ class FeatureGrant {
 
   /// +[amount] AC bonus (e.g., Defense Fighting Style: +1 AC while in armor).
   factory FeatureGrant.acBonus({
+    required String grantId,
     required int amount,
     bool requiresArmor = false,
     bool requiresNoArmor = false,
-    String? grantId,
     String? label,
   }) =>
       FeatureGrant(
@@ -157,10 +166,10 @@ class FeatureGrant {
 
   /// +[amount] to [stat]. Supported stats: 'initiative', 'passivePerception', 'speed'.
   factory FeatureGrant.passiveBonus({
+    required String grantId,
     required String stat,
     required String formula,
     int? flat,
-    String? grantId,
     String? label,
   }) =>
       FeatureGrant(
@@ -175,7 +184,11 @@ class FeatureGrant {
       );
 
   /// Proficiency with a specific skill.
-  factory FeatureGrant.skillProficiency(String skill, {String? grantId, String? label}) =>
+  factory FeatureGrant.skillProficiency(
+    String skill, {
+    required String grantId,
+    String? label,
+  }) =>
       FeatureGrant(
         type: GrantType.bonusSkill,
         grantId: grantId,
@@ -185,9 +198,9 @@ class FeatureGrant {
 
   /// Choose [count] skills from an optional [pool] (null = any skill).
   factory FeatureGrant.skillChoice({
+    required String grantId,
     required int count,
     List<String>? pool,
-    String? grantId,
     String? label,
   }) =>
       FeatureGrant(
@@ -201,7 +214,12 @@ class FeatureGrant {
       );
 
   /// Expertise (double proficiency) on a specific skill.
-  factory FeatureGrant.expertise(String skill, {String? grantId, String? label}) => FeatureGrant(
+  factory FeatureGrant.expertise(
+    String skill, {
+    required String grantId,
+    String? label,
+  }) =>
+      FeatureGrant(
         type: GrantType.expertiseGrant,
         grantId: grantId,
         payload: {'skill': skill},
@@ -209,7 +227,11 @@ class FeatureGrant {
       );
 
   /// Proficiency with weapon, armor, or tool category.
-  factory FeatureGrant.weaponArmorProficiency(String proficiency, {String? grantId, String? label}) =>
+  factory FeatureGrant.weaponArmorProficiency(
+    String proficiency, {
+    required String grantId,
+    String? label,
+  }) =>
       FeatureGrant(
         type: GrantType.proficiency,
         grantId: grantId,
@@ -219,9 +241,9 @@ class FeatureGrant {
 
   /// Bonus [count] cantrips (optionally specifying casting ability).
   factory FeatureGrant.bonusCantrips({
+    required String grantId,
     required int count,
     String? castingAbility,
-    String? grantId,
     String? label,
   }) =>
       FeatureGrant(
@@ -236,9 +258,9 @@ class FeatureGrant {
 
   /// Bonus specific spell granted.
   factory FeatureGrant.bonusSpell({
+    required String grantId,
     required String slug,
     required String displayName,
-    String? grantId,
     String? label,
   }) =>
       FeatureGrant(
@@ -252,7 +274,12 @@ class FeatureGrant {
       );
 
   /// Darkvision at [feet] range (stacks to max with existing darkvision).
-  factory FeatureGrant.darkvisionRange(int feet, {String? grantId, String? label}) => FeatureGrant(
+  factory FeatureGrant.darkvisionRange(
+    int feet, {
+    required String grantId,
+    String? label,
+  }) =>
+      FeatureGrant(
         type: GrantType.darkvision,
         grantId: grantId,
         payload: {'feet': feet},
@@ -261,9 +288,9 @@ class FeatureGrant {
 
   /// +[amount] to a specific [ability] score (e.g., racial ASI).
   factory FeatureGrant.abilityBoost({
+    required String grantId,
     required String ability,
     required int amount,
-    String? grantId,
     String? label,
   }) =>
       FeatureGrant(
@@ -274,7 +301,12 @@ class FeatureGrant {
       );
 
   /// Damage resistance to a specific damage type (e.g., fire).
-  factory FeatureGrant.resistance(String damageType, {String? grantId, String? label}) => FeatureGrant(
+  factory FeatureGrant.resistance(
+    String damageType, {
+    required String grantId,
+    String? label,
+  }) =>
+      FeatureGrant(
         type: GrantType.resistanceGrant,
         grantId: grantId,
         payload: {'damageType': damageType},
@@ -282,7 +314,12 @@ class FeatureGrant {
       );
 
   /// Speed modifier in feet (positive = bonus, negative = penalty).
-  factory FeatureGrant.speedBonus(int amount, {String? grantId, String? label}) => FeatureGrant(
+  factory FeatureGrant.speedBonus(
+    int amount, {
+    required String grantId,
+    String? label,
+  }) =>
+      FeatureGrant(
         type: GrantType.speedModifier,
         grantId: grantId,
         payload: {'amount': amount},
@@ -295,7 +332,7 @@ class FeatureGrant {
 
   Map<String, dynamic> toMap() => {
         'type': type.name,
-        if (grantId != null) 'grantId': grantId,
+        'grantId': grantId,
         'payload': payload,
         if (label != null) 'label': label,
       };
@@ -306,9 +343,14 @@ class FeatureGrant {
       (g) => g.name == typeName,
       orElse: () => GrantType.passiveModifier,
     );
+    final rawGrantId = map['grantId']?.toString();
+    final grantId = (rawGrantId != null && rawGrantId.isNotEmpty)
+        ? rawGrantId
+        : 'grant_${type.name}_legacy';
+
     return FeatureGrant(
       type: type,
-      grantId: map['grantId']?.toString(),
+      grantId: grantId,
       payload: Map<String, dynamic>.from(map['payload'] as Map? ?? {}),
       label: map['label']?.toString(),
     );
@@ -324,10 +366,10 @@ class FeatureGrant {
           label == other.label;
 
   @override
-  int get hashCode => type.hashCode ^ (grantId?.hashCode ?? 0) ^ (label?.hashCode ?? 0);
+  int get hashCode => type.hashCode ^ grantId.hashCode ^ (label?.hashCode ?? 0);
 
   @override
-  String toString() => 'FeatureGrant(${type.name}${grantId != null ? ' ($grantId)' : ''}${label != null ? ': $label' : ''})';
+  String toString() => 'FeatureGrant(${type.name} ($grantId)${label != null ? ': $label' : ''})';
 }
 
 // ---------------------------------------------------------------------------

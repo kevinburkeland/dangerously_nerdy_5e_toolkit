@@ -23,6 +23,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _kPinnedSpellIds = 'setting_pinned_spell_ids';
   static const _kPinnedMonsterIds = 'setting_pinned_monster_ids';
   static const _kPinnedItemIds = 'setting_pinned_item_ids';
+  static const _kBypassedHomebrewSlugs = 'setting_bypassed_homebrew_slugs';
 
   // Legacy v1 keys (for fallback during in-flight upgrades)
   static const _kLegacyThemeMode = 'setting_theme_mode';
@@ -124,6 +125,7 @@ class SettingsProvider extends ChangeNotifier {
       final pinnedSpellList = prefs.getStringList(_kPinnedSpellIds);
       final pinnedMonsterList = prefs.getStringList(_kPinnedMonsterIds);
       final pinnedItemList = prefs.getStringList(_kPinnedItemIds);
+      final bypassedList = prefs.getStringList(_kBypassedHomebrewSlugs);
 
       return AppSettings(
         themeMode: resolvedTheme,
@@ -141,6 +143,7 @@ class SettingsProvider extends ChangeNotifier {
         pinnedSpellIds: pinnedSpellList?.toSet() ?? const <String>{},
         pinnedMonsterIds: pinnedMonsterList?.toSet() ?? const <String>{},
         pinnedItemIds: pinnedItemList?.toSet() ?? const <String>{},
+        bypassedHomebrewSlugs: bypassedList?.toSet() ?? const <String>{},
       );
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
@@ -190,6 +193,7 @@ class SettingsProvider extends ChangeNotifier {
         prefs.setStringList(_kPinnedSpellIds, newSettings.pinnedSpellIds.toList()),
         prefs.setStringList(_kPinnedMonsterIds, newSettings.pinnedMonsterIds.toList()),
         prefs.setStringList(_kPinnedItemIds, newSettings.pinnedItemIds.toList()),
+        prefs.setStringList(_kBypassedHomebrewSlugs, newSettings.bypassedHomebrewSlugs.toList()),
       ]);
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
@@ -258,6 +262,19 @@ class SettingsProvider extends ChangeNotifier {
   void pinItem(String itemId) => updateSettings(_settings.copyWith(pinnedItemIds: _addSetId(_settings.pinnedItemIds, itemId)));
   void unpinItem(String itemId) => updateSettings(_settings.copyWith(pinnedItemIds: _removeSetId(_settings.pinnedItemIds, itemId)));
   void clearPinnedItems() => _settings.pinnedItemIds.isEmpty ? null : updateSettings(_settings.copyWith(pinnedItemIds: const <String>{}));
+
+  // --- Homebrew Override Bypass ---
+  bool isHomebrewBypassed(String slug) => _settings.bypassedHomebrewSlugs.contains(slug);
+
+  void toggleHomebrewBypass(String slug) {
+    final updatedSet = Set<String>.from(_settings.bypassedHomebrewSlugs);
+    if (updatedSet.contains(slug)) {
+      updatedSet.remove(slug);
+    } else {
+      updatedSet.add(slug);
+    }
+    updateSettings(_settings.copyWith(bypassedHomebrewSlugs: updatedSet));
+  }
 }
 
 class SettingsScope extends InheritedNotifier<SettingsProvider> {

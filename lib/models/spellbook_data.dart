@@ -407,8 +407,22 @@ class SpellbookLibrary {
   ];
 
   static SpellItem? getSpellById(String id) {
+    final lower = id.trim().toLowerCase();
+    final stripped = lower.startsWith('spell_') ? lower.substring(6) : lower;
+    final hyphenated = stripped.replaceAll('_', '-');
+    final underscored = stripped.replaceAll('-', '_');
+
     try {
-      return allSpells.firstWhere((s) => s.id == id);
+      return allSpells.firstWhere((s) {
+        final sId = s.id.toLowerCase();
+        if (sId == lower) return true;
+        final sStripped = sId.startsWith('spell_') ? sId.substring(6) : sId;
+        return sStripped == stripped ||
+            sStripped == hyphenated ||
+            sStripped == underscored ||
+            s.name.toLowerCase() == lower ||
+            s.name.toLowerCase() == hyphenated.replaceAll('-', ' ');
+      });
     } catch (_) {
       return null;
     }

@@ -4,6 +4,7 @@ import 'core_types.dart';
 import 'entity_reference.dart';
 import 'spell_monster_equipment.dart';
 import '../party/party_purse.dart';
+import '../spellbook_data.dart';
 import '../dm_screen_data.dart' show DmRulesEdition;
 import '../../services/rules/dnd_5e_rules_engine.dart';
 
@@ -902,9 +903,14 @@ class Character extends DomainEntity {
 
   List<EntityReference<Spell>> get cantrips {
     final list = <EntityReference<Spell>>[];
-    for (final entry in allocatedSpells.entries) {
-      if (entry.key.toLowerCase().contains('cantrip')) {
-        for (final s in entry.value) {
+    for (final spells in allocatedSpells.values) {
+      for (final s in spells) {
+        final spellDef = SpellbookLibrary.getSpellById(s.slug);
+        if (spellDef != null) {
+          if (spellDef.level == 0 && !list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        } else if (s.slug.toLowerCase().contains('cantrip')) {
           if (!list.any((e) => e.slug == s.slug)) {
             list.add(s);
           }
@@ -921,9 +927,14 @@ class Character extends DomainEntity {
 
   List<EntityReference<Spell>> get spellsKnown {
     final list = <EntityReference<Spell>>[];
-    for (final entry in allocatedSpells.entries) {
-      if (!entry.key.toLowerCase().contains('cantrip')) {
-        for (final s in entry.value) {
+    for (final spells in allocatedSpells.values) {
+      for (final s in spells) {
+        final spellDef = SpellbookLibrary.getSpellById(s.slug);
+        if (spellDef != null) {
+          if (spellDef.level > 0 && !list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        } else if (!s.slug.toLowerCase().contains('cantrip')) {
           if (!list.any((e) => e.slug == s.slug)) {
             list.add(s);
           }

@@ -22,6 +22,7 @@ import '../acl/homebrew_merge_resolver.dart';
 import '../acl/srd_equivalence_index.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
+import 'app_database_service.dart';
 
 /// Service managing persistent storage and repository hydration for user-created homebrew and campaign overrides.
 class HomebrewPersistenceService {
@@ -52,11 +53,49 @@ class HomebrewPersistenceService {
   factory HomebrewPersistenceService() => _instance;
   HomebrewPersistenceService._internal();
 
+  final AppDatabaseService _db = AppDatabaseService.instance;
+
+  Future<List<String>> _loadStringList(String key) async {
+    try {
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrew)) {
+        final dbVal = _db.get(AppDatabaseService.boxHomebrew, key);
+        if (dbVal is List) {
+          return dbVal.map((e) => e.toString()).toList();
+        }
+      }
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList(key) ?? <String>[];
+      if (list.isNotEmpty && _db.isBoxOpen(AppDatabaseService.boxHomebrew)) {
+        await _db.put(AppDatabaseService.boxHomebrew, key, list);
+      }
+      return list;
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load string list for $key');
+      return [];
+    }
+  }
+
+  Future<void> _saveStringList(String key, List<String> list) async {
+    try {
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrew)) {
+        await _db.put(AppDatabaseService.boxHomebrew, key, list);
+      }
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList(key, list);
+      } catch (_) {
+        // Suppress quota exceeded in SharedPreferences
+      }
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to save string list for $key');
+    }
+  }
+
+
   /// Loads all custom spells from persistent storage.
   Future<List<Spell>> loadCustomSpells() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewSpells) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewSpells);
       return rawList
           .map((jsonStr) =>
               Spell.fromMap(Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -78,13 +117,12 @@ class HomebrewPersistenceService {
     } else {
       spells.add(spell);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewSpells,
       spells.map((s) => json.encode(s.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewSpellsRaw, spell.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewSpellsRaw, spell.id.slug, rawPayload);
     }
   }
 
@@ -106,14 +144,13 @@ class HomebrewPersistenceService {
         spells.add(spell);
       }
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewSpells,
       spells.map((s) => json.encode(s.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newSpells.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewSpellsRaw, newSpells[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewSpellsRaw, newSpells[i].id.slug, rawPayloads[i]);
       }
     }
   }
@@ -122,19 +159,17 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomSpell(String slug) async {
     final spells = await loadCustomSpells();
     spells.removeWhere((s) => s.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewSpells,
       spells.map((s) => json.encode(s.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewSpellsRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewSpellsRaw, slug);
   }
 
   /// Loads all custom monsters from persistent storage.
   Future<List<Monster>> loadCustomMonsters() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewMonsters) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewMonsters);
       return rawList
           .map((jsonStr) =>
               Monster.fromMap(Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -194,13 +229,12 @@ class HomebrewPersistenceService {
     } else {
       monsters.add(monster);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewMonsters,
       monsters.map((m) => json.encode(m.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewMonstersRaw, monster.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewMonstersRaw, monster.id.slug, rawPayload);
     }
     MonsterCodexLibrary.addHomebrewMonster(monster);
   }
@@ -224,14 +258,13 @@ class HomebrewPersistenceService {
       }
       MonsterCodexLibrary.addHomebrewMonster(monster);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewMonsters,
       monsters.map((m) => json.encode(m.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newMonsters.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewMonstersRaw, newMonsters[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewMonstersRaw, newMonsters[i].id.slug, rawPayloads[i]);
       }
     }
   }
@@ -240,20 +273,18 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomMonster(String slug) async {
     final monsters = await loadCustomMonsters();
     monsters.removeWhere((m) => m.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewMonsters,
       monsters.map((m) => json.encode(m.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewMonstersRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewMonstersRaw, slug);
     MonsterCodexLibrary.removeHomebrewMonster(slug);
   }
 
   /// Loads all custom items from persistent storage.
   Future<List<EquipmentItem>> loadCustomItems() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewItems) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewItems);
       return rawList
           .map((jsonStr) => EquipmentItem.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -275,13 +306,12 @@ class HomebrewPersistenceService {
     } else {
       items.add(item);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewItems,
       items.map((i) => json.encode(i.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewItemsRaw, item.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewItemsRaw, item.id.slug, rawPayload);
     }
   }
 
@@ -303,14 +333,13 @@ class HomebrewPersistenceService {
         items.add(item);
       }
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewItems,
       items.map((i) => json.encode(i.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newItems.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewItemsRaw, newItems[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewItemsRaw, newItems[i].id.slug, rawPayloads[i]);
       }
     }
   }
@@ -319,19 +348,17 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomItem(String slug) async {
     final items = await loadCustomItems();
     items.removeWhere((i) => i.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewItems,
       items.map((i) => json.encode(i.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewItemsRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewItemsRaw, slug);
   }
 
   /// Loads all custom classes from persistent storage.
   Future<List<CharacterClass>> loadCustomClasses() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewClasses) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewClasses);
       return rawList
           .map((jsonStr) => CharacterClass.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -353,13 +380,12 @@ class HomebrewPersistenceService {
     } else {
       classes.add(characterClass);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewClasses,
       classes.map((c) => json.encode(c.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewClassesRaw, characterClass.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewClassesRaw, characterClass.id.slug, rawPayload);
     }
     SrdClassesLibrary.addCustomClass(characterClass);
   }
@@ -383,14 +409,13 @@ class HomebrewPersistenceService {
       }
       SrdClassesLibrary.addCustomClass(c);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewClasses,
       classes.map((c) => json.encode(c.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newClasses.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewClassesRaw, newClasses[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewClassesRaw, newClasses[i].id.slug, rawPayloads[i]);
       }
     }
   }
@@ -399,20 +424,18 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomClass(String slug) async {
     final classes = await loadCustomClasses();
     classes.removeWhere((c) => c.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewClasses,
       classes.map((c) => json.encode(c.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewClassesRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewClassesRaw, slug);
     SrdClassesLibrary.removeCustomClass(slug);
   }
 
   /// Loads all custom subclasses from persistent storage.
   Future<List<Subclass>> loadCustomSubclasses() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewSubclasses) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewSubclasses);
       return rawList
           .map((jsonStr) => Subclass.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -434,13 +457,12 @@ class HomebrewPersistenceService {
     } else {
       subs.add(subclass);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewSubclasses,
       subs.map((s) => json.encode(s.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewSubclassesRaw, subclass.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewSubclassesRaw, subclass.id.slug, rawPayload);
     }
     SrdClassesLibrary.addCustomSubclass(subclass);
   }
@@ -463,14 +485,13 @@ class HomebrewPersistenceService {
         subs.add(s);
       }
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewSubclasses,
       subs.map((s) => json.encode(s.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newSubclasses.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewSubclassesRaw, newSubclasses[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewSubclassesRaw, newSubclasses[i].id.slug, rawPayloads[i]);
       }
     }
     for (final s in newSubclasses) {
@@ -482,20 +503,18 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomSubclass(String slug) async {
     final subs = await loadCustomSubclasses();
     subs.removeWhere((s) => s.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewSubclasses,
       subs.map((s) => json.encode(s.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewSubclassesRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewSubclassesRaw, slug);
     SrdClassesLibrary.removeCustomSubclass(slug);
   }
 
   /// Loads all custom races from persistent storage.
   Future<List<Race>> loadCustomRaces() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewRaces) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewRaces);
       return rawList
           .map((jsonStr) => Race.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -517,13 +536,12 @@ class HomebrewPersistenceService {
     } else {
       races.add(race);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewRaces,
       races.map((r) => json.encode(r.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewRacesRaw, race.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewRacesRaw, race.id.slug, rawPayload);
     }
     SrdSpeciesLibrary.addCustomSpecies(race);
   }
@@ -547,14 +565,13 @@ class HomebrewPersistenceService {
       }
       SrdSpeciesLibrary.addCustomSpecies(r);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewRaces,
       races.map((r) => json.encode(r.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newRaces.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewRacesRaw, newRaces[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewRacesRaw, newRaces[i].id.slug, rawPayloads[i]);
       }
     }
   }
@@ -563,20 +580,18 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomRace(String slug) async {
     final races = await loadCustomRaces();
     races.removeWhere((r) => r.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewRaces,
       races.map((r) => json.encode(r.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewRacesRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewRacesRaw, slug);
     SrdSpeciesLibrary.removeCustomSpecies(slug);
   }
 
   /// Loads all custom feats from persistent storage.
   Future<List<Feat>> loadCustomFeats() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewFeats) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewFeats);
       return rawList
           .map((jsonStr) => Feat.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -598,13 +613,12 @@ class HomebrewPersistenceService {
     } else {
       feats.add(feat);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewFeats,
       feats.map((f) => json.encode(f.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewFeatsRaw, feat.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewFeatsRaw, feat.id.slug, rawPayload);
     }
     SrdFeatsLibrary.addCustomFeat(feat);
   }
@@ -628,14 +642,13 @@ class HomebrewPersistenceService {
       }
       SrdFeatsLibrary.addCustomFeat(f);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewFeats,
       feats.map((f) => json.encode(f.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newFeats.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewFeatsRaw, newFeats[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewFeatsRaw, newFeats[i].id.slug, rawPayloads[i]);
       }
     }
   }
@@ -644,20 +657,18 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomFeat(String slug) async {
     final feats = await loadCustomFeats();
     feats.removeWhere((f) => f.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewFeats,
       feats.map((f) => json.encode(f.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewFeatsRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewFeatsRaw, slug);
     SrdFeatsLibrary.removeCustomFeat(slug);
   }
 
   /// Loads all custom backgrounds from persistent storage.
   Future<List<Background>> loadCustomBackgrounds() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewBackgrounds) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewBackgrounds);
       return rawList
           .map((jsonStr) => Background.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -679,13 +690,12 @@ class HomebrewPersistenceService {
     } else {
       backgrounds.add(background);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewBackgrounds,
       backgrounds.map((b) => json.encode(b.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewBackgroundsRaw, background.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewBackgroundsRaw, background.id.slug, rawPayload);
     }
     SrdBackgroundsLibrary.addCustomBackground(background);
   }
@@ -709,14 +719,13 @@ class HomebrewPersistenceService {
       }
       SrdBackgroundsLibrary.addCustomBackground(b);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewBackgrounds,
       backgrounds.map((b) => json.encode(b.toMap())).toList(),
     );
     if (rawPayloads != null) {
       for (int i = 0; i < newBackgrounds.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewBackgroundsRaw, newBackgrounds[i].id.slug, rawPayloads[i], prefs);
+        await _saveRawPayload(_keyHomebrewBackgroundsRaw, newBackgrounds[i].id.slug, rawPayloads[i]);
       }
     }
   }
@@ -725,20 +734,18 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomBackground(String slug) async {
     final backgrounds = await loadCustomBackgrounds();
     backgrounds.removeWhere((b) => b.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewBackgrounds,
       backgrounds.map((b) => json.encode(b.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewBackgroundsRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewBackgroundsRaw, slug);
     SrdBackgroundsLibrary.removeCustomBackground(slug);
   }
 
   /// Loads all custom generic entries (tables, rules, etc.) from persistent storage.
   Future<List<HomebrewCompendiumEntry>> loadCustomOtherEntries() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawList = prefs.getStringList(_keyHomebrewOther) ?? [];
+      final rawList = await _loadStringList(_keyHomebrewOther);
       return rawList
           .map((jsonStr) => HomebrewCompendiumEntry.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
@@ -758,13 +765,12 @@ class HomebrewPersistenceService {
     } else {
       entries.add(entry);
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewOther,
       entries.map((e) => json.encode(e.toMap())).toList(),
     );
     if (rawPayload != null) {
-      await _saveRawPayload(_keyHomebrewOtherRaw, entry.id.slug, rawPayload, prefs);
+      await _saveRawPayload(_keyHomebrewOtherRaw, entry.id.slug, rawPayload);
     }
     if (entry.category.toLowerCase().contains('invocation')) {
       SrdFeatureOptions.addCustomInvocation(FeatureOption(
@@ -779,12 +785,11 @@ class HomebrewPersistenceService {
   Future<void> deleteCustomOtherEntry(String slug) async {
     final entries = await loadCustomOtherEntries();
     entries.removeWhere((e) => e.id.slug == slug);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    await _saveStringList(
       _keyHomebrewOther,
       entries.map((e) => json.encode(e.toMap())).toList(),
     );
-    await _deleteRawPayload(_keyHomebrewOtherRaw, slug, prefs);
+    await _deleteRawPayload(_keyHomebrewOtherRaw, slug);
     SrdFeatureOptions.removeCustomInvocation(slug);
   }
 
@@ -793,7 +798,6 @@ class HomebrewPersistenceService {
   Future<int> deleteCustomEntitiesBatch(EntityType type, List<String> slugs) async {
     if (slugs.isEmpty) return 0;
     final slugSet = slugs.toSet();
-    final prefs = await SharedPreferences.getInstance();
     int count = 0;
 
     switch (type) {
@@ -802,9 +806,9 @@ class HomebrewPersistenceService {
         final initialLen = spells.length;
         spells.removeWhere((s) => slugSet.contains(s.id.slug));
         count = initialLen - spells.length;
-        await prefs.setStringList(_keyHomebrewSpells, spells.map((s) => json.encode(s.toMap())).toList());
+        await _saveStringList(_keyHomebrewSpells, spells.map((s) => json.encode(s.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewSpellsRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewSpellsRaw, slug);
         }
 
       case EntityType.monster:
@@ -812,9 +816,9 @@ class HomebrewPersistenceService {
         final initialLen = monsters.length;
         monsters.removeWhere((m) => slugSet.contains(m.id.slug));
         count = initialLen - monsters.length;
-        await prefs.setStringList(_keyHomebrewMonsters, monsters.map((m) => json.encode(m.toMap())).toList());
+        await _saveStringList(_keyHomebrewMonsters, monsters.map((m) => json.encode(m.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewMonstersRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewMonstersRaw, slug);
           MonsterCodexLibrary.removeHomebrewMonster(slug);
         }
 
@@ -823,9 +827,9 @@ class HomebrewPersistenceService {
         final initialLen = items.length;
         items.removeWhere((i) => slugSet.contains(i.id.slug));
         count = initialLen - items.length;
-        await prefs.setStringList(_keyHomebrewItems, items.map((i) => json.encode(i.toMap())).toList());
+        await _saveStringList(_keyHomebrewItems, items.map((i) => json.encode(i.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewItemsRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewItemsRaw, slug);
         }
 
       case EntityType.classDefinition:
@@ -833,9 +837,9 @@ class HomebrewPersistenceService {
         final initialLen = classes.length;
         classes.removeWhere((c) => slugSet.contains(c.id.slug));
         count = initialLen - classes.length;
-        await prefs.setStringList(_keyHomebrewClasses, classes.map((c) => json.encode(c.toMap())).toList());
+        await _saveStringList(_keyHomebrewClasses, classes.map((c) => json.encode(c.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewClassesRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewClassesRaw, slug);
           SrdClassesLibrary.removeCustomClass(slug);
         }
 
@@ -844,9 +848,9 @@ class HomebrewPersistenceService {
         final initialLen = subs.length;
         subs.removeWhere((s) => slugSet.contains(s.id.slug));
         count = initialLen - subs.length;
-        await prefs.setStringList(_keyHomebrewSubclasses, subs.map((s) => json.encode(s.toMap())).toList());
+        await _saveStringList(_keyHomebrewSubclasses, subs.map((s) => json.encode(s.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewSubclassesRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewSubclassesRaw, slug);
         }
 
       case EntityType.species:
@@ -854,9 +858,9 @@ class HomebrewPersistenceService {
         final initialLen = races.length;
         races.removeWhere((r) => slugSet.contains(r.id.slug));
         count = initialLen - races.length;
-        await prefs.setStringList(_keyHomebrewRaces, races.map((r) => json.encode(r.toMap())).toList());
+        await _saveStringList(_keyHomebrewRaces, races.map((r) => json.encode(r.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewRacesRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewRacesRaw, slug);
           SrdSpeciesLibrary.removeCustomSpecies(slug);
         }
 
@@ -865,9 +869,9 @@ class HomebrewPersistenceService {
         final initialLen = feats.length;
         feats.removeWhere((f) => slugSet.contains(f.id.slug));
         count = initialLen - feats.length;
-        await prefs.setStringList(_keyHomebrewFeats, feats.map((f) => json.encode(f.toMap())).toList());
+        await _saveStringList(_keyHomebrewFeats, feats.map((f) => json.encode(f.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewFeatsRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewFeatsRaw, slug);
           SrdFeatsLibrary.removeCustomFeat(slug);
         }
 
@@ -876,9 +880,9 @@ class HomebrewPersistenceService {
         final initialLen = bgs.length;
         bgs.removeWhere((b) => slugSet.contains(b.id.slug));
         count = initialLen - bgs.length;
-        await prefs.setStringList(_keyHomebrewBackgrounds, bgs.map((b) => json.encode(b.toMap())).toList());
+        await _saveStringList(_keyHomebrewBackgrounds, bgs.map((b) => json.encode(b.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewBackgroundsRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewBackgroundsRaw, slug);
           SrdBackgroundsLibrary.removeCustomBackground(slug);
         }
 
@@ -887,9 +891,9 @@ class HomebrewPersistenceService {
         final initialLen = others.length;
         others.removeWhere((o) => slugSet.contains(o.id.slug));
         count = initialLen - others.length;
-        await prefs.setStringList(_keyHomebrewOther, others.map((o) => json.encode(o.toMap())).toList());
+        await _saveStringList(_keyHomebrewOther, others.map((o) => json.encode(o.toMap())).toList());
         for (final slug in slugSet) {
-          await _deleteRawPayload(_keyHomebrewOtherRaw, slug, prefs);
+          await _deleteRawPayload(_keyHomebrewOtherRaw, slug);
         }
 
       default:
@@ -1219,6 +1223,7 @@ class HomebrewPersistenceService {
   /// Clears all saved homebrew and override data.
   Future<void> clearAllHomebrew() async {
     final prefs = await SharedPreferences.getInstance();
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSpells);
     await prefs.remove(_keyHomebrewSpells);
     await prefs.remove(_keyHomebrewMonsters);
     await prefs.remove(_keyHomebrewItems);
@@ -1230,6 +1235,7 @@ class HomebrewPersistenceService {
     await prefs.remove(_keyHomebrewOther);
     await prefs.remove(_keyCampaignOverrides);
     // Clear raw payload keys
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSpellsRaw);
     await prefs.remove(_keyHomebrewSpellsRaw);
     await prefs.remove(_keyHomebrewMonstersRaw);
     await prefs.remove(_keyHomebrewItemsRaw);
@@ -1256,8 +1262,10 @@ class HomebrewPersistenceService {
     final prefs = await SharedPreferences.getInstance();
     switch (type) {
       case EntityType.spell:
-        await prefs.remove(_keyHomebrewSpells);
-        await prefs.remove(_keyHomebrewSpellsRaw);
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSpells);
+    await prefs.remove(_keyHomebrewSpells);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSpellsRaw);
+    await prefs.remove(_keyHomebrewSpellsRaw);
       case EntityType.monster:
         await prefs.remove(_keyHomebrewMonsters);
         await prefs.remove(_keyHomebrewMonstersRaw);
@@ -1300,10 +1308,29 @@ class HomebrewPersistenceService {
     final key = _rawKeyForType(type);
     if (key == null) return [];
     try {
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+        final dbVal = _db.get(AppDatabaseService.boxHomebrewRaw, key);
+        if (dbVal is Map) {
+          return dbVal.values
+              .whereType<Map>()
+              .map((m) => Map<String, dynamic>.from(m))
+              .toList();
+        } else if (dbVal is String && dbVal.isNotEmpty) {
+          final decoded = json.decode(dbVal) as Map<String, dynamic>;
+          return decoded.values
+              .whereType<Map>()
+              .map((m) => Map<String, dynamic>.from(m))
+              .toList();
+        }
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final stored = prefs.getString(key);
       if (stored == null || stored.isEmpty) return [];
       final decoded = json.decode(stored) as Map<String, dynamic>;
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+        await _db.put(AppDatabaseService.boxHomebrewRaw, key, decoded);
+      }
       return decoded.values
           .whereType<Map>()
           .map((m) => Map<String, dynamic>.from(m))
@@ -1474,20 +1501,39 @@ class HomebrewPersistenceService {
   // ---------------------------------------------------------------------------
 
   /// Saves a single raw JSON payload keyed by [entitySlug].
-  /// Uses a `Map<slug, rawJson>` stored as a single JSON string per category.
+  /// Uses a `Map<slug, rawJson>` stored in database and syncs to SharedPreferences.
   Future<void> _saveRawPayload(
     String key,
     String entitySlug,
-    Map<String, dynamic> rawPayload,
-    SharedPreferences prefs,
-  ) async {
+    Map<String, dynamic> rawPayload, [
+    SharedPreferences? prefs,
+  ]) async {
     try {
-      final existing = prefs.getString(key);
-      final map = existing != null && existing.isNotEmpty
-          ? Map<String, dynamic>.from(json.decode(existing) as Map)
-          : <String, dynamic>{};
+      Map<String, dynamic> map = {};
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+        final dbVal = _db.get(AppDatabaseService.boxHomebrewRaw, key);
+        if (dbVal is Map) {
+          map = Map<String, dynamic>.from(dbVal);
+        } else if (dbVal is String && dbVal.isNotEmpty) {
+          map = Map<String, dynamic>.from(json.decode(dbVal) as Map);
+        }
+      }
+      if (map.isEmpty) {
+        final p = prefs ?? await SharedPreferences.getInstance();
+        final existing = p.getString(key);
+        if (existing != null && existing.isNotEmpty) {
+          map = Map<String, dynamic>.from(json.decode(existing) as Map);
+        }
+      }
       map[entitySlug] = rawPayload;
-      await prefs.setString(key, json.encode(map));
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+        await _db.put(AppDatabaseService.boxHomebrewRaw, key, map);
+      }
+
+      try {
+        final p = prefs ?? await SharedPreferences.getInstance();
+        await p.setString(key, json.encode(map));
+      } catch (_) {}
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to save raw payload for $entitySlug');
     }
@@ -1496,15 +1542,31 @@ class HomebrewPersistenceService {
   /// Removes the raw payload for [entitySlug] from [key].
   Future<void> _deleteRawPayload(
     String key,
-    String entitySlug,
-    SharedPreferences prefs,
-  ) async {
+    String entitySlug, [
+    SharedPreferences? prefs,
+  ]) async {
     try {
-      final existing = prefs.getString(key);
-      if (existing == null || existing.isEmpty) return;
-      final map = Map<String, dynamic>.from(json.decode(existing) as Map);
-      map.remove(entitySlug);
-      await prefs.setString(key, json.encode(map));
+      Map<String, dynamic> map = {};
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+        final dbVal = _db.get(AppDatabaseService.boxHomebrewRaw, key);
+        if (dbVal is Map) {
+          map = Map<String, dynamic>.from(dbVal);
+        } else if (dbVal is String && dbVal.isNotEmpty) {
+          map = Map<String, dynamic>.from(json.decode(dbVal) as Map);
+        }
+        map.remove(entitySlug);
+        await _db.put(AppDatabaseService.boxHomebrewRaw, key, map);
+      }
+
+      try {
+        final p = prefs ?? await SharedPreferences.getInstance();
+        final existing = p.getString(key);
+        if (existing != null && existing.isNotEmpty) {
+          final pMap = Map<String, dynamic>.from(json.decode(existing) as Map);
+          pMap.remove(entitySlug);
+          await p.setString(key, json.encode(pMap));
+        }
+      } catch (_) {}
     } catch (_) {}
   }
 

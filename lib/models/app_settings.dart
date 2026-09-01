@@ -71,6 +71,7 @@ class AppSettings {
   final Set<String> pinnedSpellIds;
   final Set<String> pinnedMonsterIds;
   final Set<String> pinnedItemIds;
+  final Set<String> bypassedHomebrewSlugs;
 
   const AppSettings({
     this.themeMode = ThemeMode.dark,
@@ -88,6 +89,7 @@ class AppSettings {
     this.pinnedSpellIds = const <String>{},
     this.pinnedMonsterIds = const <String>{},
     this.pinnedItemIds = const <String>{},
+    this.bypassedHomebrewSlugs = const <String>{},
   });
 
   /// Whether particle and continuous visual FX are permitted to render
@@ -115,6 +117,7 @@ class AppSettings {
     Set<String>? pinnedSpellIds,
     Set<String>? pinnedMonsterIds,
     Set<String>? pinnedItemIds,
+    Set<String>? bypassedHomebrewSlugs,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -132,6 +135,7 @@ class AppSettings {
       pinnedSpellIds: pinnedSpellIds ?? this.pinnedSpellIds,
       pinnedMonsterIds: pinnedMonsterIds ?? this.pinnedMonsterIds,
       pinnedItemIds: pinnedItemIds ?? this.pinnedItemIds,
+      bypassedHomebrewSlugs: bypassedHomebrewSlugs ?? this.bypassedHomebrewSlugs,
     );
   }
 
@@ -154,7 +158,8 @@ class AppSettings {
           setEquals(pinnedRuleIds, other.pinnedRuleIds) &&
           setEquals(pinnedSpellIds, other.pinnedSpellIds) &&
           setEquals(pinnedMonsterIds, other.pinnedMonsterIds) &&
-          setEquals(pinnedItemIds, other.pinnedItemIds);
+          setEquals(pinnedItemIds, other.pinnedItemIds) &&
+          setEquals(bypassedHomebrewSlugs, other.bypassedHomebrewSlugs);
 
   @override
   int get hashCode => Object.hash(
@@ -168,10 +173,10 @@ class AppSettings {
         enable3dDiceOverlays,
         enableGlyphAnimations,
         performanceMode,
-        rulesEdition,
-        Object.hashAll(pinnedRuleIds),
-        Object.hashAll(pinnedSpellIds),
-        Object.hashAll(pinnedMonsterIds),
-        Object.hashAll(pinnedItemIds),
+        Object.hashAllUnordered(pinnedRuleIds),
+        Object.hashAllUnordered(pinnedSpellIds),
+        Object.hashAllUnordered(pinnedMonsterIds),
+        Object.hashAllUnordered(pinnedItemIds),
+        Object.hashAllUnordered(bypassedHomebrewSlugs),
       );
 }

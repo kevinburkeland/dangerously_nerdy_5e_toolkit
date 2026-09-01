@@ -6,9 +6,11 @@ import '../../models/domain/session_graph_models.dart';
 import '../app_services.dart';
 import '../logging_service.dart';
 import '../party/campaign_registry_service.dart';
+import 'app_database_service.dart';
 import 'character_persistence_service.dart';
 
 /// Centralized service coordinator for multi-campaign profile lifecycles and debounced persistence.
+/// Backed by Hive / IndexedDB via [AppDatabaseService], bypassing 5MB localStorage limits.
 class CampaignProfileService extends ChangeNotifier {
   static const String profileKeyPrefix = 'dn5e_campaign_profile_';
   static const String profileIndexKey = 'dn5e_campaign_profile_index';
@@ -18,6 +20,7 @@ class CampaignProfileService extends ChangeNotifier {
   factory CampaignProfileService() => _instance;
   CampaignProfileService._internal();
 
+  final AppDatabaseService _db = AppDatabaseService.instance;
   final Map<String, CampaignProfile> _memoryCache = {};
   String? _activeProfileId;
   bool _initialized = false;
@@ -30,17 +33,35 @@ class CampaignProfileService extends ChangeNotifier {
   /// Loads all saved campaign profiles from persistent storage.
   Future<List<CampaignProfile>> loadAllProfiles() async {
     try {
+      List<String> indexList = [];
+      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+        final dbIndex = _db.get(AppDatabaseService.boxCampaignProfiles, profileIndexKey);
+        if (dbIndex is List) {
+          indexList = dbIndex.map((e) => e.toString()).toList();
+        }
+      }
+
       final prefs = await SharedPreferences.getInstance();
-      final indexList = prefs.getStringList(profileIndexKey) ?? <String>[];
+      if (indexList.isEmpty) {
+        indexList = prefs.getStringList(profileIndexKey) ?? <String>[];
+      }
+
       final profiles = <CampaignProfile>[];
+      _memoryCache.clear();
 
       for (final id in indexList) {
-        if (_memoryCache.containsKey(id)) {
-          profiles.add(_memoryCache[id]!);
-          continue;
+        String? rawJson;
+        if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+          rawJson = _db.get(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id')?.toString();
+        }
+        if (rawJson == null || rawJson.isEmpty) {
+          rawJson = prefs.getString('$profileKeyPrefix$id');
+          if (rawJson != null && rawJson.isNotEmpty && _db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+            // One-time migration into database
+            await _db.put(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id', rawJson);
+          }
         }
 
-        final rawJson = prefs.getString('$profileKeyPrefix$id');
         if (rawJson != null && rawJson.isNotEmpty) {
           try {
             final profile = CampaignProfile.fromJson(rawJson);
@@ -93,27 +114,32 @@ class CampaignProfileService extends ChangeNotifier {
         return profiles;
       }
     } catch (e, st) {
-      LoggingService().logNonFatal(e, st, reason: 'Failed to load campaign profiles index');
+      LoggingService().logFatal(
+        e,
+        st,
+        reason: 'Failed to load campaign profiles from storage',
+      );
     }
 
-    // If still no profiles exist, create a clean default profile
-    final defaultProf = CampaignProfile.defaultProfile(
-      name: 'My Campaign',
-    );
-    await saveProfileImmediate(defaultProf);
-    await switchProfile(defaultProf.id);
+    // Default Fallback
+    final defaultProfile = CampaignProfile.defaultProfile();
+    await saveProfileImmediate(defaultProfile);
     _initialized = true;
-    return [defaultProf];
+    return [defaultProfile];
   }
 
-  /// Returns the currently active campaign profile. Generates a default profile if none exists.
+  /// Gets the currently active campaign profile, initializing if empty.
   Future<CampaignProfile> getActiveProfile() async {
     if (!_initialized || _memoryCache.isEmpty) {
       await loadAllProfiles();
     }
 
     final prefs = await SharedPreferences.getInstance();
-    _activeProfileId = prefs.getString(activeProfileIdKey) ?? _activeProfileId;
+    String? activeId;
+    if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+      activeId = _db.get(AppDatabaseService.boxCampaignProfiles, activeProfileIdKey)?.toString();
+    }
+    _activeProfileId = activeId ?? prefs.getString(activeProfileIdKey) ?? _activeProfileId;
 
     if (_activeProfileId != null && _memoryCache.containsKey(_activeProfileId)) {
       return _memoryCache[_activeProfileId]!;
@@ -190,14 +216,37 @@ class CampaignProfileService extends ChangeNotifier {
   /// Internal disk persistence implementation
   Future<void> _persistProfileToDisk(CampaignProfile profile) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final jsonStr = profile.toJson();
-      await prefs.setString('$profileKeyPrefix${profile.id}', jsonStr);
+      final prefs = await SharedPreferences.getInstance();
+      var indexList = prefs.getStringList(profileIndexKey) ?? <String>[];
 
-      final indexList = List<String>.from(prefs.getStringList(profileIndexKey) ?? <String>[]);
-      if (!indexList.contains(profile.id)) {
-        indexList.add(profile.id);
+      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+        await _db.put(
+          AppDatabaseService.boxCampaignProfiles,
+          '$profileKeyPrefix${profile.id}',
+          jsonStr,
+        );
+
+        final dbIndex = _db.get(AppDatabaseService.boxCampaignProfiles, profileIndexKey);
+        if (dbIndex is List) {
+          indexList = dbIndex.map((e) => e.toString()).toList();
+        }
+        if (!indexList.contains(profile.id)) {
+          indexList.add(profile.id);
+          await _db.put(AppDatabaseService.boxCampaignProfiles, profileIndexKey, indexList);
+        }
+      } else {
+        if (!indexList.contains(profile.id)) {
+          indexList.add(profile.id);
+        }
+      }
+
+      // Sync to SharedPreferences
+      try {
+        await prefs.setString('$profileKeyPrefix${profile.id}', jsonStr);
         await prefs.setStringList(profileIndexKey, indexList);
+      } catch (_) {
+        // Suppress quota exceeded in SharedPreferences
       }
     } catch (e, st) {
       LoggingService().logNonFatal(
@@ -211,8 +260,11 @@ class CampaignProfileService extends ChangeNotifier {
   /// Switches active profile pointer and triggers reactivity.
   Future<void> switchProfile(String profileId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       _activeProfileId = profileId;
+      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+        await _db.put(AppDatabaseService.boxCampaignProfiles, activeProfileIdKey, profileId);
+      }
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString(activeProfileIdKey, profileId);
       notifyListeners();
     } catch (e, st) {
@@ -255,11 +307,25 @@ class CampaignProfileService extends ChangeNotifier {
     try {
       _memoryCache.remove(profileId);
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('$profileKeyPrefix$profileId');
+      var indexList = prefs.getStringList(profileIndexKey) ?? <String>[];
 
-      final indexList = List<String>.from(prefs.getStringList(profileIndexKey) ?? <String>[]);
-      indexList.remove(profileId);
-      await prefs.setStringList(profileIndexKey, indexList);
+      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+        await _db.delete(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$profileId');
+
+        final dbIndex = _db.get(AppDatabaseService.boxCampaignProfiles, profileIndexKey);
+        if (dbIndex is List) {
+          indexList = dbIndex.map((e) => e.toString()).toList();
+        }
+        indexList.remove(profileId);
+        await _db.put(AppDatabaseService.boxCampaignProfiles, profileIndexKey, indexList);
+      } else {
+        indexList.remove(profileId);
+      }
+
+      try {
+        await prefs.remove('$profileKeyPrefix$profileId');
+        await prefs.setStringList(profileIndexKey, indexList);
+      } catch (_) {}
 
       if (_activeProfileId == profileId) {
         if (indexList.isNotEmpty) {
