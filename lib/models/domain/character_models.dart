@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
+import 'feature_grant.dart';
 import 'spell_monster_equipment.dart';
 import '../party/party_purse.dart';
 import '../spellbook_data.dart';
@@ -1068,6 +1069,137 @@ class Character extends DomainEntity {
 
   List<InventoryItemInstance> get equippedItems =>
       inventory.where((item) => item.isEquipped).toList();
+
+  /// Resolves the effective [AbilityType] for attack and damage rolls with [weapon].
+  AbilityType getEffectiveAttackAbility(
+    InventoryItemInstance weapon, {
+    AbilityScores? scores,
+    List<FeatureGrant>? additionalGrants,
+  }) {
+    final effectiveScores = scores ?? effectiveAbilityScores;
+    return Character.resolveEffectiveAttackAbility(
+      scores: effectiveScores,
+      weapon: weapon,
+      character: this,
+      additionalGrants: additionalGrants,
+    );
+  }
+
+  /// Evaluates ability scores, weapon properties, and feature grants to determine the optimal attack ability.
+  static AbilityType resolveEffectiveAttackAbility({
+    required AbilityScores scores,
+    required InventoryItemInstance weapon,
+    Character? character,
+    List<FeatureGrant>? additionalGrants,
+  }) {
+    final props = weapon.customProperties;
+    final nameLower = weapon.displayName.toLowerCase();
+    final slugLower = weapon.itemRef.slug.toLowerCase();
+
+    // 1. Weapon Property Extraction
+    final isFinesse = props['isFinesse'] == true ||
+        props['finesse'] == true ||
+        (props['property'] != null && props['property'].toString().toLowerCase().contains('finesse')) ||
+        (props['properties'] != null && props['properties'].toString().toLowerCase().contains('finesse')) ||
+        nameLower.contains('shortsword') ||
+        nameLower.contains('rapier') ||
+        nameLower.contains('scimitar') ||
+        nameLower.contains('dagger') ||
+        nameLower.contains('whip');
+
+    final isRanged = props['isRanged'] == true ||
+        props['ranged'] == true ||
+        nameLower.contains('longbow') ||
+        nameLower.contains('shortbow') ||
+        nameLower.contains('crossbow') ||
+        nameLower.contains('blowgun') ||
+        nameLower.contains('sling');
+
+    final isThrown = props['isThrown'] == true ||
+        props['thrown'] == true ||
+        (props['property'] != null && props['property'].toString().toLowerCase().contains('thrown')) ||
+        (props['properties'] != null && props['properties'].toString().toLowerCase().contains('thrown')) ||
+        nameLower.contains('handaxe') ||
+        nameLower.contains('dagger') ||
+        nameLower.contains('javelin') ||
+        nameLower.contains('light hammer') ||
+        nameLower.contains('spear') ||
+        nameLower.contains('trident') ||
+        nameLower.contains('dart');
+
+    final isMagicWeapon = props['isMagic'] == true ||
+        props['magic'] == true ||
+        (props['magicBonus'] as num? ?? 0) > 0 ||
+        (props['attackBonus'] as num? ?? 0) > 0 ||
+        nameLower.contains('+1') ||
+        nameLower.contains('+2') ||
+        nameLower.contains('+3') ||
+        slugLower.contains('magic') ||
+        slugLower.contains('plus-');
+
+    // 2. Base Candidates
+    final candidates = <AbilityType>[];
+    if (isRanged && !isThrown) {
+      candidates.add(AbilityType.dexterity);
+    } else if (isFinesse) {
+      candidates.add(AbilityType.strength);
+      candidates.add(AbilityType.dexterity);
+    } else if (isThrown && !isRanged) {
+      candidates.add(AbilityType.strength);
+      if (isFinesse) {
+        candidates.add(AbilityType.dexterity);
+      }
+    } else {
+      candidates.add(AbilityType.strength);
+    }
+
+    // 3. Subclass / Feature Grants Substitution
+    bool isBattleSmith = false;
+    bool isHexblade = false;
+
+    if (character != null) {
+      for (final c in character.progression.classes) {
+        final subName = (c.subclassRef?.displayName ?? '').toLowerCase();
+        final subSlug = (c.subclassRef?.slug ?? '').toLowerCase();
+        if (subName.contains('battle smith') || subSlug.contains('battle-smith') || subSlug.contains('battle_smith')) {
+          isBattleSmith = true;
+        }
+        if (subName.contains('hexblade') || subSlug.contains('hexblade')) {
+          isHexblade = true;
+        }
+      }
+    }
+
+    if (isBattleSmith && isMagicWeapon) {
+      candidates.add(AbilityType.intelligence);
+    }
+
+    if (isHexblade) {
+      candidates.add(AbilityType.charisma);
+    }
+
+    if (additionalGrants != null) {
+      final grantSubs = GrantEvaluator.evaluateAttackAbilitySubstitutions(
+        additionalGrants,
+        isMagicWeapon: isMagicWeapon,
+      );
+      candidates.addAll(grantSubs);
+    }
+
+    // 4. Select the candidate that gives the highest score / modifier
+    AbilityType bestAbility = candidates.first;
+    int bestMod = scores.getModifier(bestAbility);
+
+    for (final ability in candidates.skip(1)) {
+      final mod = scores.getModifier(ability);
+      if (mod > bestMod) {
+        bestMod = mod;
+        bestAbility = ability;
+      }
+    }
+
+    return bestAbility;
+  }
 
   @override
   Map<String, dynamic> toMap() => {

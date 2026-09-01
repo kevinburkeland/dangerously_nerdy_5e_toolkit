@@ -166,9 +166,10 @@ class _SkillsSavesMatrixState extends State<SkillsSavesMatrix> {
             ],
           ),
           SegmentedButton<RollMode>(
-            style: const ButtonStyle(
+            style: ButtonStyle(
               visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              tapTargetSize: MaterialTapTargetSize.padded,
+              minimumSize: WidgetStateProperty.all(const Size(0, 36)),
             ),
             segments: const [
               ButtonSegment<RollMode>(

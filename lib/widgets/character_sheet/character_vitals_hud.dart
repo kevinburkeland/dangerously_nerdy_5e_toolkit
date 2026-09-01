@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../models/arena/arena_condition.dart';
 import '../../models/dm_screen_data.dart';
@@ -6,7 +5,7 @@ import '../../models/domain/character_models.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/secure_random.dart';
+import 'short_rest_dialog.dart';
 
 /// Core Vitals HUD presenting Armor Class, Initiative, Speed, Passive Senses,
 /// Interactive HP Bar with Temp HP buffer, Hit Dice tracker, Death Saves,
@@ -503,7 +502,7 @@ class CharacterVitalsHud extends StatelessWidget {
               // Successes
               Row(
                 children: [
-                  const Icon(Icons.check, size: 14, color: Colors.green),
+                  const Icon(Icons.check, size: 16, color: Colors.green),
                   const SizedBox(width: 4),
                   ...List.generate(3, (index) {
                     final isChecked = index < successes;
@@ -511,6 +510,7 @@ class CharacterVitalsHud extends StatelessWidget {
                       button: true,
                       label: 'Death save success ${index + 1}',
                       child: InkWell(
+                        borderRadius: BorderRadius.circular(24),
                         onTap: () {
                           HapticService.selectionTick(context);
                           controller.setDeathSaves(
@@ -518,11 +518,13 @@ class CharacterVitalsHud extends StatelessWidget {
                           );
                         },
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(minWidth: 28, minHeight: 32),
-                          child: Icon(
-                            isChecked ? Icons.check_circle : Icons.circle_outlined,
-                            size: 18,
-                            color: isChecked ? Colors.green : Colors.grey.shade600,
+                          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                          child: Center(
+                            child: Icon(
+                              isChecked ? Icons.check_circle : Icons.circle_outlined,
+                              size: 22,
+                              color: isChecked ? Colors.green : Colors.grey.shade600,
+                            ),
                           ),
                         ),
                       ),
@@ -534,7 +536,7 @@ class CharacterVitalsHud extends StatelessWidget {
               // Failures
               Row(
                 children: [
-                  const Icon(Icons.close, size: 14, color: Colors.red),
+                  const Icon(Icons.close, size: 16, color: Colors.red),
                   const SizedBox(width: 4),
                   ...List.generate(3, (index) {
                     final isChecked = index < failures;
@@ -542,6 +544,7 @@ class CharacterVitalsHud extends StatelessWidget {
                       button: true,
                       label: 'Death save failure ${index + 1}',
                       child: InkWell(
+                        borderRadius: BorderRadius.circular(24),
                         onTap: () {
                           HapticService.selectionTick(context);
                           controller.setDeathSaves(
@@ -549,11 +552,13 @@ class CharacterVitalsHud extends StatelessWidget {
                           );
                         },
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(minWidth: 28, minHeight: 32),
-                          child: Icon(
-                            isChecked ? Icons.cancel : Icons.circle_outlined,
-                            size: 18,
-                            color: isChecked ? Colors.red : Colors.grey.shade600,
+                          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                          child: Center(
+                            child: Icon(
+                              isChecked ? Icons.cancel : Icons.circle_outlined,
+                              size: 22,
+                              color: isChecked ? Colors.red : Colors.grey.shade600,
+                            ),
                           ),
                         ),
                       ),
@@ -1009,114 +1014,7 @@ class CharacterVitalsHud extends StatelessWidget {
   }
 
   void _showShortRestDialog(BuildContext context) {
-    final character = controller.character;
-    final diceMap = character.resources.currentHitDice;
-    final conMod = controller.stats.abilityModifiers[AbilityType.constitution] ?? 0;
-    final spentDice = <String, int>{};
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setModalState) {
-          int totalHealEstimate = 0;
-          for (final entry in spentDice.entries) {
-            final dieSize = int.tryParse(entry.key.replaceAll('d', '')) ?? 8;
-            final count = entry.value;
-            totalHealEstimate += count * ((dieSize ~/ 2 + 1) + conMod);
-          }
-
-          return AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.coffee, color: Colors.amber),
-                SizedBox(width: 8),
-                Text('Short Rest'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Spend Hit Dice to recover HP. Pact Magic spell slots will also be restored.',
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Available Hit Dice:',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                ...character.progression.classes.map((c) {
-                  final die = c.hitDie;
-                  final available = diceMap[die] ?? c.level;
-                  final spent = spentDice[die] ?? 0;
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('$die (Max $available)'),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove),
-                            onPressed: spent > 0
-                                ? () => setModalState(() => spentDice[die] = spent - 1)
-                                : null,
-                          ),
-                          Text('$spent', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: spent < available
-                                ? () => setModalState(() => spentDice[die] = spent + 1)
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                }),
-                const SizedBox(height: 8),
-                Text(
-                  'Estimated Healing: ~$totalHealEstimate HP (incl. CON mod +$conMod)',
-                  style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  int totalHealing = 0;
-                  for (final entry in spentDice.entries) {
-                    final dieSides = int.tryParse(entry.key.replaceAll('d', '')) ?? 8;
-                    for (int i = 0; i < entry.value; i++) {
-                      final roll = secureRandom.nextInt(dieSides) + 1;
-                      totalHealing += math.max<int>(1, roll + conMod);
-                    }
-                  }
-                  controller.applyShortRest(
-                    hitDiceSpent: spentDice,
-                    healingRolled: totalHealing,
-                  );
-                  Navigator.of(ctx).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Short rest finished! Healed $totalHealing HP.'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                child: const Text('Rest & Heal'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+    ShortRestDialog.show(context, controller: controller);
   }
 
   void _showLongRestConfirmationDialog(BuildContext context) {

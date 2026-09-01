@@ -530,30 +530,15 @@ class CharacterEvaluationEngine {
 
       if (isWeapon) {
         final weaponName = instance.displayName;
-        final isFinesse = props['isFinesse'] == true ||
-            props['finesse'] == true ||
-            (props['property'] != null && props['property'].toString().toLowerCase().contains('finesse')) ||
-            (props['properties'] != null && props['properties'].toString().toLowerCase().contains('finesse')) ||
-            weaponName.toLowerCase().contains('shortsword') ||
-            weaponName.toLowerCase().contains('rapier') ||
-            weaponName.toLowerCase().contains('scimitar') ||
-            weaponName.toLowerCase().contains('dagger') ||
-            weaponName.toLowerCase().contains('whip');
         final isRanged = props['isRanged'] == true || props['ranged'] == true;
         final magicWeaponBonus = (props['attackBonus'] as num?)?.toInt() ??
             (props['magicBonus'] as num?)?.toInt() ?? 0;
 
-        int abilityMod;
-        if (isRanged) {
-          abilityMod = abilityMods[AbilityType.dexterity]!;
-        } else if (isFinesse) {
-          abilityMod = math.max(
-            abilityMods[AbilityType.strength]!,
-            abilityMods[AbilityType.dexterity]!,
-          );
-        } else {
-          abilityMod = abilityMods[AbilityType.strength]!;
-        }
+        final effectiveAbility = character.getEffectiveAttackAbility(
+          instance,
+          scores: effectiveScores,
+        );
+        final abilityMod = abilityMods[effectiveAbility]!;
 
         final isProficient = props['isProficient'] != false;
         final totalAttackBonus = abilityMod + (isProficient ? profBonus : 0) + magicWeaponBonus + exhaustion.d20TestPenalty;

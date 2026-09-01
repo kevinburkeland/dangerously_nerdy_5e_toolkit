@@ -63,6 +63,11 @@ enum GrantType {
 
   /// Grants cantrip access (payload: {count, castingAbility?}).
   bonusCantrip,
+
+  /// Overrides or allows alternative ability score for attack and damage rolls
+  /// (e.g., Battle Smith INT for magic weapons, Hexblade CHA for pact/hex weapons).
+  /// Payload: {ability, requiresMagic?, condition?}.
+  attackAbilitySubstitution,
 }
 
 /// A single typed mechanic grant attached to a domain entity.
@@ -236,6 +241,25 @@ class FeatureGrant {
         type: GrantType.proficiency,
         grantId: grantId,
         payload: {'proficiency': proficiency},
+        label: label,
+      );
+
+  /// Attack ability substitution (e.g. Battle Ready: Intelligence for magic weapons, Hex Warrior: Charisma).
+  factory FeatureGrant.attackAbilitySubstitution({
+    required String grantId,
+    required String ability,
+    bool requiresMagic = false,
+    String? condition,
+    String? label,
+  }) =>
+      FeatureGrant(
+        type: GrantType.attackAbilitySubstitution,
+        grantId: grantId,
+        payload: {
+          'ability': ability,
+          if (requiresMagic) 'requiresMagic': true,
+          if (condition != null) 'condition': condition,
+        },
         label: label,
       );
 
@@ -490,6 +514,24 @@ class GrantEvaluator {
         .map((g) => g.payload['damageType']?.toString() ?? '')
         .where((s) => s.isNotEmpty)
         .toSet();
+  }
+
+  /// Returns valid attack ability substitution candidates for an item based on active grants.
+  static List<AbilityType> evaluateAttackAbilitySubstitutions(
+    List<FeatureGrant> grants, {
+    required bool isMagicWeapon,
+  }) {
+    final validAbilities = <AbilityType>[];
+    for (final g in grants.where((g) => g.type == GrantType.attackAbilitySubstitution)) {
+      final requiresMagic = g.payload['requiresMagic'] == true;
+      if (requiresMagic && !isMagicWeapon) continue;
+      final abilityStr = g.payload['ability']?.toString();
+      final ability = AbilityType.fromLooseString(abilityStr);
+      if (!validAbilities.contains(ability)) {
+        validAbilities.add(ability);
+      }
+    }
+    return validAbilities;
   }
 
   // ---------------------------------------------------------------------------

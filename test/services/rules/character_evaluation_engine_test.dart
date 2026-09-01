@@ -518,5 +518,149 @@ void main() {
       expect(stats.skillModifiers[SkillType.athletics], equals(0));
       expect(stats.passivePerception, equals(14)); // 10 + 4
     });
+
+    test('Battle Smith Artificer wielding magic weapon uses INT when INT > STR/DEX', () {
+      const character = Character(
+        id: EntityId(slug: 'battle-smith-hero', ruleset: RulesetVersion.v2024),
+        name: 'Gnome Artificer',
+        speciesRef: EntityReference<DomainEntity>(
+          refType: EntityType.species,
+          slug: 'gnome',
+          displayName: 'Gnome',
+        ),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'artificer',
+                displayName: 'Artificer',
+              ),
+              subclassRef: EntityReference<DomainEntity>(
+                refType: EntityType.subclass,
+                slug: 'battle-smith',
+                displayName: 'Battle Smith',
+              ),
+              level: 3,
+              hitDie: 'd8',
+            ),
+          ],
+        ),
+        baseScores: AbilityScores(
+          strength: 10, // Mod 0
+          dexterity: 12, // Mod +1
+          intelligence: 18, // Mod +4
+        ),
+        inventory: [
+          InventoryItemInstance(
+            instanceId: 'magic-longsword',
+            itemRef: EntityReference<EquipmentItem>(
+              refType: EntityType.equipment,
+              slug: 'longsword-plus-1',
+              displayName: 'Longsword +1',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.mainHand,
+            customProperties: {
+              'isWeapon': true,
+              'weaponType': 'martial',
+              'damageDice': '1d8',
+              'damageType': 'slashing',
+              'isMagic': true,
+              'attackBonus': 1,
+              'magicBonus': 1,
+            },
+          ),
+        ],
+        resources: CharacterResourcePool(currentHp: 25),
+      );
+
+      final stats = CharacterEvaluationEngine.evaluate(character);
+      expect(stats.attackProfiles.length, equals(1));
+      final atk = stats.attackProfiles.first;
+      // PB (+2) + INT Mod (+4) + Magic (+1) = +7
+      expect(atk.attackBonus, equals(7));
+      expect(atk.attackBonusString, equals('+7'));
+      // 1d8 + 4 (INT) + 1 (Magic) = 1d8 + 5
+      expect(atk.damageFormula, equals('1d8 + 5'));
+    });
+
+    test('Handaxe (Thrown) uses STR whereas Dagger (Finesse, Thrown) uses DEX if DEX > STR', () {
+      const character = Character(
+        id: EntityId(slug: 'ranger-skirmisher', ruleset: RulesetVersion.v2024),
+        name: 'Skirmisher',
+        speciesRef: EntityReference<DomainEntity>(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+        ),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'ranger',
+                displayName: 'Ranger',
+              ),
+              level: 2,
+              hitDie: 'd10',
+            ),
+          ],
+        ),
+        baseScores: AbilityScores(
+          strength: 12, // Mod +1
+          dexterity: 16, // Mod +3
+        ),
+        inventory: [
+          InventoryItemInstance(
+            instanceId: 'handaxe-1',
+            itemRef: EntityReference<EquipmentItem>(
+              refType: EntityType.equipment,
+              slug: 'handaxe',
+              displayName: 'Handaxe',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.mainHand,
+            customProperties: {
+              'isWeapon': true,
+              'damageDice': '1d6',
+              'damageType': 'slashing',
+              'isThrown': true,
+            },
+          ),
+          InventoryItemInstance(
+            instanceId: 'dagger-1',
+            itemRef: EntityReference<EquipmentItem>(
+              refType: EntityType.equipment,
+              slug: 'dagger',
+              displayName: 'Dagger',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.offHand,
+            customProperties: {
+              'isWeapon': true,
+              'damageDice': '1d4',
+              'damageType': 'piercing',
+              'isFinesse': true,
+              'isThrown': true,
+            },
+          ),
+        ],
+        resources: CharacterResourcePool(currentHp: 20),
+      );
+
+      final stats = CharacterEvaluationEngine.evaluate(character);
+      expect(stats.attackProfiles.length, equals(2));
+
+      final handaxeAtk = stats.attackProfiles.firstWhere((a) => a.weaponName == 'Handaxe');
+      // PB (+2) + STR (+1) = +3
+      expect(handaxeAtk.attackBonus, equals(3));
+      expect(handaxeAtk.damageFormula, equals('1d6 + 1'));
+
+      final daggerAtk = stats.attackProfiles.firstWhere((a) => a.weaponName == 'Dagger');
+      // PB (+2) + DEX (+3) = +5
+      expect(daggerAtk.attackBonus, equals(5));
+      expect(daggerAtk.isOffhand, isTrue);
+    });
   });
 }

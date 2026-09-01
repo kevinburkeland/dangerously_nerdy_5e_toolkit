@@ -659,15 +659,6 @@ class CharacterStatCalculator {
               props['isWeapon'] == true || item.itemType.toLowerCase().contains('weapon');
           if (isWeapon) {
             hasEquippedWeapon = true;
-            final isFinesse = props['isFinesse'] == true ||
-                props['finesse'] == true ||
-                (props['property'] != null && props['property'].toString().toLowerCase().contains('finesse')) ||
-                (props['properties'] != null && props['properties'].toString().toLowerCase().contains('finesse')) ||
-                instance.displayName.toLowerCase().contains('shortsword') ||
-                instance.displayName.toLowerCase().contains('rapier') ||
-                instance.displayName.toLowerCase().contains('scimitar') ||
-                instance.displayName.toLowerCase().contains('dagger') ||
-                instance.displayName.toLowerCase().contains('whip');
             final isRanged = props['isRanged'] == true;
             final baseDamageFormula = props['damageFormula']?.toString() ?? '1d6';
             final dmgTypeStr = props['damageType']?.toString() ?? 'slashing';
@@ -677,11 +668,11 @@ class CharacterStatCalculator {
             );
             final magicBonus = (props['attackBonus'] as num?)?.toInt() ?? 0;
 
-            final chosenAbilityMod = (isRanged ||
-                    (isFinesse &&
-                        abilityMods[AbilityType.dexterity]! > abilityMods[AbilityType.strength]!))
-                ? abilityMods[AbilityType.dexterity]!
-                : abilityMods[AbilityType.strength]!;
+            final effectiveAbility = character.getEffectiveAttackAbility(
+              instance,
+              scores: phaseB.scoresWithEmbeddedBonuses,
+            );
+            final chosenAbilityMod = abilityMods[effectiveAbility]!;
 
             final toHit = profBonus + chosenAbilityMod + magicBonus + phaseC.exhaustion.d20TestPenalty;
             final damageBonus = (instance.equippedSlot == EquipmentSlot.offHand)
