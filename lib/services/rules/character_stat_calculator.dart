@@ -61,8 +61,8 @@ class ComputedCharacterStats {
   final Map<AbilityType, int> savingThrowModifiers;
   final Map<SkillType, int> skillModifiers;
   final int passivePerception;
-  final int passiveInvestigation;
   final int passiveInsight;
+  final int passiveInvestigation;
   final Map<String, int> spellSaveDcs;
   final Map<String, int> spellAttackBonuses;
   final SpellSlotPool computedSpellSlots;
@@ -88,8 +88,8 @@ class ComputedCharacterStats {
     required this.savingThrowModifiers,
     required this.skillModifiers,
     required this.passivePerception,
-    required this.passiveInvestigation,
     required this.passiveInsight,
+    required this.passiveInvestigation,
     required this.spellSaveDcs,
     required this.spellAttackBonuses,
     required this.computedSpellSlots,
@@ -105,18 +105,200 @@ class ComputedCharacterStats {
   });
 }
 
-/// Pure Evaluation Pipeline for Character Stats
+// ---------------------------------------------------------------------------
+// Internal pipeline data models
+// ---------------------------------------------------------------------------
+
+class _PhaseABaseResult {
+  final int totalLevel;
+  final int proficiencyBonus;
+  final AbilityScores boundedBaseScores;
+  final int baseSpeedFeet;
+
+  const _PhaseABaseResult({
+    required this.totalLevel,
+    required this.proficiencyBonus,
+    required this.boundedBaseScores,
+    required this.baseSpeedFeet,
+  });
+}
+
+class _PhaseBEmbeddedResult {
+  final AbilityScores scoresWithEmbeddedBonuses;
+  final bool hasDefenseFightingStyle;
+  final bool hasDraconicResilience;
+  final bool isPowerfulBuild;
+  final int racialHpPerLevelBonus;
+
+  const _PhaseBEmbeddedResult({
+    required this.scoresWithEmbeddedBonuses,
+    required this.hasDefenseFightingStyle,
+    required this.hasDraconicResilience,
+    required this.isPowerfulBuild,
+    required this.racialHpPerLevelBonus,
+  });
+}
+
+class _PhaseCActiveEffectsResult {
+  final AbilityScores effectiveScores;
+  final Map<AbilityType, int> abilityModifiers;
+  final List<EquipmentItem> resolvedEquippedItems;
+  final List<UnresolvedReference> unresolvedReferences;
+  final List<String> buffNotes;
+  final ExhaustionEffects exhaustion;
+  final EncumbranceStatus encumbrance;
+  final int magicAcBonus;
+  final int itemSpeedBonus;
+
+  const _PhaseCActiveEffectsResult({
+    required this.effectiveScores,
+    required this.abilityModifiers,
+    required this.resolvedEquippedItems,
+    required this.unresolvedReferences,
+    required this.buffNotes,
+    required this.exhaustion,
+    required this.encumbrance,
+    required this.magicAcBonus,
+    required this.itemSpeedBonus,
+  });
+}
+
+/// Pure 4-Phase Derivation Pipeline for Character Stats adhering to 5e rules.
 class CharacterStatCalculator {
-  /// Evaluates a Character and its equipped items against the priority store
+  /// Evaluates a Character and its equipped items against the reference resolver
+  /// across 4 deterministic derivation phases:
+  ///
+  /// - Phase A (Base Data): Proficiency bonus, total level, and raw score bounds.
+  /// - Phase B (Embedded Grants): Species, background, and class traits.
+  /// - Phase C (Active Effects Matrix): Attuned equipment additions, overrides, and conditions.
+  /// - Phase D (Derived Data): AC, attack profiles, spell save DCs, skills, and vitals.
   static ComputedCharacterStats compute(
     Character character,
     ReferenceResolver resolver,
   ) {
-    final unresolved = <UnresolvedReference>[];
-    final buffNotes = <String>[];
     final strategy = RulesetStrategy.forEdition(character.rulesEdition);
 
-    // 0. Exhaustion Evaluation
+    // Phase A: Base Data
+    final phaseA = _phaseABaseData(character);
+
+    // Phase B: Embedded Grants
+    final phaseB = _phaseBEmbeddedGrants(character, phaseA);
+
+    // Phase C: Active Effects Matrix
+    final phaseC = _phaseCActiveEffectsMatrix(
+      character: character,
+      phaseA: phaseA,
+      phaseB: phaseB,
+      resolver: resolver,
+      strategy: strategy,
+    );
+
+    // Phase D: Derived Data
+    return _phaseDDerivedData(
+      character: character,
+      phaseA: phaseA,
+      phaseB: phaseB,
+      phaseC: phaseC,
+      resolver: resolver,
+      strategy: strategy,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Phase A: Base Data
+  // ---------------------------------------------------------------------------
+
+  static _PhaseABaseResult _phaseABaseData(Character character) {
+    final totalLevel = math.max(1, character.totalLevel);
+    final profBonus = character.proficiencyBonus;
+
+    // Bound raw base ability scores to [1, 30]
+    final boundedScores = AbilityScores(
+      strength: character.baseScores.strength.clamp(1, 30),
+      dexterity: character.baseScores.dexterity.clamp(1, 30),
+      constitution: character.baseScores.constitution.clamp(1, 30),
+      intelligence: character.baseScores.intelligence.clamp(1, 30),
+      wisdom: character.baseScores.wisdom.clamp(1, 30),
+      charisma: character.baseScores.charisma.clamp(1, 30),
+    );
+
+    return _PhaseABaseResult(
+      totalLevel: totalLevel,
+      proficiencyBonus: profBonus,
+      boundedBaseScores: boundedScores,
+      baseSpeedFeet: character.baseSpeedFeet,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Phase B: Embedded Grants
+  // ---------------------------------------------------------------------------
+
+  static _PhaseBEmbeddedResult _phaseBEmbeddedGrants(
+    Character character,
+    _PhaseABaseResult phaseA,
+  ) {
+    // 1. Ingest permanent bonus scores from background/species/origin ASI
+    final scoresWithBonuses = AbilityScores(
+      strength: phaseA.boundedBaseScores.strength + character.bonusScores.strength,
+      dexterity: phaseA.boundedBaseScores.dexterity + character.bonusScores.dexterity,
+      constitution: phaseA.boundedBaseScores.constitution + character.bonusScores.constitution,
+      intelligence: phaseA.boundedBaseScores.intelligence + character.bonusScores.intelligence,
+      wisdom: phaseA.boundedBaseScores.wisdom + character.bonusScores.wisdom,
+      charisma: phaseA.boundedBaseScores.charisma + character.bonusScores.charisma,
+    );
+
+    // 2. Class trait selections (e.g. Defense fighting style, Draconic Resilience)
+    bool hasDefenseStyle = false;
+    for (final cls in character.progression.classes) {
+      for (final optList in cls.selectedFeatureOptions.values) {
+        if (optList.contains('defense')) {
+          hasDefenseStyle = true;
+        }
+      }
+    }
+
+    final hasDraconic = character.progression.classes.any((c) =>
+        c.subclassRef?.slug.toLowerCase() == 'draconic-sorcery' ||
+        c.subclassRef?.slug.toLowerCase() == 'draconic_bloodline');
+
+    // 3. Species physical traits
+    final isPowerfulBuild = character.customProperties['powerfulBuild'] == true ||
+        character.speciesRef.slug.toLowerCase().contains('goliath') ||
+        character.speciesRef.slug.toLowerCase().contains('firbolg');
+
+    int racialHpBonus = 0;
+    if (character.speciesRef.slug.toLowerCase().contains('dwarf') &&
+        (character.rulesEdition == DmRulesEdition.v2024 ||
+            character.speciesRef.slug.toLowerCase().contains('hill'))) {
+      racialHpBonus = 1;
+    }
+
+    return _PhaseBEmbeddedResult(
+      scoresWithEmbeddedBonuses: scoresWithBonuses,
+      hasDefenseFightingStyle: hasDefenseStyle,
+      hasDraconicResilience: hasDraconic,
+      isPowerfulBuild: isPowerfulBuild,
+      racialHpPerLevelBonus: racialHpBonus,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Phase C: Active Effects Matrix
+  // ---------------------------------------------------------------------------
+
+  static _PhaseCActiveEffectsResult _phaseCActiveEffectsMatrix({
+    required Character character,
+    required _PhaseABaseResult phaseA,
+    required _PhaseBEmbeddedResult phaseB,
+    required ReferenceResolver resolver,
+    required RulesetStrategy strategy,
+  }) {
+    final unresolved = <UnresolvedReference>[];
+    final buffNotes = <String>[];
+    final resolvedItems = <EquipmentItem>[];
+
+    // C.0 Exhaustion Evaluation
     int exhaustionLevel = 0;
     for (final cond in character.conditions) {
       if (cond.conditionName.toLowerCase() == 'exhaustion') {
@@ -127,50 +309,66 @@ class CharacterStatCalculator {
     final exhaustion = strategy.evaluateExhaustion(exhaustionLevel);
     if (exhaustion.level > 0) {
       if (character.rulesEdition == DmRulesEdition.v2024) {
-        buffNotes.add('Exhaustion (Level ${exhaustion.level}): ${exhaustion.d20TestPenalty} to d20 tests, -${exhaustion.speedReductionFeet} ft Speed');
+        buffNotes.add(
+            'Exhaustion (Level ${exhaustion.level}): ${exhaustion.d20TestPenalty} to d20 tests, -${exhaustion.speedReductionFeet} ft Speed');
       } else {
         buffNotes.add('Exhaustion (Tier ${exhaustion.level}) Active');
       }
     }
 
-    // 1. Resolve Equipped Items
-    final List<EquipmentItem> resolvedEquippedItems = [];
+    // C.1 Ingest Base + Embedded Scores
+    var str = phaseB.scoresWithEmbeddedBonuses.strength;
+    var dex = phaseB.scoresWithEmbeddedBonuses.dexterity;
+    var con = phaseB.scoresWithEmbeddedBonuses.constitution;
+    var intl = phaseB.scoresWithEmbeddedBonuses.intelligence;
+    var wis = phaseB.scoresWithEmbeddedBonuses.wisdom;
+    var cha = phaseB.scoresWithEmbeddedBonuses.charisma;
+
+    int magicAcBonus = 0;
+    int itemSpeedBonus = 0;
+
+    // C.2 Apply Item Additions (checking attunement)
     for (final instance in character.equippedItems) {
       final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
       if (res.isResolved) {
-        resolvedEquippedItems.add(res.entity!);
+        final item = res.entity!;
+        resolvedItems.add(item);
+
+        if (instance.requiresAttunement && !instance.isAttuned) continue;
+
+        final props = item.customProperties;
+        if (props['abilityBonuses'] is Map) {
+          final bonuses = props['abilityBonuses'] as Map;
+          str += (bonuses['strength'] as num?)?.toInt() ?? 0;
+          dex += (bonuses['dexterity'] as num?)?.toInt() ?? 0;
+          con += (bonuses['constitution'] as num?)?.toInt() ?? 0;
+          intl += (bonuses['intelligence'] as num?)?.toInt() ?? 0;
+          wis += (bonuses['wisdom'] as num?)?.toInt() ?? 0;
+          cha += (bonuses['charisma'] as num?)?.toInt() ?? 0;
+        }
+
+        if (instance.equippedSlot != EquipmentSlot.armor &&
+            instance.equippedSlot != EquipmentSlot.shield &&
+            props['isShield'] != true &&
+            props['acBonus'] is num) {
+          magicAcBonus += (props['acBonus'] as num).toInt();
+        }
+
+        if (props['speedBonus'] is num) {
+          itemSpeedBonus += (props['speedBonus'] as num).toInt();
+        }
       } else {
         unresolved.add(res.unresolved!);
       }
     }
 
-    // 2. Evaluate Effective Ability Scores
-    var str = character.baseScores.strength + character.bonusScores.strength;
-    var dex = character.baseScores.dexterity + character.bonusScores.dexterity;
-    var con = character.baseScores.constitution + character.bonusScores.constitution;
-    var intl = character.baseScores.intelligence + character.bonusScores.intelligence;
-    var wis = character.baseScores.wisdom + character.bonusScores.wisdom;
-    var cha = character.baseScores.charisma + character.bonusScores.charisma;
-
-    // Apply item stat bonuses and overrides
-    for (int i = 0; i < character.equippedItems.length; i++) {
-      final instance = character.equippedItems[i];
+    // C.3 Apply Ability Overrides (e.g. Gauntlets of Ogre Power)
+    for (final instance in character.equippedItems) {
       if (instance.requiresAttunement && !instance.isAttuned) continue;
-
       final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
       if (!res.isResolved) continue;
       final item = res.entity!;
-
       final props = item.customProperties;
-      if (props['abilityBonuses'] is Map) {
-        final bonuses = props['abilityBonuses'] as Map;
-        str += (bonuses['strength'] as num?)?.toInt() ?? 0;
-        dex += (bonuses['dexterity'] as num?)?.toInt() ?? 0;
-        con += (bonuses['constitution'] as num?)?.toInt() ?? 0;
-        intl += (bonuses['intelligence'] as num?)?.toInt() ?? 0;
-        wis += (bonuses['wisdom'] as num?)?.toInt() ?? 0;
-        cha += (bonuses['charisma'] as num?)?.toInt() ?? 0;
-      }
 
       if (props['abilityOverrides'] is Map) {
         final overrides = props['abilityOverrides'] as Map;
@@ -195,13 +393,14 @@ class CharacterStatCalculator {
       }
     }
 
+    // Final ceiling clamp [1, 30]
     final effectiveScores = AbilityScores(
-      strength: str,
-      dexterity: dex,
-      constitution: con,
-      intelligence: intl,
-      wisdom: wis,
-      charisma: cha,
+      strength: str.clamp(1, 30),
+      dexterity: dex.clamp(1, 30),
+      constitution: con.clamp(1, 30),
+      intelligence: intl.clamp(1, 30),
+      wisdom: wis.clamp(1, 30),
+      charisma: cha.clamp(1, 30),
     );
 
     final abilityMods = <AbilityType, int>{
@@ -213,31 +412,57 @@ class CharacterStatCalculator {
       AbilityType.charisma: effectiveScores.charisma.dndModifier,
     };
 
-    final profBonus = character.proficiencyBonus;
-
-    // Encumbrance evaluation
-    final isPowerfulBuild = character.customProperties['powerfulBuild'] == true ||
-        character.speciesRef.slug.toLowerCase().contains('goliath') ||
-        character.speciesRef.slug.toLowerCase().contains('firbolg');
+    // C.4 Encumbrance Matrix
     final encumbrance = strategy.calculateEncumbrance(
       strengthScore: effectiveScores.strength,
       inventory: character.inventory,
       totalCoinCount: character.purse.totalCoins,
-      isPowerfulBuildOrLarge: isPowerfulBuild,
+      isPowerfulBuildOrLarge: phaseB.isPowerfulBuild,
     );
     if (encumbrance.variantTier != EncumbranceTier.unencumbered) {
-      buffNotes.add('Encumbrance (${encumbrance.variantTier.displayName}): -${encumbrance.speedPenaltyFeet} ft Speed');
+      buffNotes.add(
+          'Encumbrance (${encumbrance.variantTier.displayName}): -${encumbrance.speedPenaltyFeet} ft Speed');
     }
 
-    // 3. Armor Class (AC) Pipeline
+    return _PhaseCActiveEffectsResult(
+      effectiveScores: effectiveScores,
+      abilityModifiers: abilityMods,
+      resolvedEquippedItems: resolvedItems,
+      unresolvedReferences: unresolved,
+      buffNotes: buffNotes,
+      exhaustion: exhaustion,
+      encumbrance: encumbrance,
+      magicAcBonus: magicAcBonus,
+      itemSpeedBonus: itemSpeedBonus,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Phase D: Derived Data
+  // ---------------------------------------------------------------------------
+
+  static ComputedCharacterStats _phaseDDerivedData({
+    required Character character,
+    required _PhaseABaseResult phaseA,
+    required _PhaseBEmbeddedResult phaseB,
+    required _PhaseCActiveEffectsResult phaseC,
+    required ReferenceResolver resolver,
+    required RulesetStrategy strategy,
+  }) {
+    final abilityMods = phaseC.abilityModifiers;
+    final profBonus = phaseA.proficiencyBonus;
+    final buffNotes = List<String>.from(phaseC.buffNotes);
+
+    // D.1 Armor Class Precedence Matrix
     int baseAc = 10;
     String acFormula = '10 (Base)';
     int dexContribution = abilityMods[AbilityType.dexterity]!;
     int shieldBonus = 0;
-    int magicAcBonus = 0;
+    int magicAcBonus = phaseC.magicAcBonus;
     bool hasEquippedArmor = false;
+    bool isHeavyArmor = false;
 
-    // Detect equipped armor and shields
+    // Detect equipped armor and shield
     for (final instance in character.equippedItems) {
       if (instance.requiresAttunement && !instance.isAttuned) continue;
       final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
@@ -253,6 +478,7 @@ class CharacterStatCalculator {
 
         baseAc = itemBaseAc;
         if (armorType == 'heavy') {
+          isHeavyArmor = true;
           dexContribution = 0;
           acFormula = '$itemBaseAc (${item.name})';
         } else if (armorType == 'medium') {
@@ -267,33 +493,21 @@ class CharacterStatCalculator {
       } else if (instance.equippedSlot == EquipmentSlot.shield || props['isShield'] == true) {
         final sBonus = (props['acBonus'] as num?)?.toInt() ?? 2;
         shieldBonus += sBonus;
-      } else if (props['acBonus'] is num) {
-        magicAcBonus += (props['acBonus'] as num).toInt();
       }
     }
 
-    // Check Defense Fighting Style grant (+1 AC while wearing armor)
-    bool hasDefenseStyle = false;
-    for (final cls in character.progression.classes) {
-      for (final optList in cls.selectedFeatureOptions.values) {
-        if (optList.contains('defense')) {
-          hasDefenseStyle = true;
-        }
-      }
-    }
-    if (hasDefenseStyle && hasEquippedArmor) {
+    // Apply Defense Fighting Style (+1 AC while wearing armor)
+    if (phaseB.hasDefenseFightingStyle && hasEquippedArmor) {
       magicAcBonus += 1;
       buffNotes.add('Defense Fighting Style: +1 AC');
     }
 
-    // If unarmored, check Unarmored Defense & Draconic Resilience
+    // Unarmored hierarchy
     if (!hasEquippedArmor) {
-      final classSlugs = character.progression.classes.map((c) => c.classRef.slug.toLowerCase()).toSet();
-      final hasDraconicSorcery = character.progression.classes.any((c) =>
-          c.subclassRef?.slug.toLowerCase() == 'draconic-sorcery' ||
-          c.subclassRef?.slug.toLowerCase() == 'draconic_bloodline');
+      final classSlugs =
+          character.progression.classes.map((c) => c.classRef.slug.toLowerCase()).toSet();
 
-      if (hasDraconicSorcery) {
+      if (phaseB.hasDraconicResilience) {
         baseAc = 13;
         dexContribution = abilityMods[AbilityType.dexterity]!;
         acFormula = '13 (Draconic Resilience) + $dexContribution (DEX)';
@@ -321,23 +535,23 @@ class CharacterStatCalculator {
       acFormula += ' + $magicAcBonus (Bonus)';
     }
 
-    final totalAc = baseAc + (hasEquippedArmor && propsArmorHeavy(character, resolver) ? 0 : dexContribution) + shieldBonus + magicAcBonus;
+    final totalAc = baseAc + (isHeavyArmor ? 0 : dexContribution) + shieldBonus + magicAcBonus;
 
-    // 4. Max HP Computation (Retroactive CON Scaling across all Hit Dice)
+    // D.2 Max HP Computation (Retroactive CON Scaling)
     int computedMaxHp = 0;
     final conMod = abilityMods[AbilityType.constitution]!;
     for (int i = 0; i < character.progression.classes.length; i++) {
       final cls = character.progression.classes[i];
       if (cls.isStartingClass || i == 0) {
         // Level 1 max hit die
-        computedMaxHp += cls.hitDieSides + conMod;
+        computedMaxHp += cls.hitDieSides + conMod + phaseB.racialHpPerLevelBonus;
         // Remaining levels
         for (int l = 1; l < cls.level; l++) {
           final rolledIndex = l - 1;
           final rolled = (rolledIndex < cls.hitPointsRolled.length)
               ? cls.hitPointsRolled[rolledIndex]
               : cls.averageHpPerLevel;
-          computedMaxHp += math.max(1, rolled + conMod);
+          computedMaxHp += math.max(1, rolled + conMod + phaseB.racialHpPerLevelBonus);
         }
       } else {
         // Multiclass levels
@@ -345,12 +559,12 @@ class CharacterStatCalculator {
           final rolled = (l < cls.hitPointsRolled.length)
               ? cls.hitPointsRolled[l]
               : cls.averageHpPerLevel;
-          computedMaxHp += math.max(1, rolled + conMod);
+          computedMaxHp += math.max(1, rolled + conMod + phaseB.racialHpPerLevelBonus);
         }
       }
     }
 
-    // Feat adjustments (e.g. Toughness: +2 HP per level)
+    // Feat adjustments (e.g. Tough: +2 HP per level)
     for (final featRef in character.feats) {
       if (featRef.slug == 'tough' || featRef.slug == 'toughness') {
         computedMaxHp += character.totalLevel * 2;
@@ -358,57 +572,49 @@ class CharacterStatCalculator {
       }
     }
 
-    // Apply 2014 Exhaustion Tier 4 (halve max HP)
-    if (exhaustion.maxHpMultiplier < 1.0) {
-      computedMaxHp = (computedMaxHp * exhaustion.maxHpMultiplier).floor();
+    // Apply Exhaustion Tier 4 (halve max HP)
+    if (phaseC.exhaustion.maxHpMultiplier < 1.0) {
+      computedMaxHp = (computedMaxHp * phaseC.exhaustion.maxHpMultiplier).floor();
     }
     if (computedMaxHp < 1) computedMaxHp = 1;
 
-    // 5. Speed & Initiative
-    var speed = character.baseSpeedFeet;
-    for (final instance in character.equippedItems) {
-      if (instance.requiresAttunement && !instance.isAttuned) continue;
-      final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
-      if (res.isResolved && res.entity!.customProperties['speedBonus'] is num) {
-        speed += (res.entity!.customProperties['speedBonus'] as num).toInt();
-      }
+    // D.3 Speed & Initiative
+    var speed = phaseA.baseSpeedFeet + phaseC.itemSpeedBonus;
+    speed = math.max(0, speed - phaseC.encumbrance.speedPenaltyFeet);
+    if (phaseC.exhaustion.speedMultiplier < 1.0) {
+      speed = (speed * phaseC.exhaustion.speedMultiplier).floor();
     }
+    speed = math.max(0, speed - phaseC.exhaustion.speedReductionFeet);
 
-    // Apply encumbrance and exhaustion speed modifiers
-    speed = math.max(0, speed - encumbrance.speedPenaltyFeet);
-    if (exhaustion.speedMultiplier < 1.0) {
-      speed = (speed * exhaustion.speedMultiplier).floor();
-    }
-    speed = math.max(0, speed - exhaustion.speedReductionFeet);
+    final initiativeBonus = abilityMods[AbilityType.dexterity]! + phaseC.exhaustion.d20TestPenalty;
 
-    final initiativeBonus = abilityMods[AbilityType.dexterity]! + exhaustion.d20TestPenalty;
-
-    // 6. Saving Throws
+    // D.4 Saving Throws
     final savingThrows = <AbilityType, int>{};
     for (final ability in AbilityType.values) {
       var save = abilityMods[ability]!;
       if (character.savingThrowProficiencies.contains(ability)) {
         save += profBonus;
       }
-      save += exhaustion.d20TestPenalty;
+      save += phaseC.exhaustion.d20TestPenalty;
       savingThrows[ability] = save;
     }
 
-    // 7. Skills & Passives
+    // D.5 Skills & Passives
     final skills = <SkillType, int>{};
     for (final skill in SkillType.values) {
       final ability = skill.defaultAbility;
       final baseMod = abilityMods[ability]!;
       final profLevel = character.skillProficiencies[skill] ?? SkillProficiencyLevel.none;
-      final skillMod = baseMod + (profLevel.multiplier * profBonus).floor() + exhaustion.d20TestPenalty;
+      final skillMod =
+          baseMod + (profLevel.multiplier * profBonus).floor() + phaseC.exhaustion.d20TestPenalty;
       skills[skill] = skillMod;
     }
 
     final passivePerception = 10 + (skills[SkillType.perception] ?? 0);
-    final passiveInvestigation = 10 + (skills[SkillType.investigation] ?? 0);
     final passiveInsight = 10 + (skills[SkillType.insight] ?? 0);
+    final passiveInvestigation = 10 + (skills[SkillType.investigation] ?? 0);
 
-    // 8. Spellcasting Profile & Multiclass Spell Slots
+    // D.6 Spellcasting Metrics
     final spellSaveDcs = <String, int>{};
     final spellAttackBonuses = <String, int>{};
 
@@ -418,7 +624,7 @@ class CharacterStatCalculator {
       if (castingAbility != null) {
         final mod = abilityMods[castingAbility]!;
         spellSaveDcs[classSlug] = 8 + profBonus + mod;
-        spellAttackBonuses[classSlug] = profBonus + mod + exhaustion.d20TestPenalty;
+        spellAttackBonuses[classSlug] = profBonus + mod + phaseC.exhaustion.d20TestPenalty;
       }
     }
 
@@ -427,7 +633,7 @@ class CharacterStatCalculator {
       character.rulesEdition,
     );
 
-    // 9. Attack Profiles & Weapon Masteries
+    // D.7 Attack Profiles & Weapon Masteries
     final attackProfiles = <ComputedAttackProfile>[];
     final activeMasteries = <WeaponMasteryProperty>[];
     bool hasEquippedWeapon = false;
@@ -440,7 +646,8 @@ class CharacterStatCalculator {
         if (res.isResolved) {
           final item = res.entity!;
           final props = item.customProperties;
-          final isWeapon = props['isWeapon'] == true || item.itemType.toLowerCase().contains('weapon');
+          final isWeapon =
+              props['isWeapon'] == true || item.itemType.toLowerCase().contains('weapon');
           if (isWeapon) {
             hasEquippedWeapon = true;
             final isFinesse = props['isFinesse'] == true;
@@ -453,24 +660,31 @@ class CharacterStatCalculator {
             );
             final magicBonus = (props['attackBonus'] as num?)?.toInt() ?? 0;
 
-            final chosenAbilityMod = (isRanged || (isFinesse && abilityMods[AbilityType.dexterity]! > abilityMods[AbilityType.strength]!))
+            final chosenAbilityMod = (isRanged ||
+                    (isFinesse &&
+                        abilityMods[AbilityType.dexterity]! > abilityMods[AbilityType.strength]!))
                 ? abilityMods[AbilityType.dexterity]!
                 : abilityMods[AbilityType.strength]!;
 
-            final toHit = profBonus + chosenAbilityMod + magicBonus + exhaustion.d20TestPenalty;
+            final toHit = profBonus + chosenAbilityMod + magicBonus + phaseC.exhaustion.d20TestPenalty;
             final damageBonus = (instance.equippedSlot == EquipmentSlot.offHand)
                 ? magicBonus
                 : chosenAbilityMod + magicBonus;
 
             final damageString = damageBonus == 0
                 ? baseDamageFormula
-                : (damageBonus > 0 ? '$baseDamageFormula + $damageBonus' : '$baseDamageFormula - ${damageBonus.abs()}');
+                : (damageBonus > 0
+                    ? '$baseDamageFormula + $damageBonus'
+                    : '$baseDamageFormula - ${damageBonus.abs()}');
 
             // Weapon mastery check
             WeaponMasteryProperty? activeMastery;
-            final masteryKey = props['mastery']?.toString() ?? props['weaponMastery']?.toString();
+            final masteryKey =
+                props['mastery']?.toString() ?? props['weaponMastery']?.toString();
             final masteryProp = WeaponMasteryProperty.tryParse(masteryKey);
-            if (masteryProp != null && strategy.canUseWeaponMastery(character: character, weapon: item, mastery: masteryProp)) {
+            if (masteryProp != null &&
+                strategy.canUseWeaponMastery(
+                    character: character, weapon: item, mastery: masteryProp)) {
               activeMastery = masteryProp;
               if (!activeMasteries.contains(masteryProp)) {
                 activeMasteries.add(masteryProp);
@@ -499,7 +713,7 @@ class CharacterStatCalculator {
 
     if (!hasEquippedWeapon) {
       final strMod = abilityMods[AbilityType.strength]!;
-      final toHit = profBonus + strMod + exhaustion.d20TestPenalty;
+      final toHit = profBonus + strMod + phaseC.exhaustion.d20TestPenalty;
       final dmg = math.max(1, 1 + strMod);
       attackProfiles.add(ComputedAttackProfile(
         weaponName: 'Unarmed Strike',
@@ -510,7 +724,7 @@ class CharacterStatCalculator {
       ));
     }
 
-    // 10. Derived Grapple / Shove DC & Summary
+    // D.8 Grapple / Shove DC
     final grappleShove = strategy.calculateGrappleShoveDc(
       strengthModifier: abilityMods[AbilityType.strength]!,
       dexterityModifier: abilityMods[AbilityType.dexterity]!,
@@ -518,7 +732,7 @@ class CharacterStatCalculator {
     );
 
     return ComputedCharacterStats(
-      effectiveScores: effectiveScores,
+      effectiveScores: phaseC.effectiveScores,
       abilityModifiers: abilityMods,
       proficiencyBonus: profBonus,
       armorClass: totalAc,
@@ -529,16 +743,16 @@ class CharacterStatCalculator {
       savingThrowModifiers: savingThrows,
       skillModifiers: skills,
       passivePerception: passivePerception,
-      passiveInvestigation: passiveInvestigation,
       passiveInsight: passiveInsight,
+      passiveInvestigation: passiveInvestigation,
       spellSaveDcs: spellSaveDcs,
       spellAttackBonuses: spellAttackBonuses,
       computedSpellSlots: computedSpellSlots,
       attackProfiles: attackProfiles,
-      unresolvedReferences: unresolved,
+      unresolvedReferences: phaseC.unresolvedReferences,
       activeBuffNotes: buffNotes,
-      encumbrance: encumbrance,
-      exhaustion: exhaustion,
+      encumbrance: phaseC.encumbrance,
+      exhaustion: phaseC.exhaustion,
       grappleShoveSaveDc: grappleShove.dc,
       grappleShoveSummary: grappleShove.formulaDescription,
       activeWeaponMasteries: activeMasteries,
@@ -546,11 +760,16 @@ class CharacterStatCalculator {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
   static bool propsArmorHeavy(Character character, ReferenceResolver resolver) {
     for (final instance in character.equippedItems) {
       if (instance.equippedSlot == EquipmentSlot.armor) {
         final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
-        if (res.isResolved && res.entity!.customProperties['armorType']?.toString().toLowerCase() == 'heavy') {
+        if (res.isResolved &&
+            res.entity!.customProperties['armorType']?.toString().toLowerCase() == 'heavy') {
           return true;
         }
       }

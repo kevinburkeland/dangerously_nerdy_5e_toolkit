@@ -494,5 +494,106 @@ void main() {
       expect(stats.unresolvedReferences.length, equals(1));
       expect(stats.unresolvedReferences.first.slug, equals('deleted-legendary-blade'));
     });
+
+    test('4-Phase Pipeline: Phase A bounds scores [1, 30] and Phase B ingests embedded bonus scores', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-phase-ab', ruleset: RulesetVersion.v2024),
+        name: 'Phase AB Test',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'dwarf',
+          displayName: 'Dwarf',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'fighter',
+              displayName: 'Fighter',
+            ),
+            level: 5,
+            hitDie: 'd10',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 35, // clamped to 30 in Phase A
+          dexterity: 0, // clamped to 1 in Phase A
+          constitution: 14,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        bonusScores: const AbilityScores(
+          strength: 0,
+          dexterity: 2, // Phase B additions (+2)
+          constitution: 2, // Phase B additions (+2)
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        ),
+        resources: const CharacterResourcePool(currentHp: 40),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      expect(stats.proficiencyBonus, equals(3)); // Level 5 -> PB 3
+      expect(stats.effectiveScores.strength, equals(30)); // 35 clamped to 30
+      expect(stats.effectiveScores.dexterity, equals(3)); // 1 + 2 = 3
+      expect(stats.effectiveScores.constitution, equals(16)); // 14 + 2 = 16
+      expect(stats.abilityModifiers[AbilityType.dexterity], equals(-4)); // 3 -> -4
+      expect(stats.abilityModifiers[AbilityType.constitution], equals(3)); // 16 -> +3
+    });
+
+    test('4-Phase Pipeline: Phase C applies additions then overrides then clamps ceiling', () {
+      final character = Character(
+        id: const EntityId(slug: 'test-phase-c', ruleset: RulesetVersion.v2024),
+        name: 'Phase C Test',
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: const CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'fighter',
+              displayName: 'Fighter',
+            ),
+            level: 1,
+            hitDie: 'd10',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: const AbilityScores(
+          strength: 10,
+          dexterity: 10,
+          constitution: 10,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        inventory: const [
+          InventoryItemInstance(
+            instanceId: 'inst-gauntlets',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'gauntlets-of-ogre-power',
+              displayName: 'Gauntlets of Ogre Power',
+            ),
+            isEquipped: true,
+            equippedSlot: EquipmentSlot.wondrous,
+            requiresAttunement: true,
+            isAttuned: true,
+          ),
+        ],
+        resources: const CharacterResourcePool(currentHp: 10),
+      );
+
+      final stats = CharacterStatCalculator.compute(character, resolver);
+      expect(stats.effectiveScores.strength, equals(19));
+      expect(stats.abilityModifiers[AbilityType.strength], equals(4)); // 19 -> +4
+    });
   });
 }
+
