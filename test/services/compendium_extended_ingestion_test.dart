@@ -154,11 +154,11 @@ void main() {
     test('persists and hydrates all extended homebrew types across repository and backups', () async {
       final service = HomebrewPersistenceService();
 
-      final customClass = CharacterClass(
-        id: const EntityId(slug: 'shaman', ruleset: RulesetVersion.homebrew),
+      const customClass = CharacterClass(
+        id: EntityId(slug: 'shaman', ruleset: RulesetVersion.homebrew),
         name: 'Shaman',
         hitDie: 'd8',
-        savingThrows: const ['WIS', 'CHA'],
+        savingThrows: ['WIS', 'CHA'],
         featuresMarkdown: 'Spirit Communion',
       );
 
@@ -168,17 +168,17 @@ void main() {
         traitsMarkdown: 'Petrifying Gaze',
       );
 
-      final customFeat = Feat(
-        id: const EntityId(slug: 'spell-sniper-plus', ruleset: RulesetVersion.homebrew),
+      const customFeat = Feat(
+        id: EntityId(slug: 'spell-sniper-plus', ruleset: RulesetVersion.homebrew),
         name: 'Spell Sniper Plus',
         category: 'Origin',
         descriptionMarkdown: 'Doubles spell range.',
       );
 
-      final customBg = Background(
-        id: const EntityId(slug: 'astronomer', ruleset: RulesetVersion.homebrew),
+      const customBg = Background(
+        id: EntityId(slug: 'astronomer', ruleset: RulesetVersion.homebrew),
         name: 'Astronomer',
-        skillProficiencies: const ['Arcana', 'Perception'],
+        skillProficiencies: ['Arcana', 'Perception'],
         descriptionMarkdown: 'Stargazer feature.',
       );
 

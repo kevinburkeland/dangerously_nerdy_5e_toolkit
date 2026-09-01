@@ -2,7 +2,9 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../../models/characters/subclass_spells_library.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
+import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
+import '../../models/domain/feature_grant.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart' show SpellClass;
 import '../repository/reference_resolver.dart';
@@ -432,6 +434,66 @@ class SpellAllocationValidator {
                 'Spell "${spell.name}" is Level ${spell.level}, but $targetClassSlug at level $targetClassLevel can only cast up to Level ${limits.maxSpellSlotLevel} spells.',
               );
             }
+          }
+        }
+      }
+    }
+
+    if (errors.isNotEmpty) {
+      return SpellValidationResult.invalid(errors, warnings);
+    }
+    return const SpellValidationResult.valid();
+  }
+
+  /// Validates origin-keyed spell allocations against active feature grants and class progressions.
+  static SpellValidationResult validateSpellAllocations(
+    Character character,
+    List<FeatureGrant> activeGrants,
+  ) {
+    final errors = <String>[];
+    final warnings = <String>[];
+
+    // Extract all valid grantIds
+    final validGrantIds = activeGrants
+        .map((g) => g.grantId)
+        .whereType<String>()
+        .toSet();
+
+    // Add standard class-specific grant ids
+    for (final c in character.progression.classes) {
+      validGrantIds.add('class-${c.classRef.slug}-cantrips');
+      validGrantIds.add('class-${c.classRef.slug}-spells');
+      validGrantIds.add('class-${c.classRef.slug}');
+      validGrantIds.add(c.classRef.slug);
+    }
+
+    // Check character.allocatedSpells.keys
+    for (final entry in character.allocatedSpells.entries) {
+      final grantKey = entry.key;
+      final spells = entry.value;
+
+      // Check if it's an orphan grant
+      final matchingGrant = activeGrants.where((g) => g.grantId == grantKey).firstOrNull;
+      final isClassKey = character.progression.classes.any((c) =>
+          grantKey.contains(c.classRef.slug) ||
+          grantKey == 'cantrips' ||
+          grantKey == 'spellsKnown');
+
+      if (!validGrantIds.contains(grantKey) && !isClassKey && matchingGrant == null) {
+        errors.add('Orphan spell allocation key "$grantKey" is not associated with any active grant or class.');
+      }
+
+      // If matching grant found, check counts
+      if (matchingGrant != null) {
+        if (matchingGrant.type == GrantType.bonusCantrip) {
+          final maxCount = (matchingGrant.payload['count'] as num?)?.toInt() ?? 1;
+          if (spells.length > maxCount) {
+            errors.add('Grant "$grantKey" allows at most $maxCount cantrips, but allocated ${spells.length}.');
+          }
+        } else if (matchingGrant.type == GrantType.bonusSpell) {
+          const maxCount = 1;
+          if (spells.length > maxCount) {
+            errors.add('Grant "$grantKey" allows at most $maxCount spells, but allocated ${spells.length}.');
           }
         }
       }

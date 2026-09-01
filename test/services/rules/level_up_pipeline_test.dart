@@ -17,15 +17,15 @@ void main() {
       repository = LayeredPriorityRepository();
       resolver = ReferenceResolver(repository);
 
-      baseWizard = Character(
-        id: const EntityId(slug: 'gandalf', ruleset: RulesetVersion.v2024),
+      baseWizard = const Character(
+        id: EntityId(slug: 'gandalf', ruleset: RulesetVersion.v2024),
         name: 'Gandalf',
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -38,7 +38,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 8,
           dexterity: 14,
           constitution: 14, // +2 mod
@@ -46,7 +46,7 @@ void main() {
           wisdom: 12,
           charisma: 10,
         ),
-        resources: const CharacterResourcePool(
+        resources: CharacterResourcePool(
           currentHp: 8, // 6 max + 2 CON
           currentHitDice: {'d6': 1},
         ),
@@ -150,15 +150,15 @@ void main() {
     });
 
     test('multiclass spell slots aggregate correctly (Wizard 3 / Paladin 2)', () {
-      var char = Character(
-        id: const EntityId(slug: 'gish', ruleset: RulesetVersion.v2024),
+      var char = const Character(
+        id: EntityId(slug: 'gish', ruleset: RulesetVersion.v2024),
         name: 'Gish',
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -179,7 +179,7 @@ void main() {
             hitDie: 'd10',
           ),
         ]),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 14,
           dexterity: 10,
           constitution: 14,
@@ -187,7 +187,7 @@ void main() {
           wisdom: 10,
           charisma: 14,
         ),
-        resources: const CharacterResourcePool(currentHp: 35),
+        resources: CharacterResourcePool(currentHp: 35),
       );
 
       // ECL = Wizard 3 + floor(Paladin 2 / 2 = 1) = 4

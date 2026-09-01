@@ -349,20 +349,20 @@ class SrdFeatureOptions {
 /// Comprehensive SRD 5.1 and 5.2 Classes Library containing all 12 core classes.
 @immutable
 class SrdClassesLibrary {
-  static final CharacterClass barbarian = CharacterClass(
-    id: const EntityId(slug: 'barbarian', ruleset: RulesetVersion.v2024),
+  static const CharacterClass barbarian = CharacterClass(
+    id: EntityId(slug: 'barbarian', ruleset: RulesetVersion.v2024),
     name: 'Barbarian',
     hitDie: 'd12',
     primaryAbility: 'Strength',
-    savingThrows: const ['Strength', 'Constitution'],
-    armorProficiencies: const ['Light Armor', 'Medium Armor', 'Shields'],
-    weaponProficiencies: const ['Simple Weapons', 'Martial Weapons'],
+    savingThrows: ['Strength', 'Constitution'],
+    armorProficiencies: ['Light Armor', 'Medium Armor', 'Shields'],
+    weaponProficiencies: ['Simple Weapons', 'Martial Weapons'],
     featuresMarkdown:
         '**Rage.** Gain Advantage on STR checks/saves, bonus melee damage (+2 to +4), and resistance to bludgeoning, piercing, and slashing damage.\n\n'
         '**Unarmored Defense.** When not wearing armor, AC = 10 + DEX mod + CON mod + Shield.\n\n'
         '**Reckless Attack.** Gain Advantage on melee weapon attack rolls using STR, but attack rolls against you have Advantage until your next turn.\n\n'
         '**Danger Sense.** Advantage on DEX saving throws against effects you can see.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': [
         'animalHandling',
@@ -375,7 +375,7 @@ class SrdClassesLibrary {
     },
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'path-of-the-berserker', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'path-of-the-berserker', ruleset: RulesetVersion.v2024),
         name: 'Path of the Berserker',
         classSlug: 'barbarian',
         featuresMarkdown:
@@ -384,14 +384,14 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass bard = CharacterClass(
-    id: const EntityId(slug: 'bard', ruleset: RulesetVersion.v2024),
+  static const CharacterClass bard = CharacterClass(
+    id: EntityId(slug: 'bard', ruleset: RulesetVersion.v2024),
     name: 'Bard',
     hitDie: 'd8',
     primaryAbility: 'Charisma',
-    savingThrows: const ['Dexterity', 'Charisma'],
-    armorProficiencies: const ['Light Armor'],
-    weaponProficiencies: const [
+    savingThrows: ['Dexterity', 'Charisma'],
+    armorProficiencies: ['Light Armor'],
+    weaponProficiencies: [
       'Simple Weapons',
       'Hand Crossbows',
       'Longswords',
@@ -405,7 +405,7 @@ class SrdClassesLibrary {
         '**Jack of All Trades.** Add half your Proficiency Bonus to any ability check that doesn\'t already include it.\n\n'
         '**Song of Rest / Restorative Rhythm.** Heal allies during Short Rests.\n\n'
         '**Expertise.** Double proficiency bonus on two chosen skills.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 3,
       'allowedSkills': [
         'acrobatics',
@@ -430,7 +430,7 @@ class SrdClassesLibrary {
     },
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'college-of-lore', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'college-of-lore', ruleset: RulesetVersion.v2024),
         name: 'College of Lore',
         classSlug: 'bard',
         featuresMarkdown:
@@ -439,14 +439,14 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass cleric = CharacterClass(
-    id: const EntityId(slug: 'cleric', ruleset: RulesetVersion.v2024),
+  static const CharacterClass cleric = CharacterClass(
+    id: EntityId(slug: 'cleric', ruleset: RulesetVersion.v2024),
     name: 'Cleric',
     hitDie: 'd8',
     primaryAbility: 'Wisdom',
-    savingThrows: const ['Wisdom', 'Charisma'],
-    armorProficiencies: const ['Light Armor', 'Medium Armor', 'Shields'],
-    weaponProficiencies: const ['Simple Weapons'],
+    savingThrows: ['Wisdom', 'Charisma'],
+    armorProficiencies: ['Light Armor', 'Medium Armor', 'Shields'],
+    weaponProficiencies: ['Simple Weapons'],
     spellcastingAbility: 'Wisdom',
     featuresMarkdown:
         '**Spellcasting.** Full divine spellcaster using Wisdom.\n\n'
@@ -454,11 +454,11 @@ class SrdClassesLibrary {
         '**Channel Divinity.** Powerful divine surges (e.g. Turn Undead, Divine Spark).\n\n'
         '**Turn Undead.** Undead must flee from you on failed WIS saving throw.\n\n'
         '**Divine Intervention.** Call upon your deity for direct miraculous intervention.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': ['history', 'insight', 'medicine', 'persuasion', 'religion'],
     },
-    featureDecisions: const [
+    featureDecisions: [
       ClassFeatureDecision(
         id: 'cleric-divine-order-1',
         name: 'Divine Order',
@@ -473,7 +473,7 @@ class SrdClassesLibrary {
     ],
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'life-domain', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'life-domain', ruleset: RulesetVersion.v2024),
         name: 'Life Domain',
         classSlug: 'cleric',
         featuresMarkdown:
@@ -481,7 +481,7 @@ class SrdClassesLibrary {
             '**Preserve Life.** Channel Divinity to heal injured allies within 30 feet.',
       ),
       Subclass(
-        id: const EntityId(slug: 'light-domain', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'light-domain', ruleset: RulesetVersion.v2024),
         name: 'Light Domain',
         classSlug: 'cleric',
         featuresMarkdown:
@@ -491,14 +491,14 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass druid = CharacterClass(
-    id: const EntityId(slug: 'druid', ruleset: RulesetVersion.v2024),
+  static const CharacterClass druid = CharacterClass(
+    id: EntityId(slug: 'druid', ruleset: RulesetVersion.v2024),
     name: 'Druid',
     hitDie: 'd8',
     primaryAbility: 'Wisdom',
-    savingThrows: const ['Intelligence', 'Wisdom'],
-    armorProficiencies: const ['Light Armor', 'Medium Armor', 'Shields'],
-    weaponProficiencies: const [
+    savingThrows: ['Intelligence', 'Wisdom'],
+    armorProficiencies: ['Light Armor', 'Medium Armor', 'Shields'],
+    weaponProficiencies: [
       'Clubs',
       'Daggers',
       'Darts',
@@ -516,7 +516,7 @@ class SrdClassesLibrary {
         '**Primal Order.** Choose Magician (extra cantrip & skill bonus) or Warden (Medium armor & martial weapons).\n\n'
         '**Wild Shape.** Magically transform into the form of a beast or elemental.\n\n'
         '**Wild Companion.** Summon a familiar spirit using your Wild Shape charges.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': [
         'arcana',
@@ -529,7 +529,7 @@ class SrdClassesLibrary {
         'survival'
       ],
     },
-    featureDecisions: const [
+    featureDecisions: [
       ClassFeatureDecision(
         id: 'druid-primal-order-1',
         name: 'Primal Order',
@@ -544,7 +544,7 @@ class SrdClassesLibrary {
     ],
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'circle-of-the-land', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'circle-of-the-land', ruleset: RulesetVersion.v2024),
         name: 'Circle of the Land',
         classSlug: 'druid',
         featuresMarkdown:
@@ -552,7 +552,7 @@ class SrdClassesLibrary {
             '**Circle Spells.** Gain bonus domain spells based on chosen biome.',
       ),
       Subclass(
-        id: const EntityId(slug: 'circle-of-the-moon', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'circle-of-the-moon', ruleset: RulesetVersion.v2024),
         name: 'Circle of the Moon',
         classSlug: 'druid',
         featuresMarkdown:
@@ -561,21 +561,21 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass fighter = CharacterClass(
-    id: const EntityId(slug: 'fighter', ruleset: RulesetVersion.v2024),
+  static const CharacterClass fighter = CharacterClass(
+    id: EntityId(slug: 'fighter', ruleset: RulesetVersion.v2024),
     name: 'Fighter',
     hitDie: 'd10',
     primaryAbility: 'Strength or Dexterity',
-    savingThrows: const ['Strength', 'Constitution'],
-    armorProficiencies: const ['All Armor', 'Shields'],
-    weaponProficiencies: const ['Simple Weapons', 'Martial Weapons'],
+    savingThrows: ['Strength', 'Constitution'],
+    armorProficiencies: ['All Armor', 'Shields'],
+    weaponProficiencies: ['Simple Weapons', 'Martial Weapons'],
     featuresMarkdown:
         '**Fighting Style.** Select a specialized combat style (Archery, Defense, Dueling, Great Weapon Fighting, Two-Weapon Fighting).\n\n'
         '**Second Wind.** Bonus action to regain 1d10 + Fighter Level HP.\n\n'
         '**Action Surge.** Take an additional Action on your turn once per short or long rest.\n\n'
         '**Extra Attack.** Attack two, three, or four times whenever you take the Attack action.\n\n'
         '**Indomitable.** Reroll a failed saving throw.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': [
         'acrobatics',
@@ -588,7 +588,7 @@ class SrdClassesLibrary {
         'survival'
       ],
     },
-    featureDecisions: const [
+    featureDecisions: [
       ClassFeatureDecision(
         id: 'fighter-fighting-style-1',
         name: 'Fighting Style',
@@ -614,7 +614,7 @@ class SrdClassesLibrary {
     ],
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'champion', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'champion', ruleset: RulesetVersion.v2024),
         name: 'Champion',
         classSlug: 'fighter',
         featuresMarkdown:
@@ -622,7 +622,7 @@ class SrdClassesLibrary {
             '**Remarkable Athlete.** Bonus to non-proficient STR, DEX, and CON checks; increased jump distance.',
       ),
       Subclass(
-        id: const EntityId(slug: 'battle-master', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'battle-master', ruleset: RulesetVersion.v2024),
         name: 'Battle Master',
         classSlug: 'fighter',
         featuresMarkdown:
@@ -631,20 +631,20 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass monk = CharacterClass(
-    id: const EntityId(slug: 'monk', ruleset: RulesetVersion.v2024),
+  static const CharacterClass monk = CharacterClass(
+    id: EntityId(slug: 'monk', ruleset: RulesetVersion.v2024),
     name: 'Monk',
     hitDie: 'd8',
     primaryAbility: 'Dexterity and Wisdom',
-    savingThrows: const ['Strength', 'Dexterity'],
-    armorProficiencies: const [],
-    weaponProficiencies: const ['Simple Weapons', 'Shortswords'],
+    savingThrows: ['Strength', 'Dexterity'],
+    armorProficiencies: [],
+    weaponProficiencies: ['Simple Weapons', 'Shortswords'],
     featuresMarkdown:
         '**Unarmored Defense.** When not wearing armor or wielding a shield, AC = 10 + DEX mod + WIS mod.\n\n'
         '**Martial Arts.** Use DEX for monk weapons and unarmed strikes; unarmed die scales from 1d6 to 1d12; bonus unarmed attack.\n\n'
         '**Ki / Focus Points.** Flurry of Blows, Patient Defense, Step of the Wind, Stunning Strike.\n\n'
         '**Deflect Attacks.** Reaction to reduce damage from ranged/melee attacks and deflect them back.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': [
         'acrobatics',
@@ -657,7 +657,7 @@ class SrdClassesLibrary {
     },
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'warrior-of-the-open-hand', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'warrior-of-the-open-hand', ruleset: RulesetVersion.v2024),
         name: 'Warrior of the Open Hand',
         classSlug: 'monk',
         featuresMarkdown:
@@ -666,14 +666,14 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass paladin = CharacterClass(
-    id: const EntityId(slug: 'paladin', ruleset: RulesetVersion.v2024),
+  static const CharacterClass paladin = CharacterClass(
+    id: EntityId(slug: 'paladin', ruleset: RulesetVersion.v2024),
     name: 'Paladin',
     hitDie: 'd10',
     primaryAbility: 'Strength and Charisma',
-    savingThrows: const ['Wisdom', 'Charisma'],
-    armorProficiencies: const ['All Armor', 'Shields'],
-    weaponProficiencies: const ['Simple Weapons', 'Martial Weapons'],
+    savingThrows: ['Wisdom', 'Charisma'],
+    armorProficiencies: ['All Armor', 'Shields'],
+    weaponProficiencies: ['Simple Weapons', 'Martial Weapons'],
     spellcastingAbility: 'Charisma',
     featuresMarkdown:
         '**Divine Sense.** Detect celestials, fiends, and undead.\n\n'
@@ -681,7 +681,7 @@ class SrdClassesLibrary {
         '**Divine Smite.** Channel holy wrath to deal extra radiant damage on melee hits.\n\n'
         '**Aura of Protection.** Add Charisma bonus to all saving throws for you and nearby allies.\n\n'
         '**Extra Attack.** Attack twice per Attack action.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': [
         'athletics',
@@ -692,7 +692,7 @@ class SrdClassesLibrary {
         'religion'
       ],
     },
-    featureDecisions: const [
+    featureDecisions: [
       ClassFeatureDecision(
         id: 'paladin-fighting-style-2',
         name: 'Fighting Style',
@@ -734,7 +734,7 @@ class SrdClassesLibrary {
     ],
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'oath-of-devotion', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'oath-of-devotion', ruleset: RulesetVersion.v2024),
         name: 'Oath of Devotion',
         classSlug: 'paladin',
         featuresMarkdown:
@@ -744,21 +744,21 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass ranger = CharacterClass(
-    id: const EntityId(slug: 'ranger', ruleset: RulesetVersion.v2024),
+  static const CharacterClass ranger = CharacterClass(
+    id: EntityId(slug: 'ranger', ruleset: RulesetVersion.v2024),
     name: 'Ranger',
     hitDie: 'd10',
     primaryAbility: 'Dexterity and Wisdom',
-    savingThrows: const ['Strength', 'Dexterity'],
-    armorProficiencies: const ['Light Armor', 'Medium Armor', 'Shields'],
-    weaponProficiencies: const ['Simple Weapons', 'Martial Weapons'],
+    savingThrows: ['Strength', 'Dexterity'],
+    armorProficiencies: ['Light Armor', 'Medium Armor', 'Shields'],
+    weaponProficiencies: ['Simple Weapons', 'Martial Weapons'],
     spellcastingAbility: 'Wisdom',
     featuresMarkdown:
         '**Deft Explorer / Natural Explorer.** Expertise in one skill, climbing and swimming speeds.\n\n'
         '**Favored Enemy / Hunter\'s Mark.** Cast Hunter\'s Mark without expending spell slots and track targets with Advantage.\n\n'
         '**Spellcasting.** Half-caster with primal nature spells.\n\n'
         '**Extra Attack.** Attack twice per Attack action.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 3,
       'allowedSkills': [
         'animalHandling',
@@ -771,7 +771,7 @@ class SrdClassesLibrary {
         'survival'
       ],
     },
-    featureDecisions: const [
+    featureDecisions: [
       ClassFeatureDecision(
         id: 'ranger-fighting-style-2',
         name: 'Fighting Style',
@@ -812,7 +812,7 @@ class SrdClassesLibrary {
     ],
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'hunter', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'hunter', ruleset: RulesetVersion.v2024),
         name: 'Hunter',
         classSlug: 'ranger',
         featuresMarkdown:
@@ -821,14 +821,14 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass rogue = CharacterClass(
-    id: const EntityId(slug: 'rogue', ruleset: RulesetVersion.v2024),
+  static const CharacterClass rogue = CharacterClass(
+    id: EntityId(slug: 'rogue', ruleset: RulesetVersion.v2024),
     name: 'Rogue',
     hitDie: 'd8',
     primaryAbility: 'Dexterity',
-    savingThrows: const ['Dexterity', 'Intelligence'],
-    armorProficiencies: const ['Light Armor'],
-    weaponProficiencies: const [
+    savingThrows: ['Dexterity', 'Intelligence'],
+    armorProficiencies: ['Light Armor'],
+    weaponProficiencies: [
       'Simple Weapons',
       'Hand Crossbows',
       'Longswords',
@@ -841,7 +841,7 @@ class SrdClassesLibrary {
         '**Cunning Action.** Bonus Action to Dash, Disengage, or Hide.\n\n'
         '**Uncanny Dodge.** Reaction to halve incoming attack damage.\n\n'
         '**Evasion.** Take no damage on successful DEX saves against area effects, and half damage on failure.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 4,
       'allowedSkills': [
         'acrobatics',
@@ -859,7 +859,7 @@ class SrdClassesLibrary {
     },
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'thief', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'thief', ruleset: RulesetVersion.v2024),
         name: 'Thief',
         classSlug: 'rogue',
         featuresMarkdown:
@@ -869,14 +869,14 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass sorcerer = CharacterClass(
-    id: const EntityId(slug: 'sorcerer', ruleset: RulesetVersion.v2024),
+  static const CharacterClass sorcerer = CharacterClass(
+    id: EntityId(slug: 'sorcerer', ruleset: RulesetVersion.v2024),
     name: 'Sorcerer',
     hitDie: 'd6',
     primaryAbility: 'Charisma',
-    savingThrows: const ['Constitution', 'Charisma'],
-    armorProficiencies: const [],
-    weaponProficiencies: const [
+    savingThrows: ['Constitution', 'Charisma'],
+    armorProficiencies: [],
+    weaponProficiencies: [
       'Daggers',
       'Darts',
       'Slings',
@@ -888,7 +888,7 @@ class SrdClassesLibrary {
         '**Innate Sorcery.** Innate magic flares to grant Advantage on spell attacks and increase spell save DC by 1.\n\n'
         '**Font of Magic.** Sorcery Points pool for creating spell slots or fueling Metamagic.\n\n'
         '**Metamagic.** Twinned Spell, Quickened Spell, Subtle Spell, Heightened Spell, Empowered Spell, Distant Spell.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': [
         'arcana',
@@ -901,19 +901,19 @@ class SrdClassesLibrary {
     },
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'draconic-sorcery', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'draconic-sorcery', ruleset: RulesetVersion.v2024),
         name: 'Draconic Sorcery',
         classSlug: 'sorcerer',
         featuresMarkdown:
             '**Draconic Resilience.** Base AC 13 + DEX mod, and +1 Max HP per Sorcerer level.\n\n'
             '**Elemental Affinity.** Add CHA modifier to damage matching draconic ancestry.',
-        customProperties: const {
+        customProperties: {
           'acFormula': '13 + DEX',
           'baseAc': 13,
         },
       ),
       Subclass(
-        id: const EntityId(slug: 'wild-magic', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'wild-magic', ruleset: RulesetVersion.v2024),
         name: 'Wild Magic',
         classSlug: 'sorcerer',
         featuresMarkdown:
@@ -1066,16 +1066,16 @@ class SrdClassesLibrary {
       ),
     ],
     subclasses: [
-      Subclass(
-        id: const EntityId(slug: 'fiend-patron', ruleset: RulesetVersion.v2024),
+      const Subclass(
+        id: EntityId(slug: 'fiend-patron', ruleset: RulesetVersion.v2024),
         name: 'The Fiend',
         classSlug: 'warlock',
         featuresMarkdown:
             '**Dark One\'s Blessing.** Gain temporary HP equal to CHA mod + Warlock Level upon reducing a hostile creature to 0 HP.\n\n'
             '**Dark One\'s Own Luck.** Add 1d10 to an ability check or saving throw.',
       ),
-      Subclass(
-        id: const EntityId(slug: 'archfey-patron', ruleset: RulesetVersion.v2024),
+      const Subclass(
+        id: EntityId(slug: 'archfey-patron', ruleset: RulesetVersion.v2024),
         name: 'The Archfey',
         classSlug: 'warlock',
         featuresMarkdown:
@@ -1085,14 +1085,14 @@ class SrdClassesLibrary {
     ],
   );
 
-  static final CharacterClass wizard = CharacterClass(
-    id: const EntityId(slug: 'wizard', ruleset: RulesetVersion.v2024),
+  static const CharacterClass wizard = CharacterClass(
+    id: EntityId(slug: 'wizard', ruleset: RulesetVersion.v2024),
     name: 'Wizard',
     hitDie: 'd6',
     primaryAbility: 'Intelligence',
-    savingThrows: const ['Intelligence', 'Wisdom'],
-    armorProficiencies: const [],
-    weaponProficiencies: const [
+    savingThrows: ['Intelligence', 'Wisdom'],
+    armorProficiencies: [],
+    weaponProficiencies: [
       'Daggers',
       'Darts',
       'Slings',
@@ -1105,7 +1105,7 @@ class SrdClassesLibrary {
         '**Ritual Casting.** Cast any ritual spell from your spellbook without preparing it.\n\n'
         '**Arcane Recovery.** Regain expended spell slots equal to half Wizard level on a Short Rest.\n\n'
         '**Spell Mastery.** Cast selected 1st and 2nd level spells at will.',
-    customProperties: const {
+    customProperties: {
       'skillChoiceCount': 2,
       'allowedSkills': [
         'arcana',
@@ -1118,7 +1118,7 @@ class SrdClassesLibrary {
     },
     subclasses: [
       Subclass(
-        id: const EntityId(slug: 'school-of-evocation', ruleset: RulesetVersion.v2024),
+        id: EntityId(slug: 'school-of-evocation', ruleset: RulesetVersion.v2024),
         name: 'School of Evocation',
         classSlug: 'wizard',
         featuresMarkdown:

@@ -225,26 +225,26 @@ void main() {
       final persistence = HomebrewPersistenceService();
       await persistence.saveCustomSpellsBatch(
         [
-          Spell(
-            id: const EntityId(slug: 'spell-a', ruleset: RulesetVersion.homebrew),
+          const Spell(
+            id: EntityId(slug: 'spell-a', ruleset: RulesetVersion.homebrew),
             name: 'Spell Alpha',
             level: 1,
             school: 'Evocation',
-            castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-            duration: const SpellDuration(type: DurationType.instantaneous),
+            castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+            duration: SpellDuration(type: DurationType.instantaneous),
             range: '30 ft',
-            components: const SpellComponents(),
+            components: SpellComponents(),
             descriptionMarkdown: 'Alpha',
           ),
-          Spell(
-            id: const EntityId(slug: 'spell-b', ruleset: RulesetVersion.homebrew),
+          const Spell(
+            id: EntityId(slug: 'spell-b', ruleset: RulesetVersion.homebrew),
             name: 'Spell Beta',
             level: 2,
             school: 'Abjuration',
-            castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-            duration: const SpellDuration(type: DurationType.instantaneous),
+            castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+            duration: SpellDuration(type: DurationType.instantaneous),
             range: '60 ft',
-            components: const SpellComponents(),
+            components: SpellComponents(),
             descriptionMarkdown: 'Beta',
           ),
         ],

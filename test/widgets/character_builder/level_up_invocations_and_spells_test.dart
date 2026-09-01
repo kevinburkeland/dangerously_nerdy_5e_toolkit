@@ -25,12 +25,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final character = Character(
-        id: const EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2024),
+      const character = Character(
+        id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2024),
         name: 'Warlock Hero',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'soldier', displayName: 'Soldier'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'soldier', displayName: 'Soldier'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
@@ -40,7 +40,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 10,
           dexterity: 14,
           constitution: 14,
@@ -48,7 +48,7 @@ void main() {
           wisdom: 12,
           charisma: 16,
         ),
-        resources: const CharacterResourcePool(
+        resources: CharacterResourcePool(
           currentHp: 10,
           currentHitDice: {'d8': 1},
         ),
@@ -124,12 +124,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final character = Character(
-        id: const EntityId(slug: 'test-fiend-warlock', ruleset: RulesetVersion.v2024),
+      const character = Character(
+        id: EntityId(slug: 'test-fiend-warlock', ruleset: RulesetVersion.v2024),
         name: 'Fiend Warlock',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
@@ -140,12 +140,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 12, wisdom: 10, charisma: 16),
-        resources: const CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
+        baseScores: AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 12, wisdom: 10, charisma: 16),
+        resources: CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: character),
           ),
@@ -174,12 +174,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final barbarian = Character(
-        id: const EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
+      const barbarian = Character(
+        id: EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
         name: 'Barbarian',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'orc', displayName: 'Orc'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'soldier', displayName: 'Soldier'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'orc', displayName: 'Orc'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'soldier', displayName: 'Soldier'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'barbarian', displayName: 'Barbarian'),
@@ -189,12 +189,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(strength: 16, dexterity: 14, constitution: 16, intelligence: 8, wisdom: 10, charisma: 8),
-        resources: const CharacterResourcePool(currentHp: 15, currentHitDice: {'d12': 1}),
+        baseScores: AbilityScores(strength: 16, dexterity: 14, constitution: 16, intelligence: 8, wisdom: 10, charisma: 8),
+        resources: CharacterResourcePool(currentHp: 15, currentHitDice: {'d12': 1}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: barbarian),
           ),
@@ -220,12 +220,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final bard = Character(
-        id: const EntityId(slug: 'test-bard', ruleset: RulesetVersion.v2024),
+      const bard = Character(
+        id: EntityId(slug: 'test-bard', ruleset: RulesetVersion.v2024),
         name: 'Elven Minstrel',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'entertainer', displayName: 'Entertainer'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'entertainer', displayName: 'Entertainer'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'bard', displayName: 'Bard'),
@@ -236,12 +236,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 12, intelligence: 12, wisdom: 12, charisma: 18),
-        resources: const CharacterResourcePool(currentHp: 55, currentHitDice: {'d8': 9}),
+        baseScores: AbilityScores(strength: 8, dexterity: 14, constitution: 12, intelligence: 12, wisdom: 12, charisma: 18),
+        resources: CharacterResourcePool(currentHp: 55, currentHitDice: {'d8': 9}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: bard),
           ),
@@ -275,12 +275,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final warlock = Character(
-        id: const EntityId(slug: 'test-warlock-10', ruleset: RulesetVersion.v2024),
+      const warlock = Character(
+        id: EntityId(slug: 'test-warlock-10', ruleset: RulesetVersion.v2024),
         name: 'High Warlock',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
@@ -291,12 +291,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 18),
-        resources: const CharacterResourcePool(currentHp: 65, currentHitDice: {'d8': 10}),
+        baseScores: AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 18),
+        resources: CharacterResourcePool(currentHp: 65, currentHitDice: {'d8': 10}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: warlock),
           ),
@@ -322,12 +322,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final cleric = Character(
-        id: const EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
+      const cleric = Character(
+        id: EntityId(slug: 'test-cleric', ruleset: RulesetVersion.v2024),
         name: 'Life Cleric',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'cleric', displayName: 'Cleric'),
@@ -338,12 +338,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(strength: 14, dexterity: 10, constitution: 14, intelligence: 10, wisdom: 16, charisma: 12),
-        resources: const CharacterResourcePool(currentHp: 18, currentHitDice: {'d8': 2}),
+        baseScores: AbilityScores(strength: 14, dexterity: 10, constitution: 14, intelligence: 10, wisdom: 16, charisma: 12),
+        resources: CharacterResourcePool(currentHp: 18, currentHitDice: {'d8': 2}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: cleric),
           ),
@@ -371,12 +371,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final warlock2014 = Character(
-        id: const EntityId(slug: 'test-warlock-2014', ruleset: RulesetVersion.v2014),
+      const warlock2014 = Character(
+        id: EntityId(slug: 'test-warlock-2014', ruleset: RulesetVersion.v2014),
         name: 'Classic Warlock',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
@@ -387,12 +387,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 16),
-        resources: const CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
+        baseScores: AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 16),
+        resources: CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: warlock2014),
           ),
@@ -419,12 +419,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final paladin2014 = Character(
-        id: const EntityId(slug: 'test-paladin-2014', ruleset: RulesetVersion.v2014),
+      const paladin2014 = Character(
+        id: EntityId(slug: 'test-paladin-2014', ruleset: RulesetVersion.v2014),
         name: 'Classic Paladin',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'noble', displayName: 'Noble'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'noble', displayName: 'Noble'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'paladin', displayName: 'Paladin'),
@@ -434,12 +434,12 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(strength: 16, dexterity: 10, constitution: 14, intelligence: 8, wisdom: 10, charisma: 16),
-        resources: const CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
+        baseScores: AbilityScores(strength: 16, dexterity: 10, constitution: 14, intelligence: 8, wisdom: 10, charisma: 16),
+        resources: CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: paladin2014),
           ),
@@ -483,12 +483,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final wizard = Character(
-        id: const EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
+      const wizard = Character(
+        id: EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
         name: 'Wizard Scholar',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'wizard', displayName: 'Wizard'),
@@ -498,21 +498,21 @@ void main() {
             ),
           ],
         ),
-        cantrips: const [
+        cantrips: [
           EntityReference(refType: EntityType.spell, slug: 'spell_mage_hand', displayName: 'Mage Hand'),
           EntityReference(refType: EntityType.spell, slug: 'spell_fire_bolt', displayName: 'Fire Bolt'),
           EntityReference(refType: EntityType.spell, slug: 'spell_prestidigitation', displayName: 'Prestidigitation'),
         ],
-        spellsPrepared: const [
+        spellsPrepared: [
           EntityReference(refType: EntityType.spell, slug: 'spell_shield', displayName: 'Shield'),
           EntityReference(refType: EntityType.spell, slug: 'spell_magic_missile', displayName: 'Magic Missile'),
         ],
-        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 16, wisdom: 12, charisma: 10),
-        resources: const CharacterResourcePool(currentHp: 8, currentHitDice: {'d6': 1}),
+        baseScores: AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 16, wisdom: 12, charisma: 10),
+        resources: CharacterResourcePool(currentHp: 8, currentHitDice: {'d6': 1}),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LevelUpWizardDialog(character: wizard),
           ),
@@ -560,12 +560,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      final warlock = Character(
-        id: const EntityId(slug: 'test-warlock-swap', ruleset: RulesetVersion.v2024),
+      const warlock = Character(
+        id: EntityId(slug: 'test-warlock-swap', ruleset: RulesetVersion.v2024),
         name: 'Warlock Swapper',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'charlatan', displayName: 'Charlatan'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'charlatan', displayName: 'Charlatan'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
@@ -576,16 +576,16 @@ void main() {
             ),
           ],
         ),
-        cantrips: const [
+        cantrips: [
           EntityReference(refType: EntityType.spell, slug: 'spell_eldritch_blast', displayName: 'Eldritch Blast'),
           EntityReference(refType: EntityType.spell, slug: 'spell_minor_illusion', displayName: 'Minor Illusion'),
         ],
-        spellsKnown: const [
+        spellsKnown: [
           EntityReference(refType: EntityType.spell, slug: 'spell_witch_bolt', displayName: 'Witch Bolt'),
           EntityReference(refType: EntityType.spell, slug: 'spell_arms_of_hadar', displayName: 'Arms of Hadar'),
         ],
-        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 16),
-        resources: const CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
+        baseScores: AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 16),
+        resources: CharacterResourcePool(currentHp: 10, currentHitDice: {'d8': 1}),
       );
 
       Character? leveledResult;

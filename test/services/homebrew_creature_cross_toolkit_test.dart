@@ -23,8 +23,8 @@ void main() {
   });
 
   group('Homebrew Creature Cross-Toolkit Integration Tests', () {
-    final customBeast = Monster(
-      id: const EntityId(slug: 'dire-timber-wolf', ruleset: RulesetVersion.homebrew),
+    const customBeast = Monster(
+      id: EntityId(slug: 'dire-timber-wolf', ruleset: RulesetVersion.homebrew),
       name: 'Dire Timber Wolf',
       size: 'Large',
       monsterType: 'Beast',
@@ -43,8 +43,8 @@ void main() {
       },
     );
 
-    final customDragon = Monster(
-      id: const EntityId(slug: 'astral-drake', ruleset: RulesetVersion.homebrew),
+    const customDragon = Monster(
+      id: EntityId(slug: 'astral-drake', ruleset: RulesetVersion.homebrew),
       name: 'Astral Drake',
       size: 'Huge',
       monsterType: 'Dragon',
@@ -88,8 +88,8 @@ void main() {
     });
 
     test('parses ### markdown headers without colon into named traits and actions', () {
-      final headingMonster = Monster(
-        id: const EntityId(slug: 'shadow-stalker', ruleset: RulesetVersion.homebrew),
+      const headingMonster = Monster(
+        id: EntityId(slug: 'shadow-stalker', ruleset: RulesetVersion.homebrew),
         name: 'Shadow Stalker',
         size: 'Medium',
         monsterType: 'Monstrosity',

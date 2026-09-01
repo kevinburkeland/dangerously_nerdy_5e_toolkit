@@ -93,14 +93,14 @@ class SrdSpeciesLibrary {
       'abilityBonuses2014': {'dexterity': 2},
     },
     subraces: [
-      Subrace(
-        id: const EntityId(slug: 'high-elf', ruleset: RulesetVersion.v2024),
+      const Subrace(
+        id: EntityId(slug: 'high-elf', ruleset: RulesetVersion.v2024),
         name: 'High Elf',
         raceSlug: 'elf',
         traitsMarkdown: '**Cantrip.** You know one cantrip of your choice from the Wizard spell list.',
       ),
-      Subrace(
-        id: const EntityId(slug: 'wood-elf', ruleset: RulesetVersion.v2024),
+      const Subrace(
+        id: EntityId(slug: 'wood-elf', ruleset: RulesetVersion.v2024),
         name: 'Wood Elf',
         raceSlug: 'elf',
         traitsMarkdown: '**Fleet of Foot.** Your base walking speed increases to 35 feet.',
@@ -127,14 +127,14 @@ class SrdSpeciesLibrary {
       'abilityBonuses2014': {'constitution': 2},
     },
     subraces: [
-      Subrace(
-        id: const EntityId(slug: 'hill-dwarf', ruleset: RulesetVersion.v2024),
+      const Subrace(
+        id: EntityId(slug: 'hill-dwarf', ruleset: RulesetVersion.v2024),
         name: 'Hill Dwarf',
         raceSlug: 'dwarf',
         traitsMarkdown: '**Dwarven Toughness.** +1 HP maximum per level.',
       ),
-      Subrace(
-        id: const EntityId(slug: 'mountain-dwarf', ruleset: RulesetVersion.v2024),
+      const Subrace(
+        id: EntityId(slug: 'mountain-dwarf', ruleset: RulesetVersion.v2024),
         name: 'Mountain Dwarf',
         raceSlug: 'dwarf',
         traitsMarkdown: '**Dwarven Armor Training.** Proficiency with light and medium armor.',
@@ -158,8 +158,8 @@ class SrdSpeciesLibrary {
       'abilityBonuses2014': {'dexterity': 2},
     },
     subraces: [
-      Subrace(
-        id: const EntityId(slug: 'lightfoot-halfling', ruleset: RulesetVersion.v2024),
+      const Subrace(
+        id: EntityId(slug: 'lightfoot-halfling', ruleset: RulesetVersion.v2024),
         name: 'Lightfoot Halfling',
         raceSlug: 'halfling',
         traitsMarkdown: '**Naturally Stealthy.** You can attempt to hide even when obscured only by a larger creature.',

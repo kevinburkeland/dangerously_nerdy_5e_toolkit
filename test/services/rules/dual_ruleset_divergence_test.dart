@@ -95,11 +95,11 @@ void main() {
 
   group('Retroactive HP Scaling & Constitution Updates', () {
     test('Constitution increase from 14 (+2) to 16 (+3) retroactively scales all Hit Dice', () {
-      final fighter = Character(
-        id: const EntityId(slug: 'fighter_hero', ruleset: RulesetVersion.v2024),
+      const fighter = Character(
+        id: EntityId(slug: 'fighter_hero', ruleset: RulesetVersion.v2024),
         name: 'Valeros',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: const CharacterProgression(classes: [
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'fighter', displayName: 'Fighter'),
             level: 5,
@@ -108,7 +108,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 16,
           dexterity: 12,
           constitution: 14, // +2 mod
@@ -116,7 +116,7 @@ void main() {
           wisdom: 12,
           charisma: 8,
         ),
-        resources: const CharacterResourcePool(currentHp: 44),
+        resources: CharacterResourcePool(currentHp: 44),
       );
 
       final repo = LayeredPriorityRepository();
@@ -135,14 +135,14 @@ void main() {
     });
 
     test('Equipping and attuning Amulet of Health (CON 19 = +4) dynamically scales HP', () {
-      final amuletItem = EquipmentItem(
-        id: const EntityId(slug: 'amulet_of_health', ruleset: RulesetVersion.v2024),
+      const amuletItem = EquipmentItem(
+        id: EntityId(slug: 'amulet_of_health', ruleset: RulesetVersion.v2024),
         name: 'Amulet of Health',
         itemType: 'Wondrous Item',
         rarity: 'Rare',
         requiresAttunement: true,
         descriptionMarkdown: 'Sets Constitution to 19.',
-        customProperties: const {
+        customProperties: {
           'abilityOverrides': {'constitution': 19},
         },
       );
@@ -157,11 +157,11 @@ void main() {
       repo.addLayer(baseLayer);
       final resolver = ReferenceResolver(repo);
 
-      final wizard = Character(
-        id: const EntityId(slug: 'fragile_wizard', ruleset: RulesetVersion.v2024),
+      const wizard = Character(
+        id: EntityId(slug: 'fragile_wizard', ruleset: RulesetVersion.v2024),
         name: 'Raistlin',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        progression: const CharacterProgression(classes: [
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'wizard', displayName: 'Wizard'),
             level: 4,
@@ -170,7 +170,7 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 8,
           dexterity: 14,
           constitution: 10, // +0 mod
@@ -178,7 +178,7 @@ void main() {
           wisdom: 12,
           charisma: 10,
         ),
-        inventory: const [
+        inventory: [
           InventoryItemInstance(
             instanceId: 'item_amulet_1',
             itemRef: EntityReference<EquipmentItem>(refType: EntityType.equipment, slug: 'amulet_of_health', displayName: 'Amulet of Health'),
@@ -187,7 +187,7 @@ void main() {
             requiresAttunement: true,
           ),
         ],
-        resources: const CharacterResourcePool(currentHp: 18),
+        resources: CharacterResourcePool(currentHp: 18),
       );
 
       final stats = CharacterStatCalculator.compute(wizard, resolver);
@@ -199,11 +199,11 @@ void main() {
     });
 
     test('Tough feat correctly adds 2 HP per total level', () {
-      final hero = Character(
-        id: const EntityId(slug: 'tough_barb', ruleset: RulesetVersion.v2024),
+      const hero = Character(
+        id: EntityId(slug: 'tough_barb', ruleset: RulesetVersion.v2024),
         name: 'Conan',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: const CharacterProgression(classes: [
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'barbarian', displayName: 'Barbarian'),
             level: 3,
@@ -212,11 +212,11 @@ void main() {
             isStartingClass: true,
           ),
         ]),
-        baseScores: const AbilityScores(constitution: 14), // +2
-        feats: const [
+        baseScores: AbilityScores(constitution: 14), // +2
+        feats: [
           EntityReference(refType: EntityType.feat, slug: 'tough', displayName: 'Tough'),
         ],
-        resources: const CharacterResourcePool(currentHp: 30),
+        resources: CharacterResourcePool(currentHp: 30),
       );
 
       final repo = LayeredPriorityRepository();
@@ -279,24 +279,24 @@ void main() {
     });
 
     test('CharacterStatCalculator applies 2024 exhaustion penalties to speed and attack/skill rolls', () {
-      final character = Character(
-        id: const EntityId(slug: 'exhausted_rogue', ruleset: RulesetVersion.v2024),
+      const character = Character(
+        id: EntityId(slug: 'exhausted_rogue', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
         rulesEdition: DmRulesEdition.v2024,
         baseSpeedFeet: 30,
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'rogue', displayName: 'Rogue'),
             level: 2,
             hitDie: 'd8',
           ),
         ]),
-        baseScores: const AbilityScores(strength: 10, dexterity: 16, constitution: 12),
-        conditions: const [
+        baseScores: AbilityScores(strength: 10, dexterity: 16, constitution: 12),
+        conditions: [
           CharacterCondition(conditionName: 'exhaustion', parameters: {'level': 2}),
         ],
-        resources: const CharacterResourcePool(currentHp: 15),
+        resources: CharacterResourcePool(currentHp: 15),
       );
 
       final repo = LayeredPriorityRepository();
@@ -328,49 +328,49 @@ void main() {
     test('2024 Weapon Mastery validation succeeds for eligible classes and matching property', () {
       const s2024 = Ruleset2024Strategy();
 
-      final fighterChar = Character(
-        id: const EntityId(slug: 'f1', ruleset: RulesetVersion.v2024),
+      const fighterChar = Character(
+        id: EntityId(slug: 'f1', ruleset: RulesetVersion.v2024),
         name: 'Knight',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
         rulesEdition: DmRulesEdition.v2024,
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'fighter', displayName: 'Fighter'),
             level: 1,
             hitDie: 'd10',
           ),
         ]),
-        baseScores: const AbilityScores(),
-        resources: const CharacterResourcePool(currentHp: 10),
+        baseScores: AbilityScores(),
+        resources: CharacterResourcePool(currentHp: 10),
       );
 
-      final greatsword = EquipmentItem(
-        id: const EntityId(slug: 'greatsword', ruleset: RulesetVersion.v2024),
+      const greatsword = EquipmentItem(
+        id: EntityId(slug: 'greatsword', ruleset: RulesetVersion.v2024),
         name: 'Greatsword',
         itemType: 'Martial Melee Weapon',
         rarity: 'Common',
         requiresAttunement: false,
         descriptionMarkdown: '2d6 slashing damage.',
-        customProperties: const {'mastery': 'graze'},
+        customProperties: {'mastery': 'graze'},
       );
 
       expect(s2024.canUseWeaponMastery(character: fighterChar, weapon: greatsword, mastery: WeaponMasteryProperty.graze), true);
       expect(s2024.canUseWeaponMastery(character: fighterChar, weapon: greatsword, mastery: WeaponMasteryProperty.topple), false);
 
-      final wizardChar = Character(
-        id: const EntityId(slug: 'w1', ruleset: RulesetVersion.v2024),
+      const wizardChar = Character(
+        id: EntityId(slug: 'w1', ruleset: RulesetVersion.v2024),
         name: 'Mage',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
         rulesEdition: DmRulesEdition.v2024,
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'wizard', displayName: 'Wizard'),
             level: 1,
             hitDie: 'd6',
           ),
         ]),
-        baseScores: const AbilityScores(),
-        resources: const CharacterResourcePool(currentHp: 6),
+        baseScores: AbilityScores(),
+        resources: CharacterResourcePool(currentHp: 6),
       );
 
       // Wizard does not have Weapon Mastery class feature
@@ -408,20 +408,20 @@ void main() {
 
   group('Schema Hydration, State Immutability & Controller Persistence', () {
     test('Character serialization toMap and fromMap preserves rulesEdition and custom properties', () {
-      final original = Character(
-        id: const EntityId(slug: 'schema_test_char', ruleset: RulesetVersion.v2024),
+      const original = Character(
+        id: EntityId(slug: 'schema_test_char', ruleset: RulesetVersion.v2024),
         name: 'Elminster',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
         rulesEdition: DmRulesEdition.v2024,
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'wizard', displayName: 'Wizard'),
             level: 20,
             hitDie: 'd6',
           ),
         ]),
-        baseScores: const AbilityScores(intelligence: 20),
-        resources: const CharacterResourcePool(currentHp: 80),
+        baseScores: AbilityScores(intelligence: 20),
+        resources: CharacterResourcePool(currentHp: 80),
       );
 
       final map = original.toMap();
@@ -453,20 +453,20 @@ void main() {
     });
 
     test('CharacterSheetController manages ruleset switching, HP modification, and debounced saving', () async {
-      final char = Character(
-        id: const EntityId(slug: 'controller_test', ruleset: RulesetVersion.v2014),
+      const char = Character(
+        id: EntityId(slug: 'controller_test', ruleset: RulesetVersion.v2014),
         name: 'Grom',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'orc', displayName: 'Orc'),
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'orc', displayName: 'Orc'),
         rulesEdition: DmRulesEdition.v2014,
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(refType: EntityType.classDefinition, slug: 'barbarian', displayName: 'Barbarian'),
             level: 1,
             hitDie: 'd12',
           ),
         ]),
-        baseScores: const AbilityScores(constitution: 16),
-        resources: const CharacterResourcePool(currentHp: 15),
+        baseScores: AbilityScores(constitution: 16),
+        resources: CharacterResourcePool(currentHp: 15),
       );
 
       final debouncedStorage = DebouncedStorageService();

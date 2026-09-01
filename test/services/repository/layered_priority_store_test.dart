@@ -18,43 +18,43 @@ void main() {
       repository = LayeredPriorityRepository();
       resolver = ReferenceResolver(repository);
 
-      baseFireball2024 = Spell(
-        id: const EntityId(slug: 'fireball', ruleset: RulesetVersion.v2024),
+      baseFireball2024 = const Spell(
+        id: EntityId(slug: 'fireball', ruleset: RulesetVersion.v2024),
         name: 'Fireball (2024)',
         level: 3,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '150 feet',
-        components: const SpellComponents(v: true, s: true, m: true),
+        components: SpellComponents(v: true, s: true, m: true),
         descriptionMarkdown: 'SRD 2024 Fireball description.',
-        damageMath: const [EvaluationMath(diceFormula: '8d6', damageType: DamageType.fire)],
+        damageMath: [EvaluationMath(diceFormula: '8d6', damageType: DamageType.fire)],
       );
 
-      baseFireball2014 = Spell(
-        id: const EntityId(slug: 'fireball', ruleset: RulesetVersion.v2014),
+      baseFireball2014 = const Spell(
+        id: EntityId(slug: 'fireball', ruleset: RulesetVersion.v2014),
         name: 'Fireball (2014)',
         level: 3,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '150 feet',
-        components: const SpellComponents(v: true, s: true, m: true),
+        components: SpellComponents(v: true, s: true, m: true),
         descriptionMarkdown: 'SRD 2014 Fireball description.',
-        damageMath: const [EvaluationMath(diceFormula: '8d6', damageType: DamageType.fire)],
+        damageMath: [EvaluationMath(diceFormula: '8d6', damageType: DamageType.fire)],
       );
 
-      customFireballOverride = Spell(
-        id: const EntityId(slug: 'fireball', ruleset: RulesetVersion.homebrew),
+      customFireballOverride = const Spell(
+        id: EntityId(slug: 'fireball', ruleset: RulesetVersion.homebrew),
         name: 'Custom Mega Fireball',
         level: 3,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.bonusAction),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.bonusAction),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '300 feet',
-        components: const SpellComponents(v: true),
+        components: SpellComponents(v: true),
         descriptionMarkdown: 'Overridden custom fireball in campaign.',
-        damageMath: const [EvaluationMath(diceFormula: '10d6', damageType: DamageType.fire)],
+        damageMath: [EvaluationMath(diceFormula: '10d6', damageType: DamageType.fire)],
       );
     });
 

@@ -22,22 +22,22 @@ void main() {
 
     test('exports full backup containing homebrew spells, monsters, and items', () async {
       // 1. Save sample homebrew entities
-      final spell = Spell(
-        id: const EntityId(slug: 'hellfire-blast', ruleset: RulesetVersion.homebrew),
+      const spell = Spell(
+        id: EntityId(slug: 'hellfire-blast', ruleset: RulesetVersion.homebrew),
         name: 'Hellfire Blast',
         level: 2,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: const SpellComponents(v: true, s: true),
+        components: SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Blasts with hellfire.',
-        damageMath: const [EvaluationMath(diceFormula: '3d10', damageType: DamageType.fire)],
+        damageMath: [EvaluationMath(diceFormula: '3d10', damageType: DamageType.fire)],
       );
       await homebrewService.saveCustomSpell(spell);
 
-      final monster = Monster(
-        id: const EntityId(slug: 'hell-hound-alpha', ruleset: RulesetVersion.homebrew),
+      const monster = Monster(
+        id: EntityId(slug: 'hell-hound-alpha', ruleset: RulesetVersion.homebrew),
         name: 'Hell Hound Alpha',
         size: 'Large',
         monsterType: 'Fiend',
@@ -50,8 +50,8 @@ void main() {
       );
       await homebrewService.saveCustomMonster(monster);
 
-      final item = EquipmentItem(
-        id: const EntityId(slug: 'flame-tongue-greatsword', ruleset: RulesetVersion.homebrew),
+      const item = EquipmentItem(
+        id: EntityId(slug: 'flame-tongue-greatsword', ruleset: RulesetVersion.homebrew),
         name: 'Flame Tongue Greatsword',
         itemType: 'Weapon',
         rarity: 'Rare',

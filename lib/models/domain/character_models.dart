@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
@@ -352,6 +353,35 @@ class InventoryItemInstance {
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InventoryItemInstance &&
+          runtimeType == other.runtimeType &&
+          instanceId == other.instanceId &&
+          itemRef == other.itemRef &&
+          quantity == other.quantity &&
+          isEquipped == other.isEquipped &&
+          equippedSlot == other.equippedSlot &&
+          isAttuned == other.isAttuned &&
+          requiresAttunement == other.requiresAttunement &&
+          customName == other.customName &&
+          notes == other.notes &&
+          mapEquals(customProperties, other.customProperties);
+
+  @override
+  int get hashCode =>
+      instanceId.hashCode ^
+      itemRef.hashCode ^
+      quantity.hashCode ^
+      isEquipped.hashCode ^
+      (equippedSlot?.hashCode ?? 0) ^
+      isAttuned.hashCode ^
+      requiresAttunement.hashCode ^
+      (customName?.hashCode ?? 0) ^
+      (notes?.hashCode ?? 0) ^
+      customProperties.length.hashCode;
 }
 
 /// Single class progression slice (supporting single class or multiclassing)
@@ -396,9 +426,11 @@ class ClassLevelProgression {
       subclassRef: subclassRef ?? this.subclassRef,
       level: level ?? this.level,
       hitDie: hitDie ?? this.hitDie,
-      hitPointsRolled: hitPointsRolled ?? this.hitPointsRolled,
+      hitPointsRolled: hitPointsRolled != null ? List.unmodifiable(hitPointsRolled) : this.hitPointsRolled,
       isStartingClass: isStartingClass ?? this.isStartingClass,
-      selectedFeatureOptions: selectedFeatureOptions ?? this.selectedFeatureOptions,
+      selectedFeatureOptions: selectedFeatureOptions != null
+          ? Map.unmodifiable(selectedFeatureOptions.map((k, v) => MapEntry(k, List<String>.unmodifiable(v))))
+          : this.selectedFeatureOptions,
     );
   }
 
@@ -442,6 +474,29 @@ class ClassLevelProgression {
       selectedFeatureOptions: parsedOptions,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClassLevelProgression &&
+          runtimeType == other.runtimeType &&
+          classRef == other.classRef &&
+          subclassRef == other.subclassRef &&
+          level == other.level &&
+          hitDie == other.hitDie &&
+          listEquals(hitPointsRolled, other.hitPointsRolled) &&
+          isStartingClass == other.isStartingClass &&
+          mapEquals(selectedFeatureOptions, other.selectedFeatureOptions);
+
+  @override
+  int get hashCode =>
+      classRef.hashCode ^
+      (subclassRef?.hashCode ?? 0) ^
+      level.hashCode ^
+      hitDie.hashCode ^
+      Object.hashAll(hitPointsRolled) ^
+      isStartingClass.hashCode ^
+      selectedFeatureOptions.length.hashCode;
 }
 
 /// Overall Character Progression aggregating all class levels
@@ -449,10 +504,12 @@ class ClassLevelProgression {
 class CharacterProgression {
   final List<ClassLevelProgression> classes;
   final int experiencePoints;
+  final Map<int, int> manualHpRolls; // Character Level -> Rolled HP
 
   const CharacterProgression({
     required this.classes,
     this.experiencePoints = 0,
+    this.manualHpRolls = const {},
   });
 
   int get totalLevel => classes.fold(0, (sum, c) => sum + c.level);
@@ -487,27 +544,54 @@ class CharacterProgression {
   CharacterProgression copyWith({
     List<ClassLevelProgression>? classes,
     int? experiencePoints,
+    Map<int, int>? manualHpRolls,
   }) {
     return CharacterProgression(
-      classes: classes ?? this.classes,
+      classes: classes != null ? List.unmodifiable(classes) : this.classes,
       experiencePoints: experiencePoints ?? this.experiencePoints,
+      manualHpRolls: manualHpRolls != null ? Map.unmodifiable(manualHpRolls) : this.manualHpRolls,
     );
   }
 
   Map<String, dynamic> toMap() => {
         'classes': classes.map((c) => c.toMap()).toList(),
         'experiencePoints': experiencePoints,
+        'manualHpRolls': manualHpRolls.map((k, v) => MapEntry(k.toString(), v)),
       };
 
   factory CharacterProgression.fromMap(Map<String, dynamic> map) {
+    final hpRolls = <int, int>{};
+    if (map['manualHpRolls'] is Map) {
+      (map['manualHpRolls'] as Map).forEach((k, v) {
+        final key = int.tryParse(k.toString());
+        if (key != null && v is num) hpRolls[key] = v.toInt();
+      });
+    }
+
     return CharacterProgression(
       classes: (map['classes'] as List? ?? [])
           .whereType<Map>()
           .map((c) => ClassLevelProgression.fromMap(Map<String, dynamic>.from(c)))
           .toList(),
       experiencePoints: (map['experiencePoints'] as num?)?.toInt() ?? 0,
+      manualHpRolls: hpRolls,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CharacterProgression &&
+          runtimeType == other.runtimeType &&
+          listEquals(classes, other.classes) &&
+          experiencePoints == other.experiencePoints &&
+          mapEquals(manualHpRolls, other.manualHpRolls);
+
+  @override
+  int get hashCode =>
+      Object.hashAll(classes) ^
+      experiencePoints.hashCode ^
+      manualHpRolls.length.hashCode;
 }
 
 /// Standard 5e Spell Slots Pool
@@ -535,8 +619,8 @@ class SpellSlotPool {
     int? pactMagicCurrent,
   }) {
     return SpellSlotPool(
-      currentSlots: currentSlots ?? this.currentSlots,
-      maxSlots: maxSlots ?? this.maxSlots,
+      currentSlots: currentSlots != null ? Map.unmodifiable(currentSlots) : this.currentSlots,
+      maxSlots: maxSlots != null ? Map.unmodifiable(maxSlots) : this.maxSlots,
       pactMagicSlotLevel: pactMagicSlotLevel ?? this.pactMagicSlotLevel,
       pactMagicMax: pactMagicMax ?? this.pactMagicMax,
       pactMagicCurrent: pactMagicCurrent ?? this.pactMagicCurrent,
@@ -576,6 +660,26 @@ class SpellSlotPool {
       pactMagicCurrent: (map['pactMagicCurrent'] as num?)?.toInt() ?? 0,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SpellSlotPool &&
+          runtimeType == other.runtimeType &&
+          mapEquals(currentSlots, other.currentSlots) &&
+          mapEquals(maxSlots, other.maxSlots) &&
+          pactMagicSlotLevel == other.pactMagicSlotLevel &&
+          pactMagicMax == other.pactMagicMax &&
+          pactMagicCurrent == other.pactMagicCurrent;
+
+  @override
+  int get hashCode =>
+      mapEquals.hashCode ^
+      currentSlots.length.hashCode ^
+      maxSlots.length.hashCode ^
+      pactMagicSlotLevel.hashCode ^
+      pactMagicMax.hashCode ^
+      pactMagicCurrent.hashCode;
 }
 
 /// Character resource pools (HP, Hit Dice, Spell Slots, Class charges)
@@ -589,7 +693,7 @@ class CharacterResourcePool {
   final Map<String, int> customResourcesMax;
 
   const CharacterResourcePool({
-    required this.currentHp,
+    this.currentHp = 10,
     this.tempHp = 0,
     this.currentHitDice = const {},
     this.spellSlots = const SpellSlotPool(),
@@ -608,11 +712,11 @@ class CharacterResourcePool {
     return CharacterResourcePool(
       currentHp: currentHp ?? this.currentHp,
       tempHp: tempHp ?? this.tempHp,
-      currentHitDice: currentHitDice ?? this.currentHitDice,
+      currentHitDice: currentHitDice != null ? Map.unmodifiable(currentHitDice) : this.currentHitDice,
       spellSlots: spellSlots ?? this.spellSlots,
       customResourcesCurrent:
-          customResourcesCurrent ?? this.customResourcesCurrent,
-      customResourcesMax: customResourcesMax ?? this.customResourcesMax,
+          customResourcesCurrent != null ? Map.unmodifiable(customResourcesCurrent) : this.customResourcesCurrent,
+      customResourcesMax: customResourcesMax != null ? Map.unmodifiable(customResourcesMax) : this.customResourcesMax,
     );
   }
 
@@ -638,6 +742,27 @@ class CharacterResourcePool {
           Map<String, int>.from(map['customResourcesMax'] as Map? ?? {}),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CharacterResourcePool &&
+          runtimeType == other.runtimeType &&
+          currentHp == other.currentHp &&
+          tempHp == other.tempHp &&
+          mapEquals(currentHitDice, other.currentHitDice) &&
+          spellSlots == other.spellSlots &&
+          mapEquals(customResourcesCurrent, other.customResourcesCurrent) &&
+          mapEquals(customResourcesMax, other.customResourcesMax);
+
+  @override
+  int get hashCode =>
+      currentHp.hashCode ^
+      tempHp.hashCode ^
+      currentHitDice.length.hashCode ^
+      spellSlots.hashCode ^
+      customResourcesCurrent.length.hashCode ^
+      customResourcesMax.length.hashCode;
 }
 
 /// Active Condition and Temporary Status Effect
@@ -655,6 +780,20 @@ class CharacterCondition {
     this.parameters = const {},
   });
 
+  CharacterCondition copyWith({
+    String? conditionName,
+    int? durationSeconds,
+    String? source,
+    Map<String, dynamic>? parameters,
+  }) {
+    return CharacterCondition(
+      conditionName: conditionName ?? this.conditionName,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      source: source ?? this.source,
+      parameters: parameters != null ? Map.unmodifiable(parameters) : this.parameters,
+    );
+  }
+
   Map<String, dynamic> toMap() => {
         'conditionName': conditionName,
         'durationSeconds': durationSeconds,
@@ -670,6 +809,23 @@ class CharacterCondition {
       parameters: Map<String, dynamic>.from(map['parameters'] as Map? ?? {}),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CharacterCondition &&
+          runtimeType == other.runtimeType &&
+          conditionName == other.conditionName &&
+          durationSeconds == other.durationSeconds &&
+          source == other.source &&
+          mapEquals(parameters, other.parameters);
+
+  @override
+  int get hashCode =>
+      conditionName.hashCode ^
+      durationSeconds.hashCode ^
+      (source?.hashCode ?? 0) ^
+      parameters.length.hashCode;
 }
 
 /// Root Character Domain Entity adhering to DomainEntity interface
@@ -690,8 +846,9 @@ class Character extends DomainEntity {
   final List<String> languages;
   final List<InventoryItemInstance> inventory;
   final PartyPurse purse;
-  final List<EntityReference<Spell>> cantrips;
-  final List<EntityReference<Spell>> spellsKnown;
+  final Map<String, List<EntityReference<Spell>>> allocatedSpells;
+  final List<EntityReference<Spell>> _cantrips;
+  final List<EntityReference<Spell>> _spellsKnown;
   final List<EntityReference<Spell>> spellsPrepared;
   final List<EntityReference<DomainEntity>> feats;
   final CharacterResourcePool resources;
@@ -702,7 +859,7 @@ class Character extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  Character({
+  const Character({
     required this.id,
     required this.name,
     required this.speciesRef,
@@ -723,8 +880,9 @@ class Character extends DomainEntity {
     this.languages = const ['Common'],
     this.inventory = const [],
     this.purse = const PartyPurse(),
-    this.cantrips = const [],
-    this.spellsKnown = const [],
+    this.allocatedSpells = const {},
+    List<EntityReference<Spell>> cantrips = const [],
+    List<EntityReference<Spell>> spellsKnown = const [],
     this.spellsPrepared = const [],
     this.feats = const [],
     required this.resources,
@@ -733,13 +891,132 @@ class Character extends DomainEntity {
     this.baseSpeedFeet = 30,
     this.rulesEdition = DmRulesEdition.v2014,
     this.customProperties = const {},
-  });
+  })  : _cantrips = cantrips,
+        _spellsKnown = spellsKnown;
 
   @override
   EntityType get entityType => EntityType.character;
 
   int get totalLevel => progression.totalLevel;
   int get proficiencyBonus => totalLevel.dndProficiencyBonus;
+
+  List<EntityReference<Spell>> get cantrips {
+    final list = <EntityReference<Spell>>[];
+    for (final entry in allocatedSpells.entries) {
+      if (entry.key.toLowerCase().contains('cantrip')) {
+        for (final s in entry.value) {
+          if (!list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        }
+      }
+    }
+    for (final c in _cantrips) {
+      if (!list.any((e) => e.slug == c.slug)) {
+        list.add(c);
+      }
+    }
+    return List.unmodifiable(list);
+  }
+
+  List<EntityReference<Spell>> get spellsKnown {
+    final list = <EntityReference<Spell>>[];
+    for (final entry in allocatedSpells.entries) {
+      if (!entry.key.toLowerCase().contains('cantrip')) {
+        for (final s in entry.value) {
+          if (!list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        }
+      }
+    }
+    for (final s in _spellsKnown) {
+      if (!list.any((e) => e.slug == s.slug)) {
+        list.add(s);
+      }
+    }
+    return List.unmodifiable(list);
+  }
+
+  /// Raw ability scores (base scores with permanent bonuses from species/ASI/feats)
+  AbilityScores get rawAbilityScores => baseScores.withBonus(bonusScores);
+
+  /// Effective ability scores (evaluates rawAbilityScores and applies hard overrides from attuned/equipped items or custom properties)
+  AbilityScores get effectiveAbilityScores {
+    var raw = rawAbilityScores;
+    var str = raw.strength;
+    var dex = raw.dexterity;
+    var con = raw.constitution;
+    var intl = raw.intelligence;
+    var wis = raw.wisdom;
+    var cha = raw.charisma;
+
+    for (final instance in equippedItems) {
+      if (instance.requiresAttunement && !instance.isAttuned) continue;
+      final props = instance.customProperties;
+      if (props['abilityOverrides'] is Map) {
+        final overrides = props['abilityOverrides'] as Map;
+        if (overrides['strength'] is num) {
+          str = math.max(str, (overrides['strength'] as num).toInt());
+        }
+        if (overrides['dexterity'] is num) {
+          dex = math.max(dex, (overrides['dexterity'] as num).toInt());
+        }
+        if (overrides['constitution'] is num) {
+          con = math.max(con, (overrides['constitution'] as num).toInt());
+        }
+        if (overrides['intelligence'] is num) {
+          intl = math.max(intl, (overrides['intelligence'] as num).toInt());
+        }
+        if (overrides['wisdom'] is num) {
+          wis = math.max(wis, (overrides['wisdom'] as num).toInt());
+        }
+        if (overrides['charisma'] is num) {
+          cha = math.max(cha, (overrides['charisma'] as num).toInt());
+        }
+      }
+      if (props['abilityBonuses'] is Map) {
+        final bonuses = props['abilityBonuses'] as Map;
+        str += (bonuses['strength'] as num?)?.toInt() ?? 0;
+        dex += (bonuses['dexterity'] as num?)?.toInt() ?? 0;
+        con += (bonuses['constitution'] as num?)?.toInt() ?? 0;
+        intl += (bonuses['intelligence'] as num?)?.toInt() ?? 0;
+        wis += (bonuses['wisdom'] as num?)?.toInt() ?? 0;
+        cha += (bonuses['charisma'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    if (customProperties['abilityOverrides'] is Map) {
+      final overrides = customProperties['abilityOverrides'] as Map;
+      if (overrides['strength'] is num) {
+        str = math.max(str, (overrides['strength'] as num).toInt());
+      }
+      if (overrides['dexterity'] is num) {
+        dex = math.max(dex, (overrides['dexterity'] as num).toInt());
+      }
+      if (overrides['constitution'] is num) {
+        con = math.max(con, (overrides['constitution'] as num).toInt());
+      }
+      if (overrides['intelligence'] is num) {
+        intl = math.max(intl, (overrides['intelligence'] as num).toInt());
+      }
+      if (overrides['wisdom'] is num) {
+        wis = math.max(wis, (overrides['wisdom'] as num).toInt());
+      }
+      if (overrides['charisma'] is num) {
+        cha = math.max(cha, (overrides['charisma'] as num).toInt());
+      }
+    }
+
+    return AbilityScores(
+      strength: str,
+      dexterity: dex,
+      constitution: con,
+      intelligence: intl,
+      wisdom: wis,
+      charisma: cha,
+    );
+  }
 
   int get attunedItemCount =>
       inventory.where((item) => item.isAttuned).length;
@@ -764,6 +1041,9 @@ class Character extends DomainEntity {
         'languages': languages,
         'inventory': inventory.map((i) => i.toMap()).toList(),
         'purse': purse.toMap(),
+        'allocatedSpells': allocatedSpells.map(
+          (k, v) => MapEntry(k, v.map((s) => s.toMap()).toList()),
+        ),
         'cantrips': cantrips.map((c) => c.toMap()).toList(),
         'spellsKnown': spellsKnown.map((s) => s.toMap()).toList(),
         'spellsPrepared': spellsPrepared.map((s) => s.toMap()).toList(),
@@ -810,6 +1090,38 @@ class Character extends DomainEntity {
           )
         : DmRulesEdition.v2014;
 
+    final rawAllocated = map['allocatedSpells'];
+    final parsedAllocated = <String, List<EntityReference<Spell>>>{};
+    if (rawAllocated is Map) {
+      rawAllocated.forEach((k, v) {
+        if (v is List) {
+          parsedAllocated[k.toString()] = v
+              .whereType<Map>()
+              .map((s) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(s)))
+              .toList();
+        }
+      });
+    }
+
+    final parsedCantrips = (map['cantrips'] as List? ?? [])
+        .whereType<Map>()
+        .map((c) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(c)))
+        .toList();
+
+    final parsedSpellsKnown = (map['spellsKnown'] as List? ?? [])
+        .whereType<Map>()
+        .map((s) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(s)))
+        .toList();
+
+    if (parsedAllocated.isEmpty) {
+      if (parsedCantrips.isNotEmpty) {
+        parsedAllocated['cantrips'] = parsedCantrips;
+      }
+      if (parsedSpellsKnown.isNotEmpty) {
+        parsedAllocated['spellsKnown'] = parsedSpellsKnown;
+      }
+    }
+
     return Character(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
@@ -841,14 +1153,9 @@ class Character extends DomainEntity {
           ? PartyPurse.fromMap(
               Map<String, dynamic>.from(map['purse'] as Map? ?? {}))
           : const PartyPurse(),
-      cantrips: (map['cantrips'] as List? ?? [])
-          .whereType<Map>()
-          .map((c) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(c)))
-          .toList(),
-      spellsKnown: (map['spellsKnown'] as List? ?? [])
-          .whereType<Map>()
-          .map((s) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(s)))
-          .toList(),
+      allocatedSpells: parsedAllocated,
+      cantrips: parsedCantrips,
+      spellsKnown: parsedSpellsKnown,
       spellsPrepared: (map['spellsPrepared'] as List? ?? [])
           .whereType<Map>()
           .map((s) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(s)))
@@ -888,6 +1195,7 @@ class Character extends DomainEntity {
     List<String>? languages,
     List<InventoryItemInstance>? inventory,
     PartyPurse? purse,
+    Map<String, List<EntityReference<Spell>>>? allocatedSpells,
     List<EntityReference<Spell>>? cantrips,
     List<EntityReference<Spell>>? spellsKnown,
     List<EntityReference<Spell>>? spellsPrepared,
@@ -907,23 +1215,79 @@ class Character extends DomainEntity {
       progression: progression ?? this.progression,
       baseScores: baseScores ?? this.baseScores,
       bonusScores: bonusScores ?? this.bonusScores,
-      skillProficiencies: skillProficiencies ?? this.skillProficiencies,
+      skillProficiencies: skillProficiencies != null ? Map.unmodifiable(skillProficiencies) : this.skillProficiencies,
       savingThrowProficiencies:
-          savingThrowProficiencies ?? this.savingThrowProficiencies,
-      toolProficiencies: toolProficiencies ?? this.toolProficiencies,
-      languages: languages ?? this.languages,
-      inventory: inventory ?? this.inventory,
+          savingThrowProficiencies != null ? Set.unmodifiable(savingThrowProficiencies) : this.savingThrowProficiencies,
+      toolProficiencies: toolProficiencies != null ? List.unmodifiable(toolProficiencies) : this.toolProficiencies,
+      languages: languages != null ? List.unmodifiable(languages) : this.languages,
+      inventory: inventory != null ? List.unmodifiable(inventory) : this.inventory,
       purse: purse ?? this.purse,
-      cantrips: cantrips ?? this.cantrips,
-      spellsKnown: spellsKnown ?? this.spellsKnown,
-      spellsPrepared: spellsPrepared ?? this.spellsPrepared,
-      feats: feats ?? this.feats,
+      allocatedSpells: allocatedSpells != null
+          ? Map.unmodifiable(allocatedSpells.map((k, v) => MapEntry(k, List<EntityReference<Spell>>.unmodifiable(v))))
+          : this.allocatedSpells,
+      cantrips: cantrips != null ? List.unmodifiable(cantrips) : _cantrips,
+      spellsKnown: spellsKnown != null ? List.unmodifiable(spellsKnown) : _spellsKnown,
+      spellsPrepared: spellsPrepared != null ? List.unmodifiable(spellsPrepared) : this.spellsPrepared,
+      feats: feats != null ? List.unmodifiable(feats) : this.feats,
       resources: resources ?? this.resources,
-      conditions: conditions ?? this.conditions,
+      conditions: conditions != null ? List.unmodifiable(conditions) : this.conditions,
       maxAttunementSlots: maxAttunementSlots ?? this.maxAttunementSlots,
       baseSpeedFeet: baseSpeedFeet ?? this.baseSpeedFeet,
       rulesEdition: rulesEdition ?? this.rulesEdition,
-      customProperties: customProperties ?? this.customProperties,
+      customProperties: customProperties != null ? Map.unmodifiable(customProperties) : this.customProperties,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Character &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          speciesRef == other.speciesRef &&
+          backgroundRef == other.backgroundRef &&
+          progression == other.progression &&
+          baseScores == other.baseScores &&
+          bonusScores == other.bonusScores &&
+          mapEquals(skillProficiencies, other.skillProficiencies) &&
+          setEquals(savingThrowProficiencies, other.savingThrowProficiencies) &&
+          listEquals(toolProficiencies, other.toolProficiencies) &&
+          listEquals(languages, other.languages) &&
+          listEquals(inventory, other.inventory) &&
+          purse == other.purse &&
+          mapEquals(allocatedSpells, other.allocatedSpells) &&
+          listEquals(spellsPrepared, other.spellsPrepared) &&
+          listEquals(feats, other.feats) &&
+          resources == other.resources &&
+          listEquals(conditions, other.conditions) &&
+          maxAttunementSlots == other.maxAttunementSlots &&
+          baseSpeedFeet == other.baseSpeedFeet &&
+          rulesEdition == other.rulesEdition &&
+          mapEquals(customProperties, other.customProperties);
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      speciesRef.hashCode ^
+      (backgroundRef?.hashCode ?? 0) ^
+      progression.hashCode ^
+      baseScores.hashCode ^
+      bonusScores.hashCode ^
+      skillProficiencies.length.hashCode ^
+      savingThrowProficiencies.length.hashCode ^
+      toolProficiencies.length.hashCode ^
+      languages.length.hashCode ^
+      inventory.length.hashCode ^
+      purse.hashCode ^
+      allocatedSpells.length.hashCode ^
+      spellsPrepared.length.hashCode ^
+      feats.length.hashCode ^
+      resources.hashCode ^
+      conditions.length.hashCode ^
+      maxAttunementSlots.hashCode ^
+      baseSpeedFeet.hashCode ^
+      rulesEdition.hashCode ^
+      customProperties.length.hashCode;
 }

@@ -55,15 +55,15 @@ void main() {
       final profile = CampaignProfile.defaultProfile(name: 'Dragonlance');
       await campaignService.saveProfileImmediate(profile);
 
-      final spell = Spell(
-        id: const EntityId(slug: 'time-stop-plus', ruleset: RulesetVersion.v2024),
+      const spell = Spell(
+        id: EntityId(slug: 'time-stop-plus', ruleset: RulesetVersion.v2024),
         name: 'Time Stop Plus',
         level: 9,
         school: 'Transmutation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: 'Self',
-        components: const SpellComponents(v: true),
+        components: SpellComponents(v: true),
         descriptionMarkdown: 'Freezes time for 1 minute.',
       );
       await homebrewService.saveCustomSpell(spell);

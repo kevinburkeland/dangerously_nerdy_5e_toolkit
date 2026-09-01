@@ -21,15 +21,15 @@ void main() {
       repository = LayeredPriorityRepository();
       resolver = ReferenceResolver(repository);
 
-      rogue = Character(
-        id: const EntityId(slug: 'shadow', ruleset: RulesetVersion.v2024),
+      rogue = const Character(
+        id: EntityId(slug: 'shadow', ruleset: RulesetVersion.v2024),
         name: 'Shadow',
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'elf',
           displayName: 'Elf',
         ),
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -40,7 +40,7 @@ void main() {
             hitDie: 'd8',
           ),
         ]),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 10,
           dexterity: 16,
           constitution: 12,
@@ -48,22 +48,22 @@ void main() {
           wisdom: 12,
           charisma: 10,
         ),
-        skillProficiencies: const {
+        skillProficiencies: {
           SkillType.perception: SkillProficiencyLevel.expertise, // Expertise in perception: +2 * 2 + 1 = +5 => Passive 15
           SkillType.investigation: SkillProficiencyLevel.proficient, // +2 + 2 = +4 => Passive 14
         },
-        resources: const CharacterResourcePool(currentHp: 21),
+        resources: CharacterResourcePool(currentHp: 21),
       );
 
-      cleric = Character(
-        id: const EntityId(slug: 'solaris', ruleset: RulesetVersion.v2024),
+      cleric = const Character(
+        id: EntityId(slug: 'solaris', ruleset: RulesetVersion.v2024),
         name: 'Solaris',
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -74,7 +74,7 @@ void main() {
             hitDie: 'd8',
           ),
         ]),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 14,
           dexterity: 10,
           constitution: 14,
@@ -82,10 +82,10 @@ void main() {
           wisdom: 16,
           charisma: 12,
         ),
-        skillProficiencies: const {
+        skillProficiencies: {
           SkillType.insight: SkillProficiencyLevel.proficient, // +3 + 2 = +5 => Passive 15
         },
-        resources: const CharacterResourcePool(currentHp: 24),
+        resources: CharacterResourcePool(currentHp: 24),
       );
     });
 

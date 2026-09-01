@@ -1,5 +1,6 @@
 import 'dart:math';
 import '../../models/dm_screen_data.dart';
+import '../../models/domain/character_models.dart';
 import '../../models/spellbook_data.dart';
 import '../../utils/secure_random.dart';
 
@@ -69,6 +70,106 @@ class MulticlassSlotMatrix {
       return effective.clamp(0, 20);
     }
   }
+
+  /// Calculates complete SpellSlotPool for a Character adhering to 2014/2024 RAW rules.
+  static SpellSlotPool calculateSpellSlots(Character character) {
+    int fullCasterLevels = 0;
+    int paladinLevels = 0;
+    int rangerLevels = 0;
+    int artificerLevels = 0;
+    int thirdCasterLevels = 0;
+    int warlockLevels = 0;
+
+    for (final cls in character.progression.classes) {
+      final slug = cls.classRef.slug.toLowerCase();
+      switch (slug) {
+        case 'wizard':
+        case 'cleric':
+        case 'druid':
+        case 'bard':
+        case 'sorcerer':
+          fullCasterLevels += cls.level;
+        case 'paladin':
+          paladinLevels += cls.level;
+        case 'ranger':
+          rangerLevels += cls.level;
+        case 'artificer':
+          artificerLevels += cls.level;
+        case 'warlock':
+          warlockLevels += cls.level;
+      }
+
+      final subSlug = cls.subclassRef?.slug.toLowerCase() ?? '';
+      if (subSlug.contains('eldritch_knight') ||
+          subSlug.contains('arcane_trickster') ||
+          subSlug.contains('eldritch-knight') ||
+          subSlug.contains('arcane-trickster')) {
+        thirdCasterLevels += cls.level;
+      }
+    }
+
+    final totalCasterClasses = (fullCasterLevels > 0 ? 1 : 0) +
+        (paladinLevels > 0 ? 1 : 0) +
+        (rangerLevels > 0 ? 1 : 0) +
+        (artificerLevels > 0 ? 1 : 0) +
+        (thirdCasterLevels > 0 ? 1 : 0);
+
+    int effectiveCasterLevel;
+    if (totalCasterClasses == 1 && fullCasterLevels == 0) {
+      if (paladinLevels > 0) {
+        effectiveCasterLevel = character.rulesEdition == DmRulesEdition.v2024
+            ? (paladinLevels + 1) ~/ 2
+            : paladinLevels ~/ 2;
+      } else if (rangerLevels > 0) {
+        effectiveCasterLevel = character.rulesEdition == DmRulesEdition.v2024
+            ? (rangerLevels + 1) ~/ 2
+            : rangerLevels ~/ 2;
+      } else if (artificerLevels > 0) {
+        effectiveCasterLevel = (artificerLevels + 1) ~/ 2;
+      } else if (thirdCasterLevels > 0) {
+        effectiveCasterLevel = character.rulesEdition == DmRulesEdition.v2024
+            ? (thirdCasterLevels + 2) ~/ 3
+            : thirdCasterLevels ~/ 3;
+      } else {
+        effectiveCasterLevel = 0;
+      }
+    } else {
+      effectiveCasterLevel = calculateEffectiveCasterLevel(
+        fullCasterLevels: fullCasterLevels,
+        paladinLevels: paladinLevels,
+        rangerLevels: rangerLevels,
+        artificerLevels: artificerLevels,
+        thirdCasterLevels: thirdCasterLevels,
+        edition: character.rulesEdition,
+      );
+    }
+
+    final rawSlots = getSpellSlots(effectiveCasterLevel);
+    final maxSlots = <int, int>{};
+    for (int i = 0; i < rawSlots.length; i++) {
+      if (rawSlots[i] > 0) {
+        maxSlots[i + 1] = rawSlots[i];
+      }
+    }
+
+    final pactPool = PactMagicPool.fromWarlockLevel(warlockLevels);
+
+    return SpellSlotPool(
+      currentSlots: Map<int, int>.from(maxSlots),
+      maxSlots: maxSlots,
+      pactMagicSlotLevel: pactPool.slotLevel,
+      pactMagicMax: pactPool.totalSlots,
+      pactMagicCurrent: pactPool.totalSlots,
+    );
+  }
+}
+
+/// Facade for spellcasting rules
+class SpellcastingRulesEngine {
+  SpellcastingRulesEngine._();
+
+  static SpellSlotPool calculateSpellSlots(Character character) =>
+      MulticlassSlotMatrix.calculateSpellSlots(character);
 }
 
 /// Helper for Warlock Pact Magic slot pool (which regains on short rest and remains separate from standard slots).

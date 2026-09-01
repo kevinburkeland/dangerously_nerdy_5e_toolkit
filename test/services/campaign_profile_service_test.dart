@@ -56,11 +56,11 @@ void main() {
           ],
         ),
         partyRoster: [
-          Character(
-            id: const EntityId(slug: 'cleric_1', ruleset: RulesetVersion.v2024),
+          const Character(
+            id: EntityId(slug: 'cleric_1', ruleset: RulesetVersion.v2024),
             name: 'Cleric of Light',
-            speciesRef: const EntityReference(slug: 'elf', refType: EntityType.species, displayName: 'Elf'),
-            progression: const CharacterProgression(
+            speciesRef: EntityReference(slug: 'elf', refType: EntityType.species, displayName: 'Elf'),
+            progression: CharacterProgression(
               classes: [
                 ClassLevelProgression(
                   classRef: EntityReference(slug: 'cleric', refType: EntityType.classDefinition, displayName: 'Cleric'),
@@ -69,15 +69,15 @@ void main() {
                 ),
               ],
             ),
-            baseScores: const AbilityScores.standardArray(),
-            resources: const CharacterResourcePool(
+            baseScores: AbilityScores.standardArray(),
+            resources: CharacterResourcePool(
               currentHp: 24,
               spellSlots: SpellSlotPool(
                 maxSlots: {1: 4, 2: 2},
                 currentSlots: {1: 3, 2: 2},
               ),
             ),
-            purse: const PartyPurse(gp: 150, sp: 20),
+            purse: PartyPurse(gp: 150, sp: 20),
           ),
         ],
         activeMinions: [

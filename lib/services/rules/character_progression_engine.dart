@@ -224,7 +224,7 @@ class CharacterProgressionEngine {
   /// and target class (multiclassing IN).
   static LevelUpValidationResult validateMulticlass(Character character, String targetClassSlug) {
     final errors = <String>[];
-    final scores = character.baseScores.withBonus(character.bonusScores);
+    final scores = character.rawAbilityScores;
     final prereqs = getMulticlassPrerequisites();
 
     // 1. Max level ceiling check (20)
@@ -271,10 +271,14 @@ class CharacterProgressionEngine {
       throw ArgumentError('Level up validation failed: ${validation.errors.join(', ')}');
     }
 
+    final newTotalLevel = character.totalLevel + 1;
+    final newManualHpRolls = Map<int, int>.from(character.progression.manualHpRolls);
+
     // 1. Update Class Progression slices
     final updatedClasses = <ClassLevelProgression>[];
     bool classFound = false;
     String gainedHitDie = request.targetClassHitDie ?? getDefaultHitDie(request.targetClassSlug);
+    int addedHp = 0;
 
     for (final cls in character.progression.classes) {
       if (cls.classRef.slug.toLowerCase() == request.targetClassSlug.toLowerCase()) {
@@ -284,10 +288,11 @@ class CharacterProgressionEngine {
         final rolledHpList = List<int>.from(cls.hitPointsRolled);
 
         final avg = cls.averageHpPerLevel;
-        final addedHp = request.hpChoice.useFixedAverage
+        addedHp = request.hpChoice.useFixedAverage
             ? avg
             : (request.hpChoice.rolledValue ?? avg);
         rolledHpList.add(addedHp);
+        newManualHpRolls[newTotalLevel] = addedHp;
 
         final mergedOptions = Map<String, List<String>>.from(cls.selectedFeatureOptions);
         request.selectedFeatureOptions.forEach((k, v) {
@@ -311,9 +316,10 @@ class CharacterProgressionEngine {
       gainedHitDie = hitDie;
       final avg = getAverageHpForHitDie(hitDie);
 
-      final addedHp = request.hpChoice.useFixedAverage
+      addedHp = request.hpChoice.useFixedAverage
           ? avg
           : (request.hpChoice.rolledValue ?? avg);
+      newManualHpRolls[newTotalLevel] = addedHp;
 
       updatedClasses.add(ClassLevelProgression(
         classRef: EntityReference<DomainEntity>(
@@ -330,7 +336,10 @@ class CharacterProgressionEngine {
       ));
     }
 
-    final newProgression = character.progression.copyWith(classes: updatedClasses);
+    final newProgression = character.progression.copyWith(
+      classes: updatedClasses,
+      manualHpRolls: newManualHpRolls,
+    );
 
     // 2. Apply ASI or Feat Choice
     var newBonusScores = character.bonusScores;
@@ -396,6 +405,27 @@ class CharacterProgressionEngine {
       updatedSpellsPrepared.removeWhere((s) => toRemove.contains(s.slug));
     }
 
+    // Update allocatedSpells
+    final updatedAllocated = Map<String, List<EntityReference<Spell>>>.from(character.allocatedSpells);
+    if (request.newCantrips.isNotEmpty) {
+      final key = 'class-${request.targetClassSlug}-cantrips';
+      final curList = List<EntityReference<Spell>>.from(updatedAllocated[key] ?? []);
+      final curSlugs = curList.map((c) => c.slug).toSet();
+      for (final c in request.newCantrips) {
+        if (!curSlugs.contains(c.slug)) curList.add(c);
+      }
+      updatedAllocated[key] = curList;
+    }
+    if (request.newSpells.isNotEmpty) {
+      final key = 'class-${request.targetClassSlug}-spells';
+      final curList = List<EntityReference<Spell>>.from(updatedAllocated[key] ?? []);
+      final curSlugs = curList.map((s) => s.slug).toSet();
+      for (final s in request.newSpells) {
+        if (!curSlugs.contains(s.slug)) curList.add(s);
+      }
+      updatedAllocated[key] = curList;
+    }
+
     // 4. Update Hit Dice Resource Pool (increment pool for gained hit die)
     final updatedHitDice = Map<String, int>.from(character.resources.currentHitDice);
     updatedHitDice[gainedHitDie] = (updatedHitDice[gainedHitDie] ?? 0) + 1;
@@ -405,6 +435,7 @@ class CharacterProgressionEngine {
       progression: newProgression,
       bonusScores: newBonusScores,
       feats: newFeats,
+      allocatedSpells: updatedAllocated,
       cantrips: updatedCantrips,
       spellsKnown: updatedSpellsKnown,
       spellsPrepared: updatedSpellsPrepared,
@@ -457,8 +488,8 @@ class CharacterProgressionEngine {
   }
 
   /// Internal max HP computation adhering strictly to 5e RAW rules:
-  /// - Starting class gets full hit die sides + CON at Level 1.
-  /// - Subsequent levels (and all multiclass levels) gain rolled/average hit die + CON (min 1 per level).
+  /// - Starting class gets full hit die sides + CON at Level 1 (or manualHpRolls[1] if recorded).
+  /// - Subsequent levels (and all multiclass levels) gain recorded manualHpRolls or rolled/average hit die + CON (min 1 per level).
   /// - Retroactive CON modifier adjustments apply automatically across all levels.
   /// - Feats (like Tough) add +2 HP per total character level.
   static int _computeMaxHp(Character character) {
@@ -466,26 +497,36 @@ class CharacterProgressionEngine {
     final totalCon = character.baseScores.constitution + character.bonusScores.constitution;
     final conMod = totalCon.dndModifier;
 
+    int currentLevelCounter = 1;
     for (int i = 0; i < character.progression.classes.length; i++) {
       final cls = character.progression.classes[i];
       if (cls.isStartingClass || i == 0) {
         // Starting class level 1 gets max hit die + CON
-        maxHp += cls.hitDieSides + conMod;
+        final level1Hp = character.progression.manualHpRolls[1] ?? cls.hitDieSides;
+        maxHp += level1Hp + conMod;
+        currentLevelCounter++;
+
         // Remaining levels of starting class
         for (int l = 1; l < cls.level; l++) {
           final rolledIndex = l - 1;
-          final rolled = (rolledIndex < cls.hitPointsRolled.length)
-              ? cls.hitPointsRolled[rolledIndex]
-              : cls.averageHpPerLevel;
+          final recordedRoll = character.progression.manualHpRolls[currentLevelCounter];
+          final rolled = recordedRoll ??
+              ((rolledIndex < cls.hitPointsRolled.length)
+                  ? cls.hitPointsRolled[rolledIndex]
+                  : cls.averageHpPerLevel);
           maxHp += math.max(1, rolled + conMod);
+          currentLevelCounter++;
         }
       } else {
         // Multiclass slices: all levels gain rolled/average + CON
         for (int l = 0; l < cls.level; l++) {
-          final rolled = (l < cls.hitPointsRolled.length)
-              ? cls.hitPointsRolled[l]
-              : cls.averageHpPerLevel;
+          final recordedRoll = character.progression.manualHpRolls[currentLevelCounter];
+          final rolled = recordedRoll ??
+              ((l < cls.hitPointsRolled.length)
+                  ? cls.hitPointsRolled[l]
+                  : cls.averageHpPerLevel);
           maxHp += math.max(1, rolled + conMod);
+          currentLevelCounter++;
         }
       }
     }

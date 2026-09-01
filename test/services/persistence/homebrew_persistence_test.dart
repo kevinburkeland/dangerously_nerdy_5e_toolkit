@@ -18,17 +18,17 @@ void main() {
     });
 
     test('saves, loads, and deletes custom spells', () async {
-      final spell = Spell(
-        id: const EntityId(slug: 'void-lance', ruleset: RulesetVersion.homebrew),
+      const spell = Spell(
+        id: EntityId(slug: 'void-lance', ruleset: RulesetVersion.homebrew),
         name: 'Void Lance',
         level: 4,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '120 feet',
-        components: const SpellComponents(v: true, s: true),
+        components: SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Fires a beam of necrotic void energy.',
-        damageMath: const [EvaluationMath(diceFormula: '6d8', damageType: DamageType.necrotic)],
+        damageMath: [EvaluationMath(diceFormula: '6d8', damageType: DamageType.necrotic)],
       );
 
       await persistence.saveCustomSpell(spell);
@@ -45,8 +45,8 @@ void main() {
     });
 
     test('saves, loads, and deletes custom monsters', () async {
-      final monster = Monster(
-        id: const EntityId(slug: 'void-crawler', ruleset: RulesetVersion.homebrew),
+      const monster = Monster(
+        id: EntityId(slug: 'void-crawler', ruleset: RulesetVersion.homebrew),
         name: 'Void Crawler',
         size: 'Large',
         monsterType: 'Monstrosity',
@@ -71,8 +71,8 @@ void main() {
     });
 
     test('saves, loads, and deletes custom equipment items', () async {
-      final item = EquipmentItem(
-        id: const EntityId(slug: 'ring-of-aether', ruleset: RulesetVersion.homebrew),
+      const item = EquipmentItem(
+        id: EntityId(slug: 'ring-of-aether', ruleset: RulesetVersion.homebrew),
         name: 'Ring of Aether',
         itemType: 'Ring',
         rarity: 'Very Rare',
@@ -93,15 +93,15 @@ void main() {
     });
 
     test('hydrates LayeredPriorityRepository with saved homebrew entities', () async {
-      final spell = Spell(
-        id: const EntityId(slug: 'chaos-bolt-homebrew', ruleset: RulesetVersion.homebrew),
+      const spell = Spell(
+        id: EntityId(slug: 'chaos-bolt-homebrew', ruleset: RulesetVersion.homebrew),
         name: 'Chaos Bolt (Homebrew)',
         level: 1,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '120 feet',
-        components: const SpellComponents(v: true, s: true),
+        components: SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Chaotic blast.',
       );
 
@@ -115,37 +115,37 @@ void main() {
       expect(lookupResult!.name, equals('Chaos Bolt (Homebrew)'));
     });
     test('batch deletes custom entities by slug list and cleans up storage', () async {
-      final spell1 = Spell(
-        id: const EntityId(slug: 'fire-dart', ruleset: RulesetVersion.homebrew),
+      const spell1 = Spell(
+        id: EntityId(slug: 'fire-dart', ruleset: RulesetVersion.homebrew),
         name: 'Fire Dart',
         level: 1,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: const SpellComponents(v: true, s: true),
+        components: SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Fires a dart of flame.',
       );
-      final spell2 = Spell(
-        id: const EntityId(slug: 'ice-spike', ruleset: RulesetVersion.homebrew),
+      const spell2 = Spell(
+        id: EntityId(slug: 'ice-spike', ruleset: RulesetVersion.homebrew),
         name: 'Ice Spike',
         level: 2,
         school: 'Evocation',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: '60 feet',
-        components: const SpellComponents(v: true, s: true),
+        components: SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Fires an icy spike.',
       );
-      final spell3 = Spell(
-        id: const EntityId(slug: 'arcane-ward', ruleset: RulesetVersion.homebrew),
+      const spell3 = Spell(
+        id: EntityId(slug: 'arcane-ward', ruleset: RulesetVersion.homebrew),
         name: 'Arcane Ward',
         level: 3,
         school: 'Abjuration',
-        castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
-        duration: const SpellDuration(type: DurationType.instantaneous),
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
         range: 'Self',
-        components: const SpellComponents(v: true, s: true),
+        components: SpellComponents(v: true, s: true),
         descriptionMarkdown: 'Creates an arcane ward.',
       );
 
@@ -174,8 +174,8 @@ void main() {
     });
 
     test('clearHomebrewCategory purges specific category and updates runtime library', () async {
-      final monster = Monster(
-        id: const EntityId(slug: 'abyssal-stalker', ruleset: RulesetVersion.homebrew),
+      const monster = Monster(
+        id: EntityId(slug: 'abyssal-stalker', ruleset: RulesetVersion.homebrew),
         name: 'Abyssal Stalker',
         size: 'Medium',
         monsterType: 'Fiend',
@@ -195,8 +195,8 @@ void main() {
 
     test('reparseAllHomebrew upgrades entities from raw JSON and removes exact SRD matches', () async {
       // 1. Custom feat with raw JSON
-      final feat = Feat(
-        id: const EntityId(slug: 'astral-touched', ruleset: RulesetVersion.homebrew),
+      const feat = Feat(
+        id: EntityId(slug: 'astral-touched', ruleset: RulesetVersion.homebrew),
         name: 'Astral Touched',
         category: 'General',
         descriptionMarkdown: 'Old text',
@@ -212,8 +212,8 @@ void main() {
       );
 
       // 2. Exact SRD match (e.g. Grappler) saved as homebrew
-      final srdFeat = Feat(
-        id: const EntityId(slug: 'grappler', ruleset: RulesetVersion.homebrew),
+      const srdFeat = Feat(
+        id: EntityId(slug: 'grappler', ruleset: RulesetVersion.homebrew),
         name: 'Grappler',
         category: 'General',
         descriptionMarkdown: 'Old text',

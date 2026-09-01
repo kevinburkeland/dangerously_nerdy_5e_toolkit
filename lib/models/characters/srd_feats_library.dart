@@ -27,107 +27,107 @@ class SrdFeatsLibrary {
     },
   );
 
-  static final Feat crafter2024 = Feat(
-    id: const EntityId(slug: 'crafter', ruleset: RulesetVersion.v2024),
+  static const Feat crafter2024 = Feat(
+    id: EntityId(slug: 'crafter', ruleset: RulesetVersion.v2024),
     name: 'Crafter',
     category: 'Origin',
     descriptionMarkdown:
         '**Tool Proficiency.** You gain proficiency with three different Artisan\'s Tools of your choice.\n\n'
         '**Discount.** Whenever you buy a nonmagical item, you receive a 20 percent discount on it.\n\n'
         '**Fast Crafting.** Craft nonmagical items in 20% less time.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'toolProficienciesCount': 3,
       'shoppingDiscountPercent': 20,
     },
   );
 
-  static final Feat healer2024 = Feat(
-    id: const EntityId(slug: 'healer', ruleset: RulesetVersion.v2024),
+  static const Feat healer2024 = Feat(
+    id: EntityId(slug: 'healer', ruleset: RulesetVersion.v2024),
     name: 'Healer',
     category: 'Origin',
     descriptionMarkdown:
         '**Battle Medic.** As an action, you can spend one use of a Healer\'s Kit to tend to a creature and expend one of its Hit Dice. The creature regains HP equal to the roll + your Proficiency Bonus.\n\n'
         '**Healing Rerolls.** Whenever you roll dice to determine the HP a creature regains from a spell or healing ability, you can reroll any 1s.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'rerollHealingOnes': true,
     },
   );
 
-  static final Feat lucky2024 = Feat(
-    id: const EntityId(slug: 'lucky', ruleset: RulesetVersion.v2024),
+  static const Feat lucky2024 = Feat(
+    id: EntityId(slug: 'lucky', ruleset: RulesetVersion.v2024),
     name: 'Lucky',
     category: 'Origin',
     descriptionMarkdown:
         '**Luck Points.** You have a number of Luck Points equal to your Proficiency Bonus. You regain all spent points on a Long Rest.\n\n'
         '**Advantage / Disadvantage.** Spend 1 Luck Point to gain Advantage on a D20 Test, or force an attacker against you to roll with Disadvantage.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'luckPointsFormula': 'profBonus',
     },
   );
 
-  static final Feat magicInitiate2024 = Feat(
-    id: const EntityId(slug: 'magic-initiate', ruleset: RulesetVersion.v2024),
+  static const Feat magicInitiate2024 = Feat(
+    id: EntityId(slug: 'magic-initiate', ruleset: RulesetVersion.v2024),
     name: 'Magic Initiate',
     category: 'Origin',
     descriptionMarkdown:
         '**Two Cantrips.** Choose two cantrips from the Cleric, Druid, or Wizard spell list.\n\n'
         '**1st-Level Spell.** Choose one 1st-level spell from the same list. You always have it prepared and can cast it once per Long Rest without expending a spell slot, or using your available spell slots.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'cantripsCount': 2,
       'level1SpellsCount': 1,
     },
   );
 
-  static final Feat musician2024 = Feat(
-    id: const EntityId(slug: 'musician', ruleset: RulesetVersion.v2024),
+  static const Feat musician2024 = Feat(
+    id: EntityId(slug: 'musician', ruleset: RulesetVersion.v2024),
     name: 'Musician',
     category: 'Origin',
     descriptionMarkdown:
         '**Instrument Training.** You gain proficiency with three Musical Instruments of your choice.\n\n'
         '**Inspiring Song.** As a Short or Long Rest activity, play music for your allies. A number of allies up to your Proficiency Bonus gain Heroic Inspiration.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'grantsHeroicInspiration': true,
     },
   );
 
-  static final Feat savageAttacker2024 = Feat(
-    id: const EntityId(slug: 'savage-attacker', ruleset: RulesetVersion.v2024),
+  static const Feat savageAttacker2024 = Feat(
+    id: EntityId(slug: 'savage-attacker', ruleset: RulesetVersion.v2024),
     name: 'Savage Attacker',
     category: 'Origin',
     descriptionMarkdown:
         '**Brutal Damage.** Once per turn when you hit a target with a weapon, you can roll the weapon’s damage dice twice and use either total.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'rerollWeaponDamage': true,
     },
   );
 
-  static final Feat skilled2024 = Feat(
-    id: const EntityId(slug: 'skilled', ruleset: RulesetVersion.v2024),
+  static const Feat skilled2024 = Feat(
+    id: EntityId(slug: 'skilled', ruleset: RulesetVersion.v2024),
     name: 'Skilled',
     category: 'Origin',
     descriptionMarkdown:
         '**Versatile Expertise.** You gain proficiency in any combination of three skills or tools of your choice.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'bonusProficienciesCount': 3,
     },
   );
 
-  static final Feat tavernBrawler2024 = Feat(
-    id: const EntityId(slug: 'tavern-brawler', ruleset: RulesetVersion.v2024),
+  static const Feat tavernBrawler2024 = Feat(
+    id: EntityId(slug: 'tavern-brawler', ruleset: RulesetVersion.v2024),
     name: 'Tavern Brawler',
     category: 'Origin',
     descriptionMarkdown:
         '**Enhanced Unarmed Strike.** Your unarmed strike deals 1d4 + STR modifier damage.\n\n'
         '**Damage Rerolls.** Whenever you roll a 1 on a damage die for an unarmed strike, you can reroll the die.\n\n'
         '**Pushing Strike.** When you hit with an unarmed strike on your turn, you can deal damage and push the target 5 feet away.',
-    customProperties: const {
+    customProperties: {
       'isOriginFeat': true,
       'unarmedDie': '1d4',
       'pushOnHit': true,
@@ -153,22 +153,22 @@ class SrdFeatsLibrary {
   // GENERAL & COMBAT FEATS (SRD 5.1 & SRD 5.2)
   // --------------------------------------------------------------------------
 
-  static final Feat greatWeaponMaster = Feat(
-    id: const EntityId(slug: 'great-weapon-master', ruleset: RulesetVersion.v2024),
+  static const Feat greatWeaponMaster = Feat(
+    id: EntityId(slug: 'great-weapon-master', ruleset: RulesetVersion.v2024),
     name: 'Great Weapon Master',
     prerequisite: 'Strength 13+ or Level 4+',
     category: 'General',
     descriptionMarkdown:
         '**Heavy Weapon Mastery.** On your turn, when you score a critical hit with a melee weapon or reduce a creature to 0 HP, you can make one melee weapon attack as a bonus action.\n\n'
         '**Heavy Power Attack / Heavy Weapon Mastery.** When attacking with a Heavy weapon, you can add your Proficiency Bonus to damage rolls.',
-    customProperties: const {
+    customProperties: {
       'bonusAttackOnCrit': true,
       'addsProficiencyToHeavyDamage': true,
     },
   );
 
-  static final Feat sharpshooter = Feat(
-    id: const EntityId(slug: 'sharpshooter', ruleset: RulesetVersion.v2024),
+  static const Feat sharpshooter = Feat(
+    id: EntityId(slug: 'sharpshooter', ruleset: RulesetVersion.v2024),
     name: 'Sharpshooter',
     prerequisite: 'Dexterity 13+ or Level 4+',
     category: 'General',
@@ -176,14 +176,14 @@ class SrdFeatsLibrary {
         '**Bypass Cover.** Your ranged weapon attacks ignore Half Cover and Three-Quarters Cover.\n\n'
         '**Point Blank Shots.** Being within 5 feet of a hostile creature doesn’t impose disadvantage on your ranged attack rolls.\n\n'
         '**Extreme Range.** Attacking at long range doesn\'t impose disadvantage on your ranged weapon attack rolls.',
-    customProperties: const {
+    customProperties: {
       'ignoresCover': true,
       'noMeleeRangeDisadvantage': true,
     },
   );
 
-  static final Feat warCaster = Feat(
-    id: const EntityId(slug: 'war-caster', ruleset: RulesetVersion.v2024),
+  static const Feat warCaster = Feat(
+    id: EntityId(slug: 'war-caster', ruleset: RulesetVersion.v2024),
     name: 'War Caster',
     prerequisite: 'Spellcasting or Pact Magic feature',
     category: 'General',
@@ -191,15 +191,15 @@ class SrdFeatsLibrary {
         '**Concentration Advantage.** You have Advantage on Constitution saving throws that you make to maintain Concentration on a spell when taking damage.\n\n'
         '**Somatic Weaponry.** You can perform the somatic components of spells even when you have weapons or a shield in one or both hands.\n\n'
         '**Reactive Spell.** When a hostile creature triggers an Opportunity Attack from you, you can use your Reaction to cast a spell targeting only that creature instead.',
-    customProperties: const {
+    customProperties: {
       'concentrationAdvantage': true,
       'somaticWithWeapons': true,
       'opportunitySpell': true,
     },
   );
 
-  static final Feat sentinel = Feat(
-    id: const EntityId(slug: 'sentinel', ruleset: RulesetVersion.v2024),
+  static const Feat sentinel = Feat(
+    id: EntityId(slug: 'sentinel', ruleset: RulesetVersion.v2024),
     name: 'Sentinel',
     prerequisite: 'Strength or Dexterity 13+',
     category: 'General',
@@ -207,28 +207,28 @@ class SrdFeatsLibrary {
         '**Zero Speed on Hit.** When you hit a creature with an Opportunity Attack, the creature\'s speed becomes 0 for the rest of the turn.\n\n'
         '**Ignore Disengage.** Creatures provoke Opportunity Attacks from you even if they take the Disengage action.\n\n'
         '**Guardian Reaction.** When a creature within 5 feet makes an attack against an ally, you can use your Reaction to make a melee weapon attack against the attacking creature.',
-    customProperties: const {
+    customProperties: {
       'sentinelPin': true,
       'ignoresDisengage': true,
     },
   );
 
-  static final Feat polearmMaster = Feat(
-    id: const EntityId(slug: 'polearm-master', ruleset: RulesetVersion.v2024),
+  static const Feat polearmMaster = Feat(
+    id: EntityId(slug: 'polearm-master', ruleset: RulesetVersion.v2024),
     name: 'Polearm Master',
     prerequisite: 'Strength or Dexterity 13+',
     category: 'General',
     descriptionMarkdown:
         '**Butt Strike.** When you take the Attack action and attack with only a Glaive, Halberd, Pike, Quarterstaff, or Spear, you can use a Bonus Action to make a melee attack with the opposite end (deals 1d4 bludgeoning).\n\n'
         '**Reach Opportunity Attack.** While you are wielding one of these weapons, other creatures provoke an Opportunity Attack from you when they enter your reach.',
-    customProperties: const {
+    customProperties: {
       'bonusButtAttack': true,
       'provokeOnEnterReach': true,
     },
   );
 
-  static final Feat shieldMaster = Feat(
-    id: const EntityId(slug: 'shield-master', ruleset: RulesetVersion.v2024),
+  static const Feat shieldMaster = Feat(
+    id: EntityId(slug: 'shield-master', ruleset: RulesetVersion.v2024),
     name: 'Shield Master',
     prerequisite: 'Shield Proficiency',
     category: 'General',
@@ -236,40 +236,40 @@ class SrdFeatsLibrary {
         '**Shield Bash.** If you take the Attack action on your turn, you can use a Bonus Action to shove a creature within 5 feet of you with your shield.\n\n'
         '**Interposing Shield.** If you aren\'t incapacitated, you can add your shield\'s AC bonus to any Dexterity saving throw you make against a spell or harmful effect targeting only you.\n\n'
         '**Shield Evasion.** When an effect allows a DEX save for half damage, use your Reaction to take no damage on a success.',
-    customProperties: const {
+    customProperties: {
       'bonusShieldShove': true,
       'addShieldToDexSave': true,
     },
   );
 
-  static final Feat resilient = Feat(
-    id: const EntityId(slug: 'resilient', ruleset: RulesetVersion.v2024),
+  static const Feat resilient = Feat(
+    id: EntityId(slug: 'resilient', ruleset: RulesetVersion.v2024),
     name: 'Resilient',
     category: 'General',
     descriptionMarkdown:
         '**Stat & Save Mastery.** Choose one ability score: increase the chosen score by 1, and you gain proficiency in saving throws using that chosen ability score.',
-    customProperties: const {
+    customProperties: {
       'grantsSavingThrowProficiency': true,
       'statIncrease': 1,
     },
   );
 
-  static final Feat mobile = Feat(
-    id: const EntityId(slug: 'mobile', ruleset: RulesetVersion.v2014),
+  static const Feat mobile = Feat(
+    id: EntityId(slug: 'mobile', ruleset: RulesetVersion.v2014),
     name: 'Mobile',
     category: 'General',
     descriptionMarkdown:
         '**Fleet of Foot.** Your speed increases by 10 feet.\n\n'
         '**Agile Dash.** When you use the Dash action, difficult terrain doesn\'t cost you extra movement.\n\n'
         '**Hit and Run.** When you make a melee attack against a creature, you don\'t provoke Opportunity Attacks from that creature for the rest of the turn, whether you hit or not.',
-    customProperties: const {
+    customProperties: {
       'speedBonus': 10,
       'freeDisengageOnAttack': true,
     },
   );
 
-  static final Feat dualWielder = Feat(
-    id: const EntityId(slug: 'dual-wielder', ruleset: RulesetVersion.v2024),
+  static const Feat dualWielder = Feat(
+    id: EntityId(slug: 'dual-wielder', ruleset: RulesetVersion.v2024),
     name: 'Dual Wielder',
     prerequisite: 'Strength or Dexterity 13+',
     category: 'General',
@@ -277,28 +277,28 @@ class SrdFeatsLibrary {
         '**Defensive Pair.** You gain a +1 bonus to AC while you are wielding a separate melee weapon in each hand.\n\n'
         '**Non-Light Dual Wielding.** You can use Two-Weapon Fighting even when the one-handed melee weapons you are wielding aren\'t Light.\n\n'
         '**Quick Draw.** You can draw or stow two one-handed weapons when you would normally be able to draw or stow only one.',
-    customProperties: const {
+    customProperties: {
       'dualWieldAcBonus': 1,
       'allowNonLightOffhand': true,
     },
   );
 
-  static final Feat heavyArmorMaster = Feat(
-    id: const EntityId(slug: 'heavy-armor-master', ruleset: RulesetVersion.v2024),
+  static const Feat heavyArmorMaster = Feat(
+    id: EntityId(slug: 'heavy-armor-master', ruleset: RulesetVersion.v2024),
     name: 'Heavy Armor Master',
     prerequisite: 'Heavy Armor Proficiency',
     category: 'General',
     descriptionMarkdown:
         '**Damage Reduction.** While wearing Heavy Armor, nonmagical bludgeoning, piercing, and slashing damage that you take from attacks is reduced by your Proficiency Bonus (or 3 in 2014).\n\n'
         '**Strength Increase.** Increase your Strength score by 1, to a maximum of 20.',
-    customProperties: const {
+    customProperties: {
       'statIncrease': 1,
       'damageReductionProfBonus': true,
     },
   );
 
-  static final Feat grappler = Feat(
-    id: const EntityId(slug: 'grappler', ruleset: RulesetVersion.v2024),
+  static const Feat grappler = Feat(
+    id: EntityId(slug: 'grappler', ruleset: RulesetVersion.v2024),
     name: 'Grappler',
     prerequisite: 'Strength or Dexterity 13+',
     category: 'General',
@@ -306,7 +306,7 @@ class SrdFeatsLibrary {
         '**Advantage on Grappled Targets.** You have Advantage on attack rolls against a creature you are grappling.\n\n'
         '**Fast Grappler.** You can move at your full speed rather than half speed when carrying or dragging a creature grappled by you.\n\n'
         '**Free Strike.** Once per turn when you hit a creature with an Unarmed Strike, you can deal damage and grapple the target.',
-    customProperties: const {
+    customProperties: {
       'advantageOnGrappled': true,
       'fastDrag': true,
     },

@@ -91,15 +91,15 @@ void main() {
     });
 
     testWidgets('renders party member vitals and AC', (tester) async {
-      final character = Character(
-        id: const EntityId(slug: 'valeros', ruleset: RulesetVersion.v2024),
+      const character = Character(
+        id: EntityId(slug: 'valeros', ruleset: RulesetVersion.v2024),
         name: 'Valeros',
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: const CharacterProgression(
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(
@@ -114,7 +114,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 16,
           dexterity: 14,
           constitution: 14,
@@ -122,13 +122,13 @@ void main() {
           wisdom: 12,
           charisma: 8,
         ),
-        resources: const CharacterResourcePool(
+        resources: CharacterResourcePool(
           currentHp: 44,
         ),
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: DmDashboardPartyHud(partyRoster: [character]),
           ),

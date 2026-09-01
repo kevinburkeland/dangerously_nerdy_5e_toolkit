@@ -3,6 +3,8 @@ import 'core_types.dart';
 
 /// Base contract for all identifiable domain entities.
 abstract class DomainEntity {
+  const DomainEntity();
+
   EntityId get id;
   String get name;
   EntityType get entityType;

@@ -182,7 +182,7 @@ class Spell extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  Spell({
+  const Spell({
     required this.id,
     required this.name,
     required this.level,
@@ -299,7 +299,7 @@ class Monster extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  Monster({
+  const Monster({
     required this.id,
     required this.name,
     required this.size,
@@ -410,7 +410,7 @@ class EquipmentItem extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  EquipmentItem({
+  const EquipmentItem({
     required this.id,
     required this.name,
     required this.itemType,

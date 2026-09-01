@@ -97,12 +97,12 @@ void main() {
 
     group('2. Ruleset-Aware Subclass Selection Matrix', () {
       test('2014 Ruleset Subclass Milestones: Cleric, Sorcerer, Warlock at Level 1, Druid/Wizard at Level 2, Fighter at Level 3', () {
-        final cleric = SrdClassesLibrary.cleric;
-        final sorcerer = SrdClassesLibrary.sorcerer;
+        const cleric = SrdClassesLibrary.cleric;
+        const sorcerer = SrdClassesLibrary.sorcerer;
         final warlock = SrdClassesLibrary.warlock;
-        final druid = SrdClassesLibrary.druid;
-        final wizard = SrdClassesLibrary.wizard;
-        final fighter = SrdClassesLibrary.fighter;
+        const druid = SrdClassesLibrary.druid;
+        const wizard = SrdClassesLibrary.wizard;
+        const fighter = SrdClassesLibrary.fighter;
 
         // Subclass level inquiry under 2014
         expect(cleric.getSubclassLevel(RulesetVersion.v2014), equals(1));
@@ -120,11 +120,11 @@ void main() {
       });
 
       test('2024 Ruleset Subclass Milestones: Standardized across all classes at Level 3', () {
-        final cleric = SrdClassesLibrary.cleric;
-        final sorcerer = SrdClassesLibrary.sorcerer;
+        const cleric = SrdClassesLibrary.cleric;
+        const sorcerer = SrdClassesLibrary.sorcerer;
         final warlock = SrdClassesLibrary.warlock;
-        final druid = SrdClassesLibrary.druid;
-        final fighter = SrdClassesLibrary.fighter;
+        const druid = SrdClassesLibrary.druid;
+        const fighter = SrdClassesLibrary.fighter;
 
         expect(cleric.getSubclassLevel(RulesetVersion.v2024), equals(3));
         expect(sorcerer.getSubclassLevel(RulesetVersion.v2024), equals(3));
@@ -141,7 +141,7 @@ void main() {
 
     group('3. 2024 Level 1 Class Decisions Engine', () {
       test('2024 Cleric presents Divine Order choices (Protector vs Thaumaturge)', () {
-        final cleric = SrdClassesLibrary.cleric;
+        const cleric = SrdClassesLibrary.cleric;
         final decisions = cleric.getDecisionsForLevel(1, ruleset: RulesetVersion.v2024);
 
         expect(decisions, isNotEmpty);
@@ -150,7 +150,7 @@ void main() {
       });
 
       test('2024 Druid presents Primal Order choices (Magician vs Warden)', () {
-        final druid = SrdClassesLibrary.druid;
+        const druid = SrdClassesLibrary.druid;
         final decisions = druid.getDecisionsForLevel(1, ruleset: RulesetVersion.v2024);
 
         expect(decisions, isNotEmpty);
@@ -168,7 +168,7 @@ void main() {
       });
 
       test('Fighter presents Fighting Style at Level 1 in both 2014 and 2024', () {
-        final fighter = SrdClassesLibrary.fighter;
+        const fighter = SrdClassesLibrary.fighter;
         final decisions2024 = fighter.getDecisionsForLevel(1, ruleset: RulesetVersion.v2024);
         final decisions2014 = fighter.getDecisionsForLevel(1, ruleset: RulesetVersion.v2014);
 
@@ -250,8 +250,8 @@ void main() {
 
     group('5. Mechanical Grants & Live Character Sheet Evaluation', () {
       test('Defense Fighting Style grants +1 AC only when armor is equipped', () {
-        final leatherArmor = EquipmentItem(
-          id: const EntityId(slug: 'leather-armor', ruleset: RulesetVersion.v2024),
+        const leatherArmor = EquipmentItem(
+          id: EntityId(slug: 'leather-armor', ruleset: RulesetVersion.v2024),
           name: 'Leather Armor',
           itemType: 'Armor',
           rarity: 'common',
@@ -264,11 +264,11 @@ void main() {
         );
         baseLayer.registerEntity(leatherArmor);
 
-        final characterWithoutArmor = Character(
-          id: const EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
+        const characterWithoutArmor = Character(
+          id: EntityId(slug: 'fighter-hero', ruleset: RulesetVersion.v2024),
           name: 'Fighter Hero',
-          speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-          progression: const CharacterProgression(classes: [
+          speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+          progression: CharacterProgression(classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'fighter', displayName: 'Fighter'),
               level: 1,
@@ -278,9 +278,9 @@ void main() {
               },
             ),
           ]),
-          baseScores: const AbilityScores(strength: 16, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 10, charisma: 10),
+          baseScores: AbilityScores(strength: 16, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 10, charisma: 10),
           inventory: [],
-          resources: const CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
+          resources: CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
         );
 
         final unarmoredStats = CharacterStatCalculator.compute(characterWithoutArmor, resolver);
@@ -305,11 +305,11 @@ void main() {
       });
 
       test('Draconic Sorcerer subclass grants base AC 13 + DEX when unarmored', () {
-        final sorcerer = Character(
-          id: const EntityId(slug: 'draconic-sorc', ruleset: RulesetVersion.v2024),
+        const sorcerer = Character(
+          id: EntityId(slug: 'draconic-sorc', ruleset: RulesetVersion.v2024),
           name: 'Dragon Sorcerer',
-          speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-          progression: const CharacterProgression(classes: [
+          speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+          progression: CharacterProgression(classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'sorcerer', displayName: 'Sorcerer'),
               subclassRef: EntityReference(refType: EntityType.subclass, slug: 'draconic-sorcery', displayName: 'Draconic Sorcery'),
@@ -317,9 +317,9 @@ void main() {
               hitDie: 'd6',
             ),
           ]),
-          baseScores: const AbilityScores(strength: 10, dexterity: 16, constitution: 14, intelligence: 10, wisdom: 10, charisma: 16),
+          baseScores: AbilityScores(strength: 10, dexterity: 16, constitution: 14, intelligence: 10, wisdom: 10, charisma: 16),
           inventory: [],
-          resources: const CharacterResourcePool(currentHp: 8, currentHitDice: {'d6': 1}),
+          resources: CharacterResourcePool(currentHp: 8, currentHitDice: {'d6': 1}),
         );
 
         final stats = CharacterStatCalculator.compute(sorcerer, resolver);
@@ -329,11 +329,11 @@ void main() {
       });
 
       test('LevelUpRequest preserves and aggregates selectedFeatureOptions across level ups', () {
-        final baseFighter = Character(
-          id: const EntityId(slug: 'fighter-prog', ruleset: RulesetVersion.v2024),
+        const baseFighter = Character(
+          id: EntityId(slug: 'fighter-prog', ruleset: RulesetVersion.v2024),
           name: 'Fighter Progression',
-          speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-          progression: const CharacterProgression(classes: [
+          speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+          progression: CharacterProgression(classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'fighter', displayName: 'Fighter'),
               level: 1,
@@ -343,9 +343,9 @@ void main() {
               },
             ),
           ]),
-          baseScores: const AbilityScores.standardArray(),
+          baseScores: AbilityScores.standardArray(),
           inventory: [],
-          resources: const CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
+          resources: CharacterResourcePool(currentHp: 12, currentHitDice: {'d10': 1}),
         );
 
         // Advance to Level 2

@@ -540,26 +540,35 @@ class CharacterStatCalculator {
     // D.2 Max HP Computation (Retroactive CON Scaling)
     int computedMaxHp = 0;
     final conMod = abilityMods[AbilityType.constitution]!;
+    int currentLevelCounter = 1;
     for (int i = 0; i < character.progression.classes.length; i++) {
       final cls = character.progression.classes[i];
       if (cls.isStartingClass || i == 0) {
         // Level 1 max hit die
-        computedMaxHp += cls.hitDieSides + conMod + phaseB.racialHpPerLevelBonus;
+        final level1Hp = character.progression.manualHpRolls[1] ?? cls.hitDieSides;
+        computedMaxHp += level1Hp + conMod + phaseB.racialHpPerLevelBonus;
+        currentLevelCounter++;
         // Remaining levels
         for (int l = 1; l < cls.level; l++) {
           final rolledIndex = l - 1;
-          final rolled = (rolledIndex < cls.hitPointsRolled.length)
-              ? cls.hitPointsRolled[rolledIndex]
-              : cls.averageHpPerLevel;
+          final recordedRoll = character.progression.manualHpRolls[currentLevelCounter];
+          final rolled = recordedRoll ??
+              ((rolledIndex < cls.hitPointsRolled.length)
+                  ? cls.hitPointsRolled[rolledIndex]
+                  : cls.averageHpPerLevel);
           computedMaxHp += math.max(1, rolled + conMod + phaseB.racialHpPerLevelBonus);
+          currentLevelCounter++;
         }
       } else {
         // Multiclass levels
         for (int l = 0; l < cls.level; l++) {
-          final rolled = (l < cls.hitPointsRolled.length)
-              ? cls.hitPointsRolled[l]
-              : cls.averageHpPerLevel;
+          final recordedRoll = character.progression.manualHpRolls[currentLevelCounter];
+          final rolled = recordedRoll ??
+              ((l < cls.hitPointsRolled.length)
+                  ? cls.hitPointsRolled[l]
+                  : cls.averageHpPerLevel);
           computedMaxHp += math.max(1, rolled + conMod + phaseB.racialHpPerLevelBonus);
+          currentLevelCounter++;
         }
       }
     }

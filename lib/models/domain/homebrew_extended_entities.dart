@@ -179,7 +179,7 @@ class CharacterClass extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  CharacterClass({
+  const CharacterClass({
     required this.id,
     required this.name,
     required this.hitDie,
@@ -330,7 +330,7 @@ class Subclass extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  Subclass({
+  const Subclass({
     required this.id,
     required this.name,
     required this.classSlug,
@@ -599,7 +599,7 @@ class Subrace extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  Subrace({
+  const Subrace({
     required this.id,
     required this.name,
     required this.raceSlug,
@@ -646,7 +646,7 @@ class Feat extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  Feat({
+  const Feat({
     required this.id,
     required this.name,
     this.prerequisite,
@@ -725,7 +725,7 @@ class Background extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  Background({
+  const Background({
     required this.id,
     required this.name,
     this.abilityScoreSummary,
@@ -819,7 +819,7 @@ class HomebrewCompendiumEntry extends DomainEntity {
   @override
   final Map<String, dynamic> customProperties;
 
-  HomebrewCompendiumEntry({
+  const HomebrewCompendiumEntry({
     required this.id,
     required this.name,
     required this.category,

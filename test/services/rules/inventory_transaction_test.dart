@@ -11,15 +11,15 @@ void main() {
     late Character baseCharacter;
 
     setUp(() {
-      baseCharacter = Character(
-        id: const EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
+      baseCharacter = const Character(
+        id: EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
         name: 'Warrior',
-        speciesRef: const EntityReference(
+        speciesRef: EntityReference(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        progression: const CharacterProgression(classes: [
+        progression: CharacterProgression(classes: [
           ClassLevelProgression(
             classRef: EntityReference(
               refType: EntityType.classDefinition,
@@ -30,8 +30,8 @@ void main() {
             hitDie: 'd10',
           ),
         ]),
-        baseScores: const AbilityScores.standardArray(),
-        inventory: const [
+        baseScores: AbilityScores.standardArray(),
+        inventory: [
           InventoryItemInstance(
             instanceId: 'inst-sword',
             itemRef: EntityReference(
@@ -102,8 +102,8 @@ void main() {
             isAttuned: true,
           ),
         ],
-        resources: const CharacterResourcePool(currentHp: 12),
-        purse: const PartyPurse(gp: 50),
+        resources: CharacterResourcePool(currentHp: 12),
+        purse: PartyPurse(gp: 50),
       );
     });
 

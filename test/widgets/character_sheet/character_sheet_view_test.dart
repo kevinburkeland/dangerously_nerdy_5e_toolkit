@@ -18,20 +18,20 @@ void main() {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
 
-      baseCharacter = Character(
-        id: const EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
+      baseCharacter = const Character(
+        id: EntityId(slug: 'hero-test', ruleset: RulesetVersion.v2024),
         name: 'Valerius',
-        speciesRef: const EntityReference<DomainEntity>(
+        speciesRef: EntityReference<DomainEntity>(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        backgroundRef: const EntityReference<DomainEntity>(
+        backgroundRef: EntityReference<DomainEntity>(
           refType: EntityType.background,
           slug: 'soldier',
           displayName: 'Soldier',
         ),
-        progression: const CharacterProgression(
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<DomainEntity>(
@@ -45,7 +45,7 @@ void main() {
             ),
           ],
         ),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 16, // Mod +3
           dexterity: 14, // Mod +2
           constitution: 14, // Mod +2
@@ -53,7 +53,7 @@ void main() {
           wisdom: 12,
           charisma: 8,
         ),
-        inventory: const [
+        inventory: [
           InventoryItemInstance(
             instanceId: 'plate-1',
             itemRef: EntityReference<EquipmentItem>(
@@ -83,7 +83,7 @@ void main() {
             },
           ),
         ],
-        resources: const CharacterResourcePool(
+        resources: CharacterResourcePool(
           currentHp: 28,
           tempHp: 0,
           currentHitDice: {'d10': 3},
