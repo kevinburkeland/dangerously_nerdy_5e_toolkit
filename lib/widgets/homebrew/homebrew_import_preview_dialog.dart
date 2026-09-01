@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../services/acl/homebrew_merge_resolver.dart';
 import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
@@ -25,6 +26,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
   final _pipeline = CompendiumJsonIngestionPipeline();
   final _resolver = const HomebrewMergeResolver();
 
+  RulesetVersion? _selectedRuleset = RulesetVersion.v2024;
   ImportAnalysisResult? _analysisResult;
   bool _isAnalyzing = false;
   bool _isImporting = false;
@@ -55,7 +57,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
     });
 
     try {
-      final ingestion = _pipeline.ingestJsonString(jsonString);
+      final ingestion = _pipeline.ingestJsonString(jsonString, forceRuleset: _selectedRuleset);
       if (ingestion.hasErrors && ingestion.totalEntities == 0) {
         setState(() {
           _errorMessage = ingestion.errors.join('\n');
@@ -198,6 +200,43 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'Target Ruleset Edition:',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 6),
+        SegmentedButton<RulesetVersion?>(
+          segments: const [
+            ButtonSegment<RulesetVersion?>(
+              value: RulesetVersion.v2024,
+              icon: Icon(Icons.auto_awesome, size: 16),
+              label: Text('2024 Revision'),
+            ),
+            ButtonSegment<RulesetVersion?>(
+              value: RulesetVersion.v2014,
+              icon: Icon(Icons.history_edu, size: 16),
+              label: Text('2014 Classic'),
+            ),
+            ButtonSegment<RulesetVersion?>(
+              value: null,
+              icon: Icon(Icons.auto_mode, size: 16),
+              label: Text('Auto-Detect'),
+            ),
+          ],
+          selected: {_selectedRuleset},
+          onSelectionChanged: (newSelection) {
+            setState(() {
+              _selectedRuleset = newSelection.first;
+            });
+            if (_textController.text.trim().isNotEmpty) {
+              _analyzeInput(_textController.text);
+            }
+          },
+        ),
+        const SizedBox(height: 14),
         Text(
           'Paste Community Compendium JSON, homebrew entity maps, or an exported Homebrew Bundle JSON package.',
           style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),

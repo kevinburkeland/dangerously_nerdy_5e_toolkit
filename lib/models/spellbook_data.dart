@@ -396,7 +396,15 @@ class SpellItem {
 class SpellbookLibrary {
   SpellbookLibrary._();
 
-  static const List<SpellItem> allSpells = [
+  static List<SpellItem> _customSpells = const [];
+
+  /// Sets user-created / imported homebrew spells to be included in the library.
+  static void setHomebrewSpells(List<SpellItem> spells) {
+    _customSpells = List.unmodifiable(spells);
+  }
+
+  /// Canonical SRD spells.
+  static const List<SpellItem> srdSpells = [
     ...srdCantrips,
     ...srdLevel1Spells,
     ...srdLevel2Spells,
@@ -404,6 +412,12 @@ class SpellbookLibrary {
     ...srdLevel4Spells,
     ...srdLevel5Spells,
     ...srdHighLevelSpells,
+  ];
+
+  /// All registered spells including canonical SRD and active homebrew.
+  static List<SpellItem> get allSpells => [
+    ...srdSpells,
+    ..._customSpells,
   ];
 
   static SpellItem? getSpellById(String id) {

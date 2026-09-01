@@ -108,7 +108,7 @@ void main() {
     }
 
     test('validates total spell count in SRD library', () {
-      const spells = SpellbookLibrary.allSpells;
+      final spells = SpellbookLibrary.allSpells;
       expect(spells, isNotEmpty);
       expect(spells.length, greaterThanOrEqualTo(100),
           reason: 'Expected comprehensive SRD spell library');

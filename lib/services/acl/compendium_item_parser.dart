@@ -163,14 +163,24 @@ class CompendiumItemParser {
       return (requiresAttunement: true, prerequisite: null);
     }
     if (attuneData is String) {
-      return (requiresAttunement: true, prerequisite: attuneData);
+      final clean = attuneData.trim();
+      if (clean.toLowerCase() == 'false' || clean.isEmpty) {
+        return (requiresAttunement: false, prerequisite: null);
+      }
+      final prereq = (clean.toLowerCase() == 'true' || clean.toLowerCase() == 'optional') ? null : clean;
+      return (requiresAttunement: true, prerequisite: prereq);
     }
     if (attuneData is Map) {
       final tags = attuneData['tags'] as List?;
+      String? prereq;
       if (tags != null && tags.isNotEmpty) {
-        return (requiresAttunement: true, prerequisite: tags.join(', '));
+        prereq = tags.join(', ');
+      } else if (attuneData['prerequisite'] != null) {
+        prereq = attuneData['prerequisite'].toString();
+      } else if (attuneData['condition'] != null) {
+        prereq = attuneData['condition'].toString();
       }
-      return (requiresAttunement: true, prerequisite: null);
+      return (requiresAttunement: true, prerequisite: prereq);
     }
     return (requiresAttunement: false, prerequisite: null);
   }

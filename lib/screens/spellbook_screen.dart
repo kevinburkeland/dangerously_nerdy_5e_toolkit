@@ -197,7 +197,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
         settingsProvider?.settings.rulesEdition ??
         DmRulesEdition.v2024;
     final pinnedIds = _getPinnedIds(context);
-    const allSpells = SpellbookLibrary.allSpells;
+    final allSpells = SpellbookLibrary.allSpells;
 
     // Filter spells based on search, view mode, and sheet filters
     final filteredSpells = allSpells.where((spell) {

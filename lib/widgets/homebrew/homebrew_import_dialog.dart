@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/domain/core_types.dart';
 import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
 import '../dialogs/app_dialog_frame.dart';
@@ -15,6 +16,7 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
   final _textController = TextEditingController();
   final _pipeline = CompendiumJsonIngestionPipeline();
 
+  RulesetVersion? _selectedRuleset = RulesetVersion.v2024;
   IngestionBatchResult? _previewResult;
   bool _isImporting = false;
 
@@ -25,7 +27,7 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
       return;
     }
 
-    final result = _pipeline.ingestJsonString(input);
+    final result = _pipeline.ingestJsonString(input, forceRuleset: _selectedRuleset);
     setState(() => _previewResult = result);
   }
 
@@ -102,6 +104,44 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(
+              'Select the target ruleset edition for parsed homebrew entries:',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<RulesetVersion?>(
+                segments: const [
+                  ButtonSegment<RulesetVersion?>(
+                    value: RulesetVersion.v2024,
+                    icon: Icon(Icons.auto_awesome, size: 16),
+                    label: Text('2024 Revision'),
+                  ),
+                  ButtonSegment<RulesetVersion?>(
+                    value: RulesetVersion.v2014,
+                    icon: Icon(Icons.history_edu, size: 16),
+                    label: Text('2014 Classic'),
+                  ),
+                  ButtonSegment<RulesetVersion?>(
+                    value: null,
+                    icon: Icon(Icons.auto_mode, size: 16),
+                    label: Text('Auto-Detect'),
+                  ),
+                ],
+                selected: {_selectedRuleset},
+                onSelectionChanged: (newSelection) {
+                  setState(() {
+                    _selectedRuleset = newSelection.first;
+                  });
+                  _handleAnalyze();
+                },
+              ),
+            ),
+            const SizedBox(height: 14),
             Text(
               'Paste a standard JSON compendium snippet or bundle (Spells, Monsters, Items, Classes, Races, Feats, Backgrounds, Tables, Rules):',
               style: theme.textTheme.bodyMedium?.copyWith(

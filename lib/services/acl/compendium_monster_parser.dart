@@ -83,7 +83,8 @@ class CompendiumMonsterParser {
             daily.forEach((freq, list) {
               if (list is List) {
                 final spellNames = _extractSpellNames(list, innateSpells, ruleset);
-                actionsBuffer.writeln('- **$freq/day each:** ${spellNames.join(', ')}');
+                final cleanFreq = freq.toString().replaceAll(RegExp(r'[eE]$'), '').replaceAll('/d', '').trim();
+                actionsBuffer.writeln('- **$cleanFreq/day each:** ${spellNames.join(', ')}');
               }
             });
           }
@@ -93,7 +94,9 @@ class CompendiumMonsterParser {
               if (data is Map && data['spells'] is List) {
                 final spellNames = _extractSpellNames(data['spells'] as List, innateSpells, ruleset);
                 final slots = data['slots'] != null ? ' (${data['slots']} slots)' : '';
-                actionsBuffer.writeln('- **Level $lvl$slots:** ${spellNames.join(', ')}');
+                final lvlNum = int.tryParse(lvl.toString()) ?? 0;
+                final lvlLabel = lvlNum == 0 ? 'Cantrips (at will)' : 'Level $lvl$slots';
+                actionsBuffer.writeln('- **$lvlLabel:** ${spellNames.join(', ')}');
               }
             });
           }
@@ -298,12 +301,27 @@ class CompendiumMonsterParser {
     if (acData is List && acData.isNotEmpty) {
       final first = acData.first;
       if (first is Map) {
-        return (first['ac'] as num?)?.toInt() ?? 10;
+        final val = first['ac'] ?? first['value'] ?? first['armourClass'];
+        if (val is num) return val.toInt();
+        if (val is String) {
+          final m = RegExp(r'\d+').firstMatch(val);
+          if (m != null) return int.tryParse(m.group(0)!) ?? 10;
+        }
+        return 10;
       } else if (first is num) {
         return first.toInt();
+      } else if (first is String) {
+        final m = RegExp(r'\d+').firstMatch(first);
+        if (m != null) return int.tryParse(m.group(0)!) ?? 10;
       }
     } else if (acData is Map) {
-      return (acData['ac'] as num?)?.toInt() ?? 10;
+      final val = acData['ac'] ?? acData['value'] ?? acData['armourClass'];
+      if (val is num) return val.toInt();
+      if (val is String) {
+        final m = RegExp(r'\d+').firstMatch(val);
+        if (m != null) return int.tryParse(m.group(0)!) ?? 10;
+      }
+      return 10;
     } else if (acData is num) {
       return acData.toInt();
     } else if (acData is String) {
@@ -349,27 +367,43 @@ class CompendiumMonsterParser {
   }
 
   String _parseSpeed(dynamic speedData) {
+    if (speedData is num) {
+      return 'walk ${speedData}ft.';
+    }
     if (speedData is Map) {
       final parts = <String>[];
       speedData.forEach((mode, val) {
         if (mode == 'walk' || mode == 'speed') {
-          parts.add('walk ${val}ft.');
+          if (val is Map) {
+            final numVal = val['number'] ?? val['amount'] ?? 30;
+            final cond = val['condition'] != null ? ' (${val['condition']})' : '';
+            parts.add('walk ${numVal}ft.$cond'.trim());
+          } else {
+            parts.add('walk ${val}ft.');
+          }
         } else if (val is Map) {
           final cond = val['condition'] != null ? ', (${val['condition']})' : '';
-          parts.add('$mode ${val['number']}ft.$cond'.trim());
+          final numVal = val['number'] ?? val['amount'] ?? '';
+          parts.add('$mode ${numVal}ft.$cond'.trim());
         } else if (val == true) {
           if (mode == 'canHover' || mode == 'hover') {
             parts.add('(hover)');
           } else {
             parts.add(mode);
           }
+        } else if (val == false) {
+          // ignore false flags
         } else {
           parts.add('$mode ${val}ft.');
         }
       });
       return parts.isNotEmpty ? parts.join(', ') : '30 ft.';
     } else if (speedData != null) {
-      return speedData.toString();
+      final str = speedData.toString().trim();
+      if (RegExp(r'^\d+$').hasMatch(str)) {
+        return 'walk ${str}ft.';
+      }
+      return str.isNotEmpty ? str : '30 ft.';
     }
     return '30 ft.';
   }
@@ -435,17 +469,23 @@ class CompendiumMonsterParser {
   List<String> _extractSpellNames(List list, List<EntityReference<Spell>> innateSpells, RulesetVersion ruleset) {
     final names = <String>[];
     for (final item in list) {
+      String rawText = '';
       if (item is String) {
-        final match = RegExp(r'\{@spell\s+([^|}]+).*?\}').firstMatch(item);
-        final clean = match != null ? match.group(1)!.trim() : item.trim();
-        names.add('*$clean*');
-        innateSpells.add(EntityReference<Spell>(
-          refType: EntityType.spell,
-          slug: _slugify(clean),
-          displayName: clean,
-          rulesetPreferred: ruleset,
-        ));
+        rawText = item;
+      } else if (item is Map) {
+        rawText = (item['entry'] ?? item['name'] ?? item['item'] ?? '').toString();
       }
+      if (rawText.trim().isEmpty) continue;
+
+      final match = RegExp(r'\{@spell\s+([^|}]+).*?\}').firstMatch(rawText);
+      final clean = match != null ? match.group(1)!.trim() : rawText.trim();
+      names.add('*$clean*');
+      innateSpells.add(EntityReference<Spell>(
+        refType: EntityType.spell,
+        slug: _slugify(clean),
+        displayName: clean,
+        rulesetPreferred: ruleset,
+      ));
     }
     return names;
   }

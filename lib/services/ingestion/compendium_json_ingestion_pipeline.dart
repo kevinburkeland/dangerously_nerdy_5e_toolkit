@@ -119,17 +119,17 @@ class CompendiumJsonIngestionPipeline {
             CompendiumGenericEntryParser(transformer: transformer ?? EntryTagTransformer());
 
   /// Parses arbitrary JSON text containing single entity maps, multi-entity bundles, or [HomebrewBundle] envelopes.
-  IngestionBatchResult ingestJsonString(String jsonString) {
+  IngestionBatchResult ingestJsonString(String jsonString, {RulesetVersion? forceRuleset}) {
     try {
       final clean = jsonString.trim();
       final decoded = json.decode(clean);
 
       if (decoded is List) {
-        return _ingestList(decoded);
+        return _ingestList(decoded, forceRuleset: forceRuleset);
       } else if (decoded is Map<String, dynamic>) {
-        return _ingestMap(decoded);
+        return _ingestMap(decoded, forceRuleset: forceRuleset);
       } else if (decoded is Map) {
-        return _ingestMap(Map<String, dynamic>.from(decoded));
+        return _ingestMap(Map<String, dynamic>.from(decoded), forceRuleset: forceRuleset);
       } else {
         return const IngestionBatchResult(
           errors: ['Invalid JSON format: expected Map or List at root.'],
@@ -142,7 +142,7 @@ class CompendiumJsonIngestionPipeline {
     }
   }
 
-  IngestionBatchResult _ingestList(List<dynamic> list) {
+  IngestionBatchResult _ingestList(List<dynamic> list, {RulesetVersion? forceRuleset}) {
     final spells = <Spell>[];
     final monsters = <Monster>[];
     final items = <EquipmentItem>[];
@@ -157,7 +157,10 @@ class CompendiumJsonIngestionPipeline {
     for (int i = 0; i < list.length; i++) {
       final item = list[i];
       if (item is Map) {
-        final subResult = _ingestSingleEntityMap(Map<String, dynamic>.from(item));
+        final subResult = _ingestSingleEntityMap(
+          Map<String, dynamic>.from(item),
+          forceRuleset: forceRuleset,
+        );
         spells.addAll(subResult.spells);
         monsters.addAll(subResult.monsters);
         items.addAll(subResult.items);
@@ -185,7 +188,7 @@ class CompendiumJsonIngestionPipeline {
     );
   }
 
-  IngestionBatchResult _ingestMap(Map<String, dynamic> map) {
+  IngestionBatchResult _ingestMap(Map<String, dynamic> map, {RulesetVersion? forceRuleset}) {
     final lowerKeys = map.keys.map((k) => k.toLowerCase()).toSet();
 
     // 1. Check if it's a native HomebrewBundle envelope
@@ -215,13 +218,23 @@ class CompendiumJsonIngestionPipeline {
       }
     }
 
-    // 2. If the map itself represents a single class definition (e.g. has 'hd' and 'name')
-    if ((lowerKeys.contains('hd') || lowerKeys.contains('hitdie') || (lowerKeys.contains('name') && lowerKeys.contains('subclasslevel'))) &&
-        !lowerKeys.contains('class') &&
-        !lowerKeys.contains('classes') &&
-        !lowerKeys.contains('spell') &&
-        !lowerKeys.contains('monster')) {
-      return _ingestSingleEntityMap(map);
+    // 2. If the map itself represents a single entity definition (e.g. no bundle list keys)
+    final hasBundleKeys = lowerKeys.any((k) => const {
+      'spell', 'spells', 'monster', 'monsters', 'bestiary', 'creature', 'creatures',
+      'item', 'items', 'baseitem', 'magicitems', 'magicitem', 'magicvariants', 'equipment',
+      'class', 'classes', 'subclass', 'subclasses', 'classfeature', 'classfeatures',
+      'subclassfeature', 'subclassfeatures', 'race', 'races', 'species', 'lineage', 'lineages',
+      'subrace', 'subraces', 'feat', 'feats', 'background', 'backgrounds',
+      'invocation', 'invocations', 'eldritchinvocation', 'eldritchinvocations',
+      'optionalfeature', 'optionalfeatures', 'table', 'tables', 'reward', 'rewards',
+      'condition', 'conditions', 'hazard', 'hazards', 'variantrule', 'variantrules', 'rule', 'rules',
+    }.contains(k) && map[k] is List);
+
+    if (!hasBundleKeys) {
+      final singleResult = _ingestSingleEntityMap(map, forceRuleset: forceRuleset);
+      if (singleResult.totalEntities > 0) {
+        return singleResult;
+      }
     }
 
     final spells = <Spell>[];
@@ -265,19 +278,82 @@ class CompendiumJsonIngestionPipeline {
     }
 
     // Spells
-    ingestKeys(['spell', 'spells'], (raw) => spells.add(spellParser.parseSpell(raw)), 'Spell');
+    ingestKeys(['spell', 'spells'], (raw) => spells.add(spellParser.parseSpell(raw, forceRuleset: forceRuleset)), 'Spell');
 
     // Monsters / Bestiary
     ingestKeys(['monster', 'monsters', 'bestiary', 'creature', 'creatures', 'npc', 'npcs'],
-        (raw) => monsters.add(monsterParser.parseMonster(raw)), 'Monster');
+        (raw) => monsters.add(monsterParser.parseMonster(raw, forceRuleset: forceRuleset)), 'Monster');
 
     // Items / Equipment
     ingestKeys(['item', 'items', 'baseitem', 'magicitems', 'magicitem', 'magicvariants', 'equipment'],
-        (raw) => items.add(itemParser.parseItem(raw)), 'Item');
+        (raw) => items.add(itemParser.parseItem(raw, forceRuleset: forceRuleset)), 'Item');
 
-    // Classes & Subclasses
+    // Intercept Class & Subclass features upfront to build relational stitching lookup maps
+    final rawSubclassFeatures = <Map<String, dynamic>>[];
+    ingestKeys(['subclassfeature', 'subclassfeatures'], (raw) {
+      rawSubclassFeatures.add(raw);
+    }, 'Subclass Feature');
+
+    final rawClassFeatures = <Map<String, dynamic>>[];
+    ingestKeys(['classfeature', 'classfeatures'], (raw) {
+      rawClassFeatures.add(raw);
+    }, 'Class Feature');
+
+    final classFeatureMap = <String, Map<String, dynamic>>{};
+    for (final feat in rawClassFeatures) {
+      final name = feat['name']?.toString().toLowerCase().trim() ?? '';
+      final className = (feat['className']?.toString() ?? feat['class']?.toString() ?? '').toLowerCase().trim();
+      final source = (feat['source']?.toString() ?? '').toLowerCase().trim();
+      final level = (feat['level']?.toString() ?? '').trim();
+
+      if (name.isNotEmpty) {
+        classFeatureMap[name] = feat;
+        if (className.isNotEmpty) {
+          classFeatureMap['$name|$className'] = feat;
+          if (level.isNotEmpty) {
+            classFeatureMap['$name|$className|$level'] = feat;
+            if (source.isNotEmpty) {
+              classFeatureMap['$name|$className|$source|$level'] = feat;
+            }
+          }
+        }
+      }
+    }
+
+    final subclassFeatureMap = <String, Map<String, dynamic>>{};
+    for (final feat in rawSubclassFeatures) {
+      final name = feat['name']?.toString().toLowerCase().trim() ?? '';
+      final className = (feat['className']?.toString() ?? feat['class']?.toString() ?? '').toLowerCase().trim();
+      final subShort = (feat['subclassShortName']?.toString() ?? feat['shortName']?.toString() ?? '').toLowerCase().trim();
+      final source = (feat['source']?.toString() ?? '').toLowerCase().trim();
+      final subSource = (feat['subclassSource']?.toString() ?? source).toLowerCase().trim();
+      final level = (feat['level']?.toString() ?? '').trim();
+
+      if (name.isNotEmpty) {
+        subclassFeatureMap[name] = feat;
+        if (subShort.isNotEmpty) {
+          subclassFeatureMap['$name|$subShort'] = feat;
+          if (level.isNotEmpty) {
+            subclassFeatureMap['$name|$subShort|$level'] = feat;
+            if (className.isNotEmpty) {
+              subclassFeatureMap['$name|$className|$subShort|$level'] = feat;
+              if (source.isNotEmpty) {
+                subclassFeatureMap['$name|$className|$source|$subShort|$subSource|$level'] = feat;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Classes & Subclasses (with relational feature lookup maps)
     ingestKeys(['class', 'classes'], (raw) {
-      final parsedClass = classParser.parseClass(raw);
+      final parsedClass = classParser.parseClass(
+        raw,
+        forceRuleset: forceRuleset,
+        classFeatureMap: classFeatureMap,
+        subclassFeatureMap: subclassFeatureMap,
+      );
       classes.add(parsedClass);
       // Automatically extract any embedded subclasses as standalone subclasses
       // so additive additions to SRD classes are tracked and importable!
@@ -289,7 +365,11 @@ class CompendiumJsonIngestionPipeline {
     }, 'Class');
 
     ingestKeys(['subclass', 'subclasses'], (raw) {
-      final sub = classParser.parseSubclass(raw);
+      final sub = classParser.parseSubclass(
+        raw,
+        forceRuleset: forceRuleset,
+        subclassFeatureMap: subclassFeatureMap,
+      );
       if (!subclasses.any((s) => s.id.slug == sub.id.slug)) {
         subclasses.add(sub);
       }
@@ -303,16 +383,16 @@ class CompendiumJsonIngestionPipeline {
     }, 'Subclass');
 
     // Races / Species
-    ingestKeys(['race', 'races', 'species', 'lineage', 'lineages'], (raw) => races.add(raceParser.parseRace(raw)), 'Race');
+    ingestKeys(['race', 'races', 'species', 'lineage', 'lineages'], (raw) => races.add(raceParser.parseRace(raw, forceRuleset: forceRuleset)), 'Race');
     ingestKeys(['subrace', 'subraces'], (raw) {
-      final sub = raceParser.parseSubrace(raw);
+      final sub = raceParser.parseSubrace(raw, forceRuleset: forceRuleset);
       final match = races.where((r) => r.id.slug == sub.raceSlug).firstOrNull;
       if (match != null) {
         final idx = races.indexOf(match);
         races[idx] = match.copyWith(subraces: [...match.subraces, sub]);
       } else {
         races.add(Race(
-          id: EntityId(slug: sub.raceSlug, ruleset: sub.id.ruleset),
+          id: EntityId(slug: sub.raceSlug, ruleset: forceRuleset ?? sub.id.ruleset),
           name: sub.raceSlug.replaceAll('-', ' '),
           traitsMarkdown: '',
           subraces: [sub],
@@ -321,10 +401,10 @@ class CompendiumJsonIngestionPipeline {
     }, 'Subrace');
 
     // Feats
-    ingestKeys(['feat', 'feats'], (raw) => feats.add(featParser.parseFeat(raw)), 'Feat');
+    ingestKeys(['feat', 'feats'], (raw) => feats.add(featParser.parseFeat(raw, forceRuleset: forceRuleset)), 'Feat');
 
     // Backgrounds
-    ingestKeys(['background', 'backgrounds'], (raw) => backgrounds.add(backgroundParser.parseBackground(raw)), 'Background');
+    ingestKeys(['background', 'backgrounds'], (raw) => backgrounds.add(backgroundParser.parseBackground(raw, forceRuleset: forceRuleset)), 'Background');
 
     // Eldritch Invocations
     ingestKeys([
@@ -333,7 +413,7 @@ class CompendiumJsonIngestionPipeline {
       'eldritchinvocation',
       'eldritchinvocations',
     ], (raw) {
-      otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Eldritch Invocation'));
+      otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Eldritch Invocation'));
     }, 'Eldritch Invocation');
 
     // Other Compendium Entities & Optional Features
@@ -350,25 +430,14 @@ class CompendiumJsonIngestionPipeline {
       } else if (featureType.contains('AI') || featureType.contains('INF') || name.contains('infusion')) {
         category = 'Infusion';
       }
-      otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: category));
+      otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: category));
     }, 'Optional Feature');
 
-    ingestKeys(['table', 'tables'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Table')), 'Table');
-    ingestKeys(['reward', 'rewards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Reward')), 'Reward');
-    ingestKeys(['condition', 'conditions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Condition')), 'Condition');
-    ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Hazard')), 'Hazard');
-    ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, defaultCategory: 'Rule')), 'Rule');
-
-    // Class & Subclass feature array handling (stitches external features into Subclass and Class definitions)
-    final rawSubclassFeatures = <Map<String, dynamic>>[];
-    ingestKeys(['subclassfeature', 'subclassfeatures'], (raw) {
-      rawSubclassFeatures.add(raw);
-    }, 'Subclass Feature');
-
-    final rawClassFeatures = <Map<String, dynamic>>[];
-    ingestKeys(['classfeature', 'classfeatures'], (raw) {
-      rawClassFeatures.add(raw);
-    }, 'Class Feature');
+    ingestKeys(['table', 'tables'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Table')), 'Table');
+    ingestKeys(['reward', 'rewards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Reward')), 'Reward');
+    ingestKeys(['condition', 'conditions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Condition')), 'Condition');
+    ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Hazard')), 'Hazard');
+    ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Rule')), 'Rule');
 
     // Stitch external subclass features into Subclasses
     if (rawSubclassFeatures.isNotEmpty) {
@@ -496,7 +565,7 @@ class CompendiumJsonIngestionPipeline {
     );
   }
 
-  IngestionBatchResult _ingestSingleEntityMap(Map<String, dynamic> map) {
+  IngestionBatchResult _ingestSingleEntityMap(Map<String, dynamic> map, {RulesetVersion? forceRuleset}) {
     final lowerKeys = map.keys.map((k) => k.toLowerCase()).toSet();
 
     // 1. Identify Spells (has school or level + time/duration/range)
@@ -504,7 +573,7 @@ class CompendiumJsonIngestionPipeline {
         (lowerKeys.contains('level') &&
             (lowerKeys.contains('time') || lowerKeys.contains('duration') || lowerKeys.contains('range')))) {
       try {
-        final spell = spellParser.parseSpell(map);
+        final spell = spellParser.parseSpell(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(spells: [spell]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse spell: $e']);
@@ -515,7 +584,7 @@ class CompendiumJsonIngestionPipeline {
     if (lowerKeys.contains('cr') ||
         (lowerKeys.contains('hp') && (lowerKeys.contains('ac') || lowerKeys.contains('speed')))) {
       try {
-        final monster = monsterParser.parseMonster(map);
+        final monster = monsterParser.parseMonster(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(monsters: [monster]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse monster: $e']);
@@ -527,7 +596,7 @@ class CompendiumJsonIngestionPipeline {
         lowerKeys.contains('classfeatures') ||
         (lowerKeys.contains('proficiency') && lowerKeys.contains('subclasses'))) {
       try {
-        final cl = classParser.parseClass(map);
+        final cl = classParser.parseClass(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(
           classes: [cl],
           subclasses: cl.subclasses,
@@ -545,7 +614,7 @@ class CompendiumJsonIngestionPipeline {
         lowerKeys.contains('subclasstitle') ||
         (lowerKeys.contains('class') && (lowerKeys.contains('features') || lowerKeys.contains('desc') || lowerKeys.contains('entries')))) {
       try {
-        final sub = classParser.parseSubclass(map);
+        final sub = classParser.parseSubclass(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(subclasses: [sub]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse subclass: $e']);
@@ -558,7 +627,7 @@ class CompendiumJsonIngestionPipeline {
         !lowerKeys.contains('hp') &&
         !lowerKeys.contains('school')) {
       try {
-        final race = raceParser.parseRace(map);
+        final race = raceParser.parseRace(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(races: [race]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse race: $e']);
@@ -570,7 +639,7 @@ class CompendiumJsonIngestionPipeline {
         lowerKeys.contains('feattype') ||
         (map['category']?.toString().toLowerCase().contains('feat') ?? false)) {
       try {
-        final feat = featParser.parseFeat(map);
+        final feat = featParser.parseFeat(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(feats: [feat]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse feat: $e']);
@@ -580,7 +649,7 @@ class CompendiumJsonIngestionPipeline {
     // 7. Identify Backgrounds (has skillProficiencies or backgroundFeature)
     if (lowerKeys.contains('skillproficiencies') || lowerKeys.contains('backgroundfeature')) {
       try {
-        final bg = backgroundParser.parseBackground(map);
+        final bg = backgroundParser.parseBackground(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(backgrounds: [bg]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse background: $e']);
@@ -593,7 +662,7 @@ class CompendiumJsonIngestionPipeline {
         lowerKeys.contains('reqattune') ||
         lowerKeys.contains('weaponcategory')) {
       try {
-        final item = itemParser.parseItem(map);
+        final item = itemParser.parseItem(map, forceRuleset: forceRuleset);
         return IngestionBatchResult(items: [item]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse item: $e']);
@@ -603,7 +672,7 @@ class CompendiumJsonIngestionPipeline {
     // 9. Generic Fallback (tables, rules, etc.)
     if (lowerKeys.contains('name')) {
       try {
-        final entry = genericParser.parseGenericEntry(map, defaultCategory: 'Custom');
+        final entry = genericParser.parseGenericEntry(map, forceRuleset: forceRuleset, defaultCategory: 'Custom');
         return IngestionBatchResult(otherEntries: [entry]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse custom compendium entry: $e']);

@@ -10,7 +10,13 @@ class CompendiumClassParser {
       : transformer = transformer ?? EntryNodeTransformer();
 
   /// Transforms a raw community compendium or homebrew class JSON map into a strongly-typed [CharacterClass].
-  CharacterClass parseClass(Map<String, dynamic> raw, {RulesetVersion? forceRuleset}) {
+  /// Transforms a raw community compendium or homebrew class JSON map into a strongly-typed [CharacterClass].
+  CharacterClass parseClass(
+    Map<String, dynamic> raw, {
+    RulesetVersion? forceRuleset,
+    Map<String, Map<String, dynamic>>? classFeatureMap,
+    Map<String, Map<String, dynamic>>? subclassFeatureMap,
+  }) {
     final name = raw['name']?.toString().trim() ?? 'Unnamed Class';
     final slug = _slugify(name);
     final source = raw['source']?.toString().toUpperCase() ?? 'PHB';
@@ -36,7 +42,7 @@ class CompendiumClassParser {
     }
 
     // Class Features (Level-by-level entries or general entries)
-    final featuresMarkdown = _parseClassFeatures(raw, ruleset);
+    final featuresMarkdown = _parseClassFeatures(raw, ruleset, classFeatureMap);
 
     // Subclasses
     final subclasses = <Subclass>[];
@@ -45,7 +51,12 @@ class CompendiumClassParser {
       for (final rawSub in rawSubList) {
         if (rawSub is Map) {
           try {
-            subclasses.add(parseSubclass(Map<String, dynamic>.from(rawSub), defaultClassSlug: slug, forceRuleset: ruleset));
+            subclasses.add(parseSubclass(
+              Map<String, dynamic>.from(rawSub),
+              defaultClassSlug: slug,
+              forceRuleset: ruleset,
+              subclassFeatureMap: subclassFeatureMap,
+            ));
           } catch (_) {}
         }
       }
@@ -118,6 +129,7 @@ class CompendiumClassParser {
     Map<String, dynamic> raw, {
     String? defaultClassSlug,
     RulesetVersion? forceRuleset,
+    Map<String, Map<String, dynamic>>? subclassFeatureMap,
   }) {
     final name = raw['name']?.toString().trim() ??
         raw['subclassName']?.toString().trim() ??
@@ -157,23 +169,7 @@ class CompendiumClassParser {
         raw['description'] ??
         raw['subclassFeature'];
 
-    dynamic cleanedEntries = entriesData;
-    if (cleanedEntries is List) {
-      final flattened = <dynamic>[];
-      for (final item in cleanedEntries) {
-        if (item is List) {
-          flattened.addAll(item);
-        } else {
-          flattened.add(item);
-        }
-      }
-      cleanedEntries = flattened;
-    }
-
-    final parsedEntries = transformer.transformEntries(
-      cleanedEntries,
-      defaultRuleset: ruleset,
-    );
+    final featuresMarkdown = _parseSubclassFeatures(entriesData, ruleset, subclassFeatureMap);
 
     final customProperties = <String, dynamic>{};
     raw.forEach((key, value) {
@@ -200,7 +196,7 @@ class CompendiumClassParser {
       name: name,
       classSlug: classSlug,
       shortName: shortName,
-      featuresMarkdown: parsedEntries.markdown,
+      featuresMarkdown: featuresMarkdown,
       customProperties: customProperties,
     );
   }
@@ -262,19 +258,179 @@ class CompendiumClassParser {
     return saves;
   }
 
-  String _parseClassFeatures(Map<String, dynamic> raw, RulesetVersion ruleset) {
-    final features = raw['classFeatures'] ?? raw['features'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
+  Map<String, dynamic>? _lookupFeature(dynamic ptr, Map<String, Map<String, dynamic>>? featureMap) {
+    if (featureMap == null || featureMap.isEmpty) return null;
+    String pointerStr = '';
+    if (ptr is String) {
+      pointerStr = ptr.trim();
+    } else if (ptr is Map) {
+      pointerStr = (ptr['classFeature'] ?? ptr['subclassFeature'] ?? ptr['feature'] ?? '').toString().trim();
+    }
+    if (pointerStr.isEmpty) return null;
+
+    final lower = pointerStr.toLowerCase();
+    if (featureMap.containsKey(lower)) {
+      return featureMap[lower];
+    }
+    final parts = lower.split('|').map((p) => p.trim()).toList();
+    if (parts.isNotEmpty) {
+      final name = parts[0];
+      if (parts.length >= 4) {
+        final c1 = '$name|${parts[1]}|${parts[3]}';
+        if (featureMap.containsKey(c1)) return featureMap[c1];
+        final c2 = '$name|${parts[1]}|${parts[2]}|${parts[3]}';
+        if (featureMap.containsKey(c2)) return featureMap[c2];
+      }
+      if (parts.length >= 2) {
+        final c3 = '$name|${parts[1]}';
+        if (featureMap.containsKey(c3)) return featureMap[c3];
+      }
+      if (featureMap.containsKey(name)) {
+        return featureMap[name];
+      }
+    }
+    return null;
+  }
+
+  String _parseClassFeatures(
+    Map<String, dynamic> raw,
+    RulesetVersion ruleset,
+    Map<String, Map<String, dynamic>>? classFeatureMap,
+  ) {
+    final features = raw['classFeatures'] ??
+        raw['features'] ??
+        raw['entries'] ??
+        raw['desc'] ??
+        raw['description'];
     if (features == null) return '';
 
-    // Convert pipe-syntax cross references to null while retaining any real description entries
-    final cleaned = features is List
-        ? features.map((f) {
-            if (f is String && f.contains('|') && !f.contains(' ')) return null;
-            return f;
-          }).where((f) => f != null).toList()
-        : features;
+    final featureBlocks = <String>[];
+    final otherEntries = <dynamic>[];
 
-    return transformer.transformEntries(cleaned, defaultRuleset: ruleset).markdown;
+    void processItem(dynamic f) {
+      if (f is List) {
+        for (final item in f) {
+          processItem(item);
+        }
+        return;
+      }
+      if (f is String && (f.contains('|') || classFeatureMap != null)) {
+        final resolved = _lookupFeature(f, classFeatureMap);
+        if (resolved != null) {
+          final fName = resolved['name']?.toString() ?? '';
+          final level = resolved['level'] != null ? ' (Level ${resolved['level']})' : '';
+          final fContent = transformer.transformEntries(
+            resolved['entries'] ?? resolved['entry'] ?? resolved['desc'] ?? resolved['description'],
+            defaultRuleset: ruleset,
+          ).markdown;
+          if (fName.isNotEmpty || fContent.isNotEmpty) {
+            featureBlocks.add('### $fName$level\n$fContent');
+          }
+          return;
+        }
+        if (f.contains('|') && !f.contains(' ')) {
+          return;
+        }
+      } else if (f is Map && (f.containsKey('classFeature') || f.containsKey('subclassFeature'))) {
+        final resolved = _lookupFeature(f, classFeatureMap);
+        if (resolved != null) {
+          final fName = resolved['name']?.toString() ?? '';
+          final level = resolved['level'] != null ? ' (Level ${resolved['level']})' : '';
+          final fContent = transformer.transformEntries(
+            resolved['entries'] ?? resolved['entry'] ?? resolved['desc'] ?? resolved['description'],
+            defaultRuleset: ruleset,
+          ).markdown;
+          if (fName.isNotEmpty || fContent.isNotEmpty) {
+            featureBlocks.add('### $fName$level\n$fContent');
+          }
+          return;
+        }
+      }
+      otherEntries.add(f);
+    }
+
+    if (features is List) {
+      for (final f in features) {
+        processItem(f);
+      }
+    } else {
+      otherEntries.add(features);
+    }
+
+    final parsedOther = transformer.transformEntries(otherEntries, defaultRuleset: ruleset).markdown;
+    final allParts = [
+      if (parsedOther.isNotEmpty) parsedOther,
+      ...featureBlocks,
+    ];
+    return allParts.join('\n\n').trim();
+  }
+
+  String _parseSubclassFeatures(
+    dynamic entriesData,
+    RulesetVersion ruleset,
+    Map<String, Map<String, dynamic>>? subclassFeatureMap,
+  ) {
+    if (entriesData == null) return '';
+
+    final featureBlocks = <String>[];
+    final otherEntries = <dynamic>[];
+
+    void processItem(dynamic f) {
+      if (f is List) {
+        for (final item in f) {
+          processItem(item);
+        }
+        return;
+      }
+      if (f is String && (f.contains('|') || subclassFeatureMap != null)) {
+        final resolved = _lookupFeature(f, subclassFeatureMap);
+        if (resolved != null) {
+          final fName = resolved['name']?.toString() ?? '';
+          final level = resolved['level'] != null ? ' (Level ${resolved['level']})' : '';
+          final fContent = transformer.transformEntries(
+            resolved['entries'] ?? resolved['entry'] ?? resolved['desc'] ?? resolved['description'],
+            defaultRuleset: ruleset,
+          ).markdown;
+          if (fName.isNotEmpty || fContent.isNotEmpty) {
+            featureBlocks.add('### $fName$level\n$fContent');
+          }
+          return;
+        }
+        if (f.contains('|') && !f.contains(' ')) {
+          return;
+        }
+      } else if (f is Map && (f.containsKey('subclassFeature') || f.containsKey('classFeature'))) {
+        final resolved = _lookupFeature(f, subclassFeatureMap);
+        if (resolved != null) {
+          final fName = resolved['name']?.toString() ?? '';
+          final level = resolved['level'] != null ? ' (Level ${resolved['level']})' : '';
+          final fContent = transformer.transformEntries(
+            resolved['entries'] ?? resolved['entry'] ?? resolved['desc'] ?? resolved['description'],
+            defaultRuleset: ruleset,
+          ).markdown;
+          if (fName.isNotEmpty || fContent.isNotEmpty) {
+            featureBlocks.add('### $fName$level\n$fContent');
+          }
+          return;
+        }
+      }
+      otherEntries.add(f);
+    }
+
+    if (entriesData is List) {
+      for (final f in entriesData) {
+        processItem(f);
+      }
+    } else {
+      otherEntries.add(entriesData);
+    }
+
+    final parsedOther = transformer.transformEntries(otherEntries, defaultRuleset: ruleset).markdown;
+    final allParts = [
+      if (parsedOther.isNotEmpty) parsedOther,
+      ...featureBlocks,
+    ];
+    return allParts.join('\n\n').trim();
   }
 
   String _slugify(String name) {

@@ -10,6 +10,7 @@ import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/monster_codex_data.dart';
+import '../../models/spellbook_data.dart';
 import '../acl/compendium_background_parser.dart';
 import '../acl/compendium_class_parser.dart';
 import '../acl/compendium_feat_parser.dart';
@@ -182,6 +183,10 @@ class HomebrewPersistenceService {
 
   /// Synchronizes all loaded homebrew entities into global runtime libraries.
   Future<void> syncToLibraries() async {
+    final spells = await loadCustomSpells();
+    final spellItems = spells.map(spellToSpellItem).toList();
+    SpellbookLibrary.setHomebrewSpells(spellItems);
+
     final monsters = await loadCustomMonsters();
     MonsterCodexLibrary.setHomebrewMonsters(monsters);
 
@@ -216,6 +221,54 @@ class HomebrewPersistenceService {
             ))
         .toList();
     SrdFeatureOptions.setCustomInvocations(customInvocations);
+  }
+
+  /// Converts a [Spell] domain entity to a [SpellItem] for [SpellbookLibrary].
+  static SpellItem spellToSpellItem(Spell s) {
+    final school = SpellSchool.values.firstWhere(
+      (e) => e.name.toLowerCase() == s.school.toLowerCase(),
+      orElse: () => SpellSchool.evocation,
+    );
+    final compList = <String>[];
+    if (s.components.v) compList.add('V');
+    if (s.components.s) compList.add('S');
+    if (s.components.m) {
+      final desc = s.components.materialDescription;
+      compList.add(desc != null && desc.isNotEmpty ? 'M ($desc)' : 'M');
+    }
+
+    final durationText = s.duration.rawText ??
+        (s.duration.type == DurationType.instantaneous
+            ? 'Instantaneous'
+            : (s.duration.type == DurationType.permanent
+                ? 'Permanent'
+                : (s.duration.type == DurationType.special
+                    ? 'Special'
+                    : '${s.duration.durationSeconds} seconds')));
+
+    final editionDetails = SpellEditionDetails(
+      castingTime: s.castingTime.cost > 0
+          ? '${s.castingTime.cost} ${s.castingTime.actionType.name}'
+          : '1 Action',
+      range: s.range.isNotEmpty ? s.range : 'Self',
+      components: compList.join(', '),
+      duration: durationText,
+      concentration: s.duration.requiresConcentration,
+      description: [s.descriptionMarkdown],
+      higherLevels: s.higherLevelsMarkdown,
+      classes: const [],
+      rollFormula: s.damageMath.isNotEmpty ? s.damageMath.first.diceFormula : null,
+      damageOrHealType: s.damageMath.isNotEmpty ? s.damageMath.first.damageType.name : null,
+    );
+
+    return SpellItem(
+      id: s.id.slug,
+      name: s.name,
+      level: s.level,
+      school: school,
+      rules2014: editionDetails,
+      rules2024: editionDetails,
+    );
   }
 
   /// Saves a custom monster to persistent storage and updates MonsterCodexLibrary.

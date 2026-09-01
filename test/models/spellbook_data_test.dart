@@ -5,7 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 void main() {
   group('SpellbookLibrary & SpellItem Data Model Tests', () {
     test('contains comprehensive spells across schools and levels', () {
-      const spells = SpellbookLibrary.allSpells;
+      final spells = SpellbookLibrary.allSpells;
       expect(spells.isNotEmpty, isTrue);
 
       final schools = spells.map((s) => s.school).toSet();

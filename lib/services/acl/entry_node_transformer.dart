@@ -176,6 +176,17 @@ class EntryNodeTransformer {
         _parseNode(node['entries'] ?? node['entry'] ?? node['desc'] ?? node['description'], buffer, math, refs, depth + 1, defaultRuleset);
 
       // -----------------------------------------------------------------------
+      // Options block — renders each option choice recursively.
+      // -----------------------------------------------------------------------
+      case 'options':
+        if (name != null && name.isNotEmpty) {
+          final prefix = '#' * (depth + 3).clamp(1, 6);
+          buffer.writeln('$prefix $name');
+          buffer.writeln();
+        }
+        _parseNode(node['entries'] ?? node['items'] ?? node['options'], buffer, math, refs, depth + 1, defaultRuleset);
+
+      // -----------------------------------------------------------------------
       // Default — if there's an `entries` or `entry` key, recurse into it.
       // Emit the name (if any) as a heading first.
       // -----------------------------------------------------------------------
@@ -199,6 +210,12 @@ class EntryNodeTransformer {
           _parseNode(node['subclassFeatures'], buffer, math, refs, depth + 1, defaultRuleset);
         } else if (node.containsKey('features')) {
           _parseNode(node['features'], buffer, math, refs, depth + 1, defaultRuleset);
+        } else if (node.containsKey('items')) {
+          _parseNode(node['items'], buffer, math, refs, depth + 1, defaultRuleset);
+        } else if (node.containsKey('options')) {
+          _parseNode(node['options'], buffer, math, refs, depth + 1, defaultRuleset);
+        } else if (node.containsKey('subentries')) {
+          _parseNode(node['subentries'], buffer, math, refs, depth + 1, defaultRuleset);
         }
     }
   }
@@ -401,9 +418,33 @@ class EntryNodeTransformer {
           return '**`$primary ${dmgType.name}`**';
 
         case 'hit':
-        case 'atk':
           final pfx = primary.startsWith('+') || primary.startsWith('-') ? '' : '+';
           return '**`$pfx$primary`**';
+
+        case 'atk':
+          final cleanAtk = primary.toLowerCase().replaceAll(' ', '');
+          switch (cleanAtk) {
+            case 'mw':
+              return '*Melee Weapon Attack:*';
+            case 'rw':
+              return '*Ranged Weapon Attack:*';
+            case 'ms':
+              return '*Melee Spell Attack:*';
+            case 'rs':
+              return '*Ranged Spell Attack:*';
+            case 'mw,rw':
+            case 'rw,mw':
+              return '*Melee or Ranged Weapon Attack:*';
+            case 'ms,rs':
+            case 'rs,ms':
+              return '*Melee or Ranged Spell Attack:*';
+            default:
+              if (RegExp(r'^[+-]?\d+$').hasMatch(cleanAtk)) {
+                final pfx = cleanAtk.startsWith('+') || cleanAtk.startsWith('-') ? '' : '+';
+                return '**`$pfx$cleanAtk`**';
+              }
+              return '*$primary:*';
+          }
 
         case 'recharge':
           return primary.isEmpty ? '*(Recharge 6)*' : '*(Recharge $primary–6)*';
@@ -422,6 +463,7 @@ class EntryNodeTransformer {
         // Entity references
         case 'spell':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           final ruleset = _mapSourceToRuleset(
             parts.length > 1 ? parts[1] : null,
             defaultRuleset,
@@ -429,75 +471,82 @@ class EntryNodeTransformer {
           refsList.add(EntityReference<Spell>(
             refType: EntityType.spell,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
             rulesetPreferred: ruleset,
           ));
-          return '[$primary](ref://spell/$slug)';
+          return '[$displayName](ref://spell/$slug)';
 
         case 'item':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           refsList.add(EntityReference<EquipmentItem>(
             refType: EntityType.equipment,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
           ));
-          return '[$primary](ref://equipment/$slug)';
+          return '[$displayName](ref://equipment/$slug)';
 
         case 'creature':
         case 'monster':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           refsList.add(EntityReference<Monster>(
             refType: EntityType.monster,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
           ));
-          return '[$primary](ref://monster/$slug)';
+          return '[$displayName](ref://monster/$slug)';
 
         case 'class':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           refsList.add(EntityReference<CharacterClass>(
             refType: EntityType.classDefinition,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
           ));
-          return '[$primary](ref://class/$slug)';
+          return '[$displayName](ref://class/$slug)';
 
         case 'subclass':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           refsList.add(EntityReference<Subclass>(
             refType: EntityType.subclass,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
           ));
-          return '[$primary](ref://subclass/$slug)';
+          return '[$displayName](ref://subclass/$slug)';
 
         case 'race':
         case 'species':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           refsList.add(EntityReference<Race>(
             refType: EntityType.species,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
           ));
-          return '[$primary](ref://species/$slug)';
+          return '[$displayName](ref://species/$slug)';
 
         case 'feat':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           refsList.add(EntityReference<Feat>(
             refType: EntityType.feat,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
           ));
-          return '[$primary](ref://feat/$slug)';
+          return '[$displayName](ref://feat/$slug)';
 
         case 'background':
           final slug = _slugify(primary);
+          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
           refsList.add(EntityReference<Background>(
             refType: EntityType.background,
             slug: slug,
-            displayName: primary,
+            displayName: displayName,
           ));
-          return '[$primary](ref://background/$slug)';
+          return '[$displayName](ref://background/$slug)';
 
         // Feature references — strip pipe syntax, bold the feature name
         case 'classfeature':

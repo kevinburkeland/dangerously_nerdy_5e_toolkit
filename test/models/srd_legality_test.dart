@@ -91,7 +91,7 @@ void main() {
     });
 
     test('Spellbook Library contains no WotC Product Identity terms in spell names or IDs', () {
-      const spells = SpellbookLibrary.allSpells;
+      final spells = SpellbookLibrary.allSpells;
       expect(spells, isNotEmpty);
 
       for (final spell in spells) {

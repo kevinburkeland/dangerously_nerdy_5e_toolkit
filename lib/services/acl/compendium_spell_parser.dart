@@ -319,15 +319,17 @@ class CompendiumSpellParser {
       final rawM = compData['m'];
       if (rawM is String) {
         m = true;
-        matDesc = rawM;
+        matDesc = rawM.trim();
       } else if (rawM is Map) {
         m = true;
-        matDesc = rawM['text']?.toString();
-        final rawCost = rawM['cost'] as num?;
+        matDesc = rawM['text']?.toString()?.trim();
+        final rawCost = rawM['cost'] is num
+            ? (rawM['cost'] as num)
+            : (rawM['cost'] is String ? num.tryParse(rawM['cost'].toString()) : null);
         cost = rawCost != null
-            ? (rawCost >= 100 ? rawCost ~/ 100 : rawCost.toInt())
+            ? (rawCost >= 100 ? (rawCost / 100).round() : rawCost.toInt())
             : 0;
-        consumed = rawM['consume'] == true;
+        consumed = rawM['consume'] == true || rawM['consumed'] == true;
       } else if (rawM == true) {
         m = true;
         matDesc = 'Material components';
@@ -339,7 +341,8 @@ class CompendiumSpellParser {
         if (str.startsWith('S')) s = true;
         if (str.startsWith('M')) {
           m = true;
-          matDesc = item.toString();
+          final match = RegExp(r'M\s*\((.*?)\)', caseSensitive: false).firstMatch(item.toString());
+          matDesc = match != null ? match.group(1)!.trim() : item.toString();
         }
       }
     } else if (compData is String) {
@@ -348,7 +351,8 @@ class CompendiumSpellParser {
       if (upper.contains('S')) s = true;
       if (upper.contains('M')) {
         m = true;
-        matDesc = compData;
+        final match = RegExp(r'M\s*\((.*?)\)', caseSensitive: false).firstMatch(compData);
+        matDesc = match != null ? match.group(1)!.trim() : compData;
       }
     }
 
