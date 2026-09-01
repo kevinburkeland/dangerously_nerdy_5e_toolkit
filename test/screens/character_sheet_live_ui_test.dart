@@ -397,7 +397,7 @@ void main() {
     });
 
     testWidgets('2014 Variant Human character creation includes Feat step and saves starting feat', (tester) async {
-      tester.view.physicalSize = const Size(1200, 3000);
+      tester.view.physicalSize = const Size(1200, 6000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 

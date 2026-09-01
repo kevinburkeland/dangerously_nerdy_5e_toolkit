@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/feats_compendium_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/feats/feat_card.dart';
@@ -12,12 +13,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  Widget buildTestScreen({SettingsProvider? provider}) {
+  Widget buildTestScreen({SettingsProvider? provider, DmRulesEdition? edition}) {
     final settingsProvider = provider ?? SettingsProvider();
     return SettingsScope(
       notifier: settingsProvider,
-      child: const MaterialApp(
-        home: FeatsCompendiumScreen(),
+      child: MaterialApp(
+        home: FeatsCompendiumScreen(initialEdition: edition),
       ),
     );
   }
@@ -48,5 +49,25 @@ void main() {
 
     // Verify detail dialog is shown
     expect(find.textContaining('Initiative Proficiency'), findsWidgets);
+  });
+
+  testWidgets('FeatsCompendiumScreen renders full feats catalogue in 2014 rules edition mode', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(buildTestScreen(edition: DmRulesEdition.v2014));
+    await tester.pumpAndSettle();
+
+    // Verify 2014 feats are fully populated
+    expect(find.byType(FeatCard), findsWidgets);
+    expect(find.text('Alert'), findsWidgets);
+    expect(find.text('Healer'), findsWidgets);
+    expect(find.text('Lucky'), findsWidgets);
+
+    // Search for War Caster
+    await tester.enterText(find.byType(TextField), 'War Caster');
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(FeatCard, 'War Caster'), findsOneWidget);
   });
 }

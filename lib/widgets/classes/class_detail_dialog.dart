@@ -166,10 +166,27 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
           if (cls.armorProficiencies.isNotEmpty) _buildMetaRow('Armor Training', cls.armorProficiencies.join(', ')),
           if (cls.weaponProficiencies.isNotEmpty) _buildMetaRow('Weapon Training', cls.weaponProficiencies.join(', ')),
           if (cls.spellcastingAbility != null) _buildMetaRow('Spellcasting', '${cls.spellcastingAbility} modifier'),
-          _buildMetaRow('Subclass Level', 'Level ${cls.subclassSelectionLevel} Archetype'),
+          _buildMetaRow(
+            'Subclass Level',
+            _getSubclassLevelString(cls.id.slug, cls.subclassSelectionLevel),
+          ),
         ],
       ),
     );
+  }
+
+  String _getSubclassLevelString(String slug, int level) {
+    switch (slug.toLowerCase()) {
+      case 'cleric':
+      case 'sorcerer':
+      case 'warlock':
+        return 'Level 3 (2024) • Level 1 (2014 RAW)';
+      case 'druid':
+      case 'wizard':
+        return 'Level 3 (2024) • Level 2 (2014 RAW)';
+      default:
+        return 'Level $level Archetype';
+    }
   }
 
   Widget _buildMetaRow(String label, String value) {

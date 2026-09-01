@@ -321,6 +321,223 @@ class SrdFeatsLibrary {
     },
   );
 
+  static const Feat crossbowExpert = Feat(
+    id: EntityId(slug: 'crossbow-expert', ruleset: RulesetVersion.v2024),
+    name: 'Crossbow Expert',
+    prerequisite: 'Dexterity 13+ or Level 4+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Ignore Loading.** You ignore the loading property of crossbows with which you are proficient.\n\n'
+        '**Close Combat Shooter.** Being within 5 feet of a hostile creature doesn’t impose disadvantage on your ranged attack rolls.\n\n'
+        '**Hand Crossbow Bonus Attack.** When you use the Attack action and attack with a one-handed weapon, you can use a bonus action to attack with a hand crossbow you are holding.',
+    customProperties: {
+      'ignoreLoading': true,
+      'noMeleeRangeDisadvantage': true,
+    },
+  );
+
+  static const Feat defensiveDuelist = Feat(
+    id: EntityId(slug: 'defensive-duelist', ruleset: RulesetVersion.v2024),
+    name: 'Defensive Duelist',
+    prerequisite: 'Dexterity 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Parry.** When you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you.',
+    customProperties: {
+      'reactionAcBonus': 'profBonus',
+    },
+  );
+
+  static const Feat elementalAdept = Feat(
+    id: EntityId(slug: 'elemental-adept', ruleset: RulesetVersion.v2024),
+    name: 'Elemental Adept',
+    prerequisite: 'Spellcasting feature',
+    category: 'General',
+    descriptionMarkdown:
+        '**Resistance Bypass.** Spells you cast ignore resistance to damage of the chosen type (Acid, Cold, Fire, Lightning, or Thunder).\n\n'
+        '**Damage Floor.** When you roll damage for a spell you cast that deals damage of that type, you can treat any 1 on a damage die as a 2.',
+    customProperties: {
+      'bypassesElementalResistance': true,
+      'onesAsTwos': true,
+    },
+  );
+
+  static const Feat inspiringLeader = Feat(
+    id: EntityId(slug: 'inspiring-leader', ruleset: RulesetVersion.v2024),
+    name: 'Inspiring Leader',
+    prerequisite: 'Charisma 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Inspiring Speech.** Spend 10 minutes inspiring your companions. Choose up to 6 friendly creatures (which can include yourself) within 30 feet. Each creature gains Temporary HP equal to your level + your Charisma modifier once per Short or Long Rest.',
+    customProperties: {
+      'tempHpFormula': 'level+chaMod',
+    },
+  );
+
+  static const Feat mageSlayer = Feat(
+    id: EntityId(slug: 'mage-slayer', ruleset: RulesetVersion.v2024),
+    name: 'Mage Slayer',
+    category: 'General',
+    descriptionMarkdown:
+        '**Spell Disruption.** When a creature within 5 feet of you casts a spell, you can use your reaction to make a melee weapon attack against that creature.\n\n'
+        '**Concentration Breaker.** When you damage a creature that is concentrating on a spell, that creature has disadvantage on the saving throw it makes to maintain its concentration.\n\n'
+        '**Spell Resistance.** You have advantage on saving throws against spells cast by creatures within 5 feet of you.',
+    customProperties: {
+      'reactionAttackOnSpellCast': true,
+      'disadvantageOnConcentration': true,
+      'advantageOnCloseSpellSaves': true,
+    },
+  );
+
+  static const Feat mediumArmorMaster = Feat(
+    id: EntityId(slug: 'medium-armor-master', ruleset: RulesetVersion.v2024),
+    name: 'Medium Armor Master',
+    prerequisite: 'Medium Armor Proficiency',
+    category: 'General',
+    descriptionMarkdown:
+        '**No Stealth Disadvantage.** Wearing medium armor doesn’t impose disadvantage on your Dexterity (Stealth) checks.\n\n'
+        '**Dexterity Cap Increase.** When you wear medium armor, you can add 3, rather than 2, to your AC if you have a Dexterity of 16 or higher.',
+    customProperties: {
+      'noStealthDisadvantage': true,
+      'maxMediumArmorDexBonus': 3,
+    },
+  );
+
+  static const Feat mountedCombatant = Feat(
+    id: EntityId(slug: 'mounted-combatant', ruleset: RulesetVersion.v2024),
+    name: 'Mounted Combatant',
+    category: 'General',
+    descriptionMarkdown:
+        '**Advantage from High Ground.** You have advantage on melee attack rolls against any unmounted creature that is smaller than your mount.\n\n'
+        '**Mount Redirection.** You can force an attack targeted at your mount to target you instead.\n\n'
+        '**Mount Evasion.** If your mount is subjected to an effect that allows a Dexterity saving throw to take only half damage, it instead takes no damage if it succeeds on the saving throw, and only half damage if it fails.',
+    customProperties: {
+      'advantageMounted': true,
+      'mountEvasion': true,
+    },
+  );
+
+  static const Feat observant = Feat(
+    id: EntityId(slug: 'observant', ruleset: RulesetVersion.v2024),
+    name: 'Observant',
+    prerequisite: 'Intelligence or Wisdom 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Stat Increase.** Increase your Intelligence or Wisdom score by 1, to a maximum of 20.\n\n'
+        '**Lip Reading.** If you can see a creature’s mouth while it is speaking a language you understand, you can interpret what it’s saying by reading its lips.\n\n'
+        '**Passive Senses Bonus.** You have a +5 bonus to your passive Wisdom (Perception) and passive Intelligence (Investigation) scores.',
+    customProperties: {
+      'statIncrease': 1,
+      'passivePerceptionBonus': 5,
+      'passiveInvestigationBonus': 5,
+    },
+  );
+
+  static const Feat ritualCaster = Feat(
+    id: EntityId(slug: 'ritual-caster', ruleset: RulesetVersion.v2024),
+    name: 'Ritual Caster',
+    prerequisite: 'Intelligence or Wisdom 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Ritual Book.** You acquire a ritual book holding two 1st-level spells of your choice with the ritual tag from a chosen class spell list. You can cast these spells as rituals.\n\n'
+        '**Copying Rituals.** You can add other ritual spells to your ritual book if you find them on scrolls or spellbooks.',
+    customProperties: {
+      'grantsRitualBook': true,
+    },
+  );
+
+  static const Feat spellSniper = Feat(
+    id: EntityId(slug: 'spell-sniper', ruleset: RulesetVersion.v2024),
+    name: 'Spell Sniper',
+    prerequisite: 'The ability to cast at least one spell',
+    category: 'General',
+    descriptionMarkdown:
+        '**Double Range.** When you cast a spell that requires you to make an attack roll, the spell’s range is doubled.\n\n'
+        '**Bypass Cover.** Your ranged spell attacks ignore half cover and three-quarters cover.\n\n'
+        '**Bonus Attack Cantrip.** You learn one cantrip that requires an attack roll.',
+    customProperties: {
+      'doubleSpellRange': true,
+      'ignoresSpellCover': true,
+    },
+  );
+
+  static const Feat athlete = Feat(
+    id: EntityId(slug: 'athlete', ruleset: RulesetVersion.v2024),
+    name: 'Athlete',
+    prerequisite: 'Strength or Dexterity 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Stat Increase.** Increase your Strength or Dexterity score by 1, to a maximum of 20.\n\n'
+        '**Quick Stand.** When you are prone, standing up uses only 5 feet of your movement.\n\n'
+        '**Swift Climb.** Climbing doesn’t cost you extra movement.\n\n'
+        '**Running Jump.** You can make a running long jump or a running high jump after moving only 5 feet on foot, rather than 10 feet.',
+    customProperties: {
+      'statIncrease': 1,
+      'quickStandFeet': 5,
+      'climbNoExtraCost': true,
+    },
+  );
+
+  static const Feat actor = Feat(
+    id: EntityId(slug: 'actor', ruleset: RulesetVersion.v2024),
+    name: 'Actor',
+    prerequisite: 'Charisma 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Stat Increase.** Increase your Charisma score by 1, to a maximum of 20.\n\n'
+        '**Impersonation Advantage.** You have advantage on Charisma (Deception) and Charisma (Performance) checks when trying to pass yourself off as a different person.\n\n'
+        '**Vocal Mimicry.** You can mimic the speech of another person or the sounds made by other creatures that you have heard for at least 1 minute.',
+    customProperties: {
+      'statIncrease': 1,
+      'advantageOnDeceptionImpersonation': true,
+    },
+  );
+
+  static const Feat dungeonDelver = Feat(
+    id: EntityId(slug: 'dungeon-delver', ruleset: RulesetVersion.v2024),
+    name: 'Dungeon Delver',
+    category: 'General',
+    descriptionMarkdown:
+        '**Trap Detection.** You have advantage on Wisdom (Perception) and Intelligence (Investigation) checks made to detect the presence of secret doors.\n\n'
+        '**Trap Saves & Resistance.** You have advantage on saving throws made to avoid or resist traps, and resistance to the damage dealt by traps.\n\n'
+        '**Pace Freedom.** Searching for traps doesn’t slow your travel pace.',
+    customProperties: {
+      'advantageSecretDoors': true,
+      'advantageTrapSaves': true,
+      'trapDamageResistance': true,
+    },
+  );
+
+  static const Feat durable = Feat(
+    id: EntityId(slug: 'durable', ruleset: RulesetVersion.v2024),
+    name: 'Durable',
+    prerequisite: 'Constitution 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Stat Increase.** Increase your Constitution score by 1, to a maximum of 20.\n\n'
+        '**Minimum HP Recovery.** When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2).',
+    customProperties: {
+      'statIncrease': 1,
+      'minHitDieRecoveryTwiceCon': true,
+    },
+  );
+
+  static const Feat keenMind = Feat(
+    id: EntityId(slug: 'keen-mind', ruleset: RulesetVersion.v2024),
+    name: 'Keen Mind',
+    prerequisite: 'Intelligence 13+',
+    category: 'General',
+    descriptionMarkdown:
+        '**Stat Increase.** Increase your Intelligence score by 1, to a maximum of 20.\n\n'
+        '**Direction Sense.** You always know which way is north.\n\n'
+        '**Time Sense.** You always know the number of hours left before the next sunrise or sunset.\n\n'
+        '**Perfect Recall.** You can accurately recall anything you have seen or heard within the past month.',
+    customProperties: {
+      'statIncrease': 1,
+      'perfectRecall': true,
+    },
+  );
+
   /// Base Core SRD Feats
   static final List<Feat> _baseFeats = [
     alert2024,
@@ -344,6 +561,21 @@ class SrdFeatsLibrary {
     dualWielder,
     heavyArmorMaster,
     grappler,
+    crossbowExpert,
+    defensiveDuelist,
+    elementalAdept,
+    inspiringLeader,
+    mageSlayer,
+    mediumArmorMaster,
+    mountedCombatant,
+    observant,
+    ritualCaster,
+    spellSniper,
+    athlete,
+    actor,
+    dungeonDelver,
+    durable,
+    keenMind,
   ];
 
   static List<Feat> _customFeats = [];

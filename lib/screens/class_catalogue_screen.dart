@@ -126,28 +126,19 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
     DmRulesEdition edition,
     Set<String> pinnedIds,
   ) {
-    final ruleset = edition == DmRulesEdition.v2024 ? RulesetVersion.v2024 : RulesetVersion.v2014;
-
     return allClasses.where((cls) {
-      // View Mode Filter
+      // 1. View Mode Filter
       if (_viewMode == ClassViewMode.myBookmarks && !pinnedIds.contains(cls.id.slug)) {
         return false;
       }
       if (_viewMode == ClassViewMode.homebrew && cls.id.ruleset != RulesetVersion.homebrew) {
         return false;
       }
-      if (_viewMode == ClassViewMode.revisions2024 && cls.id.ruleset != RulesetVersion.v2024) {
-        return false;
+      if (_viewMode == ClassViewMode.revisions2024) {
+        if (cls.id.ruleset == RulesetVersion.homebrew) return false;
       }
 
-      // Ruleset baseline filter
-      if (_viewMode == ClassViewMode.allClasses) {
-        if (cls.id.ruleset != RulesetVersion.homebrew && cls.id.ruleset != ruleset) {
-          return false;
-        }
-      }
-
-      // Role Filter
+      // 2. Role Filter
       if (!_matchesRole(cls, _roleFilter)) {
         return false;
       }

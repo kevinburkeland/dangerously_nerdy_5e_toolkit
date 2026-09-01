@@ -99,35 +99,50 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
   }
 
   List<Feat> _filterFeats(List<Feat> allFeats, DmRulesEdition edition, Set<String> pinnedIds) {
-    final ruleset = edition == DmRulesEdition.v2024 ? RulesetVersion.v2024 : RulesetVersion.v2014;
+    final is2024 = edition == DmRulesEdition.v2024;
 
     return allFeats.where((feat) {
-      // View Mode Filter
+      // 1. View Mode Filter
       if (_viewMode == FeatsViewMode.myBookmarks && !pinnedIds.contains(feat.id.slug)) {
         return false;
       }
       if (_viewMode == FeatsViewMode.homebrew && feat.id.ruleset != RulesetVersion.homebrew) {
         return false;
       }
-      if (_viewMode == FeatsViewMode.revisions2024 && feat.id.ruleset != RulesetVersion.v2024) {
-        return false;
+      if (_viewMode == FeatsViewMode.revisions2024) {
+        // Show 2024 specific Origin feats or revised feats
+        if (feat.id.ruleset == RulesetVersion.homebrew) return false;
+        final has2024Revision = feat.category == 'Origin' ||
+            feat.id.slug == 'great-weapon-master' ||
+            feat.id.slug == 'sharpshooter' ||
+            feat.id.slug == 'war-caster' ||
+            feat.id.slug == 'heavy-armor-master' ||
+            feat.id.slug == 'grappler' ||
+            feat.id.slug == 'alert' ||
+            feat.id.slug == 'tavern-brawler';
+        if (!has2024Revision) return false;
       }
 
-      // Ruleset baseline filter (unless viewing homebrew or all)
+      // 2. Ruleset / Edition Filter for All Feats view
       if (_viewMode == FeatsViewMode.allFeats) {
-        if (feat.id.ruleset != RulesetVersion.homebrew && feat.id.ruleset != ruleset) {
-          return false;
+        if (!is2024) {
+          // 2014 RAW mode: Hide 2024-exclusive newly invented feats (Crafter, Musician)
+          if (feat.id.slug == 'crafter' || feat.id.slug == 'musician') {
+            return false;
+          }
         }
       }
 
-      // Category filter
+      // 3. Category Filter
       if (_selectedCategory != null) {
-        if (feat.category.toLowerCase() != _selectedCategory!.toLowerCase()) {
+        final featCat = (!is2024 && feat.category == 'Origin') ? 'General' : feat.category;
+        if (featCat.toLowerCase() != _selectedCategory!.toLowerCase() &&
+            feat.category.toLowerCase() != _selectedCategory!.toLowerCase()) {
           return false;
         }
       }
 
-      // Prerequisite filter
+      // 4. Prerequisite Filter
       if (_showOnlyPrerequisites && (feat.prerequisite == null || feat.prerequisite!.isEmpty)) {
         return false;
       }
@@ -135,7 +150,7 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
         return false;
       }
 
-      // Search Query filter
+      // 5. Search Query Filter
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
         final matchName = feat.name.toLowerCase().contains(q);
