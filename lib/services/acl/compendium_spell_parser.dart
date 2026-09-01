@@ -322,7 +322,7 @@ class CompendiumSpellParser {
         matDesc = rawM.trim();
       } else if (rawM is Map) {
         m = true;
-        matDesc = rawM['text']?.toString()?.trim();
+        matDesc = rawM['text']?.toString().trim();
         final rawCost = rawM['cost'] is num
             ? (rawM['cost'] as num)
             : (rawM['cost'] is String ? num.tryParse(rawM['cost'].toString()) : null);

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
@@ -6,7 +5,6 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_class_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_item_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_monster_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_spell_parser.dart';
@@ -38,15 +36,15 @@ void main() {
       expect(SpellbookLibrary.getSpellById('mystic-spark')!.level, 0);
 
       // Create a character with allocated mystic-spark
-      final character = Character(
-        id: const EntityId(slug: 'char-123', ruleset: RulesetVersion.homebrew),
+      const character = Character(
+        id: EntityId(slug: 'char-123', ruleset: RulesetVersion.homebrew),
         name: 'Sparky',
-        speciesRef: const EntityReference<Race>(
+        speciesRef: EntityReference<Race>(
           refType: EntityType.species,
           slug: 'human',
           displayName: 'Human',
         ),
-        baseScores: const AbilityScores(
+        baseScores: AbilityScores(
           strength: 10,
           dexterity: 10,
           constitution: 10,
@@ -54,8 +52,8 @@ void main() {
           wisdom: 10,
           charisma: 10,
         ),
-        resources: const CharacterResourcePool(currentHp: 8),
-        progression: const CharacterProgression(
+        resources: CharacterResourcePool(currentHp: 8),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference<CharacterClass>(
@@ -70,12 +68,12 @@ void main() {
         ),
         allocatedSpells: {
           'wizard': [
-            const EntityReference<Spell>(
+            EntityReference<Spell>(
               refType: EntityType.spell,
               slug: 'mystic-spark',
               displayName: 'Mystic Spark',
             ),
-            const EntityReference<Spell>(
+            EntityReference<Spell>(
               refType: EntityType.spell,
               slug: 'magic-missile',
               displayName: 'Magic Missile',
