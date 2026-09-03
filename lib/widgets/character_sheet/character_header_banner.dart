@@ -19,15 +19,18 @@ class CharacterHeaderBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final customColors = theme.extension<TabletopColors>();
-    final character = controller.character;
-    final stats = controller.stats;
-    final hasInspiration = controller.hasInspiration;
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final theme = Theme.of(context);
+        final customColors = theme.extension<TabletopColors>();
+        final character = controller.character;
+        final stats = controller.stats;
+        final hasInspiration = controller.hasInspiration;
 
-    final classSummary = character.progression.classes
-        .map((c) => '${c.classRef.displayName} ${c.level}')
-        .join(' / ');
+        final classSummary = character.progression.classes
+            .map((c) => '${c.classRef.displayName} ${c.level}')
+            .join(' / ');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -139,8 +142,8 @@ class CharacterHeaderBanner extends StatelessWidget {
                             LevelUpWizardDialog.show(
                               context,
                               character: controller.character,
-                              onLevelUpApplied: (upgraded) {
-                                controller.setCharacter(upgraded);
+                              onLevelUpApplied: (upgraded) async {
+                                await controller.setCharacter(upgraded, persist: true);
                               },
                             );
                           },
@@ -316,6 +319,8 @@ class CharacterHeaderBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+      },
     );
   }
 

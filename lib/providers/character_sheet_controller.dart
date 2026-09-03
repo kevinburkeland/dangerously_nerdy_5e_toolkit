@@ -59,11 +59,15 @@ class CharacterSheetController extends ChangeNotifier {
   }
 
   /// Sets a new active character, flushes any pending writes for the previous character, and re-evaluates stats.
-  Future<void> setCharacter(Character newCharacter) async {
+  /// If [persist] is true (default), immediately saves the updated character to storage.
+  Future<void> setCharacter(Character newCharacter, {bool persist = true}) async {
     await flush();
     _character = newCharacter;
     _recalculateStats();
     notifyListeners();
+    if (persist) {
+      await _persistImmediate();
+    }
   }
 
   /// Switches active ruleset edition (2014 vs 2024) and triggers live re-evaluation.

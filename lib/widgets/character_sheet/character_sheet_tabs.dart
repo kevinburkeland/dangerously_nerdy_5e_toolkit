@@ -3,15 +3,11 @@ import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
-import '../../models/characters/srd_classes_library.dart';
-import '../../models/characters/srd_feats_library.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
-import '../spellbook/spell_quick_roll_dialog.dart';
-import 'feature_list_item.dart';
 import 'features_traits_section.dart';
 import 'interactive_roll_action_card.dart';
 import 'interactive_spell_tile.dart';
@@ -272,9 +268,6 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
   // TAB 2: SKILLS & TRAITS
   // ==========================================
   Widget _buildSkillsTab(BuildContext context) {
-    final theme = Theme.of(context);
-    final character = widget.controller.character;
-
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [

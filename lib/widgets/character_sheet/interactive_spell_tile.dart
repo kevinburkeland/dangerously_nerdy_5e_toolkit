@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/domain/character_models.dart';
-import '../../models/domain/core_types.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/a11y_service.dart';

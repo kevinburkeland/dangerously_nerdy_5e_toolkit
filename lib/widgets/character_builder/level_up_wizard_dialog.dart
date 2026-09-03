@@ -346,7 +346,21 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
         ? DmRulesEdition.v2024
         : DmRulesEdition.v2014;
 
-    final cantripRefs = _newCantrips.map((c) {
+    final limits = SpellAllocationValidator.getLimitsForClass(
+      classSlug: _selectedClassSlug,
+      classLevel: _targetClassNewLevel,
+      abilityModifier: _getCastingModifier(_selectedClassSlug),
+      subclassSlug: subclassRef?.slug ?? _effectiveSubclassSlug,
+      edition: edition,
+    );
+    final curCantripsCount = widget.character.cantrips.length;
+    final maxAllowedNewCantrips = math.max(0, limits.maxCantrips - curCantripsCount);
+
+    final allowedCantrips = maxAllowedNewCantrips > 0
+        ? _newCantrips.take(maxAllowedNewCantrips).toList()
+        : <String>[];
+
+    final cantripRefs = allowedCantrips.map((c) {
       final spell = SpellbookLibrary.getSpellById(c);
       return EntityReference<Spell>(
         refType: EntityType.spell,
@@ -397,7 +411,9 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final updated = CharacterProgressionEngine.applyLevelUp(widget.character, request);
     HapticService.selectionTick(context);
     widget.onLevelUpApplied?.call(updated);
-    Navigator.of(context).pop(updated);
+    if (mounted) {
+      Navigator.of(context).pop(updated);
+    }
   }
 
   @override
@@ -612,6 +628,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                 _isMulticlass = !widget.character.progression.classes.any((c) => c.classRef.slug.toLowerCase() == val);
                 _rolledHp = _fixedAverageHp;
                 _selectedSubclass = null;
+                _newCantrips.clear();
+                _newSpells.clear();
               });
             }
           },
@@ -1399,7 +1417,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           s.id.toLowerCase().contains(q);
     }).toList();
 
-    final availableCantrips = filtered.where((s) => s.level == 0).toList();
+    final existingCantripSlugs = widget.character.cantrips.map((c) => c.slug).toSet();
+    final availableCantrips = filtered.where((s) => s.level == 0 && !existingCantripSlugs.contains(s.id)).toList();
     final availableLeveled = filtered.where((s) => s.level > 0).toList();
 
     final curCantripsCount = widget.character.cantrips.length;
@@ -1470,7 +1489,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
         ),
         const SizedBox(height: 4),
         Text(
-          'Quota for Level $_targetClassNewLevel: ${_newSpells.length}/$maxAllowedNewSpells New Leveled Spell(s)${maxAllowedNewCantrips > 0 ? ", ${_newCantrips.length}/$maxAllowedNewCantrips New Cantrip(s)" : ""}.',
+          'Quota for Level $_targetClassNewLevel: ${_newSpells.length}/$maxAllowedNewSpells New Leveled Spell(s)${maxAllowedNewCantrips > 0 ? ", ${_newCantrips.length}/$maxAllowedNewCantrips New Cantrip(s)" : ", 0 New Cantrips allowed ($curCantripsCount/${limits.maxCantrips} already known)"}.',
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
         ),
         const SizedBox(height: 12),
@@ -1748,8 +1767,37 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
 
         // Available Cantrips Grid
         if (availableCantrips.isNotEmpty) ...[
-          Text('Available Cantrips (${availableCantrips.length})',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent)),
+          Row(
+            children: [
+              Text(
+                'Available Cantrips (${availableCantrips.length})',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: maxAllowedNewCantrips > 0
+                      ? Colors.purpleAccent.withValues(alpha: 0.2)
+                      : Colors.white10,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: maxAllowedNewCantrips > 0 ? Colors.purpleAccent : Colors.white24,
+                  ),
+                ),
+                child: Text(
+                  maxAllowedNewCantrips > 0
+                      ? '${_newCantrips.length}/$maxAllowedNewCantrips Selected'
+                      : '0 New Allowed ($curCantripsCount/${limits.maxCantrips} known)',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: maxAllowedNewCantrips > 0 ? Colors.purpleAccent : Colors.white60,
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 6),
           Wrap(
             spacing: 6,
@@ -1765,10 +1813,15 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   HapticService.selectionTick(context);
                   setState(() {
                     if (selected) {
-                      if (maxAllowedNewCantrips > 0 && _newCantrips.length >= maxAllowedNewCantrips) {
+                      if (_newCantrips.length >= maxAllowedNewCantrips) {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Cannot select more than $maxAllowedNewCantrips new cantrip(s) at Level $_targetClassNewLevel.'),
+                            content: Text(
+                              maxAllowedNewCantrips == 0
+                                  ? 'No new cantrips granted at Level $_targetClassNewLevel (already at maximum $curCantripsCount/${limits.maxCantrips}).'
+                                  : 'Cannot select more than $maxAllowedNewCantrips new cantrip(s) at Level $_targetClassNewLevel.',
+                            ),
                             duration: const Duration(seconds: 2),
                           ),
                         );
@@ -1805,10 +1858,15 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   HapticService.selectionTick(context);
                   setState(() {
                     if (selected) {
-                      if (maxAllowedNewSpells > 0 && _newSpells.length >= maxAllowedNewSpells) {
+                      if (_newSpells.length >= maxAllowedNewSpells) {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Cannot select more than $maxAllowedNewSpells new spell(s) at Level $_targetClassNewLevel.'),
+                            content: Text(
+                              maxAllowedNewSpells == 0
+                                  ? 'No new leveled spells granted at Level $_targetClassNewLevel.'
+                                  : 'Cannot select more than $maxAllowedNewSpells new spell(s) at Level $_targetClassNewLevel.',
+                            ),
                             duration: const Duration(seconds: 2),
                           ),
                         );
@@ -1846,10 +1904,15 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               onPressed: () {
                 final txt = _customSpellController.text.trim();
                 if (txt.isNotEmpty) {
-                  if (maxAllowedNewSpells > 0 && _newSpells.length >= maxAllowedNewSpells) {
+                  if (_newSpells.length >= maxAllowedNewSpells) {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Cannot select more than $maxAllowedNewSpells new spell(s) at Level $_targetClassNewLevel.'),
+                        content: Text(
+                          maxAllowedNewSpells == 0
+                              ? 'No new leveled spells granted at Level $_targetClassNewLevel.'
+                              : 'Cannot select more than $maxAllowedNewSpells new spell(s) at Level $_targetClassNewLevel.',
+                        ),
                         duration: const Duration(seconds: 2),
                       ),
                     );

@@ -177,7 +177,7 @@ void main() {
           slug: 'elf',
           displayName: 'Elf',
         ),
-        resources: const CharacterResourcePool(),
+        resources: CharacterResourcePool(),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
@@ -308,7 +308,7 @@ void main() {
           slug: 'acolyte',
           displayName: 'Acolyte',
         ),
-        resources: const CharacterResourcePool(),
+        resources: CharacterResourcePool(),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
