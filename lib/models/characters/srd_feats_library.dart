@@ -258,8 +258,17 @@ class SrdFeatsLibrary {
     descriptionMarkdown:
         '**Stat & Save Mastery.** Choose one ability score: increase the chosen score by 1, and you gain proficiency in saving throws using that chosen ability score.',
     customProperties: {
+      'selectableAbilities': [
+        'strength',
+        'dexterity',
+        'constitution',
+        'intelligence',
+        'wisdom',
+        'charisma',
+      ],
       'grantsSavingThrowProficiency': true,
       'statIncrease': 1,
+      'riderDescription': 'Gain saving throw proficiency in the chosen ability.',
     },
   );
 
@@ -301,6 +310,7 @@ class SrdFeatsLibrary {
         '**Damage Reduction.** While wearing Heavy Armor, nonmagical bludgeoning, piercing, and slashing damage that you take from attacks is reduced by your Proficiency Bonus (or 3 in 2014).\n\n'
         '**Strength Increase.** Increase your Strength score by 1, to a maximum of 20.',
     customProperties: {
+      'selectableAbilities': ['strength'],
       'statIncrease': 1,
       'damageReductionProfBonus': true,
     },
@@ -427,6 +437,7 @@ class SrdFeatsLibrary {
         '**Lip Reading.** If you can see a creature’s mouth while it is speaking a language you understand, you can interpret what it’s saying by reading its lips.\n\n'
         '**Passive Senses Bonus.** You have a +5 bonus to your passive Wisdom (Perception) and passive Intelligence (Investigation) scores.',
     customProperties: {
+      'selectableAbilities': ['intelligence', 'wisdom'],
       'statIncrease': 1,
       'passivePerceptionBonus': 5,
       'passiveInvestigationBonus': 5,
@@ -472,6 +483,7 @@ class SrdFeatsLibrary {
         '**Swift Climb.** Climbing doesn’t cost you extra movement.\n\n'
         '**Running Jump.** You can make a running long jump or a running high jump after moving only 5 feet on foot, rather than 10 feet.',
     customProperties: {
+      'selectableAbilities': ['strength', 'dexterity'],
       'statIncrease': 1,
       'quickStandFeet': 5,
       'climbNoExtraCost': true,
@@ -488,6 +500,7 @@ class SrdFeatsLibrary {
         '**Impersonation Advantage.** You have advantage on Charisma (Deception) and Charisma (Performance) checks when trying to pass yourself off as a different person.\n\n'
         '**Vocal Mimicry.** You can mimic the speech of another person or the sounds made by other creatures that you have heard for at least 1 minute.',
     customProperties: {
+      'selectableAbilities': ['charisma'],
       'statIncrease': 1,
       'advantageOnDeceptionImpersonation': true,
     },
@@ -517,6 +530,7 @@ class SrdFeatsLibrary {
         '**Stat Increase.** Increase your Constitution score by 1, to a maximum of 20.\n\n'
         '**Minimum HP Recovery.** When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2).',
     customProperties: {
+      'selectableAbilities': ['constitution'],
       'statIncrease': 1,
       'minHitDieRecoveryTwiceCon': true,
     },
@@ -533,6 +547,7 @@ class SrdFeatsLibrary {
         '**Time Sense.** You always know the number of hours left before the next sunrise or sunset.\n\n'
         '**Perfect Recall.** You can accurately recall anything you have seen or heard within the past month.',
     customProperties: {
+      'selectableAbilities': ['intelligence'],
       'statIncrease': 1,
       'perfectRecall': true,
     },

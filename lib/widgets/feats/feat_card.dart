@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../../providers/settings_provider.dart';
 import '../common/edition_diff_badge.dart';
 import '../interactive/pressable_card.dart';
 
@@ -9,6 +11,7 @@ import '../interactive/pressable_card.dart';
 class FeatCard extends StatelessWidget {
   final Feat feat;
   final bool isPinned;
+  final DmRulesEdition? edition;
   final VoidCallback onTogglePin;
   final VoidCallback onTap;
 
@@ -16,6 +19,7 @@ class FeatCard extends StatelessWidget {
     super.key,
     required this.feat,
     required this.isPinned,
+    this.edition,
     required this.onTogglePin,
     required this.onTap,
   });
@@ -66,12 +70,14 @@ class FeatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final accentColor = _getCategoryColor(feat.category, isDark);
-    final categoryIcon = _getCategoryIcon(feat.category);
+    final resolvedEdition = edition ?? SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final is2024Mode = resolvedEdition == DmRulesEdition.v2024;
+    final categoryLabel = (!is2024Mode && feat.category.toLowerCase() == 'origin') ? 'General' : feat.category;
+    final accentColor = _getCategoryColor(categoryLabel, isDark);
+    final categoryIcon = _getCategoryIcon(categoryLabel);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
     final isHomebrew = feat.id.ruleset == RulesetVersion.homebrew;
-    final is2024 = feat.id.ruleset == RulesetVersion.v2024;
 
     final cardBorderColor = isPinned
         ? pinColor.withValues(alpha: 0.85)
@@ -124,7 +130,7 @@ class FeatCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${feat.category} Feat • ${is2024 ? "2024 Revision" : (isHomebrew ? "Homebrew" : "2014 Classic")}',
+                      '$categoryLabel Feat • ${is2024Mode ? "2024 Revision" : (isHomebrew ? "Homebrew" : "2014 Classic")}',
                       style: TextStyle(
                         color: accentColor,
                         fontWeight: FontWeight.w600,
@@ -134,7 +140,7 @@ class FeatCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (is2024 && !isHomebrew) ...[
+              if (is2024Mode && !isHomebrew) ...[
                 const EditionDiffBadge(),
                 const SizedBox(width: 4),
               ],

@@ -6,7 +6,9 @@ import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/subclass_spells_library.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/spellbook_data.dart';
 import '../../services/haptic_service.dart';
 import '../../services/rules/character_progression_engine.dart';
@@ -69,6 +71,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   AbilityType _asiDualAbility2 = AbilityType.dexterity;
   String _selectedFeatSlug = 'tough';
   String _selectedFeatName = 'Tough';
+  AbilityType? _selectedFeatAbility;
 
   // Step 5: Spells
   final List<String> _newCantrips = [];
@@ -172,18 +175,9 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     ],
   };
 
-  static const List<Map<String, String>> _popularFeats = [
-    {'slug': 'tough', 'name': 'Tough', 'desc': '+2 Hit Points per character level'},
-    {'slug': 'war_caster', 'name': 'War Caster', 'desc': 'Advantage on concentration & spell opportunity attacks'},
-    {'slug': 'alert', 'name': 'Alert', 'desc': '+5 to Initiative & cannot be surprised'},
-    {'slug': 'mobile', 'name': 'Mobile', 'desc': '+10 ft speed & free disengage on melee attack'},
-    {'slug': 'lucky', 'name': 'Lucky', 'desc': '3 Luck Points to reroll d20 rolls'},
-    {'slug': 'sentinel', 'name': 'Sentinel', 'desc': 'Opportunity attacks stop movement to 0 ft'},
-    {'slug': 'sharpshooter', 'name': 'Sharpshooter', 'desc': 'Ignore half/three-quarters cover & -5/+10 ranged damage'},
-    {'slug': 'great_weapon_master', 'name': 'Great Weapon Master', 'desc': 'Bonus attack on crit/kill & -5/+10 heavy weapon damage'},
-    {'slug': 'fey_touched', 'name': 'Fey Touched', 'desc': '+1 INT/WIS/CHA, Misty Step & 1st level Div/Ench spell'},
-    {'slug': 'shadow_touched', 'name': 'Shadow Touched', 'desc': '+1 INT/WIS/CHA, Invisibility & 1st level Necro/Illusion spell'},
-  ];
+  List<Feat> get _availableFeats {
+    return SrdFeatsLibrary.getFeatsForRuleset(widget.character.id.ruleset);
+  }
 
   @override
   void initState() {
@@ -196,6 +190,16 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
 
     final hitDie = starting?.hitDie ?? 'd8';
     _rolledHp = CharacterProgressionEngine.getAverageHpForHitDie(hitDie);
+
+    final feats = _availableFeats;
+    if (feats.isNotEmpty) {
+      final initialFeat = feats.firstWhere((f) => f.id.slug == 'tough', orElse: () => feats.first);
+      _selectedFeatSlug = initialFeat.id.slug;
+      _selectedFeatName = initialFeat.name;
+      if (initialFeat.hasAbilityScoreIncrease) {
+        _selectedFeatAbility = initialFeat.selectableAbilities.first;
+      }
+    }
 
     _diceAnimController = AnimationController(
       vsync: this,
@@ -292,11 +296,29 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           asiChoice = AsiOrFeatChoice.asi(increases);
         }
       } else {
-        asiChoice = AsiOrFeatChoice.feat(EntityReference<DomainEntity>(
-          refType: EntityType.feat,
-          slug: _selectedFeatSlug,
-          displayName: _selectedFeatName,
-        ));
+        final feat = SrdFeatsLibrary.findBySlug(_selectedFeatSlug);
+        final increases = <AbilityType, int>{};
+        final saves = <AbilityType>{};
+        final chosenAbility = _selectedFeatAbility ??
+            (feat?.selectableAbilities.isNotEmpty == true ? feat!.selectableAbilities.first : null);
+
+        if (feat != null && feat.hasAbilityScoreIncrease && chosenAbility != null) {
+          increases[chosenAbility] = feat.statIncreaseAmount;
+          if (feat.grantsSavingThrowProficiency) {
+            saves.add(chosenAbility);
+          }
+        }
+
+        asiChoice = AsiOrFeatChoice.feat(
+          EntityReference<DomainEntity>(
+            refType: EntityType.feat,
+            slug: _selectedFeatSlug,
+            displayName: _selectedFeatName,
+          ),
+          abilityIncreases: increases,
+          savingThrowGrants: saves,
+          chosenFeatAbility: chosenAbility,
+        );
       }
     }
 
@@ -1084,17 +1106,138 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
             isExpanded: true,
             initialValue: _selectedFeatSlug,
             decoration: const InputDecoration(labelText: 'Select Feat', border: OutlineInputBorder()),
-            items: _popularFeats.map((f) => DropdownMenuItem(value: f['slug'], child: Text('${f['name']} — ${f['desc']}'))).toList(),
+            items: _availableFeats.map((f) {
+              final prereq = f.prerequisite != null ? ' (${f.prerequisite})' : '';
+              return DropdownMenuItem(
+                value: f.id.slug,
+                child: Text(
+                  '${f.name}$prereq',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
             onChanged: (v) {
               if (v != null) {
-                final match = _popularFeats.firstWhere((f) => f['slug'] == v);
+                final match = _availableFeats.firstWhere(
+                  (f) => f.id.slug == v,
+                  orElse: () => _availableFeats.first,
+                );
                 setState(() {
                   _selectedFeatSlug = v;
-                  _selectedFeatName = match['name']!;
+                  _selectedFeatName = match.name;
+                  if (match.hasAbilityScoreIncrease) {
+                    if (_selectedFeatAbility == null || !match.selectableAbilities.contains(_selectedFeatAbility)) {
+                      _selectedFeatAbility = match.selectableAbilities.first;
+                    }
+                  } else {
+                    _selectedFeatAbility = null;
+                  }
                 });
               }
             },
           ),
+          () {
+            final feat = _availableFeats.firstWhere(
+              (f) => f.id.slug == _selectedFeatSlug,
+              orElse: () => _availableFeats.first,
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (feat.hasAbilityScoreIncrease) ...[
+                  const SizedBox(height: 16),
+                  if (feat.requiresAbilityChoice) ...[
+                    Text(
+                      'Choose Ability Score to Increase (+${feat.statIncreaseAmount}):',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: feat.selectableAbilities.map((ability) {
+                        final isSelected = (_selectedFeatAbility ?? feat.selectableAbilities.first) == ability;
+                        return ChoiceChip(
+                          key: Key('feat_ability_chip_${ability.name}'),
+                          label: Text('${ability.shortName} (+${feat.statIncreaseAmount})'),
+                          selected: isSelected,
+                          selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
+                          onSelected: (sel) {
+                            if (sel) {
+                              HapticService.selectionTick(context);
+                              setState(() => _selectedFeatAbility = ability);
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ] else ...[
+                    Chip(
+                      avatar: const Icon(Icons.arrow_upward, size: 16, color: Colors.greenAccent),
+                      label: Text('+${feat.statIncreaseAmount} ${feat.selectableAbilities.first.shortName} (Included)'),
+                      backgroundColor: Colors.green.withValues(alpha: 0.15),
+                    ),
+                  ],
+                  if (feat.grantsSavingThrowProficiency) ...[
+                    const SizedBox(height: 10),
+                    () {
+                      final chosenSave = _selectedFeatAbility ?? feat.selectableAbilities.first;
+                      final alreadyProficient = widget.character.savingThrowProficiencies.contains(chosenSave);
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: alreadyProficient
+                              ? Colors.amber.shade900.withValues(alpha: 0.2)
+                              : Colors.blue.shade900.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: alreadyProficient ? Colors.amberAccent : Colors.blueAccent,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              alreadyProficient ? Icons.warning_amber_rounded : Icons.shield,
+                              color: alreadyProficient ? Colors.amberAccent : Colors.cyanAccent,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                alreadyProficient
+                                    ? 'Already proficient in ${chosenSave.shortName} saving throws.'
+                                    : 'Grants Proficiency: ${chosenSave.shortName} Saving Throws',
+                                style: TextStyle(
+                                  color: alreadyProficient ? Colors.amberAccent : Colors.cyanAccent,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }(),
+                  ],
+                ],
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Text(
+                    feat.descriptionMarkdown,
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                ),
+              ],
+            );
+          }(),
         ],
       ],
     );
@@ -1763,8 +1906,24 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               _buildDiffRow('Proficiency Bonus', '+${oldStats.proficiencyBonus}', '+${newStats.proficiencyBonus}', theme),
               if (_isAsiEligible && _isAsiSelected)
                 _buildDiffRow('ASI Bonus', 'None', _isAsiPlusTwo ? '+2 ${_asiSingleAbility.name}' : '+1 ${_asiDualAbility1.name}, +1 ${_asiDualAbility2.name}', theme, highlightNew: true),
-              if (_isAsiEligible && !_isAsiSelected)
+              if (_isAsiEligible && !_isAsiSelected) ...[
                 _buildDiffRow('Feat Gained', 'None', _selectedFeatName, theme, highlightNew: true),
+                () {
+                  final feat = SrdFeatsLibrary.findBySlug(_selectedFeatSlug);
+                  final chosenAbility = _selectedFeatAbility ??
+                      (feat?.selectableAbilities.isNotEmpty == true ? feat!.selectableAbilities.first : null);
+                  if (feat != null && feat.hasAbilityScoreIncrease && chosenAbility != null) {
+                    return Column(
+                      children: [
+                        _buildDiffRow('Feat Ability', 'None', '+${feat.statIncreaseAmount} ${chosenAbility.shortName}', theme, highlightNew: true),
+                        if (feat.grantsSavingThrowProficiency)
+                          _buildDiffRow('Feat Saving Throw', 'None', '${chosenAbility.shortName} Save Proficiency', theme, highlightNew: true),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }(),
+              ],
               if (_selectedSubclass != null)
                 _buildDiffRow('Subclass', 'None', _selectedSubclass!, theme, highlightNew: true),
             ],

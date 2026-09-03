@@ -70,4 +70,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.widgetWithText(FeatCard, 'War Caster'), findsOneWidget);
   });
+
+  testWidgets('FeatCard shows General Feat in 2014 mode and Origin Feat in 2024 mode for Alert', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    // 1. In 2024 mode:
+    await tester.pumpWidget(buildTestScreen(edition: DmRulesEdition.v2024));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Alert');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Origin Feat'), findsWidgets);
+
+    // 2. In 2014 mode:
+    await tester.pumpWidget(buildTestScreen(edition: DmRulesEdition.v2014));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Alert');
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('General Feat'), findsWidgets);
+  });
 }

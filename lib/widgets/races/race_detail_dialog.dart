@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/settings_provider.dart';
@@ -11,17 +12,19 @@ import '../common/formatted_markdown_text.dart';
 /// and editable user-notes for a 5e Species or Lineage.
 class RaceDetailDialog extends StatefulWidget {
   final Race race;
+  final DmRulesEdition? edition;
 
   const RaceDetailDialog({
     super.key,
     required this.race,
+    this.edition,
   });
 
-  static Future<void> show(BuildContext context, Race race) {
+  static Future<void> show(BuildContext context, Race race, {DmRulesEdition? edition}) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (context) => RaceDetailDialog(race: race),
+      builder: (context) => RaceDetailDialog(race: race, edition: edition),
     );
   }
 
@@ -180,26 +183,34 @@ class _RaceDetailDialogState extends State<RaceDetailDialog> with SingleTickerPr
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Species Summary',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: theme.colorScheme.primary,
+          child: () {
+            final resolvedEdition = widget.edition ??
+                SettingsScope.maybeOf(context)?.settings.rulesEdition ??
+                DmRulesEdition.v2024;
+            final resolvedSpeed = widget.race.getSpeedForEdition(resolvedEdition);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Species Summary',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text('• Size: ${widget.race.size}', style: const TextStyle(fontSize: 12.5)),
-              Text('• Speed: ${widget.race.speed}', style: const TextStyle(fontSize: 12.5)),
-              if (widget.race.abilityScoreSummary != null && widget.race.abilityScoreSummary!.isNotEmpty)
-                Text('• Ability Scores: ${widget.race.abilityScoreSummary}', style: const TextStyle(fontSize: 12.5)),
-              if (widget.race.bonusFeatCount > 0)
-                Text('• Bonus Feats: +${widget.race.bonusFeatCount} Feat choice', style: const TextStyle(fontSize: 12.5)),
-            ],
-          ),
+                const SizedBox(height: 6),
+                Text('• Size: ${widget.race.size}', style: const TextStyle(fontSize: 12.5)),
+                Text('• Speed: $resolvedSpeed (${resolvedEdition == DmRulesEdition.v2014 ? "2014 RAW" : "2024 Revised"})',
+                    style: const TextStyle(fontSize: 12.5)),
+                if (widget.race.abilityScoreSummary != null && widget.race.abilityScoreSummary!.isNotEmpty)
+                  Text('• Ability Scores: ${widget.race.abilityScoreSummary}', style: const TextStyle(fontSize: 12.5)),
+                if (widget.race.bonusFeatCount > 0)
+                  Text('• Bonus Feats: +${widget.race.bonusFeatCount} Feat choice', style: const TextStyle(fontSize: 12.5)),
+              ],
+            );
+          }(),
         ),
         const SizedBox(height: 16),
 

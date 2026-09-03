@@ -56,14 +56,24 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant SpeciesCodexScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEdition != oldWidget.initialEdition) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
   DmRulesEdition _resolveEdition(BuildContext context) {
-    if (_localEditionOverride != null) return _localEditionOverride!;
-    return SettingsScope.of(context).settings.rulesEdition;
+    if (widget.initialEdition != null) {
+      return _localEditionOverride ?? widget.initialEdition!;
+    }
+    return SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
   }
 
   Set<String> _getPinnedIds(BuildContext context) {
@@ -231,7 +241,10 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
             currentEdition: edition,
             onEditionChanged: (newEdition) {
               HapticService.selectionTick(context);
-              setState(() => _localEditionOverride = newEdition);
+              if (widget.initialEdition != null) {
+                setState(() => _localEditionOverride = newEdition);
+              }
+              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
             },
           ),
           const SizedBox(width: 8),
@@ -287,8 +300,9 @@ class _SpeciesCodexScreenState extends State<SpeciesCodexScreen> {
                         return RaceCard(
                           race: race,
                           isPinned: isPinned,
+                          edition: edition,
                           onTogglePin: () => _togglePinRace(context, race.id.slug),
-                          onTap: () => RaceDetailDialog.show(context, race),
+                          onTap: () => RaceDetailDialog.show(context, race, edition: edition),
                         );
                       },
                     ),

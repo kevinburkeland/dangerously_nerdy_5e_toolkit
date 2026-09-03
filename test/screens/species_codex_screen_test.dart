@@ -86,5 +86,33 @@ void main() {
       expect(find.text('High Elf'), findsOneWidget);
       expect(find.text('Wood Elf'), findsOneWidget);
     });
+
+    testWidgets('displays 25 ft speed for Gnome/Dwarf in 2014 mode and 30 ft in 2024 mode', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final settings = SettingsProvider();
+      await tester.pumpWidget(MaterialApp(
+        home: SettingsScope(
+          notifier: settings,
+          child: const SpeciesCodexScreen(),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // In 2024 default: Dwarf & Gnome should show Speed: 30 ft.
+      expect(find.text('Speed: 30 ft.'), findsWidgets);
+
+      // Switch to 2014 rules via toggle
+      await tester.tap(find.text('2014'));
+      await tester.pumpAndSettle();
+
+      // In 2014: Dwarf & Gnome should show Speed: 25 ft.
+      expect(find.text('Speed: 25 ft.'), findsWidgets);
+    });
   });
 }

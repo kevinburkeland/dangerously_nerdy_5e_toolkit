@@ -61,6 +61,14 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant ItemCompendiumScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEdition != oldWidget.initialEdition) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -150,9 +158,9 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final settingsProvider = SettingsScope.maybeOf(context);
-    final activeEdition = _localEditionOverride ??
-        settingsProvider?.settings.rulesEdition ??
-        DmRulesEdition.v2024;
+    final activeEdition = widget.initialEdition != null
+        ? (_localEditionOverride ?? widget.initialEdition!)
+        : (settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
     final pinnedIds = _getPinnedIds(context);
     final allItems = MagicItemLibrary.allItems;
@@ -216,9 +224,11 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
           RulesEditionToggle(
             currentEdition: activeEdition,
             onEditionChanged: (newEdition) {
-              setState(() {
-                _localEditionOverride = newEdition;
-              });
+              if (widget.initialEdition != null) {
+                setState(() {
+                  _localEditionOverride = newEdition;
+                });
+              }
               settingsProvider?.setRulesEdition(newEdition);
             },
           ),

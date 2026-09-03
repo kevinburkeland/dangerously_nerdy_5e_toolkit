@@ -59,6 +59,14 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
     _syncHomebrew();
   }
 
+  @override
+  void didUpdateWidget(covariant FeatsCompendiumScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEdition != oldWidget.initialEdition) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
   Future<void> _syncHomebrew() async {
     await HomebrewPersistenceService().syncToLibraries();
     if (mounted) {
@@ -73,9 +81,10 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
   }
 
   DmRulesEdition _resolveEdition(BuildContext context) {
-    return _localEditionOverride ??
-        SettingsScope.maybeOf(context)?.settings.rulesEdition ??
-        DmRulesEdition.v2024;
+    if (widget.initialEdition != null) {
+      return _localEditionOverride ?? widget.initialEdition!;
+    }
+    return SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
   }
 
   Set<String> _getPinnedIds(BuildContext context) {
@@ -209,8 +218,10 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
     );
   }
 
-  Widget _buildCategoryFilters(BuildContext context) {
-    final categories = ['Origin', 'General', 'Fighting Style', 'Epic Boon'];
+  Widget _buildCategoryFilters(BuildContext context, DmRulesEdition edition) {
+    final categories = edition == DmRulesEdition.v2024
+        ? const ['Origin', 'General', 'Fighting Style', 'Epic Boon']
+        : const ['General', 'Fighting Style'];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -249,7 +260,6 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final edition = _resolveEdition(context);
     final pinnedIds = _getPinnedIds(context);
     final allFeats = SrdFeatsLibrary.allFeats;
@@ -258,23 +268,40 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.military_tech, size: 22, color: Color(0xFF38BDF8)),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+              ),
+              child: const Icon(Icons.military_tech, color: Color(0xFFF59E0B), size: 16),
+            ),
             const SizedBox(width: 8),
-            const Text('Feats Compendium', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Flexible(
+              child: Text(
+                'Feats Compendium',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
               ),
               child: Text(
                 '${filteredFeats.length}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onPrimaryContainer,
+                  color: Color(0xFFF59E0B),
                 ),
               ),
             ),
@@ -285,7 +312,10 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
             currentEdition: edition,
             onEditionChanged: (newEdition) {
               HapticService.selectionTick(context);
-              setState(() => _localEditionOverride = newEdition);
+              if (widget.initialEdition != null) {
+                setState(() => _localEditionOverride = newEdition);
+              }
+              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
             },
           ),
           const SizedBox(width: 8),
@@ -320,7 +350,7 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
             _buildViewModeTabs(context),
 
             // Category Chips
-            _buildCategoryFilters(context),
+            _buildCategoryFilters(context, edition),
 
             const SizedBox(height: 6),
 
@@ -339,11 +369,13 @@ class _FeatsCompendiumScreenState extends State<FeatsCompendiumScreen> {
                       itemBuilder: (context, feat) => FeatCard(
                         feat: feat,
                         isPinned: pinnedIds.contains(feat.id.slug),
+                        edition: edition,
                         onTogglePin: () => _togglePinFeat(context, feat.id.slug),
                         onTap: () => FeatDetailDialog.show(
                           context,
                           feat: feat,
                           isPinned: pinnedIds.contains(feat.id.slug),
+                          edition: edition,
                           onTogglePin: () => _togglePinFeat(context, feat.id.slug),
                         ),
                       ),

@@ -75,6 +75,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   String _selectedClass = 'fighter';
   String _selectedBackground = 'soldier';
   String _selectedFeat = 'tough';
+  AbilityType? _selectedFeatAbility;
   String? _wizardSelectedSubclass;
   final Map<String, List<String>> _wizardSelectedFeatureOptions = {};
   final Set<String> _selectedWizardCantrips = {};
@@ -2566,17 +2567,97 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             ),
             child: Material(
               color: Colors.transparent,
-              child: ListTile(
-                title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: FormattedMarkdownText(
-                  feat.descriptionMarkdown,
-                  style: const TextStyle(fontSize: 11.5, color: Colors.white70),
-                ),
-                trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.purpleAccent) : null,
-                onTap: () {
-                  HapticService.selectionTick(context);
-                  setState(() => _selectedFeat = feat.id.slug);
-                },
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: FormattedMarkdownText(
+                      feat.descriptionMarkdown,
+                      style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                    ),
+                    trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.purpleAccent) : null,
+                    onTap: () {
+                      HapticService.selectionTick(context);
+                      setState(() {
+                        _selectedFeat = feat.id.slug;
+                        if (feat.hasAbilityScoreIncrease) {
+                          if (_selectedFeatAbility == null || !feat.selectableAbilities.contains(_selectedFeatAbility)) {
+                            _selectedFeatAbility = feat.selectableAbilities.first;
+                          }
+                        } else {
+                          _selectedFeatAbility = null;
+                        }
+                      });
+                    },
+                  ),
+                  if (isSelected && feat.hasAbilityScoreIncrease) ...[
+                    const Divider(color: Colors.white12, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (feat.requiresAbilityChoice) ...[
+                            Text(
+                              'Choose Ability to Increase (+${feat.statIncreaseAmount}):',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.cyanAccent,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: feat.selectableAbilities.map((ab) {
+                                final isChipSelected = (_selectedFeatAbility ?? feat.selectableAbilities.first) == ab;
+                                return ChoiceChip(
+                                  key: Key('builder_feat_ability_${ab.name}'),
+                                  label: Text('${ab.shortName} (+${feat.statIncreaseAmount})'),
+                                  selected: isChipSelected,
+                                  selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
+                                  onSelected: (val) {
+                                    if (val) {
+                                      HapticService.selectionTick(context);
+                                      setState(() => _selectedFeatAbility = ab);
+                                    }
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ] else ...[
+                            Chip(
+                              avatar: const Icon(Icons.arrow_upward, size: 14, color: Colors.greenAccent),
+                              label: Text('+${feat.statIncreaseAmount} ${feat.selectableAbilities.first.shortName} (Included)'),
+                              backgroundColor: Colors.green.withValues(alpha: 0.15),
+                            ),
+                          ],
+                          if (feat.grantsSavingThrowProficiency) ...[
+                            const SizedBox(height: 8),
+                            () {
+                              final chosenSave = _selectedFeatAbility ?? feat.selectableAbilities.first;
+                              return Row(
+                                children: [
+                                  const Icon(Icons.shield, color: Colors.cyanAccent, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Grants Proficiency: ${chosenSave.shortName} Saving Throws',
+                                    style: const TextStyle(
+                                      color: Colors.cyanAccent,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }(),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           );
@@ -2978,9 +3059,20 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           final allReviewSkills = {...reviewSkillReport.resolvedProficiencies.keys, ..._speciesBonusSkillPicks};
           return Text('Skill Proficiencies: ${allReviewSkills.map((s) => s.displayName).join(", ")}', style: const TextStyle(fontSize: 12));
         }),
-        if (hasFeat)
-          Text(is2024 ? 'Origin Feat: ${_selectedFeat.toUpperCase()}' : 'Feat: ${_selectedFeat.toUpperCase()}',
-              style: const TextStyle(fontSize: 12, color: Colors.purpleAccent)),
+        if (hasFeat) ...[
+          () {
+            final feat = SrdFeatsLibrary.findBySlug(_selectedFeat);
+            final chosenAbility = _selectedFeatAbility ??
+                (feat?.selectableAbilities.isNotEmpty == true ? feat!.selectableAbilities.first : null);
+            final extra = (feat != null && feat.hasAbilityScoreIncrease && chosenAbility != null)
+                ? ' (+${feat.statIncreaseAmount} ${chosenAbility.shortName}${feat.grantsSavingThrowProficiency ? ', ${chosenAbility.shortName} Save Prof' : ''})'
+                : '';
+            return Text(
+              '${is2024 ? 'Origin Feat' : 'Feat'}: ${feat?.name ?? _selectedFeat.toUpperCase()}$extra',
+              style: const TextStyle(fontSize: 12, color: Colors.purpleAccent),
+            );
+          }(),
+        ],
         if (_selectedWizardCantrips.isNotEmpty || _selectedWizardSpells.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
@@ -3204,6 +3296,36 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     }).toList();
 
     final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
+    var finalBonusScores = calculatedBonuses;
+    final finalSaveProficiencies = Set<AbilityType>.from(saveProficiencies);
+
+    if (hasFeat) {
+      final feat = SrdFeatsLibrary.findBySlug(_selectedFeat);
+      if (feat != null && feat.hasAbilityScoreIncrease) {
+        final chosenAbility = _selectedFeatAbility ??
+            (feat.selectableAbilities.isNotEmpty ? feat.selectableAbilities.first : null);
+        if (chosenAbility != null) {
+          final amt = feat.statIncreaseAmount;
+          switch (chosenAbility) {
+            case AbilityType.strength:
+              finalBonusScores = finalBonusScores.copyWith(strength: finalBonusScores.strength + amt);
+            case AbilityType.dexterity:
+              finalBonusScores = finalBonusScores.copyWith(dexterity: finalBonusScores.dexterity + amt);
+            case AbilityType.constitution:
+              finalBonusScores = finalBonusScores.copyWith(constitution: finalBonusScores.constitution + amt);
+            case AbilityType.intelligence:
+              finalBonusScores = finalBonusScores.copyWith(intelligence: finalBonusScores.intelligence + amt);
+            case AbilityType.wisdom:
+              finalBonusScores = finalBonusScores.copyWith(wisdom: finalBonusScores.wisdom + amt);
+            case AbilityType.charisma:
+              finalBonusScores = finalBonusScores.copyWith(charisma: finalBonusScores.charisma + amt);
+          }
+          if (feat.grantsSavingThrowProficiency) {
+            finalSaveProficiencies.add(chosenAbility);
+          }
+        }
+      }
+    }
 
     EntityReference<DomainEntity>? startingSubclassRef;
     if (curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty) {
@@ -3236,8 +3358,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       startingClassDisplayName: curClass.name,
       startingClassHitDie: curClass.hitDie,
       baseScores: _wizardBaseScores,
-      bonusScores: calculatedBonuses,
-      savingThrowProficiencies: saveProficiencies,
+      bonusScores: finalBonusScores,
+      savingThrowProficiencies: finalSaveProficiencies,
       skillProficiencies: skillMap,
       originFeats: [
         if (hasFeat)

@@ -10,6 +10,7 @@ import '../services/party/campaign_registry_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
+import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../widgets/interactive/pressable_card.dart';
 import '../widgets/dialogs/legal_dialogs.dart';
 import '../widgets/app_logo.dart';
@@ -66,6 +67,7 @@ class _LandingScreenState extends State<LandingScreen> {
     final searchResults = _tools.where((t) => t.matches(query)).toList();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final activeEdition = SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
 
     return Scaffold(
       appBar: AppBar(
@@ -91,6 +93,12 @@ class _LandingScreenState extends State<LandingScreen> {
           ],
         ),
         actions: [
+          RulesEditionToggle(
+            currentEdition: activeEdition,
+            onEditionChanged: (newEdition) {
+              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: 'Preferences & Theme Settings',

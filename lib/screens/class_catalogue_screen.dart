@@ -68,6 +68,14 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
     _syncHomebrew();
   }
 
+  @override
+  void didUpdateWidget(covariant ClassCatalogueScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEdition != oldWidget.initialEdition) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
   Future<void> _syncHomebrew() async {
     await HomebrewPersistenceService().syncToLibraries();
     if (mounted) {
@@ -82,9 +90,10 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
   }
 
   DmRulesEdition _resolveEdition(BuildContext context) {
-    return _localEditionOverride ??
-        SettingsScope.maybeOf(context)?.settings.rulesEdition ??
-        DmRulesEdition.v2024;
+    if (widget.initialEdition != null) {
+      return _localEditionOverride ?? widget.initialEdition!;
+    }
+    return SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
   }
 
   Set<String> _getPinnedIds(BuildContext context) {
@@ -264,7 +273,10 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
             currentEdition: edition,
             onEditionChanged: (newEdition) {
               HapticService.selectionTick(context);
-              setState(() => _localEditionOverride = newEdition);
+              if (widget.initialEdition != null) {
+                setState(() => _localEditionOverride = newEdition);
+              }
+              SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
             },
           ),
           const SizedBox(width: 8),

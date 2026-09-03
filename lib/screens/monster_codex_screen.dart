@@ -75,6 +75,14 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
     _syncHomebrew();
   }
 
+  @override
+  void didUpdateWidget(covariant MonsterCodexScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEdition != oldWidget.initialEdition) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
   Future<void> _syncHomebrew() async {
     await HomebrewPersistenceService().syncToLibraries();
     if (mounted) {
@@ -89,8 +97,10 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
   }
 
   DmRulesEdition _resolveEdition(BuildContext context) {
-    return _localEditionOverride ??
-        SettingsScope.of(context).settings.rulesEdition;
+    if (widget.initialEdition != null) {
+      return _localEditionOverride ?? widget.initialEdition!;
+    }
+    return SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
   }
 
   Set<String> _getPinnedIds(BuildContext context) {
@@ -374,9 +384,11 @@ class _MonsterCodexScreenState extends State<MonsterCodexScreen> {
           RulesEditionToggle(
             currentEdition: activeEdition,
             onEditionChanged: (newEdition) {
-              setState(() {
-                _localEditionOverride = newEdition;
-              });
+              if (widget.initialEdition != null) {
+                setState(() {
+                  _localEditionOverride = newEdition;
+                });
+              }
               SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
             },
           ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
@@ -10,12 +12,14 @@ import '../common/formatted_markdown_text.dart';
 class FeatDetailDialog extends StatefulWidget {
   final Feat feat;
   final bool isPinned;
+  final DmRulesEdition? edition;
   final VoidCallback onTogglePin;
 
   const FeatDetailDialog({
     super.key,
     required this.feat,
     required this.isPinned,
+    this.edition,
     required this.onTogglePin,
   });
 
@@ -23,6 +27,7 @@ class FeatDetailDialog extends StatefulWidget {
     BuildContext context, {
     required Feat feat,
     required bool isPinned,
+    DmRulesEdition? edition,
     required VoidCallback onTogglePin,
   }) {
     HapticService.selectionTick(context);
@@ -31,6 +36,7 @@ class FeatDetailDialog extends StatefulWidget {
       builder: (ctx) => FeatDetailDialog(
         feat: feat,
         isPinned: isPinned,
+        edition: edition,
         onTogglePin: onTogglePin,
       ),
     );
@@ -49,8 +55,8 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
   void initState() {
     super.initState();
     _pinned = widget.isPinned;
-    final existing = _fluffService.getUserNotes('feat', widget.feat.id.slug) ?? '';
-    _notesController = TextEditingController(text: existing);
+    final existingNotes = _fluffService.getUserNotes('feat', widget.feat.id.slug) ?? '';
+    _notesController = TextEditingController(text: existingNotes);
   }
 
   @override
@@ -60,10 +66,11 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
   }
 
   void _handlePinToggle() {
+    HapticService.selectionTick(context);
+    widget.onTogglePin();
     setState(() {
       _pinned = !_pinned;
     });
-    widget.onTogglePin();
   }
 
   Color _getCategoryColor(String category, bool isDark) {
@@ -93,12 +100,15 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final feat = widget.feat;
-    final accentColor = _getCategoryColor(feat.category, isDark);
-    final categoryIcon = _getCategoryIcon(feat.category);
+    final resolvedEdition = widget.edition ?? SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final is2024Mode = resolvedEdition == DmRulesEdition.v2024;
+    final categoryLabel = (!is2024Mode && feat.category.toLowerCase() == 'origin') ? 'General' : feat.category;
+
+    final accentColor = _getCategoryColor(categoryLabel, isDark);
+    final categoryIcon = _getCategoryIcon(categoryLabel);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
     final isHomebrew = feat.id.ruleset == RulesetVersion.homebrew;
-    final is2024 = feat.id.ruleset == RulesetVersion.v2024;
 
     return Dialog(
       backgroundColor: theme.colorScheme.surface,
@@ -110,7 +120,6 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Row: Category Icon + Title + Pin Button + Close Button
             Row(
               children: [
                 Container(
@@ -138,7 +147,7 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${feat.category} Feat • ${is2024 ? "2024 Rules (SRD 5.2)" : (isHomebrew ? "Custom Homebrew" : "2014 Rules (SRD 5.1)")}',
+                        '$categoryLabel Feat • ${is2024Mode ? "2024 Rules (SRD 5.2)" : (isHomebrew ? "Custom Homebrew" : "2014 Rules (SRD 5.1)")}',
                         style: TextStyle(
                           color: accentColor,
                           fontWeight: FontWeight.w600,
@@ -165,14 +174,13 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
             ),
             const SizedBox(height: 12),
 
-            // Metadata Chips
             Wrap(
               spacing: 6,
               runSpacing: 6,
               children: [
                 Chip(
                   avatar: Icon(categoryIcon, size: 14, color: accentColor),
-                  label: Text('${feat.category} Feat'),
+                  label: Text('$categoryLabel Feat'),
                   labelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: accentColor),
                   backgroundColor: accentColor.withValues(alpha: 0.12),
                   side: BorderSide(color: accentColor.withValues(alpha: 0.4)),

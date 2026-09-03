@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../dm_screen_data.dart';
+import 'character_models.dart' show AbilityType;
 import 'core_types.dart';
 import 'entity_reference.dart';
 import 'feature_grant.dart';
@@ -704,6 +705,143 @@ class Feat extends DomainEntity {
       grants: grants ?? this.grants,
       customProperties: customProperties ?? this.customProperties,
     );
+  }
+}
+
+/// Convenience extension for querying ability score improvements, choices,
+/// and associated riders (like saving throw proficiencies) on a [Feat].
+extension FeatAsiExtension on Feat {
+  /// Whether this feat provides any ability score increase (fixed or user choice).
+  bool get hasAbilityScoreIncrease => selectableAbilities.isNotEmpty;
+
+  /// Whether this feat requires the user to choose an ability score from multiple options.
+  bool get requiresAbilityChoice => selectableAbilities.length > 1;
+
+  /// List of ability types the user can choose from (or single ability if fixed).
+  List<AbilityType> get selectableAbilities {
+    // 1. Explicit list in customProperties
+    final rawList = customProperties['selectableAbilities'] ?? customProperties['statChoicePool'];
+    if (rawList is List) {
+      final list = <AbilityType>[];
+      for (final item in rawList) {
+        final parsed = AbilityType.fromLooseString(item.toString());
+        if (!list.contains(parsed)) list.add(parsed);
+      }
+      if (list.isNotEmpty) return list;
+    }
+
+    // 2. Single explicit ability in customProperties
+    final single = customProperties['statIncreaseAbility'] ?? customProperties['ability'];
+    if (single != null) {
+      return [AbilityType.fromLooseString(single.toString())];
+    }
+
+    // 3. Fallback to slug-based defaults for standard SRD feats if not explicitly declared
+    return switch (id.slug.toLowerCase()) {
+      'resilient' => AbilityType.values,
+      'athlete' => const [AbilityType.strength, AbilityType.dexterity],
+      'observant' => const [AbilityType.intelligence, AbilityType.wisdom],
+      'actor' => const [AbilityType.charisma],
+      'heavy-armor-master' => const [AbilityType.strength],
+      'durable' => const [AbilityType.constitution],
+      'keen-mind' => const [AbilityType.intelligence],
+      'war-caster' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.intelligence,
+          AbilityType.wisdom,
+          AbilityType.charisma,
+        ],
+      'great-weapon-master' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+        ],
+      'sharpshooter' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.dexterity,
+        ],
+      'sentinel' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+          AbilityType.dexterity,
+        ],
+      'polearm-master' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+          AbilityType.dexterity,
+        ],
+      'shield-master' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+        ],
+      'dual-wielder' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+          AbilityType.dexterity,
+        ],
+      'grappler' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+          AbilityType.dexterity,
+        ],
+      'crossbow-expert' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.dexterity,
+        ],
+      'defensive-duelist' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.dexterity,
+        ],
+      'elemental-adept' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.intelligence,
+          AbilityType.wisdom,
+          AbilityType.charisma,
+        ],
+      'inspiring-leader' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.wisdom,
+          AbilityType.charisma,
+        ],
+      'mage-slayer' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+          AbilityType.dexterity,
+        ],
+      'medium-armor-master' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+          AbilityType.dexterity,
+        ],
+      'mounted-combatant' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.strength,
+          AbilityType.dexterity,
+          AbilityType.wisdom,
+        ],
+      'ritual-caster' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.intelligence,
+          AbilityType.wisdom,
+          AbilityType.charisma,
+        ],
+      'spell-sniper' when id.ruleset == RulesetVersion.v2024 => const [
+          AbilityType.intelligence,
+          AbilityType.wisdom,
+          AbilityType.charisma,
+        ],
+      _ => const [],
+    };
+  }
+
+  /// Amount to increase the chosen or fixed ability score (defaults to 1).
+  int get statIncreaseAmount {
+    if (customProperties['statIncrease'] is num) {
+      return (customProperties['statIncrease'] as num).toInt();
+    }
+    if (customProperties['statIncreaseAmount'] is num) {
+      return (customProperties['statIncreaseAmount'] as num).toInt();
+    }
+    return selectableAbilities.isNotEmpty ? 1 : 0;
+  }
+
+  /// Whether this feat grants saving throw proficiency in the chosen ability (e.g. Resilient).
+  bool get grantsSavingThrowProficiency {
+    if (customProperties['grantsSavingThrowProficiency'] == true) return true;
+    return id.slug.toLowerCase() == 'resilient';
+  }
+
+  /// Human-readable explanation of any choice rider attached to this feat.
+  String? get choiceRiderDescription {
+    if (grantsSavingThrowProficiency) {
+      return 'Grants proficiency in saving throws using the chosen ability.';
+    }
+    final rawDesc = customProperties['riderDescription']?.toString();
+    if (rawDesc != null && rawDesc.isNotEmpty) return rawDesc;
+    return null;
   }
 }
 

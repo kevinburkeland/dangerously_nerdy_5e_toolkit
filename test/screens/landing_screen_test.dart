@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/landing_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/minion_tool_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dice_roller_screen.dart';
@@ -10,6 +13,9 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/item_compendium_screen.dart
 import 'package:dangerously_nerdy_5e_toolkit/widgets/glyphs/dnd_glyph.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
   Widget createTestableWidget(Widget child) {
     return MaterialApp(
       home: child,
@@ -190,5 +196,30 @@ void main() {
     // Categories restored
     expect(find.text('SPELL MINION COMPANIONS'), findsOneWidget);
     expect(find.text('Animate Objects'), findsOneWidget);
+  });
+
+  testWidgets('LandingScreen RulesEditionToggle toggles global 2014 and 2024 rules edition', (WidgetTester tester) async {
+    final settings = SettingsProvider();
+    await tester.pumpWidget(MaterialApp(
+      home: SettingsScope(
+        notifier: settings,
+        child: const LandingScreen(),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(settings.settings.rulesEdition, DmRulesEdition.v2024);
+
+    // Toggle to 2014
+    await tester.tap(find.text('2014'));
+    await tester.pumpAndSettle();
+
+    expect(settings.settings.rulesEdition, DmRulesEdition.v2014);
+
+    // Toggle back to 2024
+    await tester.tap(find.text('2024'));
+    await tester.pumpAndSettle();
+
+    expect(settings.settings.rulesEdition, DmRulesEdition.v2024);
   });
 }

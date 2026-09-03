@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 import '../common/edition_diff_badge.dart';
 import '../interactive/pressable_card.dart';
@@ -9,6 +11,7 @@ import '../interactive/pressable_card.dart';
 class RaceCard extends StatelessWidget {
   final Race race;
   final bool isPinned;
+  final DmRulesEdition? edition;
   final VoidCallback onTogglePin;
   final VoidCallback onTap;
 
@@ -16,6 +19,7 @@ class RaceCard extends StatelessWidget {
     super.key,
     required this.race,
     required this.isPinned,
+    this.edition,
     required this.onTogglePin,
     required this.onTap,
   });
@@ -112,7 +116,9 @@ class RaceCard extends StatelessWidget {
     final slug = race.id.slug.toLowerCase();
     final speciesColor = _getSpeciesColor(slug);
     final speciesIcon = _getSpeciesIcon(slug);
-    final is2024 = race.id.ruleset == RulesetVersion.v2024;
+    final resolvedEdition = edition ?? SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final resolvedSpeed = race.getSpeedForEdition(resolvedEdition);
+    final is2024Mode = resolvedEdition == DmRulesEdition.v2024;
     final isHomebrew = race.id.ruleset == RulesetVersion.homebrew;
 
     final hasDarkvision = race.customProperties['hasDarkvision'] == true ||
@@ -168,7 +174,7 @@ class RaceCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      '${race.size} • ${race.speed} • ${is2024 ? "2024 Species" : (isHomebrew ? "Homebrew" : "2014 Race")}',
+                      '${race.size} • $resolvedSpeed • ${is2024Mode ? "2024 Species" : (isHomebrew ? "Homebrew" : "2014 Race")}',
                       style: TextStyle(
                         color: speciesColor,
                         fontWeight: FontWeight.w600,
@@ -178,7 +184,7 @@ class RaceCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (is2024 && !isHomebrew) ...[
+              if (is2024Mode && !isHomebrew) ...[
                 const EditionDiffBadge(),
                 const SizedBox(width: 4),
               ],
@@ -207,7 +213,7 @@ class RaceCard extends StatelessWidget {
             runSpacing: 4,
             children: [
               _buildTag('Size: ${race.size}', speciesColor),
-              _buildTag('Speed: ${race.speed}', isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7)),
+              _buildTag('Speed: $resolvedSpeed', isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7)),
               if (hasDarkvision)
                 _buildTag(
                   'Darkvision $darkvisionFeet ft.',

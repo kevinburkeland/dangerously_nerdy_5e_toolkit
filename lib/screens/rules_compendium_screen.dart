@@ -45,6 +45,14 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant RulesCompendiumScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEdition != oldWidget.initialEdition) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -66,12 +74,16 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
 
   void _onEditionChanged(BuildContext context, DmRulesEdition newEdition) {
     final settingsProvider = SettingsScope.of(context);
-    final current = _localEditionOverride ?? settingsProvider.settings.rulesEdition;
+    final current = widget.initialEdition != null
+        ? (_localEditionOverride ?? widget.initialEdition!)
+        : settingsProvider.settings.rulesEdition;
     if (current == newEdition) return;
     HapticService.selectionTick(context);
-    setState(() {
-      _localEditionOverride = newEdition;
-    });
+    if (widget.initialEdition != null) {
+      setState(() {
+        _localEditionOverride = newEdition;
+      });
+    }
     settingsProvider.setRulesEdition(newEdition);
   }
 
@@ -97,7 +109,9 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settingsProvider = SettingsScope.maybeOf(context);
-    final edition = _localEditionOverride ?? settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final edition = widget.initialEdition != null
+        ? (_localEditionOverride ?? widget.initialEdition!)
+        : (settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024);
     final pinnedIds = _getPinnedIds(context);
     const allItems = DmScreenLibrary.allItems;
 

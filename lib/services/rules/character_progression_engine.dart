@@ -30,11 +30,23 @@ class HpProgressionChoice {
 class AsiOrFeatChoice {
   final Map<AbilityType, int> abilityIncreases;
   final EntityReference<DomainEntity>? featRef;
+  final Set<AbilityType> savingThrowGrants;
+  final Set<SkillType> skillGrants;
+  final AbilityType? chosenFeatAbility;
 
-  const AsiOrFeatChoice.asi(this.abilityIncreases) : featRef = null;
-  const AsiOrFeatChoice.feat(EntityReference<DomainEntity> feat)
-      : featRef = feat,
-        abilityIncreases = const {};
+  const AsiOrFeatChoice.asi(this.abilityIncreases)
+      : featRef = null,
+        savingThrowGrants = const {},
+        skillGrants = const {},
+        chosenFeatAbility = null;
+
+  const AsiOrFeatChoice.feat(
+    EntityReference<DomainEntity> feat, {
+    this.abilityIncreases = const {},
+    this.savingThrowGrants = const {},
+    this.skillGrants = const {},
+    this.chosenFeatAbility,
+  }) : featRef = feat;
 
   bool get isFeat => featRef != null;
 }
@@ -344,28 +356,37 @@ class CharacterProgressionEngine {
     // 2. Apply ASI or Feat Choice
     var newBonusScores = character.bonusScores;
     final newFeats = List<EntityReference<DomainEntity>>.from(character.feats);
+    final updatedSavingThrows = Set<AbilityType>.from(character.savingThrowProficiencies);
+    final updatedSkills = Map<SkillType, SkillProficiencyLevel>.from(character.skillProficiencies);
 
     if (request.asiOrFeat != null) {
       final choice = request.asiOrFeat!;
-      if (choice.isFeat && choice.featRef != null) {
+      if (choice.featRef != null) {
         newFeats.add(choice.featRef!);
-      } else {
-        choice.abilityIncreases.forEach((ability, bonus) {
-          switch (ability) {
-            case AbilityType.strength:
-              newBonusScores = newBonusScores.copyWith(strength: newBonusScores.strength + bonus);
-            case AbilityType.dexterity:
-              newBonusScores = newBonusScores.copyWith(dexterity: newBonusScores.dexterity + bonus);
-            case AbilityType.constitution:
-              newBonusScores = newBonusScores.copyWith(constitution: newBonusScores.constitution + bonus);
-            case AbilityType.intelligence:
-              newBonusScores = newBonusScores.copyWith(intelligence: newBonusScores.intelligence + bonus);
-            case AbilityType.wisdom:
-              newBonusScores = newBonusScores.copyWith(wisdom: newBonusScores.wisdom + bonus);
-            case AbilityType.charisma:
-              newBonusScores = newBonusScores.copyWith(charisma: newBonusScores.charisma + bonus);
-          }
-        });
+      }
+      choice.abilityIncreases.forEach((ability, bonus) {
+        switch (ability) {
+          case AbilityType.strength:
+            newBonusScores = newBonusScores.copyWith(strength: newBonusScores.strength + bonus);
+          case AbilityType.dexterity:
+            newBonusScores = newBonusScores.copyWith(dexterity: newBonusScores.dexterity + bonus);
+          case AbilityType.constitution:
+            newBonusScores = newBonusScores.copyWith(constitution: newBonusScores.constitution + bonus);
+          case AbilityType.intelligence:
+            newBonusScores = newBonusScores.copyWith(intelligence: newBonusScores.intelligence + bonus);
+          case AbilityType.wisdom:
+            newBonusScores = newBonusScores.copyWith(wisdom: newBonusScores.wisdom + bonus);
+          case AbilityType.charisma:
+            newBonusScores = newBonusScores.copyWith(charisma: newBonusScores.charisma + bonus);
+        }
+      });
+      if (choice.savingThrowGrants.isNotEmpty) {
+        updatedSavingThrows.addAll(choice.savingThrowGrants);
+      }
+      for (final skill in choice.skillGrants) {
+        if (!updatedSkills.containsKey(skill) || updatedSkills[skill] == SkillProficiencyLevel.none) {
+          updatedSkills[skill] = SkillProficiencyLevel.proficient;
+        }
       }
     }
 
@@ -435,6 +456,8 @@ class CharacterProgressionEngine {
       progression: newProgression,
       bonusScores: newBonusScores,
       feats: newFeats,
+      savingThrowProficiencies: updatedSavingThrows,
+      skillProficiencies: updatedSkills,
       allocatedSpells: updatedAllocated,
       cantrips: updatedCantrips,
       spellsKnown: updatedSpellsKnown,

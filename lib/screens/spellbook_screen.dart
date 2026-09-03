@@ -63,6 +63,14 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant SpellbookScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialEdition != oldWidget.initialEdition) {
+      _localEditionOverride = widget.initialEdition;
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -84,13 +92,16 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
 
   void _onEditionChanged(BuildContext context, DmRulesEdition newEdition) {
     final settingsProvider = SettingsScope.of(context);
-    final current =
-        _localEditionOverride ?? settingsProvider.settings.rulesEdition;
+    final current = widget.initialEdition != null
+        ? (_localEditionOverride ?? widget.initialEdition!)
+        : settingsProvider.settings.rulesEdition;
     if (current == newEdition) return;
     HapticService.selectionTick(context);
-    setState(() {
-      _localEditionOverride = newEdition;
-    });
+    if (widget.initialEdition != null) {
+      setState(() {
+        _localEditionOverride = newEdition;
+      });
+    }
     settingsProvider.setRulesEdition(newEdition);
   }
 
@@ -137,6 +148,22 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
     if (_showOnlyRitual) count++;
     if (_showOnlyConcentration) count++;
     return count;
+  }
+
+  void _clearAllFilters() {
+    HapticService.selectionTick(context);
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _selectedLevel = null;
+      _selectedSchool = null;
+      _selectedClass = null;
+      _showOnlyChangedIn2024 = false;
+      _showOnlyPinned = false;
+      _showOnlyRitual = false;
+      _showOnlyConcentration = false;
+      _lastQuickRollLabel = null;
+    });
   }
 
   void _showCompareDialog(
@@ -193,9 +220,9 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settingsProvider = SettingsScope.maybeOf(context);
-    final edition = _localEditionOverride ??
-        settingsProvider?.settings.rulesEdition ??
-        DmRulesEdition.v2024;
+    final edition = widget.initialEdition != null
+        ? (_localEditionOverride ?? widget.initialEdition!)
+        : (settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024);
     final pinnedIds = _getPinnedIds(context);
     final allSpells = SpellbookLibrary.allSpells;
 
@@ -618,21 +645,7 @@ class _SpellbookScreenState extends State<SpellbookScreen> {
           ? 'Browse the Spellbook Companion and tap the bookmark icon on any spell to pin it to your personal spellbook.'
           : 'Try adjusting your search terms or clearing active filters.',
       actionLabel: !isSpellbookEmpty ? 'Clear All Filters' : null,
-      onAction: !isSpellbookEmpty
-          ? () {
-              _searchController.clear();
-              setState(() {
-                _searchQuery = '';
-                _selectedLevel = null;
-                _selectedSchool = null;
-                _selectedClass = null;
-                _showOnlyChangedIn2024 = false;
-                _showOnlyPinned = false;
-                _showOnlyRitual = false;
-                _showOnlyConcentration = false;
-              });
-            }
-          : null,
+      onAction: !isSpellbookEmpty ? _clearAllFilters : null,
       actionIcon: Icons.refresh,
     );
   }

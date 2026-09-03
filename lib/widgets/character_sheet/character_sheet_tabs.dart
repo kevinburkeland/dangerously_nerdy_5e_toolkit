@@ -4,6 +4,7 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/srd_feats_library.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
@@ -337,12 +338,25 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
 
         // Feats
         ...character.feats.map((feat) {
+          final is2024 = character.id.ruleset == RulesetVersion.v2024;
+          final srdFeat = SrdFeatsLibrary.findBySlug(feat.slug);
+          final categoryLabel = srdFeat != null
+              ? (is2024
+                  ? '${srdFeat.category} Feat'
+                  : (srdFeat.category.toLowerCase() == 'origin' ? 'General Feat' : '${srdFeat.category} Feat'))
+              : 'Feat';
+
           return FeatureListItem(
             name: feat.displayName,
-            source: 'Feat',
-            descriptionMarkdown: 'General or Origin feat granting unique combat or exploration prowess.',
+            source: categoryLabel,
+            descriptionMarkdown: srdFeat?.descriptionMarkdown ??
+                (is2024
+                    ? 'General or Origin feat granting unique combat or exploration prowess.'
+                    : 'Feat granting unique combat or exploration prowess.'),
             icon: Icons.military_tech,
-            badgeColor: Colors.amber,
+            badgeColor: is2024 && srdFeat?.category.toLowerCase() == 'origin'
+                ? Colors.amber
+                : Colors.lightBlueAccent,
           );
         }),
       ],
