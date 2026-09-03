@@ -165,14 +165,14 @@ class CharacterVitalsHud extends StatelessWidget {
                         context,
                         label: '-5',
                         color: Colors.red.shade400,
-                        onPressed: () => controller.modifyHp(-5),
+                        onPressed: () => controller.takeDamage(5),
                       ),
                       const SizedBox(width: 6),
                       _buildQuickHpButton(
                         context,
                         label: '-1',
                         color: Colors.red.shade400,
-                        onPressed: () => controller.modifyHp(-1),
+                        onPressed: () => controller.takeDamage(1),
                       ),
                     ],
                   ),
@@ -196,16 +196,64 @@ class CharacterVitalsHud extends StatelessWidget {
                         context,
                         label: '+1',
                         color: Colors.green.shade400,
-                        onPressed: () => controller.modifyHp(1),
+                        onPressed: () => controller.heal(1),
                       ),
                       const SizedBox(width: 6),
                       _buildQuickHpButton(
                         context,
                         label: '+5',
                         color: Colors.green.shade400,
-                        onPressed: () => controller.modifyHp(5),
+                        onPressed: () => controller.heal(5),
                       ),
                     ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 10),
+
+              // Rest Action Buttons below the HP bar
+              Row(
+                children: [
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      label: 'Short Rest',
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 48),
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.coffee_outlined, size: 18),
+                          label: const Text('Short Rest', style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: () => _showShortRestDialog(context),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      label: 'Long Rest',
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 48),
+                        child: FilledButton.tonalIcon(
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 48),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.bedtime_outlined, size: 18),
+                          label: const Text('Long Rest', style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: () => _showLongRestConfirmationDialog(context),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1021,38 +1069,40 @@ class CharacterVitalsHud extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
             Icon(Icons.bedtime, color: Colors.indigoAccent),
             SizedBox(width: 8),
-            Text('Take Long Rest?'),
+            Text('Begin Long Rest?'),
           ],
         ),
         content: const Text(
-          'A Long Rest will:\n'
-          '• Restore HP to Maximum\n'
-          '• Reset Temporary HP & Death Saves\n'
-          '• Restore all Spell Slots & Pact Slots\n'
-          '• Regain up to half of spent Hit Dice\n'
-          '• Reduce Exhaustion Level by 1',
+          'Begin Long Rest? This will restore HP, spell slots, half your hit dice, and reduce Exhaustion.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+            child: TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
           ),
-          FilledButton(
-            onPressed: () {
-              controller.applyLongRest();
-              Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Long rest completed! HP, spell slots, and hit dice restored.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: const Text('Complete Long Rest'),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+            child: FilledButton(
+              onPressed: () {
+                controller.applyLongRest();
+                Navigator.of(ctx).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Long rest completed! HP, spell slots, and hit dice restored.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              child: const Text('Begin Long Rest'),
+            ),
           ),
         ],
       ),

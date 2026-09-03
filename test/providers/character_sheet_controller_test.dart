@@ -185,5 +185,88 @@ void main() {
       await controller.toggleInspiration();
       expect(controller.hasInspiration, isFalse);
     });
+
+    test('takeDamage strictly depletes tempHp before reducing currentHp, clamping at 0', () async {
+      // testCharacter has currentHp: 10, tempHp: 4
+      expect(controller.character.resources.currentHp, equals(10));
+      expect(controller.character.resources.tempHp, equals(4));
+
+      // 1. Partial damage absorbed by tempHp
+      await controller.takeDamage(3);
+      expect(controller.character.resources.tempHp, equals(1));
+      expect(controller.character.resources.currentHp, equals(10));
+
+      // 2. Damage exceeding remaining tempHp
+      await controller.takeDamage(5); // 1 tempHp absorbed, remaining 4 damages currentHp (10 - 4 = 6)
+      expect(controller.character.resources.tempHp, equals(0));
+      expect(controller.character.resources.currentHp, equals(6));
+
+      // 3. Overkill damage clamps currentHp at 0
+      await controller.takeDamage(20);
+      expect(controller.character.resources.tempHp, equals(0));
+      expect(controller.character.resources.currentHp, equals(0));
+    });
+
+    test('heal increases currentHp clamped at stats.maxHp', () async {
+      // Bring HP down to 0 then heal 5
+      await controller.takeDamage(100);
+      await controller.heal(5);
+      expect(controller.character.resources.currentHp, equals(5));
+
+      // Heal beyond maxHp
+      final maxHp = controller.stats.maxHp;
+      await controller.heal(maxHp + 50);
+      expect(controller.character.resources.currentHp, equals(maxHp));
+    });
+
+    test('Short Rest explicitly recovers Warlock Pact Magic slots, but not standard spell slots', () async {
+      final warlockMage = controller.character.copyWith(
+        resources: controller.character.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 3},
+            currentSlots: {1: 1, 2: 0},
+            pactMagicMax: 2,
+            pactMagicCurrent: 0,
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      await controller.setCharacter(warlockMage);
+
+      expect(controller.character.resources.spellSlots.pactMagicCurrent, equals(0));
+      expect(controller.character.resources.spellSlots.currentSlots[1], equals(1));
+      expect(controller.character.resources.spellSlots.currentSlots[2], equals(0));
+
+      // Take short rest
+      await controller.applyShortRest(hitDiceSpent: {}, healingRolled: 0);
+
+      // Pact magic slots should be fully restored to pactMagicMax (2)
+      expect(controller.character.resources.spellSlots.pactMagicCurrent, equals(2));
+      // Standard spell slots should remain unchanged
+      expect(controller.character.resources.spellSlots.currentSlots[1], equals(1));
+      expect(controller.character.resources.spellSlots.currentSlots[2], equals(0));
+    });
+
+    test('Long Rest restores all standard spell slots and pact magic slots to maximum', () async {
+      final warlockMage = controller.character.copyWith(
+        resources: controller.character.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 3},
+            currentSlots: {1: 1, 2: 0},
+            pactMagicMax: 2,
+            pactMagicCurrent: 0,
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      await controller.setCharacter(warlockMage);
+
+      await controller.applyLongRest();
+
+      final pool = controller.character.resources.spellSlots;
+      expect(pool.pactMagicCurrent, equals(2));
+      expect(pool.currentSlots[1], equals(4));
+      expect(pool.currentSlots[2], equals(3));
+    });
   });
 }

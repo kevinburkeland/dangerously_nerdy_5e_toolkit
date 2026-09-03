@@ -72,6 +72,11 @@ class EvaluatedCharacterStats {
     this.activeWeaponMasteries = const [],
     this.rulesEdition = DmRulesEdition.v2014,
   });
+
+  /// Primary spell attack bonus (first class or default proficiency bonus).
+  int get spellAttackBonus => spellAttackBonuses.isNotEmpty
+      ? spellAttackBonuses.values.first
+      : proficiencyBonus;
 }
 
 /// Pure Dart derivation engine for computing dynamic stats from base Character models,

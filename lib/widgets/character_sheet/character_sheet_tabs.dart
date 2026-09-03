@@ -12,7 +12,9 @@ import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import '../spellbook/spell_quick_roll_dialog.dart';
 import 'feature_list_item.dart';
+import 'features_traits_section.dart';
 import 'interactive_roll_action_card.dart';
+import 'interactive_spell_tile.dart';
 import 'skills_saves_matrix.dart';
 
 /// 4-Tab Content Area: Actions & Combat, Spells & Magic, Skills & Traits, and Inventory & Reliquary.
@@ -280,85 +282,8 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
         SkillsSavesMatrix(controller: widget.controller),
         const SizedBox(height: 18),
 
-        // Features & Traits Section (Invocations, Feats, Specializations, Class Features, Species Traits)
-        Text(
-          'FEATURES & TRAITS',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Species Traits
-        FeatureListItem(
-          name: '${character.speciesRef.displayName} Traits',
-          source: 'Species Lineage',
-          descriptionMarkdown: 'Inherent physical and biological traits granted by the ${character.speciesRef.displayName} species lineage.',
-          icon: Icons.fingerprint,
-          badgeColor: Colors.tealAccent,
-        ),
-
-        // Class Features
-        ...character.progression.classes.map((cls) {
-          return FeatureListItem(
-            name: '${cls.classRef.displayName} Features (Lvl ${cls.level})',
-            source: 'Class Feature',
-            descriptionMarkdown: 'Core class abilities, proficiencies, and subclass powers granted at level ${cls.level} of ${cls.classRef.displayName}.',
-            icon: Icons.shield,
-            badgeColor: theme.colorScheme.primary,
-          );
-        }),
-
-        // Specializations & Invocations
-        Builder(
-          builder: (context) {
-            final allSelectedOptions = character.progression.getAllSelectedFeatureOptions();
-            return Column(
-              children: allSelectedOptions.entries.map((entry) {
-                final decisionId = entry.key;
-                final optionIds = entry.value;
-
-                return Column(
-                  children: optionIds.map((optId) {
-                    final opt = SrdFeatureOptions.allOptions.where((o) => o.id == optId).firstOrNull;
-                    return FeatureListItem(
-                      name: opt?.name ?? optId.replaceAll('_', ' '),
-                      source: decisionId.replaceAll('-', ' ').toUpperCase(),
-                      descriptionMarkdown: opt?.descriptionMarkdown ?? 'Selected character customization option for $decisionId.',
-                      icon: Icons.auto_awesome,
-                      badgeColor: Colors.cyanAccent,
-                    );
-                  }).toList(),
-                );
-              }).toList(),
-            );
-          },
-        ),
-
-        // Feats
-        ...character.feats.map((feat) {
-          final is2024 = character.id.ruleset == RulesetVersion.v2024;
-          final srdFeat = SrdFeatsLibrary.findBySlug(feat.slug);
-          final categoryLabel = srdFeat != null
-              ? (is2024
-                  ? '${srdFeat.category} Feat'
-                  : (srdFeat.category.toLowerCase() == 'origin' ? 'General Feat' : '${srdFeat.category} Feat'))
-              : 'Feat';
-
-          return FeatureListItem(
-            name: feat.displayName,
-            source: categoryLabel,
-            descriptionMarkdown: srdFeat?.descriptionMarkdown ??
-                (is2024
-                    ? 'General or Origin feat granting unique combat or exploration prowess.'
-                    : 'Feat granting unique combat or exploration prowess.'),
-            icon: Icons.military_tech,
-            badgeColor: is2024 && srdFeat?.category.toLowerCase() == 'origin'
-                ? Colors.amber
-                : Colors.lightBlueAccent,
-          );
-        }),
+        // Features, Feats & Lineage Section
+        FeaturesTraitsSection(controller: widget.controller),
       ],
     );
   }
@@ -933,109 +858,113 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
     bool isPrepared = false,
     required DmRulesEdition edition,
   }) {
-    final theme = Theme.of(context);
     final spellItem = SpellbookLibrary.getSpellById(spellRef.slug);
     final spellName = spellItem?.getName(edition) ?? spellRef.displayName;
     final rules = spellItem?.getRules(edition);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(
-          color: isPrepared ? Colors.purpleAccent.withValues(alpha: 0.6) : Colors.white12,
-        ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: isCantrip
-            ? const Icon(Icons.star, color: Colors.purpleAccent, size: 20)
-            : IconButton(
-                icon: Icon(
-                  isPrepared ? Icons.bookmark : Icons.bookmark_border,
-                  color: isPrepared ? Colors.purpleAccent : Colors.white38,
-                ),
-                tooltip: isPrepared ? 'Prepared Spell' : 'Unprepared (Tap to prepare)',
-                onPressed: () {
-                  HapticService.selectionTick(context);
-                  widget.controller.togglePreparedSpell(spellRef);
-                },
-              ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                spellName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
+    final domainSpell = spellItem != null
+        ? Spell(
+            id: EntityId(
+              slug: spellItem.id,
+              ruleset: edition == DmRulesEdition.v2024 ? RulesetVersion.v2024 : RulesetVersion.v2014,
             ),
-            if (rules?.concentration == true)
-              Container(
-                margin: const EdgeInsets.only(left: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.amber.shade900, borderRadius: BorderRadius.circular(4)),
-                child: const Text('C', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-              ),
-            if (rules?.ritual == true)
-              Container(
-                margin: const EdgeInsets.only(left: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.teal.shade900, borderRadius: BorderRadius.circular(4)),
-                child: const Text('R', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-              ),
-          ],
-        ),
-        subtitle: Text(
-          '${spellItem?.school.name.toUpperCase() ?? "MAGIC"} • ${rules?.castingTime ?? "1 Action"} • ${rules?.range ?? "30 ft"}',
-          style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (spellItem != null &&
-                rules?.rollFormula != null &&
-                rules!.rollFormula!.trim().isNotEmpty &&
-                rules.rollFormula!.trim().toLowerCase() != 'none')
-              IconButton(
-                icon: const Icon(Icons.casino, size: 18, color: Colors.cyanAccent),
-                tooltip: 'Quick Roll Spell',
-                onPressed: () {
-                  HapticService.selectionTick(context);
-                  SpellQuickRollDialog.show(
-                    context,
-                    spell: spellItem,
-                    edition: edition,
-                  );
-                },
-              ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, size: 18),
-              onSelected: (action) {
-                if (action == 'cast_slot') {
-                  HapticService.heavyImpact(context);
-                  final lvl = spellItem?.level ?? 1;
-                  widget.controller.toggleSpellSlot(lvl, true);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Cast $spellName (Expended Level $lvl slot)')),
-                  );
-                } else if (action == 'remove') {
-                  HapticService.selectionTick(context);
-                  widget.controller.removeSpell(spellRef, isCantrip: isCantrip);
-                }
-              },
-              itemBuilder: (ctx) => [
-                if (!isCantrip)
-                  const PopupMenuItem(
-                    value: 'cast_slot',
-                    child: Text('Cast & Expend Slot'),
-                  ),
+            name: spellName,
+            level: spellItem.level,
+            school: (rules?.schoolOverride ?? spellItem.school).name,
+            castingTime: CastingTime(
+              cost: 1,
+              actionType: ActionType.action,
+              triggerCondition: rules?.castingTime ?? '1 Action',
+            ),
+            duration: SpellDuration(
+              type: rules?.concentration == true
+                  ? DurationType.special
+                  : DurationType.instantaneous,
+              requiresConcentration: rules?.concentration ?? false,
+              rawText: rules?.duration,
+            ),
+            range: rules?.range ?? '30 ft',
+            components: SpellComponents(
+              v: rules?.components.contains('V') ?? false,
+              s: rules?.components.contains('S') ?? false,
+              m: rules?.components.contains('M') ?? false,
+              materialDescription: rules?.materialDetails?.description,
+            ),
+            descriptionMarkdown: rules != null ? rules.description.join('\n\n') : spellRef.displayName,
+            higherLevelsMarkdown: rules?.higherLevels,
+            damageMath: (rules?.rollFormula != null &&
+                    rules!.rollFormula!.trim().isNotEmpty &&
+                    rules.rollFormula!.trim().toLowerCase() != 'none')
+                ? [
+                    EvaluationMath(
+                      diceFormula: rules.rollFormula!,
+                      damageType: DamageType.values.firstWhere(
+                        (d) => d.name.toLowerCase() == (rules.damageOrHealType ?? '').toLowerCase(),
+                        orElse: () => DamageType.untyped,
+                      ),
+                    )
+                  ]
+                : const [],
+            customProperties: {
+              if (rules?.rollFormula != null) 'rollFormula': rules!.rollFormula,
+              if (rules?.ritual != null) 'ritual': rules!.ritual,
+            },
+          )
+        : Spell(
+            id: EntityId(slug: spellRef.slug, ruleset: RulesetVersion.v2024),
+            name: spellRef.displayName,
+            level: isCantrip ? 0 : 1,
+            school: 'evocation',
+            castingTime: const CastingTime(cost: 1, actionType: ActionType.action),
+            duration: const SpellDuration(type: DurationType.instantaneous),
+            range: '30 ft',
+            components: const SpellComponents(),
+            descriptionMarkdown: spellRef.displayName,
+          );
+
+    return InteractiveSpellTile(
+      spell: domainSpell,
+      controller: widget.controller,
+      isCantrip: isCantrip,
+      isPrepared: isPrepared,
+      onTogglePrepared: isCantrip
+          ? null
+          : () {
+              HapticService.selectionTick(context);
+              widget.controller.togglePreparedSpell(spellRef);
+            },
+      trailingExtra: Semantics(
+        button: true,
+        label: 'More options for $spellName',
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          child: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, size: 18),
+            onSelected: (action) {
+              if (action == 'cast_slot') {
+                HapticService.heavyImpact(context);
+                final lvl = spellItem?.level ?? 1;
+                widget.controller.toggleSpellSlot(lvl, true);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Cast $spellName (Expended Level $lvl slot)')),
+                );
+              } else if (action == 'remove') {
+                HapticService.selectionTick(context);
+                widget.controller.removeSpell(spellRef, isCantrip: isCantrip);
+              }
+            },
+            itemBuilder: (ctx) => [
+              if (!isCantrip)
                 const PopupMenuItem(
-                  value: 'remove',
-                  child: Text('Remove from Sheet', style: TextStyle(color: Colors.redAccent)),
+                  value: 'cast_slot',
+                  child: Text('Cast & Expend Slot'),
                 ),
-              ],
-            ),
-          ],
+              const PopupMenuItem(
+                value: 'remove',
+                child: Text('Remove from Sheet', style: TextStyle(color: Colors.redAccent)),
+              ),
+            ],
+          ),
         ),
       ),
     );

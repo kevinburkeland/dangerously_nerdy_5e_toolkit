@@ -1,14 +1,20 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import '../models/characters/srd_classes_library.dart' show SrdFeatureOptions;
+import '../models/dice_roll.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
 import '../models/domain/character_models.dart';
 import '../models/domain/entity_reference.dart';
+import '../models/domain/homebrew_extended_entities.dart' show FeatureOption;
 import '../models/domain/spell_monster_equipment.dart';
+import '../models/room_roll.dart';
+import '../services/dice_room_service.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/debounced_storage_service.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
 import '../services/rules/character_progression_engine.dart';
+import '../utils/secure_random.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,
 /// resource management, equipment/attunement toggles, condition management, and debounced persistence.
@@ -167,31 +173,26 @@ class CharacterSheetController extends ChangeNotifier {
     return toggleAttunement(instanceId, !targetItem.isAttuned);
   }
 
-  /// Modifies current HP by [delta] (positive for healing, negative for damage).
-  /// Damage is absorbed by temporary HP first before depleting current HP.
-  Future<void> modifyHp(int delta) async {
+  /// Applies damage to the character.
+  /// Damage strictly depletes temporary HP before reducing current HP, clamping at 0.
+  Future<void> takeDamage(int amount) async {
+    if (amount <= 0) return;
     final curHp = _character.resources.currentHp;
     final curTemp = _character.resources.tempHp;
-    final maxHp = _stats.maxHp;
 
     int newHp = curHp;
     int newTemp = curTemp;
 
-    if (delta < 0) {
-      final damage = delta.abs();
-      if (curTemp > 0) {
-        if (damage <= curTemp) {
-          newTemp = curTemp - damage;
-        } else {
-          final remainingDamage = damage - curTemp;
-          newTemp = 0;
-          newHp = math.max(0, curHp - remainingDamage);
-        }
+    if (curTemp > 0) {
+      if (amount <= curTemp) {
+        newTemp = curTemp - amount;
       } else {
-        newHp = math.max(0, curHp - damage);
+        final remainingDamage = amount - curTemp;
+        newTemp = 0;
+        newHp = math.max(0, curHp - remainingDamage);
       }
-    } else if (delta > 0) {
-      newHp = math.min(maxHp, curHp + delta);
+    } else {
+      newHp = math.max(0, curHp - amount);
     }
 
     _character = _character.copyWith(
@@ -203,6 +204,33 @@ class CharacterSheetController extends ChangeNotifier {
     _recalculateStats();
     notifyListeners();
     _schedulePersist();
+  }
+
+  /// Heals the character by [amount], clamping at [stats.maxHp].
+  Future<void> heal(int amount) async {
+    if (amount <= 0) return;
+    final curHp = _character.resources.currentHp;
+    final maxHp = _stats.maxHp;
+    final newHp = math.min(maxHp, curHp + amount);
+
+    _character = _character.copyWith(
+      resources: _character.resources.copyWith(
+        currentHp: newHp,
+      ),
+    );
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Modifies current HP by [delta] (positive for healing, negative for damage).
+  /// Damage is absorbed by temporary HP first before depleting current HP.
+  Future<void> modifyHp(int delta) async {
+    if (delta < 0) {
+      await takeDamage(delta.abs());
+    } else if (delta > 0) {
+      await heal(delta);
+    }
   }
 
   /// Sets temporary hit points directly.
@@ -327,7 +355,7 @@ class CharacterSheetController extends ChangeNotifier {
     await setHeroicInspiration(!current);
   }
 
-  /// Applies a Short Rest: spends the provided hit dice, applies rolled healing,
+  /// Applies a Short Rest: spends the provided hit dice, applies rolled healing via [heal],
   /// recovers Pact Magic slots, and persists state.
   Future<void> applyShortRest({
     required Map<String, int> hitDiceSpent,
@@ -339,11 +367,7 @@ class CharacterSheetController extends ChangeNotifier {
       currentDice[entry.key] = math.max(0, cur - entry.value);
     }
 
-    final maxHp = _stats.maxHp;
-    final curHp = _character.resources.currentHp;
-    final newHp = math.min(maxHp, curHp + healingRolled);
-
-    // Pact Magic slots recharge on short rest
+    // Pact Magic slots recharge on short rest (RAW 5e Warlock mechanics)
     final spellSlots = _character.resources.spellSlots;
     final updatedSpellSlots = spellSlots.copyWith(
       pactMagicCurrent: spellSlots.pactMagicMax,
@@ -351,7 +375,6 @@ class CharacterSheetController extends ChangeNotifier {
 
     _character = _character.copyWith(
       resources: _character.resources.copyWith(
-        currentHp: newHp,
         currentHitDice: currentDice,
         spellSlots: updatedSpellSlots,
       ),
@@ -359,6 +382,10 @@ class CharacterSheetController extends ChangeNotifier {
     _recalculateStats();
     notifyListeners();
     _schedulePersist();
+
+    if (healingRolled > 0) {
+      await heal(healingRolled);
+    }
   }
 
   /// Applies a Long Rest:
@@ -367,7 +394,7 @@ class CharacterSheetController extends ChangeNotifier {
   /// - Clears death save successes and failures
   /// - Restores all spell slots & pact slots
   /// - Reduces exhaustion level by 1
-  /// - Restores spent hit dice up to half of character's total hit dice (min 1 if any spent)
+  /// - Restores spent hit dice up to half of character's total level (min 1 if any spent)
   Future<void> applyLongRest() async {
     final maxHp = _stats.maxHp;
     final spellSlots = _character.resources.spellSlots;
@@ -384,8 +411,11 @@ class CharacterSheetController extends ChangeNotifier {
       maxHitDice[c.hitDie] = (maxHitDice[c.hitDie] ?? 0) + c.level;
       totalCharacterLevel += c.level;
     }
+    if (totalCharacterLevel == 0) {
+      totalCharacterLevel = math.max(1, _character.totalLevel);
+    }
 
-    // Regain up to half total level (min 1 if spent)
+    // Regain spent hit dice up to half the character's total level (minimum 1)
     int diceToRegain = math.max(1, (totalCharacterLevel / 2).floor());
     final currentDice = Map<String, int>.from(_character.resources.currentHitDice);
 
@@ -568,6 +598,132 @@ class CharacterSheetController extends ChangeNotifier {
     }
     notifyListeners();
     _schedulePersist();
+  }
+
+  /// Evaluates whether the character has a specific capability flag enabled from any selected feature option.
+  bool hasCapabilityFlag(String flagKey) {
+    if (_character.customProperties[flagKey] == true) return true;
+    final allSelectedOptions = _character.progression.getAllSelectedFeatureOptions();
+    for (final optionIds in allSelectedOptions.values) {
+      for (final optId in optionIds) {
+        final opt = SrdFeatureOptions.allOptions.firstWhere(
+          (o) => o.id == optId || o.id == optId.replaceAll('-', '_'),
+          orElse: () => SrdFeatureOptions.allOptions.firstWhere(
+            (o) => o.name.toLowerCase() == optId.toLowerCase(),
+            orElse: () => const FeatureOption(id: '', name: '', descriptionMarkdown: ''),
+          ),
+        );
+        if (opt.grants[flagKey] == true) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Executes a spell attack roll: 1d20 + stats.spellAttackBonus.
+  DiceRollResult rollSpellAttack(Spell spell) {
+    final bonus = stats.spellAttackBonus;
+    final result = DiceRollResult.roll(
+      dieType: DieType.d20,
+      count: 1,
+      modifier: bonus,
+    );
+
+    // Broadcast roll to dice room if active
+    final roomService = DiceRoomService();
+    final activeRoom = roomService.activeRoomCode;
+    if (activeRoom != null) {
+      final playerName = _character.name.isNotEmpty ? _character.name : 'Player';
+      final roomRoll = RoomRoll(
+        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        roomCode: activeRoom,
+        playerName: playerName,
+        formulaString: '${spell.name} (Spell Attack)',
+        total: result.total,
+        individualRolls: result.individualRolls,
+        details: ['1d20(${result.individualRolls.first}) + $bonus = ${result.total}'],
+        isCrit: result.isCrit,
+        isFumble: result.isFumble,
+        timestamp: DateTime.now(),
+      );
+      roomService.broadcastRoll(roomRoll);
+    }
+
+    return result;
+  }
+
+  /// Executes a spell damage roll, dynamically routing capability flags
+  /// (e.g. adding Charisma modifier to Eldritch Blast if 'eldritchBlastChaDamage' is active).
+  DiceRollResult rollSpellDamage(Spell spell, {int? slotLevel}) {
+    final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
+    final isEldritchBlast = slug == 'eldritch-blast';
+
+    // Parse or retrieve damage dice
+    String formula = '1d10';
+    if (spell.damageMath.isNotEmpty) {
+      formula = spell.damageMath.first.diceFormula;
+    } else if (spell.customProperties['rollFormula'] != null) {
+      formula = spell.customProperties['rollFormula'].toString();
+    }
+
+    // Determine base dice count and die type
+    int count = 1;
+    DieType dieType = DieType.d10;
+    int customSides = 10;
+
+    final match = RegExp(r'^(\d+)d(\d+)').firstMatch(formula.trim());
+    if (match != null) {
+      count = int.tryParse(match.group(1)!) ?? 1;
+      final sides = int.tryParse(match.group(2)!) ?? 10;
+      dieType = DieType.values.firstWhere(
+        (d) => d.sides == sides && d != DieType.custom,
+        orElse: () => DieType.custom,
+      );
+      customSides = sides;
+    }
+
+    int modifier = 0;
+    if (isEldritchBlast && hasCapabilityFlag('eldritchBlastChaDamage')) {
+      final chaMod = _character.effectiveAbilityScores.getModifier(AbilityType.charisma);
+      modifier += chaMod;
+    }
+
+    final result = DiceRollResult.rollPool(
+      diceEntries: [
+        DiceEntry(
+          dieType: dieType,
+          count: count,
+          customSides: customSides,
+        ),
+      ],
+      modifier: modifier,
+    );
+
+    // Broadcast roll to dice room if active
+    final roomService = DiceRoomService();
+    final activeRoom = roomService.activeRoomCode;
+    if (activeRoom != null) {
+      final playerName = _character.name.isNotEmpty ? _character.name : 'Player';
+      final roomRoll = RoomRoll(
+        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        roomCode: activeRoom,
+        playerName: playerName,
+        formulaString: '${spell.name} (Damage: ${result.formulaString})',
+        total: result.total,
+        individualRolls: result.individualRolls,
+        details: [
+          '${result.diceEntries.first.formulaString}(${result.individualRolls.join(", ")})'
+              '${modifier != 0 ? (modifier > 0 ? " + $modifier" : " - ${modifier.abs()}") : ""} = ${result.total}'
+        ],
+        isCrit: result.isCrit,
+        isFumble: result.isFumble,
+        timestamp: DateTime.now(),
+      );
+      roomService.broadcastRoll(roomRoll);
+    }
+
+    return result;
   }
 
   @override
