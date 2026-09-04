@@ -700,6 +700,29 @@ class Feat extends DomainEntity {
       };
 
   factory Feat.fromMap(Map<String, dynamic> map) {
+    final customProperties =
+        Map<String, dynamic>.from(map['customProperties'] as Map? ?? {});
+
+    // Ensure selectableAbilities and statIncreaseAmount are hydrated if ability is present
+    final rawAbility = customProperties['ability'] ??
+        customProperties['abilities'] ??
+        map['ability'];
+    if (rawAbility != null &&
+        (customProperties['selectableAbilities'] == null ||
+            (customProperties['selectableAbilities'] is List &&
+                (customProperties['selectableAbilities'] as List).isEmpty))) {
+      final parsed = FeatAsiExtension.parseFeatAbilityData(rawAbility);
+      if (parsed.selectableAbilities.isNotEmpty) {
+        customProperties['selectableAbilities'] =
+            parsed.selectableAbilities.map((a) => a.name).toList();
+        customProperties['statIncreaseAmount'] = parsed.amount;
+        if (parsed.selectableAbilities.length == 1) {
+          customProperties['statIncreaseAbility'] =
+              parsed.selectableAbilities.first.name;
+        }
+      }
+    }
+
     return Feat(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
@@ -710,8 +733,7 @@ class Feat extends DomainEntity {
           .whereType<Map>()
           .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
           .toList(),
-      customProperties:
-          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+      customProperties: customProperties,
     );
   }
 
@@ -745,11 +767,56 @@ extension FeatAsiExtension on Feat {
   /// Whether this feat requires the user to choose an ability score from multiple options.
   bool get requiresAbilityChoice => selectableAbilities.length > 1;
 
+  /// Helper to parse structured ability data from 5e compendium formats
+  static ({List<AbilityType> selectableAbilities, int amount}) parseFeatAbilityData(dynamic rawAbility) {
+    final abilities = <AbilityType>[];
+    int amount = 1;
+
+    void processMap(Map map) {
+      map.forEach((k, v) {
+        final key = k.toString().toLowerCase().trim();
+        if (['str', 'dex', 'con', 'int', 'wis', 'cha', 'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].contains(key)) {
+          final parsed = AbilityType.fromLooseString(key);
+          if (!abilities.contains(parsed)) abilities.add(parsed);
+          if (v is num && v.toInt() > 0) amount = v.toInt();
+        } else if (key == 'choose' && v is Map) {
+          if (v['from'] is List) {
+            for (final item in v['from']) {
+              final parsed = AbilityType.fromLooseString(item.toString());
+              if (!abilities.contains(parsed)) abilities.add(parsed);
+            }
+          }
+          if (v['amount'] is num && (v['amount'] as num).toInt() > 0) {
+            amount = (v['amount'] as num).toInt();
+          }
+        }
+      });
+    }
+
+    if (rawAbility is List) {
+      for (final item in rawAbility) {
+        if (item is Map) {
+          processMap(item);
+        } else if (item is String) {
+          final parsed = AbilityType.fromLooseString(item);
+          if (!abilities.contains(parsed)) abilities.add(parsed);
+        }
+      }
+    } else if (rawAbility is Map) {
+      processMap(rawAbility);
+    } else if (rawAbility is String && rawAbility.trim().isNotEmpty) {
+      final parsed = AbilityType.fromLooseString(rawAbility);
+      abilities.add(parsed);
+    }
+
+    return (selectableAbilities: abilities, amount: amount);
+  }
+
   /// List of ability types the user can choose from (or single ability if fixed).
   List<AbilityType> get selectableAbilities {
     // 1. Explicit list in customProperties
     final rawList = customProperties['selectableAbilities'] ?? customProperties['statChoicePool'];
-    if (rawList is List) {
+    if (rawList is List && rawList.isNotEmpty) {
       final list = <AbilityType>[];
       for (final item in rawList) {
         final parsed = AbilityType.fromLooseString(item.toString());
@@ -758,14 +825,29 @@ extension FeatAsiExtension on Feat {
       if (list.isNotEmpty) return list;
     }
 
-    // 2. Single explicit ability in customProperties
-    final single = customProperties['statIncreaseAbility'] ?? customProperties['ability'];
-    if (single != null) {
-      return [AbilityType.fromLooseString(single.toString())];
+    // 2. Structured ability in customProperties (maps, choose blocks, or single string)
+    final rawAbility = customProperties['ability'] ??
+        customProperties['abilities'] ??
+        customProperties['statIncreaseAbility'];
+    if (rawAbility != null) {
+      final parsed = parseFeatAbilityData(rawAbility);
+      if (parsed.selectableAbilities.isNotEmpty) {
+        return parsed.selectableAbilities;
+      }
     }
 
-    // 3. Fallback to slug-based defaults for standard SRD feats if not explicitly declared
+    // 3. Fallback to slug-based defaults for standard SRD / known feats if not explicitly declared
     return switch (id.slug.toLowerCase()) {
+      'chef' => const [AbilityType.constitution, AbilityType.wisdom],
+      'crusher' => const [AbilityType.strength, AbilityType.constitution],
+      'slasher' => const [AbilityType.strength, AbilityType.dexterity],
+      'piercer' => const [AbilityType.strength, AbilityType.dexterity],
+      'fey-touched' => const [AbilityType.intelligence, AbilityType.wisdom, AbilityType.charisma],
+      'shadow-touched' => const [AbilityType.intelligence, AbilityType.wisdom, AbilityType.charisma],
+      'telekinetic' => const [AbilityType.intelligence, AbilityType.wisdom, AbilityType.charisma],
+      'telepathic' => const [AbilityType.intelligence, AbilityType.wisdom, AbilityType.charisma],
+      'skill-expert' => AbilityType.values,
+      'elven-accuracy' => const [AbilityType.dexterity, AbilityType.intelligence, AbilityType.wisdom, AbilityType.charisma],
       'resilient' => AbilityType.values,
       'athlete' => const [AbilityType.strength, AbilityType.dexterity],
       'observant' => const [AbilityType.intelligence, AbilityType.wisdom],
@@ -852,6 +934,11 @@ extension FeatAsiExtension on Feat {
     }
     if (customProperties['statIncreaseAmount'] is num) {
       return (customProperties['statIncreaseAmount'] as num).toInt();
+    }
+    final rawAbility = customProperties['ability'] ?? customProperties['abilities'];
+    if (rawAbility != null) {
+      final parsed = parseFeatAbilityData(rawAbility);
+      if (parsed.amount > 0) return parsed.amount;
     }
     return selectableAbilities.isNotEmpty ? 1 : 0;
   }

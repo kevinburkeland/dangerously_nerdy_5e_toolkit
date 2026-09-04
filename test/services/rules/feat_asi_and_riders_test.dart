@@ -75,6 +75,96 @@ void main() {
       expect(customFeat.grantsSavingThrowProficiency, isTrue);
       expect(customFeat.choiceRiderDescription, contains('saving throw'));
     });
+
+    test('Chef feat deserialized from 5etools/homebrew JSON format parses CON or WIS choices', () {
+      final rawChef = {
+        'id': {'slug': 'chef', 'ruleset': 'v2014'},
+        'name': 'Chef',
+        'category': 'General',
+        'descriptionMarkdown': 'Mastering culinary arts...',
+        'grants': [],
+        'customProperties': {
+          'page': 79,
+          'ability': [
+            {
+              'choose': {
+                'from': ['con', 'wis'],
+                'amount': 1,
+              }
+            }
+          ],
+          'toolProficiencies': [
+            {"cook's utensils": true}
+          ]
+        }
+      };
+
+      final chef = Feat.fromMap(rawChef);
+      expect(chef.hasAbilityScoreIncrease, isTrue);
+      expect(chef.requiresAbilityChoice, isTrue);
+      expect(chef.selectableAbilities, equals([AbilityType.constitution, AbilityType.wisdom]));
+      expect(chef.statIncreaseAmount, equals(1));
+    });
+
+    test('FeatAsiExtension parses various structured ability formats correctly', () {
+      // 1. Crusher: str or con
+      const crusher = Feat(
+        id: EntityId(slug: 'crusher', ruleset: RulesetVersion.v2014),
+        name: 'Crusher',
+        descriptionMarkdown: '',
+        customProperties: {
+          'ability': [
+            {
+              'choose': {
+                'from': ['str', 'con'],
+                'amount': 1,
+              }
+            }
+          ]
+        },
+      );
+      expect(crusher.requiresAbilityChoice, isTrue);
+      expect(crusher.selectableAbilities, equals([AbilityType.strength, AbilityType.constitution]));
+      expect(crusher.statIncreaseAmount, equals(1));
+
+      // 2. Fey Touched: int, wis, or cha
+      const feyTouched = Feat(
+        id: EntityId(slug: 'fey-touched', ruleset: RulesetVersion.v2014),
+        name: 'Fey Touched',
+        descriptionMarkdown: '',
+        customProperties: {
+          'ability': [
+            {
+              'choose': {
+                'from': ['int', 'wis', 'cha'],
+                'amount': 1,
+              }
+            }
+          ]
+        },
+      );
+      expect(feyTouched.requiresAbilityChoice, isTrue);
+      expect(feyTouched.selectableAbilities, equals([
+        AbilityType.intelligence,
+        AbilityType.wisdom,
+        AbilityType.charisma,
+      ]));
+      expect(feyTouched.statIncreaseAmount, equals(1));
+
+      // 3. Fixed single ability (Aberrant Dragonmark: con + 1)
+      const aberrantDragonmark = Feat(
+        id: EntityId(slug: 'aberrant-dragonmark', ruleset: RulesetVersion.v2014),
+        name: 'Aberrant Dragonmark',
+        descriptionMarkdown: '',
+        customProperties: {
+          'ability': [{'con': 1}]
+        },
+      );
+      expect(aberrantDragonmark.hasAbilityScoreIncrease, isTrue);
+      expect(aberrantDragonmark.requiresAbilityChoice, isFalse);
+      expect(aberrantDragonmark.selectableAbilities, equals([AbilityType.constitution]));
+      expect(aberrantDragonmark.statIncreaseAmount, equals(1));
+    });
   });
 
   group('CharacterProgressionEngine with Feat ASIs & Riders', () {

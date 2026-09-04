@@ -201,7 +201,29 @@ class HomebrewPersistenceService {
     SrdSpeciesLibrary.setCustomSubraces(customSubraces);
 
     final feats = await loadCustomFeats();
-    SrdFeatsLibrary.setCustomFeats(feats);
+    final revitalizedFeats = feats.map((f) {
+      if (f.customProperties['selectableAbilities'] == null ||
+          (f.customProperties['selectableAbilities'] is List &&
+              (f.customProperties['selectableAbilities'] as List).isEmpty)) {
+        final rawAbility = f.customProperties['ability'] ?? f.customProperties['abilities'];
+        if (rawAbility != null) {
+          final parsed = FeatAsiExtension.parseFeatAbilityData(rawAbility);
+          if (parsed.selectableAbilities.isNotEmpty) {
+            final updatedCp = Map<String, dynamic>.from(f.customProperties);
+            updatedCp['selectableAbilities'] =
+                parsed.selectableAbilities.map((a) => a.name).toList();
+            updatedCp['statIncreaseAmount'] = parsed.amount;
+            if (parsed.selectableAbilities.length == 1) {
+              updatedCp['statIncreaseAbility'] =
+                  parsed.selectableAbilities.first.name;
+            }
+            return f.copyWith(customProperties: updatedCp);
+          }
+        }
+      }
+      return f;
+    }).toList();
+    SrdFeatsLibrary.setCustomFeats(revitalizedFeats);
 
     final classes = await loadCustomClasses();
     final revitalizedClasses = classes.map((c) {

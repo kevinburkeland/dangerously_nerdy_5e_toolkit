@@ -535,7 +535,15 @@ class CompendiumJsonIngestionPipeline {
 
     final rawClassFeatures = <Map<String, dynamic>>[];
     ingestKeys(['classfeature', 'classfeatures'], (raw) {
-      rawClassFeatures.add(raw);
+      final isSubclass = raw['subclassShortName'] != null ||
+          raw['subclass'] != null ||
+          raw['subclassName'] != null ||
+          raw['gainSubclassFeature'] == true;
+      if (isSubclass) {
+        rawSubclassFeatures.add(raw);
+      } else {
+        rawClassFeatures.add(raw);
+      }
     }, 'Class Feature');
 
     final classFeatureMap = <String, Map<String, dynamic>>{};
@@ -714,15 +722,15 @@ class CompendiumJsonIngestionPipeline {
 
         final matchingFeatures = rawSubclassFeatures.where((f) {
           final fClass = (f['className']?.toString() ?? f['class']?.toString() ?? '').toLowerCase().trim();
-          final fSubShort = (f['subclassShortName']?.toString() ?? f['shortName']?.toString() ?? '').toLowerCase().trim();
-          final fSubName = (f['subclassName']?.toString() ?? f['name']?.toString() ?? '').toLowerCase().trim();
+          final fSubShort = (f['subclassShortName'] ?? f['shortName'] ?? f['subclass'])?.toString().toLowerCase().trim() ?? '';
+          final fSubName = (f['subclassName'] ?? f['name'])?.toString().toLowerCase().trim() ?? '';
 
           final matchesClass = fClass.isEmpty || cleanClass.isEmpty || fClass == cleanClass || cleanClass.contains(fClass) || fClass.contains(cleanClass);
           final matchesSub = fSubShort == cleanSubShort ||
               fSubShort == cleanSubName ||
               fSubName == cleanSubName ||
               fSubName == cleanSubShort ||
-              (fSubShort.isNotEmpty && cleanSubName.contains(fSubShort));
+              (fSubShort.isNotEmpty && (cleanSubName.contains(fSubShort) || cleanSubShort.contains(fSubShort)));
 
           return matchesClass && matchesSub;
         }).toList();
@@ -775,6 +783,11 @@ class CompendiumJsonIngestionPipeline {
         final cleanClassName = cls.name.toLowerCase().trim();
 
         final matchingFeatures = rawClassFeatures.where((f) {
+          final isSubclass = f['subclassShortName'] != null ||
+              f['subclass'] != null ||
+              f['subclassName'] != null ||
+              f['gainSubclassFeature'] == true;
+          if (isSubclass) return false;
           final fClass = (f['className']?.toString() ?? f['class']?.toString() ?? '').toLowerCase().trim();
           return fClass == cleanClass || fClass == cleanClassName;
         }).toList();

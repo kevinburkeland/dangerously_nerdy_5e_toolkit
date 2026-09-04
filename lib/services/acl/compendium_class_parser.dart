@@ -332,6 +332,11 @@ class CompendiumClassParser {
       if (f is String && (f.contains('|') || classFeatureMap != null)) {
         final resolved = _lookupFeature(f, classFeatureMap);
         if (resolved != null) {
+          final isSubclass = resolved['subclassShortName'] != null ||
+              resolved['subclass'] != null ||
+              resolved['gainSubclassFeature'] == true;
+          if (isSubclass) return;
+
           final fName = resolved['name']?.toString() ?? '';
           final level = resolved['level'] != null ? ' (Level ${resolved['level']})' : '';
           final fContent = transformer.transformEntries(
@@ -347,8 +352,18 @@ class CompendiumClassParser {
           return;
         }
       } else if (f is Map && (f.containsKey('classFeature') || f.containsKey('subclassFeature'))) {
+        if (f['gainSubclassFeature'] == true ||
+            f['subclassShortName'] != null ||
+            f['subclass'] != null) {
+          return;
+        }
         final resolved = _lookupFeature(f, classFeatureMap);
         if (resolved != null) {
+          final isSubclass = resolved['subclassShortName'] != null ||
+              resolved['subclass'] != null ||
+              resolved['gainSubclassFeature'] == true;
+          if (isSubclass) return;
+
           final fName = resolved['name']?.toString() ?? '';
           final level = resolved['level'] != null ? ' (Level ${resolved['level']})' : '';
           final fContent = transformer.transformEntries(

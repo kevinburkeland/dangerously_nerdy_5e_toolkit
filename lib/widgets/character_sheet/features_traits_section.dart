@@ -12,6 +12,19 @@ import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 
+@immutable
+class _ExtractedFeature {
+  final String name;
+  final int? level;
+  final String descriptionMarkdown;
+
+  const _ExtractedFeature({
+    required this.name,
+    this.level,
+    required this.descriptionMarkdown,
+  });
+}
+
 /// Aggregated Identity, Traits, Feats, and Class Features Section with
 /// accessible 48x48dp touch targets and modal bottom sheet reference viewers.
 class FeaturesTraitsSection extends StatelessWidget {
@@ -240,6 +253,61 @@ class FeaturesTraitsSection extends StatelessWidget {
     );
   }
 
+  static List<_ExtractedFeature> _extractFeaturesFromMarkdown(String markdown) {
+    if (markdown.trim().isEmpty) return const [];
+
+    final List<_ExtractedFeature> result = [];
+
+    // Case 1: Markdown with headers "### Feature Name (Level X)" or "### Feature Name"
+    if (markdown.contains(RegExp(r'(?:^|\n)###\s+'))) {
+      final blocks = markdown.split(RegExp(r'(?=(?:^|\n)###\s+)'));
+      for (final block in blocks) {
+        final trimmed = block.trim();
+        if (trimmed.isEmpty) continue;
+        final lines = trimmed.split('\n');
+        final headerLine = lines.first.replaceAll(RegExp(r'^#+\s*'), '').trim();
+        final levelMatch = RegExp(r'^(.*?)(?:\s*\(Level\s+(\d+)\))?$').firstMatch(headerLine);
+        final name = levelMatch?.group(1)?.trim() ?? headerLine;
+        final level = levelMatch?.group(2) != null ? int.tryParse(levelMatch!.group(2)!) : null;
+        final body = lines.length > 1 ? lines.sublist(1).join('\n').trim() : '';
+
+        if (name.isNotEmpty && !result.any((r) => r.name.toLowerCase() == name.toLowerCase())) {
+          result.add(_ExtractedFeature(
+            name: name,
+            level: level,
+            descriptionMarkdown: body.isNotEmpty ? body : trimmed,
+          ));
+        }
+      }
+      if (result.isNotEmpty) return result;
+    }
+
+    // Case 2: Markdown with bold bullet / section markers "**Feature Name.** Description..."
+    final boldRegex = RegExp(r'\*\*([^*]+?)\.\*\*\s*([\s\S]*?)(?=(?:\n\s*\*\*[^*]+?\.\*)|$)');
+    final matches = boldRegex.allMatches(markdown).toList();
+    if (matches.isNotEmpty) {
+      for (final match in matches) {
+        final title = match.group(1)?.trim() ?? '';
+        final body = match.group(2)?.trim() ?? '';
+        if (title.isNotEmpty && !result.any((r) => r.name.toLowerCase() == title.toLowerCase())) {
+          int? level;
+          final lvlMatch = RegExp(r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level', caseSensitive: false).firstMatch(body);
+          if (lvlMatch != null) {
+            level = int.tryParse(lvlMatch.group(1)!);
+          }
+          result.add(_ExtractedFeature(
+            name: title,
+            level: level,
+            descriptionMarkdown: '**$title.** $body',
+          ));
+        }
+      }
+      if (result.isNotEmpty) return result;
+    }
+
+    return const [];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -348,16 +416,24 @@ class FeaturesTraitsSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // Core Class features
-        ...character.progression.classes.map((cls) {
-          final srdClass = SrdClassesLibrary.findBySlug(cls.classRef.slug);
+        // Class & Subclass features
+        ...character.progression.classes.expand((cls) {
+          final widgets = <Widget>[];
+
+          // 1. Resolve Class
+          final srdClass = SrdClassesLibrary.findBySlug(cls.classRef.slug) ??
+              SrdClassesLibrary.allClasses.where((c) =>
+                  c.id.slug == cls.classRef.slug ||
+                  c.name.toLowerCase() == cls.classRef.displayName.toLowerCase(),
+              ).firstOrNull;
+
           final classDesc = srdClass?.featuresMarkdown ??
               'Core class features, weapon/armor proficiencies, and archetype specialization at level ${cls.level} of ${cls.classRef.displayName}.';
           final clsType = DndClassType.tryParse(cls.classRef.slug) ??
               DndClassType.tryParse(cls.classRef.displayName) ??
               DndClassType.fighter;
 
-          return _buildFeatureChip(
+          widgets.add(_buildFeatureChip(
             context,
             name: '${cls.classRef.displayName} Features (Lvl ${cls.level})',
             category: 'Class Feature',
@@ -369,7 +445,77 @@ class FeaturesTraitsSection extends StatelessWidget {
             ),
             icon: Icons.shield,
             color: theme.colorScheme.primary,
-          );
+          ));
+
+          // 2. Resolve Subclass (if selected)
+          if (cls.subclassRef != null) {
+            final subSlug = cls.subclassRef!.slug.toLowerCase().trim();
+            final subDisplayName = cls.subclassRef!.displayName.trim();
+            final subNameLower = subDisplayName.toLowerCase();
+
+            final resolvedSubclass = SrdClassesLibrary.allSubclasses.where((s) =>
+                s.id.slug.toLowerCase().trim() == subSlug ||
+                s.name.toLowerCase().trim() == subNameLower ||
+                s.shortName.toLowerCase().trim() == subNameLower,
+            ).firstOrNull;
+
+            final subName = resolvedSubclass?.name ?? subDisplayName;
+            final subFeaturesMarkdown = resolvedSubclass?.featuresMarkdown ?? '';
+
+            final extractedSubFeatures = _extractFeaturesFromMarkdown(subFeaturesMarkdown);
+            final eligibleSubFeatures = extractedSubFeatures
+                .where((f) => f.level == null || f.level! <= cls.level)
+                .toList();
+
+            if (eligibleSubFeatures.isNotEmpty) {
+              for (final feat in eligibleSubFeatures) {
+                widgets.add(_buildFeatureChip(
+                  context,
+                  name: feat.name,
+                  category:
+                      '$subName Feature${feat.level != null ? ' (Lvl ${feat.level})' : ''}',
+                  descriptionMarkdown: feat.descriptionMarkdown,
+                  glyphWidget: DndGlyph.classFeature(
+                    classType: clsType,
+                    size: 24,
+                    isDarkMode: true,
+                  ),
+                  icon: Icons.workspace_premium,
+                  color: Colors.cyanAccent,
+                ));
+              }
+            } else if (subFeaturesMarkdown.isNotEmpty) {
+              widgets.add(_buildFeatureChip(
+                context,
+                name: '$subName (Lvl ${cls.level})',
+                category: '${cls.classRef.displayName} Subclass',
+                descriptionMarkdown: subFeaturesMarkdown,
+                glyphWidget: DndGlyph.classFeature(
+                  classType: clsType,
+                  size: 24,
+                  isDarkMode: true,
+                ),
+                icon: Icons.workspace_premium,
+                color: Colors.cyanAccent,
+              ));
+            } else {
+              widgets.add(_buildFeatureChip(
+                context,
+                name: subName,
+                category: '${cls.classRef.displayName} Subclass',
+                descriptionMarkdown: 'Archetype and specialization chosen for ${cls.classRef.displayName}.',
+                glyphWidget: DndGlyph.classFeature(
+                  classType: clsType,
+                  size: 24,
+                  isDarkMode: true,
+                ),
+                icon: Icons.workspace_premium,
+                color: Colors.cyanAccent,
+              ));
+            }
+          }
+
+          return widgets;
         }),
 
         // Selected options (Invocations, Fighting Styles, etc.)
