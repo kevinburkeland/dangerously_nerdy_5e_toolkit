@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
 
@@ -173,7 +176,7 @@ void main() {
       expect(remaining.first.slug, equals('ice-spike'));
     });
 
-    test('clearHomebrewCategory purges specific category and updates runtime library', () async {
+    test('clearHomebrewCategory purges specific category from AppDatabaseService and updates runtime library', () async {
       const monster = Monster(
         id: EntityId(slug: 'abyssal-stalker', ruleset: RulesetVersion.homebrew),
         name: 'Abyssal Stalker',
@@ -188,9 +191,21 @@ void main() {
       );
       await persistence.saveCustomMonster(monster);
       expect((await persistence.loadCustomMonsters()).length, equals(1));
+      expect(MonsterCodexLibrary.homebrewMonsters.length, equals(1));
+
+      // Also ensure AppDatabaseService explicitly has the key
+      await AppDatabaseService.instance.put(
+        AppDatabaseService.boxHomebrew,
+        'dn_homebrew_monsters_v1',
+        [jsonEncode(monster.toMap())],
+      );
 
       await persistence.clearHomebrewCategory(EntityType.monster);
-      expect((await persistence.loadCustomMonsters()), isEmpty);
+
+      // Verify both persistence and AppDatabaseService box are cleared
+      expect(await persistence.loadCustomMonsters(), isEmpty);
+      expect(AppDatabaseService.instance.get(AppDatabaseService.boxHomebrew, 'dn_homebrew_monsters_v1'), isNull);
+      expect(MonsterCodexLibrary.homebrewMonsters, isEmpty);
     });
 
     test('reparseAllHomebrew upgrades entities from raw JSON and removes exact SRD matches', () async {

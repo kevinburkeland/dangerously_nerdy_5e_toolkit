@@ -472,45 +472,5 @@ class CompendiumSpellParser {
     return RulesetVersion.homebrew;
   }
 
-  List<String> _extractClassList(dynamic classesData) {
-    if (classesData == null) return const [];
-    final result = <String>{};
-
-    if (classesData is Map) {
-      final fromClassList = classesData['fromClassList'];
-      if (fromClassList is List) {
-        for (final item in fromClassList) {
-          if (item is Map && item['name'] != null) {
-            result.add(item['name'].toString().trim());
-          } else if (item is String) {
-            result.add(item.trim());
-          }
-        }
-      }
-      final fromSubclass = classesData['fromSubclass'];
-      if (fromSubclass is List) {
-        for (final item in fromSubclass) {
-          if (item is Map && item['class'] is Map && item['class']['name'] != null) {
-            result.add(item['class']['name'].toString().trim());
-          }
-        }
-      }
-    } else if (classesData is List) {
-      for (final item in classesData) {
-        if (item is Map && item['name'] != null) {
-          result.add(item['name'].toString().trim());
-        } else if (item is String) {
-          result.add(item.trim());
-        }
-      }
-    } else if (classesData is String) {
-      for (final part in classesData.split(',')) {
-        final clean = part.trim();
-        if (clean.isNotEmpty) result.add(clean);
-      }
-    }
-
-    return result.toList();
-  }
 }
 

@@ -1311,6 +1311,16 @@ class HomebrewPersistenceService {
   Future<void> clearAllHomebrew() async {
     final prefs = await SharedPreferences.getInstance();
     await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSpells);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewMonsters);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewItems);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewClasses);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSubclasses);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewRaces);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewFeats);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewBackgrounds);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewOther);
+    await _db.delete(AppDatabaseService.boxHomebrew, _keyCampaignOverrides);
+
     await prefs.remove(_keyHomebrewSpells);
     await prefs.remove(_keyHomebrewMonsters);
     await prefs.remove(_keyHomebrewItems);
@@ -1321,8 +1331,18 @@ class HomebrewPersistenceService {
     await prefs.remove(_keyHomebrewBackgrounds);
     await prefs.remove(_keyHomebrewOther);
     await prefs.remove(_keyCampaignOverrides);
+
     // Clear raw payload keys
     await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSpellsRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewMonstersRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewItemsRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewClassesRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSubclassesRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewRacesRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewFeatsRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewBackgroundsRaw);
+    await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewOtherRaw);
+
     await prefs.remove(_keyHomebrewSpellsRaw);
     await prefs.remove(_keyHomebrewMonstersRaw);
     await prefs.remove(_keyHomebrewItemsRaw);
@@ -1332,10 +1352,14 @@ class HomebrewPersistenceService {
     await prefs.remove(_keyHomebrewFeatsRaw);
     await prefs.remove(_keyHomebrewBackgroundsRaw);
     await prefs.remove(_keyHomebrewOtherRaw);
+
     MonsterCodexLibrary.clearHomebrewMonsters();
+    SpellbookLibrary.setHomebrewSpells([]);
     SrdSpeciesLibrary.setCustomSpecies([]);
+    SrdSpeciesLibrary.setCustomSubraces([]);
     SrdFeatsLibrary.setCustomFeats([]);
     SrdClassesLibrary.setCustomClasses([]);
+    SrdClassesLibrary.setCustomSubclasses([]);
     SrdBackgroundsLibrary.setCustomBackgrounds([]);
     SrdEquivalenceIndex().invalidate();
   }
@@ -1350,37 +1374,56 @@ class HomebrewPersistenceService {
     switch (type) {
       case EntityType.spell:
         await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSpells);
-    await prefs.remove(_keyHomebrewSpells);
+        await prefs.remove(_keyHomebrewSpells);
         await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSpellsRaw);
-    await prefs.remove(_keyHomebrewSpellsRaw);
+        await prefs.remove(_keyHomebrewSpellsRaw);
+        SpellbookLibrary.setHomebrewSpells([]);
       case EntityType.monster:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewMonsters);
         await prefs.remove(_keyHomebrewMonsters);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewMonstersRaw);
         await prefs.remove(_keyHomebrewMonstersRaw);
         MonsterCodexLibrary.clearHomebrewMonsters();
       case EntityType.equipment:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewItems);
         await prefs.remove(_keyHomebrewItems);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewItemsRaw);
         await prefs.remove(_keyHomebrewItemsRaw);
       case EntityType.classDefinition:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewClasses);
         await prefs.remove(_keyHomebrewClasses);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewClassesRaw);
         await prefs.remove(_keyHomebrewClassesRaw);
         SrdClassesLibrary.setCustomClasses([]);
       case EntityType.subclass:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSubclasses);
         await prefs.remove(_keyHomebrewSubclasses);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSubclassesRaw);
         await prefs.remove(_keyHomebrewSubclassesRaw);
+        SrdClassesLibrary.setCustomSubclasses([]);
       case EntityType.species:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewRaces);
         await prefs.remove(_keyHomebrewRaces);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewRacesRaw);
         await prefs.remove(_keyHomebrewRacesRaw);
         SrdSpeciesLibrary.setCustomSpecies([]);
+        SrdSpeciesLibrary.setCustomSubraces([]);
       case EntityType.feat:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewFeats);
         await prefs.remove(_keyHomebrewFeats);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewFeatsRaw);
         await prefs.remove(_keyHomebrewFeatsRaw);
         SrdFeatsLibrary.setCustomFeats([]);
       case EntityType.background:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewBackgrounds);
         await prefs.remove(_keyHomebrewBackgrounds);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewBackgroundsRaw);
         await prefs.remove(_keyHomebrewBackgroundsRaw);
         SrdBackgroundsLibrary.setCustomBackgrounds([]);
       case EntityType.custom:
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewOther);
         await prefs.remove(_keyHomebrewOther);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewOtherRaw);
         await prefs.remove(_keyHomebrewOtherRaw);
       default:
         break;

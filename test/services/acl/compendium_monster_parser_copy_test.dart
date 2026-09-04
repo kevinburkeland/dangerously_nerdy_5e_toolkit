@@ -127,8 +127,8 @@ void main() {
 
     test('revitalizes _copy creature from backup bundle where actions were empty', () {
       // Simulates creature from ~/homebrew.json where actionsMarkdown was only table and stats were 10
-      final backupMonster = Monster(
-        id: const EntityId(slug: 'animated-spider-idol', ruleset: RulesetVersion.v2014),
+      const backupMonster = Monster(
+        id: EntityId(slug: 'animated-spider-idol', ruleset: RulesetVersion.v2014),
         name: 'Animated Spider Idol',
         size: 'Large',
         monsterType: 'construct',
