@@ -62,6 +62,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Step 5 Ability Scores -> Step 6 Feats
+      if (find.text('Auto-Assign').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Auto-Assign'));
+        await tester.pumpAndSettle();
+      }
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
@@ -138,6 +142,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step')); // Step 4 -> 5
       await tester.pumpAndSettle();
+      if (find.text('Auto-Assign').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Auto-Assign'));
+        await tester.pumpAndSettle();
+      }
       await tester.tap(find.text('Next Step')); // Step 5 -> 6 (Equipment in 2014)
       await tester.pumpAndSettle();
 

@@ -168,6 +168,10 @@ void main() {
       await tester.tap(find.text('CHARISMA (+2 Bonus)'));
       await tester.pumpAndSettle();
 
+      // Allocate ability score pool
+      await tester.tap(find.text('Auto-Assign'));
+      await tester.pumpAndSettle();
+
       // Advance to Custom Lineage Bonus Feat step
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
@@ -232,6 +236,10 @@ void main() {
       await tester.tap(find.text('DEXTERITY (+1 Bonus)'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('INTELLIGENCE (+1 Bonus)'));
+      await tester.pumpAndSettle();
+
+      // Allocate ability score pool
+      await tester.tap(find.text('Auto-Assign'));
       await tester.pumpAndSettle();
 
       // Advance to Feats step

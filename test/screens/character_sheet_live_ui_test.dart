@@ -376,6 +376,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Step 5: Ability Score Allocation'), findsOneWidget);
 
+      // Auto-assign ability scores pool
+      await tester.tap(find.text('Auto-Assign'));
+      await tester.pumpAndSettle();
+
       // Step 5 -> Equipment (Feats step was skipped!)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
@@ -446,6 +450,10 @@ void main() {
 
       // Step 4 -> Step 5 (Ability Scores)
       await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Auto-assign ability scores pool
+      await tester.tap(find.text('Auto-Assign'));
       await tester.pumpAndSettle();
 
       // Step 5 -> Step 6 (Variant Human Feat)

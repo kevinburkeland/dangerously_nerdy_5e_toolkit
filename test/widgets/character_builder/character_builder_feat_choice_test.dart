@@ -70,6 +70,8 @@ void main() {
 
       // Step 6: Ability Scores -> Step 7 (Feats)
       expect(find.textContaining('Ability Score Allocation'), findsOneWidget);
+      await tester.tap(find.text('Auto-Assign'));
+      await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));

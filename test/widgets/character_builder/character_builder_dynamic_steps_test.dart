@@ -99,6 +99,10 @@ void main() {
 
       // Advance through Class Decisions, Background, Ability Scores, Equipment until Spells
       while (!tester.any(find.textContaining('Spells & Cantrips'))) {
+        if (tester.any(find.text('Auto-Assign'))) {
+          await tester.tap(find.text('Auto-Assign'));
+          await tester.pumpAndSettle();
+        }
         await tester.drag(find.byType(ListView), const Offset(0, -800));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Next Step'));
