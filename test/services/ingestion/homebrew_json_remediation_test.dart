@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/feature_grant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_background_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_feat_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_generic_entry_parser.dart';
@@ -197,7 +196,7 @@ void main() {
       expect(bladeOfDisaster.customProperties['classes'], containsAll(['Sorcerer', 'Warlock', 'Wizard']));
     });
 
-    test('7. CompendiumJsonIngestionPipeline revitalizes HomebrewBundle and prevents empty subrace slugs', () async {
+    test('7. CompendiumJsonIngestionPipeline revitalizes HomebrewBundle and prevents empty subrace slugs', () {
       final pipeline = CompendiumJsonIngestionPipeline();
 
       final bundleJson = {
@@ -246,7 +245,7 @@ void main() {
         ],
       };
 
-      final compendium = await pipeline.ingestJsonMap(bundleJson);
+      final compendium = pipeline.ingestJsonMap(bundleJson);
 
       // Verify item revitalization
       expect(compendium.items.first.itemType, equals('Spellcasting Focus'));
@@ -272,7 +271,7 @@ void main() {
       expect(compendium.otherEntries.first.category, equals('Eldritch Invocation'));
     });
 
-    test('8. CompendiumJsonIngestionPipeline revitalizes existing HomebrewBundle exports', () async {
+    test('8. CompendiumJsonIngestionPipeline revitalizes existing HomebrewBundle exports', () {
       final pipeline = CompendiumJsonIngestionPipeline();
 
       final bundleExportJson = {
@@ -336,7 +335,7 @@ void main() {
         ],
       };
 
-      final compendium = await pipeline.ingestJsonMap(bundleExportJson);
+      final compendium = pipeline.ingestJsonMap(bundleExportJson);
 
       // Verify revitalization across all 5 categories
       expect(compendium.items.first.itemType, equals('Spellcasting Focus'));

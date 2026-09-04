@@ -4,7 +4,6 @@ import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
-import '../../models/spellbook_data.dart';
 import '../acl/compendium_background_parser.dart';
 import '../acl/compendium_class_parser.dart';
 import '../acl/compendium_feat_parser.dart';
