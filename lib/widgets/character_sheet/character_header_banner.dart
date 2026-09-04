@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 import '../character_builder/level_up_wizard_dialog.dart';
 
@@ -27,6 +29,13 @@ class CharacterHeaderBanner extends StatelessWidget {
         final character = controller.character;
         final stats = controller.stats;
         final hasInspiration = controller.hasInspiration;
+        final isDark = theme.brightness == Brightness.dark;
+
+        final firstClass = character.progression.classes.firstOrNull;
+        final primaryClassType = DndClassType.tryParse(firstClass?.classRef.slug) ??
+            DndClassType.tryParse(firstClass?.classRef.displayName);
+        final speciesType = SpeciesType.tryParse(character.speciesRef.slug) ??
+            SpeciesType.tryParse(character.speciesRef.displayName);
 
         final classSummary = character.progression.classes
             .map((c) => '${c.classRef.displayName} ${c.level}')
@@ -55,15 +64,15 @@ class CharacterHeaderBanner extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Character Avatar
+              // Character Avatar with Dynamic Glyph
               Container(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.tertiary,
+                      theme.colorScheme.primary.withValues(alpha: 0.6),
+                      theme.colorScheme.tertiary.withValues(alpha: 0.6),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -86,13 +95,25 @@ class CharacterHeaderBanner extends StatelessWidget {
                       : null,
                 ),
                 child: Center(
-                  child: Text(
-                    character.name.isNotEmpty ? character.name.substring(0, 1).toUpperCase() : '?',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: primaryClassType != null
+                      ? DndGlyph.classFeature(
+                          classType: primaryClassType,
+                          size: 44,
+                          isDarkMode: isDark,
+                        )
+                      : (speciesType != null
+                          ? DndGlyph.species(
+                              speciesType: speciesType,
+                              size: 44,
+                              isDarkMode: isDark,
+                            )
+                          : Text(
+                              character.name.isNotEmpty ? character.name.substring(0, 1).toUpperCase() : '?',
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )),
                 ),
               ),
               const SizedBox(width: 16),

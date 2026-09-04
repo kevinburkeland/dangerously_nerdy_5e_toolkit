@@ -2065,6 +2065,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
               child: Column(
                 children: [
                   ListTile(
+                    leading: DndGlyph.feat(
+                      category: FeatCategory.parse(feat.category),
+                      featId: feat.id.slug,
+                      displayName: feat.name,
+                      size: 32,
+                      isDarkMode: true,
+                    ),
                     title: Text(feat.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: FormattedMarkdownText(
                       feat.descriptionMarkdown,
@@ -2356,6 +2363,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   children: alwaysPreparedSpells.map((s) {
                     return Chip(
                       visualDensity: VisualDensity.compact,
+                      avatar: DndGlyph.spell(
+                        school: s.school,
+                        level: s.level,
+                        size: 16,
+                        isDarkMode: true,
+                      ),
                       label: Text('${s.getName(edition)} (L${s.level})', style: const TextStyle(fontSize: 11)),
                       backgroundColor: Colors.teal.shade800.withValues(alpha: 0.4),
                       side: BorderSide(color: Colors.tealAccent.withValues(alpha: 0.3)),
@@ -2429,7 +2442,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                         selected: isSelected,
                         selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
                         label: Text(c.getName(edition)),
-                        avatar: Icon(Icons.star, size: 14, color: isSelected ? Colors.purpleAccent : Colors.white54),
+                        avatar: DndGlyph.spell(
+                          school: c.school,
+                          level: 0,
+                          size: 16,
+                          isDarkMode: true,
+                        ),
                         onSelected: (selected) {
                           HapticService.selectionTick(context);
                           setState(() {
@@ -2498,7 +2516,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                       selected: isSelected,
                       selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
                       label: Text(s.getName(edition)),
-                      avatar: Icon(Icons.auto_awesome, size: 14, color: isSelected ? Colors.cyanAccent : Colors.white54),
+                      avatar: DndGlyph.spell(
+                        school: s.school,
+                        level: 1,
+                        size: 16,
+                        isDarkMode: true,
+                      ),
                       onSelected: (selected) {
                         HapticService.selectionTick(context);
                         setState(() {

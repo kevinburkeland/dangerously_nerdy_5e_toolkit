@@ -8,6 +8,7 @@ class FeatureListItem extends StatelessWidget {
   final String source;
   final String descriptionMarkdown;
   final IconData? icon;
+  final Widget? glyphWidget;
   final Color? badgeColor;
 
   const FeatureListItem({
@@ -16,6 +17,7 @@ class FeatureListItem extends StatelessWidget {
     required this.source,
     required this.descriptionMarkdown,
     this.icon,
+    this.glyphWidget,
     this.badgeColor,
   });
 
@@ -62,15 +64,18 @@ class FeatureListItem extends StatelessWidget {
                     label: 'Feature Details: $name',
                     child: Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: effectiveColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: effectiveColor.withValues(alpha: 0.4)),
+                        if (glyphWidget != null)
+                          SizedBox(width: 40, height: 40, child: glyphWidget)
+                        else
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: effectiveColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: effectiveColor.withValues(alpha: 0.4)),
+                            ),
+                            child: Icon(icon ?? Icons.auto_awesome, color: effectiveColor, size: 22),
                           ),
-                          child: Icon(icon ?? Icons.auto_awesome, color: effectiveColor, size: 22),
-                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -158,7 +163,10 @@ class FeatureListItem extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(icon ?? Icons.auto_awesome, size: 16, color: effectiveColor),
+                  if (glyphWidget != null)
+                    SizedBox(width: 22, height: 22, child: glyphWidget)
+                  else
+                    Icon(icon ?? Icons.auto_awesome, size: 16, color: effectiveColor),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(

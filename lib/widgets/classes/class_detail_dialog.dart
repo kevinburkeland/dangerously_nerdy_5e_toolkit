@@ -4,6 +4,8 @@ import '../../models/domain/homebrew_extended_entities.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Comprehensive modal presenting complete class mechanics, proficiencies,
 /// feature progression text, and subclass archetypes breakdown.
@@ -221,6 +223,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
     final slug = cls.id.slug;
     final accentColor = _getClassColor(slug, isDark);
     final classIcon = _getClassIcon(slug);
+    final resolvedClassType = DndClassType.tryParse(slug) ?? DndClassType.tryParse(cls.name);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
     final isHomebrew = cls.id.ruleset == RulesetVersion.homebrew;
@@ -236,19 +239,26 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: Class Icon + Name + Pin + Close
+            // Header: Class Glyph + Name + Pin + Close
             Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: accentColor.withValues(alpha: 0.6)),
+                if (resolvedClassType != null)
+                  DndGlyph.classFeature(
+                    classType: resolvedClassType,
+                    size: 44,
+                    isDarkMode: isDark,
+                  )
+                else
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: accentColor.withValues(alpha: 0.6)),
+                    ),
+                    child: Icon(classIcon, color: accentColor, size: 24),
                   ),
-                  child: Icon(classIcon, color: accentColor, size: 24),
-                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(

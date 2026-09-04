@@ -5,6 +5,8 @@ import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 import '../common/edition_diff_badge.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 import '../interactive/pressable_card.dart';
 
 /// Card component for rendering 5e Species & Races in the Species Codex grid.
@@ -114,6 +116,7 @@ class RaceCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final slug = race.id.slug.toLowerCase();
+    final resolvedSpeciesType = SpeciesType.tryParse(slug) ?? SpeciesType.tryParse(race.name);
     final speciesColor = _getSpeciesColor(slug);
     final speciesIcon = _getSpeciesIcon(slug);
     final resolvedEdition = edition ?? SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
@@ -145,20 +148,27 @@ class RaceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header: Species Icon + Name + Edition Badge + Pin Button
+          // Header: Species Glyph + Name + Edition Badge + Pin Button
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: speciesColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: speciesColor.withValues(alpha: 0.55)),
+              if (resolvedSpeciesType != null)
+                DndGlyph.species(
+                  speciesType: resolvedSpeciesType,
+                  size: 38,
+                  isDarkMode: isDark,
+                )
+              else
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: speciesColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: speciesColor.withValues(alpha: 0.55)),
+                  ),
+                  child: Icon(speciesIcon, color: speciesColor, size: 20),
                 ),
-                child: Icon(speciesIcon, color: speciesColor, size: 20),
-              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

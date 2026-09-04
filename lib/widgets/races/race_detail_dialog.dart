@@ -7,6 +7,8 @@ import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../common/edition_diff_badge.dart';
 import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Modal dialog providing comprehensive details, subrace options, imported lore/fluff,
 /// and editable user-notes for a 5e Species or Lineage.
@@ -67,11 +69,14 @@ class _RaceDetailDialogState extends State<RaceDetailDialog> with SingleTickerPr
 
     final importedFluff = _fluffService.getFluff('race', widget.race.id.slug);
 
+    final resolvedSpeciesType = SpeciesType.tryParse(widget.race.id.slug) ?? SpeciesType.tryParse(widget.race.name);
+
     return Dialog(
+      backgroundColor: theme.colorScheme.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680, maxHeight: 720),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
         child: Column(
           children: [
             // Dialog Header
@@ -79,16 +84,23 @@ class _RaceDetailDialogState extends State<RaceDetailDialog> with SingleTickerPr
               padding: const EdgeInsets.fromLTRB(16, 16, 12, 8),
               child: Row(
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.5)),
+                  if (resolvedSpeciesType != null)
+                    DndGlyph.species(
+                      speciesType: resolvedSpeciesType,
+                      size: 40,
+                      isDarkMode: isDark,
+                    )
+                  else
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.5)),
+                      ),
+                      child: const Icon(Icons.people_alt, color: Color(0xFF10B981), size: 20),
                     ),
-                    child: const Icon(Icons.people_alt, color: Color(0xFF10B981), size: 20),
-                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(

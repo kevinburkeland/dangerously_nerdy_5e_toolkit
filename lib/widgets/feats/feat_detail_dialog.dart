@@ -6,6 +6,8 @@ import '../../providers/settings_provider.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Modal dialog presenting comprehensive feat details, formatted rules text,
 /// mechanic grants breakdown, and bookmarking.
@@ -103,7 +105,7 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
     final resolvedEdition = widget.edition ?? SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
     final is2024Mode = resolvedEdition == DmRulesEdition.v2024;
     final categoryLabel = (!is2024Mode && feat.category.toLowerCase() == 'origin') ? 'General' : feat.category;
-
+    final featCat = FeatCategory.parse(categoryLabel);
     final accentColor = _getCategoryColor(categoryLabel, isDark);
     final categoryIcon = _getCategoryIcon(categoryLabel);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
@@ -122,15 +124,12 @@ class _FeatDetailDialogState extends State<FeatDetailDialog> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: accentColor.withValues(alpha: 0.6)),
-                  ),
-                  child: Icon(categoryIcon, color: accentColor, size: 24),
+                DndGlyph.feat(
+                  category: featCat,
+                  featId: feat.id.slug,
+                  displayName: feat.name,
+                  size: 44,
+                  isDarkMode: isDark,
                 ),
                 const SizedBox(width: 14),
                 Expanded(

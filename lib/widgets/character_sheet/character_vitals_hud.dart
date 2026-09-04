@@ -5,6 +5,8 @@ import '../../models/domain/character_models.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 import 'short_rest_dialog.dart';
 
 /// Core Vitals HUD presenting Armor Class, Initiative, Speed, Passive Senses,
@@ -533,7 +535,11 @@ class CharacterVitalsHud extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.dangerous, size: 18, color: Colors.redAccent),
+              DndGlyph.genericUi(
+                uiType: GenericUiGlyphType.deathSave,
+                size: 20,
+                isDarkMode: true,
+              ),
               const SizedBox(width: 8),
               Text(
                 'DEATH SAVES',
@@ -844,6 +850,7 @@ class CharacterVitalsHud extends StatelessWidget {
 
   Widget _buildHitDiceCard(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final character = controller.character;
     final diceMap = character.resources.currentHitDice;
 
@@ -859,7 +866,11 @@ class CharacterVitalsHud extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.casino_outlined, size: 16, color: theme.colorScheme.primary),
+              DndGlyph.genericUi(
+                uiType: GenericUiGlyphType.d20,
+                size: 18,
+                isDarkMode: isDark,
+              ),
               const SizedBox(width: 8),
               Text(
                 'HIT DICE',
@@ -876,6 +887,7 @@ class CharacterVitalsHud extends StatelessWidget {
               final die = c.hitDie;
               final current = diceMap[die] ?? c.level;
               final max = c.level;
+              final dieGlyph = GenericUiGlyphType.fromDie(die);
               return Semantics(
                 button: true,
                 label: 'Spend or recover $die hit die, $current of $max available',
@@ -905,14 +917,27 @@ class CharacterVitalsHud extends StatelessWidget {
                               : theme.colorScheme.outlineVariant,
                         ),
                       ),
-                      child: Text(
-                        '$current/$max $die',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: current > 0
-                              ? theme.colorScheme.onPrimaryContainer
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (dieGlyph != null) ...[
+                            DndGlyph.genericUi(
+                              uiType: dieGlyph,
+                              size: 16,
+                              isDarkMode: isDark,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            '$current/$max $die',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: current > 0
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

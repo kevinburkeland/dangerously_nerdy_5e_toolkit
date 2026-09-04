@@ -416,6 +416,20 @@ enum DndClassType {
       DndClassType.artificer => const Color(0xFFFBBF24),
     };
   }
+
+  /// Resolve a [DndClassType] from slug, name, or identifier.
+  static DndClassType? tryParse(String? nameOrSlug) {
+    if (nameOrSlug == null || nameOrSlug.isEmpty) return null;
+    final clean = nameOrSlug.trim().toLowerCase().replaceAll('-', '').replaceAll('_', '').replaceAll(' ', '');
+    for (final c in values) {
+      final cClean = c.name.toLowerCase().replaceAll('-', '').replaceAll('_', '');
+      final dClean = c.displayName.toLowerCase().replaceAll('-', '').replaceAll('_', '').replaceAll(' ', '');
+      if (clean == cClean || clean == dClean || clean.contains(cClean)) {
+        return c;
+      }
+    }
+    return null;
+  }
 }
 
 /// Feat category classification (Origin, General, Epic Boon).
@@ -449,6 +463,15 @@ enum FeatCategory {
       FeatCategory.general => const Color(0xFFC084FC),
       FeatCategory.epicBoon => const Color(0xFFFBBF24),
     };
+  }
+
+  /// Parse a [FeatCategory] from a descriptive category label or slug.
+  static FeatCategory parse(String? category) {
+    if (category == null) return FeatCategory.general;
+    final lower = category.toLowerCase();
+    if (lower.contains('origin')) return FeatCategory.origin;
+    if (lower.contains('boon') || lower.contains('epic')) return FeatCategory.epicBoon;
+    return FeatCategory.general;
   }
 }
 
@@ -578,6 +601,20 @@ enum SpeciesType {
       SpeciesType.aasimar => const Color(0xFFFDE047),
     };
   }
+
+  /// Resolve a [SpeciesType] from slug, name, or identifier.
+  static SpeciesType? tryParse(String? nameOrSlug) {
+    if (nameOrSlug == null || nameOrSlug.isEmpty) return null;
+    final clean = nameOrSlug.trim().toLowerCase().replaceAll('-', '').replaceAll('_', '').replaceAll(' ', '');
+    for (final s in values) {
+      final sClean = s.name.toLowerCase();
+      final dClean = s.displayName.toLowerCase().replaceAll(' ', '');
+      if (clean == sClean || clean == dClean || clean.contains(sClean)) {
+        return s;
+      }
+    }
+    return null;
+  }
 }
 
 /// Generic UI Glyphs: Polyhedrals, HUD Status Reticles, and Action Economy Badges.
@@ -641,6 +678,22 @@ enum GenericUiGlyphType {
       GenericUiGlyphType.actionEconomyAction => const Color(0xFF60A5FA),
       GenericUiGlyphType.actionEconomyBonus => const Color(0xFFFBBF24),
       GenericUiGlyphType.actionEconomyReaction => const Color(0xFF22D3EE),
+    };
+  }
+
+  /// Resolve a polyhedral die [GenericUiGlyphType] from die string (e.g., 'd4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100').
+  static GenericUiGlyphType? fromDie(String? dieName) {
+    if (dieName == null) return null;
+    final clean = dieName.toLowerCase().trim();
+    return switch (clean) {
+      'd4' => GenericUiGlyphType.d4,
+      'd6' => GenericUiGlyphType.d6,
+      'd8' => GenericUiGlyphType.d8,
+      'd10' => GenericUiGlyphType.d10,
+      'd12' => GenericUiGlyphType.d12,
+      'd20' => GenericUiGlyphType.d20,
+      'd100' || 'percentile' => GenericUiGlyphType.d100,
+      _ => null,
     };
   }
 }

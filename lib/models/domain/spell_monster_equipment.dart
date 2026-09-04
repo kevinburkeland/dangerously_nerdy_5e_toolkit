@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import '../dm_screen_data.dart';
+import '../spellbook_data.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
 import 'feature_grant.dart';
@@ -276,6 +278,25 @@ class Spell extends DomainEntity {
       relatedEntityRefs: relatedEntityRefs ?? this.relatedEntityRefs,
       customProperties: customProperties ?? this.customProperties,
     );
+  }
+
+  /// Dynamic action rings for DndGlyph HUD rendering conforming to the Glyph Style Guide.
+  List<ActionTraitRing> getGlyphActionRings([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final libSpell = SpellbookLibrary.getSpellById(id.slug) ??
+        SpellbookLibrary.getSpellById(name.toLowerCase().replaceAll(' ', '-').replaceAll('/', '-'));
+    if (libSpell != null) {
+      return libSpell.getGlyphActionRings(edition);
+    }
+    final rings = <ActionTraitRing>[];
+    if (duration.requiresConcentration) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.concentration, label: 'Concentration'));
+    }
+    if (castingTime.actionType == ActionType.bonusAction) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.bonusAction, label: 'Bonus Action'));
+    } else if (castingTime.actionType == ActionType.reaction) {
+      rings.add(const ActionTraitRing(ringType: ActionRingType.reaction, label: 'Reaction'));
+    }
+    return rings;
   }
 }
 

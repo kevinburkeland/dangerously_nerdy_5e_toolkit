@@ -156,26 +156,35 @@ void main() {
       await tester.tap(find.textContaining('Rogue (d8').last);
       await tester.pumpAndSettle();
 
-      // Advance to Equipment Step
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step')); // Step 3 -> 4
+      await tester.tap(find.text('Next Step')); // After Class
       await tester.pumpAndSettle();
-      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
-      if (soldierFinder.evaluate().isNotEmpty) {
-        await tester.tap(soldierFinder.first);
+
+      final acolyteFinder = find.widgetWithText(ListTile, 'Acolyte');
+      if (acolyteFinder.evaluate().isNotEmpty) {
+        await tester.tap(acolyteFinder.first);
+        await tester.pumpAndSettle();
+      }
+      if (find.textContaining('Skill Proficiency Overlap Detected').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Animal Handling'));
         await tester.pumpAndSettle();
       }
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Next Step')); // Step 4 -> 5
+      await tester.tap(find.text('Next Step')); // After Background
       await tester.pumpAndSettle();
+
       if (find.text('Auto-Assign').evaluate().isNotEmpty) {
         await tester.tap(find.text('Auto-Assign'));
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('Next Step')); // Step 5 -> 6 (Equipment in 2014)
+      await tester.tap(find.text('Next Step')); // After Scores
       await tester.pumpAndSettle();
+      if (find.textContaining('Feat').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Next Step')); // Feat -> Equipment
+        await tester.pumpAndSettle();
+      }
 
       expect(find.text('Starting Wealth (Gold Only Option)'), findsOneWidget);
       expect(find.text('100 GP'), findsOneWidget);

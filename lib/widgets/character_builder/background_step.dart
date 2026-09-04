@@ -4,6 +4,8 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/character_builder_controller.dart';
 import '../../services/haptic_service.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Step 4: Choose Background Origin widget with reactive 5e RAW Skill Overlap Refund Engine.
 class BackgroundStep extends StatelessWidget {
@@ -80,6 +82,18 @@ class BackgroundStep extends StatelessWidget {
                           : 'Skills: ${bg.skillProficiencies.join(", ")}${bg.toolProficiencies.isNotEmpty ? "\nTools: ${bg.toolProficiencies.join(', ')}" : ""}',
                       style: const TextStyle(fontSize: 11.5, color: Colors.white70),
                     ),
+                    trailing: (is2024 && bg.originFeat != null)
+                        ? Tooltip(
+                            message: 'Origin Feat: ${bg.originFeat}',
+                            child: DndGlyph.feat(
+                              category: FeatCategory.origin,
+                              featId: bg.originFeat!,
+                              displayName: bg.originFeat,
+                              size: 28,
+                              isDarkMode: true,
+                            ),
+                          )
+                        : null,
                     onTap: () {
                       HapticService.selectionTick(context);
                       onBackgroundSelected(bg.id.slug);

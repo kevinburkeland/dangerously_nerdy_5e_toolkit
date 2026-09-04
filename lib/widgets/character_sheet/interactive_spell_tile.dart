@@ -5,6 +5,8 @@ import '../../providers/character_sheet_controller.dart';
 import '../../services/a11y_service.dart';
 import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Interactive VTT Combat Spell Tile allowing one-tap attack/damage roll execution
 /// and modal bottom sheet reference inspection.
@@ -38,6 +40,13 @@ class InteractiveSpellTile extends StatelessWidget {
     return spell.damageMath.isNotEmpty ||
         spell.customProperties['rollFormula'] != null ||
         desc.contains('damage');
+  }
+
+  SpellSchool _resolveSchool(String schoolStr) {
+    return SpellSchool.values.firstWhere(
+      (s) => s.name.toLowerCase() == schoolStr.toLowerCase() || s.displayName.toLowerCase() == schoolStr.toLowerCase(),
+      orElse: () => SpellSchool.evocation,
+    );
   }
 
   void _executeSpellAction(BuildContext context) {
@@ -143,13 +152,12 @@ class InteractiveSpellTile extends StatelessWidget {
                   label: 'Spell Details: ${spell.name}',
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.purpleAccent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.auto_awesome, color: Colors.purpleAccent, size: 22),
+                      DndGlyph.spell(
+                        school: _resolveSchool(spell.school),
+                        level: spell.level,
+                        actionRings: spell.getGlyphActionRings(controller.character.rulesEdition),
+                        size: 40,
+                        isDarkMode: true,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -341,7 +349,12 @@ class InteractiveSpellTile extends StatelessWidget {
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
             leading: isCantrip
-                ? const Icon(Icons.star, color: Colors.purpleAccent, size: 22)
+                ? DndGlyph.spell(
+                    school: _resolveSchool(spell.school),
+                    level: 0,
+                    size: 26,
+                    isDarkMode: true,
+                  )
                 : (onTogglePrepared != null
                     ? Semantics(
                         button: true,
@@ -358,7 +371,12 @@ class InteractiveSpellTile extends StatelessWidget {
                           ),
                         ),
                       )
-                    : const Icon(Icons.auto_awesome, color: Colors.purpleAccent, size: 20)),
+                    : DndGlyph.spell(
+                        school: _resolveSchool(spell.school),
+                        level: spell.level,
+                        size: 26,
+                        isDarkMode: true,
+                      )),
             title: Row(
               children: [
                 Expanded(

@@ -6,6 +6,8 @@ import '../../providers/character_sheet_controller.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/secure_random.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Interactive Skills and Saving Throws matrix with global Advantage/Disadvantage roll mode toggling,
 /// accessible tap targets (min 48dp height), and live DiceRoom roll broadcasting.
@@ -166,25 +168,39 @@ class _SkillsSavesMatrixState extends State<SkillsSavesMatrix> {
             ],
           ),
           SegmentedButton<RollMode>(
+            showSelectedIcon: false,
             style: ButtonStyle(
               visualDensity: VisualDensity.compact,
               tapTargetSize: MaterialTapTargetSize.padded,
               minimumSize: WidgetStateProperty.all(const Size(0, 36)),
             ),
-            segments: const [
+            segments: [
               ButtonSegment<RollMode>(
                 value: RollMode.disadvantage,
-                label: Text('Dis', style: TextStyle(fontSize: 11)),
-                icon: Icon(Icons.arrow_downward, size: 12),
+                label: const Text('Dis', style: TextStyle(fontSize: 11)),
+                icon: DndGlyph.genericUi(
+                  uiType: GenericUiGlyphType.disadvantage,
+                  size: 16,
+                  isDarkMode: Theme.of(context).brightness == Brightness.dark,
+                ),
               ),
               ButtonSegment<RollMode>(
                 value: RollMode.normal,
-                label: Text('Norm', style: TextStyle(fontSize: 11)),
+                label: const Text('Norm', style: TextStyle(fontSize: 11)),
+                icon: DndGlyph.genericUi(
+                  uiType: GenericUiGlyphType.d20,
+                  size: 16,
+                  isDarkMode: Theme.of(context).brightness == Brightness.dark,
+                ),
               ),
               ButtonSegment<RollMode>(
                 value: RollMode.advantage,
-                label: Text('Adv', style: TextStyle(fontSize: 11)),
-                icon: Icon(Icons.arrow_upward, size: 12),
+                label: const Text('Adv', style: TextStyle(fontSize: 11)),
+                icon: DndGlyph.genericUi(
+                  uiType: GenericUiGlyphType.advantage,
+                  size: 16,
+                  isDarkMode: Theme.of(context).brightness == Brightness.dark,
+                ),
               ),
             ],
             selected: {_rollMode},

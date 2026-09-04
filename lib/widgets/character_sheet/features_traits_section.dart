@@ -9,6 +9,8 @@ import '../../models/domain/homebrew_extended_entities.dart' show FeatureOption;
 import '../../providers/character_sheet_controller.dart';
 import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Aggregated Identity, Traits, Feats, and Class Features Section with
 /// accessible 48x48dp touch targets and modal bottom sheet reference viewers.
@@ -26,6 +28,7 @@ class FeaturesTraitsSection extends StatelessWidget {
     required String category,
     required String descriptionMarkdown,
     IconData icon = Icons.auto_awesome,
+    Widget? glyphWidget,
     Color? accentColor,
   }) {
     HapticService.selectionTick(context);
@@ -72,14 +75,17 @@ class FeaturesTraitsSection extends StatelessWidget {
                   label: 'Feature Details: $name',
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+                      if (glyphWidget != null)
+                        SizedBox(width: 40, height: 40, child: glyphWidget)
+                      else
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(icon, color: color, size: 22),
                         ),
-                        child: Icon(icon, color: color, size: 22),
-                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -98,7 +104,11 @@ class FeaturesTraitsSection extends StatelessWidget {
                               ),
                               child: Text(
                                 category.toUpperCase(),
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+                                style: TextStyle(
+                                  color: color,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -152,7 +162,8 @@ class FeaturesTraitsSection extends StatelessWidget {
     required String name,
     required String category,
     required String descriptionMarkdown,
-    required IconData icon,
+    IconData icon = Icons.auto_awesome,
+    Widget? glyphWidget,
     required Color color,
   }) {
     final theme = Theme.of(context);
@@ -170,6 +181,7 @@ class FeaturesTraitsSection extends StatelessWidget {
             category: category,
             descriptionMarkdown: descriptionMarkdown,
             icon: icon,
+            glyphWidget: glyphWidget,
             accentColor: color,
           ),
           child: ConstrainedBox(
@@ -184,14 +196,17 @@ class FeaturesTraitsSection extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                  if (glyphWidget != null)
+                    SizedBox(width: 24, height: 24, child: glyphWidget)
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(icon, color: color, size: 18),
                     ),
-                    child: Icon(icon, color: color, size: 18),
-                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -296,6 +311,13 @@ class FeaturesTraitsSection extends StatelessWidget {
           name: '${character.speciesRef.displayName} Traits',
           category: 'Species Lineage',
           descriptionMarkdown: speciesDesc,
+          glyphWidget: DndGlyph.species(
+            speciesType: SpeciesType.tryParse(character.speciesRef.slug) ??
+                SpeciesType.tryParse(character.speciesRef.displayName) ??
+                SpeciesType.human,
+            size: 24,
+            isDarkMode: true,
+          ),
           icon: Icons.fingerprint,
           color: Colors.tealAccent,
         ),
@@ -306,6 +328,11 @@ class FeaturesTraitsSection extends StatelessWidget {
           name: bgName,
           category: 'Background',
           descriptionMarkdown: bgDesc,
+          glyphWidget: DndGlyph.genericUi(
+            uiType: GenericUiGlyphType.d20,
+            size: 24,
+            isDarkMode: true,
+          ),
           icon: Icons.history_edu,
           color: Colors.orangeAccent,
         ),
@@ -326,12 +353,20 @@ class FeaturesTraitsSection extends StatelessWidget {
           final srdClass = SrdClassesLibrary.findBySlug(cls.classRef.slug);
           final classDesc = srdClass?.featuresMarkdown ??
               'Core class features, weapon/armor proficiencies, and archetype specialization at level ${cls.level} of ${cls.classRef.displayName}.';
+          final clsType = DndClassType.tryParse(cls.classRef.slug) ??
+              DndClassType.tryParse(cls.classRef.displayName) ??
+              DndClassType.fighter;
 
           return _buildFeatureChip(
             context,
             name: '${cls.classRef.displayName} Features (Lvl ${cls.level})',
             category: 'Class Feature',
             descriptionMarkdown: classDesc,
+            glyphWidget: DndGlyph.classFeature(
+              classType: clsType,
+              size: 24,
+              isDarkMode: true,
+            ),
             icon: Icons.shield,
             color: theme.colorScheme.primary,
           );
@@ -344,6 +379,11 @@ class FeaturesTraitsSection extends StatelessWidget {
             name: item['name']!,
             category: item['category']!,
             descriptionMarkdown: item['description']!,
+            glyphWidget: DndGlyph.genericUi(
+              uiType: GenericUiGlyphType.advantage,
+              size: 24,
+              isDarkMode: true,
+            ),
             icon: Icons.auto_awesome,
             color: Colors.cyanAccent,
           );
@@ -367,6 +407,7 @@ class FeaturesTraitsSection extends StatelessWidget {
             final category = (is2014 && rawCategory.toLowerCase() == 'origin')
                 ? 'Feat'
                 : (srdFeat != null ? '${srdFeat.category} Feat' : 'Feat');
+            final featCat = FeatCategory.parse(category);
             final desc = srdFeat?.descriptionMarkdown ?? 'Feat granting specialized combat or exploration prowess.';
 
             return _buildFeatureChip(
@@ -374,6 +415,13 @@ class FeaturesTraitsSection extends StatelessWidget {
               name: feat.displayName,
               category: category,
               descriptionMarkdown: desc,
+              glyphWidget: DndGlyph.feat(
+                category: featCat,
+                featId: feat.slug,
+                displayName: feat.displayName,
+                size: 24,
+                isDarkMode: true,
+              ),
               icon: Icons.military_tech,
               color: Colors.amberAccent,
             );

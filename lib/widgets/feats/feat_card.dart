@@ -4,6 +4,8 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/settings_provider.dart';
 import '../common/edition_diff_badge.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 import '../interactive/pressable_card.dart';
 
 /// Interactive card presenting an individual 5e Feat with category tagging,
@@ -39,14 +41,6 @@ class FeatCard extends StatelessWidget {
     return isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
   }
 
-  IconData _getCategoryIcon(String category) {
-    final cat = category.toLowerCase();
-    if (cat.contains('origin')) return Icons.auto_awesome;
-    if (cat.contains('fighting')) return Icons.sports_martial_arts;
-    if (cat.contains('boon') || cat.contains('epic')) return Icons.stars;
-    return Icons.military_tech;
-  }
-
   Widget _buildTag(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
@@ -73,8 +67,8 @@ class FeatCard extends StatelessWidget {
     final resolvedEdition = edition ?? SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
     final is2024Mode = resolvedEdition == DmRulesEdition.v2024;
     final categoryLabel = (!is2024Mode && feat.category.toLowerCase() == 'origin') ? 'General' : feat.category;
+    final featCat = FeatCategory.parse(categoryLabel);
     final accentColor = _getCategoryColor(categoryLabel, isDark);
-    final categoryIcon = _getCategoryIcon(categoryLabel);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
     final isHomebrew = feat.id.ruleset == RulesetVersion.homebrew;
@@ -101,19 +95,16 @@ class FeatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Category Icon + Title + Badges + Pin button
+          // Header: Category Glyph + Title + Badges + Pin button
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: accentColor.withValues(alpha: 0.5)),
-                ),
-                child: Icon(categoryIcon, color: accentColor, size: 20),
+              DndGlyph.feat(
+                category: featCat,
+                featId: feat.id.slug,
+                displayName: feat.name,
+                size: 38,
+                isDarkMode: isDark,
               ),
               const SizedBox(width: 10),
               Expanded(

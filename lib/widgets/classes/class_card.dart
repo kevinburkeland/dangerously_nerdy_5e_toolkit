@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../common/edition_diff_badge.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 import '../interactive/pressable_card.dart';
 
 /// Interactive card presenting a 5e Character Class with Hit Die indicator,
@@ -127,6 +129,7 @@ class ClassCard extends StatelessWidget {
     final slug = characterClass.id.slug;
     final classColor = _getClassColor(slug, isDark);
     final classIcon = _getClassIcon(slug);
+    final resolvedClassType = DndClassType.tryParse(slug) ?? DndClassType.tryParse(characterClass.name);
     final hitDieColor = _getHitDieColor(characterClass.hitDie, isDark);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
@@ -157,20 +160,27 @@ class ClassCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Class Icon + Name + Hit Die Pill + Pin Button
+          // Header: Class Glyph + Name + Hit Die Pill + Pin Button
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: classColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: classColor.withValues(alpha: 0.55)),
+              if (resolvedClassType != null)
+                DndGlyph.classFeature(
+                  classType: resolvedClassType,
+                  size: 40,
+                  isDarkMode: isDark,
+                )
+              else
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: classColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: classColor.withValues(alpha: 0.55)),
+                  ),
+                  child: Icon(classIcon, color: classColor, size: 22),
                 ),
-                child: Icon(classIcon, color: classColor, size: 22),
-              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

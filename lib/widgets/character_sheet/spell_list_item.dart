@@ -3,6 +3,7 @@ import '../../models/dm_screen_data.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
+import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 
 /// Interactive spell row item for character sheet spell lists with deep reference inspection modals.
@@ -104,14 +105,12 @@ class SpellListItem extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: schoolColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: schoolColor.withValues(alpha: 0.5)),
-                          ),
-                          child: Icon(school.icon, color: schoolColor, size: 24),
+                        DndGlyph.spell(
+                          school: school,
+                          level: spell.level,
+                          actionRings: spell.getGlyphActionRings(edition),
+                          size: 40,
+                          isDarkMode: isDark,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -276,8 +275,13 @@ class SpellListItem extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                   ],
-                  // School Icon
-                  Icon(school.icon, size: 16, color: schoolColor),
+                  // School Glyph
+                  DndGlyph.spell(
+                    school: school,
+                    level: spell.level,
+                    size: 22,
+                    isDarkMode: isDark,
+                  ),
                   const SizedBox(width: 8),
                   // Name and tags
                   Expanded(

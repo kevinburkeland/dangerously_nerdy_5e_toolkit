@@ -16,6 +16,7 @@ import '../../services/rules/character_evaluation_engine.dart';
 import '../../services/rules/spell_allocation_validator.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../theme/app_theme.dart';
+import '../glyphs/dnd_glyph.dart';
 
 /// Interactive, 6-step multi-step modal wizard for 5e Character Level Advancement.
 class LevelUpWizardDialog extends StatefulWidget {
@@ -611,14 +612,34 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           decoration: InputDecoration(
             labelText: 'Class to Level Up',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            prefixIcon: const Icon(Icons.shield_outlined),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: DndGlyph.classFeature(
+                classType: DndClassType.tryParse(_selectedClassSlug) ?? DndClassType.fighter,
+                size: 24,
+                isDarkMode: theme.brightness == Brightness.dark,
+              ),
+            ),
           ),
           items: _availableClasses.map((cls) {
             final isCurrent = widget.character.progression.classes.any((c) => c.classRef.slug.toLowerCase() == cls['slug']);
             final label = '${cls['name']} (${cls['hitDie']}) ${isCurrent ? "— Current" : "— Multiclass (Req: ${cls['prereq']})"}';
+            final classType = DndClassType.tryParse(cls['slug']) ?? DndClassType.fighter;
             return DropdownMenuItem(
               value: cls['slug'],
-              child: Text(label, style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal)),
+              child: Row(
+                children: [
+                  DndGlyph.classFeature(
+                    classType: classType,
+                    size: 20,
+                    isDarkMode: theme.brightness == Brightness.dark,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(label, style: TextStyle(fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal), overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ),
             );
           }).toList(),
           onChanged: (val) {
@@ -715,10 +736,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               icon: const Icon(Icons.balance),
               label: Text('Fixed Average ($_fixedAverageHp)'),
             ),
-            const ButtonSegment(
+            ButtonSegment(
               value: false,
-              icon: Icon(Icons.casino_outlined),
-              label: Text('Interactive Roll'),
+              icon: DndGlyph.genericUi(
+                uiType: GenericUiGlyphType.fromDie(_currentHitDie) ?? GenericUiGlyphType.d20,
+                size: 16,
+                isDarkMode: theme.brightness == Brightness.dark,
+              ),
+              label: const Text('Interactive Roll'),
             ),
           ],
           selected: {_useFixedAverage},
@@ -741,6 +766,12 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    DndGlyph.genericUi(
+                      uiType: GenericUiGlyphType.fromDie(_currentHitDie) ?? GenericUiGlyphType.d20,
+                      size: 24,
+                      isDarkMode: theme.brightness == Brightness.dark,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       'Roll $_currentHitDie:',
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -1123,14 +1154,43 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           DropdownButtonFormField<String>(
             isExpanded: true,
             initialValue: _selectedFeatSlug,
-            decoration: const InputDecoration(labelText: 'Select Feat', border: OutlineInputBorder()),
+            decoration: InputDecoration(
+              labelText: 'Select Feat',
+              border: const OutlineInputBorder(),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: DndGlyph.feat(
+                  category: FeatCategory.parse(
+                    _availableFeats.firstWhere((f) => f.id.slug == _selectedFeatSlug, orElse: () => _availableFeats.first).category,
+                  ),
+                  featId: _selectedFeatSlug,
+                  displayName: _selectedFeatName,
+                  size: 24,
+                  isDarkMode: theme.brightness == Brightness.dark,
+                ),
+              ),
+            ),
             items: _availableFeats.map((f) {
               final prereq = f.prerequisite != null ? ' (${f.prerequisite})' : '';
               return DropdownMenuItem(
                 value: f.id.slug,
-                child: Text(
-                  '${f.name}$prereq',
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    DndGlyph.feat(
+                      category: FeatCategory.parse(f.category),
+                      featId: f.id.slug,
+                      displayName: f.name,
+                      size: 20,
+                      isDarkMode: theme.brightness == Brightness.dark,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${f.name}$prereq',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               );
             }).toList(),
@@ -1732,6 +1792,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                     ..._newCantrips.map((c) {
                       final spell = SpellbookLibrary.getSpellById(c);
                       return Chip(
+                        avatar: spell != null
+                            ? DndGlyph.spell(
+                                school: spell.school,
+                                level: 0,
+                                size: 16,
+                                isDarkMode: true,
+                              )
+                            : null,
                         label: Text('Cantrip: ${spell?.getName(edition) ?? c}'),
                         backgroundColor: Colors.purple.shade800.withValues(alpha: 0.5),
                         onDeleted: () => setState(() => _newCantrips.remove(c)),
@@ -1740,6 +1808,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                     ..._newSpells.map((s) {
                       final spell = SpellbookLibrary.getSpellById(s);
                       return Chip(
+                        avatar: spell != null
+                            ? DndGlyph.spell(
+                                school: spell.school,
+                                level: spell.level,
+                                size: 16,
+                                isDarkMode: true,
+                              )
+                            : null,
                         label: Text('${spell?.levelLabel ?? "Spell"}: ${spell?.getName(edition) ?? s}'),
                         backgroundColor: Colors.cyan.shade800.withValues(alpha: 0.5),
                         onDeleted: () => setState(() => _newSpells.remove(s)),
@@ -1774,25 +1850,27 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: maxAllowedNewCantrips > 0
-                      ? Colors.purpleAccent.withValues(alpha: 0.2)
-                      : Colors.white10,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: maxAllowedNewCantrips > 0 ? Colors.purpleAccent : Colors.white24,
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: maxAllowedNewCantrips > 0
+                        ? Colors.purpleAccent.withValues(alpha: 0.2)
+                        : Colors.white10,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: maxAllowedNewCantrips > 0 ? Colors.purpleAccent : Colors.white24,
+                    ),
                   ),
-                ),
-                child: Text(
-                  maxAllowedNewCantrips > 0
-                      ? '${_newCantrips.length}/$maxAllowedNewCantrips Selected'
-                      : '0 New Allowed ($curCantripsCount/${limits.maxCantrips} known)',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: maxAllowedNewCantrips > 0 ? Colors.purpleAccent : Colors.white60,
+                  child: Text(
+                    maxAllowedNewCantrips > 0
+                        ? '${_newCantrips.length}/$maxAllowedNewCantrips Selected'
+                        : '0 New Allowed ($curCantripsCount/${limits.maxCantrips} known)',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: maxAllowedNewCantrips > 0 ? Colors.purpleAccent : Colors.white60,
+                    ),
                   ),
                 ),
               ),
@@ -1808,7 +1886,12 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                 selected: isChosen,
                 selectedColor: Colors.purpleAccent.withValues(alpha: 0.35),
                 label: Text(c.getName(edition)),
-                avatar: Icon(Icons.star, size: 14, color: isChosen ? Colors.purpleAccent : Colors.white54),
+                avatar: DndGlyph.spell(
+                  school: c.school,
+                  level: 0,
+                  size: 16,
+                  isDarkMode: true,
+                ),
                 onSelected: (selected) {
                   HapticService.selectionTick(context);
                   setState(() {
@@ -1853,7 +1936,12 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                 selected: isChosen,
                 selectedColor: Colors.cyanAccent.withValues(alpha: 0.35),
                 label: Text('${s.getName(edition)} (L${s.level})'),
-                avatar: Icon(Icons.auto_awesome, size: 14, color: isChosen ? Colors.cyanAccent : Colors.white54),
+                avatar: DndGlyph.spell(
+                  school: s.school,
+                  level: s.level,
+                  size: 16,
+                  isDarkMode: true,
+                ),
                 onSelected: (selected) {
                   HapticService.selectionTick(context);
                   setState(() {

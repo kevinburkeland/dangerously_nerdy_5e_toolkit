@@ -8,6 +8,8 @@ import '../../services/a11y_service.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/secure_random.dart';
+import '../glyphs/dnd_glyph.dart';
+import '../glyphs/glyph_tokens.dart';
 
 /// Interactive modal bottom sheet allowing players to spend hit dice during a Short Rest,
 /// roll dice with Constitution modifier, restore Pact Magic slots, and update character vitals.
@@ -279,38 +281,50 @@ class _ShortRestDialogState extends State<ShortRestDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          Row(
+                          if (GenericUiGlyphType.fromDie(die) != null) ...[
+                            DndGlyph.genericUi(
+                              uiType: GenericUiGlyphType.fromDie(die)!,
+                              size: 32,
+                              isDarkMode: theme.brightness == Brightness.dark,
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Die: $die',
-                                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  '$conModStr CON',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.primary,
+                              Row(
+                                children: [
+                                  Text(
+                                    'Die: $die',
+                                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                                   ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '$conModStr CON',
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$remaining of $maxAvailable available',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$remaining of $maxAvailable available',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
                           ),
                         ],
                       ),
