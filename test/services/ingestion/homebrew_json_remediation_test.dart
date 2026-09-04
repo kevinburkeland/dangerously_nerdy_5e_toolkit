@@ -66,7 +66,7 @@ void main() {
 
       // Winged race with boolean fly speed
       final winged = parser.parseRace({
-        'name': 'Aarakocra Variant',
+        'name': 'Avian Kin Variant',
         'speed': {'walk': 30, 'fly': true},
         'size': ['M'],
         'entries': ['Bird folk.'],
@@ -76,7 +76,7 @@ void main() {
 
       // Modern lineage race with flexible ASIs
       final lineage = parser.parseRace({
-        'name': 'Dhampir Lineage',
+        'name': 'Gothic Lineage',
         'lineage': 'VRGR',
         'speed': 35,
         'darkvision': 60,
@@ -145,7 +145,7 @@ void main() {
 
       // Background with _copy linking to Criminal and an origin feat with source pipe
       final bg = parser.parseBackground({
-        'name': 'Baldur\'s Gate Criminal',
+        'name': 'Port City Criminal',
         '_copy': {'name': 'Criminal', 'source': 'PHB'},
         'originFeat': 'Alert|PHB',
         'feats': [{'feat': 'Alert|PHB'}],
@@ -163,9 +163,9 @@ void main() {
       final parser = CompendiumGenericEntryParser();
 
       final maneuver = parser.parseGenericEntry({
-        'name': 'Ambush',
+        'name': 'Trip Attack',
         'featureType': ['MV', 'B'],
-        'entries': ['When you make a Dexterity (Stealth) check, add the superiority die.'],
+        'entries': ['When you make a weapon attack, add the superiority die.'],
       });
       expect(maneuver.category, equals('Maneuver'));
 
@@ -180,13 +180,13 @@ void main() {
     test('6. Spell Parser infers expansion spell classes when classes field is missing or empty', () {
       final parser = CompendiumSpellParser();
 
-      final causticBrew = parser.parseSpell({
-        'name': 'Tasha\'s Caustic Brew',
-        'level': 1,
+      final boomingBlade = parser.parseSpell({
+        'name': 'Booming Blade',
+        'level': 0,
         'school': 'V',
-        'entries': ['A stream of acid emanates from you.'],
+        'entries': ['You brandish the weapon used in the spell\'s casting.'],
       });
-      expect(causticBrew.customProperties['classes'], containsAll(['Artificer', 'Sorcerer', 'Wizard']));
+      expect(boomingBlade.customProperties['classes'], containsAll(['Artificer', 'Sorcerer', 'Warlock', 'Wizard']));
 
       final bladeOfDisaster = parser.parseSpell({
         'name': 'Blade of Disaster',
@@ -217,7 +217,7 @@ void main() {
         ],
         'subraces': [
           {
-            'name': 'Sun Elf',
+            'name': 'Wood Elf Variant',
             '_copy': {'name': 'Elf', 'source': 'PHB'},
           },
           {
@@ -233,7 +233,7 @@ void main() {
         ],
         'backgrounds': [
           {
-            'name': 'Urban Bounty Hunter Copy',
+            'name': 'Bounty Hunter Copy',
             '_copy': {'name': 'Criminal', 'source': 'PHB'},
             'originFeat': 'Skilled|PHB',
           }
@@ -255,10 +255,10 @@ void main() {
       // Verify race revitalization
       expect(compendium.races.first.speed, equals('30 ft. (fly 30 ft.)'));
 
-      // Verify subraces: ghost subrace without raceSlug skipped, Sun Elf attached to Elf
+      // Verify subraces: ghost subrace without raceSlug skipped, Wood Elf Variant attached to Elf
       final elf = compendium.races.firstWhere((r) => r.id.slug == 'elf');
       expect(elf.subraces.length, equals(1));
-      expect(elf.subraces.first.name, equals('Sun Elf'));
+      expect(elf.subraces.first.name, equals('Wood Elf Variant'));
       expect(compendium.races.any((r) => r.id.slug.isEmpty || r.id.slug == 'ghost-subrace-without-base'), isFalse);
 
       // Verify feats revitalization
@@ -316,8 +316,8 @@ void main() {
         ],
         'backgrounds': [
           {
-            'id': {'slug': 'gate-warden', 'ruleset': 'homebrew'},
-            'name': 'Gate Warden',
+            'id': {'slug': 'citadel-warden', 'ruleset': 'homebrew'},
+            'name': 'Citadel Warden',
             'descriptionMarkdown': '',
             'customProperties': {
               '_copy': {'name': 'Guard', 'source': 'PHB'},
