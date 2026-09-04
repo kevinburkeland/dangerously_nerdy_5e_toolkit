@@ -1,5 +1,6 @@
 import '../../models/domain/core_types.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/spellbook_data.dart';
 import 'entry_tag_transformer.dart';
 
 /// Anti-Corruption Layer (ACL) dedicated transformer for Community Compendium and Homebrew Spells.
@@ -68,6 +69,54 @@ class CompendiumSpellParser {
       }
     }
 
+    // Infer damage type if damageMath has untyped damage
+    if (damageMath.isNotEmpty) {
+      DamageType? inferred;
+      if (raw['damageInflict'] is List && (raw['damageInflict'] as List).isNotEmpty) {
+        inferred = DamageType.fromLooseString((raw['damageInflict'] as List).first?.toString());
+      }
+      if (inferred == null || inferred == DamageType.untyped) {
+        final descLower = transformed.markdown.toLowerCase();
+        for (final dt in DamageType.values) {
+          if (dt != DamageType.untyped && descLower.contains('${dt.name} damage')) {
+            inferred = dt;
+            break;
+          }
+        }
+      }
+      if (inferred != null && inferred != DamageType.untyped) {
+        damageMath = damageMath.map((m) {
+          if (m.damageType == DamageType.untyped) {
+            return EvaluationMath(
+              diceFormula: m.diceFormula,
+              damageType: inferred!,
+              scalingFormula: m.scalingFormula,
+            );
+          }
+          return m;
+        }).toList();
+      }
+    }
+
+    // Scaling level dice
+    if (raw['scalingLevelDice'] is Map) {
+      final sld = raw['scalingLevelDice'] as Map;
+      final scaling = sld['scaling'];
+      if (scaling is Map && scaling.isNotEmpty) {
+        final firstScale = scaling.values.first?.toString();
+        if (firstScale != null && damageMath.isNotEmpty) {
+          damageMath = [
+            EvaluationMath(
+              diceFormula: damageMath.first.diceFormula,
+              damageType: damageMath.first.damageType,
+              scalingFormula: '+$firstScale per higher slot',
+            ),
+            ...damageMath.skip(1),
+          ];
+        }
+      }
+    }
+
     // Capture all auxiliary & unmapped fields in customProperties to guarantee 0% data loss
     final customProperties = <String, dynamic>{};
     raw.forEach((key, value) {
@@ -76,9 +125,15 @@ class CompendiumSpellParser {
       }
     });
 
-    // Also store explicit class list metadata if present
-    if (raw.containsKey('classes')) {
-      customProperties['classes'] = raw['classes'];
+    // Preserve raw classes if present (ensuring 0% data loss); if omitted or empty, attempt SRD inheritance
+    if (!customProperties.containsKey('classes') || customProperties['classes'] == null) {
+      final srdMatch = SpellbookLibrary.allSpells.where((s) => s.name.toLowerCase() == name.toLowerCase() || s.id == slug).firstOrNull;
+      if (srdMatch != null) {
+        final srdClasses = (ruleset == RulesetVersion.v2024 ? srdMatch.rules2024 : srdMatch.rules2014).classes;
+        if (srdClasses.isNotEmpty) {
+          customProperties['classes'] = srdClasses;
+        }
+      }
     }
     if (raw.containsKey('page')) {
       customProperties['page'] = raw['page'];
@@ -416,4 +471,46 @@ class CompendiumSpellParser {
     }
     return RulesetVersion.homebrew;
   }
+
+  List<String> _extractClassList(dynamic classesData) {
+    if (classesData == null) return const [];
+    final result = <String>{};
+
+    if (classesData is Map) {
+      final fromClassList = classesData['fromClassList'];
+      if (fromClassList is List) {
+        for (final item in fromClassList) {
+          if (item is Map && item['name'] != null) {
+            result.add(item['name'].toString().trim());
+          } else if (item is String) {
+            result.add(item.trim());
+          }
+        }
+      }
+      final fromSubclass = classesData['fromSubclass'];
+      if (fromSubclass is List) {
+        for (final item in fromSubclass) {
+          if (item is Map && item['class'] is Map && item['class']['name'] != null) {
+            result.add(item['class']['name'].toString().trim());
+          }
+        }
+      }
+    } else if (classesData is List) {
+      for (final item in classesData) {
+        if (item is Map && item['name'] != null) {
+          result.add(item['name'].toString().trim());
+        } else if (item is String) {
+          result.add(item.trim());
+        }
+      }
+    } else if (classesData is String) {
+      for (final part in classesData.split(',')) {
+        final clean = part.trim();
+        if (clean.isNotEmpty) result.add(clean);
+      }
+    }
+
+    return result.toList();
+  }
 }
+

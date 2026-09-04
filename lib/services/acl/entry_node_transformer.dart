@@ -26,7 +26,7 @@ class ParsedEntryResult {
 /// All inline tags (`{@spell …}`, `{@dice …}`, `{@item …}`, etc.) are
 /// stripped to clean Markdown / strongly-typed objects.
 class EntryNodeTransformer {
-  static final RegExp _tagRegex = RegExp(r'\{@([a-zA-Z0-9_-]+)\s+([^}]+)\}');
+  static final RegExp _tagRegex = RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^}]+))?\}');
 
   // ---------------------------------------------------------------------------
   // Public entry point
@@ -105,7 +105,8 @@ class EntryNodeTransformer {
       case 'section':
         if (name != null && name.isNotEmpty) {
           final prefix = '#' * (depth + 3).clamp(1, 6);
-          buffer.writeln('$prefix $name');
+          final processedName = _processTags(name, math, refs, defaultRuleset);
+          buffer.writeln('$prefix $processedName');
           buffer.writeln();
         }
         _parseNode(node['entries'] ?? node['entry'] ?? node['desc'] ?? node['description'], buffer, math, refs, depth + 1, defaultRuleset);
@@ -115,7 +116,8 @@ class EntryNodeTransformer {
       // -----------------------------------------------------------------------
       case 'inset':
         if (name != null && name.isNotEmpty) {
-          buffer.writeln('> **$name**');
+          final processedName = _processTags(name, math, refs, defaultRuleset);
+          buffer.writeln('> **$processedName**');
           buffer.writeln('>');
         }
         final insetContent = _captureNode(node['entries'] ?? node['entry'] ?? node['desc'], depth + 1, math, refs, defaultRuleset);
@@ -278,13 +280,16 @@ class EntryNodeTransformer {
     // Caption above the table
     final caption = tableNode['caption'] as String?;
     if (caption != null && caption.isNotEmpty) {
-      buffer.writeln('**$caption**');
+      final processedCaption = _processTags(caption, math, refs, defaultRuleset);
+      buffer.writeln('**$processedCaption**');
       buffer.writeln();
     }
 
     // Column headers
-    final colLabels =
-        (tableNode['colLabels'] as List?)?.map((e) => e.toString()).toList() ?? [];
+    final colLabels = (tableNode['colLabels'] as List?)
+            ?.map((e) => _processTags(e.toString(), math, refs, defaultRuleset))
+            .toList() ??
+        [];
     final rows = tableNode['rows'] as List? ?? [];
 
     if (colLabels.isNotEmpty) {
@@ -415,7 +420,28 @@ class EntryNodeTransformer {
             diceFormula: primary,
             damageType: dmgType,
           ));
+          if (dmgType == DamageType.untyped) {
+            return '**`$primary`**';
+          }
           return '**`$primary ${dmgType.name}`**';
+
+        case 'h':
+          return '*Hit:* ';
+
+        case 'hom':
+          return '*Hit or Miss:* ';
+
+        case 'hityourspellattack':
+          return '**`+your spell attack modifier`**';
+
+        case 'chance':
+          return parts.length > 1 && parts[1].trim().isNotEmpty ? parts[1].trim() : '$primary%';
+
+        case 'actsave':
+          return '$primary saving throw';
+
+        case 'actsavefail':
+          return 'failed save';
 
         case 'hit':
           final pfx = primary.startsWith('+') || primary.startsWith('-') ? '' : '+';

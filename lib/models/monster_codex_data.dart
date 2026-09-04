@@ -576,12 +576,23 @@ extension MonsterHomebrewExt on Monster {
         : 'CR $challengeRating';
 
     // Parse ability scores
-    final str = (customProperties['strScore'] as num?)?.toInt() ?? 10;
-    final dex = (customProperties['dexScore'] as num?)?.toInt() ?? 10;
-    final con = (customProperties['conScore'] as num?)?.toInt() ?? 10;
-    final intSc = (customProperties['intScore'] as num?)?.toInt() ?? 10;
-    final wis = (customProperties['wisScore'] as num?)?.toInt() ?? 10;
-    final cha = (customProperties['chaScore'] as num?)?.toInt() ?? 10;
+    int parseScore(String key, String legacyKey) {
+      final val = customProperties[key] ?? customProperties[legacyKey];
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 10;
+      return 10;
+    }
+
+    int str = parseScore('str', 'strScore');
+    int dex = parseScore('dex', 'dexScore');
+    int con = parseScore('con', 'conScore');
+    int intSc = parseScore('int', 'intScore');
+    int wis = parseScore('wis', 'wisScore');
+    int cha = parseScore('cha', 'chaScore');
+
+    int ac = armorClass;
+    int hp = hitPoints;
+    String hitDice = hitDieFormula;
 
     // Parse traits & actions from actionsMarkdown
     final parsedActions = <CreatureAction>[];
@@ -764,6 +775,82 @@ extension MonsterHomebrewExt on Monster {
       color = const Color(0xFF8B5CF6);
     }
 
+    // If parsedActions is empty and creature has _copy in customProperties, revitalize from base monster!
+    if (parsedActions.isEmpty && customProperties.containsKey('_copy')) {
+      final copyObj = customProperties['_copy'];
+      if (copyObj is Map && copyObj['name'] != null) {
+        final baseName = copyObj['name'].toString().trim();
+        final baseItem = MonsterCodexLibrary.getMonsterByName(baseName);
+        if (baseItem != null) {
+          final baseSb = baseItem.sourceStatBlock;
+          if (parsedTraits.isEmpty) {
+            parsedTraits.addAll(baseSb.traits);
+          }
+          parsedActions.addAll(baseSb.actions);
+          if (ac == 10 && baseSb.ac > 10) {
+            ac = baseSb.ac;
+          }
+          if (hp <= 10 && baseSb.maxHp > 10) {
+            hp = baseSb.maxHp;
+            hitDice = baseSb.hitDice ?? hitDice;
+          }
+          if (str == 10 && dex == 10 && con == 10 && intSc == 10 && wis == 10 && cha == 10) {
+            str = baseSb.strScore;
+            dex = baseSb.dexScore;
+            con = baseSb.conScore;
+            intSc = baseSb.intScore;
+            wis = baseSb.wisScore;
+            cha = baseSb.chaScore;
+          }
+        }
+      }
+    }
+
+    String? formatDefenses(dynamic val) {
+      if (val == null) return null;
+      if (val is List) {
+        if (val.isEmpty) return null;
+        return val.map((e) => e is Map ? (e['note'] != null ? '${e['resist'] ?? e['immune'] ?? ''} (${e['note']})' : e.toString()) : e.toString()).join(', ');
+      }
+      final str = val.toString().trim();
+      return str.isNotEmpty ? str : null;
+    }
+
+    String? formatMapValues(dynamic val) {
+      if (val is Map) {
+        if (val.isEmpty) return null;
+        return val.entries.map((e) => '${e.key.toString().toUpperCase()} ${e.value}').join(', ');
+      }
+      if (val is String && val.trim().isNotEmpty) return val.trim();
+      return null;
+    }
+
+    String? extractSpeed(String md) {
+      final m = RegExp(r'\*\*Speed:\*\*\s*([^\n]+)', caseSensitive: false).firstMatch(md);
+      return m?.group(1)?.trim();
+    }
+
+    final speed = customProperties['speed']?.toString() ?? extractSpeed(actionsMarkdown) ?? '30 ft.';
+    final saves = customProperties['savingThrows']?.toString() ?? formatMapValues(customProperties['save']);
+    final skills = customProperties['skills']?.toString() ?? formatMapValues(customProperties['skill']);
+    final vuln = customProperties['damageVulnerabilities']?.toString() ?? formatDefenses(customProperties['vulnerable']);
+    final resist = customProperties['damageResistances']?.toString() ?? formatDefenses(customProperties['resist']);
+    final immune = customProperties['damageImmunities']?.toString() ?? formatDefenses(customProperties['immune']);
+    final condImmune = customProperties['conditionImmunities']?.toString() ?? formatDefenses(customProperties['conditionImmune']);
+
+    String? senses = customProperties['senses']?.toString();
+    if (senses == null || senses.isEmpty) {
+      final rawSenses = formatDefenses(customProperties['senses']);
+      final passive = customProperties['passive'];
+      final parts = [if (rawSenses != null && rawSenses.isNotEmpty) rawSenses, if (passive != null) 'passive Perception $passive'];
+      if (parts.isNotEmpty) {
+        senses = parts.join(', ');
+      }
+    }
+    senses ??= 'passive Perception 10';
+
+    final languages = customProperties['languages']?.toString() ?? formatDefenses(customProperties['languages']) ?? '—';
+
     return MinionStatBlock(
       id: id.slug,
       name: name,
@@ -771,24 +858,24 @@ extension MonsterHomebrewExt on Monster {
       crDisplay: crStr,
       typeDisplay: monsterType,
       alignment: alignment,
-      ac: armorClass,
-      maxHp: hitPoints,
-      hitDice: hitDieFormula.isNotEmpty ? hitDieFormula : null,
-      speed: customProperties['speed']?.toString() ?? '30 ft.',
+      ac: ac,
+      maxHp: hp,
+      hitDice: hitDice.isNotEmpty ? hitDice : null,
+      speed: speed,
       strScore: str,
       dexScore: dex,
       conScore: con,
       intScore: intSc,
       wisScore: wis,
       chaScore: cha,
-      savingThrows: customProperties['savingThrows']?.toString(),
-      skills: customProperties['skills']?.toString(),
-      damageVulnerabilities: customProperties['damageVulnerabilities']?.toString(),
-      damageResistances: customProperties['damageResistances']?.toString(),
-      damageImmunities: customProperties['damageImmunities']?.toString(),
-      conditionImmunities: customProperties['conditionImmunities']?.toString(),
-      senses: customProperties['senses']?.toString() ?? 'passive Perception 10',
-      languages: customProperties['languages']?.toString() ?? '—',
+      savingThrows: saves,
+      skills: skills,
+      damageVulnerabilities: vuln,
+      damageResistances: resist,
+      damageImmunities: immune,
+      conditionImmunities: condImmune,
+      senses: senses,
+      languages: languages,
       traits: parsedTraits,
       actions: parsedActions,
       attackBonus: atkBonus,

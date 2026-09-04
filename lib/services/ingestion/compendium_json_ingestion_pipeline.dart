@@ -3,6 +3,7 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/spellbook_data.dart';
 import '../acl/compendium_background_parser.dart';
 import '../acl/compendium_class_parser.dart';
 import '../acl/compendium_feat_parser.dart';
@@ -211,9 +212,89 @@ class CompendiumJsonIngestionPipeline {
             lowerKeys.contains('backgrounds'))) {
       try {
         final bundle = HomebrewBundle.fromMap(map);
+
+        final baseMonsterLookup = <String, Map<String, dynamic>>{};
+        for (final m in bundle.monsters) {
+          if (!m.customProperties.containsKey('_copy')) {
+            baseMonsterLookup[m.name.toLowerCase().trim()] = {
+              'name': m.name,
+              'ac': m.armorClass,
+              'hp': {'average': m.hitPoints, 'formula': m.hitDieFormula},
+              'cr': m.challengeRating,
+              'speed': m.customProperties['speed'] ?? '30 ft.',
+              'actionsMarkdown': m.actionsMarkdown,
+              ...m.customProperties,
+            };
+          }
+        }
+
+        final revitalizedMonsters = bundle.monsters.map((m) {
+          if (m.customProperties.containsKey('_copy') &&
+              (m.actionsMarkdown.isEmpty ||
+               m.actionsMarkdown.startsWith('**Speed:** 30 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |') ||
+               (m.hitPoints <= 10 && m.armorClass == 10))) {
+            final copyObj = m.customProperties['_copy'];
+            if (copyObj is Map && copyObj['name'] != null) {
+              final rawSynthesized = <String, dynamic>{
+                ...m.customProperties,
+                'name': m.name,
+                'source': m.id.ruleset.name,
+                '_copy': copyObj,
+                if (m.armorClass > 10) 'ac': m.armorClass,
+                if (m.hitPoints > 10) 'hp': {'average': m.hitPoints, 'formula': m.hitDieFormula},
+                if (m.challengeRating != '0') 'cr': m.challengeRating,
+              };
+              return monsterParser.parseMonster(
+                rawSynthesized,
+                forceRuleset: forceRuleset ?? m.id.ruleset,
+                baseLookup: (name, src) => baseMonsterLookup[name.toLowerCase().trim()],
+              );
+            }
+          }
+
+          // Clean legacy actionsMarkdown of unparsed tags and leaked untyped
+          String actions = m.actionsMarkdown;
+          if (actions.contains('{@') || actions.contains('untyped')) {
+            actions = transformer.transformEntries(actions).markdown;
+            actions = actions.replaceAll(RegExp(r'\*\*`([^`]+)\s+untyped`\*\*'), r'**`$1`**');
+            return m.copyWith(actionsMarkdown: actions);
+          }
+          return m;
+        }).toList();
+
+        final revitalizedSpells = bundle.spells.map((s) {
+          String desc = s.descriptionMarkdown;
+          if (desc.contains('{@') || desc.contains('untyped')) {
+            desc = transformer.transformEntries(desc).markdown;
+            desc = desc.replaceAll(RegExp(r'\*\*`([^`]+)\s+untyped`\*\*'), r'**`$1`**');
+          }
+          String? hl = s.higherLevelsMarkdown;
+          if (hl != null && (hl.contains('{@') || hl.contains('untyped'))) {
+            hl = transformer.transformEntries(hl).markdown;
+            hl = hl.replaceAll(RegExp(r'\*\*`([^`]+)\s+untyped`\*\*'), r'**`$1`**');
+          }
+          var updated = s.copyWith(descriptionMarkdown: desc, higherLevelsMarkdown: hl);
+
+          if (!updated.customProperties.containsKey('classes') ||
+              (updated.customProperties['classes'] is List && (updated.customProperties['classes'] as List).isEmpty)) {
+            final srdMatch = SpellbookLibrary.allSpells
+                .where((sp) => sp.name.toLowerCase() == updated.name.toLowerCase() || sp.id == updated.id.slug)
+                .firstOrNull;
+            if (srdMatch != null) {
+              final srdClasses = (updated.id.ruleset == RulesetVersion.v2024 ? srdMatch.rules2024 : srdMatch.rules2014).classes;
+              if (srdClasses.isNotEmpty) {
+                final cp = Map<String, dynamic>.from(updated.customProperties);
+                cp['classes'] = srdClasses;
+                return updated.copyWith(customProperties: cp);
+              }
+            }
+          }
+          return updated;
+        }).toList();
+
         return IngestionBatchResult(
-          spells: bundle.spells,
-          monsters: bundle.monsters,
+          spells: revitalizedSpells,
+          monsters: revitalizedMonsters,
           items: bundle.items,
           classes: bundle.classes,
           subclasses: bundle.subclasses,
@@ -298,8 +379,39 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['spell', 'spells'], (raw) => spells.add(spellParser.parseSpell(raw, forceRuleset: forceRuleset)), 'Spell');
 
     // Monsters / Bestiary
-    ingestKeys(['monster', 'monsters', 'bestiary', 'creature', 'creatures', 'npc', 'npcs'],
-        (raw) => monsters.add(monsterParser.parseMonster(raw, forceRuleset: forceRuleset)), 'Monster');
+    final rawMonsterList = findListForKeys(['monster', 'monsters', 'bestiary', 'creature', 'creatures', 'npc', 'npcs']);
+    if (rawMonsterList != null) {
+      final batchLookup = <String, Map<String, dynamic>>{};
+      final rawMonsters = <Map<String, dynamic>>[];
+      for (final item in rawMonsterList) {
+        if (item is Map) {
+          final m = Map<String, dynamic>.from(item);
+          rawMonsters.add(m);
+          final name = m['name']?.toString().toLowerCase().trim();
+          if (name != null && name.isNotEmpty && !m.containsKey('_copy')) {
+            batchLookup[name] = m;
+          }
+        }
+      }
+
+      Map<String, dynamic>? lookupBase(String name, String? source) {
+        final norm = name.toLowerCase().trim();
+        return batchLookup[norm];
+      }
+
+      for (final raw in rawMonsters) {
+        try {
+          final parsed = monsterParser.parseMonster(
+            raw,
+            forceRuleset: forceRuleset,
+            baseLookup: lookupBase,
+          );
+          monsters.add(parsed);
+        } catch (e) {
+          errors.add('Monster error (${raw['name'] ?? 'unnamed'}): $e');
+        }
+      }
+    }
 
     // Items / Equipment
     ingestKeys(['item', 'items', 'baseitem', 'magicitems', 'magicitem', 'magicvariants', 'equipment'],

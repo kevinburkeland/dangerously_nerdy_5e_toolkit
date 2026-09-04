@@ -1,6 +1,8 @@
+import 'dart:convert';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/monster_codex_data.dart';
 import 'entry_tag_transformer.dart';
 
 /// Anti-Corruption Layer (ACL) dedicated transformer for Community Compendium and Homebrew Monsters/NPCs.
@@ -11,7 +13,12 @@ class CompendiumMonsterParser {
       : transformer = transformer ?? EntryTagTransformer();
 
   /// Transforms a raw community compendium or homebrew monster JSON map into a strongly-typed [Monster].
-  Monster parseMonster(Map<String, dynamic> raw, {RulesetVersion? forceRuleset}) {
+  Monster parseMonster(
+    Map<String, dynamic> rawInput, {
+    RulesetVersion? forceRuleset,
+    Map<String, dynamic>? Function(String name, String? source)? baseLookup,
+  }) {
+    final raw = resolveCopy(rawInput, baseLookup: baseLookup);
     final name = raw['name']?.toString().trim() ?? 'Unnamed Monster';
     final slug = _slugify(name);
     final source = raw['source']?.toString().toUpperCase() ?? 'MM';
@@ -157,6 +164,62 @@ class CompendiumMonsterParser {
       }
     });
 
+    // Explicitly preserve speed & ability scores in standard & suffixed forms
+    customProperties['speed'] = speedStr;
+    customProperties['str'] = raw['str'] ?? 10;
+    customProperties['dex'] = raw['dex'] ?? 10;
+    customProperties['con'] = raw['con'] ?? 10;
+    customProperties['int'] = raw['int'] ?? 10;
+    customProperties['wis'] = raw['wis'] ?? 10;
+    customProperties['cha'] = raw['cha'] ?? 10;
+    customProperties['strScore'] = customProperties['str'];
+    customProperties['dexScore'] = customProperties['dex'];
+    customProperties['conScore'] = customProperties['con'];
+    customProperties['intScore'] = customProperties['int'];
+    customProperties['wisScore'] = customProperties['wis'];
+    customProperties['chaScore'] = customProperties['cha'];
+
+    // Preserved friendly formatted strings for defenses, senses, skills, languages
+    if (raw['save'] is Map) {
+      customProperties['savingThrows'] = (raw['save'] as Map).entries.map((e) => '${e.key.toString().toUpperCase()} ${e.value}').join(', ');
+    } else if (raw['savingThrows'] != null) {
+      customProperties['savingThrows'] = raw['savingThrows'].toString();
+    }
+    if (raw['skill'] is Map) {
+      customProperties['skills'] = (raw['skill'] as Map).entries.map((e) => '${e.key} ${e.value}').join(', ');
+    } else if (raw['skills'] != null) {
+      customProperties['skills'] = raw['skills'].toString();
+    }
+    if (raw['vulnerable'] != null) {
+      customProperties['damageVulnerabilities'] = _formatList(raw['vulnerable']);
+    } else if (raw['damageVulnerabilities'] != null) {
+      customProperties['damageVulnerabilities'] = raw['damageVulnerabilities'].toString();
+    }
+    if (raw['resist'] != null) {
+      customProperties['damageResistances'] = _formatList(raw['resist']);
+    } else if (raw['damageResistances'] != null) {
+      customProperties['damageResistances'] = raw['damageResistances'].toString();
+    }
+    if (raw['immune'] != null) {
+      customProperties['damageImmunities'] = _formatList(raw['immune']);
+    } else if (raw['damageImmunities'] != null) {
+      customProperties['damageImmunities'] = raw['damageImmunities'].toString();
+    }
+    if (raw['conditionImmune'] != null) {
+      customProperties['conditionImmunities'] = _formatList(raw['conditionImmune']);
+    } else if (raw['conditionImmunities'] != null) {
+      customProperties['conditionImmunities'] = raw['conditionImmunities'].toString();
+    }
+    final senses = raw['senses'] != null ? _formatList(raw['senses']) : '';
+    final passive = raw['passive'] != null ? 'passive Perception ${raw['passive']}' : '';
+    final sensesStr = [if (senses.isNotEmpty) senses, if (passive.isNotEmpty) passive].join(', ');
+    if (sensesStr.isNotEmpty) {
+      customProperties['senses'] = sensesStr;
+    }
+    if (raw['languages'] != null) {
+      customProperties['languages'] = _formatList(raw['languages']);
+    }
+
     return Monster(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
@@ -182,7 +245,8 @@ class CompendiumMonsterParser {
     required String defaultTitle,
   }) {
     if (node is Map) {
-      final aName = node['name'] ?? node['title'] ?? defaultTitle;
+      final rawName = (node['name'] ?? node['title'] ?? defaultTitle).toString();
+      final aName = transformer.transformEntries(rawName, defaultRuleset: ruleset).markdown;
       final entriesData = node['entries'] ?? node['desc'] ?? node['description'] ?? node['text'] ?? node['entry'];
       final parsed = transformer.transformEntries(entriesData, defaultRuleset: ruleset);
       attackMath.addAll(parsed.extractedMath);
@@ -509,4 +573,191 @@ class CompendiumMonsterParser {
     }
     return RulesetVersion.homebrew;
   }
+
+  /// Pre-resolves `_copy` specifications using a provider of base monster raw maps or the MonsterCodexLibrary.
+  Map<String, dynamic> resolveCopy(
+    Map<String, dynamic> raw, {
+    Map<String, dynamic>? Function(String name, String? source)? baseLookup,
+  }) {
+    if (!raw.containsKey('_copy') || raw['_copy'] is! Map) {
+      return raw;
+    }
+
+    final copy = raw['_copy'] as Map;
+    final copyName = copy['name']?.toString().trim();
+    if (copyName == null || copyName.isEmpty) return raw;
+    final copySource = copy['source']?.toString().trim();
+
+    Map<String, dynamic>? base;
+    if (baseLookup != null) {
+      base = baseLookup(copyName, copySource);
+    }
+    if (base == null) {
+      final codexMatch = MonsterCodexLibrary.getMonsterByName(copyName);
+      if (codexMatch != null) {
+        base = _monsterItemToRawMap(codexMatch);
+      }
+    }
+
+    if (base == null) {
+      return raw;
+    }
+
+    // Deep copy base map
+    final merged = json.decode(json.encode(base)) as Map<String, dynamic>;
+
+    // Apply _mod modifications
+    final mod = copy['_mod'];
+    if (mod is Map) {
+      _applyMod(merged, mod);
+    }
+
+    // Merge overlay fields from raw (except _copy)
+    raw.forEach((key, value) {
+      if (key != '_copy') {
+        merged[key] = value;
+      }
+    });
+
+    // Keep _copy in customProperties
+    merged['_copy'] = copy;
+
+    return merged;
+  }
+
+  void _applyMod(Map<String, dynamic> target, Map mod) {
+    mod.forEach((key, modRule) {
+      final ruleList = modRule is List ? modRule : [modRule];
+      for (final rule in ruleList) {
+        if (rule is! Map) continue;
+        final mode = rule['mode']?.toString();
+
+        if (key == '*' || mode == 'replaceTxt') {
+          final replace = rule['replace']?.toString();
+          final withTxt = rule['with']?.toString() ?? '';
+          if (replace != null && replace.isNotEmpty) {
+            final flags = rule['flags']?.toString() ?? '';
+            final caseSensitive = !flags.contains('i');
+            _replaceTextInNode(target, replace, withTxt, caseSensitive: caseSensitive);
+          }
+        } else if (mode == 'appendArr') {
+          final items = rule['items'];
+          final arr = target[key];
+          if (arr is List && items != null) {
+            if (items is List) {
+              arr.addAll(items);
+            } else {
+              arr.add(items);
+            }
+          } else if (items != null) {
+            target[key] = items is List ? List.from(items) : [items];
+          }
+        } else if (mode == 'prependArr') {
+          final items = rule['items'];
+          final arr = target[key];
+          if (arr is List && items != null) {
+            if (items is List) {
+              arr.insertAll(0, items);
+            } else {
+              arr.insert(0, items);
+            }
+          } else if (items != null) {
+            target[key] = items is List ? List.from(items) : [items];
+          }
+        } else if (mode == 'replaceArr') {
+          final replace = rule['replace'];
+          final withItem = rule['with'];
+          final arr = target[key];
+          if (arr is List && replace != null && withItem != null) {
+            final matchName = replace is Map ? replace['name']?.toString() : replace.toString();
+            final idx = arr.indexWhere((it) =>
+                it is Map && (it['name']?.toString() == matchName || it['title']?.toString() == matchName));
+            if (idx != -1) {
+              arr[idx] = withItem;
+            }
+          }
+        } else if (mode == 'removeArr') {
+          final names = rule['names'];
+          final arr = target[key];
+          if (arr is List && names != null) {
+            final nameList = names is List
+                ? names.map((e) => e.toString().toLowerCase()).toSet()
+                : {names.toString().toLowerCase()};
+            arr.removeWhere((it) =>
+                it is Map && nameList.contains((it['name'] ?? it['title'])?.toString().toLowerCase()));
+          }
+        } else if (mode == 'addSkills' || mode == 'skills') {
+          final skills = rule['skills'];
+          if (skills is Map) {
+            final current = target['skill'] is Map ? Map<String, dynamic>.from(target['skill'] as Map) : <String, dynamic>{};
+            skills.forEach((k, v) => current[k.toString()] = v);
+            target['skill'] = current;
+          }
+        }
+      }
+    });
+  }
+
+  void _replaceTextInNode(dynamic node, String search, String replace, {bool caseSensitive = true}) {
+    if (node is Map) {
+      for (final key in node.keys.toList()) {
+        final val = node[key];
+        if (val is String) {
+          node[key] = val.replaceAll(
+            RegExp(RegExp.escape(search), caseSensitive: caseSensitive),
+            replace,
+          );
+        } else {
+          _replaceTextInNode(val, search, replace, caseSensitive: caseSensitive);
+        }
+      }
+    } else if (node is List) {
+      for (int i = 0; i < node.length; i++) {
+        final val = node[i];
+        if (val is String) {
+          node[i] = val.replaceAll(
+            RegExp(RegExp.escape(search), caseSensitive: caseSensitive),
+            replace,
+          );
+        } else {
+          _replaceTextInNode(val, search, replace, caseSensitive: caseSensitive);
+        }
+      }
+    }
+  }
+
+  static Map<String, dynamic> _monsterItemToRawMap(MonsterItem item) {
+    final sb = item.sourceStatBlock;
+    return {
+      'name': item.name,
+      'size': [sb.sizeDisplay],
+      'type': sb.typeDisplay,
+      'alignment': [sb.alignment],
+      'ac': [sb.ac],
+      'hp': {'average': sb.maxHp, 'formula': sb.hitDice ?? '${sb.maxHp}hp'},
+      'speed': sb.speed,
+      'str': sb.strScore,
+      'dex': sb.dexScore,
+      'con': sb.conScore,
+      'int': sb.intScore,
+      'wis': sb.wisScore,
+      'cha': sb.chaScore,
+      'cr': item.sourceStatBlock.crDisplay.replaceAll(RegExp(r'^CR\s*', caseSensitive: false), '').trim(),
+      'trait': sb.traits.map((t) => {'name': t.name, 'entries': [t.description]}).toList(),
+      'action': sb.actions.map((a) => {
+        'name': a.name,
+        'entries': [a.description],
+      }).toList(),
+      'reaction': sb.reactions.map((r) => {'name': r.name, 'entries': [r.description]}).toList(),
+      'senses': sb.senses,
+      'languages': sb.languages,
+      'savingThrows': sb.savingThrows,
+      'skills': sb.skills,
+      'immune': sb.damageImmunities,
+      'resist': sb.damageResistances,
+      'vulnerable': sb.damageVulnerabilities,
+      'conditionImmune': sb.conditionImmunities,
+    };
+  }
 }
+

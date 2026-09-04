@@ -246,6 +246,40 @@ class HomebrewPersistenceService {
                     ? 'Special'
                     : '${s.duration.durationSeconds} seconds')));
 
+    final extractedClasses = <SpellClass>[];
+    final rawClasses = s.customProperties['classes'];
+    final candidates = <dynamic>[];
+    if (rawClasses is List) {
+      candidates.addAll(rawClasses);
+    } else if (rawClasses is Map) {
+      if (rawClasses['fromClassList'] is List) {
+        candidates.addAll(rawClasses['fromClassList'] as List);
+      }
+      if (rawClasses['fromSubclass'] is List) {
+        for (final sub in (rawClasses['fromSubclass'] as List)) {
+          if (sub is Map && sub['class'] != null) {
+            candidates.add(sub['class']);
+          }
+        }
+      }
+    }
+
+    for (final c in candidates) {
+      if (c is SpellClass) {
+        if (!extractedClasses.contains(c)) extractedClasses.add(c);
+        continue;
+      }
+      final name = (c is Map && c['name'] != null ? c['name'] : c)
+          .toString()
+          .replaceFirst('SpellClass.', '')
+          .toLowerCase()
+          .trim();
+      final match = SpellClass.values.where((sc) => sc.name.toLowerCase() == name || sc.label.toLowerCase() == name).firstOrNull;
+      if (match != null && !extractedClasses.contains(match)) {
+        extractedClasses.add(match);
+      }
+    }
+
     final editionDetails = SpellEditionDetails(
       castingTime: s.castingTime.cost > 0
           ? '${s.castingTime.cost} ${s.castingTime.actionType.name}'
@@ -256,7 +290,7 @@ class HomebrewPersistenceService {
       concentration: s.duration.requiresConcentration,
       description: [s.descriptionMarkdown],
       higherLevels: s.higherLevelsMarkdown,
-      classes: const [],
+      classes: extractedClasses,
       rollFormula: s.damageMath.isNotEmpty ? s.damageMath.first.diceFormula : null,
       damageOrHealType: s.damageMath.isNotEmpty ? s.damageMath.first.damageType.name : null,
     );
