@@ -4,9 +4,11 @@ import 'core_types.dart';
 import 'entity_reference.dart';
 import 'feature_grant.dart';
 import 'spell_monster_equipment.dart';
+import 'homebrew_extended_entities.dart';
 import '../party/party_purse.dart';
 import '../spellbook_data.dart';
 import '../dm_screen_data.dart' show DmRulesEdition;
+import '../characters/srd_classes_library.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 
 /// 5e Core Ability Score Keys
@@ -1077,6 +1079,311 @@ class Character extends DomainEntity {
 
   List<InventoryItemInstance> get equippedItems =>
       inventory.where((item) => item.isEquipped).toList();
+
+  /// Evaluates whether the character has a specific capability flag enabled from any selected
+  /// feature option, feat, class feature, or custom properties.
+  bool hasCapabilityFlag(String flagKey) {
+    if (customProperties[flagKey] == true) return true;
+    final normalizedKey = flagKey.toLowerCase().replaceAll('-', '_');
+    final allSelectedOptions = progression.getAllSelectedFeatureOptions();
+    for (final optionIds in allSelectedOptions.values) {
+      for (final optId in optionIds) {
+        final normOptId = optId.toLowerCase().replaceAll('-', '_');
+        if (normOptId == normalizedKey) return true;
+        final opt = SrdFeatureOptions.allOptions.firstWhere(
+          (o) => o.id == optId || o.id == optId.replaceAll('-', '_'),
+          orElse: () => SrdFeatureOptions.allOptions.firstWhere(
+            (o) => o.name.toLowerCase() == optId.toLowerCase(),
+            orElse: () => const FeatureOption(id: '', name: '', descriptionMarkdown: ''),
+          ),
+        );
+        if (opt.id.toLowerCase().replaceAll('-', '_') == normalizedKey) return true;
+        if (opt.grants[flagKey] == true || opt.grants[normalizedKey] == true) {
+          return true;
+        }
+      }
+    }
+    for (final featRef in feats) {
+      final slug = featRef.slug.toLowerCase().replaceAll('-', '_');
+      final name = featRef.displayName.toLowerCase().replaceAll(' ', '_');
+      if (flagKey == 'mediumArmorMaster' &&
+          (slug.contains('medium_armor_master') || name.contains('medium_armor_master'))) {
+        return true;
+      }
+      if (flagKey == 'observant' &&
+          (slug.contains('observant') || name.contains('observant'))) {
+        return true;
+      }
+      if (flagKey == 'alert' &&
+          (slug.contains('alert') || name.contains('alert'))) {
+        return true;
+      }
+      if (flagKey == 'jackOfAllTrades' &&
+          (slug.contains('jack_of_all_trades') || name.contains('jack_of_all_trades'))) {
+        return true;
+      }
+    }
+    if (flagKey == 'jackOfAllTrades') {
+      final bardClass = progression.classes
+          .where((c) =>
+              c.classRef.slug.toLowerCase().contains('bard') ||
+              c.classRef.displayName.toLowerCase().contains('bard'))
+          .firstOrNull;
+      if (bardClass != null && bardClass.level >= 2) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Dynamic Armor Class calculation taking into account equipped armor, shields,
+  /// ability scores, feats (e.g. Medium Armor Master), and unarmored defense.
+  int get armorClass {
+    final scores = effectiveAbilityScores;
+    final dexMod = scores.getModifier(AbilityType.dexterity);
+    final conMod = scores.getModifier(AbilityType.constitution);
+    final wisMod = scores.getModifier(AbilityType.wisdom);
+
+    bool hasArmor = false;
+    int armorBaseAc = 10;
+    String armorType = 'none';
+    int? armorMaxDex;
+    int armorMagicBonus = 0;
+    int shieldBonus = 0;
+    int magicAcBonus = 0;
+
+    for (final instance in equippedItems) {
+      if (instance.requiresAttunement && !instance.isAttuned) continue;
+      final props = instance.customProperties;
+      final nameLower = instance.displayName.toLowerCase();
+      final slugLower = instance.itemRef.slug.toLowerCase();
+
+      final isShield = instance.equippedSlot == EquipmentSlot.shield ||
+          props['isShield'] == true ||
+          nameLower.contains('shield') ||
+          slugLower.contains('shield');
+
+      if (isShield) {
+        final bonus = (props['acBonus'] as num?)?.toInt() ??
+            (props['shieldBonus'] as num?)?.toInt() ??
+            2;
+        final magic = (props['magicBonus'] as num?)?.toInt() ?? 0;
+        shieldBonus += (bonus + magic);
+        continue;
+      }
+
+      final isArmor = instance.equippedSlot == EquipmentSlot.armor ||
+          props['armorType'] != null ||
+          props['baseAc'] != null ||
+          _isStandardArmorName(nameLower, slugLower);
+
+      if (isArmor && !hasArmor) {
+        hasArmor = true;
+        int? baseAc = (props['baseAc'] as num?)?.toInt();
+        String? type = props['armorType']?.toString().toLowerCase();
+        int? maxDex = (props['maxDexBonus'] as num?)?.toInt();
+        int magic = (props['magicBonus'] as num?)?.toInt() ?? 0;
+
+        if (baseAc == null || baseAc == 0) {
+          final standard = _resolveStandardArmor(nameLower, slugLower);
+          baseAc = standard.baseAc;
+          type ??= standard.armorType;
+          maxDex ??= standard.maxDex;
+        }
+
+        armorBaseAc = baseAc;
+        armorType = type ?? 'light';
+        armorMaxDex = maxDex;
+        armorMagicBonus = magic;
+      } else if (!isArmor && !isShield) {
+        if (props['acBonus'] is num) {
+          magicAcBonus += (props['acBonus'] as num).toInt();
+        }
+      }
+    }
+
+    // Defense Fighting Style (+1 AC while wearing armor)
+    if (hasArmor &&
+        (hasCapabilityFlag('defense') ||
+            hasCapabilityFlag('defenseFightingStyle') ||
+            hasCapabilityFlag('defense_fighting_style'))) {
+      magicAcBonus += 1;
+    }
+
+    int totalAc;
+    if (hasArmor) {
+      int dexContribution = dexMod;
+      if (armorType == 'heavy') {
+        dexContribution = 0;
+      } else if (armorType == 'medium') {
+        final hasMam = hasCapabilityFlag('mediumArmorMaster');
+        final cap = hasMam ? 3 : (armorMaxDex ?? 2);
+        dexContribution = math.min(dexMod, cap);
+      }
+      totalAc = armorBaseAc + dexContribution + armorMagicBonus + shieldBonus + magicAcBonus;
+    } else {
+      // Unarmored hierarchy:
+      int unarmoredAc = 10 + dexMod;
+
+      // Barbarian: 10 + DEX + CON (allows shield)
+      final isBarbarian = progression.classes.any((c) =>
+              c.classRef.slug.toLowerCase().contains('barbarian') ||
+              c.classRef.displayName.toLowerCase().contains('barbarian')) ||
+          hasCapabilityFlag('unarmoredDefenseBarbarian');
+      if (isBarbarian) {
+        final barbarianAc = 10 + dexMod + conMod;
+        if (barbarianAc > unarmoredAc) {
+          unarmoredAc = barbarianAc;
+        }
+      }
+
+      // Monk: 10 + DEX + WIS (no shield)
+      final isMonk = progression.classes.any((c) =>
+              c.classRef.slug.toLowerCase().contains('monk') ||
+              c.classRef.displayName.toLowerCase().contains('monk')) ||
+          hasCapabilityFlag('unarmoredDefenseMonk');
+      if (isMonk && shieldBonus == 0) {
+        final monkAc = 10 + dexMod + wisMod;
+        if (monkAc > unarmoredAc) {
+          unarmoredAc = monkAc;
+        }
+      }
+
+      // Draconic Sorcerer: 13 + DEX
+      final isDraconic = progression.classes.any((c) =>
+              c.subclassRef?.slug.toLowerCase().contains('draconic') == true ||
+              c.subclassRef?.displayName.toLowerCase().contains('draconic') == true) ||
+          hasCapabilityFlag('draconicResilience');
+      if (isDraconic) {
+        final draconicAc = 13 + dexMod;
+        if (draconicAc > unarmoredAc) {
+          unarmoredAc = draconicAc;
+        }
+      }
+
+      totalAc = unarmoredAc + shieldBonus + magicAcBonus;
+    }
+
+    return totalAc;
+  }
+
+  static bool _isStandardArmorName(String name, String slug) {
+    final combined = '$name $slug'.toLowerCase();
+    return combined.contains('padded') ||
+        combined.contains('leather') ||
+        combined.contains('studded') ||
+        combined.contains('hide') ||
+        combined.contains('chain shirt') ||
+        combined.contains('scale mail') ||
+        combined.contains('breastplate') ||
+        combined.contains('half plate') ||
+        combined.contains('ring mail') ||
+        combined.contains('chain mail') ||
+        combined.contains('splint') ||
+        combined.contains('plate');
+  }
+
+  static ({int baseAc, String armorType, int? maxDex}) _resolveStandardArmor(
+    String name,
+    String slug,
+  ) {
+    final combined = '$name $slug'.toLowerCase().replaceAll('-', ' ');
+    if (combined.contains('studded leather')) {
+      return (baseAc: 12, armorType: 'light', maxDex: null);
+    }
+    if (combined.contains('padded') || combined.contains('leather')) {
+      return (baseAc: 11, armorType: 'light', maxDex: null);
+    }
+    if (combined.contains('hide')) {
+      return (baseAc: 12, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('chain shirt')) {
+      return (baseAc: 13, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('scale mail') || combined.contains('breastplate')) {
+      return (baseAc: 14, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('half plate')) {
+      return (baseAc: 15, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('ring mail')) {
+      return (baseAc: 14, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('chain mail')) {
+      return (baseAc: 16, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('splint')) {
+      return (baseAc: 17, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('plate')) {
+      return (baseAc: 18, armorType: 'heavy', maxDex: 0);
+    }
+    return (baseAc: 11, armorType: 'light', maxDex: null);
+  }
+
+  /// Dynamic Initiative Bonus: DEX modifier + Alert feat bonus + Jack of All Trades (if untrained).
+  int get initiativeBonus {
+    final dexMod = effectiveAbilityScores.getModifier(AbilityType.dexterity);
+    int bonus = dexMod;
+
+    final hasAlert = hasCapabilityFlag('alert');
+    if (hasAlert) {
+      if (rulesEdition == DmRulesEdition.v2024) {
+        bonus += proficiencyBonus;
+      } else {
+        bonus += 5;
+      }
+    } else if (hasCapabilityFlag('jackOfAllTrades')) {
+      // In 5e RAW, initiative is a Dexterity check. Jack of All Trades applies to any ability check
+      // that doesn't already include proficiency bonus.
+      bonus += (proficiencyBonus * 0.5).floor();
+    }
+
+    if (customProperties['initiativeBonus'] is num) {
+      bonus += (customProperties['initiativeBonus'] as num).toInt();
+    }
+
+    return bonus;
+  }
+
+  /// Dynamic Skill Modifier calculation factoring in ability modifiers, proficiency levels,
+  /// and Jack of All Trades.
+  int getSkillModifier(SkillType skill) {
+    final ability = skill.defaultAbility;
+    final baseMod = effectiveAbilityScores.getModifier(ability);
+    final profLevel = skillProficiencies[skill] ?? SkillProficiencyLevel.none;
+
+    int bonus = 0;
+    if (profLevel != SkillProficiencyLevel.none) {
+      bonus = (proficiencyBonus * profLevel.multiplier).floor();
+    } else if (hasCapabilityFlag('jackOfAllTrades')) {
+      bonus = (proficiencyBonus * 0.5).floor();
+    }
+
+    return baseMod + bonus;
+  }
+
+  /// Dynamic Saving Throw Modifier calculation factoring in ability modifiers and proficiency.
+  int getSaveModifier(AbilityType ability) {
+    final baseMod = effectiveAbilityScores.getModifier(ability);
+    int bonus = 0;
+    if (savingThrowProficiencies.contains(ability)) {
+      bonus = proficiencyBonus;
+    }
+    return baseMod + bonus;
+  }
+
+  /// Passive Perception (10 + Perception skill modifier + Observant feat bonus if present)
+  int get passivePerception =>
+      10 + getSkillModifier(SkillType.perception) + (hasCapabilityFlag('observant') ? 5 : 0);
+
+  /// Passive Investigation (10 + Investigation skill modifier + Observant feat bonus if present)
+  int get passiveInvestigation =>
+      10 + getSkillModifier(SkillType.investigation) + (hasCapabilityFlag('observant') ? 5 : 0);
+
+  /// Passive Insight (10 + Insight skill modifier + Observant feat bonus if present)
+  int get passiveInsight =>
+      10 + getSkillModifier(SkillType.insight) + (hasCapabilityFlag('observant') ? 5 : 0);
 
   /// Resolves the effective [AbilityType] for attack and damage rolls with [weapon].
   AbilityType getEffectiveAttackAbility(

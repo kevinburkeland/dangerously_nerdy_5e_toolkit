@@ -1,11 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
-import '../models/characters/srd_classes_library.dart' show SrdFeatureOptions;
 import '../models/dice_roll.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
 import '../models/domain/character_models.dart';
 import '../models/domain/entity_reference.dart';
-import '../models/domain/homebrew_extended_entities.dart' show FeatureOption;
 import '../models/domain/spell_monster_equipment.dart';
 import '../models/room_roll.dart';
 import '../services/dice_room_service.dart';
@@ -604,26 +602,17 @@ class CharacterSheetController extends ChangeNotifier {
     _schedulePersist();
   }
 
-  /// Evaluates whether the character has a specific capability flag enabled from any selected feature option.
-  bool hasCapabilityFlag(String flagKey) {
-    if (_character.customProperties[flagKey] == true) return true;
-    final allSelectedOptions = _character.progression.getAllSelectedFeatureOptions();
-    for (final optionIds in allSelectedOptions.values) {
-      for (final optId in optionIds) {
-        final opt = SrdFeatureOptions.allOptions.firstWhere(
-          (o) => o.id == optId || o.id == optId.replaceAll('-', '_'),
-          orElse: () => SrdFeatureOptions.allOptions.firstWhere(
-            (o) => o.name.toLowerCase() == optId.toLowerCase(),
-            orElse: () => const FeatureOption(id: '', name: '', descriptionMarkdown: ''),
-          ),
-        );
-        if (opt.grants[flagKey] == true) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+  /// Evaluates whether the character has a specific capability flag enabled from any selected feature option, feat, class feature, or custom properties.
+  bool hasCapabilityFlag(String flagKey) => _character.hasCapabilityFlag(flagKey);
+
+  /// True if character has Agonizing Blast invocation enabled (adds CHA modifier to Eldritch Blast damage).
+  bool get hasAgonizingBlast => hasCapabilityFlag('eldritchBlastChaDamage');
+
+  /// True if character has Jack of All Trades (adds half proficiency bonus to untrained ability checks/initiative).
+  bool get hasJackOfAllTrades => hasCapabilityFlag('jackOfAllTrades');
+
+  /// True if character has Medium Armor Master feat (raises medium armor DEX cap from +2 to +3).
+  bool get hasMediumArmorMaster => hasCapabilityFlag('mediumArmorMaster');
 
   /// Executes a spell attack roll: 1d20 + stats.spellAttackBonus.
   DiceRollResult rollSpellAttack(Spell spell) {
@@ -688,7 +677,7 @@ class CharacterSheetController extends ChangeNotifier {
     }
 
     int modifier = 0;
-    if (isEldritchBlast && hasCapabilityFlag('eldritchBlastChaDamage')) {
+    if (isEldritchBlast && hasAgonizingBlast) {
       final chaMod = _character.effectiveAbilityScores.getModifier(AbilityType.charisma);
       modifier += chaMod;
     }

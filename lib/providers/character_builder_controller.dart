@@ -79,6 +79,7 @@ class CharacterBuilderController extends ChangeNotifier {
   // --- Skill Refund Getters ---
   int get refundedSkillChoices => _refundedSkillChoices;
   Set<SkillType> get bonusReplacementSkills => Set.unmodifiable(_bonusReplacementSkills);
+  Set<SkillType> get pendingReplacementSkills => Set.unmodifiable(_bonusReplacementSkills);
   Set<SkillType> get selectedSkills => Set.unmodifiable(_draft.selectedSkills.keys);
 
   /// Skills granted by the selected Background.
