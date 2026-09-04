@@ -24,22 +24,11 @@ class CompendiumGenericEntryParser {
 
     String category = defaultCategory;
     if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
-      category = raw['category'].toString();
+      category = _cleanCategoryString(raw['category'].toString());
     } else if (raw['featureType'] != null) {
-      final ft = raw['featureType'].toString().toUpperCase();
-      if (ft == 'EI' || ft.contains('INVOCATION')) {
-        category = 'Eldritch Invocation';
-      } else if (ft == 'MM' || ft.contains('METAMAGIC')) {
-        category = 'Metamagic';
-      } else if (ft == 'MAN' || ft == 'BM' || ft.contains('MANEUVER')) {
-        category = 'Maneuver';
-      } else if (ft == 'AI' || ft == 'INF' || ft.contains('INFUSION')) {
-        category = 'Infusion';
-      } else {
-        category = raw['featureType'].toString();
-      }
+      category = _decodeFeatureType(raw['featureType']);
     } else if (raw['type'] != null && raw['type'].toString().isNotEmpty) {
-      category = raw['type'].toString();
+      category = _cleanCategoryString(raw['type'].toString());
     }
 
     final parsedEntries = transformer.transformEntries(
@@ -62,6 +51,81 @@ class CompendiumGenericEntryParser {
       descriptionMarkdown: parsedEntries.markdown,
       customProperties: customProperties,
     );
+  }
+
+  String _decodeFeatureType(dynamic ftData) {
+    final str = (ftData is List ? ftData.join(', ') : ftData.toString()).toUpperCase().trim();
+    if (str.contains('MV') || str.contains('MANEUVER') || str.contains('BM')) {
+      return 'Maneuver';
+    }
+    if (str.contains('EI') || str.contains('INVOCATION')) {
+      return 'Eldritch Invocation';
+    }
+    if (str.contains('AI') || str.contains('INF') || str.contains('INFUSION')) {
+      return 'Infusion';
+    }
+    if (str.contains('AS') || str.contains('ARCANE SHOT')) {
+      return 'Arcane Shot';
+    }
+    if (str.contains('ED') || str.contains('ELEMENTAL DISCIPLINE')) {
+      return 'Elemental Discipline';
+    }
+    if (str.contains('MM') || str.contains('METAMAGIC')) {
+      return 'Metamagic';
+    }
+    if (str.contains('RN') || str.contains('RUNE')) {
+      return 'Rune';
+    }
+    if (str.contains('FS') || str.contains('FIGHTING STYLE')) {
+      return 'Fighting Style';
+    }
+    if (str.contains('PB') || str.contains('PACT BOON')) {
+      return 'Pact Boon';
+    }
+    return _cleanCategoryString(ftData.toString());
+  }
+
+  String _cleanCategoryString(String cat) {
+    var c = cat.trim();
+    if (c.startsWith('[') && c.endsWith(']')) {
+      c = c.substring(1, c.length - 1).trim();
+    }
+    if (c.startsWith("'") && c.endsWith("'")) {
+      c = c.substring(1, c.length - 1).trim();
+    }
+    if (c.startsWith('"') && c.endsWith('"')) {
+      c = c.substring(1, c.length - 1).trim();
+    }
+    // Check if inner content is a code like MV:B
+    final upper = c.toUpperCase();
+    if (upper.contains('MV') || upper.contains('MANEUVER') || upper.contains('BM')) {
+      return 'Maneuver';
+    }
+    if (upper.contains('EI') || upper.contains('INVOCATION')) {
+      return 'Eldritch Invocation';
+    }
+    if (upper.contains('AI') || upper.contains('INF') || upper.contains('INFUSION')) {
+      return 'Infusion';
+    }
+    if (upper.contains('AS') || upper.contains('ARCANE SHOT')) {
+      return 'Arcane Shot';
+    }
+    if (upper.contains('ED') || upper.contains('ELEMENTAL DISCIPLINE')) {
+      return 'Elemental Discipline';
+    }
+    if (upper.contains('MM') || upper.contains('METAMAGIC')) {
+      return 'Metamagic';
+    }
+    if (upper.contains('RN') || upper.contains('RUNE')) {
+      return 'Rune';
+    }
+    if (upper.contains('FS') || upper.contains('FIGHTING STYLE')) {
+      return 'Fighting Style';
+    }
+    if (upper.contains('PB') || upper.contains('PACT BOON')) {
+      return 'Pact Boon';
+    }
+    return c.isNotEmpty ? c : 'Custom';
   }
 
   String _slugify(String name) {

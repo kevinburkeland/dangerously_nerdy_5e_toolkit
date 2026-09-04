@@ -125,14 +125,22 @@ class CompendiumSpellParser {
       }
     });
 
-    // Preserve raw classes if present (ensuring 0% data loss); if omitted or empty, attempt SRD inheritance
-    if (!customProperties.containsKey('classes') || customProperties['classes'] == null) {
-      final srdMatch = SpellbookLibrary.allSpells.where((s) => s.name.toLowerCase() == name.toLowerCase() || s.id == slug).firstOrNull;
-      if (srdMatch != null) {
-        final srdClasses = (ruleset == RulesetVersion.v2024 ? srdMatch.rules2024 : srdMatch.rules2014).classes;
-        if (srdClasses.isNotEmpty) {
-          customProperties['classes'] = srdClasses;
+    // Preserve raw classes if present as Map (ensuring 0% data loss); if omitted or empty, attempt SRD / expansion index inheritance
+    final rawClasses = raw['classes'] ?? customProperties['classes'];
+    if (rawClasses is Map && rawClasses.isNotEmpty) {
+      customProperties['classes'] = rawClasses;
+      final hasClassList = (rawClasses['fromClassList'] is List && (rawClasses['fromClassList'] as List).isNotEmpty);
+      final hasSubclass = (rawClasses['fromSubclass'] is List && (rawClasses['fromSubclass'] as List).isNotEmpty);
+      if (!hasClassList && !hasSubclass) {
+        final parsed = _extractClasses(rawClasses, slug, name, ruleset);
+        if (parsed.isNotEmpty) {
+          rawClasses['fromClassList'] = parsed.map((c) => {'name': c, 'source': 'PHB'}).toList();
         }
+      }
+    } else {
+      final parsedClasses = _extractClasses(rawClasses, slug, name, ruleset);
+      if (parsedClasses.isNotEmpty) {
+        customProperties['classes'] = parsedClasses;
       }
     }
     if (raw.containsKey('page')) {
@@ -459,6 +467,127 @@ class CompendiumSpellParser {
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
   }
+
+  List<String> _extractClasses(dynamic rawClasses, String slug, String name, RulesetVersion ruleset) {
+    final classes = <String>[];
+
+    if (rawClasses is Map) {
+      final fromClassList = rawClasses['fromClassList'];
+      if (fromClassList is List) {
+        for (final item in fromClassList) {
+          if (item is Map && item['name'] != null) {
+            final cName = item['name'].toString().trim();
+            if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+          } else if (item is String) {
+            final cName = item.split('|').first.trim();
+            if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+          }
+        }
+      }
+    } else if (rawClasses is List) {
+      for (final item in rawClasses) {
+        if (item is Map && item['name'] != null) {
+          final cName = item['name'].toString().trim();
+          if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+        } else if (item != null) {
+          final cName = item.toString().split('|').first.trim();
+          if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+        }
+      }
+    } else if (rawClasses is String && rawClasses.isNotEmpty) {
+      for (final part in rawClasses.split(',')) {
+        final cName = part.split('|').first.trim();
+        if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+      }
+    }
+
+    // Fallback 1: SRD Match
+    if (classes.isEmpty) {
+      final srdMatch = SpellbookLibrary.allSpells.where((s) => s.name.toLowerCase() == name.toLowerCase() || s.id == slug).firstOrNull;
+      if (srdMatch != null) {
+        final srdClasses = (ruleset == RulesetVersion.v2024 ? srdMatch.rules2024 : srdMatch.rules2014).classes;
+        for (final sc in srdClasses) {
+          if (!classes.contains(sc.label)) classes.add(sc.label);
+        }
+      }
+    }
+
+    // Fallback 2: Known Expansion Spells Index
+    if (classes.isEmpty) {
+      final expansionMatch = _expansionSpellClasses[slug] ?? _expansionSpellClasses[_slugify(name)];
+      if (expansionMatch != null) {
+        classes.addAll(expansionMatch);
+      }
+    }
+
+    return classes;
+  }
+
+  static const Map<String, List<String>> _expansionSpellClasses = {
+    'blade-of-disaster': ['Sorcerer', 'Warlock', 'Wizard'],
+    'booming-blade': ['Artificer', 'Sorcerer', 'Warlock', 'Wizard'],
+    'green-flame-blade': ['Artificer', 'Sorcerer', 'Warlock', 'Wizard'],
+    'lightning-lure': ['Artificer', 'Sorcerer', 'Warlock', 'Wizard'],
+    'sword-burst': ['Artificer', 'Sorcerer', 'Warlock', 'Wizard'],
+    'mind-sliver': ['Sorcerer', 'Warlock', 'Wizard'],
+    'tashas-caustic-brew': ['Artificer', 'Sorcerer', 'Wizard'],
+    'tashas-mind-whip': ['Sorcerer', 'Wizard'],
+    'tashas-otherworldly-guise': ['Sorcerer', 'Warlock', 'Wizard'],
+    'intellect-fortress': ['Artificer', 'Bard', 'Sorcerer', 'Warlock', 'Wizard'],
+    'spirit-shroud': ['Cleric', 'Paladin', 'Warlock', 'Wizard'],
+    'summon-aberration': ['Sorcerer', 'Warlock', 'Wizard'],
+    'summon-beast': ['Druid', 'Ranger'],
+    'summon-celestial': ['Cleric', 'Paladin'],
+    'summon-construct': ['Artificer', 'Wizard'],
+    'summon-elemental': ['Druid', 'Ranger', 'Wizard'],
+    'summon-fey': ['Bard', 'Druid', 'Ranger', 'Warlock', 'Wizard'],
+    'summon-fiend': ['Warlock', 'Wizard'],
+    'summon-shadowspawn': ['Warlock', 'Wizard'],
+    'summon-undead': ['Warlock', 'Wizard'],
+    'dream-of-the-blue-veil': ['Bard', 'Sorcerer', 'Warlock', 'Wizard'],
+    'frost-fingers': ['Wizard'],
+    'silvery-barbs': ['Bard', 'Sorcerer', 'Wizard'],
+    'kinetic-jaunt': ['Artificer', 'Bard', 'Sorcerer', 'Wizard'],
+    'vortex-warp': ['Artificer', 'Sorcerer', 'Wizard'],
+    'wither-and-bloom': ['Druid', 'Sorcerer', 'Wizard'],
+    'borrowed-knowledge': ['Bard', 'Cleric', 'Warlock', 'Wizard'],
+    'chaos-bolt': ['Sorcerer'],
+    'toll-the-dead': ['Cleric', 'Warlock', 'Wizard'],
+    'word-of-radiance': ['Cleric'],
+    'primal-savagery': ['Druid'],
+    'infestation': ['Druid', 'Sorcerer', 'Warlock', 'Wizard'],
+    'create-bonfire': ['Artificer', 'Druid', 'Sorcerer', 'Warlock', 'Wizard'],
+    'control-flames': ['Druid', 'Sorcerer', 'Wizard'],
+    'gust': ['Druid', 'Sorcerer', 'Wizard'],
+    'mold-earth': ['Druid', 'Sorcerer', 'Wizard'],
+    'shape-water': ['Druid', 'Sorcerer', 'Wizard'],
+    'thunderclap': ['Artificer', 'Bard', 'Druid', 'Sorcerer', 'Warlock', 'Wizard'],
+    'absorb-elements': ['Artificer', 'Druid', 'Ranger', 'Sorcerer', 'Wizard'],
+    'beast-bond': ['Druid', 'Ranger'],
+    'catapult': ['Artificer', 'Sorcerer', 'Wizard'],
+    'ice-knife': ['Druid', 'Sorcerer', 'Wizard'],
+    'snare': ['Artificer', 'Druid', 'Ranger', 'Wizard'],
+    'zephyr-strike': ['Ranger'],
+    'earth-tremor': ['Bard', 'Druid', 'Sorcerer', 'Wizard'],
+    'shadow-blade': ['Sorcerer', 'Warlock', 'Wizard'],
+    'healing-spirit': ['Druid', 'Ranger'],
+    'tiny-servant': ['Artificer', 'Wizard'],
+    'life-transference': ['Cleric', 'Wizard'],
+    'enemies-abound': ['Bard', 'Sorcerer', 'Warlock', 'Wizard'],
+    'synaptic-static': ['Bard', 'Sorcerer', 'Warlock', 'Wizard'],
+    'holy-weapon': ['Cleric', 'Paladin'],
+    'steel-wind-strike': ['Ranger', 'Wizard'],
+    'dawn': ['Cleric', 'Paladin'],
+    'infernal-calling': ['Warlock', 'Wizard'],
+    'negative-energy-flood': ['Warlock', 'Wizard'],
+    'scatter': ['Sorcerer', 'Warlock', 'Wizard'],
+    'crown-of-stars': ['Sorcerer', 'Warlock', 'Wizard'],
+    'danse-macabre': ['Warlock', 'Wizard'],
+    'soul-cage': ['Warlock', 'Wizard'],
+    'maddening-darkness': ['Warlock', 'Wizard'],
+    'illusory-dragon': ['Wizard'],
+    'psychic-scream': ['Bard', 'Sorcerer', 'Warlock', 'Wizard'],
+  };
 
   RulesetVersion _mapSourceToRuleset(String? source) {
     if (source == null || source.isEmpty) return RulesetVersion.homebrew;

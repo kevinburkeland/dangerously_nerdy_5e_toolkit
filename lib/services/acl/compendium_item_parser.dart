@@ -1,4 +1,5 @@
 import '../../models/domain/core_types.dart';
+import '../../models/domain/feature_grant.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import 'entry_tag_transformer.dart';
 
@@ -56,13 +57,50 @@ class CompendiumItemParser {
     if (raw.containsKey('recharge')) customProperties['recharge'] = raw['recharge'];
     if (raw.containsKey('rechargeAmount')) customProperties['rechargeAmount'] = raw['rechargeAmount'];
 
+    // Fallback description markdown for mundane items or trade goods lacking entries
+    var description = parsed.markdown;
+    if (description.isEmpty) {
+      final details = <String>[];
+      details.add('**Type:** $itemType');
+      if (rarity != 'None') details.add('**Rarity:** $rarity');
+      if (reqAttune.requiresAttunement) {
+        details.add('**Requires Attunement:** Yes${reqAttune.prerequisite != null ? " (${reqAttune.prerequisite})" : ""}');
+      }
+      if (customProperties['ac'] != null) details.add('**AC:** ${customProperties['ac']}');
+      if (customProperties['bonusAc'] != null) details.add('**AC Bonus:** ${customProperties['bonusAc']}');
+      if (customProperties['dmg1'] != null) {
+        details.add('**Damage:** ${customProperties['dmg1']}${customProperties['dmgType'] != null ? " ${customProperties['dmgType']}" : ""}');
+      }
+      if (customProperties['dmg2'] != null) details.add('**Versatile Damage:** ${customProperties['dmg2']}');
+      if (customProperties['value'] != null) {
+        final val = customProperties['value'];
+        if (val is num) {
+          final gp = (val / 100).toStringAsFixed(val % 100 == 0 ? 0 : 2);
+          details.add('**Value:** $gp gp');
+        } else {
+          details.add('**Value:** $val');
+        }
+      }
+      if (customProperties['weight'] != null) details.add('**Weight:** ${customProperties['weight']} lb.');
+      if (customProperties['vehHp'] != null) details.add('**Hull HP:** ${customProperties['vehHp']}');
+      if (customProperties['vehAc'] != null) details.add('**Hull AC:** ${customProperties['vehAc']}');
+      if (customProperties['vehSpeed'] != null) details.add('**Speed:** ${customProperties['vehSpeed']} mph');
+      if (customProperties['crew'] != null) details.add('**Crew:** ${customProperties['crew']}');
+      if (customProperties['capPassenger'] != null) details.add('**Passengers:** ${customProperties['capPassenger']}');
+      if (customProperties['capCargo'] != null) details.add('**Cargo Capacity:** ${customProperties['capCargo']} tons');
+      description = details.join('\n\n');
+    }
+
+    final grants = _extractGrants(slug, raw, customProperties);
+
     return EquipmentItem(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       itemType: itemType,
       rarity: rarity,
       requiresAttunement: reqAttune.requiresAttunement,
-      descriptionMarkdown: parsed.markdown,
+      descriptionMarkdown: description,
+      grants: grants,
       customProperties: customProperties,
     );
   }
@@ -82,7 +120,9 @@ class CompendiumItemParser {
 
   String _parseItemType(Map<String, dynamic> raw) {
     if (raw['type'] != null) {
-      final t = raw['type'].toString().toUpperCase().trim();
+      final rawTypeStr = raw['type'].toString();
+      // Handle compound types like 'RD|DMG', 'WD|DMG', 'RG|DMG', '$A|DMG'
+      final t = rawTypeStr.split('|').first.toUpperCase().trim();
       switch (t) {
         case 'M':
         case 'MELEE':
@@ -114,13 +154,170 @@ class CompendiumItemParser {
           return 'Staff';
         case 'G':
           return 'Adventuring Gear';
+        case 'SCF':
+          return 'Spellcasting Focus';
+        case 'INS':
+          return 'Instrument';
+        case 'TG':
+          return 'Trade Good';
+        case 'OTH':
+          return 'Other';
+        case 'FD':
+          return 'Food & Drink';
+        case r'$A':
+          return 'Art Object';
+        case r'$C':
+          return 'Coin / Currency';
+        case r'$G':
+          return 'Gemstone';
+        case 'MNT':
+          return 'Mount';
+        case 'VEH':
+          return 'Vehicle';
+        case 'SHP':
+          return 'Ship';
+        case 'AIR':
+          return 'Airship';
+        case 'EXP':
+          return 'Explosive';
+        case 'SPC':
+          return 'Spelljamming Ship';
+        case 'GS':
+          return 'Gaming Set';
+        case 'A':
+          return 'Ammunition';
+        case 'TAH':
+          return 'Tack and Harness';
         default:
-          return raw['type'].toString();
+          return rawTypeStr;
       }
     }
     if (raw['weaponCategory'] != null) return 'Weapon';
     if (raw['armor'] == true || raw['ac'] != null) return 'Armor';
     return 'Wondrous Item';
+  }
+
+  List<FeatureGrant> _extractGrants(String slug, Map<String, dynamic> raw, Map<String, dynamic> custom) {
+    final grants = <FeatureGrant>[];
+
+    // AC bonus (e.g. Ring of Protection +1, Shield +1)
+    final rawBonusAc = raw['bonusAc'] ?? custom['bonusAc'];
+    if (rawBonusAc != null) {
+      final val = int.tryParse(rawBonusAc.toString().replaceAll('+', '').trim());
+      if (val != null && val != 0) {
+        grants.add(FeatureGrant.acBonus(
+          grantId: 'item-$slug-ac-bonus',
+          amount: val,
+          label: '+${val > 0 ? "$val" : "$val"} AC',
+        ));
+      }
+    }
+
+    // Weapon bonus (attack & damage)
+    final rawBonusWpn = raw['bonusWeapon'] ?? custom['bonusWeapon'] ?? raw['bonusWeaponAttack'] ?? custom['bonusWeaponAttack'];
+    if (rawBonusWpn != null) {
+      final val = int.tryParse(rawBonusWpn.toString().replaceAll('+', '').trim());
+      if (val != null && val != 0) {
+        grants.add(FeatureGrant.passiveBonus(
+          grantId: 'item-$slug-weapon-bonus',
+          stat: 'weapon_attack_damage',
+          formula: 'flat_bonus',
+          flat: val,
+          label: '+${val > 0 ? "$val" : "$val"} Weapon Attack & Damage',
+        ));
+      }
+    }
+
+    // Saving throw bonus
+    final rawSaveBonus = raw['bonusSavingThrow'] ?? custom['bonusSavingThrow'];
+    if (rawSaveBonus != null) {
+      final val = int.tryParse(rawSaveBonus.toString().replaceAll('+', '').trim());
+      if (val != null && val != 0) {
+        grants.add(FeatureGrant.passiveBonus(
+          grantId: 'item-$slug-save-bonus',
+          stat: 'saving_throw',
+          formula: 'flat_bonus',
+          flat: val,
+          label: '+${val > 0 ? "$val" : "$val"} to Saving Throws',
+        ));
+      }
+    }
+
+    // Spell attack / DC bonus
+    final rawSpellAtk = raw['bonusSpellAttack'] ?? custom['bonusSpellAttack'];
+    if (rawSpellAtk != null) {
+      final val = int.tryParse(rawSpellAtk.toString().replaceAll('+', '').trim());
+      if (val != null && val != 0) {
+        grants.add(FeatureGrant.passiveBonus(
+          grantId: 'item-$slug-spell-attack',
+          stat: 'spell_attack',
+          formula: 'flat_bonus',
+          flat: val,
+          label: '+${val > 0 ? "$val" : "$val"} Spell Attack Rolls',
+        ));
+      }
+    }
+
+    final rawSpellDc = raw['bonusSpellSaveDc'] ?? custom['bonusSpellSaveDc'];
+    if (rawSpellDc != null) {
+      final val = int.tryParse(rawSpellDc.toString().replaceAll('+', '').trim());
+      if (val != null && val != 0) {
+        grants.add(FeatureGrant.passiveBonus(
+          grantId: 'item-$slug-spell-dc',
+          stat: 'spell_save_dc',
+          formula: 'flat_bonus',
+          flat: val,
+          label: '+${val > 0 ? "$val" : "$val"} Spell Save DC',
+        ));
+      }
+    }
+
+    // Damage resistances
+    final resist = raw['resist'] ?? custom['resist'];
+    if (resist is List) {
+      for (final r in resist) {
+        final rStr = r.toString().toLowerCase().trim();
+        if (rStr.isNotEmpty) {
+          grants.add(FeatureGrant.resistance(
+            rStr,
+            grantId: 'item-$slug-resist-$rStr',
+            label: 'Resistance to $rStr damage',
+          ));
+        }
+      }
+    } else if (resist is String && resist.isNotEmpty) {
+      final rStr = resist.toLowerCase().trim();
+      grants.add(FeatureGrant.resistance(
+        rStr,
+        grantId: 'item-$slug-resist-$rStr',
+        label: 'Resistance to $resist damage',
+      ));
+    }
+
+    // Speed bonus
+    final modifySpeed = raw['modifySpeed'] ?? custom['modifySpeed'];
+    if (modifySpeed is Map && modifySpeed['bonus'] != null) {
+      final bonus = int.tryParse(modifySpeed['bonus'].toString().replaceAll('+', '').trim());
+      if (bonus != null && bonus != 0) {
+        grants.add(FeatureGrant.speedBonus(
+          bonus,
+          grantId: 'item-$slug-speed-bonus',
+          label: '+${bonus > 0 ? "$bonus" : "$bonus"} ft. Speed',
+        ));
+      }
+    }
+
+    // Darkvision
+    final darkvision = raw['darkvision'] ?? custom['darkvision'];
+    if (darkvision is num && darkvision > 0) {
+      grants.add(FeatureGrant.darkvisionRange(
+        darkvision.toInt(),
+        grantId: 'item-$slug-darkvision',
+        label: 'Darkvision ${darkvision.toInt()} ft.',
+      ));
+    }
+
+    return grants;
   }
 
   String _parseRarity(dynamic rarityData) {

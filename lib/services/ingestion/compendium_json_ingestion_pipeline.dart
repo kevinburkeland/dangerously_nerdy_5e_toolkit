@@ -1,5 +1,6 @@
 import 'dart:convert';
 import '../../models/domain/core_types.dart';
+import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
@@ -277,31 +278,142 @@ class CompendiumJsonIngestionPipeline {
 
           if (!updated.customProperties.containsKey('classes') ||
               (updated.customProperties['classes'] is List && (updated.customProperties['classes'] as List).isEmpty)) {
-            final srdMatch = SpellbookLibrary.allSpells
-                .where((sp) => sp.name.toLowerCase() == updated.name.toLowerCase() || sp.id == updated.id.slug)
-                .firstOrNull;
-            if (srdMatch != null) {
-              final srdClasses = (updated.id.ruleset == RulesetVersion.v2024 ? srdMatch.rules2024 : srdMatch.rules2014).classes;
-              if (srdClasses.isNotEmpty) {
-                final cp = Map<String, dynamic>.from(updated.customProperties);
-                cp['classes'] = srdClasses;
-                return updated.copyWith(customProperties: cp);
-              }
+            final parsedClasses = spellParser.parseSpell({
+              'name': updated.name,
+              'source': updated.id.ruleset.name,
+              'classes': updated.customProperties['classes'],
+            }).customProperties['classes'];
+            if (parsedClasses != null) {
+              final cp = Map<String, dynamic>.from(updated.customProperties);
+              cp['classes'] = parsedClasses;
+              return updated.copyWith(customProperties: cp);
             }
           }
           return updated;
         }).toList();
 
+        final revitalizedItems = bundle.items.map((i) {
+          final raw = <String, dynamic>{
+            ...i.customProperties,
+            'name': i.name,
+            'type': i.itemType,
+            'rarity': i.rarity,
+            'reqAttune': i.requiresAttunement,
+            if (i.descriptionMarkdown.isNotEmpty) 'entries': [i.descriptionMarkdown],
+          };
+          final reparsed = itemParser.parseItem(raw, forceRuleset: forceRuleset ?? i.id.ruleset);
+          return reparsed.copyWith(
+            descriptionMarkdown: i.descriptionMarkdown.isNotEmpty ? i.descriptionMarkdown : reparsed.descriptionMarkdown,
+          );
+        }).toList();
+
+        final revitalizedRaces = bundle.races.where((r) => r.id.slug.isNotEmpty && r.name.isNotEmpty).map((r) {
+          final raw = <String, dynamic>{
+            ...r.customProperties,
+            'name': r.name,
+            'size': r.size,
+            'speed': r.customProperties['speed'] ?? r.speed,
+            if (r.traitsMarkdown.isNotEmpty) 'entries': [r.traitsMarkdown],
+            if (r.abilityScoreSummary != null) 'abilityScoreSummary': r.abilityScoreSummary,
+          };
+          final reparsed = raceParser.parseRace(raw, forceRuleset: forceRuleset ?? r.id.ruleset);
+          final validSubraces = r.subraces.where((s) => s.id.slug.isNotEmpty || s.name.isNotEmpty).toList();
+          return reparsed.copyWith(
+            traitsMarkdown: r.traitsMarkdown.isNotEmpty ? r.traitsMarkdown : reparsed.traitsMarkdown,
+            subraces: validSubraces.isNotEmpty ? validSubraces : reparsed.subraces,
+          );
+        }).toList();
+
+        final revitalizedFeats = bundle.feats.map((f) {
+          final raw = <String, dynamic>{
+            ...f.customProperties,
+            'name': f.name,
+            'prerequisite': f.prerequisite,
+            'category': f.category,
+            if (f.descriptionMarkdown.isNotEmpty) 'entries': [f.descriptionMarkdown],
+          };
+          final reparsed = featParser.parseFeat(raw, forceRuleset: forceRuleset ?? f.id.ruleset);
+          return reparsed.copyWith(
+            descriptionMarkdown: f.descriptionMarkdown.isNotEmpty ? f.descriptionMarkdown : reparsed.descriptionMarkdown,
+          );
+        }).toList();
+
+        final revitalizedBackgrounds = bundle.backgrounds.map((b) {
+          final raw = <String, dynamic>{
+            ...b.customProperties,
+            'name': b.name,
+            'skillProficiencies': b.skillProficiencies,
+            'toolProficiencies': b.toolProficiencies,
+            'languageProficiencies': b.languages,
+            'feat': b.originFeat,
+            'ability': b.abilityScoreSummary,
+            if (b.descriptionMarkdown.isNotEmpty) 'entries': [b.descriptionMarkdown],
+          };
+          final reparsed = backgroundParser.parseBackground(raw, forceRuleset: forceRuleset ?? b.id.ruleset);
+          return reparsed.copyWith(
+            descriptionMarkdown: b.descriptionMarkdown.isNotEmpty ? b.descriptionMarkdown : reparsed.descriptionMarkdown,
+          );
+        }).toList();
+
+        final revitalizedOtherEntries = bundle.otherEntries.map((o) {
+          final raw = <String, dynamic>{
+            ...o.customProperties,
+            'name': o.name,
+            'category': o.category,
+            if (o.descriptionMarkdown.isNotEmpty) 'entries': [o.descriptionMarkdown],
+          };
+          final reparsed = genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset ?? o.id.ruleset, defaultCategory: o.category);
+          return reparsed.copyWith(
+            descriptionMarkdown: o.descriptionMarkdown.isNotEmpty ? o.descriptionMarkdown : reparsed.descriptionMarkdown,
+          );
+        }).toList();
+
+        final revitalizedSubclasses = bundle.subclasses.map((s) {
+          if (s.customProperties.containsKey('additionalSpells') && s.grants.isEmpty) {
+            final addSpells = s.customProperties['additionalSpells'];
+            final grants = <FeatureGrant>[];
+            if (addSpells is List) {
+              for (final spGroup in addSpells) {
+                if (spGroup is Map) {
+                  final spellsMap = spGroup['expanded'] ?? spGroup['innate'] ?? spGroup['known'] ?? spGroup['spells'];
+                  if (spellsMap is Map) {
+                    spellsMap.forEach((lvl, spList) {
+                      if (spList is List) {
+                        for (final sp in spList) {
+                          final spName = sp.toString().split('|').first.replaceAll('#c', '').trim();
+                          final spSlug = spName.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), '-').replaceAll(RegExp(r"^-+|-+$"), '');
+                          if (spSlug.isNotEmpty) {
+                            grants.add(FeatureGrant.bonusSpell(
+                              grantId: 'subclass-${s.id.slug}-spell-$spSlug',
+                              slug: spSlug,
+                              displayName: spName,
+                              label: spName,
+                            ));
+                          }
+                        }
+                      }
+                    });
+                  }
+                }
+              }
+            }
+            if (grants.isNotEmpty) {
+              return s.copyWith(grants: [...s.grants, ...grants]);
+            }
+          }
+          return s;
+        }).toList();
+
         return IngestionBatchResult(
           spells: revitalizedSpells,
           monsters: revitalizedMonsters,
-          items: bundle.items,
+          items: revitalizedItems,
           classes: bundle.classes,
-          subclasses: bundle.subclasses,
-          races: bundle.races,
-          feats: bundle.feats,
-          backgrounds: bundle.backgrounds,
-          otherEntries: bundle.otherEntries,
+          subclasses: revitalizedSubclasses,
+          races: revitalizedRaces,
+          feats: revitalizedFeats,
+          backgrounds: revitalizedBackgrounds,
+          otherEntries: revitalizedOtherEntries,
         );
       } catch (e) {
         // Fall back to standard map ingestion
@@ -515,6 +627,7 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['race', 'races', 'species', 'lineage', 'lineages'], (raw) => races.add(raceParser.parseRace(raw, forceRuleset: forceRuleset)), 'Race');
     ingestKeys(['subrace', 'subraces'], (raw) {
       final sub = raceParser.parseSubrace(raw, forceRuleset: forceRuleset);
+      if (sub.raceSlug.isEmpty) return;
       final match = races.where((r) => r.id.slug == sub.raceSlug).firstOrNull;
       if (match != null) {
         final idx = races.indexOf(match);
@@ -567,6 +680,7 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['condition', 'conditions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Condition')), 'Condition');
     ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Hazard')), 'Hazard');
     ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Rule')), 'Rule');
+    ingestKeys(['otherentry', 'otherentries', 'genericentry', 'genericentries'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset)), 'Generic Entry');
 
     // Fluff & Lore Ingestion (5etools bestiary / spell / item / race / class / feat fluff)
     int attachedFluffCount = 0;
