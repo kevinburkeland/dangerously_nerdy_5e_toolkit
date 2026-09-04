@@ -943,6 +943,27 @@ class Background extends DomainEntity {
       customProperties: customProperties ?? this.customProperties,
     );
   }
+
+  /// Returns a markdown description tailored for the specified ruleset.
+  /// Under 2014 rules, 2024 mechanics like Origin Feats and Background Ability
+  /// Score increases are omitted by stripping their lines.
+  String getDescriptionForRuleset(RulesetVersion ruleset) {
+    if (ruleset == RulesetVersion.v2014) {
+      final lines = descriptionMarkdown.split('\n');
+      final filtered = lines.where((line) {
+        final trimmed = line.trim();
+        if (trimmed.startsWith('**Origin Feat:**') ||
+            trimmed.startsWith('Origin Feat:') ||
+            trimmed.startsWith('**Ability Scores:**') ||
+            trimmed.startsWith('Ability Scores:')) {
+          return false;
+        }
+        return true;
+      }).toList();
+      return filtered.join('\n').replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+    }
+    return descriptionMarkdown;
+  }
 }
 
 /// Generic homebrew compendium entry (tables, variant rules, conditions, hazards, boons, etc.).

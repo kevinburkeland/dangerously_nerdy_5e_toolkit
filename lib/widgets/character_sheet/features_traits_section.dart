@@ -3,6 +3,8 @@ import '../../models/characters/srd_backgrounds_library.dart';
 import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
+import '../../models/dm_screen_data.dart' show DmRulesEdition;
+import '../../models/domain/core_types.dart' show RulesetVersion;
 import '../../models/domain/homebrew_extended_entities.dart' show FeatureOption;
 import '../../providers/character_sheet_controller.dart';
 import '../../services/haptic_service.dart';
@@ -227,18 +229,28 @@ class FeaturesTraitsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final character = controller.character;
+    final is2014 = character.rulesEdition == DmRulesEdition.v2014 ||
+        character.id.ruleset == RulesetVersion.v2014;
 
     // Resolve species details
     final race = SrdSpeciesLibrary.findBySlug(character.speciesRef.slug);
-    final speciesDesc = race?.traitsMarkdown ??
-        'Inherent physical, physiological, and biological traits granted by the ${character.speciesRef.displayName} species lineage.';
+    final speciesDesc = (is2014 && race?.id.slug == 'human')
+        ? '**Ability Score Increase.** Your ability scores each increase by 1.\n\n**Languages.** You can speak, read, and write Common and one extra language of your choice.'
+        : (race?.traitsMarkdown ??
+            'Inherent physical, physiological, and biological traits granted by the ${character.speciesRef.displayName} species lineage.');
 
     // Resolve background details
     final bgSlug = character.backgroundRef?.slug ?? '';
     final bg = bgSlug.isNotEmpty ? SrdBackgroundsLibrary.findBySlug(bgSlug) : null;
     final bgName = character.backgroundRef?.displayName ?? (bg?.name ?? 'Background');
-    final bgDesc = bg?.descriptionMarkdown ??
-        'Narrative background, origin identity, starting proficiencies, and personal history.';
+    final bgDesc = bg != null
+        ? SrdBackgroundsLibrary.getDescriptionForBackground(
+            bg,
+            ruleset: is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024,
+          )
+        : (is2014
+            ? 'Narrative background, starting proficiencies, and personal history.'
+            : 'Narrative background, origin identity, starting proficiencies, and personal history.');
 
     // Aggregate class feature options
     final allSelectedOptions = character.progression.getAllSelectedFeatureOptions();
@@ -351,7 +363,10 @@ class FeaturesTraitsSection extends StatelessWidget {
           const SizedBox(height: 8),
           ...character.feats.map((feat) {
             final srdFeat = SrdFeatsLibrary.findBySlug(feat.slug);
-            final category = srdFeat != null ? '${srdFeat.category} Feat' : 'Feat';
+            final rawCategory = srdFeat?.category ?? 'Feat';
+            final category = (is2014 && rawCategory.toLowerCase() == 'origin')
+                ? 'Feat'
+                : (srdFeat != null ? '${srdFeat.category} Feat' : 'Feat');
             final desc = srdFeat?.descriptionMarkdown ?? 'Feat granting specialized combat or exploration prowess.';
 
             return _buildFeatureChip(

@@ -188,4 +188,114 @@ class SrdBackgroundsLibrary {
     final clean = slug.toLowerCase().trim();
     return allBackgrounds.where((b) => b.id.slug == clean || b.name.toLowerCase() == clean).firstOrNull;
   }
+
+  /// Canonical 2014 RAW Background Descriptions featuring official Background Features,
+  /// proficiencies, and starting equipment without 2024 Origin Feats or Ability Scores.
+  static const Map<String, String> _descriptions2014 = {
+    'acolyte':
+        'You devoted yourself to service in a temple, performing sacred rites and offering sacrifices at the altar of your deity.\n\n'
+        '**Feature: Shelter of the Faithful**\n'
+        'As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle.\n\n'
+        '**Skill Proficiencies:** Insight, Religion\n'
+        '**Languages:** Two of your choice\n'
+        '**Starting Equipment:** A holy symbol, a prayer book or prayer wheel, 5 sticks of incense, vestments, a set of common clothes, and a pouch containing 15 GP.',
+    'criminal':
+        'You have a history of breaking the law and surviving in the criminal underworld through cunning, stealth, and contacts.\n\n'
+        '**Feature: Criminal Contact**\n'
+        'You have a reliable and trustworthy contact who acts as your liaison to a network of other criminals. You know how to get messages to and from your contact, even over great distances; specifically, you know the local messengers, corrupt caravan masters, and seedy sailors who can deliver messages for you.\n\n'
+        '**Skill Proficiencies:** Deception, Stealth\n'
+        '**Tool Proficiencies:** Thieves\' Tools, One type of Gaming Set\n'
+        '**Starting Equipment:** A crowbar, a set of dark common clothes including a hood, and a pouch containing 15 GP.',
+    'entertainer':
+        'You thrive in front of an audience, knowing how to entrance, entertain, and inspire crowds of commoners and nobles alike.\n\n'
+        '**Feature: By Popular Demand**\n'
+        'You can always find a place to perform, usually in an inn or tavern but possibly with a circus, at a theater, or even in a noble\'s court. At such a place, you receive free lodging and food of a modest or comfortable standard, as long as you perform each night. In addition, your performance makes you something of a local figure.\n\n'
+        '**Skill Proficiencies:** Acrobatics, Performance\n'
+        '**Tool Proficiencies:** Disguise Kit, Musical Instrument (one of your choice)\n'
+        '**Starting Equipment:** A musical instrument (one of your choice), the favor of an admirer, costume clothes, and a pouch containing 15 GP.',
+    'folk-hero':
+        'You come from humble origins, but destiny called you to stand against bullies, monsters, or oppressive local tyrants.\n\n'
+        '**Feature: Rustic Hospitality**\n'
+        'Since you come from the ranks of the common folk, you fit in among them with ease. You can find a place to hide, rest, or recuperate among other commoners, unless you have shown yourself to be a danger to them. They will shield you from the law or anyone else searching for you, though they will not risk their lives for you.\n\n'
+        '**Skill Proficiencies:** Animal Handling, Survival\n'
+        '**Tool Proficiencies:** One type of Artisan\'s Tools, Vehicles (Land)\n'
+        '**Starting Equipment:** A set of Artisan\'s Tools (one of your choice), a shovel, an iron pot, a set of common clothes, and a pouch containing 10 GP.',
+    'guild-artisan':
+        'You are a member of an established guild of craftspeople, masters of trade, production, and commerce.\n\n'
+        '**Feature: Guild Membership**\n'
+        'As an established and respected member of a guild, you can rely on certain benefits that membership provides. Your fellow guild members will provide you with lodging and food if necessary, and pay for your funeral if needed. In most cities and towns, a guildhall offers a central place to meet other members of your profession.\n\n'
+        '**Skill Proficiencies:** Insight, Persuasion\n'
+        '**Tool Proficiencies:** One type of Artisan\'s Tools\n'
+        '**Languages:** One of your choice\n'
+        '**Starting Equipment:** A set of Artisan\'s Tools (one of your choice), a letter of introduction from your guild, a set of traveler\'s clothes, and a pouch containing 15 GP.',
+    'noble':
+        'You were born into wealth, power, and privilege, carrying an aristocratic title and ancestral coat of arms.\n\n'
+        '**Feature: Position of Privilege**\n'
+        'Thanks to your noble birth, people are inclined to think the best of you. You are welcome in high society, and people assume you have the right to be wherever you are. The common folk make every effort to accommodate you and avoid your displeasure, and other people of high birth treat you as a member of the same social sphere.\n\n'
+        '**Skill Proficiencies:** History, Persuasion\n'
+        '**Tool Proficiencies:** One type of Gaming Set\n'
+        '**Languages:** One of your choice\n'
+        '**Starting Equipment:** A set of fine clothes, a signet ring, a scroll of pedigree, and a purse containing 25 GP.',
+    'sage':
+        'You spent years secluded in libraries and arcane scriptoriums cataloging manuscripts and ancient histories.\n\n'
+        '**Feature: Researcher**\n'
+        'When you attempt to learn or recall a piece of lore, if you do not know that information, you often know where and from whom you can obtain it. Usually, this information comes from a library, scriptorium, university, or a sage or other learned person or creature.\n\n'
+        '**Skill Proficiencies:** Arcana, History\n'
+        '**Languages:** Two of your choice\n'
+        '**Starting Equipment:** A bottle of black ink, a quill, a small knife, a letter from a dead colleague posing a question you have not yet been able to answer, a set of common clothes, and a pouch containing 10 GP.',
+    'sailor':
+        'You sailed on seafaring vessels facing stormy gales, sea monsters, and coastal pirates.\n\n'
+        '**Feature: Ship\'s Passage**\n'
+        'When you need to, you can secure free passage on a sailing ship for yourself and your adventuring companions. You might sail on the ship you served on, or another ship you have good relations with. In return for your free passage, you and your companions are expected to assist the crew during the voyage.\n\n'
+        '**Skill Proficiencies:** Athletics, Perception\n'
+        '**Tool Proficiencies:** Navigator\'s Tools, Vehicles (Water)\n'
+        '**Starting Equipment:** A belaying pin (club), 50 ft of silk rope, a lucky charm, a set of common clothes, and a pouch containing 10 GP.',
+    'soldier':
+        'You trained in military tactics and discipline, serving on the front lines of defense in warfare.\n\n'
+        '**Feature: Military Rank**\n'
+        'You have a military rank from your career as a soldier. Soldiers loyal to your former military organization still recognize your authority and influence, and they defer to you if they are of a lower rank. You can invoke your rank to exert influence over other soldiers and requisition simple equipment or horses for temporary use. You can also gain access to friendly military encampments and fortresses.\n\n'
+        '**Skill Proficiencies:** Athletics, Intimidation\n'
+        '**Tool Proficiencies:** One type of Gaming Set, Vehicles (Land)\n'
+        '**Starting Equipment:** An insignia of rank, a trophy taken from a fallen enemy, a set of bone dice or deck of cards, a set of common clothes, and a pouch containing 10 GP.',
+    'urchin':
+        'You grew up alone on the streets, orphaned and poor, surviving through quick reflexes and sharp wits.\n\n'
+        '**Feature: City Secrets**\n'
+        'You know the secret patterns and flow to cities and can find passages through the urban sprawl that others would miss. When you are not in combat, you (and companions you lead) can travel between two locations in the city twice as fast as your speed would normally allow.\n\n'
+        '**Skill Proficiencies:** Sleight of Hand, Stealth\n'
+        '**Tool Proficiencies:** Disguise Kit, Thieves\' Tools\n'
+        '**Starting Equipment:** A small knife, a map of the city you grew up in, a pet mouse, a token to remember your parents by, a set of common clothes, and a pouch containing 10 GP.',
+  };
+
+  /// Returns the 2014 RAW description with official 2014 features if known.
+  static String get2014Description(String slug) {
+    final clean = slug.toLowerCase().trim();
+    return _descriptions2014[clean] ?? '';
+  }
+
+  /// Sanitizes any raw background markdown for 2014 mode by stripping
+  /// lines mentioning Origin Feats and Background Ability Scores.
+  static String sanitizeFor2014(String markdown) {
+    final lines = markdown.split('\n');
+    final filtered = lines.where((line) {
+      final trimmed = line.trim();
+      if (trimmed.startsWith('**Origin Feat:**') ||
+          trimmed.startsWith('Origin Feat:') ||
+          trimmed.startsWith('**Ability Scores:**') ||
+          trimmed.startsWith('Ability Scores:')) {
+        return false;
+      }
+      return true;
+    }).toList();
+    return filtered.join('\n').replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+  }
+
+  /// Returns the ruleset-appropriate description for a background.
+  static String getDescriptionForBackground(Background bg, {required RulesetVersion ruleset}) {
+    if (ruleset == RulesetVersion.v2014) {
+      final desc2014 = get2014Description(bg.id.slug);
+      if (desc2014.isNotEmpty) return desc2014;
+      return sanitizeFor2014(bg.descriptionMarkdown);
+    }
+    return bg.descriptionMarkdown;
+  }
 }
