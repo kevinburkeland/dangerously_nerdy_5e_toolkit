@@ -18,12 +18,14 @@ class ClassDetailDialog extends StatefulWidget {
   final CharacterClass characterClass;
   final bool isPinned;
   final VoidCallback onTogglePin;
+  final DmRulesEdition? edition;
 
   const ClassDetailDialog({
     super.key,
     required this.characterClass,
     required this.isPinned,
     required this.onTogglePin,
+    this.edition,
   });
 
   static Future<void> show(
@@ -31,6 +33,7 @@ class ClassDetailDialog extends StatefulWidget {
     required CharacterClass characterClass,
     required bool isPinned,
     required VoidCallback onTogglePin,
+    DmRulesEdition? edition,
   }) {
     HapticService.selectionTick(context);
     return showDialog<void>(
@@ -39,6 +42,7 @@ class ClassDetailDialog extends StatefulWidget {
         characterClass: characterClass,
         isPinned: isPinned,
         onTogglePin: onTogglePin,
+        edition: edition,
       ),
     );
   }
@@ -66,7 +70,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
     final existing = _fluffService.getUserNotes('class', widget.characterClass.id.slug) ?? '';
     _notesController = TextEditingController(text: existing);
 
-    _initSpells();
+    _initSpells(widget.edition);
 
     final tabCount = 1 +
         (widget.characterClass.subclasses.isNotEmpty ? 1 : 0) +
@@ -75,7 +79,21 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
     _tabController = TabController(length: tabCount, vsync: this);
   }
 
-  void _initSpells() {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final currentEdition = _resolveEdition(context);
+    _initSpells(currentEdition);
+  }
+
+  DmRulesEdition _resolveEdition(BuildContext context) {
+    return widget.edition ??
+        SettingsScope.maybeOf(context)?.settings.rulesEdition ??
+        DmRulesEdition.v2024;
+  }
+
+  void _initSpells([DmRulesEdition? resolvedEdition]) {
+    final edition = resolvedEdition ?? widget.edition ?? DmRulesEdition.v2024;
     final cls = widget.characterClass;
     final slug = cls.id.slug.toLowerCase().trim();
     final spellClass = SpellClass.values.where(
@@ -83,7 +101,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
     ).firstOrNull;
 
     final baseSpells = spellClass != null
-        ? SpellbookLibrary.getSpellsByClass(spellClass)
+        ? SpellbookLibrary.getSpellsByClass(spellClass, edition: edition)
         : <SpellItem>[];
 
     final allSpellsMap = <String, SpellItem>{};
@@ -242,25 +260,27 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
           if (cls.spellcastingAbility != null) _buildMetaRow('Spellcasting', '${cls.spellcastingAbility} modifier'),
           _buildMetaRow(
             'Subclass Level',
-            _getSubclassLevelString(cls.id.slug, cls.subclassSelectionLevel),
+            _getSubclassLevelString(cls, _resolveEdition(context)),
           ),
         ],
       ),
     );
   }
 
-  String _getSubclassLevelString(String slug, int level) {
-    switch (slug.toLowerCase()) {
-      case 'cleric':
-      case 'sorcerer':
-      case 'warlock':
-        return 'Level 3 (2024) • Level 1 (2014 RAW)';
-      case 'druid':
-      case 'wizard':
-        return 'Level 3 (2024) • Level 2 (2014 RAW)';
-      default:
-        return 'Level $level Archetype';
+  String _getSubclassLevelString(CharacterClass cls, DmRulesEdition edition) {
+    final ruleset = edition == DmRulesEdition.v2024 ? RulesetVersion.v2024 : RulesetVersion.v2014;
+    final level = cls.getSubclassLevel(ruleset);
+    final slug = cls.id.slug.toLowerCase();
+    if (edition == DmRulesEdition.v2014) {
+      if (['cleric', 'sorcerer', 'warlock'].contains(slug)) {
+        return 'Level 1 (2014 RAW)';
+      }
+      if (['druid', 'wizard'].contains(slug)) {
+        return 'Level 2 (2014 RAW)';
+      }
+      return 'Level $level Archetype (2014 RAW)';
     }
+    return 'Level $level (2024 Revision)';
   }
 
   Widget _buildMetaRow(String label, String value) {
@@ -298,8 +318,9 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
     final resolvedClassType = DndClassType.tryParse(slug) ?? DndClassType.tryParse(cls.name);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
+    final resolvedEdition = _resolveEdition(context);
+    final is2024Mode = resolvedEdition == DmRulesEdition.v2024;
     final isHomebrew = cls.id.ruleset == RulesetVersion.homebrew;
-    final is2024 = cls.id.ruleset == RulesetVersion.v2024;
 
     return Dialog(
       backgroundColor: theme.colorScheme.surface,
@@ -346,7 +367,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        '${cls.primaryAbility ?? "Custom"} • ${is2024 ? "2024 Revised Rules" : (isHomebrew ? "Custom Homebrew" : "2014 Classic Rules")}',
+                        '${cls.primaryAbility ?? "Custom"} • ${is2024Mode ? "2024 Revised Rules" : (isHomebrew ? "Custom Homebrew" : "2014 Classic Rules")}',
                         style: TextStyle(
                           color: accentColor,
                           fontWeight: FontWeight.w600,
@@ -443,6 +464,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
   Widget _buildSubclassesTab(BuildContext context, Color accentColor) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final is2024Mode = _resolveEdition(context) == DmRulesEdition.v2024;
     final subclasses = widget.characterClass.subclasses;
 
     return ListView.separated(
@@ -474,7 +496,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
                       ),
                     ),
                   ),
-                  if (sub.id.ruleset == RulesetVersion.v2024)
+                  if (is2024Mode && sub.id.ruleset == RulesetVersion.v2024)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -703,6 +725,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
 
   Widget _buildSpellsTab(BuildContext context, Color accentColor) {
     final theme = Theme.of(context);
+    final resolvedEdition = _resolveEdition(context);
 
     // Filter spells
     final filtered = _allClassSpells.where((s) {
@@ -834,7 +857,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
                   itemBuilder: (context, idx) {
                     final spell = filtered[idx];
                     final subName = _spellToSubclassMap[spell.id.toLowerCase()];
-                    final rules = spell.getRules(DmRulesEdition.v2024);
+                    final rules = spell.getRules(resolvedEdition);
                     final isPinned = SettingsScope.maybeOf(context)?.settings.pinnedSpellIds.contains(spell.id) ?? false;
                     final isHomebrew = spell.id.startsWith('custom_') || spell.tags.contains('homebrew');
 

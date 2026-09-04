@@ -327,11 +327,13 @@ class _ClassCatalogueScreenState extends State<ClassCatalogueScreen> {
                       items: filteredClasses,
                       itemBuilder: (context, cls) => ClassCard(
                         characterClass: cls,
+                        edition: edition,
                         isPinned: pinnedIds.contains(cls.id.slug),
                         onTogglePin: () => _togglePinClass(context, cls.id.slug),
                         onTap: () => ClassDetailDialog.show(
                           context,
                           characterClass: cls,
+                          edition: edition,
                           isPinned: pinnedIds.contains(cls.id.slug),
                           onTogglePin: () => _togglePinClass(context, cls.id.slug),
                         ),

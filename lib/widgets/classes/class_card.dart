@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../../providers/settings_provider.dart';
 import '../common/edition_diff_badge.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
@@ -13,6 +15,7 @@ class ClassCard extends StatelessWidget {
   final bool isPinned;
   final VoidCallback onTogglePin;
   final VoidCallback onTap;
+  final DmRulesEdition? edition;
 
   const ClassCard({
     super.key,
@@ -20,6 +23,7 @@ class ClassCard extends StatelessWidget {
     required this.isPinned,
     required this.onTogglePin,
     required this.onTap,
+    this.edition,
   });
 
   IconData _getClassIcon(String slug) {
@@ -133,8 +137,10 @@ class ClassCard extends StatelessWidget {
     final hitDieColor = _getHitDieColor(characterClass.hitDie, isDark);
     final pinColor = isDark ? Colors.purpleAccent : theme.colorScheme.secondary;
 
+    final resolvedEdition =
+        edition ?? SettingsScope.maybeOf(context)?.settings.rulesEdition ?? DmRulesEdition.v2024;
+    final is2024Mode = resolvedEdition == DmRulesEdition.v2024;
     final isHomebrew = characterClass.id.ruleset == RulesetVersion.homebrew;
-    final is2024 = characterClass.id.ruleset == RulesetVersion.v2024;
 
     final cardBorderColor = isPinned
         ? pinColor.withValues(alpha: 0.85)
@@ -196,7 +202,7 @@ class ClassCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      '${characterClass.primaryAbility ?? "Custom"} • ${is2024 ? "2024 Revision" : (isHomebrew ? "Homebrew" : "2014 Classic")}',
+                      '${characterClass.primaryAbility ?? "Custom"} • ${is2024Mode ? "2024 Revision" : (isHomebrew ? "Homebrew" : "2014 Classic")}',
                       style: TextStyle(
                         color: classColor,
                         fontWeight: FontWeight.w600,
@@ -206,7 +212,7 @@ class ClassCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (is2024 && !isHomebrew) ...[
+              if (is2024Mode && !isHomebrew) ...[
                 const EditionDiffBadge(),
                 const SizedBox(width: 4),
               ],
