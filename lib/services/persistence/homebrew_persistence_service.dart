@@ -255,12 +255,35 @@ class HomebrewPersistenceService {
     SrdBackgroundsLibrary.setCustomBackgrounds(backgrounds);
 
     final others = await loadCustomOtherEntries();
-    final customInvocations = others
-        .where((e) => e.category.toLowerCase().contains('invocation'))
+    final customPactBoons = others
+        .where((e) {
+          final cat = e.category.toLowerCase();
+          final name = e.name.toLowerCase();
+          return cat.contains('pact boon') || cat.contains('pb') || name.startsWith('pact of the');
+        })
         .map((e) => FeatureOption(
               id: e.id.slug,
               name: e.name,
               descriptionMarkdown: e.descriptionMarkdown,
+              customProperties: e.customProperties,
+            ))
+        .toList();
+    SrdFeatureOptions.setCustomPactBoons(customPactBoons);
+
+    final customInvocations = others
+        .where((e) {
+          final cat = e.category.toLowerCase();
+          final isPactBoon = cat.contains('pact boon') || cat.contains('pb') || e.name.toLowerCase().startsWith('pact of the');
+          if (isPactBoon) return false;
+          return cat.contains('invocation') ||
+              cat.contains('ei') ||
+              e.customProperties['featureType']?.toString().toUpperCase().contains('EI') == true;
+        })
+        .map((e) => FeatureOption(
+              id: e.id.slug,
+              name: e.name,
+              descriptionMarkdown: e.descriptionMarkdown,
+              customProperties: e.customProperties,
             ))
         .toList();
     SrdFeatureOptions.setCustomInvocations(customInvocations);

@@ -654,14 +654,20 @@ class CompendiumJsonIngestionPipeline {
     // Backgrounds
     ingestKeys(['background', 'backgrounds'], (raw) => backgrounds.add(backgroundParser.parseBackground(raw, forceRuleset: forceRuleset)), 'Background');
 
-    // Eldritch Invocations
+    // Eldritch Invocations & Pact Boons
     ingestKeys([
       'invocation',
       'invocations',
       'eldritchinvocation',
       'eldritchinvocations',
     ], (raw) {
-      otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Eldritch Invocation'));
+      final name = raw['name']?.toString().toLowerCase() ?? '';
+      final featureType = raw['featureType']?.toString().toUpperCase() ?? '';
+      String category = 'Eldritch Invocation';
+      if (name.startsWith('pact of the') || name.contains('pact boon') || featureType.contains('PB')) {
+        category = 'Pact Boon';
+      }
+      otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: category));
     }, 'Eldritch Invocation');
 
     // Other Compendium Entities & Optional Features
@@ -669,7 +675,9 @@ class CompendiumJsonIngestionPipeline {
       final featureType = raw['featureType']?.toString().toUpperCase() ?? '';
       final name = raw['name']?.toString().toLowerCase() ?? '';
       String category = 'Optional Feature';
-      if (featureType.contains('EI') || name.contains('invocation') || raw['isInvocation'] == true) {
+      if (name.startsWith('pact of the') || name.contains('pact boon') || featureType.contains('PB')) {
+        category = 'Pact Boon';
+      } else if (featureType.contains('EI') || name.contains('invocation') || raw['isInvocation'] == true) {
         category = 'Eldritch Invocation';
       } else if (featureType.contains('MM') || name.contains('metamagic')) {
         category = 'Metamagic';

@@ -138,5 +138,67 @@ void main() {
       expect(SrdFeatureOptions.warlockInvocationsAndBoons.any((o) => o.name == 'Grasp of Hadar'), isFalse);
       expect(SrdFeatureOptions.warlockInvocationsAndBoons.any((o) => o.name == 'Tomb of Levistus'), isTrue);
     });
+
+    test('Pact of the Talisman is classified as Pact Boon, not Invocation, and Bond of the Talisman requires it', () async {
+      const jsonCompendium = '''
+{
+  "optionalfeature": [
+    {
+      "name": "Pact of the Talisman",
+      "source": "TCE",
+      "featureType": ["PB"],
+      "entries": [
+        "Your patron gives you an amulet, a talisman that can aid the wearer when the need is great."
+      ]
+    },
+    {
+      "name": "Bond of the Talisman",
+      "source": "TCE",
+      "featureType": ["EI"],
+      "prerequisite": [
+        {
+          "level": {"level": 12, "class": {"name": "Warlock"}},
+          "pact": "Talisman"
+        }
+      ],
+      "entries": [
+        "While someone else is wearing your talisman, you can use your action to teleport to them."
+      ]
+    }
+  ]
+}
+''';
+
+      final ingestion = pipeline.ingestJsonString(jsonCompendium);
+      expect(ingestion.hasErrors, isFalse);
+
+      final pactEntry = ingestion.otherEntries.firstWhere((e) => e.name == 'Pact of the Talisman');
+      expect(pactEntry.category, equals('Pact Boon'));
+
+      final bondEntry = ingestion.otherEntries.firstWhere((e) => e.name == 'Bond of the Talisman');
+      expect(bondEntry.category, equals('Eldritch Invocation'));
+
+      final bundle = ingestion.toBundle();
+      final analysis = resolver.analyzeBundle(incomingBundle: bundle);
+      await persistence.importResolvedBundle(analysis);
+
+      // Verify custom Pact Boon is registered
+      expect(SrdFeatureOptions.warlockPactBoons.any((b) => b.name == 'Pact of the Talisman'), isTrue);
+
+      // Verify Bond of the Talisman is registered in invocations
+      final bondOpt = SrdFeatureOptions.warlockInvocations.firstWhere((i) => i.name == 'Bond of the Talisman');
+      expect(bondOpt.prerequisite.minLevel, equals(12));
+      expect(bondOpt.prerequisite.requiredPact, equals('talisman'));
+
+      // Level 5 character with blade pact is gated
+      final evalLocked = bondOpt.prerequisite.evaluate(classLevel: 5, selectedPacts: {'blade'});
+      expect(evalLocked.isMet, isFalse);
+      expect(evalLocked.unmetReasons, contains('Requires Level 12 (Current: 5)'));
+      expect(evalLocked.unmetReasons, contains('Requires Pact of the Talisman'));
+
+      // Level 12 character with talisman pact is met
+      final evalUnlocked = bondOpt.prerequisite.evaluate(classLevel: 12, selectedPacts: {'talisman'});
+      expect(evalUnlocked.isMet, isTrue);
+    });
   });
 }

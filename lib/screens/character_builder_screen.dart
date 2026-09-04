@@ -1856,6 +1856,39 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
+  Set<String> _getBuilderKnownSpellSlugs() {
+    final slugs = <String>{};
+    for (final id in _selectedWizardCantrips) {
+      slugs.add(id.toLowerCase().trim());
+      final item = SpellbookLibrary.getSpellById(id);
+      if (item != null) {
+        slugs.add(item.name.toLowerCase().trim());
+      }
+    }
+    for (final id in _selectedWizardSpells) {
+      slugs.add(id.toLowerCase().trim());
+      final item = SpellbookLibrary.getSpellById(id);
+      if (item != null) {
+        slugs.add(item.name.toLowerCase().trim());
+      }
+    }
+    return slugs;
+  }
+
+  Set<String> _getBuilderSelectedPacts() {
+    final pacts = <String>{};
+    for (final list in _wizardSelectedFeatureOptions.values) {
+      for (final id in list) {
+        final lower = id.toLowerCase();
+        if (lower.contains('blade')) pacts.add('blade');
+        if (lower.contains('tome')) pacts.add('tome');
+        if (lower.contains('chain')) pacts.add('chain');
+        if (lower.contains('talisman')) pacts.add('talisman');
+      }
+    }
+    return pacts;
+  }
+
   Widget _buildStepClassDecisions(ThemeData theme, CharacterClass curClass, List<ClassFeatureDecision> decisions) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1872,7 +1905,17 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const SizedBox(height: 14),
         ...decisions.map((decision) {
           final selected = _wizardSelectedFeatureOptions[decision.id] ??= [
-            if (decision.availableOptions.isNotEmpty) decision.availableOptions.first.id,
+            if (decision.availableOptions.isNotEmpty)
+              (decision.availableOptions.firstWhere(
+                (o) => o.prerequisite
+                    .evaluate(
+                      classLevel: 1,
+                      selectedPacts: _getBuilderSelectedPacts(),
+                      knownSpellSlugs: _getBuilderKnownSpellSlugs(),
+                    )
+                    .isMet,
+                orElse: () => decision.availableOptions.first,
+              )).id,
           ];
 
           return Card(
@@ -1914,18 +1957,39 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   const SizedBox(height: 12),
                   ...decision.availableOptions.map((opt) {
                     final isOptSelected = selected.contains(opt.id);
+                    final eval = opt.prerequisite.evaluate(
+                      classLevel: 1,
+                      selectedPacts: _getBuilderSelectedPacts(),
+                      knownSpellSlugs: _getBuilderKnownSpellSlugs(),
+                    );
+                    final isGated = !eval.isMet && !isOptSelected;
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
-                        color: isOptSelected ? Colors.cyan.shade900.withValues(alpha: 0.3) : Colors.black26,
+                        color: isOptSelected
+                            ? Colors.cyan.shade900.withValues(alpha: 0.3)
+                            : (isGated ? Colors.black45 : Colors.black26),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isOptSelected ? Colors.cyanAccent.withValues(alpha: 0.7) : Colors.white12,
+                          color: isOptSelected
+                              ? Colors.cyanAccent.withValues(alpha: 0.7)
+                              : (isGated ? Colors.orangeAccent.withValues(alpha: 0.3) : Colors.white12),
                         ),
                       ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(8),
                         onTap: () {
+                          if (isGated) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Cannot select ${opt.name}: ${eval.summary}'),
+                                backgroundColor: Colors.red.shade900,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
                           HapticService.selectionTick(context);
                           setState(() {
                             if (decision.maxSelections == 1) {
@@ -1953,21 +2017,46 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                               Row(
                                 children: [
                                   Icon(
-                                    decision.maxSelections == 1
-                                        ? (isOptSelected ? Icons.radio_button_checked : Icons.radio_button_off)
-                                        : (isOptSelected ? Icons.check_box : Icons.check_box_outline_blank),
-                                    color: isOptSelected ? Colors.cyanAccent : Colors.white38,
+                                    isGated
+                                        ? Icons.lock_outline
+                                        : (decision.maxSelections == 1
+                                            ? (isOptSelected ? Icons.radio_button_checked : Icons.radio_button_off)
+                                            : (isOptSelected ? Icons.check_box : Icons.check_box_outline_blank)),
+                                    color: isOptSelected
+                                        ? Colors.cyanAccent
+                                        : (isGated ? Colors.orangeAccent.withValues(alpha: 0.7) : Colors.white38),
                                     size: 18,
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    opt.name,
-                                    style: TextStyle(
-                                      color: isOptSelected ? Colors.cyanAccent : Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13.5,
+                                  Expanded(
+                                    child: Text(
+                                      opt.name,
+                                      style: TextStyle(
+                                        color: isOptSelected
+                                            ? Colors.cyanAccent
+                                            : (isGated ? Colors.white38 : Colors.white),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13.5,
+                                      ),
                                     ),
                                   ),
+                                  if (isGated)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade900.withValues(alpha: 0.4),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.5)),
+                                      ),
+                                      child: Text(
+                                        eval.summary,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.orangeAccent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                               if (opt.descriptionMarkdown.isNotEmpty) ...[
@@ -1976,7 +2065,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                   padding: const EdgeInsets.only(left: 26),
                                   child: FormattedMarkdownText(
                                     opt.descriptionMarkdown,
-                                    defaultColor: Colors.white70,
+                                    defaultColor: isGated ? Colors.white38 : Colors.white70,
                                   ),
                                 ),
                               ],

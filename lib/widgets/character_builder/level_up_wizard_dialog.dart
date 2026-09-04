@@ -873,6 +873,61 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     );
   }
 
+  Set<String> _getAllKnownSpellSlugs() {
+    final slugs = <String>{};
+    for (final c in widget.character.cantrips) {
+      slugs.add(c.slug.toLowerCase().trim());
+      slugs.add(c.displayName.toLowerCase().trim());
+    }
+    for (final s in widget.character.spellsKnown) {
+      slugs.add(s.slug.toLowerCase().trim());
+      slugs.add(s.displayName.toLowerCase().trim());
+    }
+    for (final s in widget.character.spellsPrepared) {
+      slugs.add(s.slug.toLowerCase().trim());
+      slugs.add(s.displayName.toLowerCase().trim());
+    }
+    for (final c in _newCantrips) {
+      slugs.add(c.toLowerCase().trim());
+      final item = SpellbookLibrary.getSpellById(c);
+      if (item != null) {
+        slugs.add(item.name.toLowerCase().trim());
+      }
+    }
+    for (final s in _newSpells) {
+      slugs.add(s.toLowerCase().trim());
+      final item = SpellbookLibrary.getSpellById(s);
+      if (item != null) {
+        slugs.add(item.name.toLowerCase().trim());
+      }
+    }
+    return slugs;
+  }
+
+  Set<String> _getAllSelectedPacts() {
+    final pacts = <String>{};
+    final existing = widget.character.progression.getAllSelectedFeatureOptions();
+    for (final list in existing.values) {
+      for (final id in list) {
+        final lower = id.toLowerCase();
+        if (lower.contains('blade')) pacts.add('blade');
+        if (lower.contains('tome')) pacts.add('tome');
+        if (lower.contains('chain')) pacts.add('chain');
+        if (lower.contains('talisman')) pacts.add('talisman');
+      }
+    }
+    for (final list in _selectedFeatureOptions.values) {
+      for (final id in list) {
+        final lower = id.toLowerCase();
+        if (lower.contains('blade')) pacts.add('blade');
+        if (lower.contains('tome')) pacts.add('tome');
+        if (lower.contains('chain')) pacts.add('chain');
+        if (lower.contains('talisman')) pacts.add('talisman');
+      }
+    }
+    return pacts;
+  }
+
   // --------------------------------------------------------------------------
   // STEP 3: SUBCLASS & FEATURES
   // --------------------------------------------------------------------------
@@ -999,35 +1054,74 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                     runSpacing: 8,
                     children: decision.availableOptions.map((opt) {
                       final isSelected = selected.contains(opt.id);
-                      return FilterChip(
-                        selected: isSelected,
-                        selectedColor: Colors.cyanAccent.withValues(alpha: 0.35),
-                        label: Text(opt.name),
-                        avatar: Icon(
-                          isSelected ? Icons.check_circle : Icons.circle_outlined,
-                          size: 14,
-                          color: isSelected ? Colors.cyanAccent : Colors.white54,
-                        ),
-                        onSelected: (bool chosen) {
-                          HapticService.selectionTick(context);
-                          setState(() {
-                            final list = List<String>.from(_selectedFeatureOptions[decision.id] ?? []);
-                            if (chosen) {
-                              if (decision.maxSelections == 1) {
-                                list.clear();
-                                list.add(opt.id);
-                              } else {
-                                if (list.length >= decision.maxSelections) {
-                                  list.removeAt(0);
-                                }
-                                list.add(opt.id);
-                              }
-                            } else {
-                              list.remove(opt.id);
+                      final eval = opt.prerequisite.evaluate(
+                        classLevel: _targetClassNewLevel,
+                        selectedPacts: _getAllSelectedPacts(),
+                        knownSpellSlugs: _getAllKnownSpellSlugs(),
+                      );
+                      final isGated = !eval.isMet && !isSelected;
+
+                      return Tooltip(
+                        message: isGated
+                            ? 'Locked: ${eval.summary}'
+                            : (opt.descriptionMarkdown.isNotEmpty ? opt.descriptionMarkdown : opt.name),
+                        child: FilterChip(
+                          selected: isSelected,
+                          selectedColor: Colors.cyanAccent.withValues(alpha: 0.35),
+                          disabledColor: Colors.white10,
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isGated) ...[
+                                const Icon(Icons.lock_outline, size: 12, color: Colors.orangeAccent),
+                                const SizedBox(width: 4),
+                              ],
+                              Text(
+                                opt.name,
+                                style: TextStyle(
+                                  color: isGated ? Colors.white38 : Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          avatar: Icon(
+                            isSelected ? Icons.check_circle : (isGated ? Icons.lock : Icons.circle_outlined),
+                            size: 14,
+                            color: isSelected
+                                ? Colors.cyanAccent
+                                : (isGated ? Colors.orangeAccent.withValues(alpha: 0.6) : Colors.white54),
+                          ),
+                          onSelected: (bool chosen) {
+                            if (isGated && chosen) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Cannot select ${opt.name}: ${eval.summary}'),
+                                  backgroundColor: Colors.red.shade900,
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                              return;
                             }
-                            _selectedFeatureOptions[decision.id] = list;
-                          });
-                        },
+                            HapticService.selectionTick(context);
+                            setState(() {
+                              final list = List<String>.from(_selectedFeatureOptions[decision.id] ?? []);
+                              if (chosen) {
+                                if (decision.maxSelections == 1) {
+                                  list.clear();
+                                  list.add(opt.id);
+                                } else {
+                                  if (list.length >= decision.maxSelections) {
+                                    list.removeAt(0);
+                                  }
+                                  list.add(opt.id);
+                                }
+                              } else {
+                                list.remove(opt.id);
+                              }
+                              _selectedFeatureOptions[decision.id] = list;
+                            });
+                          },
+                        ),
                       );
                     }).toList(),
                   ),

@@ -22,13 +22,20 @@ class CompendiumGenericEntryParser {
     final source = raw['source']?.toString().toUpperCase() ?? 'HOMEBREW';
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
+    final nameLower = name.toLowerCase();
     String category = defaultCategory;
-    if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
+    if (nameLower.startsWith('pact of the') || nameLower.contains('pact boon')) {
+      category = 'Pact Boon';
+    } else if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['category'].toString());
     } else if (raw['featureType'] != null) {
       category = _decodeFeatureType(raw['featureType']);
     } else if (raw['type'] != null && raw['type'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['type'].toString());
+    }
+
+    if (nameLower.startsWith('pact of the') || nameLower.contains('pact boon')) {
+      category = 'Pact Boon';
     }
 
     final parsedEntries = transformer.transformEntries(

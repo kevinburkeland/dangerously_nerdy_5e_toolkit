@@ -98,7 +98,7 @@ class SrdFeatureOptions {
       id: 'agonizing_blast',
       name: 'Agonizing Blast',
       descriptionMarkdown:
-          'When you cast Eldritch Blast, add your Charisma modifier to the damage it deals on a hit.',
+          'Prerequisite: Eldritch Blast cantrip. When you cast Eldritch Blast, add your Charisma modifier to the damage it deals on a hit.',
       grants: {'eldritchBlastChaDamage': true},
     ),
     const FeatureOption(
@@ -235,27 +235,6 @@ class SrdFeatureOptions {
       grants: {'atWillSpells': ['jump']},
     ),
     const FeatureOption(
-      id: 'pact_of_the_blade',
-      name: 'Pact of the Blade',
-      descriptionMarkdown:
-          'You can conjure or bond with a magical melee weapon. You can use your Charisma modifier instead of Strength or Dexterity for attack and damage rolls with that weapon.',
-      grants: {'chaWeaponAttacks': true, 'bladePact': true},
-    ),
-    const FeatureOption(
-      id: 'pact_of_the_chain',
-      name: 'Pact of the Chain',
-      descriptionMarkdown:
-          'You learn the Find Familiar spell and can summon special forms: Imp, Pseudodragon, Quasit, or Sprite.',
-      grants: {'bonusSpells': ['find-familiar']},
-    ),
-    const FeatureOption(
-      id: 'pact_of_the_tome',
-      name: 'Pact of the Tome',
-      descriptionMarkdown:
-          'Your patron bestows a grimoire called the Book of Shadows. You learn 3 cantrips from any class list and can cast ritual spells.',
-      grants: {'bonusCantripCount': 3, 'ritualCasting': true},
-    ),
-    const FeatureOption(
       id: 'repelling_blast',
       name: 'Repelling Blast',
       descriptionMarkdown:
@@ -313,21 +292,71 @@ class SrdFeatureOptions {
     ),
   ];
 
+  static const List<FeatureOption> _baseWarlockPactBoons = [
+    FeatureOption(
+      id: 'pact_of_the_blade',
+      name: 'Pact of the Blade',
+      descriptionMarkdown:
+          'You can conjure or bond with a magical melee weapon. You can use your Charisma modifier instead of Strength or Dexterity for attack and damage rolls with that weapon.',
+      grants: {'chaWeaponAttacks': true, 'bladePact': true},
+    ),
+    FeatureOption(
+      id: 'pact_of_the_chain',
+      name: 'Pact of the Chain',
+      descriptionMarkdown:
+          'You learn the Find Familiar spell and can summon special forms: Imp, Pseudodragon, Quasit, or Sprite.',
+      grants: {'bonusSpells': ['find-familiar'], 'chainPact': true},
+    ),
+    FeatureOption(
+      id: 'pact_of_the_tome',
+      name: 'Pact of the Tome',
+      descriptionMarkdown:
+          'Your patron bestows a grimoire called the Book of Shadows. You learn 3 cantrips from any class list and can cast ritual spells.',
+      grants: {'bonusCantripCount': 3, 'ritualCasting': true, 'tomePact': true},
+    ),
+    FeatureOption(
+      id: 'pact_of_the_talisman',
+      name: 'Pact of the Talisman',
+      descriptionMarkdown:
+          'Your patron gives you an amulet, a talisman that can aid the wearer when the need is great. When the wearer fails an ability check, they can add a d4 to the roll, potentially turning the roll into a success. This benefit can be used a number of times equal to your proficiency bonus, restored on a long rest.',
+      grants: {'talismanPact': true},
+    ),
+  ];
+
+  static List<FeatureOption> _customPactBoons = [];
   static List<FeatureOption> _customInvocations = [];
 
-  /// Dynamic list of all available Eldritch Invocations (Base SRD + Custom Homebrew)
-  static List<FeatureOption> get warlockInvocationsAndBoons => [
+  /// Dynamic list of all available Pact Boons (Base SRD/TCE + Custom Homebrew)
+  static List<FeatureOption> get warlockPactBoons => [
+        ..._baseWarlockPactBoons,
+        ..._customPactBoons,
+      ];
+
+  /// Dynamic list of all Eldritch Invocations (Base SRD + Custom Homebrew) without Pact Boons
+  static List<FeatureOption> get warlockInvocations => [
         ..._baseWarlockInvocations,
         ..._customInvocations,
       ];
 
-  /// All feature options across all classes and custom invocations
+  /// Dynamic list of all available Eldritch Invocations and Pact Boons (used in 2024 Level 1 choice)
+  static List<FeatureOption> get warlockInvocationsAndBoons => [
+        ...warlockInvocations,
+        ...warlockPactBoons,
+      ];
+
+  /// All feature options across all classes, custom invocations, and pact boons
   static List<FeatureOption> get allOptions => [
         ...fightingStyles,
         ...clericDivineOrders,
         ...druidPrimalOrders,
-        ...warlockInvocationsAndBoons,
+        ...warlockPactBoons,
+        ...warlockInvocations,
       ];
+
+  /// Sets the list of custom homebrew Pact Boons
+  static void setCustomPactBoons(List<FeatureOption> custom) {
+    _customPactBoons = List<FeatureOption>.from(custom);
+  }
 
   /// Sets the list of custom homebrew Eldritch Invocations
   static void setCustomInvocations(List<FeatureOption> custom) {
@@ -969,9 +998,9 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.invocations,
         minSelections: 2,
         maxSelections: 2,
-        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        availableOptions: SrdFeatureOptions.warlockInvocations,
       ),
-      const ClassFeatureDecision(
+      ClassFeatureDecision(
         id: 'warlock-pact-boon-3-2014',
         name: 'Pact Boon',
         prompt: 'Choose your 3rd-level Pact Boon',
@@ -979,29 +1008,7 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.pactBoon,
         minSelections: 1,
         maxSelections: 1,
-        availableOptions: [
-          FeatureOption(
-            id: 'pact_of_the_blade',
-            name: 'Pact of the Blade',
-            descriptionMarkdown:
-                'You can conjure or bond with a magical melee weapon.',
-            grants: {'bladePact': true},
-          ),
-          FeatureOption(
-            id: 'pact_of_the_tome',
-            name: 'Pact of the Tome',
-            descriptionMarkdown:
-                'Your patron bestows the Book of Shadows with 3 extra cantrips.',
-            grants: {'bonusCantripCount': 3},
-          ),
-          FeatureOption(
-            id: 'pact_of_the_chain',
-            name: 'Pact of the Chain',
-            descriptionMarkdown:
-                'You learn Find Familiar with special forms: Imp, Pseudodragon, Quasit, Sprite.',
-            grants: {'bonusSpells': ['find-familiar']},
-          ),
-        ],
+        availableOptions: SrdFeatureOptions.warlockPactBoons,
         ruleset: RulesetVersion.v2014,
       ),
       ClassFeatureDecision(
@@ -1012,7 +1019,7 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.invocations,
         minSelections: 1,
         maxSelections: 1,
-        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        availableOptions: SrdFeatureOptions.warlockInvocations,
       ),
       ClassFeatureDecision(
         id: 'warlock-invocations-7',
@@ -1022,7 +1029,7 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.invocations,
         minSelections: 1,
         maxSelections: 1,
-        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        availableOptions: SrdFeatureOptions.warlockInvocations,
       ),
       ClassFeatureDecision(
         id: 'warlock-invocations-9',
@@ -1032,7 +1039,7 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.invocations,
         minSelections: 1,
         maxSelections: 1,
-        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        availableOptions: SrdFeatureOptions.warlockInvocations,
       ),
       ClassFeatureDecision(
         id: 'warlock-invocations-12',
@@ -1042,7 +1049,7 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.invocations,
         minSelections: 1,
         maxSelections: 1,
-        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        availableOptions: SrdFeatureOptions.warlockInvocations,
       ),
       ClassFeatureDecision(
         id: 'warlock-invocations-15',
@@ -1052,7 +1059,7 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.invocations,
         minSelections: 1,
         maxSelections: 1,
-        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        availableOptions: SrdFeatureOptions.warlockInvocations,
       ),
       ClassFeatureDecision(
         id: 'warlock-invocations-18',
@@ -1062,7 +1069,7 @@ class SrdClassesLibrary {
         type: FeatureChoiceType.invocations,
         minSelections: 1,
         maxSelections: 1,
-        availableOptions: SrdFeatureOptions.warlockInvocationsAndBoons,
+        availableOptions: SrdFeatureOptions.warlockInvocations,
       ),
     ],
     subclasses: [

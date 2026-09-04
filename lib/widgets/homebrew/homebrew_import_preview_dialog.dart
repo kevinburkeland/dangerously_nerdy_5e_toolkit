@@ -328,15 +328,45 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                   _buildCategorySection('Feats', analysis.feats),
                 if (analysis.backgrounds.isNotEmpty)
                   _buildCategorySection('Backgrounds', analysis.backgrounds),
-                if (analysis.otherEntries.any((e) => e.incomingEntity.category.toLowerCase().contains('invocation')))
+                if (analysis.otherEntries.any((e) =>
+                    e.incomingEntity.category.toLowerCase().contains('pact boon') ||
+                    e.incomingEntity.category.toLowerCase().contains('pb') ||
+                    e.incomingEntity.name.toLowerCase().startsWith('pact of the')))
+                  _buildCategorySection(
+                    'Pact Boons',
+                    analysis.otherEntries.where((e) {
+                      final cat = e.incomingEntity.category.toLowerCase();
+                      final name = e.incomingEntity.name.toLowerCase();
+                      return cat.contains('pact boon') || cat.contains('pb') || name.startsWith('pact of the');
+                    }).toList(),
+                  ),
+                if (analysis.otherEntries.any((e) {
+                  final cat = e.incomingEntity.category.toLowerCase();
+                  final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
+                  return !isPb && (cat.contains('invocation') || cat.contains('ei'));
+                }))
                   _buildCategorySection(
                     'Eldritch Invocations',
-                    analysis.otherEntries.where((e) => e.incomingEntity.category.toLowerCase().contains('invocation')).toList(),
+                    analysis.otherEntries.where((e) {
+                      final cat = e.incomingEntity.category.toLowerCase();
+                      final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
+                      return !isPb && (cat.contains('invocation') || cat.contains('ei'));
+                    }).toList(),
                   ),
-                if (analysis.otherEntries.any((e) => !e.incomingEntity.category.toLowerCase().contains('invocation')))
+                if (analysis.otherEntries.any((e) {
+                  final cat = e.incomingEntity.category.toLowerCase();
+                  final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
+                  final isEi = cat.contains('invocation') || cat.contains('ei');
+                  return !isPb && !isEi;
+                }))
                   _buildCategorySection(
                     'Rules & Tables',
-                    analysis.otherEntries.where((e) => !e.incomingEntity.category.toLowerCase().contains('invocation')).toList(),
+                    analysis.otherEntries.where((e) {
+                      final cat = e.incomingEntity.category.toLowerCase();
+                      final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
+                      final isEi = cat.contains('invocation') || cat.contains('ei');
+                      return !isPb && !isEi;
+                    }).toList(),
                   ),
               ],
             ),

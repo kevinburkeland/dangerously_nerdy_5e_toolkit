@@ -64,6 +64,8 @@ class FeatureOption {
     this.customProperties = const {},
   });
 
+  FeaturePrerequisite get prerequisite => FeaturePrerequisite.fromFeatureOption(this);
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'name': name,
@@ -81,6 +83,237 @@ class FeatureOption {
       customProperties: Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
   }
+}
+
+/// Structured representation of prerequisites for a [FeatureOption] (e.g. Eldritch Invocation or Infusion).
+@immutable
+class FeaturePrerequisite {
+  final int? minLevel;
+  final String? requiredPact; // 'blade', 'tome', 'chain', 'talisman'
+  final String? requiredSpell; // 'eldritch blast'
+  final String? requiredSubclass;
+  final String? rawPrerequisiteText;
+
+  const FeaturePrerequisite({
+    this.minLevel,
+    this.requiredPact,
+    this.requiredSpell,
+    this.requiredSubclass,
+    this.rawPrerequisiteText,
+  });
+
+  bool get hasPrerequisites =>
+      minLevel != null ||
+      requiredPact != null ||
+      requiredSpell != null ||
+      requiredSubclass != null ||
+      (rawPrerequisiteText != null && rawPrerequisiteText!.trim().isNotEmpty);
+
+  /// Parse prerequisites from structured customProperties or descriptionMarkdown of a [FeatureOption].
+  factory FeaturePrerequisite.fromFeatureOption(FeatureOption option) {
+    int? minLevel;
+    String? requiredPact;
+    String? requiredSpell;
+    String? requiredSubclass;
+    String? rawPrereq;
+
+    // 1. Inspect customProperties['prerequisite'] or customProperties['prerequisites']
+    final rawList = option.customProperties['prerequisite'] ?? option.customProperties['prerequisites'];
+    if (rawList is List && rawList.isNotEmpty) {
+      for (final item in rawList) {
+        if (item is Map) {
+          // Level
+          final lvl = item['level'];
+          if (lvl is num) {
+            minLevel = lvl.toInt();
+          } else if (lvl is Map && lvl['level'] is num) {
+            minLevel = (lvl['level'] as num).toInt();
+          }
+
+          // Pact
+          if (item['pact'] != null) {
+            final pStr = item['pact'].toString().toLowerCase().trim();
+            if (pStr.contains('blade')) {
+              requiredPact = 'blade';
+            } else if (pStr.contains('tome')) {
+              requiredPact = 'tome';
+            } else if (pStr.contains('chain')) {
+              requiredPact = 'chain';
+            } else if (pStr.contains('talisman')) {
+              requiredPact = 'talisman';
+            }
+          }
+
+          // Spell
+          if (item['spell'] != null) {
+            final spList = item['spell'] is List ? item['spell'] as List : [item['spell']];
+            for (final sp in spList) {
+              final spStr = sp.toString().split('#').first.toLowerCase().replaceAll('-', ' ').trim();
+              if (spStr.isNotEmpty) {
+                requiredSpell = spStr;
+                break;
+              }
+            }
+          }
+
+          // Subclass
+          if (item['subclass'] is Map && item['subclass']['name'] != null) {
+            requiredSubclass = item['subclass']['name'].toString().trim();
+          }
+        } else if (item is String) {
+          rawPrereq = item;
+        }
+      }
+    }
+
+    // 2. Direct property overrides
+    if (minLevel == null && option.customProperties['minLevel'] is num) {
+      minLevel = (option.customProperties['minLevel'] as num).toInt();
+    }
+    if (requiredPact == null && option.customProperties['requiredPact'] is String) {
+      requiredPact = option.customProperties['requiredPact'].toString().toLowerCase().trim();
+    }
+    if (requiredSpell == null && option.customProperties['requiredSpell'] is String) {
+      requiredSpell = option.customProperties['requiredSpell'].toString().toLowerCase().trim();
+    }
+
+    // 3. Fallback: Parse descriptionMarkdown regex for SRD / legacy entries
+    final desc = option.descriptionMarkdown;
+    final prereqHeaderMatch = RegExp(
+      r'Prerequisite:\s*([^.\n]+)',
+      caseSensitive: false,
+    ).firstMatch(desc);
+
+    if (prereqHeaderMatch != null) {
+      final prereqText = prereqHeaderMatch.group(1)!;
+      rawPrereq ??= prereqText.trim();
+
+      // Extract level if not already resolved
+      if (minLevel == null) {
+        final lvlMatch = RegExp(r'(\d+)(?:st|nd|rd|th)\s+level', caseSensitive: false).firstMatch(prereqText);
+        if (lvlMatch != null) {
+          minLevel = int.tryParse(lvlMatch.group(1)!);
+        }
+      }
+
+      // Extract Pact if not already resolved
+      if (requiredPact == null) {
+        final pactMatch = RegExp(r'Pact of the (Blade|Tome|Chain|Talisman)', caseSensitive: false).firstMatch(prereqText);
+        if (pactMatch != null) {
+          requiredPact = pactMatch.group(1)!.toLowerCase();
+        }
+      }
+
+      // Extract Spell if not already resolved
+      if (requiredSpell == null) {
+        if (prereqText.toLowerCase().contains('eldritch blast')) {
+          requiredSpell = 'eldritch blast';
+        } else {
+          final spellMatch = RegExp(r'([A-Za-z ]+)\s+(?:cantrip|spell)', caseSensitive: false).firstMatch(prereqText);
+          if (spellMatch != null) {
+            requiredSpell = spellMatch.group(1)!.toLowerCase().trim();
+          }
+        }
+      }
+    }
+
+    // Direct name-based recognition for canonical blast invocations
+    if (requiredSpell == null) {
+      final nameLower = option.name.toLowerCase();
+      if (nameLower == 'agonizing blast' ||
+          nameLower == 'eldritch spear' ||
+          nameLower == 'repelling blast' ||
+          nameLower == 'grasp of hadar' ||
+          nameLower == 'lance of lethargy') {
+        requiredSpell = 'eldritch blast';
+      }
+    }
+
+    return FeaturePrerequisite(
+      minLevel: minLevel,
+      requiredPact: requiredPact,
+      requiredSpell: requiredSpell,
+      requiredSubclass: requiredSubclass,
+      rawPrerequisiteText: rawPrereq,
+    );
+  }
+
+  /// Evaluates whether a character meets this option's prerequisites.
+  FeaturePrerequisiteEvaluation evaluate({
+    required int classLevel,
+    int? totalCharacterLevel,
+    Iterable<String> selectedPacts = const [],
+    Iterable<String> knownSpellSlugs = const [],
+  }) {
+    final unmet = <String>[];
+
+    // Check level
+    if (minLevel != null) {
+      if (classLevel < minLevel!) {
+        unmet.add('Requires Level $minLevel (Current: $classLevel)');
+      }
+    }
+
+    // Check pact
+    if (requiredPact != null) {
+      final req = requiredPact!.toLowerCase().trim();
+      final hasPact = selectedPacts.any((p) {
+        final norm = p.toLowerCase().replaceAll('-', '_').trim();
+        return norm.contains(req) ||
+            (req == 'blade' && norm.contains('blade')) ||
+            (req == 'tome' && norm.contains('tome')) ||
+            (req == 'chain' && norm.contains('chain')) ||
+            (req == 'talisman' && norm.contains('talisman'));
+      });
+      if (!hasPact) {
+        final pactName = switch (req) {
+          'blade' => 'Pact of the Blade',
+          'tome' => 'Pact of the Tome',
+          'chain' => 'Pact of the Chain',
+          'talisman' => 'Pact of the Talisman',
+          _ => 'Pact of the ${req.isNotEmpty ? req[0].toUpperCase() + req.substring(1) : req}',
+        };
+        unmet.add('Requires $pactName');
+      }
+    }
+
+    // Check spell
+    if (requiredSpell != null) {
+      final reqSpellNorm = requiredSpell!.toLowerCase().replaceAll(' ', '-').replaceAll('_', '-').trim();
+      final hasSpell = knownSpellSlugs.any((s) {
+        final norm = s.toLowerCase().replaceAll(' ', '-').replaceAll('_', '-').trim();
+        return norm == reqSpellNorm || norm.contains(reqSpellNorm) || reqSpellNorm.contains(norm);
+      });
+      if (!hasSpell) {
+        final words = requiredSpell!.split(' ');
+        final displayName = words
+            .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+            .join(' ');
+        unmet.add('Requires $displayName cantrip');
+      }
+    }
+
+    return FeaturePrerequisiteEvaluation(
+      isMet: unmet.isEmpty,
+      unmetReasons: unmet,
+    );
+  }
+}
+
+/// Evaluation result detailing whether a feature's prerequisites are met.
+@immutable
+class FeaturePrerequisiteEvaluation {
+  final bool isMet;
+  final List<String> unmetReasons;
+
+  const FeaturePrerequisiteEvaluation({
+    required this.isMet,
+    this.unmetReasons = const [],
+  });
+
+  static const met = FeaturePrerequisiteEvaluation(isMet: true);
+
+  String get summary => unmetReasons.join(', ');
 }
 
 /// Declarative schema defining a decision point / choice requirement at a specific class level.
