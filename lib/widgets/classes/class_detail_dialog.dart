@@ -102,13 +102,16 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
           }
         }
       }
+      final addSpells = sub.customProperties['additionalSpells'] ?? sub.customProperties['subclassSpells'];
+      if (addSpells != null) {
+        final names = FeatureGrant.extractSpellNames(addSpells);
+        bonusNames.addAll(names.map((e) => e.toLowerCase()));
+      }
       bonusNames.addAll(SubclassSpellsLibrary.getExpandedSpells(cls.id.slug, sub.id.slug));
 
       for (final bName in bonusNames) {
         final clean = bName.trim().toLowerCase();
-        final found = SpellbookLibrary.getSpellByName(clean) ??
-            SpellbookLibrary.getSpellById(clean.replaceAll(' ', '-')) ??
-            SpellbookLibrary.getSpellById(clean.replaceAll(' ', '_'));
+        final found = SpellbookLibrary.findSpell(clean);
         if (found != null) {
           allSpellsMap[found.id.toLowerCase()] = found;
           _spellToSubclassMap[found.id.toLowerCase()] = sub.name;
@@ -599,6 +602,15 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
       bonusSpellNames.add(cap);
     }
 
+    final addSpells = sub.customProperties['additionalSpells'] ?? sub.customProperties['subclassSpells'];
+    if (addSpells != null) {
+      final names = FeatureGrant.extractSpellNames(addSpells);
+      for (final n in names) {
+        final cap = n.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+        bonusSpellNames.add(cap);
+      }
+    }
+
     if (bonusSpellNames.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -639,9 +651,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
               runSpacing: 4,
               children: sortedSpells.map((spName) {
                 final clean = spName.toLowerCase().trim();
-                final foundSpell = SpellbookLibrary.getSpellByName(clean) ??
-                    SpellbookLibrary.getSpellById(clean.replaceAll(' ', '-')) ??
-                    SpellbookLibrary.getSpellById(clean.replaceAll(' ', '_'));
+                final foundSpell = SpellbookLibrary.findSpell(clean);
                 final isPinned = foundSpell != null &&
                     (SettingsScope.maybeOf(context)?.settings.pinnedSpellIds.contains(foundSpell.id) ?? false);
 

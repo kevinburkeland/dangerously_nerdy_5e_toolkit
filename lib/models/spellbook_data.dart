@@ -451,6 +451,24 @@ class SpellbookLibrary {
     }
   }
 
+  /// Flexible lookup for a spell by name, slug, id, or normalized punctuation.
+  static SpellItem? findSpell(String query) {
+    final lower = query.trim().toLowerCase();
+    if (lower.isEmpty) return null;
+    final direct = getSpellByName(lower) ?? getSpellById(lower);
+    if (direct != null) return direct;
+
+    final noPunct = lower.replaceAll(RegExp(r'[^a-z0-9]'), '');
+    if (noPunct.isEmpty) return null;
+
+    return allSpells.where((s) {
+      final sClean = s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      if (sClean == noPunct) return true;
+      final sIdClean = s.id.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      return sIdClean == noPunct || sIdClean == 'spell$noPunct';
+    }).firstOrNull;
+  }
+
   static List<SpellItem> getChangedSpells() {
     return allSpells.where((s) => s.isChangedIn2024).toList();
   }

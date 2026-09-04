@@ -5,6 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/feature_grant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_class_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/entry_node_transformer.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
@@ -217,4 +218,101 @@ void main() {
       expect(cleaned, contains('optional features'));
     });
   });
+
+  group('Subclass Spells Ingestion & Storage Revitalization Tests', () {
+    test('10. The Undying subclass extracts all spells from homebrew structure', () {
+      final rawSubclass = {
+        'name': 'The Undying',
+        'className': 'Warlock',
+        'source': 'CUSTOM',
+        'additionalSpells': [
+          {
+            'known': {
+              '1': ['spare the dying#c'],
+            },
+            'expanded': {
+              's1': ['false life', 'ray of sickness'],
+              's2': ['blindness/deafness', 'silence'],
+              's3': ['feign death', 'speak with dead'],
+              's4': ['aura of life', 'death ward'],
+              's5': ['contagion', 'legend lore'],
+            }
+          }
+        ],
+        'subclassFeatures': [],
+      };
+
+      final parser = CompendiumClassParser();
+      final sub = parser.parseSubclass(rawSubclass);
+
+      expect(sub.grants.length, 11);
+      final names = sub.grants.map((g) => g.payload['displayName']).toSet();
+      expect(names, containsAll([
+        'spare the dying',
+        'false life',
+        'ray of sickness',
+        'blindness/deafness',
+        'silence',
+        'feign death',
+        'speak with dead',
+        'aura of life',
+        'death ward',
+        'contagion',
+        'legend lore',
+      ]));
+    });
+
+    test('11. Subclass.fromMap auto-heals empty grants from customProperties additionalSpells', () {
+      final storedMap = {
+        'id': {'slug': 'the-undying', 'version': '1.0.0', 'source': 'homebrew'},
+        'name': 'The Undying',
+        'classSlug': 'warlock',
+        'shortName': 'Undying',
+        'featuresMarkdown': '',
+        'grants': [], // Previously saved with empty grants!
+        'customProperties': {
+          'additionalSpells': [
+            {
+              'known': {
+                '1': ['spare the dying#c'],
+              },
+              'expanded': {
+                's1': ['false life', 'ray of sickness'],
+                's2': ['blindness/deafness', 'silence'],
+                's3': ['feign death', 'speak with dead'],
+                's4': ['aura of life', 'death ward'],
+                's5': ['contagion', 'legend lore'],
+              }
+            }
+          ]
+        }
+      };
+
+      final sub = Subclass.fromMap(storedMap);
+      expect(sub.grants.length, 11);
+      final names = sub.grants.map((g) => g.payload['displayName']).toSet();
+      expect(names, contains('spare the dying'));
+      expect(names, contains('blindness/deafness'));
+
+      // Also verify SubclassSpellsLibrary fallback directly inspects sub
+      final expanded = SubclassSpellsLibrary.getExpandedSpells('warlock', 'the-undying');
+      expect(expanded, contains('false life'));
+      expect(expanded, contains('blindness/deafness'));
+    });
+
+    test('12. SpellbookLibrary.findSpell matches spells with punctuation and special formatting', () {
+      final spell1 = SpellbookLibrary.findSpell('Blindness/Deafness');
+      expect(spell1, isNotNull);
+      expect(spell1!.name, 'Blindness/Deafness');
+
+      final spell2 = SpellbookLibrary.findSpell('blindness-deafness');
+      expect(spell2, isNotNull);
+      expect(spell2!.name, 'Blindness/Deafness');
+
+      final spell3 = SpellbookLibrary.findSpell('spare the dying');
+      expect(spell3, isNotNull);
+      expect(spell3!.name, 'Spare the Dying');
+    });
+  });
 }
+

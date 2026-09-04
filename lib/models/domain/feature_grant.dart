@@ -297,6 +297,87 @@ class FeatureGrant {
         label: label,
       );
 
+  /// Exhaustively extracts clean spell names from 5eTools/compendium additionalSpells / subclassSpells structures.
+  static Set<String> extractSpellNames(dynamic addSpellsData) {
+    if (addSpellsData == null) return const {};
+    final names = <String>{};
+
+    void processSpellItem(dynamic item) {
+      if (item == null) return;
+      if (item is String) {
+        final clean = item.split('|').first.replaceAll('#c', '').trim();
+        if (clean.isNotEmpty && !clean.startsWith('{')) {
+          names.add(clean);
+        }
+      } else if (item is List) {
+        for (final subItem in item) {
+          processSpellItem(subItem);
+        }
+      } else if (item is Map) {
+        for (final entry in item.entries) {
+          final k = entry.key.toString().toLowerCase();
+          if (k == 'choose' || k == 'count' || k == 'all') continue;
+          processSpellItem(entry.value);
+        }
+      }
+    }
+
+    void processSpellGroup(dynamic group) {
+      if (group == null) return;
+      if (group is List) {
+        for (final item in group) {
+          processSpellGroup(item);
+        }
+      } else if (group is Map) {
+        bool hadKnownSubkey = false;
+        for (final key in ['prepared', 'expanded', 'innate', 'known', 'spells']) {
+          if (group.containsKey(key)) {
+            hadKnownSubkey = true;
+            processSpellItem(group[key]);
+          }
+        }
+        if (!hadKnownSubkey) {
+          for (final entry in group.entries) {
+            final k = entry.key.toString().toLowerCase();
+            if (k == 'name' || k == 'source' || k == 'class' || k == 'subclass' || k == 'choose' || k == 'count' || k == 'all') {
+              continue;
+            }
+            processSpellItem(entry.value);
+          }
+        }
+      } else if (group is String) {
+        processSpellItem(group);
+      }
+    }
+
+    processSpellGroup(addSpellsData);
+    return names;
+  }
+
+  /// Exhaustively extracts [FeatureGrant.bonusSpell] grants from 5eTools/compendium additionalSpells data.
+  static List<FeatureGrant> extractBonusSpells(dynamic addSpellsData, String ownerPrefix, String ownerSlug) {
+    final names = extractSpellNames(addSpellsData);
+    final grants = <FeatureGrant>[];
+    final seenSlugs = <String>{};
+
+    for (final clean in names) {
+      final slug = clean
+          .toLowerCase()
+          .replaceAll(RegExp(r"['’]"), '')
+          .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+          .replaceAll(RegExp(r'^-+|-+$'), '');
+      if (slug.isNotEmpty && seenSlugs.add(slug)) {
+        grants.add(FeatureGrant.bonusSpell(
+          grantId: '$ownerPrefix-$ownerSlug-spell-$slug',
+          slug: slug,
+          displayName: clean,
+          label: clean,
+        ));
+      }
+    }
+    return grants;
+  }
+
   /// Darkvision at [feet] range (stacks to max with existing darkvision).
   factory FeatureGrant.darkvisionRange(
     int feet, {

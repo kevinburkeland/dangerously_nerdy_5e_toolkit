@@ -6,6 +6,7 @@ import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
+import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
@@ -203,10 +204,30 @@ class HomebrewPersistenceService {
     SrdFeatsLibrary.setCustomFeats(feats);
 
     final classes = await loadCustomClasses();
-    SrdClassesLibrary.setCustomClasses(classes);
+    final revitalizedClasses = classes.map((c) {
+      if (c.grants.isEmpty) {
+        final addSpells = c.customProperties['additionalSpells'] ?? c.customProperties['spells'];
+        if (addSpells != null) {
+          final grants = FeatureGrant.extractBonusSpells(addSpells, 'class', c.id.slug);
+          if (grants.isNotEmpty) return c.copyWith(grants: grants);
+        }
+      }
+      return c;
+    }).toList();
+    SrdClassesLibrary.setCustomClasses(revitalizedClasses);
 
     final subclasses = await loadCustomSubclasses();
-    SrdClassesLibrary.setCustomSubclasses(subclasses);
+    final revitalizedSubclasses = subclasses.map((s) {
+      if (s.grants.isEmpty) {
+        final addSpells = s.customProperties['additionalSpells'] ?? s.customProperties['subclassSpells'];
+        if (addSpells != null) {
+          final grants = FeatureGrant.extractBonusSpells(addSpells, 'subclass', s.id.slug);
+          if (grants.isNotEmpty) return s.copyWith(grants: grants);
+        }
+      }
+      return s;
+    }).toList();
+    SrdClassesLibrary.setCustomSubclasses(revitalizedSubclasses);
 
     final backgrounds = await loadCustomBackgrounds();
     SrdBackgroundsLibrary.setCustomBackgrounds(backgrounds);

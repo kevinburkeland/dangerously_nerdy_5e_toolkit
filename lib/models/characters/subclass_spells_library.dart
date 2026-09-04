@@ -105,6 +105,19 @@ class SubclassSpellsLibrary {
       'antilife shell',
       'cloudkill',
     ],
+    'undying': [
+      'false life',
+      'ray of sickness',
+      'blindness/deafness',
+      'silence',
+      'feign death',
+      'speak with dead',
+      'aura of life',
+      'death ward',
+      'contagion',
+      'legend lore',
+      'spare the dying',
+    ],
 
     // -------------------------------------------------------------------------
     // CLERIC DOMAINS
@@ -234,6 +247,13 @@ class SubclassSpellsLibrary {
           if (name != null && name.isNotEmpty) {
             results.add(name.toLowerCase());
           }
+        }
+      }
+      final addSpells = sub.customProperties['additionalSpells'] ?? sub.customProperties['subclassSpells'];
+      if (addSpells != null) {
+        final extracted = FeatureGrant.extractSpellNames(addSpells);
+        for (final sp in extracted) {
+          results.add(sp.toLowerCase());
         }
       }
     }

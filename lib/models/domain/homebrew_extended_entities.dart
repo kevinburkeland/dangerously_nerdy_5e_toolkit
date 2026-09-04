@@ -247,6 +247,24 @@ class CharacterClass extends DomainEntity {
       };
 
   factory CharacterClass.fromMap(Map<String, dynamic> map) {
+    final customProperties =
+        Map<String, dynamic>.from(map['customProperties'] as Map? ?? {});
+    var grants = (map['grants'] as List? ?? [])
+        .whereType<Map>()
+        .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+        .toList();
+
+    if (grants.isEmpty) {
+      final addSpells = customProperties['additionalSpells'] ??
+          customProperties['spells'] ??
+          map['additionalSpells'] ??
+          map['spells'];
+      if (addSpells != null) {
+        final slug = map['id'] is Map ? (map['id']['slug']?.toString() ?? '') : '';
+        grants = FeatureGrant.extractBonusSpells(addSpells, 'class', slug);
+      }
+    }
+
     return CharacterClass(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
@@ -272,12 +290,8 @@ class CharacterClass extends DomainEntity {
           .whereType<Map>()
           .map((d) => ClassFeatureDecision.fromMap(Map<String, dynamic>.from(d)))
           .toList(),
-      grants: (map['grants'] as List? ?? [])
-          .whereType<Map>()
-          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
-          .toList(),
-      customProperties:
-          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+      grants: grants,
+      customProperties: customProperties,
     );
   }
 
@@ -356,18 +370,32 @@ class Subclass extends DomainEntity {
       };
 
   factory Subclass.fromMap(Map<String, dynamic> map) {
+    final customProperties =
+        Map<String, dynamic>.from(map['customProperties'] as Map? ?? {});
+    var grants = (map['grants'] as List? ?? [])
+        .whereType<Map>()
+        .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+        .toList();
+
+    if (grants.isEmpty) {
+      final addSpells = customProperties['additionalSpells'] ??
+          customProperties['subclassSpells'] ??
+          map['additionalSpells'] ??
+          map['subclassSpells'];
+      if (addSpells != null) {
+        final slug = map['id'] is Map ? (map['id']['slug']?.toString() ?? '') : '';
+        grants = FeatureGrant.extractBonusSpells(addSpells, 'subclass', slug);
+      }
+    }
+
     return Subclass(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
       classSlug: map['classSlug']?.toString() ?? '',
       shortName: map['shortName']?.toString() ?? map['name']?.toString() ?? '',
       featuresMarkdown: map['featuresMarkdown']?.toString() ?? '',
-      grants: (map['grants'] as List? ?? [])
-          .whereType<Map>()
-          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
-          .toList(),
-      customProperties:
-          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+      grants: grants,
+      customProperties: customProperties,
     );
   }
 
