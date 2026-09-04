@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart' show DmRulesEdition;
+import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.dart';
 
 void main() {
@@ -217,6 +220,71 @@ void main() {
       expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
       expect(find.textContaining('Skill Collision Detected: Athletics'), findsOneWidget);
       expect(find.textContaining('Compensatory Pick(s):'), findsOneWidget);
+    });
+
+    testWidgets('Attributes First preset under 2014 rules does not default attributes to 20', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final settingsProvider = SettingsProvider(
+        initialSettings: const AppSettings(
+          rulesEdition: DmRulesEdition.v2014,
+          wizardOrderingPreset: WizardOrderingPreset.attributesFirst,
+        ),
+      );
+
+      await tester.pumpWidget(
+        SettingsScope(
+          notifier: settingsProvider,
+          child: const MaterialApp(
+            home: CharacterBuilderScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open Guided Builder tab
+      await tester.tap(find.text('Guided Builder'));
+      await tester.pumpAndSettle();
+
+      // Ensure 2014 ruleset is selected on Basics step
+      final rulesetSelector = find.text('2014 SRD (5.1 Classic)');
+      if (rulesetSelector.evaluate().isNotEmpty) {
+        await tester.tap(rulesetSelector);
+        await tester.pumpAndSettle();
+      }
+
+      // Step 1: Basics -> Next Step (advances to Step 2: Ability Score Allocation under attributesFirst)
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Verify we are now on Ability Score Allocation
+      expect(find.textContaining('Ability Score Allocation'), findsOneWidget);
+
+      // Verify that NO stat displays 20 or a +10 bonus when species is not chosen yet
+      expect(find.textContaining('+10 bonus'), findsNothing);
+      expect(find.text('20'), findsNothing);
+
+      // Tap Auto-Assign standard array: stats must be 15, 14, 13, 12, 10, 8 (not 25, 24, 23, 22, 20, 18)
+      await tester.tap(find.text('Auto-Assign'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('15'), findsWidgets);
+      expect(find.text('14'), findsWidgets);
+      expect(find.text('13'), findsWidgets);
+      expect(find.text('12'), findsWidgets);
+      expect(find.text('10'), findsWidgets);
+      expect(find.text('8'), findsWidgets);
+
+      // Crucially, verify that 25 or 20 was NOT calculated as a final score
+      expect(find.text('25'), findsNothing);
+      expect(find.text('24'), findsNothing);
+      expect(find.text('23'), findsNothing);
+      expect(find.text('22'), findsNothing);
     });
   });
 }

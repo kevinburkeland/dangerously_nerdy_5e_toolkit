@@ -2631,7 +2631,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   AbilityScores _calculateBonusScores(Race? curSpecies, Background? curBackground, RulesetVersion ruleset) {
     if (ruleset == RulesetVersion.v2014) {
-      if (curSpecies == null) return const AbilityScores();
+      if (curSpecies == null) return const AbilityScores.zero();
       final fixed = curSpecies.fixedAbilityBonuses2014;
       final flexibleCount = curSpecies.flexibleAbilityChoiceCount;
       final flexibleBonus = curSpecies.flexibleAbilityBonusValue;
@@ -2662,7 +2662,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       );
     } else {
       // 2024 rules: +2 to chosen primary, +1 to secondary
-      if (curBackground == null) return const AbilityScores();
+      if (curBackground == null) return const AbilityScores.zero();
       return AbilityScores(
         strength: (_backgroundPrimaryBonus == AbilityType.strength ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.strength ? 1 : 0),
         dexterity: (_backgroundPrimaryBonus == AbilityType.dexterity ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.dexterity ? 1 : 0),
