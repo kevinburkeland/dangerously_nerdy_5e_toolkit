@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
+import '../../models/domain/character_draft.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/party_purse.dart';
@@ -81,6 +82,111 @@ class CharacterCreationRequest {
 
 /// Factory producing validated Characters conforming to SRD 2014 / 2024 specifications
 class CharacterFactory {
+  /// Compiles a fully validated [Character] domain entity from a [CharacterDraft].
+  ///
+  /// Strictly checks [CharacterDraft.isReadyForCompilation]. If incomplete,
+  /// throws a [StateError] describing what is missing.
+  static Character buildFromDraft(CharacterDraft draft) {
+    if (!draft.isReadyForCompilation) {
+      final missing = <String>[];
+      if (!draft.hasValidSpecies) missing.add('Species');
+      if (!draft.hasValidClass) missing.add('Class');
+      if (!draft.hasValidBackground) missing.add('Background');
+      if (!draft.hasValidScores) missing.add('Base Scores');
+      if (draft.characterName == null || draft.characterName!.trim().isEmpty) missing.add('Character Name');
+      throw StateError('Cannot compile character from draft. Missing mandatory field(s): ${missing.join(", ")}');
+    }
+
+    final ruleset = draft.rulesEdition == DmRulesEdition.v2014 ? RulesetVersion.v2014 : RulesetVersion.v2024;
+    final hitDie = draft.startingClassHitDie ?? 'd8';
+    final cleanHitDie = hitDie.replaceAll('d', '').trim();
+    final hitDieSides = int.tryParse(cleanHitDie) ?? 8;
+    final totalCon = draft.baseScores!.constitution + draft.bonusScores.constitution;
+    final conMod = totalCon.dndModifier;
+    final startingHp = hitDieSides + conMod;
+
+    // Convert starting equipment requests into InventoryItemInstances
+    final inventory = <InventoryItemInstance>[];
+    int instanceCounter = 1;
+    for (final equipReq in draft.startingEquipment) {
+      final instanceId = 'item-inst-$instanceCounter-${equipReq.itemRef.slug}';
+      instanceCounter++;
+
+      inventory.add(InventoryItemInstance(
+        instanceId: instanceId,
+        itemRef: equipReq.itemRef,
+        quantity: equipReq.quantity,
+        isEquipped: equipReq.equipImmediately,
+        equippedSlot: equipReq.equipImmediately ? equipReq.defaultSlot : null,
+        isAttuned: false,
+        requiresAttunement: equipReq.requiresAttunement,
+      ));
+    }
+
+    // Progression
+    final startingClassProgression = ClassLevelProgression(
+      classRef: draft.startingClassRef!,
+      subclassRef: draft.startingSubclassRef,
+      level: 1,
+      hitDie: hitDie,
+      hitPointsRolled: const [],
+      isStartingClass: true,
+      selectedFeatureOptions: draft.selectedFeatureOptions,
+    );
+
+    final progression = CharacterProgression(
+      classes: [startingClassProgression],
+      experiencePoints: 0,
+    );
+
+    // Initial Hit Dice Resource
+    final currentHitDice = <String, int>{
+      hitDie: 1,
+    };
+
+    // Initial Spell Slots Resource
+    final startingSpellSlots = CharacterProgressionEngine.computeSpellSlots(progression.classes);
+
+    final speciesTraits = SkillTraitResolver.getSpeciesTraits(
+      speciesSlug: draft.speciesRef!.slug,
+      subraceSlug: null,
+      edition: draft.rulesEdition,
+    );
+
+    final character = Character(
+      id: EntityId(
+        slug: _slugify(draft.characterName!),
+        ruleset: ruleset,
+      ),
+      name: draft.characterName!,
+      speciesRef: draft.speciesRef!,
+      backgroundRef: draft.backgroundRef,
+      progression: progression,
+      baseScores: draft.baseScores!,
+      bonusScores: draft.bonusScores,
+      skillProficiencies: draft.selectedSkills,
+      savingThrowProficiencies: draft.savingThrowProficiencies,
+      toolProficiencies: draft.toolProficiencies,
+      languages: draft.languages,
+      inventory: inventory,
+      purse: draft.startingPurse,
+      cantrips: draft.cantrips,
+      spellsKnown: draft.spellsKnown,
+      spellsPrepared: draft.spellsPrepared,
+      feats: draft.originFeats,
+      resources: CharacterResourcePool(
+        currentHp: startingHp + speciesTraits.hpPerLevelBonus,
+        tempHp: 0,
+        currentHitDice: currentHitDice,
+        spellSlots: startingSpellSlots,
+      ),
+      maxAttunementSlots: 3,
+      baseSpeedFeet: speciesTraits.baseSpeedFeet,
+      rulesEdition: draft.rulesEdition,
+    );
+
+    return character;
+  }
   /// Standard 5e Point Buy costs for attributes between 8 and 15
   static const Map<int, int> pointBuyCostTable = {
     8: 0,

@@ -125,15 +125,47 @@ void main() {
       await tester.tap(find.text('Guided Builder'));
       await tester.pumpAndSettle();
 
-      for (int i = 0; i < 10; i++) {
-        if (find.textContaining('Step 5: Ability Score Allocation').evaluate().isNotEmpty) {
-          break;
-        }
-        await tester.drag(find.byType(ListView), const Offset(0, -600));
+      // Step 1: Basics
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 2: Species -> Select Human
+      await tester.tap(find.text('Human'));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 3: Class -> Select Fighter
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step: Class Decisions (Fighting Style) -> Select Defense
+      if (find.text('Defense').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Defense'));
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Next Step'));
         await tester.pumpAndSettle();
       }
+
+      // Step: Background -> Select Soldier
+      await tester.tap(find.text('Soldier'));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
     }
 
     testWidgets('Ability Scores step disables Next Step button until all 6 are allocated', (tester) async {

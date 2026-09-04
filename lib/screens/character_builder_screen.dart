@@ -32,6 +32,7 @@ import '../widgets/glyphs/dnd_glyph.dart';
 import '../widgets/room_banner_widget.dart';
 import '../widgets/character_builder/level_up_wizard_dialog.dart';
 import '../widgets/character_builder/ability_score_step.dart';
+import '../widgets/character_builder/background_step.dart';
 import '../providers/character_sheet_controller.dart';
 import '../providers/character_builder_controller.dart';
 import '../widgets/character_sheet/character_header_banner.dart';
@@ -72,17 +73,17 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   int _wizardStep = 0;
   RulesetVersion _selectedRuleset = RulesetVersion.v2024;
   final TextEditingController _nameController = TextEditingController();
-  String _selectedSpecies = 'human';
-  String _selectedClass = 'fighter';
-  String _selectedBackground = 'soldier';
-  String _selectedFeat = 'tough';
+  String? _selectedSpecies;
+  String? _selectedClass;
+  String? _selectedBackground;
+  String? _selectedFeat;
   AbilityType? _selectedFeatAbility;
   String? _wizardSelectedSubclass;
   final Map<String, List<String>> _wizardSelectedFeatureOptions = {};
   final Set<String> _selectedWizardCantrips = {};
   final Set<String> _selectedWizardSpells = {};
-  String _selectedStartingEquipmentPreset = 'chain_and_sword';
-  Set<SkillType> _wizardSelectedSkills = {SkillType.athletics, SkillType.intimidation};
+  String? _selectedStartingEquipmentPreset;
+  Set<SkillType> _wizardSelectedSkills = {};
   final Set<SkillType> _compensatorySkillPicks = {};
   final Set<SkillType> _speciesBonusSkillPicks = {};
 
@@ -139,7 +140,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     _initDefaultCharacter();
 
     _abilityScoreController = CharacterBuilderController(initialMode: 'standard', startEmpty: true);
+    _abilityScoreController.setName(_nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim());
     _abilityScoreController.addListener(_onAbilityScoreControllerChanged);
+    _nameController.addListener(_onNameControllerChanged);
+  }
+
+  void _onNameControllerChanged() {
+    _abilityScoreController.setName(_nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim());
+    if (mounted) setState(() {});
   }
 
   void _onAbilityScoreControllerChanged() {
@@ -570,7 +578,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  static DndClassType? _findClassType(String slug) {
+  static DndClassType? _findClassType(String? slug) {
+    if (slug == null) return null;
     final s = slug.toLowerCase();
     for (final c in DndClassType.values) {
       if (c.name.toLowerCase() == s || c.displayName.toLowerCase() == s) return c;
@@ -578,7 +587,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     return null;
   }
 
-  static SpeciesType _findSpeciesType(String slug) {
+  static SpeciesType _findSpeciesType(String? slug) {
+    if (slug == null) return SpeciesType.human;
     final s = slug.toLowerCase();
     if (s.contains('human')) return SpeciesType.human;
     for (final sp in SpeciesType.values) {
@@ -1018,7 +1028,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
 
 
-  bool _isSpellcasterClass(String classSlug, RulesetVersion ruleset) {
+  bool _isSpellcasterClass(String? classSlug, RulesetVersion ruleset) {
+    if (classSlug == null) return false;
     final slug = classSlug.toLowerCase();
     if (slug == 'wizard' ||
         slug == 'cleric' ||
@@ -1035,7 +1046,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     return false;
   }
 
-  SpellClass? _findSpellClass(String slug) {
+  SpellClass? _findSpellClass(String? slug) {
+    if (slug == null) return null;
     return switch (slug.toLowerCase()) {
       'wizard' => SpellClass.wizard,
       'cleric' => SpellClass.cleric,
@@ -1050,7 +1062,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     };
   }
 
-  AbilityType _getCastingAbility(String slug) {
+  AbilityType _getCastingAbility(String? slug) {
+    if (slug == null) return AbilityType.charisma;
     return switch (slug.toLowerCase()) {
       'wizard' || 'artificer' => AbilityType.intelligence,
       'cleric' || 'druid' || 'ranger' => AbilityType.wisdom,
@@ -1059,13 +1072,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   List<String> _getWizardStepTypes() {
-    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
+    final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
-    final hasFeatStep = is2024 || curSpecies.grantsBonusFeat;
-    final curClass = SrdClassesLibrary.findBySlug(_selectedClass, ruleset: _selectedRuleset) ?? SrdClassesLibrary.fighter;
+    final hasFeatStep = is2024 || (curSpecies?.grantsBonusFeat ?? false);
+    final curClass = _selectedClass != null ? SrdClassesLibrary.findBySlug(_selectedClass!, ruleset: _selectedRuleset) : null;
     final isCaster = _isSpellcasterClass(_selectedClass, _selectedRuleset);
-    final hasSubclass = curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty;
-    final lvl1Decisions = curClass.getDecisionsForLevel(1, ruleset: _selectedRuleset);
+    final hasSubclass = curClass != null && curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty;
+    final lvl1Decisions = curClass?.getDecisionsForLevel(1, ruleset: _selectedRuleset) ?? [];
     final hasDecisions = lvl1Decisions.isNotEmpty;
 
     final preset = SettingsScope.settingsOf(context, listen: false).wizardOrderingPreset;
@@ -1107,18 +1120,18 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   // TAB 2: GUIDED CHARACTER CREATION WIZARD (STEP-BY-STEP)
   // --------------------------------------------------------------------------
   Widget _buildGuidedBuilderTab(ThemeData theme) {
-    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
+    final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
     final steps = _getWizardStepTypes();
     final maxStepIndex = steps.length - 1;
     if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
 
-    final curClass = SrdClassesLibrary.findBySlug(_selectedClass, ruleset: _selectedRuleset) ?? SrdClassesLibrary.fighter;
-    final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
-    final allowedClassSkills = (curClass.customProperties['allowedSkills'] as List? ?? [])
+    final curClass = _selectedClass != null ? SrdClassesLibrary.findBySlug(_selectedClass!, ruleset: _selectedRuleset) : null;
+    final curBackground = _selectedBackground != null ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!) : null;
+    final allowedClassSkills = (curClass?.customProperties['allowedSkills'] as List? ?? [])
         .map((s) => SkillType.values.firstWhere((st) => st.name == s.toString(), orElse: () => SkillType.athletics))
         .toList();
-    final allowedSkillCount = (curClass.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
-    final lvl1Decisions = curClass.getDecisionsForLevel(1, ruleset: _selectedRuleset);
+    final allowedSkillCount = (curClass?.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
+    final lvl1Decisions = curClass?.getDecisionsForLevel(1, ruleset: _selectedRuleset) ?? [];
 
     final currentStepKey = steps[_wizardStep];
 
@@ -1155,8 +1168,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 'basics' => _buildStep0Basics(theme),
                 'species' => _buildStep1Species(theme),
                 'class' => _buildStep2Class(theme, curClass, allowedClassSkills, allowedSkillCount),
-                'subclass' => _buildStepSubclass(theme, curClass),
-                'class_decisions' => _buildStepClassDecisions(theme, curClass, lvl1Decisions),
+                'subclass' => curClass != null ? _buildStepSubclass(theme, curClass) : const SizedBox.shrink(),
+                'class_decisions' => curClass != null ? _buildStepClassDecisions(theme, curClass, lvl1Decisions) : const SizedBox.shrink(),
                 'background' => _buildStep3Background(theme, curBackground),
                 'scores' => AbilityScoreStep(
                   controller: _abilityScoreController,
@@ -1175,7 +1188,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   bonusScores: _calculateBonusScores(curSpecies, curBackground, _selectedRuleset),
                 ),
                 'feats' => _buildStep5Feats(theme),
-                'spells' => _buildStepSpells(theme, curClass),
+                'spells' => curClass != null ? _buildStepSpells(theme, curClass) : const SizedBox.shrink(),
                 'equipment' => _buildStep6Equipment(theme),
                 _ => _buildStep7Review(theme, curSpecies, curClass, curBackground),
               };
@@ -1201,8 +1214,31 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             else
               const SizedBox.shrink(),
             if (_wizardStep < maxStepIndex) () {
-              final isScoresStep = currentStepKey == 'scores';
-              final canAdvance = !isScoresStep || _abilityScoreController.isAbilityAllocationComplete;
+              bool canAdvance;
+              switch (currentStepKey) {
+                case 'basics':
+                  canAdvance = true;
+                case 'species':
+                  canAdvance = _abilityScoreController.hasValidSpecies && _abilityScoreController.refundedSkillChoices == 0;
+                case 'class':
+                  canAdvance = _abilityScoreController.hasValidClass;
+                case 'subclass':
+                  canAdvance = _wizardSelectedSubclass != null;
+                case 'class_decisions':
+                  canAdvance = true;
+                case 'background':
+                  canAdvance = _abilityScoreController.hasValidBackground && _abilityScoreController.refundedSkillChoices == 0;
+                case 'scores':
+                  canAdvance = _abilityScoreController.isAbilityAllocationComplete;
+                case 'feats':
+                  canAdvance = _selectedFeat != null;
+                case 'spells':
+                  canAdvance = true;
+                case 'equipment':
+                  canAdvance = _selectedStartingEquipmentPreset != null;
+                default:
+                  canAdvance = true;
+              }
 
               return ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -1215,9 +1251,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 onPressed: canAdvance
                     ? () {
                         HapticService.selectionTick(context);
-                        if (_wizardStep == 0 && _nameController.text.trim().isEmpty) {
-                          _nameController.text = _suggestedNames[math.Random().nextInt(_suggestedNames.length)];
-                        }
                         setState(() => _wizardStep++);
                       }
                     : null,
@@ -1226,16 +1259,22 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             else
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent.shade700,
-                  foregroundColor: Colors.black,
+                  backgroundColor: _abilityScoreController.isReadyForCompilation
+                      ? Colors.greenAccent.shade700
+                      : Colors.grey.shade800,
+                  foregroundColor: _abilityScoreController.isReadyForCompilation
+                      ? Colors.black
+                      : Colors.white38,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 ),
                 icon: const Icon(Icons.check_circle),
                 label: const Text('CREATE & LAUNCH SHEET', style: TextStyle(fontWeight: FontWeight.bold)),
-                onPressed: () {
-                  HapticService.heavyImpact(context);
-                  _finalizeCreatedCharacter();
-                },
+                onPressed: _abilityScoreController.isReadyForCompilation
+                    ? () {
+                        HapticService.heavyImpact(context);
+                        _finalizeCreatedCharacter();
+                      }
+                    : null,
               ),
           ],
         ),
@@ -1319,6 +1358,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const Text('Select your character lineage from standard SRD species.',
             style: TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
+        SkillRefundAlertSection(controller: _abilityScoreController),
         ...speciesList.map((sp) {
           final isSelected = _selectedSpecies == sp.id.slug;
           final spType = _findSpeciesType(sp.id.slug);
@@ -1366,6 +1406,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   HapticService.selectionTick(context);
                   setState(() {
                     _selectedSpecies = sp.id.slug;
+                    _abilityScoreController.setSpecies(
+                      EntityReference(
+                        refType: EntityType.species,
+                        slug: sp.id.slug,
+                        displayName: sp.name,
+                      ),
+                    );
                     final is2024 = _selectedRuleset == RulesetVersion.v2024;
                     final hasFeatStep = is2024 || sp.grantsBonusFeat;
                     final maxStepIndex = hasFeatStep ? 7 : 6;
@@ -1380,19 +1427,21 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  Widget _buildStep2Class(ThemeData theme, CharacterClass curClass, List<SkillType> allowedSkills, int allowedCount) {
-    final curClassType = _findClassType(_selectedClass) ?? DndClassType.fighter;
+  Widget _buildStep2Class(ThemeData theme, CharacterClass? curClass, List<SkillType> allowedSkills, int allowedCount) {
+    final curClassType = _findClassType(_selectedClass);
     final edition = _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014;
 
     // Resolve skills through the rules engine to detect collisions and compensatory picks
-    final skillReport = SkillTraitResolver.resolveSkills(
-      speciesSlug: _selectedSpecies,
-      backgroundSlug: _selectedBackground,
-      classSlug: curClass.id.slug,
-      requestedClassSkills: _wizardSelectedSkills,
-      compensatoryPicks: _compensatorySkillPicks,
-      edition: edition,
-    );
+    final skillReport = curClass != null
+        ? SkillTraitResolver.resolveSkills(
+            speciesSlug: _selectedSpecies,
+            backgroundSlug: _selectedBackground,
+            classSlug: curClass.id.slug,
+            requestedClassSkills: _wizardSelectedSkills,
+            compensatoryPicks: _compensatorySkillPicks,
+            edition: edition,
+          )
+        : null;
 
     final speciesBonusSkillCount = SkillTraitResolver.getSpeciesBonusSkillCount(_selectedSpecies, edition);
 
@@ -1405,210 +1454,260 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const Text('Select your core adventurer class and starting skill proficiencies.',
             style: TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(12),
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.cyan.shade900.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
-          ),
-          child: Row(
-            children: [
-              RepaintBoundary(
-                child: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: DndGlyph.classFeature(
-                      classType: curClassType,
-                      size: 48,
-                      isDarkMode: true,
+        if (curClassType != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.cyan.shade900.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                RepaintBoundary(
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: DndGlyph.classFeature(
+                        classType: curClassType,
+                        size: 48,
+                        isDarkMode: true,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      curClassType.displayName.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.cyanAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        curClassType.displayName.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'd${curClassType.hitDieSides} Hit Die • Resource: ${curClassType.primaryResource}',
-                      style: const TextStyle(fontSize: 11.5, color: Colors.white70),
-                    ),
-                  ],
+                      Text(
+                        'd${curClassType.hitDieSides} Hit Die • Resource: ${curClassType.primaryResource}',
+                        style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.shield_outlined, color: Colors.cyanAccent, size: 36),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'NO CLASS SELECTED',
+                        style: TextStyle(
+                          color: Colors.cyanAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Select a class below to allocate skills and hit dice.',
+                        style: TextStyle(fontSize: 11.5, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
         DropdownButtonFormField<String>(
           initialValue: _selectedClass,
+          hint: const Text('Select Starting Class...'),
           decoration: const InputDecoration(labelText: 'Starting Class', border: OutlineInputBorder()),
           items: SrdClassesLibrary.allClasses
               .map((c) => DropdownMenuItem(value: c.id.slug, child: Text('${c.name} (${c.hitDie} • Primary: ${c.primaryAbility})')))
               .toList(),
           onChanged: (v) {
+            if (v == null) return;
             HapticService.selectionTick(context);
             setState(() {
-              _selectedClass = v!;
-              final newCls = SrdClassesLibrary.findBySlug(v)!;
+              _selectedClass = v;
+              final newCls = SrdClassesLibrary.findBySlug(v, ruleset: _selectedRuleset)!;
+              _abilityScoreController.setClass(
+                EntityReference(
+                  refType: EntityType.classDefinition,
+                  slug: newCls.id.slug,
+                  displayName: newCls.name,
+                ),
+                hitDie: newCls.hitDie,
+              );
               final newAllowed = (newCls.customProperties['allowedSkills'] as List? ?? [])
                   .map((s) => SkillType.values.firstWhere((st) => st.name == s.toString(), orElse: () => SkillType.athletics))
                   .toList();
               final cnt = (newCls.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
               _wizardSelectedSkills = newAllowed.take(cnt).toSet();
               _compensatorySkillPicks.clear();
+              _abilityScoreController.setSelectedSkills(_wizardSelectedSkills);
             });
           },
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Class Skills (Pick $allowedCount):', style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${_wizardSelectedSkills.length} / $allowedCount selected',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _wizardSelectedSkills.length == allowedCount ? Colors.greenAccent : Colors.amberAccent,
-                  fontWeight: FontWeight.bold,
-                )),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          children: allowedSkills.map((sk) {
-            final isChosen = _wizardSelectedSkills.contains(sk);
-            final source = skillReport.grantedSkills[sk];
-            final isGrantedByOther = source != null && !source.startsWith('Class:');
-
-            return FilterChip(
-              label: Text(isGrantedByOther ? '${sk.displayName} ($source)' : sk.displayName),
-              selected: isChosen,
-              avatar: isGrantedByOther
-                  ? const Icon(Icons.info_outline, size: 14, color: Colors.amberAccent)
-                  : null,
-              onSelected: (selected) {
-                HapticService.selectionTick(context);
-                setState(() {
-                  if (selected) {
-                    if (_wizardSelectedSkills.length < allowedCount) {
-                      _wizardSelectedSkills.add(sk);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Cannot select more than $allowedCount class skills for ${curClass.name}.'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  } else {
-                    _wizardSelectedSkills.remove(sk);
-                  }
-                });
-              },
-            );
-          }).toList(),
-        ),
-
-        // Collision & Compensatory Picks Section
-        if (skillReport.collidingSkills.isNotEmpty) ...[
+        if (curClass != null && skillReport != null) ...[
           const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.amberAccent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Skill Collision Detected: ${skillReport.collidingSkills.map((s) => s.displayName).join(", ")} is already granted by your background/species.',
-                        style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Per RAW rules, you receive ${skillReport.compensatoryPicksEarned} compensatory choice(s) from any remaining unselected skill.',
-                  style: const TextStyle(fontSize: 11.5, color: Colors.white70),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Compensatory Pick(s):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    Text(
-                      '${_compensatorySkillPicks.length} / ${skillReport.compensatoryPicksEarned} selected',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _compensatorySkillPicks.length == skillReport.compensatoryPicksEarned ? Colors.greenAccent : Colors.amberAccent,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: SkillType.values.where((sk) {
-                    return skillReport.availableSkillPool.contains(sk) || _compensatorySkillPicks.contains(sk);
-                  }).map((sk) {
-                    final isChosen = _compensatorySkillPicks.contains(sk);
-                    return FilterChip(
-                      label: Text(sk.displayName, style: const TextStyle(fontSize: 12)),
-                      selected: isChosen,
-                      selectedColor: Colors.amberAccent.withValues(alpha: 0.3),
-                      onSelected: (selected) {
-                        HapticService.selectionTick(context);
-                        setState(() {
-                          if (selected) {
-                            if (_compensatorySkillPicks.length < skillReport.compensatoryPicksEarned) {
-                              _compensatorySkillPicks.add(sk);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Cannot select more than ${skillReport.compensatoryPicksEarned} compensatory skill(s).'),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          } else {
-                            _compensatorySkillPicks.remove(sk);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Class Skills (Pick $allowedCount):', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('${_wizardSelectedSkills.length} / $allowedCount selected',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _wizardSelectedSkills.length == allowedCount ? Colors.greenAccent : Colors.amberAccent,
+                    fontWeight: FontWeight.bold,
+                  )),
+            ],
           ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: allowedSkills.map((sk) {
+              final isChosen = _wizardSelectedSkills.contains(sk);
+              final source = skillReport.grantedSkills[sk];
+              final isGrantedByOther = source != null && !source.startsWith('Class:');
+
+              return FilterChip(
+                label: Text(isGrantedByOther ? '${sk.displayName} ($source)' : sk.displayName),
+                selected: isChosen,
+                avatar: isGrantedByOther
+                    ? const Icon(Icons.info_outline, size: 14, color: Colors.amberAccent)
+                    : null,
+                onSelected: (selected) {
+                  HapticService.selectionTick(context);
+                  setState(() {
+                    if (selected) {
+                      if (_wizardSelectedSkills.length < allowedCount) {
+                        _wizardSelectedSkills.add(sk);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Cannot select more than $allowedCount class skills for ${curClass.name}.'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } else {
+                      _wizardSelectedSkills.remove(sk);
+                    }
+                    _abilityScoreController.setSelectedSkills(_wizardSelectedSkills);
+                  });
+                },
+              );
+            }).toList(),
+          ),
+
+          // Collision & Compensatory Picks Section
+          if (skillReport.collidingSkills.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amberAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: Colors.amberAccent, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Skill Collision Detected: ${skillReport.collidingSkills.map((s) => s.displayName).join(", ")} is already granted by your background/species.',
+                          style: const TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Per RAW rules, you receive ${skillReport.compensatoryPicksEarned} compensatory choice(s) from any remaining unselected skill.',
+                    style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Compensatory Pick(s):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(
+                        '${_compensatorySkillPicks.length} / ${skillReport.compensatoryPicksEarned} selected',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _compensatorySkillPicks.length == skillReport.compensatoryPicksEarned ? Colors.greenAccent : Colors.amberAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: SkillType.values.where((sk) {
+                      return skillReport.availableSkillPool.contains(sk) || _compensatorySkillPicks.contains(sk);
+                    }).map((sk) {
+                      final isChosen = _compensatorySkillPicks.contains(sk);
+                      return FilterChip(
+                        label: Text(sk.displayName, style: const TextStyle(fontSize: 12)),
+                        selected: isChosen,
+                        selectedColor: Colors.amberAccent.withValues(alpha: 0.3),
+                        onSelected: (selected) {
+                          HapticService.selectionTick(context);
+                          setState(() {
+                            if (selected) {
+                              if (_compensatorySkillPicks.length < skillReport.compensatoryPicksEarned) {
+                                _compensatorySkillPicks.add(sk);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Cannot select more than ${skillReport.compensatoryPicksEarned} compensatory skill(s).'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            } else {
+                              _compensatorySkillPicks.remove(sk);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
 
         // Species Flexible Bonus Skills (e.g. Human Skillful, Half-Elf Skill Versatility)
-        if (speciesBonusSkillCount > 0) ...[
+        if (speciesBonusSkillCount > 0 && skillReport != null) ...[
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -1623,7 +1722,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Species Bonus Skill (${SrdSpeciesLibrary.findBySlug(_selectedSpecies)?.name ?? "Species"}):',
+                    Text('Species Bonus Skill (${_selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!)?.name ?? "Species" : "Species"}):',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.tealAccent)),
                     Text(
                       '${_speciesBonusSkillPicks.length} / $speciesBonusSkillCount selected',
@@ -1896,71 +1995,37 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  Widget _buildStep3Background(ThemeData theme, Background curBackground) {
-    final is2024 = _selectedRuleset == RulesetVersion.v2024;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(is2024 ? 'Step 4: Choose Background Origin' : 'Step 4: Choose Background',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-        const SizedBox(height: 6),
-        Text(
-          is2024
-              ? 'Your background grants starting skills, tool proficiencies, and an Origin Feat.'
-              : 'Your background grants starting skills, tool proficiencies, and starting equipment.',
-          style: const TextStyle(fontSize: 12, color: Colors.white70),
-        ),
-        const SizedBox(height: 12),
-        ...SrdBackgroundsLibrary.allBackgrounds.map((bg) {
-          final isSelected = _selectedBackground == bg.id.slug;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.cyan.shade900.withValues(alpha: 0.3) : Colors.black26,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isSelected ? Colors.cyanAccent : Colors.white12,
-                width: isSelected ? 1.5 : 1.0,
-              ),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: ListTile(
-                leading: Icon(
-                  isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                  color: isSelected ? Colors.cyanAccent : Colors.white54,
-                ),
-                title: Text(bg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                  is2024
-                      ? 'Skills: ${bg.skillProficiencies.join(", ")}\nOrigin Feat: ${bg.originFeat ?? "General"}'
-                      : 'Skills: ${bg.skillProficiencies.join(", ")}${bg.toolProficiencies.isNotEmpty ? "\nTools: ${bg.toolProficiencies.join(', ')}" : ""}',
-                  style: const TextStyle(fontSize: 11.5, color: Colors.white70),
-                ),
-                onTap: () {
-                  HapticService.selectionTick(context);
-                  setState(() {
-                    _selectedBackground = bg.id.slug;
-                    // Auto-set origin feat recommendation in 2024 mode
-                    if (is2024 && bg.originFeat != null) {
-                      final fSlug = bg.originFeat!.toLowerCase().replaceAll(' ', '-').replaceAll('(', '').replaceAll(')', '');
-                      if (SrdFeatsLibrary.findBySlug(fSlug) != null) {
-                        _selectedFeat = fSlug;
-                      }
-                    }
-                  });
-                },
-              ),
+  Widget _buildStep3Background(ThemeData theme, Background? curBackground) {
+    return BackgroundStep(
+      controller: _abilityScoreController,
+      selectedBackground: _selectedBackground ?? '',
+      selectedRuleset: _selectedRuleset,
+      onBackgroundSelected: (slug) {
+        final is2024 = _selectedRuleset == RulesetVersion.v2024;
+        final bg = SrdBackgroundsLibrary.findBySlug(slug);
+        setState(() {
+          _selectedBackground = slug;
+          _abilityScoreController.setBackground(
+            EntityReference(
+              refType: EntityType.background,
+              slug: slug,
+              displayName: bg?.name ?? slug,
             ),
           );
-        }),
-      ],
+          // Auto-set origin feat recommendation in 2024 mode
+          if (is2024 && bg?.originFeat != null) {
+            final fSlug = bg!.originFeat!.toLowerCase().replaceAll(' ', '-').replaceAll('(', '').replaceAll(')', '');
+            if (SrdFeatsLibrary.findBySlug(fSlug) != null) {
+              _selectedFeat = fSlug;
+            }
+          }
+        });
+      },
     );
   }
 
   Widget _buildStep5Feats(ThemeData theme) {
-    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
+    final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final availableFeats = is2024
         ? SrdFeatsLibrary.getOriginFeats()
@@ -1972,14 +2037,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Text(
           is2024
               ? 'Step 6: Origin Feat'
-              : 'Step 6: ${curSpecies.name} Bonus Feat',
+              : 'Step 6: ${curSpecies?.name ?? "Species"} Bonus Feat',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
         ),
         const SizedBox(height: 6),
         Text(
           is2024
               ? 'Choose your 1st-level origin feat granted by your 2024 background.'
-              : 'As a ${curSpecies.name}, choose your 1st-level bonus feat from the 2014 SRD Feat Library.',
+              : 'As a ${curSpecies?.name ?? "adventurer"}, choose your 1st-level bonus feat from the 2014 SRD Feat Library.',
           style: const TextStyle(fontSize: 12, color: Colors.white70),
         ),
         const SizedBox(height: 12),
@@ -2097,11 +2162,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildStep6Equipment(ThemeData theme) {
-    final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
-    final packages = SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
+    final curClass = _selectedClass != null ? SrdClassesLibrary.findBySlug(_selectedClass!, ruleset: _selectedRuleset) : null;
+    final packages = curClass != null ? SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug) : <SrdEquipmentPackage>[];
     final stepNumber = _getWizardStepTypes().indexOf('equipment') + 1;
 
-    if (!packages.any((p) => p.id == _selectedStartingEquipmentPreset)) {
+    if (packages.isNotEmpty && !packages.any((p) => p.id == _selectedStartingEquipmentPreset)) {
       _selectedStartingEquipmentPreset = packages.first.id;
     }
 
@@ -2114,19 +2179,30 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ),
         const SizedBox(height: 6),
         Text(
-          'Choose an official 5e SRD starting inventory package or starting wealth for your ${curClass.name}.',
+          curClass != null
+              ? 'Choose an official 5e SRD starting inventory package or starting wealth for your ${curClass.name}.'
+              : 'Choose an official 5e SRD starting inventory package or starting wealth.',
           style: const TextStyle(fontSize: 12, color: Colors.white70),
         ),
         const SizedBox(height: 12),
-        ...packages.map((pkg) {
-          return _buildEquipmentPresetOption(
-            id: pkg.id,
-            title: pkg.name,
-            subtitle: pkg.subtitle,
-            icon: pkg.icon,
-            gold: pkg.startingGold,
-          );
-        }),
+        if (packages.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              'Please select a starting class to view available equipment packages.',
+              style: TextStyle(color: Colors.white60),
+            ),
+          )
+        else
+          ...packages.map((pkg) {
+            return _buildEquipmentPresetOption(
+              id: pkg.id,
+              title: pkg.name,
+              subtitle: pkg.subtitle,
+              icon: pkg.icon,
+              gold: pkg.startingGold,
+            );
+          }),
       ],
     );
   }
@@ -2203,8 +2279,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
     // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
     final castingAbility = _getCastingAbility(curClass.id.slug);
-    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
-    final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
+    final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
+    final curBackground = _selectedBackground != null ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!) : null;
     final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
     final effectiveScores = _wizardBaseScores.withBonus(calculatedBonuses);
     final castingMod = effectiveScores.getModifier(castingAbility);
@@ -2452,11 +2528,44 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  Widget _buildStep7Review(ThemeData theme, Race sp, CharacterClass cls, Background bg) {
+  Widget _buildStep7Review(ThemeData theme, Race? sp, CharacterClass? cls, Background? bg) {
+    if (sp == null || cls == null || bg == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Step ${_getWizardStepTypes().length}: Review & Finalize',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.amberAccent)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade900.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.amberAccent.withValues(alpha: 0.4)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.amberAccent),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Please complete all prior steps (Species, Class, Background, Ability Scores) before reviewing.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     final name = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
     final hasFeat = is2024 || sp.grantsBonusFeat;
-    final selectedPkg = SrdEquipmentLibrary.findPackageById(_selectedStartingEquipmentPreset) ??
+    final selectedPkg = (_selectedStartingEquipmentPreset != null
+            ? SrdEquipmentLibrary.findPackageById(_selectedStartingEquipmentPreset!)
+            : null) ??
         SrdEquipmentLibrary.getPackagesForClass(cls.id.slug).first;
     final stepNumber = _getWizardStepTypes().length;
 
@@ -2489,16 +2598,16 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           final allReviewSkills = {...reviewSkillReport.resolvedProficiencies.keys, ..._speciesBonusSkillPicks};
           return Text('Skill Proficiencies: ${allReviewSkills.map((s) => s.displayName).join(", ")}', style: const TextStyle(fontSize: 12));
         }),
-        if (hasFeat) ...[
+        if (hasFeat && _selectedFeat != null) ...[
           () {
-            final feat = SrdFeatsLibrary.findBySlug(_selectedFeat);
+            final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!);
             final chosenAbility = _selectedFeatAbility ??
                 (feat?.selectableAbilities.isNotEmpty == true ? feat!.selectableAbilities.first : null);
             final extra = (feat != null && feat.hasAbilityScoreIncrease && chosenAbility != null)
                 ? ' (+${feat.statIncreaseAmount} ${chosenAbility.shortName}${feat.grantsSavingThrowProficiency ? ', ${chosenAbility.shortName} Save Prof' : ''})'
                 : '';
             return Text(
-              '${is2024 ? 'Origin Feat' : 'Feat'}: ${feat?.name ?? _selectedFeat.toUpperCase()}$extra',
+              '${is2024 ? 'Origin Feat' : 'Feat'}: ${feat?.name ?? _selectedFeat!.toUpperCase()}$extra',
               style: const TextStyle(fontSize: 12, color: Colors.purpleAccent),
             );
           }(),
@@ -2520,8 +2629,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  AbilityScores _calculateBonusScores(Race curSpecies, Background curBackground, RulesetVersion ruleset) {
+  AbilityScores _calculateBonusScores(Race? curSpecies, Background? curBackground, RulesetVersion ruleset) {
     if (ruleset == RulesetVersion.v2014) {
+      if (curSpecies == null) return const AbilityScores();
       final fixed = curSpecies.fixedAbilityBonuses2014;
       final flexibleCount = curSpecies.flexibleAbilityChoiceCount;
       final flexibleBonus = curSpecies.flexibleAbilityBonusValue;
@@ -2552,6 +2662,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       );
     } else {
       // 2024 rules: +2 to chosen primary, +1 to secondary
+      if (curBackground == null) return const AbilityScores();
       return AbilityScores(
         strength: (_backgroundPrimaryBonus == AbilityType.strength ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.strength ? 1 : 0),
         dexterity: (_backgroundPrimaryBonus == AbilityType.dexterity ? 2 : 0) + (_backgroundSecondaryBonus == AbilityType.dexterity ? 1 : 0),
@@ -2564,9 +2675,16 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   void _finalizeCreatedCharacter() {
-    final curClass = SrdClassesLibrary.findBySlug(_selectedClass) ?? SrdClassesLibrary.fighter;
-    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies) ?? SrdSpeciesLibrary.human;
-    final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground) ?? SrdBackgroundsLibrary.soldier;
+    if (!_abilityScoreController.isReadyForCompilation) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all wizard steps before creating character.')),
+      );
+      return;
+    }
+
+    final curClass = SrdClassesLibrary.findBySlug(_selectedClass!, ruleset: _selectedRuleset)!;
+    final curSpecies = SrdSpeciesLibrary.findBySlug(_selectedSpecies!)!;
+    final curBackground = SrdBackgroundsLibrary.findBySlug(_selectedBackground!)!;
 
     // Resolve class saves
     final saveProficiencies = curClass.savingThrows.map((s) {
@@ -2590,10 +2708,16 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     for (final sk in _speciesBonusSkillPicks) {
       skillMap[sk] = SkillProficiencyLevel.proficient;
     }
+    for (final sk in _abilityScoreController.bonusReplacementSkills) {
+      skillMap[sk] = SkillProficiencyLevel.proficient;
+    }
 
     // Starting equipment and purse from chosen SRD package
     final classPackages = SrdEquipmentLibrary.getPackagesForClass(curClass.id.slug);
-    final selectedPkg = SrdEquipmentLibrary.findPackageById(_selectedStartingEquipmentPreset) ?? classPackages.first;
+    final selectedPkg = (_selectedStartingEquipmentPreset != null
+            ? SrdEquipmentLibrary.findPackageById(_selectedStartingEquipmentPreset!)
+            : null) ??
+        classPackages.first;
     final equipRequests = List<StartingEquipmentItemRequest>.from(selectedPkg.items);
     final startingPurse = PartyPurse(gp: selectedPkg.startingGold);
 
@@ -2634,8 +2758,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     var finalBonusScores = calculatedBonuses;
     final finalSaveProficiencies = Set<AbilityType>.from(saveProficiencies);
 
-    if (hasFeat) {
-      final feat = SrdFeatsLibrary.findBySlug(_selectedFeat);
+    if (hasFeat && _selectedFeat != null) {
+      final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!);
       if (feat != null && feat.hasAbilityScoreIncrease) {
         final chosenAbility = _selectedFeatAbility ??
             (feat.selectableAbilities.isNotEmpty ? feat.selectableAbilities.first : null);
@@ -2676,44 +2800,46 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       );
     }
 
-    final request = CharacterCreationRequest(
-      characterName: _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim(),
-      ruleset: _selectedRuleset,
-      speciesRef: EntityReference(
-        refType: EntityType.species,
-        slug: curSpecies.id.slug,
-        displayName: curSpecies.name,
-      ),
-      backgroundRef: EntityReference(
-        refType: EntityType.background,
-        slug: curBackground.id.slug,
-        displayName: curBackground.name,
-      ),
-      startingClassSlug: curClass.id.slug,
-      startingClassDisplayName: curClass.name,
-      startingClassHitDie: curClass.hitDie,
-      baseScores: _wizardBaseScores,
-      bonusScores: finalBonusScores,
-      savingThrowProficiencies: finalSaveProficiencies,
-      skillProficiencies: skillMap,
-      originFeats: [
-        if (hasFeat)
-          EntityReference(
-            refType: EntityType.feat,
-            slug: _selectedFeat,
-            displayName: SrdFeatsLibrary.findBySlug(_selectedFeat)?.name ?? 'Feat',
-          ),
-      ],
-      startingEquipment: equipRequests,
-      startingPurse: startingPurse,
-      cantrips: cantripRefs,
-      spellsKnown: spellRefs,
-      spellsPrepared: spellRefs,
-      startingSubclassRef: startingSubclassRef,
-      selectedFeatureOptions: Map<String, List<String>>.from(_wizardSelectedFeatureOptions),
+    final draft = _abilityScoreController.draft;
+    draft.characterName = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
+    draft.rulesEdition = _selectedRuleset == RulesetVersion.v2014 ? DmRulesEdition.v2014 : DmRulesEdition.v2024;
+    draft.speciesRef = EntityReference(
+      refType: EntityType.species,
+      slug: curSpecies.id.slug,
+      displayName: curSpecies.name,
     );
+    draft.backgroundRef = EntityReference(
+      refType: EntityType.background,
+      slug: curBackground.id.slug,
+      displayName: curBackground.name,
+    );
+    draft.startingClassRef = EntityReference(
+      refType: EntityType.classDefinition,
+      slug: curClass.id.slug,
+      displayName: curClass.name,
+    );
+    draft.startingClassHitDie = curClass.hitDie;
+    draft.baseScores = _wizardBaseScores;
+    draft.bonusScores = finalBonusScores;
+    draft.savingThrowProficiencies = finalSaveProficiencies;
+    draft.selectedSkills = skillMap;
+    draft.originFeats = [
+      if (hasFeat && _selectedFeat != null)
+        EntityReference(
+          refType: EntityType.feat,
+          slug: _selectedFeat!,
+          displayName: SrdFeatsLibrary.findBySlug(_selectedFeat!)?.name ?? 'Feat',
+        ),
+    ];
+    draft.startingEquipment = equipRequests;
+    draft.startingPurse = startingPurse;
+    draft.cantrips = cantripRefs;
+    draft.spellsKnown = spellRefs;
+    draft.spellsPrepared = spellRefs;
+    draft.startingSubclassRef = startingSubclassRef;
+    draft.selectedFeatureOptions = Map<String, List<String>>.from(_wizardSelectedFeatureOptions);
 
-    final newChar = CharacterFactory.createLevel1Character(request);
+    final newChar = CharacterFactory.buildFromDraft(draft);
     _persistenceService.saveCharacter(newChar).then((updated) {
       if (mounted) {
         setState(() {

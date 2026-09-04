@@ -76,6 +76,14 @@ class AbilityScores {
         wisdom = 10,
         charisma = 8;
 
+  const AbilityScores.zero()
+      : strength = 0,
+        dexterity = 0,
+        constitution = 0,
+        intelligence = 0,
+        wisdom = 0,
+        charisma = 0;
+
   int getScore(AbilityType ability) => switch (ability) {
         AbilityType.strength => strength,
         AbilityType.dexterity => dexterity,

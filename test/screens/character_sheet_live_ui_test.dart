@@ -234,6 +234,9 @@ void main() {
       expect(find.text('Human'), findsOneWidget);
       expect(find.text('Elf'), findsOneWidget);
 
+      await tester.tap(find.text('Human'));
+      await tester.pumpAndSettle();
+
       // Tap Next Step to Step 3: Class
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
@@ -360,16 +363,34 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
 
+      // Select Fighter
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
+
       // Step 3 -> Step 4 (Class Decisions -> Background)
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
       expect(find.text('Fighter Decisions & Specializations'), findsOneWidget);
 
       // Class Decisions -> Background
+      final defenseFinder = find.widgetWithText(ListTile, 'Defense');
+      if (defenseFinder.evaluate().isNotEmpty) {
+        await tester.tap(defenseFinder.first);
+        await tester.pumpAndSettle();
+      }
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
       expect(find.text('Step 4: Choose Background'), findsOneWidget);
       expect(find.textContaining('Origin Feat:'), findsNothing);
+
+      // Select Soldier
+      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
+      if (soldierFinder.evaluate().isNotEmpty) {
+        await tester.tap(soldierFinder.first);
+        await tester.pumpAndSettle();
+      }
 
       // Step 4 -> Step 5 (Ability Scores)
       await tester.tap(find.text('Next Step'));
@@ -439,14 +460,31 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
+      // Select Fighter
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
+
       // Step 3 -> Class Decisions
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
       expect(find.text('Fighter Decisions & Specializations'), findsOneWidget);
 
       // Class Decisions -> Step 4 (Background)
+      final defenseFinder2 = find.widgetWithText(ListTile, 'Defense');
+      if (defenseFinder2.evaluate().isNotEmpty) {
+        await tester.tap(defenseFinder2.first);
+        await tester.pumpAndSettle();
+      }
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
+
+      final soldierFinder2 = find.widgetWithText(ListTile, 'Soldier');
+      if (soldierFinder2.evaluate().isNotEmpty) {
+        await tester.tap(soldierFinder2.first);
+        await tester.pumpAndSettle();
+      }
 
       // Step 4 -> Step 5 (Ability Scores)
       await tester.tap(find.text('Next Step'));
@@ -461,12 +499,20 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Human (Variant) Bonus Feat'), findsOneWidget);
 
+      final mobileFinder = find.widgetWithText(ListTile, 'Mobile');
+      await tester.tap(mobileFinder);
+      await tester.pumpAndSettle();
+
       // Step 6 -> Step 7 (Equipment)
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Starting Equipment'), findsOneWidget);
 
       // Step 7 -> Step 8 (Review)
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Review & Finalize'), findsOneWidget);

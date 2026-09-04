@@ -48,7 +48,7 @@ class SkillTraitResolver {
   /// Resolves background fixed skills, species fixed skills, and class selections.
   /// When a class skill selection collides with a background/species grant, a compensatory pick is granted.
   static SkillCollisionReport resolveSkills({
-    required String speciesSlug,
+    String? speciesSlug,
     required String? backgroundSlug,
     required String classSlug,
     required Set<SkillType> requestedClassSkills,
@@ -60,11 +60,13 @@ class SkillTraitResolver {
     final resolved = <SkillType, SkillProficiencyLevel>{};
 
     // 1. Ingest Species Fixed Skills
-    final sSlug = speciesSlug.toLowerCase();
-    if (sSlug.contains('elf') && !sSlug.contains('half-elf')) {
-      granted[SkillType.perception] = 'Species: Elf (Keen Senses)';
-    } else if (sSlug.contains('half-orc') || sSlug.contains('orc')) {
-      granted[SkillType.intimidation] = 'Species: Half-Orc (Menacing)';
+    if (speciesSlug != null) {
+      final sSlug = speciesSlug.toLowerCase();
+      if (sSlug.contains('elf') && !sSlug.contains('half-elf')) {
+        granted[SkillType.perception] = 'Species: Elf (Keen Senses)';
+      } else if (sSlug.contains('half-orc') || sSlug.contains('orc')) {
+        granted[SkillType.intimidation] = 'Species: Half-Orc (Menacing)';
+      }
     }
 
     // 2. Ingest Background Fixed Skills
@@ -156,7 +158,8 @@ class SkillTraitResolver {
   }
 
   /// Calculates dynamic flexible skill bonus count granted by species
-  static int getSpeciesBonusSkillCount(String speciesSlug, DmRulesEdition edition) {
+  static int getSpeciesBonusSkillCount(String? speciesSlug, DmRulesEdition edition) {
+    if (speciesSlug == null) return 0;
     final slug = speciesSlug.toLowerCase();
     if (slug == 'human' && edition == DmRulesEdition.v2024) {
       return 1; // 2024 Human Skillful

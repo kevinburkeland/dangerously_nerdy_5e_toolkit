@@ -1,11 +1,19 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import '../models/dm_screen_data.dart' show DmRulesEdition;
+import '../models/domain/core_types.dart';
 import '../models/domain/character_models.dart';
+import '../models/domain/character_draft.dart';
+import '../models/domain/entity_reference.dart';
+import '../models/characters/srd_backgrounds_library.dart';
+import '../models/characters/srd_species_library.dart';
 import '../services/rules/character_factory.dart';
 
 /// State manager for 5e Character Builder attribute generation, consumable resource pools,
-/// and progression validation.
+/// progression validation, skill overlap refunds, and character draft state.
 class CharacterBuilderController extends ChangeNotifier {
+  late final CharacterDraft _draft;
+
   String _abilityScoreMode = 'standard'; // 'standard', 'pointBuy', 'rolled', 'manual'
   String _rollMethod = 'standard_4d6'; // 'standard_4d6', 'classic_3d6_down', 'classic_3d6_nice', 'silly_d20'
 
@@ -38,10 +46,18 @@ class CharacterBuilderController extends ChangeNotifier {
     AbilityType.charisma: 10,
   };
 
+  // Skill Overlap & Refund State
+  int _refundedSkillChoices = 0;
+  final Set<SkillType> _bonusReplacementSkills = {};
+  String? _selectedSpeciesSlug;
+  String? _selectedBackgroundSlug;
+
   CharacterBuilderController({
     String initialMode = 'standard',
     bool startEmpty = true,
-  }) {
+    DmRulesEdition initialEdition = DmRulesEdition.v2024,
+    CharacterDraft? initialDraft,
+  }) : _draft = initialDraft ?? CharacterDraft(rulesEdition: initialEdition) {
     _abilityScoreMode = initialMode;
     if (initialMode == 'standard') {
       if (startEmpty) {
@@ -50,6 +66,246 @@ class CharacterBuilderController extends ChangeNotifier {
         autoAssignStandardArray();
       }
     }
+  }
+
+  // --- Draft Getters & Validation ---
+  CharacterDraft get draft => _draft;
+  bool get hasValidSpecies => _draft.hasValidSpecies;
+  bool get hasValidClass => _draft.hasValidClass;
+  bool get hasValidBackground => _draft.hasValidBackground;
+  bool get hasValidScores => _draft.hasValidScores;
+  bool get isReadyForCompilation => _draft.isReadyForCompilation;
+
+  // --- Skill Refund Getters ---
+  int get refundedSkillChoices => _refundedSkillChoices;
+  Set<SkillType> get bonusReplacementSkills => Set.unmodifiable(_bonusReplacementSkills);
+  Set<SkillType> get selectedSkills => Set.unmodifiable(_draft.selectedSkills.keys);
+
+  /// Skills granted by the selected Background.
+  Set<SkillType> get grantedBackgroundSkills {
+    final slug = _draft.backgroundRef?.slug ?? _selectedBackgroundSlug;
+    if (slug == null) return {};
+    final bg = SrdBackgroundsLibrary.findBySlug(slug);
+    final res = <SkillType>{};
+    if (bg != null) {
+      for (final s in bg.skillProficiencies) {
+        final sk = _parseSkillType(s);
+        if (sk != null) res.add(sk);
+      }
+    }
+    // Rules lookup fallback
+    if (res.isEmpty) {
+      switch (slug.toLowerCase()) {
+        case 'acolyte':
+          res.addAll([SkillType.insight, SkillType.religion]);
+        case 'criminal':
+        case 'spy':
+          res.addAll([SkillType.deception, SkillType.stealth]);
+        case 'entertainer':
+          res.addAll([SkillType.acrobatics, SkillType.performance]);
+        case 'folk-hero':
+        case 'folk_hero':
+        case 'guide':
+          res.addAll([SkillType.animalHandling, SkillType.survival]);
+        case 'guild-artisan':
+        case 'guild_artisan':
+        case 'merchant':
+          res.addAll([SkillType.insight, SkillType.persuasion]);
+        case 'noble':
+          res.addAll([SkillType.history, SkillType.persuasion]);
+        case 'sage':
+          res.addAll([SkillType.arcana, SkillType.history]);
+        case 'sailor':
+          res.addAll([SkillType.athletics, SkillType.perception]);
+        case 'soldier':
+          res.addAll([SkillType.athletics, SkillType.intimidation]);
+        case 'urchin':
+          res.addAll([SkillType.sleightOfHand, SkillType.stealth]);
+      }
+    }
+    return res;
+  }
+
+  /// Skills granted natively by the selected Species.
+  Set<SkillType> get grantedSpeciesSkills {
+    final slug = (_draft.speciesRef?.slug ?? _selectedSpeciesSlug)?.toLowerCase();
+    if (slug == null) return {};
+    final res = <SkillType>{};
+    if (slug.contains('elf') && !slug.contains('half-elf')) {
+      res.add(SkillType.perception);
+    } else if (slug.contains('half-orc') || slug.contains('orc')) {
+      res.add(SkillType.intimidation);
+    }
+    final sp = SrdSpeciesLibrary.findBySlug(slug);
+    if (sp != null && sp.customProperties.containsKey('skillProficiencies')) {
+      final list = sp.customProperties['skillProficiencies'];
+      if (list is List) {
+        for (final s in list) {
+          final sk = _parseSkillType(s.toString());
+          if (sk != null) res.add(sk);
+        }
+      }
+    }
+    return res;
+  }
+
+  /// All background and species granted skills combined.
+  Set<SkillType> get grantedSkills => {
+        ...grantedBackgroundSkills,
+        ...grantedSpeciesSkills,
+      };
+
+  /// Overlaps between granted skills and class/draft selected skills.
+  Set<SkillType> get collidingSkills => grantedSkills.intersection(_draft.selectedSkills.keys.toSet());
+
+  /// Remaining eligible skills available for replacement allocation.
+  Set<SkillType> get availableReplacementSkills {
+    final used = <SkillType>{
+      ..._draft.selectedSkills.keys,
+      ...grantedSkills,
+      ..._bonusReplacementSkills,
+    };
+    return SkillType.values.where((s) => !used.contains(s)).toSet();
+  }
+
+  static SkillType? _parseSkillType(String name) {
+    final clean = name.toLowerCase().replaceAll(' ', '').replaceAll('_', '').replaceAll('-', '');
+    for (final s in SkillType.values) {
+      if (s.name.toLowerCase() == clean || s.displayName.toLowerCase().replaceAll(' ', '') == clean) {
+        return s;
+      }
+    }
+    return null;
+  }
+
+  void _recalculateSkillOverlaps() {
+    final granted = grantedSkills;
+    final selected = _draft.selectedSkills.keys.toSet();
+    final overlaps = granted.intersection(selected);
+
+    // Prune bonus replacement skills that now collide with granted or selected skills
+    _bonusReplacementSkills.removeWhere((s) => granted.contains(s) || selected.contains(s));
+
+    // Calculate unspent refunds
+    final requiredRefunds = overlaps.length;
+    _refundedSkillChoices = math.max(0, requiredRefunds - _bonusReplacementSkills.length);
+  }
+
+  /// Resolves one refunded skill by adding it to [bonusReplacementSkills]
+  /// and decrementing [refundedSkillChoices].
+  void resolveRefundedSkill(SkillType newSkill) {
+    if (!_bonusReplacementSkills.contains(newSkill)) {
+      _bonusReplacementSkills.add(newSkill);
+      if (_refundedSkillChoices > 0) {
+        _refundedSkillChoices--;
+      }
+      notifyListeners();
+    }
+  }
+
+  /// Removes an allocated bonus replacement skill and returns the refund choice.
+  void unresolveRefundedSkill(SkillType skill) {
+    if (_bonusReplacementSkills.remove(skill)) {
+      _refundedSkillChoices++;
+      notifyListeners();
+    }
+  }
+
+  /// Clears all resolved replacement skills and resets the refund counter.
+  void clearRefunds() {
+    _bonusReplacementSkills.clear();
+    _recalculateSkillOverlaps();
+    notifyListeners();
+  }
+
+  /// Manually triggers recalculation of skill overlaps and refund counts.
+  void recalculateSkillRefunds() {
+    _recalculateSkillOverlaps();
+    notifyListeners();
+  }
+
+  // --- Draft Mutation Methods ---
+  void setName(String? name) {
+    _draft.characterName = name;
+    notifyListeners();
+  }
+
+  void setRulesEdition(DmRulesEdition edition) {
+    _draft.rulesEdition = edition;
+    notifyListeners();
+  }
+
+  void setSpecies(EntityReference<DomainEntity>? speciesRef) {
+    _draft.speciesRef = speciesRef;
+    _selectedSpeciesSlug = speciesRef?.slug;
+    _recalculateSkillOverlaps();
+    notifyListeners();
+  }
+
+  void setSpeciesSlug(String? slug) {
+    _selectedSpeciesSlug = slug;
+    if (slug != null) {
+      _draft.speciesRef = EntityReference<DomainEntity>(
+        refType: EntityType.species,
+        slug: slug,
+        displayName: slug,
+      );
+    } else {
+      _draft.speciesRef = null;
+    }
+    _recalculateSkillOverlaps();
+    notifyListeners();
+  }
+
+  void setClass(EntityReference<DomainEntity>? classRef, {String? hitDie}) {
+    _draft.startingClassRef = classRef;
+    if (hitDie != null) {
+      _draft.startingClassHitDie = hitDie;
+    }
+    notifyListeners();
+  }
+
+  void setBackground(EntityReference<DomainEntity>? backgroundRef) {
+    _draft.backgroundRef = backgroundRef;
+    _selectedBackgroundSlug = backgroundRef?.slug;
+    _recalculateSkillOverlaps();
+    notifyListeners();
+  }
+
+  void setBackgroundSlug(String? slug) {
+    _selectedBackgroundSlug = slug;
+    if (slug != null) {
+      _draft.backgroundRef = EntityReference<DomainEntity>(
+        refType: EntityType.background,
+        slug: slug,
+        displayName: slug,
+      );
+    } else {
+      _draft.backgroundRef = null;
+    }
+    _recalculateSkillOverlaps();
+    notifyListeners();
+  }
+
+  void setScores(AbilityScores? scores) {
+    _draft.baseScores = scores;
+    notifyListeners();
+  }
+
+  void setSelectedSkills(dynamic skills) {
+    if (skills is Map<SkillType, SkillProficiencyLevel>) {
+      _draft.selectedSkills = Map.from(skills);
+    } else if (skills is Set<SkillType>) {
+      _draft.selectedSkills = {for (final s in skills) s: SkillProficiencyLevel.proficient};
+    } else if (skills is Iterable<SkillType>) {
+      _draft.selectedSkills = {for (final s in skills) s: SkillProficiencyLevel.proficient};
+    }
+    _recalculateSkillOverlaps();
+    notifyListeners();
+  }
+
+  void _syncDraftScores() {
+    _draft.baseScores = isAbilityAllocationComplete ? effectiveBaseScores : null;
   }
 
   // --- Getters ---
@@ -81,6 +337,7 @@ class CharacterBuilderController extends ChangeNotifier {
         _assignedScores.clear();
       }
     }
+    _syncDraftScores();
     notifyListeners();
   }
 
@@ -107,6 +364,7 @@ class CharacterBuilderController extends ChangeNotifier {
     if (_selectedPoolScore == score && !_availableScores.contains(score)) {
       _selectedPoolScore = null;
     }
+    _syncDraftScores();
     notifyListeners();
   }
 
@@ -115,6 +373,7 @@ class CharacterBuilderController extends ChangeNotifier {
     if (_assignedScores.containsKey(ability)) {
       _availableScores.add(_assignedScores.remove(ability)!);
       _availableScores.sort((a, b) => b.compareTo(a)); // Keep pool sorted high-to-low
+      _syncDraftScores();
       notifyListeners();
     }
   }
@@ -145,6 +404,7 @@ class CharacterBuilderController extends ChangeNotifier {
       _assignedScores.clear();
       _selectedPoolScore = null;
     }
+    _syncDraftScores();
     notifyListeners();
   }
 
@@ -159,6 +419,7 @@ class CharacterBuilderController extends ChangeNotifier {
     _assignedScores[AbilityType.wisdom] = 10;
     _assignedScores[AbilityType.charisma] = 8;
     _selectedPoolScore = null;
+    _syncDraftScores();
     notifyListeners();
   }
 
@@ -210,6 +471,7 @@ class CharacterBuilderController extends ChangeNotifier {
       _availableScores = List.of(newPool)..sort((a, b) => b.compareTo(a));
       _assignedScores.clear();
     }
+    _syncDraftScores();
     notifyListeners();
   }
 
@@ -231,6 +493,7 @@ class CharacterBuilderController extends ChangeNotifier {
       _availableScores = List.of(scores)..sort((a, b) => b.compareTo(a));
       _assignedScores.clear();
     }
+    _syncDraftScores();
     notifyListeners();
   }
 
@@ -243,12 +506,14 @@ class CharacterBuilderController extends ChangeNotifier {
     final cost = CharacterFactory.calculatePointBuyCost(updated);
     if (cost <= 27 || delta < 0) {
       _pointBuyScores = updated;
+      _syncDraftScores();
       notifyListeners();
     }
   }
 
   void setManualScore(AbilityType ability, int value) {
     _manualScores[ability] = value.clamp(3, 30);
+    _syncDraftScores();
     notifyListeners();
   }
 

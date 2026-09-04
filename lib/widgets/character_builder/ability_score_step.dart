@@ -11,8 +11,8 @@ import '../../services/rules/dnd_5e_rules_engine.dart';
 /// standard array, point buy, rolled stats, and manual entry with 100% accessible touch targets.
 class AbilityScoreStep extends StatelessWidget {
   final CharacterBuilderController controller;
-  final Race curSpecies;
-  final Background curBackground;
+  final Race? curSpecies;
+  final Background? curBackground;
   final RulesetVersion selectedRuleset;
   final Set<AbilityType> variantHumanBonuses;
   final ValueChanged<Set<AbilityType>> onVariantHumanBonusesChanged;
@@ -25,8 +25,8 @@ class AbilityScoreStep extends StatelessWidget {
   const AbilityScoreStep({
     super.key,
     required this.controller,
-    required this.curSpecies,
-    required this.curBackground,
+    this.curSpecies,
+    this.curBackground,
     required this.selectedRuleset,
     required this.variantHumanBonuses,
     required this.onVariantHumanBonusesChanged,
@@ -41,9 +41,9 @@ class AbilityScoreStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final is2014 = selectedRuleset == RulesetVersion.v2014;
-    final flexibleCount = curSpecies.flexibleAbilityChoiceCount;
-    final flexibleBonusValue = curSpecies.flexibleAbilityBonusValue;
-    final hasFlexibleLineageBonus = is2014 && flexibleCount > 0;
+    final flexibleCount = curSpecies?.flexibleAbilityChoiceCount ?? 0;
+    final flexibleBonusValue = curSpecies?.flexibleAbilityBonusValue ?? 0;
+    final hasFlexibleLineageBonus = is2014 && flexibleCount > 0 && curSpecies != null;
 
     return ListenableBuilder(
       listenable: controller,
@@ -803,7 +803,7 @@ class AbilityScoreStep extends StatelessWidget {
                 const Icon(Icons.stars, color: Colors.cyanAccent, size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  '${curSpecies.name} Lineage Bonus (+$flexibleBonusValue to $flexibleCount Score${flexibleCount > 1 ? 's' : ''})',
+                  '${curSpecies?.name ?? "Species"} Lineage Bonus (+$flexibleBonusValue to $flexibleCount Score${flexibleCount > 1 ? 's' : ''})',
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent, fontSize: 13),
                 ),
               ],
@@ -926,6 +926,31 @@ class AbilityScoreStep extends StatelessWidget {
       );
     }
 
+    return _buildSpeciesRacialBonusCard(context);
+  }
+
+  Widget _buildSpeciesRacialBonusCard(BuildContext context) {
+    if (curSpecies == null) {
+      return Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white10,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.cyanAccent, size: 16),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Lineage bonuses will apply once a species is chosen.',
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -938,7 +963,7 @@ class AbilityScoreStep extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '2014 Species Racial Bonus: ${curSpecies.abilityScoreSummary}',
+              '2014 Species Racial Bonus: ${curSpecies!.abilityScoreSummary}',
               style: const TextStyle(fontSize: 12, color: Colors.white70),
             ),
           ),

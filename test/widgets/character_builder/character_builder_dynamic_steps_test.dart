@@ -29,14 +29,20 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 2: Species -> Next Step
+      // Step 2: Species -> Select Human -> Next Step
+      await tester.tap(find.text('Human'));
+      await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -800));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 3: Class (default is Fighter) -> Next Step
+      // Step 3: Class -> Select Fighter -> Next Step
       expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -800));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
@@ -84,7 +90,9 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 2: Species -> Next Step
+      // Step 2: Species -> Select Human -> Next Step
+      await tester.tap(find.text('Human'));
+      await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -800));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
@@ -99,6 +107,10 @@ void main() {
 
       // Advance through Class Decisions, Background, Ability Scores, Equipment until Spells
       while (!tester.any(find.textContaining('Spells & Cantrips'))) {
+        if (tester.any(find.text('Soldier'))) {
+          await tester.tap(find.text('Soldier'));
+          await tester.pumpAndSettle();
+        }
         if (tester.any(find.text('Auto-Assign'))) {
           await tester.tap(find.text('Auto-Assign'));
           await tester.pumpAndSettle();
@@ -149,13 +161,59 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 2: Species -> Next Step
+      // Step 2: Species -> Select Human -> Next Step
+      await tester.tap(find.text('Human'));
+      await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -800));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 3: Class (Fighter default has Athletics selected, default Soldier background also has Athletics)
+      // Step 3: Class -> Select Fighter -> Next Step
+      expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
+
+      // Deselect Acrobatics and select Athletics to test collision with Soldier
+      await tester.tap(find.widgetWithText(FilterChip, 'Acrobatics').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilterChip, 'Athletics').first);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step: Class Decisions -> Select Defense -> Next Step
+      if (find.text('Defense').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Defense'));
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Next Step'));
+        await tester.pumpAndSettle();
+      }
+
+      // Step 4: Background -> Select Soldier (grants Athletics & Intimidation)
+      expect(find.text('Step 4: Choose Background Origin'), findsOneWidget);
+      await tester.tap(find.text('Soldier'));
+      await tester.pumpAndSettle();
+
+      // Navigate back to Class step to observe skill collision
+      await tester.drag(find.byType(ListView), const Offset(0, -1000));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Previous'));
+      await tester.pumpAndSettle();
+      if (find.text('Fighter Decisions & Specializations').evaluate().isNotEmpty) {
+        await tester.drag(find.byType(ListView), const Offset(0, -1000));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Previous'));
+        await tester.pumpAndSettle();
+      }
+
+      // Fighter has Athletics selected by default and Soldier also grants Athletics
       expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
       expect(find.textContaining('Skill Collision Detected: Athletics'), findsOneWidget);
       expect(find.textContaining('Compensatory Pick(s):'), findsOneWidget);

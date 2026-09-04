@@ -16,6 +16,38 @@ void main() {
       if (find.textContaining('Ability Score Allocation').evaluate().isNotEmpty) {
         break;
       }
+      if (find.text('Step 2: Choose Species / Race').evaluate().isNotEmpty) {
+        // If species not yet selected, select Human
+        if (find.byIcon(Icons.radio_button_checked).evaluate().isEmpty) {
+          final human = find.widgetWithText(ListTile, 'Human');
+          if (human.evaluate().isNotEmpty) {
+            await tester.tap(human.first);
+            await tester.pumpAndSettle();
+          }
+        }
+      } else if (find.text('Step 3: Choose Class & Starting Skills').evaluate().isNotEmpty) {
+        final dropdown = find.byType(DropdownButtonFormField<String>);
+        if (dropdown.evaluate().isNotEmpty) {
+          await tester.tap(dropdown.first);
+          await tester.pumpAndSettle();
+          await tester.tap(find.textContaining('Fighter (').last);
+          await tester.pumpAndSettle();
+        }
+      } else if (find.text('Fighter Decisions & Specializations').evaluate().isNotEmpty) {
+        final defense = find.widgetWithText(ListTile, 'Defense');
+        if (defense.evaluate().isNotEmpty) {
+          await tester.tap(defense.first);
+          await tester.pumpAndSettle();
+        }
+      } else if (find.textContaining('Choose Background').evaluate().isNotEmpty) {
+        final soldier = find.widgetWithText(ListTile, 'Soldier');
+        if (soldier.evaluate().isNotEmpty) {
+          await tester.tap(soldier.first);
+          await tester.pumpAndSettle();
+        }
+      }
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
     }

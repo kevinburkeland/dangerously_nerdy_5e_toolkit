@@ -43,7 +43,11 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 2 Species -> Step 3 Class
+      // Step 2 Species -> Select Human -> Step 3 Class
+      await tester.tap(find.widgetWithText(ListTile, 'Human').first);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
@@ -54,10 +58,19 @@ void main() {
       await tester.pumpAndSettle();
 
       // Step 3 Class -> Step 4 Background
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 4 Background -> Step 5 Ability Scores
+      // Step 4 Background -> Select Soldier -> Step 5 Ability Scores
+      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
+      if (soldierFinder.evaluate().isNotEmpty) {
+        await tester.tap(soldierFinder.first);
+        await tester.pumpAndSettle();
+      }
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
@@ -126,7 +139,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Advance to Class Step
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step')); // Step 1 -> 2
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Human').first);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step')); // Step 2 -> 3
       await tester.pumpAndSettle();
@@ -138,7 +157,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // Advance to Equipment Step
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step')); // Step 3 -> 4
+      await tester.pumpAndSettle();
+      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
+      if (soldierFinder.evaluate().isNotEmpty) {
+        await tester.tap(soldierFinder.first);
+        await tester.pumpAndSettle();
+      }
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step')); // Step 4 -> 5
       await tester.pumpAndSettle();
