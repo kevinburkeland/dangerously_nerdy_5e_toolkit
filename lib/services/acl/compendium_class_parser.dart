@@ -1,4 +1,5 @@
 import '../../models/domain/core_types.dart';
+import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import 'entry_node_transformer.dart';
 
@@ -107,6 +108,12 @@ class CompendiumClassParser {
       customProperties['spellsKnownProgression'] = raw['spellsKnownProgression'];
     }
 
+    final grants = extractSpellsGrants(
+      raw['additionalSpells'] ?? raw['spells'],
+      'class',
+      slug,
+    );
+
     return CharacterClass(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
@@ -120,6 +127,7 @@ class CompendiumClassParser {
       subclasses: subclasses,
       subclassSelectionLevel: subclassSelectionLevel,
       featureDecisions: featureDecisions,
+      grants: grants,
       customProperties: customProperties,
     );
   }
@@ -191,12 +199,19 @@ class CompendiumClassParser {
       customProperties['subclassSpells'] = raw['subclassSpells'];
     }
 
+    final grants = extractSpellsGrants(
+      raw['additionalSpells'] ?? raw['subclassSpells'],
+      'subclass',
+      slug,
+    );
+
     return Subclass(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       classSlug: classSlug,
       shortName: shortName,
       featuresMarkdown: featuresMarkdown,
+      grants: grants,
       customProperties: customProperties,
     );
   }
@@ -451,5 +466,70 @@ class CompendiumClassParser {
       return RulesetVersion.v2014;
     }
     return RulesetVersion.homebrew;
+  }
+
+  List<FeatureGrant> extractSpellsGrants(dynamic addSpellsData, String ownerPrefix, String ownerSlug) {
+    if (addSpellsData == null) return const [];
+    final grants = <FeatureGrant>[];
+    final seenSlugs = <String>{};
+
+    void processSpellItem(dynamic item) {
+      if (item == null) return;
+      if (item is String) {
+        final clean = item.split('|').first.replaceAll('#c', '').trim();
+        if (clean.isNotEmpty && !clean.startsWith('{')) {
+          final slug = _slugify(clean);
+          if (slug.isNotEmpty && seenSlugs.add(slug)) {
+            grants.add(FeatureGrant.bonusSpell(
+              grantId: '$ownerPrefix-$ownerSlug-spell-$slug',
+              slug: slug,
+              displayName: clean,
+              label: clean,
+            ));
+          }
+        }
+      } else if (item is List) {
+        for (final subItem in item) {
+          processSpellItem(subItem);
+        }
+      } else if (item is Map) {
+        for (final entry in item.entries) {
+          final k = entry.key.toString().toLowerCase();
+          if (k == 'choose' || k == 'count' || k == 'all') continue;
+          processSpellItem(entry.value);
+        }
+      }
+    }
+
+    void processSpellGroup(dynamic group) {
+      if (group == null) return;
+      if (group is List) {
+        for (final item in group) {
+          processSpellGroup(item);
+        }
+      } else if (group is Map) {
+        bool hadKnownSubkey = false;
+        for (final key in ['prepared', 'expanded', 'innate', 'known', 'spells']) {
+          if (group.containsKey(key)) {
+            hadKnownSubkey = true;
+            processSpellItem(group[key]);
+          }
+        }
+        if (!hadKnownSubkey) {
+          for (final entry in group.entries) {
+            final k = entry.key.toString().toLowerCase();
+            if (k == 'name' || k == 'source' || k == 'class' || k == 'subclass' || k == 'choose' || k == 'count' || k == 'all') {
+              continue;
+            }
+            processSpellItem(entry.value);
+          }
+        }
+      } else if (group is String) {
+        processSpellItem(group);
+      }
+    }
+
+    processSpellGroup(addSpellsData);
+    return grants;
   }
 }

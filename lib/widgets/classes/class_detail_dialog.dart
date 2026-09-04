@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../models/characters/subclass_spells_library.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
+import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../../models/spellbook_data.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
-import '../glyphs/glyph_tokens.dart';
+import '../spellbook/spell_comparison_dialog.dart';
 
 /// Comprehensive modal presenting complete class mechanics, proficiencies,
 /// feature progression text, and subclass archetypes breakdown.
@@ -47,21 +52,85 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
   late bool _pinned;
   late TextEditingController _notesController;
   final EntityFluffService _fluffService = EntityFluffService();
+  final TextEditingController _spellSearchController = TextEditingController();
+  String _spellSearchQuery = '';
+  int? _spellLevelFilter;
+  List<SpellItem> _allClassSpells = [];
+  final Map<String, String> _spellToSubclassMap = {};
+  bool _hasSpells = false;
 
   @override
   void initState() {
     super.initState();
     _pinned = widget.isPinned;
-    final tabCount = widget.characterClass.subclasses.isNotEmpty ? 3 : 2;
-    _tabController = TabController(length: tabCount, vsync: this);
     final existing = _fluffService.getUserNotes('class', widget.characterClass.id.slug) ?? '';
     _notesController = TextEditingController(text: existing);
+
+    _initSpells();
+
+    final tabCount = 1 +
+        (widget.characterClass.subclasses.isNotEmpty ? 1 : 0) +
+        (_hasSpells ? 1 : 0) +
+        1;
+    _tabController = TabController(length: tabCount, vsync: this);
+  }
+
+  void _initSpells() {
+    final cls = widget.characterClass;
+    final slug = cls.id.slug.toLowerCase().trim();
+    final spellClass = SpellClass.values.where(
+      (sc) => sc.name.toLowerCase() == slug || sc.label.toLowerCase() == cls.name.toLowerCase().trim(),
+    ).firstOrNull;
+
+    final baseSpells = spellClass != null
+        ? SpellbookLibrary.getSpellsByClass(spellClass)
+        : <SpellItem>[];
+
+    final allSpellsMap = <String, SpellItem>{};
+    for (final s in baseSpells) {
+      allSpellsMap[s.id.toLowerCase()] = s;
+    }
+
+    // Include subclass bonus spells
+    for (final sub in cls.subclasses) {
+      final bonusNames = <String>{};
+      for (final g in sub.grants) {
+        if (g.type == GrantType.bonusSpell) {
+          final name = g.payload['displayName']?.toString() ?? g.label ?? g.payload['slug']?.toString();
+          if (name != null && name.isNotEmpty) {
+            bonusNames.add(name.toLowerCase());
+          }
+        }
+      }
+      bonusNames.addAll(SubclassSpellsLibrary.getExpandedSpells(cls.id.slug, sub.id.slug));
+
+      for (final bName in bonusNames) {
+        final clean = bName.trim().toLowerCase();
+        final found = SpellbookLibrary.getSpellByName(clean) ??
+            SpellbookLibrary.getSpellById(clean.replaceAll(' ', '-')) ??
+            SpellbookLibrary.getSpellById(clean.replaceAll(' ', '_'));
+        if (found != null) {
+          allSpellsMap[found.id.toLowerCase()] = found;
+          _spellToSubclassMap[found.id.toLowerCase()] = sub.name;
+        }
+      }
+    }
+
+    _allClassSpells = allSpellsMap.values.toList()
+      ..sort((a, b) {
+        final lvlCmp = a.level.compareTo(b.level);
+        if (lvlCmp != 0) return lvlCmp;
+        return a.name.compareTo(b.name);
+      });
+
+    _hasSpells = _allClassSpells.isNotEmpty || cls.spellcastingAbility != null;
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _notesController.dispose();
+    _spellSearchController.dispose();
     super.dispose();
   }
 
@@ -304,9 +373,12 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
             // Tab bar
             TabBar(
               controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
               tabs: [
                 const Tab(text: 'Class Features'),
                 if (cls.subclasses.isNotEmpty) Tab(text: 'Subclasses (${cls.subclasses.length})'),
+                if (_hasSpells) Tab(text: 'Spells (${_allClassSpells.length})'),
                 const Tab(text: 'Lore & Notes'),
               ],
             ),
@@ -319,6 +391,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
                 children: [
                   _buildFeaturesTab(context, accentColor),
                   if (cls.subclasses.isNotEmpty) _buildSubclassesTab(context, accentColor),
+                  if (_hasSpells) _buildSpellsTab(context, accentColor),
                   _buildLoreNotesTab(context, accentColor),
                 ],
               ),
@@ -416,6 +489,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
                     ),
                 ],
               ),
+              _buildSubclassSpellsChips(context, sub, accentColor),
               const SizedBox(height: 8),
               FormattedMarkdownText(
                 sub.featuresMarkdown,
@@ -503,6 +577,370 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
             contentPadding: const EdgeInsets.all(12),
           ),
           onChanged: (val) => _fluffService.setUserNotes('class', slug, val),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubclassSpellsChips(BuildContext context, Subclass sub, Color accentColor) {
+    final theme = Theme.of(context);
+    final bonusSpellNames = <String>{};
+    for (final g in sub.grants) {
+      if (g.type == GrantType.bonusSpell) {
+        final name = g.payload['displayName']?.toString() ?? g.label ?? g.payload['slug']?.toString();
+        if (name != null && name.isNotEmpty) {
+          bonusSpellNames.add(name);
+        }
+      }
+    }
+    final libExpanded = SubclassSpellsLibrary.getExpandedSpells(widget.characterClass.id.slug, sub.id.slug);
+    for (final exp in libExpanded) {
+      final cap = exp.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+      bonusSpellNames.add(cap);
+    }
+
+    if (bonusSpellNames.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final sortedSpells = bonusSpellNames.toList()..sort();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: accentColor.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.auto_awesome, size: 13, color: accentColor),
+                const SizedBox(width: 5),
+                Text(
+                  'SUBCLASS / BONUS SPELLS',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.6,
+                    color: accentColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: sortedSpells.map((spName) {
+                final clean = spName.toLowerCase().trim();
+                final foundSpell = SpellbookLibrary.getSpellByName(clean) ??
+                    SpellbookLibrary.getSpellById(clean.replaceAll(' ', '-')) ??
+                    SpellbookLibrary.getSpellById(clean.replaceAll(' ', '_'));
+                final isPinned = foundSpell != null &&
+                    (SettingsScope.maybeOf(context)?.settings.pinnedSpellIds.contains(foundSpell.id) ?? false);
+
+                return ActionChip(
+                  avatar: Icon(
+                    Icons.auto_awesome,
+                    size: 12,
+                    color: foundSpell != null ? accentColor : Colors.grey,
+                  ),
+                  label: Text(
+                    spName,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: accentColor.withValues(alpha: 0.12),
+                  side: BorderSide(color: accentColor.withValues(alpha: 0.3)),
+                  onPressed: () {
+                    if (foundSpell != null) {
+                      SpellComparisonDialog.show(
+                        context,
+                        spell: foundSpell,
+                        isPinned: isPinned,
+                        onTogglePin: () {
+                          SettingsScope.maybeOf(context)?.togglePinSpell(foundSpell.id);
+                        },
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$spName — expanded spell granted by ${sub.name}. Full text available in spellbook.'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpellsTab(BuildContext context, Color accentColor) {
+    final theme = Theme.of(context);
+
+    // Filter spells
+    final filtered = _allClassSpells.where((s) {
+      if (_spellSearchQuery.isNotEmpty) {
+        final query = _spellSearchQuery.toLowerCase();
+        final matchesName = s.name.toLowerCase().contains(query);
+        final matchesSchool = s.school.label.toLowerCase().contains(query);
+        final sub = _spellToSubclassMap[s.id.toLowerCase()];
+        final matchesSub = sub != null && sub.toLowerCase().contains(query);
+        if (!matchesName && !matchesSchool && !matchesSub) return false;
+      }
+
+      if (_spellLevelFilter != null) {
+        if (_spellLevelFilter == -1) {
+          if (!_spellToSubclassMap.containsKey(s.id.toLowerCase())) return false;
+        } else if (s.level != _spellLevelFilter) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
+    // Collect available spell levels
+    final availableLevels = <int>{};
+    for (final s in _allClassSpells) {
+      availableLevels.add(s.level);
+    }
+    final sortedLevels = availableLevels.toList()..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Search bar
+        Container(
+          height: 38,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)),
+          ),
+          child: TextField(
+            controller: _spellSearchController,
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Search ${widget.characterClass.name} spells, schools, or subclasses...',
+              hintStyle: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
+              prefixIcon: const Icon(Icons.search, size: 18),
+              suffixIcon: _spellSearchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 16),
+                      onPressed: () => setState(() {
+                        _spellSearchController.clear();
+                        _spellSearchQuery = '';
+                      }),
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+            onChanged: (val) => setState(() => _spellSearchQuery = val.trim().toLowerCase()),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Level Filter Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              FilterChip(
+                label: Text('All (${_allClassSpells.length})'),
+                selected: _spellLevelFilter == null,
+                visualDensity: VisualDensity.compact,
+                onSelected: (_) => setState(() => _spellLevelFilter = null),
+              ),
+              const SizedBox(width: 6),
+              if (_spellToSubclassMap.isNotEmpty) ...[
+                FilterChip(
+                  avatar: const Icon(Icons.auto_awesome, size: 12),
+                  label: Text('Subclass (${_spellToSubclassMap.length})'),
+                  selected: _spellLevelFilter == -1,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) => setState(() => _spellLevelFilter = _spellLevelFilter == -1 ? null : -1),
+                ),
+                const SizedBox(width: 6),
+              ],
+              for (final lvl in sortedLevels) ...[
+                FilterChip(
+                  label: Text(lvl == 0 ? 'Cantrip' : 'Level $lvl'),
+                  selected: _spellLevelFilter == lvl,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) => setState(() => _spellLevelFilter = _spellLevelFilter == lvl ? null : lvl),
+                ),
+                const SizedBox(width: 6),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Spells List
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_fix_normal, size: 36, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No spells found',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'No spells match your current search or level filters.',
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 6),
+                  itemBuilder: (context, idx) {
+                    final spell = filtered[idx];
+                    final subName = _spellToSubclassMap[spell.id.toLowerCase()];
+                    final rules = spell.getRules(DmRulesEdition.v2024);
+                    final isPinned = SettingsScope.maybeOf(context)?.settings.pinnedSpellIds.contains(spell.id) ?? false;
+                    final isHomebrew = spell.id.startsWith('custom_') || spell.tags.contains('homebrew');
+
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          SpellComparisonDialog.show(
+                            context,
+                            spell: spell,
+                            isPinned: isPinned,
+                            onTogglePin: () {
+                              SettingsScope.maybeOf(context)?.togglePinSpell(spell.id);
+                            },
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: accentColor.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  spell.level == 0 ? 'C' : '${spell.level}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: accentColor,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            spell.name,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                          ),
+                                        ),
+                                        if (subName != null)
+                                          Container(
+                                            margin: const EdgeInsets.only(left: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: accentColor.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              subName,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: accentColor,
+                                              ),
+                                            ),
+                                          ),
+                                        if (isHomebrew)
+                                          Container(
+                                            margin: const EdgeInsets.only(left: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: Colors.purple.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: const Text(
+                                              'Homebrew',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.purpleAccent,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${spell.levelLabel} ${spell.school.label} • ${rules.castingTime} • ${rules.range}${rules.concentration ? " • Conc." : ""}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 18,
+                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );

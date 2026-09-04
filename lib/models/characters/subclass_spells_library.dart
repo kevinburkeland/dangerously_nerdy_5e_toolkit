@@ -1,5 +1,7 @@
 import '../../models/spellbook_data.dart';
 import '../dm_screen_data.dart';
+import '../domain/feature_grant.dart';
+import 'srd_classes_library.dart';
 
 /// Central repository and lookup engine for 5e Subclass Expanded Spells & Patron Spell Lists.
 class SubclassSpellsLibrary {
@@ -200,7 +202,8 @@ class SubclassSpellsLibrary {
   /// Returns the set of expanded spell names for a given class & subclass slug.
   static Set<String> getExpandedSpells(String classSlug, String? subclassSlug) {
     if (subclassSlug == null || subclassSlug.isEmpty) return const {};
-    final cleanSub = subclassSlug.toLowerCase().replaceAll('-', '_');
+    final cleanSub = subclassSlug.toLowerCase().replaceAll('-', '_').trim();
+    final cleanSubHyphen = subclassSlug.toLowerCase().replaceAll('_', '-').trim();
 
     final results = <String>{};
     for (final entry in _subclassExpandedSpells.entries) {
@@ -208,6 +211,33 @@ class SubclassSpellsLibrary {
         results.addAll(entry.value);
       }
     }
+
+    // Dynamic resolution from loaded subclasses (including homebrew)
+    final matchedSubs = SrdClassesLibrary.allSubclasses.where((s) {
+      final sSlug = s.id.slug.toLowerCase().trim();
+      final sName = s.name.toLowerCase().trim();
+      final sShort = s.shortName.toLowerCase().trim();
+      return sSlug == cleanSubHyphen ||
+          sSlug == cleanSub ||
+          sName == cleanSub ||
+          sName == cleanSubHyphen ||
+          sShort == cleanSub ||
+          sShort == cleanSubHyphen ||
+          cleanSub.contains(sSlug) ||
+          cleanSubHyphen.contains(sSlug);
+    });
+
+    for (final sub in matchedSubs) {
+      for (final g in sub.grants) {
+        if (g.type == GrantType.bonusSpell) {
+          final name = g.payload['displayName']?.toString() ?? g.label ?? g.payload['slug']?.toString();
+          if (name != null && name.isNotEmpty) {
+            results.add(name.toLowerCase());
+          }
+        }
+      }
+    }
+
     return results;
   }
 
@@ -237,9 +267,26 @@ class SubclassSpellsLibrary {
 
   /// Indicates whether the class's subclass spells are auto-prepared (e.g. Cleric Domains, Paladin Oaths)
   /// as opposed to being expanded options added to the spells known pool (e.g. Warlock Patrons).
-  static bool isAlwaysPreparedSubclass(String classSlug) {
+  static bool isAlwaysPreparedSubclass(String classSlug, [String? subclassSlug]) {
     final slug = classSlug.toLowerCase();
-    return slug == 'cleric' || slug == 'paladin' || slug == 'druid';
+    if (slug == 'cleric' || slug == 'paladin' || slug == 'druid') return true;
+
+    if (subclassSlug != null && subclassSlug.isNotEmpty) {
+      final cleanSub = subclassSlug.toLowerCase().replaceAll('_', '-').trim();
+      final match = SrdClassesLibrary.allSubclasses.where((s) {
+        final sSlug = s.id.slug.toLowerCase().trim();
+        return sSlug == cleanSub || s.name.toLowerCase().trim() == cleanSub;
+      }).firstOrNull;
+      if (match != null) {
+        final addSpells = match.customProperties['additionalSpells'];
+        if (addSpells is List) {
+          for (final group in addSpells) {
+            if (group is Map && group.containsKey('prepared')) return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   /// Returns the list of auto-granted [SpellItem]s for a given class, subclass, and class level.
@@ -249,14 +296,14 @@ class SubclassSpellsLibrary {
     required int classLevel,
     required DmRulesEdition edition,
   }) {
-    if (!isAlwaysPreparedSubclass(classSlug) || subclassSlug == null || subclassSlug.isEmpty) {
+    if (!isAlwaysPreparedSubclass(classSlug, subclassSlug) || subclassSlug == null || subclassSlug.isEmpty) {
       return const [];
     }
 
     final maxTier = switch (classSlug.toLowerCase()) {
       'cleric' || 'druid' => (classLevel + 1) ~/ 2,
       'paladin' => (classLevel < 3) ? 0 : ((classLevel + 3) ~/ 4),
-      _ => 0,
+      _ => (classLevel + 1) ~/ 2,
     };
 
     if (maxTier <= 0) return const [];

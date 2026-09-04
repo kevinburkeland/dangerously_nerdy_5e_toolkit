@@ -40,9 +40,39 @@ class FormattedMarkdownText extends StatelessWidget {
       height: style?.height ?? 1.4,
     );
 
-    final rawText = markdown.trim();
+    var rawText = markdown.trim();
     if (rawText.isEmpty) {
       return const SizedBox.shrink();
+    }
+    if (rawText.contains('{@')) {
+      rawText = rawText.replaceAllMapped(RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^}]+))?\}'), (match) {
+        final tag = match.group(1)?.toLowerCase();
+        final content = match.group(2) ?? '';
+        final parts = content.split('|');
+        final primary = parts[0].trim();
+        final display = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+        switch (tag) {
+          case 'dice':
+          case 'd20':
+          case 'damage':
+          case 'b':
+          case 'bold':
+            return '**$primary**';
+          case 'i':
+          case 'italic':
+            return '*$primary*';
+          case 'code':
+            return '`$primary`';
+          case 'h':
+            return '*Hit:* ';
+          case 'dc':
+            return 'DC $primary';
+          case 'note':
+            return '> **Note:** $primary';
+          default:
+            return display;
+        }
+      });
     }
 
     final paragraphs = rawText.split(RegExp(r'\n\s*\n'));

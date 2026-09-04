@@ -620,15 +620,24 @@ class EntryNodeTransformer {
         case 'note':
           return '> **Note:** $primary';
 
+        case 'book':
+        case 'variantrule':
+          return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+
         case 'quickref':
         case 'filter':
         case 'link':
         case 'area':
         case 'deck':
-          return primary;
+        case 'card':
+        case 'deity':
+        case 'vehicle':
+        case 'object':
+        case 'trap':
+          return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
 
         default:
-          return primary;
+          return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
       }
     });
   }

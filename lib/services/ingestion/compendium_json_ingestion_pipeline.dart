@@ -1,6 +1,5 @@
 import 'dart:convert';
 import '../../models/domain/core_types.dart';
-import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
@@ -367,47 +366,47 @@ class CompendiumJsonIngestionPipeline {
           );
         }).toList();
 
-        final revitalizedSubclasses = bundle.subclasses.map((s) {
-          if (s.customProperties.containsKey('additionalSpells') && s.grants.isEmpty) {
-            final addSpells = s.customProperties['additionalSpells'];
-            final grants = <FeatureGrant>[];
-            if (addSpells is List) {
-              for (final spGroup in addSpells) {
-                if (spGroup is Map) {
-                  final spellsMap = spGroup['expanded'] ?? spGroup['innate'] ?? spGroup['known'] ?? spGroup['spells'];
-                  if (spellsMap is Map) {
-                    spellsMap.forEach((lvl, spList) {
-                      if (spList is List) {
-                        for (final sp in spList) {
-                          final spName = sp.toString().split('|').first.replaceAll('#c', '').trim();
-                          final spSlug = spName.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), '-').replaceAll(RegExp(r"^-+|-+$"), '');
-                          if (spSlug.isNotEmpty) {
-                            grants.add(FeatureGrant.bonusSpell(
-                              grantId: 'subclass-${s.id.slug}-spell-$spSlug',
-                              slug: spSlug,
-                              displayName: spName,
-                              label: spName,
-                            ));
-                          }
-                        }
-                      }
-                    });
-                  }
-                }
-              }
-            }
+        final revitalizedClasses = bundle.classes.map((c) {
+          var updated = c;
+          if (c.featuresMarkdown.contains('{@')) {
+            updated = updated.copyWith(featuresMarkdown: cleanRawTags(updated.featuresMarkdown));
+          }
+          if (c.grants.isEmpty && (c.customProperties.containsKey('additionalSpells') || c.customProperties.containsKey('spells'))) {
+            final grants = classParser.extractSpellsGrants(
+              c.customProperties['additionalSpells'] ?? c.customProperties['spells'],
+              'class',
+              c.id.slug,
+            );
             if (grants.isNotEmpty) {
-              return s.copyWith(grants: [...s.grants, ...grants]);
+              updated = updated.copyWith(grants: [...updated.grants, ...grants]);
             }
           }
-          return s;
+          return updated;
+        }).toList();
+
+        final revitalizedSubclasses = bundle.subclasses.map((s) {
+          var updated = s;
+          if (s.featuresMarkdown.contains('{@')) {
+            updated = updated.copyWith(featuresMarkdown: cleanRawTags(updated.featuresMarkdown));
+          }
+          if (s.grants.isEmpty && (s.customProperties.containsKey('additionalSpells') || s.customProperties.containsKey('subclassSpells'))) {
+            final grants = classParser.extractSpellsGrants(
+              s.customProperties['additionalSpells'] ?? s.customProperties['subclassSpells'],
+              'subclass',
+              s.id.slug,
+            );
+            if (grants.isNotEmpty) {
+              updated = updated.copyWith(grants: [...updated.grants, ...grants]);
+            }
+          }
+          return updated;
         }).toList();
 
         return IngestionBatchResult(
           spells: revitalizedSpells,
           monsters: revitalizedMonsters,
           items: revitalizedItems,
-          classes: bundle.classes,
+          classes: revitalizedClasses,
           subclasses: revitalizedSubclasses,
           races: revitalizedRaces,
           feats: revitalizedFeats,
@@ -1018,6 +1017,62 @@ class CompendiumJsonIngestionPipeline {
       return 1;
     }
     return 0;
+  }
+
+  static String cleanRawTags(String input) {
+    if (!input.contains('{@')) return input;
+    return input.replaceAllMapped(RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^}]+))?\}'), (match) {
+      final tag = match.group(1)?.toLowerCase();
+      final content = match.group(2) ?? '';
+      final parts = content.split('|');
+      final primary = parts[0].trim();
+      final display = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+
+      switch (tag) {
+        case 'dice':
+        case 'd20':
+          return '**`$primary`**';
+        case 'damage':
+          return '**`$primary`**';
+        case 'h':
+          return '*Hit:* ';
+        case 'dc':
+          return 'DC $primary';
+        case 'b':
+        case 'bold':
+          return '**$primary**';
+        case 'i':
+        case 'italic':
+          return '*$primary*';
+        case 'code':
+          return '`$primary`';
+        case 'note':
+          return '> **Note:** $primary';
+        case 'book':
+        case 'variantrule':
+        case 'spell':
+        case 'item':
+        case 'creature':
+        case 'monster':
+        case 'class':
+        case 'subclass':
+        case 'race':
+        case 'species':
+        case 'feat':
+        case 'background':
+        case 'classfeature':
+        case 'subclassfeature':
+        case 'condition':
+        case 'status':
+        case 'skill':
+        case 'sense':
+        case 'action':
+        case 'table':
+          return display;
+        default:
+          return display;
+      }
+    });
   }
 
   String _slugify(String name) {
