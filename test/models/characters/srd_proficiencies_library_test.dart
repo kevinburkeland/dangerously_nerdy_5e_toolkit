@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_proficiencies_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 
 void main() {
   group('SrdProficienciesLibrary Tests', () {
