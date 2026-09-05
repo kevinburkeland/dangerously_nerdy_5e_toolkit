@@ -3928,9 +3928,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                         color: item.isEquipped ? Colors.cyanAccent : Colors.white60),
                     tooltip: item.isEquipped ? 'Unequip' : 'Equip',
                     onPressed: () {
+                      final targetSlot = InventoryTransactionService.resolveDefaultSlot(item);
                       final updated = item.isEquipped
                           ? InventoryTransactionService.unequipItem(char, item.instanceId)
-                          : InventoryTransactionService.equipItem(char, item.instanceId, EquipmentSlot.mainHand);
+                          : InventoryTransactionService.equipItem(char, item.instanceId, targetSlot);
                       setState(() {
                         _character = updated;
                         _recalculateStats();
@@ -4050,6 +4051,20 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                     foregroundColor: Colors.white,
                                   ),
                                   onPressed: () {
+                                    final resolvedSlot = InventoryTransactionService.resolveDefaultSlot(
+                                      InventoryItemInstance(
+                                        instanceId: 'temp',
+                                        itemRef: EntityReference(
+                                          refType: EntityType.equipment,
+                                          slug: item.id.replaceAll('_', '-'),
+                                          displayName: item.name,
+                                        ),
+                                        customProperties: {
+                                          'category': item.category.name,
+                                          'tags': item.tags,
+                                        },
+                                      ),
+                                    );
                                     final newInstance = InventoryItemInstance(
                                       instanceId: 'srd-${item.id}-${DateTime.now().millisecondsSinceEpoch}',
                                       itemRef: EntityReference(
@@ -4058,7 +4073,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                         displayName: item.name,
                                       ),
                                       quantity: 1,
+                                      equippedSlot: resolvedSlot,
                                       requiresAttunement: item.requiresAttunement,
+                                      customProperties: {
+                                        'category': item.category.name,
+                                        'tags': item.tags,
+                                      },
                                     );
                                     final updatedInventory = List<InventoryItemInstance>.from(char.inventory)..add(newInstance);
                                     final updatedChar = char.copyWith(inventory: updatedInventory);

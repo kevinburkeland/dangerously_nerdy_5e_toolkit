@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/loot_models.dart';
+import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/party_purse.dart';
 
 /// Result container for atomic loot transactions
@@ -17,6 +18,163 @@ class LootTransferResult {
 
 /// Inventory and Attunement Transaction Service
 class InventoryTransactionService {
+  /// Resolves the intended [EquipmentSlot] for an item based on its slot property,
+  /// category, tags, or name.
+  static EquipmentSlot resolveDefaultSlot(
+    InventoryItemInstance instance, {
+    EquipmentItem? resolvedItem,
+  }) {
+    if (instance.equippedSlot != null) {
+      return instance.equippedSlot!;
+    }
+
+    final props = {
+      ...instance.customProperties,
+      if (resolvedItem != null) ...resolvedItem.customProperties,
+    };
+
+    // 1. Explicit defaultSlot in properties
+    if (props['defaultSlot'] != null) {
+      final ds = props['defaultSlot'];
+      if (ds is EquipmentSlot) return ds;
+      if (ds is String) {
+        final match = EquipmentSlot.values.where(
+          (s) => s.name.toLowerCase() == ds.toLowerCase(),
+        );
+        if (match.isNotEmpty) return match.first;
+      }
+    }
+
+    final nameLower = instance.displayName.toLowerCase();
+    final slugLower = instance.itemRef.slug.toLowerCase();
+    final categoryLower = (props['category']?.toString() ??
+            resolvedItem?.itemType ??
+            '')
+        .toLowerCase();
+    final tags = (props['tags'] is List
+            ? (props['tags'] as List).map((e) => e.toString().toLowerCase()).toList()
+            : <String>[]);
+
+    // 2. Shield check
+    if (props['isShield'] == true ||
+        categoryLower == 'shield' ||
+        tags.contains('shield') ||
+        nameLower.contains('shield') ||
+        slugLower.contains('shield')) {
+      return EquipmentSlot.shield;
+    }
+
+    // 3. Armor check
+    if (categoryLower == 'armor' ||
+        categoryLower.contains('armor') ||
+        props['armorType'] != null ||
+        props['baseAc'] != null ||
+        tags.contains('armor') ||
+        tags.contains('heavy') ||
+        tags.contains('medium') ||
+        tags.contains('light') ||
+        nameLower.contains('armor') ||
+        nameLower.contains('plate') ||
+        nameLower.contains('chain mail') ||
+        nameLower.contains('ring mail') ||
+        nameLower.contains('splint') ||
+        nameLower.contains('leather') ||
+        nameLower.contains('padded') ||
+        nameLower.contains('hide') ||
+        nameLower.contains('breastplate') ||
+        slugLower.contains('armor') ||
+        slugLower.contains('plate')) {
+      return EquipmentSlot.armor;
+    }
+
+    // 4. Ring check
+    if (categoryLower == 'ring' ||
+        tags.contains('ring') ||
+        nameLower.startsWith('ring of') ||
+        nameLower.contains(' ring')) {
+      return EquipmentSlot.ring1;
+    }
+
+    // 5. Cloak check
+    if (categoryLower == 'cloak' ||
+        tags.contains('cloak') ||
+        nameLower.contains('cloak') ||
+        nameLower.contains('cape') ||
+        nameLower.contains('mantle')) {
+      return EquipmentSlot.cloak;
+    }
+
+    // 6. Boots / Footwear
+    if (categoryLower == 'boots' ||
+        tags.contains('boots') ||
+        nameLower.contains('boots') ||
+        nameLower.contains('slippers') ||
+        nameLower.contains('shoes')) {
+      return EquipmentSlot.boots;
+    }
+
+    // 7. Headgear
+    if (categoryLower == 'head' ||
+        categoryLower == 'helmet' ||
+        tags.contains('head') ||
+        tags.contains('helmet') ||
+        nameLower.contains('helm') ||
+        nameLower.contains('circlet') ||
+        nameLower.contains('hat') ||
+        nameLower.contains('crown')) {
+      return EquipmentSlot.head;
+    }
+
+    // 8. Weapons (Two-handed or One-handed)
+    final isTwoHand = props['twoHanded'] == true ||
+        tags.contains('two-handed') ||
+        tags.contains('twohanded') ||
+        nameLower.contains('greatsword') ||
+        nameLower.contains('greataxe') ||
+        nameLower.contains('maul') ||
+        nameLower.contains('halberd') ||
+        nameLower.contains('glaive') ||
+        nameLower.contains('heavy crossbow') ||
+        nameLower.contains('longbow') ||
+        nameLower.contains('pike');
+
+    if (isTwoHand) {
+      return EquipmentSlot.twoHand;
+    }
+
+    final isWeapon = categoryLower == 'weapon' ||
+        categoryLower.contains('weapon') ||
+        props['isWeapon'] == true ||
+        props['weaponType'] != null ||
+        props['damageDice'] != null ||
+        tags.contains('weapon') ||
+        tags.contains('melee') ||
+        tags.contains('ranged') ||
+        nameLower.contains('sword') ||
+        nameLower.contains('dagger') ||
+        nameLower.contains('axe') ||
+        nameLower.contains('bow') ||
+        nameLower.contains('mace') ||
+        nameLower.contains('spear') ||
+        nameLower.contains('crossbow') ||
+        nameLower.contains('hammer') ||
+        nameLower.contains('flail') ||
+        nameLower.contains('scimitar') ||
+        nameLower.contains('rapier') ||
+        nameLower.contains('quarterstaff') ||
+        nameLower.contains('trident') ||
+        nameLower.contains('morningstar') ||
+        nameLower.contains('whip') ||
+        nameLower.contains('warhammer') ||
+        nameLower.contains('club');
+
+    if (isWeapon) {
+      return EquipmentSlot.mainHand;
+    }
+
+    return EquipmentSlot.wondrous;
+  }
+
   /// Equips an item into a designated slot, managing slot conflicts
   static Character equipItem(
     Character character,

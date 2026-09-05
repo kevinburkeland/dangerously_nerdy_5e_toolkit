@@ -12,6 +12,7 @@ import '../services/persistence/debounced_storage_service.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
 import '../services/rules/character_progression_engine.dart';
+import '../services/rules/inventory_transaction_service.dart';
 import '../utils/secure_random.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,
@@ -118,18 +119,18 @@ class CharacterSheetController extends ChangeNotifier {
 
   /// Toggles the equipped state of an inventory item instance.
   Future<void> toggleEquipItem(String instanceId) async {
-    final updatedInventory = _character.inventory.map((item) {
-      if (item.instanceId == instanceId) {
-        final nextEquipped = !item.isEquipped;
-        return item.copyWith(
-          isEquipped: nextEquipped,
-          equippedSlot: nextEquipped ? (item.equippedSlot ?? EquipmentSlot.wondrous) : null,
-        );
-      }
-      return item;
-    }).toList();
+    final targetItem = _character.inventory.firstWhere(
+      (item) => item.instanceId == instanceId,
+      orElse: () => throw ArgumentError('Item instance $instanceId not found'),
+    );
 
-    _character = _character.copyWith(inventory: updatedInventory);
+    if (targetItem.isEquipped) {
+      _character = InventoryTransactionService.unequipItem(_character, instanceId);
+    } else {
+      final slot = InventoryTransactionService.resolveDefaultSlot(targetItem);
+      _character = InventoryTransactionService.equipItem(_character, instanceId, slot);
+    }
+
     _recalculateStats();
     notifyListeners();
     _schedulePersist();

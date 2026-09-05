@@ -193,6 +193,14 @@ class CharacterEvaluationEngine {
         }
       }
 
+      // Check Armor / Shield AC bonuses (+1, +2, +3)
+      final acMatch = RegExp(r'(?:armor|shield|ring of protection|cloak of protection)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(nameAndSummary);
+      if (acMatch != null) {
+        final b = int.tryParse(acMatch.group(1)!) ?? 0;
+        merged.putIfAbsent('bonusAc', () => b);
+        merged.putIfAbsent('acBonus', () => b);
+      }
+
       return merged;
     }
 
@@ -352,14 +360,79 @@ class CharacterEvaluationEngine {
       if (instance.requiresAttunement && !instance.isAttuned) continue;
       final props = getItemProperties(instance);
 
-      final isArmorSlot = instance.equippedSlot == EquipmentSlot.armor;
-      final isArmorType = props['armorType'] != null || props['baseAc'] != null;
+      final nameLower = instance.displayName.toLowerCase();
+      final slugLower = instance.itemRef.slug.toLowerCase();
+      final isStandardArmor = nameLower.contains('armor') ||
+          nameLower.contains('plate') ||
+          nameLower.contains('chain mail') ||
+          nameLower.contains('ring mail') ||
+          nameLower.contains('splint') ||
+          nameLower.contains('leather') ||
+          nameLower.contains('padded') ||
+          nameLower.contains('hide') ||
+          nameLower.contains('breastplate') ||
+          slugLower.contains('armor') ||
+          slugLower.contains('plate');
 
-      if (isArmorSlot || (isArmorType && instance.equippedSlot != EquipmentSlot.shield && props['isShield'] != true)) {
+      final isArmorSlot = instance.equippedSlot == EquipmentSlot.armor;
+      final isArmorType = props['armorType'] != null ||
+          props['baseAc'] != null ||
+          (props['category'] == 'armor' && !nameLower.contains('shield')) ||
+          isStandardArmor;
+
+      if (isArmorSlot || (isArmorType && instance.equippedSlot != EquipmentSlot.shield && props['isShield'] != true && !nameLower.contains('shield'))) {
         hasEquippedArmor = true;
-        final itemBaseAc = (props['baseAc'] as num?)?.toInt() ?? 10;
-        final armorType = (props['armorType']?.toString() ?? 'light').toLowerCase();
-        final maxDex = (props['maxDexBonus'] as num?)?.toInt();
+        int itemBaseAc = (props['baseAc'] as num?)?.toInt() ?? 0;
+        String armorType = (props['armorType']?.toString() ?? '').toLowerCase();
+        int? maxDex = (props['maxDexBonus'] as num?)?.toInt();
+
+        // Fallback for standard armor names if baseAc or armorType is unspecified
+        if (itemBaseAc == 0 || armorType.isEmpty) {
+          if (nameLower.contains('plate') || slugLower.contains('plate')) {
+            if (nameLower.contains('half plate') || slugLower.contains('half plate')) {
+              itemBaseAc = 15;
+              armorType = 'medium';
+              maxDex ??= 2;
+            } else {
+              itemBaseAc = 18;
+              armorType = 'heavy';
+              maxDex ??= 0;
+            }
+          } else if (nameLower.contains('splint')) {
+            itemBaseAc = 17;
+            armorType = 'heavy';
+            maxDex ??= 0;
+          } else if (nameLower.contains('chain mail')) {
+            itemBaseAc = 16;
+            armorType = 'heavy';
+            maxDex ??= 0;
+          } else if (nameLower.contains('ring mail')) {
+            itemBaseAc = 14;
+            armorType = 'heavy';
+            maxDex ??= 0;
+          } else if (nameLower.contains('scale mail') || nameLower.contains('breastplate')) {
+            itemBaseAc = 14;
+            armorType = 'medium';
+            maxDex ??= 2;
+          } else if (nameLower.contains('chain shirt')) {
+            itemBaseAc = 13;
+            armorType = 'medium';
+            maxDex ??= 2;
+          } else if (nameLower.contains('hide')) {
+            itemBaseAc = 12;
+            armorType = 'medium';
+            maxDex ??= 2;
+          } else if (nameLower.contains('studded leather')) {
+            itemBaseAc = 12;
+            armorType = 'light';
+          } else if (nameLower.contains('leather') || nameLower.contains('padded')) {
+            itemBaseAc = 11;
+            armorType = 'light';
+          } else {
+            if (itemBaseAc == 0) itemBaseAc = 10;
+            if (armorType.isEmpty) armorType = 'light';
+          }
+        }
 
         baseAc = itemBaseAc;
         if (armorType == 'heavy') {
@@ -375,22 +448,29 @@ class CharacterEvaluationEngine {
           armorDesc = '$itemBaseAc (${instance.displayName}) + $dexAcBonus DEX';
         }
 
-        if (props['acBonus'] is num) {
-          final bonus = (props['acBonus'] as num).toInt();
-          if (bonus > 0) {
-            magicAcBonus += bonus;
-            magicAcSources.add('+$bonus (${instance.displayName})');
-          }
+        final armorMagic = (props['acBonus'] as num?)?.toInt() ??
+            (props['bonusAc'] as num?)?.toInt() ??
+            (props['magicBonus'] as num?)?.toInt() ??
+            0;
+        if (armorMagic > 0) {
+          magicAcBonus += armorMagic;
+          magicAcSources.add('+$armorMagic (${instance.displayName})');
         }
-      } else if (instance.equippedSlot == EquipmentSlot.shield || props['isShield'] == true) {
-        final sBonus = (props['acBonus'] as num?)?.toInt() ?? (props['shieldBonus'] as num?)?.toInt() ?? 2;
+      } else if (instance.equippedSlot == EquipmentSlot.shield || props['isShield'] == true || nameLower.contains('shield')) {
+        final sBonus = (props['acBonus'] as num?)?.toInt() ??
+            (props['bonusAc'] as num?)?.toInt() ??
+            (props['shieldBonus'] as num?)?.toInt() ??
+            2;
         shieldBonus += sBonus;
         shieldDesc = '+$sBonus (${instance.displayName})';
-      } else if (props['acBonus'] is num) {
-        final bonus = (props['acBonus'] as num).toInt();
-        if (bonus != 0) {
-          magicAcBonus += bonus;
-          magicAcSources.add('${bonus >= 0 ? "+$bonus" : "$bonus"} (${instance.displayName})');
+      } else {
+        final otherBonus = (props['acBonus'] as num?)?.toInt() ??
+            (props['bonusAc'] as num?)?.toInt() ??
+            (props['magicBonus'] as num?)?.toInt() ??
+            0;
+        if (otherBonus != 0) {
+          magicAcBonus += otherBonus;
+          magicAcSources.add('${otherBonus >= 0 ? "+$otherBonus" : "$otherBonus"} (${instance.displayName})');
         }
       }
     }
@@ -590,10 +670,30 @@ class CharacterEvaluationEngine {
     final activeMasteries = <WeaponMasteryProperty>[];
 
     for (final instance in character.equippedItems) {
+      final props = getItemProperties(instance);
+      final nameLower = instance.displayName.toLowerCase();
+      final slugLower = instance.itemRef.slug.toLowerCase();
+
+      final isArmorOrShield = instance.equippedSlot == EquipmentSlot.armor ||
+          instance.equippedSlot == EquipmentSlot.shield ||
+          props['armorType'] != null ||
+          props['baseAc'] != null ||
+          props['isShield'] == true ||
+          props['category'] == 'armor' ||
+          props['category'] == 'shield' ||
+          nameLower.contains('armor') ||
+          nameLower.contains('shield') ||
+          nameLower.contains('plate') ||
+          slugLower.contains('armor') ||
+          slugLower.contains('plate');
+
+      if (isArmorOrShield && props['weaponType'] == null && props['damageDice'] == null) {
+        continue;
+      }
+
       final isWeaponSlot = instance.equippedSlot == EquipmentSlot.mainHand ||
           instance.equippedSlot == EquipmentSlot.offHand ||
           instance.equippedSlot == EquipmentSlot.twoHand;
-      final props = getItemProperties(instance);
       final isWeapon = isWeaponSlot || props['weaponType'] != null || props['damageDice'] != null;
 
       if (isWeapon) {

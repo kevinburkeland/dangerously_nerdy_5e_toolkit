@@ -308,8 +308,9 @@ class CommunityCompendiumAdapters {
     final rarity = json['rarity']?.toString() ?? 'Common';
     final typeCode = json['type']?.toString() ?? 'Wondrous Item';
     final itemType = switch (typeCode.toUpperCase()) {
-      'W' || 'M' || 'R' => 'Weapon',
+      'M' || 'R' => 'Weapon',
       'A' || 'LA' || 'MA' || 'HA' || 'S' => 'Armor',
+      'W' => 'Wondrous Item',
       'P' => 'Potion',
       'SC' => 'Scroll',
       'RG' => 'Ring',
@@ -317,7 +318,9 @@ class CommunityCompendiumAdapters {
       'ST' => 'Staff',
       'WD' => 'Wand',
       'G' => 'Adventuring Gear',
-      _ => typeCode.length > 3 ? typeCode : 'Wondrous Item',
+      _ => (name.toLowerCase().contains('armor') || name.toLowerCase().contains('shield'))
+          ? 'Armor'
+          : (typeCode.length > 3 ? typeCode : 'Wondrous Item'),
     };
 
     final reqAttune = json['reqAttune'] != null && json['reqAttune'] != false;

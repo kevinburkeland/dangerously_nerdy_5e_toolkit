@@ -694,8 +694,15 @@ class CharacterStatCalculator {
         if (res.isResolved) {
           final item = res.entity!;
           final props = item.customProperties;
-          final isWeapon =
-              props['isWeapon'] == true || item.itemType.toLowerCase().contains('weapon');
+          final isArmorOrShield = item.itemType.toLowerCase().contains('armor') ||
+              item.itemType.toLowerCase().contains('shield') ||
+              props['armorType'] != null ||
+              props['baseAc'] != null ||
+              props['isShield'] == true ||
+              item.name.toLowerCase().contains('armor') ||
+              item.name.toLowerCase().contains('plate');
+          final isWeapon = !isArmorOrShield &&
+              (props['isWeapon'] == true || item.itemType.toLowerCase().contains('weapon'));
           if (isWeapon) {
             hasEquippedWeapon = true;
             final isRanged = props['isRanged'] == true;

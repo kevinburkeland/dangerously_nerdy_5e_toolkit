@@ -917,8 +917,63 @@ class SrdEquipmentLibrary {
       if (acMatch != null) {
         final b = int.tryParse(acMatch.group(1)!) ?? 0;
         props['bonusAc'] = b;
+        props['acBonus'] = b;
       } else if (item.name.toLowerCase() == 'ring of protection' || item.name.toLowerCase() == 'cloak of protection') {
         props['bonusAc'] = 1;
+        props['acBonus'] = 1;
+      }
+
+      // If item is armor or shield, populate base armor metrics
+      final isShield = item.category == ItemCategory.armor &&
+          (item.name.toLowerCase().contains('shield') || item.tags.contains('shield'));
+      if (isShield) {
+        props['isShield'] = true;
+        props['shieldBonus'] = 2;
+        props['defaultSlot'] = EquipmentSlot.shield;
+      } else if (item.category == ItemCategory.armor || item.tags.contains('armor')) {
+        props['defaultSlot'] = EquipmentSlot.armor;
+        final nameLower = item.name.toLowerCase();
+        if (nameLower.contains('plate')) {
+          if (nameLower.contains('half plate')) {
+            props['baseAc'] = 15;
+            props['armorType'] = 'medium';
+            props['maxDexBonus'] = 2;
+          } else {
+            props['baseAc'] = 18;
+            props['armorType'] = 'heavy';
+            props['maxDexBonus'] = 0;
+          }
+        } else if (nameLower.contains('splint')) {
+          props['baseAc'] = 17;
+          props['armorType'] = 'heavy';
+          props['maxDexBonus'] = 0;
+        } else if (nameLower.contains('chain mail')) {
+          props['baseAc'] = 16;
+          props['armorType'] = 'heavy';
+          props['maxDexBonus'] = 0;
+        } else if (nameLower.contains('ring mail')) {
+          props['baseAc'] = 14;
+          props['armorType'] = 'heavy';
+          props['maxDexBonus'] = 0;
+        } else if (nameLower.contains('scale mail') || nameLower.contains('breastplate')) {
+          props['baseAc'] = 14;
+          props['armorType'] = 'medium';
+          props['maxDexBonus'] = 2;
+        } else if (nameLower.contains('chain shirt')) {
+          props['baseAc'] = 13;
+          props['armorType'] = 'medium';
+          props['maxDexBonus'] = 2;
+        } else if (nameLower.contains('hide')) {
+          props['baseAc'] = 12;
+          props['armorType'] = 'medium';
+          props['maxDexBonus'] = 2;
+        } else if (nameLower.contains('studded leather')) {
+          props['baseAc'] = 12;
+          props['armorType'] = 'light';
+        } else if (nameLower.contains('leather') || nameLower.contains('padded')) {
+          props['baseAc'] = 11;
+          props['armorType'] = 'light';
+        }
       }
 
       // Extract Weapon bonuses (+N Weapon)
@@ -928,6 +983,13 @@ class SrdEquipmentLibrary {
         props['attackBonus'] = b;
         props['magicBonus'] = b;
         props['bonusWeapon'] = b;
+      }
+      if (item.category == ItemCategory.weapon || item.tags.contains('weapon')) {
+        props['isWeapon'] = true;
+        props['defaultSlot'] = EquipmentSlot.mainHand;
+      }
+      if (item.category == ItemCategory.ring || item.tags.contains('ring')) {
+        props['defaultSlot'] = EquipmentSlot.ring1;
       }
 
       return EquipmentItem(
