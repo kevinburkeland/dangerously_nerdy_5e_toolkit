@@ -273,10 +273,10 @@ void main() {
 
       test('Hover capability keeps flier suspended in the air when suffering disruptive conditions', () {
         final hoverCreature = ArenaCombatant(
-          id: 'hover_beholder',
+          id: 'hover_specter',
           monster: wolfMonster,
           team: ArenaTeam.teamA,
-          displayName: 'Hovering Beholder',
+          displayName: 'Hovering Specter',
           maxHp: 80,
           currentHp: 80,
           ac: 16,

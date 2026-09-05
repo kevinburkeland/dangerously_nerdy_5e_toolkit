@@ -493,7 +493,7 @@ class SrdLootTables {
       TableEntry(minRoll: 6, maxRoll: 6, label: 'Old chess piece made from glass', description: 'A glass knight with a tiny imprisoned spark of light inside.'),
       TableEntry(minRoll: 7, maxRoll: 7, label: 'Pair of knucklebone dice with skull symbols', description: 'Weighted bone dice carved from the finger of an ancient warrior.'),
       TableEntry(minRoll: 8, maxRoll: 8, label: 'Small idol depicting a nightmarish creature', description: 'Squat stone carving that induces unsettling dreams when slept near.'),
-      TableEntry(minRoll: 9, maxRoll: 9, label: 'Rope of woven hair from four different beasts', description: 'Three-foot cord made of owlbear, displacer beast, wolf, and chimera mane.'),
+      TableEntry(minRoll: 9, maxRoll: 9, label: 'Rope of woven hair from four different beasts', description: 'Three-foot cord made of owlbear, manticore, wolf, and chimera mane.'),
       TableEntry(minRoll: 10, maxRoll: 10, label: 'Mechanical canary inside a brass cage', description: 'Wound with a key, it flaps brass wings and whistles a forgotten tune.'),
       TableEntry(minRoll: 11, maxRoll: 11, label: 'Tiny silver bell without a clapper', description: 'Rings with a faint telepathic chime heard only in the mind of the shaker.'),
       TableEntry(minRoll: 12, maxRoll: 12, label: 'Mechanical pocket watch that runs backward', description: 'Tick-tocks counterclockwise, keeping time in reverse.'),

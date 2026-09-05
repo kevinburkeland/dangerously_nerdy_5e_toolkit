@@ -23,14 +23,14 @@ void main() {
       final now = DateTime.now();
       final profile = CampaignProfile(
         id: 'camp_test_101',
-        name: 'Strahd Must Die',
+        name: 'The Vampire Must Fall',
         edition: DmRulesEdition.v2024,
         createdAt: now,
         lastPlayedAt: now,
         roomState: const RoomNodeState(
           roomId: 'room_101',
           roomCode: 'CR-101',
-          title: 'Ravenloft Gates',
+          title: 'Shadow Gates',
           description: 'Dark fog surrounds the gates.',
           entityLinks: [
             RoomEntityLink(
@@ -97,7 +97,7 @@ void main() {
       final restored = CampaignProfile.fromMap(map);
 
       expect(restored.id, equals('camp_test_101'));
-      expect(restored.name, equals('Strahd Must Die'));
+      expect(restored.name, equals('The Vampire Must Fall'));
       expect(restored.edition, equals(DmRulesEdition.v2024));
       expect(restored.roomState.activeEncounter.length, equals(1));
       expect(restored.partyRoster.length, equals(1));
@@ -109,9 +109,9 @@ void main() {
     });
 
     test('Default factory initializes staging area and core pinned rules', () {
-      final def = CampaignProfile.defaultProfile(name: 'Phandelver Group');
+      final def = CampaignProfile.defaultProfile(name: 'Lost Mine Explorers');
       expect(def.id, startsWith('campaign_'));
-      expect(def.name, equals('Phandelver Group'));
+      expect(def.name, equals('Lost Mine Explorers'));
       expect(def.edition, equals(DmRulesEdition.v2024));
       expect(def.pinnedRuleIds.contains('concentration'), isTrue);
       expect(def.pinnedRuleIds.contains('grapple_shove'), isTrue);
@@ -139,8 +139,8 @@ void main() {
     test('loadAllProfiles seamlessly adopts existing campaign from CampaignRegistryService', () async {
       final reg = CampaignRegistryService.newInstance();
       await reg.saveMembership(CampaignMembership(
-        roomCode: 'NEVER-1',
-        campaignName: 'Neverwinter Nights Table',
+        roomCode: 'NORTH-1',
+        campaignName: 'Northern Citadel Table',
         role: CampaignRole.host,
         lastPlayed: DateTime.now(),
       ));
@@ -149,15 +149,15 @@ void main() {
       final profiles = await service.loadAllProfiles();
 
       expect(profiles.length, equals(1));
-      expect(profiles.first.name, equals('Neverwinter Nights Table'));
-      expect(profiles.first.roomState.roomCode, equals('NEVER-1'));
+      expect(profiles.first.name, equals('Northern Citadel Table'));
+      expect(profiles.first.roomState.roomCode, equals('NORTH-1'));
     });
 
     test('Saves, loads, and switches multiple campaign profiles', () async {
       final service = CampaignProfileService();
 
-      final p1 = CampaignProfile.defaultProfile(id: 'camp_1', name: 'Waterdeep Dragon Heist');
-      final p2 = CampaignProfile.defaultProfile(id: 'camp_2', name: 'Tomb of Annihilation');
+      final p1 = CampaignProfile.defaultProfile(id: 'camp_1', name: 'Crown City Vault Heist');
+      final p2 = CampaignProfile.defaultProfile(id: 'camp_2', name: 'Tomb of the Serpent King');
 
       await service.saveProfileImmediate(p1);
       await service.saveProfileImmediate(p2);
@@ -168,7 +168,7 @@ void main() {
       await service.switchProfile('camp_2');
       final active = await service.getActiveProfile();
       expect(active.id, equals('camp_2'));
-      expect(active.name, equals('Tomb of Annihilation'));
+      expect(active.name, equals('Tomb of the Serpent King'));
     });
 
     test('Clones profile with isolated ID and title', () async {
@@ -176,17 +176,17 @@ void main() {
 
       final source = CampaignProfile.defaultProfile(
         id: 'source_1',
-        name: 'Curse of Strahd',
+        name: 'Shadows of the Vampire',
       ).copyWith(
-        notesMarkdown: 'Secret DM notes: Strahd is in the chapel.',
+        notesMarkdown: 'Secret DM notes: The vampire is in the chapel.',
       );
 
       await service.saveProfileImmediate(source);
-      final cloned = await service.cloneProfile('source_1', 'Curse of Strahd - Second Group');
+      final cloned = await service.cloneProfile('source_1', 'Shadows of the Vampire - Second Group');
 
       expect(cloned.id, isNot(equals('source_1')));
-      expect(cloned.name, equals('Curse of Strahd - Second Group'));
-      expect(cloned.notesMarkdown, equals('Secret DM notes: Strahd is in the chapel.'));
+      expect(cloned.name, equals('Shadows of the Vampire - Second Group'));
+      expect(cloned.notesMarkdown, equals('Secret DM notes: The vampire is in the chapel.'));
 
       final all = await service.loadAllProfiles();
       expect(all.length, equals(2));
@@ -223,7 +223,7 @@ void main() {
       final backupService = DmBackupService();
       final profile = CampaignProfile.defaultProfile(
         id: 'camp_export_test',
-        name: 'Spelljammer Odyssey',
+        name: 'Starfarer Odyssey',
       ).copyWith(notesMarkdown: 'Asteroid base coordinates: 42.88');
 
       final jsonStr = backupService.exportProfileJson(profile);
@@ -237,7 +237,7 @@ void main() {
       // Hydrate & Import
       final imported = await backupService.validateAndImportProfile(jsonStr);
       expect(imported, isNotNull);
-      expect(imported!.name, equals('Spelljammer Odyssey'));
+      expect(imported!.name, equals('Starfarer Odyssey'));
       expect(imported.notesMarkdown, contains('Asteroid base'));
       expect(imported.id, isNot(equals('camp_export_test'))); // Unique reassigned imported ID
     });

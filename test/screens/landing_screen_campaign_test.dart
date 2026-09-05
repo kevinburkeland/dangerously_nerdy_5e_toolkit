@@ -37,8 +37,8 @@ void main() {
     testWidgets('Renders campaign cards with role badges and room codes when present', (tester) async {
       final registry = CampaignRegistryService();
       final c1 = CampaignMembership(
-        roomCode: 'ROOM-STRHD1',
-        campaignName: 'Curse of Strahd',
+        roomCode: 'ROOM-SHDW01',
+        campaignName: 'Shadows of the Vampire',
         role: CampaignRole.host,
         hostKey: 'secret-key-1',
         characterId: 'DM Kevin',
@@ -46,8 +46,8 @@ void main() {
       );
 
       final c2 = CampaignMembership(
-        roomCode: 'ROOM-WTRDP2',
-        campaignName: 'Waterdeep Heist',
+        roomCode: 'ROOM-CITY02',
+        campaignName: 'Sunken City Heist',
         role: CampaignRole.player,
         characterId: 'Gimli',
         lastPlayed: DateTime.now().subtract(const Duration(hours: 3)),
@@ -58,12 +58,12 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.text('Curse of Strahd'), findsOneWidget);
-      expect(find.text('ROOM-STRHD1'), findsOneWidget);
+      expect(find.text('Shadows of the Vampire'), findsOneWidget);
+      expect(find.text('ROOM-SHDW01'), findsOneWidget);
       expect(find.text('DM'), findsOneWidget);
 
-      expect(find.text('Waterdeep Heist'), findsOneWidget);
-      expect(find.text('ROOM-WTRDP2'), findsOneWidget);
+      expect(find.text('Sunken City Heist'), findsOneWidget);
+      expect(find.text('ROOM-CITY02'), findsOneWidget);
       expect(find.text('Player'), findsOneWidget);
     });
 

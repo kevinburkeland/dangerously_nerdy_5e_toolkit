@@ -11,6 +11,7 @@ import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/debounced_storage_service.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
+import '../services/rules/character_homebrew_validator.dart';
 import '../services/rules/character_progression_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../utils/secure_random.dart';
@@ -42,6 +43,10 @@ class CharacterSheetController extends ChangeNotifier {
   EvaluatedCharacterStats get stats => _stats;
   bool get isSaving => _isSaving;
   DmRulesEdition get rulesEdition => _character.rulesEdition;
+
+  MissingHomebrewReport get missingHomebrewReport =>
+      CharacterHomebrewValidator.validate(_character);
+  bool get hasMissingHomebrew => missingHomebrewReport.hasMissing;
 
   bool get hasInspiration =>
       _character.resources.hasHeroicInspiration ||
@@ -110,6 +115,12 @@ class CharacterSheetController extends ChangeNotifier {
     _isSaving = true;
     notifyListeners();
     try {
+      final deps = CharacterHomebrewValidator.collectHomebrewDependencies(_character);
+      if (deps.isNotEmpty) {
+        final updatedCp = Map<String, dynamic>.from(_character.customProperties);
+        updatedCp['usedHomebrew'] = deps;
+        _character = _character.copyWith(customProperties: updatedCp);
+      }
       await _persistenceService.saveCharacter(_character);
     } finally {
       _isSaving = false;

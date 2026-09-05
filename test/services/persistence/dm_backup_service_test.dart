@@ -32,7 +32,7 @@ void main() {
         'type': 'campaign_profile',
         'campaign': {
           'id': 'c1',
-          'name': 'Curse of Strahd',
+          'name': 'Shadows of the Vampire',
         }
       });
 
@@ -52,7 +52,7 @@ void main() {
 
     test('exports and restores full system master backup', () async {
       // 1. Seed data
-      final profile = CampaignProfile.defaultProfile(name: 'Dragonlance');
+      final profile = CampaignProfile.defaultProfile(name: 'Dragonfire');
       await campaignService.saveProfileImmediate(profile);
 
       const spell = Spell(
@@ -71,7 +71,7 @@ void main() {
       // 2. Export full system
       final fullBackupJson = await backupService.exportFullSystemSnapshot();
       expect(fullBackupJson, contains('full_system_snapshot'));
-      expect(fullBackupJson, contains('Dragonlance'));
+      expect(fullBackupJson, contains('Dragonfire'));
       expect(fullBackupJson, contains('time-stop-plus'));
 
       // 3. Clear data
@@ -83,7 +83,7 @@ void main() {
       expect(restoreSuccess, isTrue);
 
       final restoredProfiles = await campaignService.loadAllProfiles();
-      expect(restoredProfiles.any((p) => p.name == 'Dragonlance'), isTrue);
+      expect(restoredProfiles.any((p) => p.name == 'Dragonfire'), isTrue);
 
       final restoredSpells = await homebrewService.loadCustomSpells();
       expect(restoredSpells.any((s) => s.id.slug == 'time-stop-plus'), isTrue);

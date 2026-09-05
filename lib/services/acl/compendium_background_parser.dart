@@ -231,7 +231,7 @@ class CompendiumBackgroundParser {
         label: originFeat,
       ));
     }
-    // Additional Spells (e.g. Ravnica guild backgrounds)
+    // Additional Spells (e.g. setting-specific guild backgrounds)
     final addSpells = raw['additionalSpells'];
     if (addSpells is List) {
       for (final spGroup in addSpells) {

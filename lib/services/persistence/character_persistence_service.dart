@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
+import '../rules/character_homebrew_validator.dart';
 import 'app_database_service.dart';
 
 /// Persistence service for saving, loading, and deleting characters in local storage.
@@ -98,12 +99,22 @@ class CharacterPersistenceService {
 
   /// Saves or updates a single character in the roster.
   Future<List<Character>> saveCharacter(Character character) async {
+    var charToSave = character;
+    if (charToSave.customProperties['usedHomebrew'] == null) {
+      final deps = CharacterHomebrewValidator.collectHomebrewDependencies(charToSave);
+      if (deps.isNotEmpty) {
+        final updatedCp = Map<String, dynamic>.from(charToSave.customProperties);
+        updatedCp['usedHomebrew'] = deps;
+        charToSave = charToSave.copyWith(customProperties: updatedCp);
+      }
+    }
+
     final roster = List<Character>.from(await loadCharacters());
-    final index = roster.indexWhere((c) => c.id.slug == character.id.slug);
+    final index = roster.indexWhere((c) => c.id.slug == charToSave.id.slug);
     if (index >= 0) {
-      roster[index] = character;
+      roster[index] = charToSave;
     } else {
-      roster.add(character);
+      roster.add(charToSave);
     }
     await saveRoster(roster);
     return roster;

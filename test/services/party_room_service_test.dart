@@ -27,12 +27,12 @@ void main() {
 
     test('Explicit Create Campaign generates roomCode, hostKey, and stores DM membership', () async {
       final session = await partyService.createCampaign(
-        campaignName: 'Waterdeep Dragon Heist',
+        campaignName: 'Crown City Vault Heist',
         playerName: 'DM Kevin',
       );
 
       expect(session.roomCode, startsWith('ROOM-'));
-      expect(session.campaignName, equals('Waterdeep Dragon Heist'));
+      expect(session.campaignName, equals('Crown City Vault Heist'));
       expect(session.hostKeyHash.length, equals(64));
       expect(session.activePlayers, contains('DM Kevin'));
 
@@ -47,23 +47,23 @@ void main() {
     test('Explicit Join Campaign joins existing live room as Player', () async {
       // 1. DM creates room
       final created = await partyService.createCampaign(
-        campaignName: 'Curse of Strahd',
-        playerName: 'DM Strahd',
+        campaignName: 'Shadows of the Vampire',
+        playerName: 'DM Vlad',
       );
 
       // 2. Player joins room
       final joined = await partyService.joinCampaign(
         roomCode: created.roomCode,
-        playerName: 'Van Richten',
+        playerName: 'Dr. Seward',
       );
 
       expect(joined.roomCode, equals(created.roomCode));
-      expect(joined.activePlayers, contains('Van Richten'));
+      expect(joined.activePlayers, contains('Dr. Seward'));
 
       // Player registry check
       final playerMembership = registry.getMembership(created.roomCode);
       expect(playerMembership, isNotNull);
-      expect(playerMembership!.characterId, equals('Van Richten'));
+      expect(playerMembership!.characterId, equals('Dr. Seward'));
 
       // 3. Player joins using raw 6-character code without 'ROOM-' prefix
       final rawCode = created.roomCode.replaceFirst('ROOM-', '');
@@ -489,8 +489,8 @@ void main() {
 
     test('Join Campaign with DM hostKey promotes player to Host role upon joining', () async {
       final session = await partyService.createCampaign(
-        campaignName: 'Dragonlance Campaign',
-        playerName: 'DM Fizban',
+        campaignName: 'Dragonfire Campaign',
+        playerName: 'DM Eldrin',
       );
 
       final dmMembership = registry.getMembership(session.roomCode);
@@ -502,7 +502,7 @@ void main() {
       // Join with passkey
       final joined = await partyService.joinCampaign(
         roomCode: session.roomCode,
-        playerName: 'Co-DM Raistlin',
+        playerName: 'Co-DM Kaelen',
         hostKey: rawKey,
       );
 
@@ -516,8 +516,8 @@ void main() {
 
     test('Join Campaign with invalid DM hostKey rejects with UnauthorizedHostActionException', () async {
       final session = await partyService.createCampaign(
-        campaignName: 'Dragonlance Campaign 2',
-        playerName: 'DM Fizban',
+        campaignName: 'Dragonfire Campaign 2',
+        playerName: 'DM Eldrin',
       );
 
       expect(
@@ -532,7 +532,7 @@ void main() {
 
     test('claimDmRole verifies passkey and promotes existing player membership to DM/Co-DM', () async {
       final session = await partyService.createCampaign(
-        campaignName: 'Baldur Gate Campaign',
+        campaignName: 'High Gate Campaign',
         playerName: 'DM Kevin',
       );
 
@@ -544,7 +544,7 @@ void main() {
         roomCode: session.roomCode,
         campaignName: session.campaignName,
         role: CampaignRole.player,
-        characterId: 'Astarion',
+        characterId: 'Morwen',
         lastPlayed: DateTime.now(),
       );
       await registry.saveMembership(playerMembership);
@@ -559,14 +559,14 @@ void main() {
         roomCode: session.roomCode,
         hostKeyOrPasskey: snippet,
         targetRole: CampaignRole.coDm,
-        playerName: 'Co-DM Astarion',
+        playerName: 'Co-DM Morwen',
       );
 
       expect(claimed.role, equals(CampaignRole.coDm));
       expect(claimed.isCoDm, isTrue);
       expect(claimed.isDmOrCoDm, isTrue);
       expect(claimed.hostKey, equals(hostKey));
-      expect(claimed.characterId, equals('Co-DM Astarion'));
+      expect(claimed.characterId, equals('Co-DM Morwen'));
 
       mem = registry.getMembership(session.roomCode);
       expect(mem!.role, equals(CampaignRole.coDm));
@@ -575,7 +575,7 @@ void main() {
 
     test('claimDmRole throws UnauthorizedHostActionException when passkey is invalid', () async {
       final session = await partyService.createCampaign(
-        campaignName: 'Baldur Gate Campaign 2',
+        campaignName: 'High Gate Campaign 2',
         playerName: 'DM Kevin',
       );
 

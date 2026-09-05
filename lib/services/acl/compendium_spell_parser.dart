@@ -514,7 +514,15 @@ class CompendiumSpellParser {
 
     // Fallback 2: Known Expansion Spells Index
     if (classes.isEmpty) {
-      final expansionMatch = _expansionSpellClasses[slug] ?? _expansionSpellClasses[_slugify(name)];
+      final slugParts = slug.split('-');
+      final normSlug = slugParts.length > 1 ? slugParts.sublist(1).join('-') : slug;
+      final nameSlug = _slugify(name);
+      final nameParts = nameSlug.split('-');
+      final normName = nameParts.length > 1 ? nameParts.sublist(1).join('-') : nameSlug;
+      final expansionMatch = _expansionSpellClasses[slug] ??
+          _expansionSpellClasses[normSlug] ??
+          _expansionSpellClasses[nameSlug] ??
+          _expansionSpellClasses[normName];
       if (expansionMatch != null) {
         classes.addAll(expansionMatch);
       }
@@ -530,9 +538,9 @@ class CompendiumSpellParser {
     'lightning-lure': ['Artificer', 'Sorcerer', 'Warlock', 'Wizard'],
     'sword-burst': ['Artificer', 'Sorcerer', 'Warlock', 'Wizard'],
     'mind-sliver': ['Sorcerer', 'Warlock', 'Wizard'],
-    'tashas-caustic-brew': ['Artificer', 'Sorcerer', 'Wizard'],
-    'tashas-mind-whip': ['Sorcerer', 'Wizard'],
-    'tashas-otherworldly-guise': ['Sorcerer', 'Warlock', 'Wizard'],
+    'caustic-brew': ['Artificer', 'Sorcerer', 'Wizard'],
+    'mind-whip': ['Sorcerer', 'Wizard'],
+    'otherworldly-guise': ['Sorcerer', 'Warlock', 'Wizard'],
     'intellect-fortress': ['Artificer', 'Bard', 'Sorcerer', 'Warlock', 'Wizard'],
     'spirit-shroud': ['Cleric', 'Paladin', 'Warlock', 'Wizard'],
     'summon-aberration': ['Sorcerer', 'Warlock', 'Wizard'],

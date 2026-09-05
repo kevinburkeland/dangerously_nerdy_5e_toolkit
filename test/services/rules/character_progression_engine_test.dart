@@ -387,7 +387,7 @@ void main() {
 
     test('Level 1 Character creation populates starting spell slots for spellcasters', () {
       const wizardCreation = CharacterCreationRequest(
-        characterName: 'Elminster',
+        characterName: 'Archmage Eldrin',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
         startingClassSlug: 'wizard',
         startingClassDisplayName: 'Wizard',

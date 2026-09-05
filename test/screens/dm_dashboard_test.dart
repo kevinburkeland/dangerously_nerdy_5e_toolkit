@@ -31,7 +31,7 @@ void main() {
 
       final p = CampaignProfile.defaultProfile(
         id: 'camp_test_render',
-        name: 'Strahd in Barovia',
+        name: 'Vampire Lord of the Mist',
         edition: DmRulesEdition.v2024,
       );
       await CampaignProfileService().saveProfileImmediate(p);
@@ -41,7 +41,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // App Bar
-      expect(find.text('Strahd in Barovia'), findsOneWidget);
+      expect(find.text('Vampire Lord of the Mist'), findsOneWidget);
       expect(find.text('2024'), findsOneWidget);
 
       // 5 HUD Cards

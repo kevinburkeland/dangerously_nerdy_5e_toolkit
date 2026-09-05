@@ -42,7 +42,7 @@ void main() {
       const roomCode = 'ROOM-TEST01';
       final membership = CampaignMembership(
         roomCode: roomCode,
-        campaignName: 'Dragonlance Chronicles',
+        campaignName: 'Chronicles of the Dragon',
         role: CampaignRole.host,
         hostKey: 'secret-key-1',
         characterId: 'DM Kevin',
@@ -60,7 +60,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest(roomCode, partyService, registry));
       await tester.pumpAndSettle();
 
-      expect(find.text('Dragonlance Chronicles'), findsOneWidget);
+      expect(find.text('Chronicles of the Dragon'), findsOneWidget);
       expect(find.text(roomCode), findsOneWidget);
       expect(find.text('DM'), findsWidgets);
 

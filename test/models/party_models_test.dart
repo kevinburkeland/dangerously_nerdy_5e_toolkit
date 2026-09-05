@@ -124,7 +124,7 @@ void main() {
       final now = DateTime.now();
       final session = PartySessionState(
         roomCode: 'ROOM-ABCDEF',
-        campaignName: 'Waterdeep Dragon Heist',
+        campaignName: 'Crown City Vault Heist',
         hostKeyHash: 'hash-abc-123',
         partyPurse: const PartyPurse(gp: 500),
         activePlayers: ['Alice', 'Bob'],
@@ -189,7 +189,7 @@ void main() {
       final now = DateTime.now();
       final session = PartySessionState(
         roomCode: 'ROOM-123456',
-        campaignName: 'Curse of Strahd',
+        campaignName: 'Shadows of the Vampire',
         hostKeyHash: 'hash-123',
         partyPurse: const PartyPurse(gp: 1000),
         memberPurses: const {

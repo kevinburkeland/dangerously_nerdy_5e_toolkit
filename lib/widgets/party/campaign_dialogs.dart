@@ -110,7 +110,7 @@ class _CreateCampaignDialogState extends State<CreateCampaignDialog> {
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: 'Campaign / Party Name',
-                hintText: 'e.g. Curse of Strahd, Waterdeep Heist',
+                hintText: 'e.g. Crown of the Dragon King, Vault of Winter',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 counterText: '',
               ),

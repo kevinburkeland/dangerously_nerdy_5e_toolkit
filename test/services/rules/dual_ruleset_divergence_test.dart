@@ -159,7 +159,7 @@ void main() {
 
       const wizard = Character(
         id: EntityId(slug: 'fragile_wizard', ruleset: RulesetVersion.v2024),
-        name: 'Raistlin',
+        name: 'Kaelen',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
         progression: CharacterProgression(classes: [
           ClassLevelProgression(
@@ -410,7 +410,7 @@ void main() {
     test('Character serialization toMap and fromMap preserves rulesEdition and custom properties', () {
       const original = Character(
         id: EntityId(slug: 'schema_test_char', ruleset: RulesetVersion.v2024),
-        name: 'Elminster',
+        name: 'Archmage Eldrin',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
         rulesEdition: DmRulesEdition.v2024,
         progression: CharacterProgression(classes: [
@@ -429,7 +429,7 @@ void main() {
 
       final deserialized = Character.fromMap(map);
       expect(deserialized.rulesEdition, DmRulesEdition.v2024);
-      expect(deserialized.name, 'Elminster');
+      expect(deserialized.name, 'Archmage Eldrin');
       expect(deserialized.totalLevel, 20);
     });
 

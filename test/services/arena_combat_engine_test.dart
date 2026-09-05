@@ -590,7 +590,7 @@ void main() {
         id: 'hover_flier',
         monster: wolfMonster,
         team: ArenaTeam.teamB,
-        displayName: 'Floating Beholder',
+        displayName: 'Floating Specter',
         maxHp: 50,
         currentHp: 50,
         ac: 14,

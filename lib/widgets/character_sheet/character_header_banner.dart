@@ -6,6 +6,7 @@ import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 
 import '../character_builder/level_up_wizard_dialog.dart';
+import 'missing_homebrew_warning_widget.dart';
 
 /// Header banner displaying character identity, classes, species, level, background,
 /// and interactive Inspiration toggle.
@@ -61,6 +62,12 @@ class CharacterHeaderBanner extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (controller.hasMissingHomebrew) ...[
+            MissingHomebrewBanner(
+              character: character,
+              report: controller.missingHomebrewReport,
+            ),
+          ],
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

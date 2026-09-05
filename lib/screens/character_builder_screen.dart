@@ -20,6 +20,7 @@ import '../services/haptic_service.dart';
 import '../services/repository/layered_priority_repository.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_factory.dart';
+import '../services/rules/character_homebrew_validator.dart';
 import '../services/rules/character_stat_calculator.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/spell_allocation_validator.dart';
@@ -40,6 +41,7 @@ import '../widgets/character_sheet/character_header_banner.dart';
 import '../widgets/character_sheet/character_vitals_hud.dart';
 import '../widgets/character_sheet/ability_scores_ribbon.dart';
 import '../widgets/character_sheet/character_sheet_tabs.dart';
+import '../widgets/character_sheet/missing_homebrew_warning_widget.dart';
 
 /// Interactive Character Generator, Live State Sheet, and Multiclassing Studio
 class CharacterBuilderScreen extends StatefulWidget {
@@ -862,6 +864,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             final isCurrentActive = _character?.id.slug == hero.id.slug;
             final heroStats =
                 CharacterStatCalculator.compute(hero, _resolver);
+            final heroHomebrewReport =
+                CharacterHomebrewValidator.validate(hero);
 
             return Card(
               key: ValueKey('character_card_${hero.id.slug}'),
@@ -938,6 +942,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                       ),
                                     ),
                                   ),
+                                  if (heroHomebrewReport.hasMissing) ...[
+                                    const SizedBox(width: 8),
+                                    MissingHomebrewBadge(
+                                      character: hero,
+                                      report: heroHomebrewReport,
+                                    ),
+                                  ],
                                 ],
                               ),
                               const SizedBox(height: 2),

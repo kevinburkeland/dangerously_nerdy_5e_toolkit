@@ -1923,7 +1923,7 @@ summary: 'Common, Dwarvish, Elvish, Draconic, Undercommon, Sylvan, Celestial, Ab
       isChangedIn2024: false,
       rules2014: [
         'Standard Languages: Common (Humans), Dwarvish (Dwarves), Elvish (Elves), Giant (Ogres, Giants), Gnomish (Gnomes), Goblin (Goblins), Halfling (Halflings), Orc (Orcs).',
-        'Exotic Languages: Abyssal (Demons), Celestial (Celestials), Draconic (Dragons, Dragonborn), Deep Speech (Mind Flayers, Beholders), Infernal (Devils), Primordial (Elementals, Aquan, Auran, Ignan, Terran), Sylvan (Fey), Undercommon (Underdark dwellers).',
+        'Exotic Languages: Abyssal (Demons), Celestial (Celestials), Draconic (Dragons, Dragonborn), Deep Speech (Aberrations), Infernal (Devils), Primordial (Elementals, Aquan, Auran, Ignan, Terran), Sylvan (Fey), Undercommon (Underdark dwellers).',
       ],
       rules2024: [
         'Standard and Exotic languages remain consistent for communication, ancient scripts, and planar interactions.',
