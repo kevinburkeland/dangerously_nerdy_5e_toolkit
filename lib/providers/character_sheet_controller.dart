@@ -308,6 +308,82 @@ class CharacterSheetController extends ChangeNotifier {
     _schedulePersist();
   }
 
+  /// Adds a language to the character if not already present.
+  Future<void> addLanguage(String language) async {
+    final clean = language.trim();
+    if (clean.isEmpty) return;
+    final langs = List<String>.from(_character.languages);
+    if (!langs.any((l) => l.toLowerCase() == clean.toLowerCase())) {
+      langs.add(clean);
+      _character = _character.copyWith(languages: langs);
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
+  /// Removes a language from the character.
+  Future<void> removeLanguage(String language) async {
+    final clean = language.trim().toLowerCase();
+    final langs = List<String>.from(_character.languages)
+      ..removeWhere((l) => l.toLowerCase() == clean);
+    _character = _character.copyWith(languages: langs);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Overwrites the full language list of the character.
+  Future<void> setLanguages(List<String> languages) async {
+    final seen = <String>{};
+    final unique = <String>[];
+    for (final l in languages) {
+      final clean = l.trim();
+      if (clean.isNotEmpty && seen.add(clean.toLowerCase())) {
+        unique.add(clean);
+      }
+    }
+    _character = _character.copyWith(languages: unique);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Adds a tool proficiency to the character if not already present.
+  Future<void> addToolProficiency(String tool) async {
+    final clean = tool.trim();
+    if (clean.isEmpty) return;
+    final tools = List<String>.from(_character.toolProficiencies);
+    if (!tools.any((t) => t.toLowerCase() == clean.toLowerCase())) {
+      tools.add(clean);
+      _character = _character.copyWith(toolProficiencies: tools);
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
+  /// Removes a tool proficiency from the character.
+  Future<void> removeToolProficiency(String tool) async {
+    final clean = tool.trim().toLowerCase();
+    final tools = List<String>.from(_character.toolProficiencies)
+      ..removeWhere((t) => t.toLowerCase() == clean);
+    _character = _character.copyWith(toolProficiencies: tools);
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Overwrites the full tool proficiency list of the character.
+  Future<void> setToolProficiencies(List<String> tools) async {
+    final seen = <String>{};
+    final unique = <String>[];
+    for (final t in tools) {
+      final clean = t.trim();
+      if (clean.isNotEmpty && seen.add(clean.toLowerCase())) {
+        unique.add(clean);
+      }
+    }
+    _character = _character.copyWith(toolProficiencies: unique);
+    notifyListeners();
+    _schedulePersist();
+  }
+
   /// Spends a hit die of the given type (e.g., "d8", "d10").
   Future<bool> expendHitDie(String dieType) async {
     final currentDice = Map<String, int>.from(_character.resources.currentHitDice);

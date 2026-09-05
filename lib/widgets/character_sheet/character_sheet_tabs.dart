@@ -12,6 +12,7 @@ import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import 'features_traits_section.dart';
 import 'interactive_spell_tile.dart';
+import 'languages_tools_section.dart';
 import 'skills_saves_matrix.dart';
 
 /// 4-Tab Content Area: Actions & Combat, Spells & Magic, Skills & Traits, and Inventory & Reliquary.
@@ -545,6 +546,10 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
       children: [
         // Interactive Skills & Saves Matrix with Advantage/Disadvantage
         SkillsSavesMatrix(controller: widget.controller),
+        const SizedBox(height: 18),
+
+        // Languages Known & Tool Proficiencies Section
+        LanguagesToolsSection(controller: widget.controller),
         const SizedBox(height: 18),
 
         // Features, Feats & Lineage Section

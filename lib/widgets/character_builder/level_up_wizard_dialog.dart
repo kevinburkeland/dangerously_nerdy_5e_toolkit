@@ -7,6 +7,7 @@ import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
+import '../../models/characters/srd_proficiencies_library.dart';
 import '../../models/characters/subclass_spells_library.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/spellbook_data.dart';
@@ -83,6 +84,10 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   bool _showAllSpellListsForSecrets = false;
   final TextEditingController _customCantripController = TextEditingController();
   final TextEditingController _customSpellController = TextEditingController();
+
+  // Languages & Tools gained on level up
+  final Set<String> _newToolProficiencies = {};
+  final Set<String> _newLanguages = {};
 
   // Animation controller for dice roll
   late AnimationController _diceAnimController;
@@ -404,6 +409,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       newSpells: spellRefs,
       replacedSpellIds: _replacedSpellId != null ? [_replacedSpellId!] : const [],
       selectedFeatureOptions: Map<String, List<String>>.from(_selectedFeatureOptions),
+      newToolProficiencies: _newToolProficiencies.toList(),
+      newLanguages: _newLanguages.toList(),
     );
   }
 
@@ -997,7 +1004,18 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                       child: Text('${sub['name']} — ${sub['desc']}'),
                     );
                   }).toList(),
-                  onChanged: (v) => setState(() => _selectedSubclass = v),
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedSubclass = v;
+                      final sub = v?.toLowerCase() ?? '';
+                      if (sub.contains('assassin')) {
+                        _newToolProficiencies.add('Disguise Kit');
+                        _newToolProficiencies.add('Poisoner\'s Kit');
+                      } else if (sub.contains('battle_master') || sub.contains('battle master')) {
+                        _newToolProficiencies.add('Artisan\'s Tools');
+                      }
+                    });
+                  },
                 ),
               ],
             ),
@@ -2174,7 +2192,287 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        // Languages & Tools Gained Panel
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: customColors?.cardBorder ?? theme.colorScheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    'Languages & Tool Proficiencies Gained',
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => _showLevelUpAddLanguageDialog(context),
+                        icon: const Icon(Icons.add, size: 14),
+                        label: const Text('Add Language', style: TextStyle(fontSize: 11)),
+                        style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _showLevelUpAddToolDialog(context),
+                        icon: const Icon(Icons.add, size: 14),
+                        label: const Text('Add Tool', style: TextStyle(fontSize: 11)),
+                        style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              if (_newLanguages.isEmpty && _newToolProficiencies.isEmpty)
+                const Text(
+                  'No additional languages or tools gained this level. Tap above to add training or DM awards.',
+                  style: TextStyle(fontSize: 11.5, color: Colors.white54, fontStyle: FontStyle.italic),
+                )
+              else ...[
+                if (_newLanguages.isNotEmpty) ...[
+                  const Text('New Languages:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: _newLanguages.map((l) => Chip(
+                      label: Text(l, style: const TextStyle(fontSize: 11)),
+                      deleteIcon: const Icon(Icons.close, size: 12),
+                      onDeleted: () => setState(() => _newLanguages.remove(l)),
+                    )).toList(),
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                if (_newToolProficiencies.isNotEmpty) ...[
+                  const Text('New Tools:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amberAccent)),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: _newToolProficiencies.map((t) => Chip(
+                      label: Text(t, style: const TextStyle(fontSize: 11)),
+                      deleteIcon: const Icon(Icons.close, size: 12),
+                      onDeleted: () => setState(() => _newToolProficiencies.remove(t)),
+                    )).toList(),
+                  ),
+                ],
+              ],
+            ],
+          ),
+        ),
       ],
+    );
+  }
+
+  void _showLevelUpAddLanguageDialog(BuildContext context) {
+    final customController = TextEditingController();
+    String searchQuery = '';
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final existing = {
+            ...widget.character.languages.map((l) => l.toLowerCase()),
+            ..._newLanguages.map((l) => l.toLowerCase()),
+          };
+          final availableStandard = SrdProficienciesLibrary.standardLanguages
+              .where((l) => !existing.contains(l.toLowerCase()))
+              .where((l) => l.toLowerCase().contains(searchQuery.toLowerCase()))
+              .toList();
+          final availableExotic = SrdProficienciesLibrary.exoticLanguages
+              .where((l) => !existing.contains(l.toLowerCase()))
+              .where((l) => l.toLowerCase().contains(searchQuery.toLowerCase()))
+              .toList();
+
+          return AlertDialog(
+            title: const Text('Add Language Gained'),
+            content: SizedBox(
+              width: 400,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: customController,
+                      decoration: const InputDecoration(
+                        labelText: 'Search or Custom Language',
+                        hintText: 'Enter language...',
+                        prefixIcon: Icon(Icons.language),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) => setDialogState(() => searchQuery = val.trim()),
+                    ),
+                    const SizedBox(height: 12),
+                    if (availableStandard.isNotEmpty) ...[
+                      const Text('Standard Languages', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.cyanAccent)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: availableStandard.map((lang) {
+                          return ActionChip(
+                            label: Text(lang),
+                            onPressed: () {
+                              setState(() => _newLanguages.add(lang));
+                              Navigator.of(ctx).pop();
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (availableExotic.isNotEmpty) ...[
+                      const Text('Exotic Languages', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.purpleAccent)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: availableExotic.map((lang) {
+                          return ActionChip(
+                            label: Text(lang),
+                            onPressed: () {
+                              setState(() => _newLanguages.add(lang));
+                              Navigator.of(ctx).pop();
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+              FilledButton(
+                onPressed: () {
+                  final custom = customController.text.trim();
+                  if (custom.isNotEmpty) {
+                    setState(() => _newLanguages.add(custom));
+                  }
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Add Custom'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showLevelUpAddToolDialog(BuildContext context) {
+    final customController = TextEditingController();
+    ToolCategory selectedCategory = ToolCategory.artisansTools;
+    String searchQuery = '';
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final existing = {
+            ...widget.character.toolProficiencies.map((t) => t.toLowerCase()),
+            ..._newToolProficiencies.map((t) => t.toLowerCase()),
+          };
+          final allCategoryTools = switch (selectedCategory) {
+            ToolCategory.artisansTools => SrdProficienciesLibrary.artisansTools,
+            ToolCategory.gamingSets => SrdProficienciesLibrary.gamingSets,
+            ToolCategory.musicalInstruments => SrdProficienciesLibrary.musicalInstruments,
+            ToolCategory.kits => SrdProficienciesLibrary.kitsAndSpecialized,
+            ToolCategory.vehicles => SrdProficienciesLibrary.vehicles,
+          };
+          final availableTools = allCategoryTools
+              .where((t) => !existing.contains(t.toLowerCase()))
+              .where((t) => t.toLowerCase().contains(searchQuery.toLowerCase()))
+              .toList();
+
+          return AlertDialog(
+            title: const Text('Add Tool Proficiency Gained'),
+            content: SizedBox(
+              width: 440,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: customController,
+                      decoration: const InputDecoration(
+                        labelText: 'Search or Custom Tool',
+                        hintText: 'Search or enter custom tool name...',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) => setDialogState(() => searchQuery = val.trim()),
+                    ),
+                    const SizedBox(height: 12),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: ToolCategory.values.map((cat) {
+                          final isSel = selectedCategory == cat;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: ChoiceChip(
+                              label: Text(cat.displayName, style: const TextStyle(fontSize: 11)),
+                              selected: isSel,
+                              onSelected: (_) => setDialogState(() => selectedCategory = cat),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (availableTools.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: availableTools.map((tool) {
+                          return ActionChip(
+                            label: Text(tool),
+                            onPressed: () {
+                              setState(() => _newToolProficiencies.add(tool));
+                              Navigator.of(ctx).pop();
+                            },
+                          );
+                        }).toList(),
+                      )
+                    else
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text('No matching tools in this category.', style: TextStyle(fontSize: 12, color: Colors.white54)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+              FilledButton(
+                onPressed: () {
+                  final custom = customController.text.trim();
+                  if (custom.isNotEmpty) {
+                    setState(() => _newToolProficiencies.add(custom));
+                  }
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Add Custom'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 

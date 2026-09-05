@@ -439,5 +439,55 @@ void main() {
       expect(level3Wizard.resources.spellSlots.maxSlots[1], equals(4));
       expect(level3Wizard.resources.spellSlots.maxSlots[2], equals(2));
     });
+
+    test('applyLevelUp merges newToolProficiencies and newLanguages without duplicates', () {
+      const initialCharacter = Character(
+        id: EntityId(slug: 'rogue-hero', ruleset: RulesetVersion.v2024),
+        name: 'Shadow',
+        speciesRef: EntityReference(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+        ),
+        languages: ['Common', 'Elvish'],
+        toolProficiencies: ["Thieves' Tools"],
+        progression: CharacterProgression(classes: [
+          ClassLevelProgression(
+            classRef: EntityReference(
+              refType: EntityType.classDefinition,
+              slug: 'rogue',
+              displayName: 'Rogue',
+            ),
+            level: 2,
+            hitDie: 'd8',
+            isStartingClass: true,
+          ),
+        ]),
+        baseScores: AbilityScores(dexterity: 16),
+        resources: CharacterResourcePool(currentHp: 16),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(
+        initialCharacter,
+        const LevelUpRequest(
+          targetClassSlug: 'rogue',
+          newToolProficiencies: ["Poisoner's Kit", "Disguise Kit", "Thieves' Tools"],
+          newLanguages: ['Thieves\' Cant', 'elvish', 'Undercommon'],
+        ),
+      );
+
+      expect(leveled.totalLevel, equals(3));
+      expect(leveled.toolProficiencies, equals([
+        "Thieves' Tools",
+        "Poisoner's Kit",
+        "Disguise Kit",
+      ]));
+      expect(leveled.languages, equals([
+        'Common',
+        'Elvish',
+        "Thieves' Cant",
+        'Undercommon',
+      ]));
+    });
   });
 }

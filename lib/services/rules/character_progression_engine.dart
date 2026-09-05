@@ -65,6 +65,8 @@ class LevelUpRequest {
   final List<EntityReference<Spell>> newSpells;
   final List<String> replacedSpellIds;
   final Map<String, List<String>> selectedFeatureOptions;
+  final List<String> newToolProficiencies;
+  final List<String> newLanguages;
 
   const LevelUpRequest({
     required this.targetClassSlug,
@@ -78,6 +80,8 @@ class LevelUpRequest {
     this.newSpells = const [],
     this.replacedSpellIds = const [],
     this.selectedFeatureOptions = const {},
+    this.newToolProficiencies = const [],
+    this.newLanguages = const [],
   });
 }
 
@@ -451,13 +455,29 @@ class CharacterProgressionEngine {
     final updatedHitDice = Map<String, int>.from(character.resources.currentHitDice);
     updatedHitDice[gainedHitDie] = (updatedHitDice[gainedHitDie] ?? 0) + 1;
 
-    // 5. Build candidate updated Character
+    // 5. Update Tool Proficiencies and Languages
+    final updatedTools = List<String>.from(character.toolProficiencies);
+    for (final t in request.newToolProficiencies) {
+      if (!updatedTools.any((existing) => existing.toLowerCase() == t.toLowerCase())) {
+        updatedTools.add(t);
+      }
+    }
+    final updatedLanguages = List<String>.from(character.languages);
+    for (final l in request.newLanguages) {
+      if (!updatedLanguages.any((existing) => existing.toLowerCase() == l.toLowerCase())) {
+        updatedLanguages.add(l);
+      }
+    }
+
+    // 6. Build candidate updated Character
     var candidate = character.copyWith(
       progression: newProgression,
       bonusScores: newBonusScores,
       feats: newFeats,
       savingThrowProficiencies: updatedSavingThrows,
       skillProficiencies: updatedSkills,
+      toolProficiencies: updatedTools,
+      languages: updatedLanguages,
       allocatedSpells: updatedAllocated,
       cantrips: updatedCantrips,
       spellsKnown: updatedSpellsKnown,

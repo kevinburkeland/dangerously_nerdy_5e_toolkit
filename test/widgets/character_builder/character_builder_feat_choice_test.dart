@@ -43,7 +43,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Advance Step 2 -> Step 3 (Class)
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.drag(find.byType(ListView), const Offset(0, -1000));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
@@ -205,7 +205,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Step 2 -> Step 3
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.drag(find.byType(ListView), const Offset(0, -1000));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();

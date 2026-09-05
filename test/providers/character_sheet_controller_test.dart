@@ -268,5 +268,67 @@ void main() {
       expect(pool.currentSlots[1], equals(4));
       expect(pool.currentSlots[2], equals(3));
     });
+
+    group('Languages & Tool Proficiencies Management', () {
+      test('addLanguage adds unique language and avoids duplicates', () {
+        expect(controller.character.languages, equals(['Common']));
+
+        controller.addLanguage('Elvish');
+        expect(controller.character.languages, contains('Elvish'));
+        expect(controller.character.languages.length, equals(2));
+
+        // Adding duplicate should not duplicate entry
+        controller.addLanguage('elvish');
+        expect(controller.character.languages.length, equals(2));
+
+        controller.addLanguage('Dwarvish');
+        expect(controller.character.languages.length, equals(3));
+        expect(controller.character.languages, contains('Dwarvish'));
+      });
+
+      test('removeLanguage removes target language', () {
+        controller.setLanguages(['Common', 'Elvish', 'Draconic']);
+        expect(controller.character.languages.length, equals(3));
+
+        controller.removeLanguage('Elvish');
+        expect(controller.character.languages, isNot(contains('Elvish')));
+        expect(controller.character.languages.length, equals(2));
+      });
+
+      test('setLanguages sets entire list without duplicates', () {
+        controller.setLanguages(['Common', 'elvish', 'Elvish', 'Orc']);
+        expect(controller.character.languages, equals(['Common', 'elvish', 'Orc']));
+      });
+
+      test('addToolProficiency adds unique tool and avoids duplicates', () {
+        expect(controller.character.toolProficiencies, isEmpty);
+
+        controller.addToolProficiency("Thieves' Tools");
+        expect(controller.character.toolProficiencies, contains("Thieves' Tools"));
+        expect(controller.character.toolProficiencies.length, equals(1));
+
+        // Duplicate
+        controller.addToolProficiency("thieves' tools");
+        expect(controller.character.toolProficiencies.length, equals(1));
+
+        controller.addToolProficiency("Smith's Tools");
+        expect(controller.character.toolProficiencies.length, equals(2));
+      });
+
+      test('removeToolProficiency removes target tool', () {
+        controller.setToolProficiencies(["Thieves' Tools", "Smith's Tools", 'Lute']);
+        expect(controller.character.toolProficiencies.length, equals(3));
+
+        controller.removeToolProficiency("Smith's Tools");
+        expect(controller.character.toolProficiencies, isNot(contains("Smith's Tools")));
+        expect(controller.character.toolProficiencies.length, equals(2));
+      });
+
+      test('setToolProficiencies sets list and trims items', () {
+        controller.setToolProficiencies(["  Thieves' Tools  ", "Lute", "Lute"]);
+        expect(controller.character.toolProficiencies, equals(["Thieves' Tools", "Lute"]));
+      });
+    });
   });
 }
+
