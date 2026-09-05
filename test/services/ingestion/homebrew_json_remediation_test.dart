@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/feature_grant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/acl/entry_node_transformer.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_background_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_feat_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_generic_entry_parser.dart';
@@ -345,6 +347,153 @@ void main() {
       expect(compendium.backgrounds.first.originFeat, equals('Alert'));
       expect(compendium.otherEntries.first.category, equals('Eldritch Invocation'));
     });
+
+    test('9. _copy monster revitalization inherits base stats, extracts markdown actions, and applies replaceArr', () {
+      final pipeline = CompendiumJsonIngestionPipeline();
+
+      final bundleJson = {
+        'schemaVersion': 1,
+        'monsters': [
+          {
+            'name': 'Troglodyte',
+            'armorClass': 11,
+            'hitPoints': 13,
+            'challengeRating': '1/4',
+            'actionsMarkdown': '''**Speed:** walk 30ft.
+
+| STR | DEX | CON | INT | WIS | CHA |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 14 (+2) | 10 (+0) | 14 (+2) | 6 (-2) | 10 (+0) | 6 (-2) |
+
+### Traits
+**Chameleon Skin**: Advantage on Stealth checks.
+
+**Stench**: Poison stench aura.
+
+### Actions
+**Multiattack**: The troglodyte makes three attacks: one with its bite and two with its claws.
+
+**Bite**: Melee Weapon Attack: +4 to hit. Hit: 4 (1d4 + 2) piercing damage.
+
+**Claw**: Melee Weapon Attack: +4 to hit. Hit: 4 (1d4 + 2) slashing damage.''',
+            'customProperties': {'speed': '30 ft.'},
+          },
+          {
+            'name': 'Armored Troglodyte',
+            'armorClass': 14,
+            'hitPoints': 10,
+            'challengeRating': '0',
+            'actionsMarkdown': '''**Speed:** 30 ft.
+
+| STR | DEX | CON | INT | WIS | CHA |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |''',
+            'customProperties': {
+              '_copy': {
+                'name': 'Troglodyte',
+                'source': 'MM',
+                '_mod': {
+                  'action': [
+                    {
+                      'mode': 'replaceArr',
+                      'replace': 'Multiattack',
+                      'items': {
+                        'name': 'Multiattack',
+                        'entries': ['The troglodyte makes two attacks with its longsword.'],
+                      },
+                    },
+                    {
+                      'mode': 'replaceArr',
+                      'replace': 'Claw',
+                      'items': {
+                        'name': 'Longsword',
+                        'entries': ['{@atk mw} {@hit 4} to hit. {@h}6 ({@damage 1d8 + 2}) slashing damage.'],
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      };
+
+      final result = pipeline.ingestJsonMap(bundleJson);
+      final armored = result.monsters.firstWhere((m) => m.name == 'Armored Troglodyte');
+
+      expect(armored.armorClass, equals(14)); // Custom override
+      expect(armored.hitPoints, equals(13)); // Inherited base HP
+      expect(armored.challengeRating, equals('1/4')); // Inherited base CR
+      expect(armored.actionsMarkdown, contains('14 (+2)')); // Inherited STR 14
+      expect(armored.actionsMarkdown, contains('Chameleon Skin')); // Inherited trait
+      expect(armored.actionsMarkdown, contains('Longsword')); // Replaced action
+      expect(armored.actionsMarkdown, contains('two attacks with its longsword')); // Replaced Multiattack
+    });
+
+    test('10. EntryNodeTransformer and Monster Parser infer damageType from trailing text and action context', () {
+      final transformer = EntryNodeTransformer();
+      const text = 'Bite. {@atk mw} {@hit 5} to hit. {@h}5 ({@damage 1d4 + 3}) bludgeoning damage plus 2 ({@damage 1d4}) fire damage.';
+      final result = transformer.transformEntries(text);
+
+      expect(result.extractedMath.length, equals(2));
+      expect(result.extractedMath[0].damageType, equals(DamageType.bludgeoning));
+      expect(result.extractedMath[1].damageType, equals(DamageType.fire));
+      expect(result.markdown, isNot(contains('bludgeoning bludgeoning')));
+    });
+
+    test('11. CompendiumSpellParser resolves classes for XGE/EGW/FTD expansion spells', () {
+      final parser = CompendiumSpellParser();
+
+      final horridWilting = parser.parseSpell({
+        'name': "Abi-Dalzim's Horrid Wilting",
+        'level': 8,
+        'school': 'N',
+        'entries': ['A sphere of deadly energy drains water.'],
+      });
+      expect(horridWilting.customProperties['classes'], containsAll(['Sorcerer', 'Wizard']));
+
+      final catnap = parser.parseSpell({
+        'name': 'Catnap',
+        'level': 3,
+        'school': 'E',
+        'entries': ['Creatures fall into a sleep resembling a short rest.'],
+      });
+      expect(catnap.customProperties['classes'], containsAll(['Artificer', 'Bard', 'Sorcerer', 'Wizard']));
+
+      final darkStar = parser.parseSpell({
+        'name': 'Dark Star',
+        'level': 8,
+        'school': 'V',
+        'entries': ['This spell creates a sphere of crushing gravity.'],
+      });
+      expect(darkStar.customProperties['classes'], contains('Wizard'));
+    });
+
+    test('12. Item revitalization cleans rechargeAmount and unparsed description tags', () {
+      final pipeline = CompendiumJsonIngestionPipeline();
+
+      final bundleJson = {
+        'items': [
+          {
+            'name': 'Abracadabrus',
+            'type': 'Wondrous Item',
+            'rarity': 'Rare',
+            'descriptionMarkdown': '> **Note:** Paired with {@item Silver Horn of Valhalla}',
+            'customProperties': {
+              'rechargeAmount': '{@dice 1d20}',
+            },
+          }
+        ],
+      };
+
+      final result = pipeline.ingestJsonMap(bundleJson);
+      final item = result.items.first;
+
+      expect(item.customProperties['rechargeAmount'], equals('1d20'));
+      expect(item.descriptionMarkdown, contains('Silver Horn of Valhalla'));
+      expect(item.descriptionMarkdown, isNot(contains('{@item')));
+    });
   });
 }
+
 

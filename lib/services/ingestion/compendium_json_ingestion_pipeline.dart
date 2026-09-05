@@ -215,12 +215,89 @@ class CompendiumJsonIngestionPipeline {
         final baseMonsterLookup = <String, Map<String, dynamic>>{};
         for (final m in bundle.monsters) {
           if (!m.customProperties.containsKey('_copy')) {
+            final traits = <Map<String, dynamic>>[];
+            final actions = <Map<String, dynamic>>[];
+            final bonusActions = <Map<String, dynamic>>[];
+            final reactions = <Map<String, dynamic>>[];
+            final legendary = <Map<String, dynamic>>[];
+
+            final sections = m.actionsMarkdown.split(RegExp(r'\n*###\s+'));
+            for (int i = 1; i < sections.length; i++) {
+              final s = sections[i];
+              final nl = s.indexOf('\n');
+              if (nl == -1) continue;
+              final title = s.substring(0, nl).trim().toLowerCase();
+              final content = s.substring(nl + 1).trim();
+              final items = <Map<String, dynamic>>[];
+              final blocks = content.split(RegExp(r'\n\s*\n'));
+              for (final block in blocks) {
+                final colonIdx = block.indexOf('**:');
+                if (block.startsWith('**') && colonIdx != -1) {
+                  final bName = block.substring(2, colonIdx).trim();
+                  final desc = block.substring(colonIdx + 3).trim();
+                  if (bName.isNotEmpty) {
+                    items.add({
+                      'name': bName,
+                      'entries': [desc],
+                    });
+                  }
+                }
+              }
+              if (title.contains('trait')) {
+                traits.addAll(items);
+              } else if (title.contains('bonus')) {
+                bonusActions.addAll(items);
+              } else if (title.contains('reaction')) {
+                reactions.addAll(items);
+              } else if (title.contains('legendary')) {
+                legendary.addAll(items);
+              } else if (title.contains('action')) {
+                actions.addAll(items);
+              }
+            }
+
+            int str = (m.customProperties['str'] as num?)?.toInt() ?? 10;
+            int dex = (m.customProperties['dex'] as num?)?.toInt() ?? 10;
+            int con = (m.customProperties['con'] as num?)?.toInt() ?? 10;
+            int intStat = (m.customProperties['int'] as num?)?.toInt() ?? 10;
+            int wis = (m.customProperties['wis'] as num?)?.toInt() ?? 10;
+            int cha = (m.customProperties['cha'] as num?)?.toInt() ?? 10;
+
+            final statTableMatch = RegExp(
+              r'\|\s*(\d+)\s*\([+-]?\d+\)\s*\|\s*(\d+)\s*\([+-]?\d+\)\s*\|\s*(\d+)\s*\([+-]?\d+\)\s*\|\s*(\d+)\s*\([+-]?\d+\)\s*\|\s*(\d+)\s*\([+-]?\d+\)\s*\|\s*(\d+)\s*\([+-]?\d+\)\s*\|',
+            ).firstMatch(m.actionsMarkdown);
+            if (statTableMatch != null) {
+              str = int.tryParse(statTableMatch.group(1)!) ?? str;
+              dex = int.tryParse(statTableMatch.group(2)!) ?? dex;
+              con = int.tryParse(statTableMatch.group(3)!) ?? con;
+              intStat = int.tryParse(statTableMatch.group(4)!) ?? intStat;
+              wis = int.tryParse(statTableMatch.group(5)!) ?? wis;
+              cha = int.tryParse(statTableMatch.group(6)!) ?? cha;
+            }
+
             baseMonsterLookup[m.name.toLowerCase().trim()] = {
               'name': m.name,
               'ac': m.armorClass,
               'hp': {'average': m.hitPoints, 'formula': m.hitDieFormula},
               'cr': m.challengeRating,
               'speed': m.customProperties['speed'] ?? '30 ft.',
+              'str': str,
+              'dex': dex,
+              'con': con,
+              'int': intStat,
+              'wis': wis,
+              'cha': cha,
+              'strScore': str,
+              'dexScore': dex,
+              'conScore': con,
+              'intScore': intStat,
+              'wisScore': wis,
+              'chaScore': cha,
+              if (traits.isNotEmpty) 'trait': traits,
+              if (actions.isNotEmpty) 'action': actions,
+              if (bonusActions.isNotEmpty) 'bonus': bonusActions,
+              if (reactions.isNotEmpty) 'reaction': reactions,
+              if (legendary.isNotEmpty) 'legendary': legendary,
               'actionsMarkdown': m.actionsMarkdown,
               ...m.customProperties,
             };
@@ -228,10 +305,14 @@ class CompendiumJsonIngestionPipeline {
         }
 
         final revitalizedMonsters = bundle.monsters.map((m) {
-          if (m.customProperties.containsKey('_copy') &&
-              (m.actionsMarkdown.isEmpty ||
-               m.actionsMarkdown.startsWith('**Speed:** 30 ft.\n\n| STR | DEX | CON | INT | WIS | CHA |\n|:---:|:---:|:---:|:---:|:---:|:---:|\n| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |') ||
-               (m.hitPoints <= 10 && m.armorClass == 10))) {
+          final hasCopy = m.customProperties.containsKey('_copy');
+          final hasDefaultStats = m.actionsMarkdown.isEmpty ||
+              m.actionsMarkdown.contains('| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |') ||
+              m.actionsMarkdown.startsWith('**Speed:** 30 ft.\n\n| STR | DEX') ||
+              (m.hitPoints <= 10 && m.armorClass == 10) ||
+              m.challengeRating == '0';
+
+          if (hasCopy && hasDefaultStats) {
             final copyObj = m.customProperties['_copy'];
             if (copyObj is Map && copyObj['name'] != null) {
               final rawSynthesized = <String, dynamic>{
@@ -243,6 +324,22 @@ class CompendiumJsonIngestionPipeline {
                 if (m.hitPoints > 10) 'hp': {'average': m.hitPoints, 'formula': m.hitDieFormula},
                 if (m.challengeRating != '0') 'cr': m.challengeRating,
               };
+              rawSynthesized.remove('str');
+              rawSynthesized.remove('dex');
+              rawSynthesized.remove('con');
+              rawSynthesized.remove('int');
+              rawSynthesized.remove('wis');
+              rawSynthesized.remove('cha');
+              rawSynthesized.remove('strScore');
+              rawSynthesized.remove('dexScore');
+              rawSynthesized.remove('conScore');
+              rawSynthesized.remove('intScore');
+              rawSynthesized.remove('wisScore');
+              rawSynthesized.remove('chaScore');
+              if (m.armorClass <= 10) rawSynthesized.remove('ac');
+              if (m.hitPoints <= 10) rawSynthesized.remove('hp');
+              if (m.challengeRating == '0') rawSynthesized.remove('cr');
+
               return monsterParser.parseMonster(
                 rawSynthesized,
                 forceRuleset: forceRuleset ?? m.id.ruleset,
@@ -256,7 +353,39 @@ class CompendiumJsonIngestionPipeline {
           if (actions.contains('{@') || actions.contains('untyped')) {
             actions = transformer.transformEntries(actions).markdown;
             actions = actions.replaceAll(RegExp(r'\*\*`([^`]+)\s+untyped`\*\*'), r'**`$1`**');
-            return m.copyWith(actionsMarkdown: actions);
+          }
+
+          // Revitalize attackMath damage types from actions text if untyped
+          var updatedAttackMath = m.attackMath;
+          if (m.attackMath.any((a) => a.damageType == DamageType.untyped)) {
+            final cleanAct = actions.toLowerCase();
+            updatedAttackMath = m.attackMath.map((att) {
+              if (att.damageType != DamageType.untyped) return att;
+              final fEsc = RegExp.escape(att.diceFormula.toLowerCase());
+              final match = RegExp(
+                fEsc + r'[^\n\.]*?\b(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\s+damage',
+                caseSensitive: false,
+              ).firstMatch(cleanAct);
+              if (match != null) {
+                final typeStr = match.group(1)!.toLowerCase();
+                final resolvedType = DamageType.values.firstWhere(
+                  (d) => d.name == typeStr,
+                  orElse: () => DamageType.untyped,
+                );
+                if (resolvedType != DamageType.untyped) {
+                  return EvaluationMath(
+                    diceFormula: att.diceFormula,
+                    damageType: resolvedType,
+                    scalingFormula: att.scalingFormula,
+                  );
+                }
+              }
+              return att;
+            }).toList();
+          }
+
+          if (actions != m.actionsMarkdown || updatedAttackMath != m.attackMath) {
+            return m.copyWith(actionsMarkdown: actions, attackMath: updatedAttackMath);
           }
           return m;
         }).toList();
@@ -291,17 +420,30 @@ class CompendiumJsonIngestionPipeline {
         }).toList();
 
         final revitalizedItems = bundle.items.map((i) {
+          var desc = i.descriptionMarkdown;
+          if (desc.contains('{@') || desc.contains('untyped')) {
+            desc = cleanRawTags(desc);
+            desc = desc.replaceAll(RegExp(r'\*\*`([^`]+)\s+untyped`\*\*'), r'**`$1`**');
+          }
+          var customProps = Map<String, dynamic>.from(i.customProperties);
+          if (customProps.containsKey('rechargeAmount')) {
+            final rc = customProps['rechargeAmount'];
+            if (rc is String && rc.contains('{@')) {
+              customProps['rechargeAmount'] = cleanRawTags(rc).replaceAll('`', '').trim();
+            }
+          }
           final raw = <String, dynamic>{
-            ...i.customProperties,
+            ...customProps,
             'name': i.name,
             'type': i.itemType,
             'rarity': i.rarity,
             'reqAttune': i.requiresAttunement,
-            if (i.descriptionMarkdown.isNotEmpty) 'entries': [i.descriptionMarkdown],
+            if (desc.isNotEmpty) 'entries': [desc],
           };
           final reparsed = itemParser.parseItem(raw, forceRuleset: forceRuleset ?? i.id.ruleset);
           return reparsed.copyWith(
-            descriptionMarkdown: i.descriptionMarkdown.isNotEmpty ? i.descriptionMarkdown : reparsed.descriptionMarkdown,
+            descriptionMarkdown: desc.isNotEmpty ? desc : reparsed.descriptionMarkdown,
+            customProperties: customProps,
           );
         }).toList();
 

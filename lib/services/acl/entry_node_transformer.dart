@@ -415,12 +415,34 @@ class EntryNodeTransformer {
           return '**`$primary`**';
 
         case 'damage':
-          final dmgType = _extractDamageType(parts);
+          var dmgType = _extractDamageType(parts);
+          if (dmgType == DamageType.untyped && match.end < input.length) {
+            final trailing = input.substring(match.end);
+            final mTrailing = RegExp(
+              r'^\s*\)?\s*(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\s+damage',
+              caseSensitive: false,
+            ).firstMatch(trailing);
+            if (mTrailing != null) {
+              final typeStr = mTrailing.group(1)!.toLowerCase();
+              dmgType = DamageType.values.firstWhere(
+                (d) => d.name == typeStr,
+                orElse: () => DamageType.untyped,
+              );
+            }
+          }
           mathList.add(EvaluationMath(
             diceFormula: primary,
             damageType: dmgType,
           ));
           if (dmgType == DamageType.untyped) {
+            return '**`$primary`**';
+          }
+          final hasTrailingDamageText = match.end < input.length &&
+              RegExp(
+                r'^\s*\)?\s*' + dmgType.name + r'\s+damage',
+                caseSensitive: false,
+              ).hasMatch(input.substring(match.end));
+          if (hasTrailingDamageText) {
             return '**`$primary`**';
           }
           return '**`$primary ${dmgType.name}`**';

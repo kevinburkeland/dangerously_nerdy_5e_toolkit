@@ -26,14 +26,19 @@ class CompendiumItemParser {
     // Attunement
     final reqAttune = _parseAttunement(raw['reqAttune'] ?? raw['attunement']);
 
-    // Transform Markdown Entries (support entries, desc, description, text)
-    final entriesData = raw['entries'] ?? raw['desc'] ?? raw['description'] ?? raw['text'];
+    // Transform Markdown Entries (support entries, desc, description, text, descriptionMarkdown)
+    final entriesData = raw['entries'] ?? raw['desc'] ?? raw['description'] ?? raw['text'] ?? raw['descriptionMarkdown'];
     final parsed = transformer.transformEntries(entriesData, defaultRuleset: ruleset);
 
     // Auxiliary & Weapon/Armor Metrics (0% data loss)
     final customProperties = <String, dynamic>{};
+    if (raw['customProperties'] is Map) {
+      (raw['customProperties'] as Map).forEach((k, v) {
+        customProperties[k.toString()] = v;
+      });
+    }
     raw.forEach((key, value) {
-      if (!_standardItemKeys.contains(key)) {
+      if (!_standardItemKeys.contains(key) && key != 'customProperties') {
         customProperties[key] = value;
       }
     });
@@ -56,6 +61,12 @@ class CompendiumItemParser {
     if (raw.containsKey('charges')) customProperties['charges'] = raw['charges'];
     if (raw.containsKey('recharge')) customProperties['recharge'] = raw['recharge'];
     if (raw.containsKey('rechargeAmount')) customProperties['rechargeAmount'] = raw['rechargeAmount'];
+    if (customProperties.containsKey('rechargeAmount')) {
+      final rc = customProperties['rechargeAmount']?.toString() ?? '';
+      if (rc.contains('{@')) {
+        customProperties['rechargeAmount'] = transformer.transformEntries(rc).markdown.replaceAll('`', '').replaceAll('*', '').trim();
+      }
+    }
 
     // Fallback description markdown for mundane items or trade goods lacking entries
     var description = parsed.markdown;

@@ -244,26 +244,57 @@ class CompendiumMonsterParser {
     RulesetVersion ruleset, {
     required String defaultTitle,
   }) {
+    String aName = defaultTitle;
+    ParsedEntryResult? parsed;
+
     if (node is Map) {
       final rawName = (node['name'] ?? node['title'] ?? defaultTitle).toString();
-      final aName = transformer.transformEntries(rawName, defaultRuleset: ruleset).markdown;
+      aName = transformer.transformEntries(rawName, defaultRuleset: ruleset).markdown;
       final entriesData = node['entries'] ?? node['desc'] ?? node['description'] ?? node['text'] ?? node['entry'];
-      final parsed = transformer.transformEntries(entriesData, defaultRuleset: ruleset);
-      attackMath.addAll(parsed.extractedMath);
-      buffer.writeln('**$aName**: ${parsed.markdown}\n');
+      parsed = transformer.transformEntries(entriesData, defaultRuleset: ruleset);
     } else if (node is String) {
       final clean = node.trim();
       if (clean.isEmpty) return;
       final splitIdx = clean.indexOf(RegExp(r'[:.]'));
       if (splitIdx != -1 && splitIdx < 35) {
-        final tTitle = clean.substring(0, splitIdx).trim();
+        aName = clean.substring(0, splitIdx).trim();
         final tBody = clean.substring(splitIdx + 1).trim();
-        final parsed = transformer.transformEntries(tBody, defaultRuleset: ruleset);
-        attackMath.addAll(parsed.extractedMath);
-        buffer.writeln('**$tTitle**: ${parsed.markdown}\n');
+        parsed = transformer.transformEntries(tBody, defaultRuleset: ruleset);
       } else {
-        final parsed = transformer.transformEntries(clean, defaultRuleset: ruleset);
-        attackMath.addAll(parsed.extractedMath);
+        parsed = transformer.transformEntries(clean, defaultRuleset: ruleset);
+      }
+    }
+
+    if (parsed != null) {
+      final resolvedMath = parsed.extractedMath.map((m) {
+        if (m.damageType != DamageType.untyped) return m;
+        final cleanText = parsed!.markdown.toLowerCase();
+        final fEsc = RegExp.escape(m.diceFormula.toLowerCase());
+        final match = RegExp(
+          fEsc + r'[^\n\.]*?\b(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\s+damage',
+          caseSensitive: false,
+        ).firstMatch(cleanText);
+        if (match != null) {
+          final typeStr = match.group(1)!.toLowerCase();
+          final resolvedType = DamageType.values.firstWhere(
+            (d) => d.name == typeStr,
+            orElse: () => DamageType.untyped,
+          );
+          if (resolvedType != DamageType.untyped) {
+            return EvaluationMath(
+              diceFormula: m.diceFormula,
+              damageType: resolvedType,
+              scalingFormula: m.scalingFormula,
+            );
+          }
+        }
+        return m;
+      }).toList();
+
+      attackMath.addAll(resolvedMath);
+      if (aName.isNotEmpty && aName != defaultTitle) {
+        buffer.writeln('**$aName**: ${parsed.markdown}\n');
+      } else {
         buffer.writeln('${parsed.markdown}\n');
       }
     }
@@ -579,11 +610,11 @@ class CompendiumMonsterParser {
     Map<String, dynamic> raw, {
     Map<String, dynamic>? Function(String name, String? source)? baseLookup,
   }) {
-    if (!raw.containsKey('_copy') || raw['_copy'] is! Map) {
+    final copy = (raw['_copy'] ?? (raw['customProperties'] is Map ? raw['customProperties']['_copy'] : null)) as Map?;
+    if (copy == null) {
       return raw;
     }
 
-    final copy = raw['_copy'] as Map;
     final copyName = copy['name']?.toString().trim();
     if (copyName == null || copyName.isEmpty) return raw;
     final copySource = copy['source']?.toString().trim();
@@ -612,9 +643,44 @@ class CompendiumMonsterParser {
       _applyMod(merged, mod);
     }
 
+    final hasDefaultStats = raw['actionsMarkdown'] != null &&
+        (raw['actionsMarkdown'].toString().contains('| 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |') ||
+            raw['actionsMarkdown'].toString().startsWith('**Speed:** 30 ft.\n\n| STR | DEX'));
+
     // Merge overlay fields from raw (except _copy)
     raw.forEach((key, value) {
-      if (key != '_copy') {
+      if (key != '_copy' && key != 'customProperties') {
+        if (hasDefaultStats) {
+          if (key == 'str' ||
+              key == 'dex' ||
+              key == 'con' ||
+              key == 'int' ||
+              key == 'wis' ||
+              key == 'cha' ||
+              key == 'strScore' ||
+              key == 'dexScore' ||
+              key == 'conScore' ||
+              key == 'intScore' ||
+              key == 'wisScore' ||
+              key == 'chaScore') {
+            return;
+          }
+          if (key == 'cr' && (value == '0' || value == 0)) {
+            return;
+          }
+          if (key == 'hp' && (value == 10 || (value is Map && value['average'] == 10))) {
+            return;
+          }
+          if (key == 'ac' && (value == 10 || (value is List && value.contains(10)))) {
+            return;
+          }
+          if (key == 'actionsMarkdown' &&
+              (value == null ||
+                  value.toString().isEmpty ||
+                  value.toString().startsWith('**Speed:** 30 ft.\n\n| STR | DEX'))) {
+            return;
+          }
+        }
         merged[key] = value;
       }
     });
@@ -666,14 +732,19 @@ class CompendiumMonsterParser {
           }
         } else if (mode == 'replaceArr') {
           final replace = rule['replace'];
-          final withItem = rule['with'];
+          final withItem = rule['items'] ?? rule['with'];
           final arr = target[key];
           if (arr is List && replace != null && withItem != null) {
-            final matchName = replace is Map ? replace['name']?.toString() : replace.toString();
+            final matchName = (replace is Map ? replace['name']?.toString() : replace.toString())?.toLowerCase().trim();
             final idx = arr.indexWhere((it) =>
-                it is Map && (it['name']?.toString() == matchName || it['title']?.toString() == matchName));
+                it is Map && ((it['name']?.toString() ?? it['title']?.toString())?.toLowerCase().trim() == matchName));
             if (idx != -1) {
-              arr[idx] = withItem;
+              if (withItem is List) {
+                arr.removeAt(idx);
+                arr.insertAll(idx, withItem);
+              } else {
+                arr[idx] = withItem;
+              }
             }
           }
         } else if (mode == 'removeArr') {
