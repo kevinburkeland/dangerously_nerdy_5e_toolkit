@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
-import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/magic_items/magic_item_library.dart';
 import '../repository/reference_resolver.dart';
 import 'character_stat_calculator.dart' show ComputedAttackProfile;
 import 'dnd_5e_rules_engine.dart';
@@ -152,6 +152,47 @@ class CharacterEvaluationEngine {
           }
         }
       }
+
+      // Fallback: Lookup from MagicItemLibrary if customProperties lacks bonus keys
+      final rawSlug = instance.itemRef.slug.toLowerCase().replaceAll('-', '_');
+      final magicItem = MagicItemLibrary.findById(rawSlug) ??
+          MagicItemLibrary.findById('item_$rawSlug') ??
+          MagicItemLibrary.findByName(instance.displayName);
+      if (magicItem != null) {
+        merged.putIfAbsent('category', () => magicItem.category.name);
+        merged.putIfAbsent('tags', () => magicItem.tags);
+      }
+
+      final nameAndSummary = '${instance.displayName} ${magicItem?.rules2024.summary ?? ""} ${magicItem?.rules2014.summary ?? ""}';
+
+      // Check Rod of the Pact Keeper (+1, +2, +3)
+      final pactKeeperMatch = RegExp(r'rod\s+of\s+the\s+pact\s+keeper(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(nameAndSummary);
+      if (pactKeeperMatch != null) {
+        final b = int.tryParse(pactKeeperMatch.group(1)!) ?? 0;
+        merged.putIfAbsent('bonusSpellAttack', () => b);
+        merged.putIfAbsent('bonusSpellSaveDc', () => b);
+        merged.putIfAbsent('spellDcBonus', () => b);
+        merged.putIfAbsent('spellClass', () => 'warlock');
+      }
+
+      // Check Wand of the War Mage (+1, +2, +3)
+      final warMageMatch = RegExp(r'wand\s+of\s+the\s+war\s+mage(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(nameAndSummary);
+      if (warMageMatch != null) {
+        final b = int.tryParse(warMageMatch.group(1)!) ?? 0;
+        merged.putIfAbsent('bonusSpellAttack', () => b);
+      }
+
+      // General +N spell bonus regex pattern
+      final genSpellMatch = RegExp(r'\+(\d+)\s+(?:bonus\s+)?to\s+(?:warlock\s+)?spell\s+attack\s+rolls', caseSensitive: false).firstMatch(nameAndSummary);
+      if (genSpellMatch != null) {
+        final b = int.tryParse(genSpellMatch.group(1)!) ?? 0;
+        merged.putIfAbsent('bonusSpellAttack', () => b);
+        if (nameAndSummary.toLowerCase().contains('saving throw dc') || nameAndSummary.toLowerCase().contains('spell save dc')) {
+          merged.putIfAbsent('bonusSpellSaveDc', () => b);
+          merged.putIfAbsent('spellDcBonus', () => b);
+        }
+      }
+
       return merged;
     }
 
@@ -505,18 +546,40 @@ class CharacterEvaluationEngine {
         castingAbility = AbilityType.intelligence;
       }
 
-      var itemSpellBonus = 0;
+      var itemSpellAtkBonus = 0;
+      var itemSpellDcBonus = 0;
       for (final instance in character.equippedItems) {
         if (instance.requiresAttunement && !instance.isAttuned) continue;
         final props = getItemProperties(instance);
-        if (props['spellDcBonus'] is num) {
-          itemSpellBonus += (props['spellDcBonus'] as num).toInt();
+
+        // Check if restricted to a specific class (e.g. Warlock for Rod of the Pact Keeper)
+        final itemClass = (props['spellClass'] ?? props['class'])?.toString().toLowerCase();
+        if (itemClass != null && itemClass.isNotEmpty && !slug.contains(itemClass)) {
+          continue;
+        }
+
+        // Spell Attack Bonus
+        final rawAtk = props['bonusSpellAttack'] ?? props['spellAttackBonus'] ?? props['spellBonus'];
+        if (rawAtk != null) {
+          final val = rawAtk is num ? rawAtk.toInt() : int.tryParse(rawAtk.toString().replaceAll('+', '').trim());
+          if (val != null) itemSpellAtkBonus += val;
+        }
+
+        // Spell Save DC Bonus
+        final rawDc = props['bonusSpellSaveDc'] ?? props['spellDcBonus'] ?? props['spellBonus'];
+        if (rawDc != null) {
+          final val = rawDc is num ? rawDc.toInt() : int.tryParse(rawDc.toString().replaceAll('+', '').trim());
+          if (val != null) itemSpellDcBonus += val;
         }
       }
 
       final castMod = abilityMods[castingAbility]!;
-      spellSaveDcs[className] = 8 + profBonus + castMod + itemSpellBonus;
-      spellAttackBonuses[className] = profBonus + castMod + itemSpellBonus + exhaustion.d20TestPenalty;
+      final dc = 8 + profBonus + castMod + itemSpellDcBonus;
+      final atk = profBonus + castMod + itemSpellAtkBonus + exhaustion.d20TestPenalty;
+      spellSaveDcs[className] = dc;
+      spellSaveDcs[slug] = dc;
+      spellAttackBonuses[className] = atk;
+      spellAttackBonuses[slug] = atk;
     }
 
     // Compute multiclass spell slots

@@ -632,8 +632,47 @@ class CharacterStatCalculator {
       final castingAbility = _inferCastingAbility(classSlug);
       if (castingAbility != null) {
         final mod = abilityMods[castingAbility]!;
-        spellSaveDcs[classSlug] = 8 + profBonus + mod;
-        spellAttackBonuses[classSlug] = profBonus + mod + phaseC.exhaustion.d20TestPenalty;
+
+        var itemSpellAtkBonus = 0;
+        var itemSpellDcBonus = 0;
+        for (final instance in character.equippedItems) {
+          if (instance.requiresAttunement && !instance.isAttuned) continue;
+          final merged = Map<String, dynamic>.from(instance.customProperties);
+          final res = resolver.resolveTyped<EquipmentItem>(instance.itemRef);
+          if (res.isResolved && res.entity != null) {
+            for (final entry in res.entity!.customProperties.entries) {
+              merged.putIfAbsent(entry.key, () => entry.value);
+            }
+          }
+          final rawName = instance.displayName.toLowerCase();
+          final pactKeeperMatch = RegExp(r'rod\s+of\s+the\s+pact\s+keeper(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(rawName);
+          if (pactKeeperMatch != null) {
+            final b = int.tryParse(pactKeeperMatch.group(1)!) ?? 0;
+            merged.putIfAbsent('bonusSpellAttack', () => b);
+            merged.putIfAbsent('bonusSpellSaveDc', () => b);
+            merged.putIfAbsent('spellClass', () => 'warlock');
+          }
+
+          final itemClass = (merged['spellClass'] ?? merged['class'])?.toString().toLowerCase();
+          if (itemClass != null && itemClass.isNotEmpty && !classSlug.contains(itemClass)) {
+            continue;
+          }
+
+          final rawAtk = merged['bonusSpellAttack'] ?? merged['spellAttackBonus'] ?? merged['spellBonus'];
+          if (rawAtk != null) {
+            final val = rawAtk is num ? rawAtk.toInt() : int.tryParse(rawAtk.toString().replaceAll('+', '').trim());
+            if (val != null) itemSpellAtkBonus += val;
+          }
+
+          final rawDc = merged['bonusSpellSaveDc'] ?? merged['spellDcBonus'] ?? merged['spellBonus'];
+          if (rawDc != null) {
+            final val = rawDc is num ? rawDc.toInt() : int.tryParse(rawDc.toString().replaceAll('+', '').trim());
+            if (val != null) itemSpellDcBonus += val;
+          }
+        }
+
+        spellSaveDcs[classSlug] = 8 + profBonus + mod + itemSpellDcBonus;
+        spellAttackBonuses[classSlug] = profBonus + mod + itemSpellAtkBonus + phaseC.exhaustion.d20TestPenalty;
       }
     }
 

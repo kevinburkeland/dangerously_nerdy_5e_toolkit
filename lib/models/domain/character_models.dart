@@ -1101,6 +1101,10 @@ class Character extends DomainEntity {
         if (opt.grants[flagKey] == true || opt.grants[normalizedKey] == true) {
           return true;
         }
+        if ((flagKey == 'eldritchBlastChaDamage' || flagKey == 'agonizing_blast') &&
+            (normOptId == 'agonizing_blast' || opt.name.toLowerCase() == 'agonizing blast')) {
+          return true;
+        }
       }
     }
     for (final featRef in feats) {

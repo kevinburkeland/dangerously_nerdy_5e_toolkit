@@ -889,6 +889,47 @@ class SrdEquipmentLibrary {
   /// Converts all MagicItem and standard gear into Domain EquipmentItem entities.
   static List<EquipmentItem> get allEquipmentItems {
     return MagicItemLibrary.allItems.map((item) {
+      final props = <String, dynamic>{
+        'cost': item.cost ?? item.cost2024 ?? item.cost2014,
+        'category': item.category.name,
+        'tags': item.tags,
+      };
+
+      // Extract Rod of the Pact Keeper bonuses
+      final pactKeeperMatch = RegExp(r'rod\s+of\s+the\s+pact\s+keeper(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+      if (pactKeeperMatch != null) {
+        final b = int.tryParse(pactKeeperMatch.group(1)!) ?? 0;
+        props['bonusSpellAttack'] = b;
+        props['bonusSpellSaveDc'] = b;
+        props['spellDcBonus'] = b;
+        props['spellClass'] = 'warlock';
+      }
+
+      // Extract Wand of the War Mage bonuses
+      final warMageMatch = RegExp(r'wand\s+of\s+the\s+war\s+mage(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+      if (warMageMatch != null) {
+        final b = int.tryParse(warMageMatch.group(1)!) ?? 0;
+        props['bonusSpellAttack'] = b;
+      }
+
+      // Extract AC bonuses (e.g. Ring/Cloak of Protection, +N Armor/Shield)
+      final acMatch = RegExp(r'(?:armor|shield|ring of protection|cloak of protection)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+      if (acMatch != null) {
+        final b = int.tryParse(acMatch.group(1)!) ?? 0;
+        props['bonusAc'] = b;
+      } else if (item.name.toLowerCase() == 'ring of protection' || item.name.toLowerCase() == 'cloak of protection') {
+        props['bonusAc'] = 1;
+      }
+
+      // Extract Weapon bonuses (+N Weapon)
+      final weaponMatch = RegExp(r'(?:weapon|sword|bow|axe|dagger|mace|hammer|spear)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+      if (weaponMatch != null) {
+        final b = int.tryParse(weaponMatch.group(1)!) ?? 0;
+        props['attackBonus'] = b;
+        props['magicBonus'] = b;
+        props['bonusWeapon'] = b;
+      }
+
       return EquipmentItem(
         id: EntityId(slug: item.id.replaceAll('_', '-'), ruleset: RulesetVersion.v2024),
         name: item.name,
@@ -896,11 +937,7 @@ class SrdEquipmentLibrary {
         rarity: item.rarity.name,
         requiresAttunement: item.requiresAttunement,
         descriptionMarkdown: item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary,
-        customProperties: {
-          'cost': item.cost ?? item.cost2024 ?? item.cost2014,
-          'category': item.category.name,
-          'tags': item.tags,
-        },
+        customProperties: props,
       );
     }).toList();
   }

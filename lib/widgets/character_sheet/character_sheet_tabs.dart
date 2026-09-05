@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
+import '../../models/domain/action_economy_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
+import '../../services/rules/character_actions_resolver.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import 'features_traits_section.dart';
-import 'interactive_roll_action_card.dart';
 import 'interactive_spell_tile.dart';
 import 'skills_saves_matrix.dart';
 
@@ -29,6 +30,12 @@ class CharacterSheetTabs extends StatefulWidget {
 class _CharacterSheetTabsState extends State<CharacterSheetTabs>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  // Action Economy Round State
+  bool _actionSpent = false;
+  bool _bonusActionSpent = false;
+  bool _reactionSpent = false;
+  String _selectedActionCategory = 'all'; // 'all', 'action', 'bonusAction', 'reaction', 'special', 'standard'
 
   @override
   void initState() {
@@ -98,171 +105,436 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
     final stats = widget.controller.stats;
     final character = widget.controller.character;
 
+    final resolved = CharacterActionsResolver.resolve(
+      character: character,
+      stats: stats,
+      controller: widget.controller,
+    );
+
+    List<CharacterCombatAction> displayActions;
+    if (_selectedActionCategory == 'action') {
+      displayActions = resolved.actions;
+    } else if (_selectedActionCategory == 'bonusAction') {
+      displayActions = resolved.bonusActions;
+    } else if (_selectedActionCategory == 'reaction') {
+      displayActions = resolved.reactions;
+    } else if (_selectedActionCategory == 'special') {
+      displayActions = resolved.specialActions;
+    } else if (_selectedActionCategory == 'standard') {
+      displayActions = resolved.standardActions;
+    } else {
+      displayActions = resolved.allActions;
+    }
+
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
-        // Section: Attacks
-        Text(
-          'EQUIPPED ATTACKS',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
+        // 1. Action Economy Quick Tracker Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
-        ),
-        const SizedBox(height: 8),
-        ...stats.attackProfiles.map((atk) => InteractiveRollActionCard(
-          attack: atk,
-          characterName: character.name,
-        )),
-
-        const SizedBox(height: 16),
-
-        // Section: Spellcasting & Save DCs
-        if (stats.spellSaveDcs.isNotEmpty) ...[
-          Text(
-            'SPELLCASTING STATS',
-            style: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...stats.spellSaveDcs.entries.map((entry) {
-            final cls = entry.key;
-            final dc = entry.value;
-            final atkBonus = stats.spellAttackBonuses[cls] ?? (dc - 8);
-            final atkStr = atkBonus >= 0 ? '+$atkBonus' : '$atkBonus';
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-              ),
-              child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    cls,
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
                   Row(
                     children: [
-                      Text('Save DC: ', style: theme.textTheme.labelSmall),
-                      Text('$dc', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 12),
-                      Text('Spell Atk: ', style: theme.textTheme.labelSmall),
-                      Text(atkStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Icon(Icons.timer_outlined, size: 16, color: Colors.amberAccent),
+                      const SizedBox(width: 6),
+                      Text(
+                        'ROUND ECONOMY',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ],
                   ),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 16),
-        ],
-
-        // Section: Spell Slots Matrix
-        _buildSpellSlotsMatrix(context),
-
-        // Section: Cantrips
-        if (character.cantrips.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(
-            'CANTRIPS',
-            style: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: character.cantrips.map((c) {
-              return Chip(
-                avatar: const Icon(Icons.auto_awesome, size: 14),
-                label: Text(c.displayName),
-              );
-            }).toList(),
-          ),
-        ],
-      ],
-    );
-  }
-
-
-  Widget _buildSpellSlotsMatrix(BuildContext context) {
-    final theme = Theme.of(context);
-    final pool = widget.controller.character.resources.spellSlots;
-    final maxSlots = pool.maxSlots;
-    final curSlots = pool.currentSlots;
-
-    if (maxSlots.isEmpty && pool.pactMagicMax == 0) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'SPELL SLOTS',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: List.generate(9, (index) {
-            final level = index + 1;
-            final max = maxSlots[level] ?? 0;
-            if (max == 0) return const SizedBox.shrink();
-            final current = curSlots[level] ?? max;
-
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
-              ),
-              child: Column(
-                children: [
-                  Text('Lvl $level', style: theme.textTheme.labelSmall),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(max, (slotIdx) {
-                      final isAvailable = slotIdx < current;
-                      return InkWell(
-                        onTap: () {
-                          HapticService.selectionTick(context);
-                          widget.controller.toggleSpellSlot(level, isAvailable);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Icon(
-                            isAvailable ? Icons.circle : Icons.circle_outlined,
-                            size: 14,
-                            color: isAvailable ? theme.colorScheme.primary : Colors.grey,
-                          ),
-                        ),
-                      );
-                    }),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    ),
+                    icon: const Icon(Icons.refresh, size: 14),
+                    label: const Text('Reset Turn', style: TextStyle(fontSize: 11)),
+                    onPressed: () {
+                      HapticService.selectionTick(context);
+                      setState(() {
+                        _actionSpent = false;
+                        _bonusActionSpent = false;
+                        _reactionSpent = false;
+                      });
+                    },
                   ),
                 ],
               ),
-            );
-          }),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildEconomyTrackerChip(
+                      label: 'Action',
+                      isSpent: _actionSpent,
+                      color: Colors.redAccent,
+                      onTap: () {
+                        HapticService.selectionTick(context);
+                        setState(() => _actionSpent = !_actionSpent);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildEconomyTrackerChip(
+                      label: 'Bonus Action',
+                      isSpent: _bonusActionSpent,
+                      color: Colors.orangeAccent,
+                      onTap: () {
+                        HapticService.selectionTick(context);
+                        setState(() => _bonusActionSpent = !_bonusActionSpent);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildEconomyTrackerChip(
+                      label: 'Reaction',
+                      isSpent: _reactionSpent,
+                      color: Colors.blueAccent,
+                      onTap: () {
+                        HapticService.selectionTick(context);
+                        setState(() => _reactionSpent = !_reactionSpent);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // 2. Category Filter Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildCategoryChip('all', 'All (${resolved.allActions.length})'),
+              const SizedBox(width: 6),
+              _buildCategoryChip('action', 'Actions (${resolved.actions.length})'),
+              const SizedBox(width: 6),
+              _buildCategoryChip('bonusAction', 'Bonus Actions (${resolved.bonusActions.length})'),
+              const SizedBox(width: 6),
+              _buildCategoryChip('reaction', 'Reactions (${resolved.reactions.length})'),
+              if (resolved.specialActions.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                _buildCategoryChip('special', 'Special (${resolved.specialActions.length})'),
+              ],
+              const SizedBox(width: 6),
+              _buildCategoryChip('standard', 'Rules (${resolved.standardActions.length})'),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // 3. Render Categorized Sections or Filtered Action List
+        if (_selectedActionCategory == 'all') ...[
+          if (resolved.actions.isNotEmpty) ...[
+            _buildSectionHeader('ACTIONS (${resolved.actions.length})', Colors.redAccent),
+            const SizedBox(height: 6),
+            ...resolved.actions.map((a) => _buildCombatActionCard(context, a)),
+            const SizedBox(height: 12),
+          ],
+          if (resolved.bonusActions.isNotEmpty) ...[
+            _buildSectionHeader('BONUS ACTIONS (${resolved.bonusActions.length})', Colors.orangeAccent),
+            const SizedBox(height: 6),
+            ...resolved.bonusActions.map((a) => _buildCombatActionCard(context, a)),
+            const SizedBox(height: 12),
+          ],
+          if (resolved.reactions.isNotEmpty) ...[
+            _buildSectionHeader('REACTIONS (${resolved.reactions.length})', Colors.blueAccent),
+            const SizedBox(height: 6),
+            ...resolved.reactions.map((a) => _buildCombatActionCard(context, a)),
+            const SizedBox(height: 12),
+          ],
+          if (resolved.specialActions.isNotEmpty) ...[
+            _buildSectionHeader('SPECIAL & MAGIC ITEMS (${resolved.specialActions.length})', Colors.purpleAccent),
+            const SizedBox(height: 6),
+            ...resolved.specialActions.map((a) => _buildCombatActionCard(context, a)),
+            const SizedBox(height: 12),
+          ],
+          if (resolved.standardActions.isNotEmpty) ...[
+            _buildSectionHeader('STANDARD 5E COMBAT ACTIONS', Colors.white70),
+            const SizedBox(height: 6),
+            ...resolved.standardActions.map((a) => _buildCombatActionCard(context, a)),
+          ],
+        ] else ...[
+          if (displayActions.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Text(
+                  'No ${_selectedActionCategory.replaceAll("Action", " Action")}s available.',
+                  style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white54),
+                ),
+              ),
+            )
+          else
+            ...displayActions.map((a) => _buildCombatActionCard(context, a)),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildEconomyTrackerChip({
+    required String label,
+    required bool isSpent,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSpent
+              ? Colors.black26
+              : color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSpent ? Colors.white24 : color,
+            width: isSpent ? 1 : 1.5,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              isSpent ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 16,
+              color: isSpent ? Colors.grey : color,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: isSpent ? Colors.white38 : Colors.white,
+                decoration: isSpent ? TextDecoration.lineThrough : null,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              isSpent ? 'Spent' : 'Ready',
+              style: TextStyle(
+                fontSize: 9,
+                color: isSpent ? Colors.white38 : color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String categoryId, String label) {
+    final isSelected = _selectedActionCategory == categoryId;
+    return ChoiceChip(
+      label: Text(label, style: TextStyle(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          HapticService.selectionTick(context);
+          setState(() => _selectedActionCategory = categoryId);
+        }
+      },
+    );
+  }
+
+  Widget _buildSectionHeader(String title, Color color) {
+    return Row(
+      children: [
+        Container(width: 4, height: 14, color: color),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: color,
+            letterSpacing: 0.6,
+          ),
         ),
       ],
     );
   }
+
+  Widget _buildCombatActionCard(BuildContext context, CharacterCombatAction action) {
+    final theme = Theme.of(context);
+    final typeColor = action.actionTypeColor;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: typeColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: typeColor.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(action.actionTypeIcon, size: 12, color: typeColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      action.actionTypeLabel.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: typeColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      action.name,
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      action.subtitle,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (action.range != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    action.range!,
+                    style: const TextStyle(fontSize: 10, color: Colors.white70),
+                  ),
+                ),
+            ],
+          ),
+          if (action.description.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              action.description,
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70, height: 1.3),
+            ),
+          ],
+          if (action.resourceCost != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.bolt, size: 12, color: Colors.amberAccent),
+                const SizedBox(width: 4),
+                Text(
+                  'Cost: ${action.resourceCost}',
+                  style: const TextStyle(fontSize: 11, color: Colors.amberAccent, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ],
+          if (action.onRollAttack != null || action.onRollDamage != null || action.onExecute != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                if (action.onRollAttack != null) ...[
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      foregroundColor: theme.colorScheme.onPrimaryContainer,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.sports_martial_arts, size: 14),
+                    label: Text(
+                      action.toHitBonus != null
+                          ? 'Atk ${action.toHitBonus! >= 0 ? "+${action.toHitBonus}" : "${action.toHitBonus}"}'
+                          : 'Attack',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () => action.onRollAttack!(context),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (action.onRollDamage != null) ...[
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade900.withValues(alpha: 0.6),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.local_fire_department, size: 14),
+                    label: Text(
+                      action.damageFormula ?? 'Damage',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () => action.onRollDamage!(context),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (action.onExecute != null)
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple.shade800,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.play_arrow, size: 14),
+                    label: const Text('Use Action', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    onPressed: () => action.onExecute!(context),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+
+
 
   // ==========================================
   // TAB 2: SKILLS & TRAITS

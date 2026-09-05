@@ -321,9 +321,12 @@ class InteractiveSpellTile extends StatelessWidget {
         damageStr = spell.customProperties['rollFormula'].toString();
       }
       final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
-      if (slug == 'eldritch-blast' && controller.hasCapabilityFlag('eldritchBlastChaDamage')) {
+      final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
+      final isEB = cleanSlug == 'eldritch-blast' || spell.name.toLowerCase() == 'eldritch blast';
+      if (isEB && (controller.hasAgonizingBlast || controller.hasCapabilityFlag('eldritchBlastChaDamage') || controller.hasCapabilityFlag('agonizing_blast'))) {
         final chaMod = controller.character.effectiveAbilityScores.getModifier(AbilityType.charisma);
-        damageStr = '$damageStr + $chaMod';
+        final chaStr = chaMod >= 0 ? '+ $chaMod' : '- ${chaMod.abs()}';
+        damageStr = '$damageStr $chaStr Force';
       }
     }
 

@@ -650,7 +650,8 @@ class CharacterSheetController extends ChangeNotifier {
   /// (e.g. adding Charisma modifier to Eldritch Blast if 'eldritchBlastChaDamage' is active).
   DiceRollResult rollSpellDamage(Spell spell, {int? slotLevel}) {
     final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
-    final isEldritchBlast = slug == 'eldritch-blast';
+    final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
+    final isEldritchBlast = cleanSlug == 'eldritch-blast' || spell.name.toLowerCase() == 'eldritch blast';
 
     // Parse or retrieve damage dice
     String formula = '1d10';
@@ -677,7 +678,7 @@ class CharacterSheetController extends ChangeNotifier {
     }
 
     int modifier = 0;
-    if (isEldritchBlast && hasAgonizingBlast) {
+    if (isEldritchBlast && (hasAgonizingBlast || hasCapabilityFlag('eldritchBlastChaDamage') || hasCapabilityFlag('agonizing_blast'))) {
       final chaMod = _character.effectiveAbilityScores.getModifier(AbilityType.charisma);
       modifier += chaMod;
     }
