@@ -3,6 +3,7 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../services/acl/homebrew_merge_resolver.dart';
 import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
+import '../../services/io/compendium_file_picker_service.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
 import '../dialogs/app_dialog_frame.dart';
 
@@ -28,6 +29,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
 
   RulesetVersion? _selectedRuleset = RulesetVersion.v2024;
   ImportAnalysisResult? _analysisResult;
+  LoadedCompendiumFile? _loadedFile;
   bool _isAnalyzing = false;
   bool _isImporting = false;
   bool _applyToRemainingCollisions = false;
@@ -108,6 +110,19 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
     }
   }
 
+  Future<void> _pickFile() async {
+    setState(() {
+      _errorMessage = null;
+    });
+    final file = await CompendiumFilePickerService.pickCompendiumJsonFile();
+    if (file == null) return;
+    setState(() {
+      _loadedFile = file;
+      _textController.clear();
+    });
+    _analyzeInput(file.content);
+  }
+
   Future<void> _commitImport() async {
     final analysis = _analysisResult;
     if (analysis == null || !analysis.hasSelected) return;
@@ -162,7 +177,10 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
       actions: [
         if (analysis != null)
           TextButton(
-            onPressed: () => setState(() => _analysisResult = null),
+            onPressed: () => setState(() {
+              _analysisResult = null;
+              _loadedFile = null;
+            }),
             child: const Text('Back / Edit JSON'),
           ),
         TextButton(
@@ -171,7 +189,10 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
         ),
         if (analysis == null)
           ElevatedButton.icon(
-            onPressed: () => _analyzeInput(_textController.text),
+            onPressed: () {
+              final src = _loadedFile?.content ?? _textController.text;
+              _analyzeInput(src);
+            },
             icon: const Icon(Icons.analytics_outlined),
             label: const Text('Analyze Bundle'),
           )
@@ -196,6 +217,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
   }
 
   Widget _buildInputView(ThemeData theme) {
+    final loadedFile = _loadedFile;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -231,27 +253,99 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
             setState(() {
               _selectedRuleset = newSelection.first;
             });
-            if (_textController.text.trim().isNotEmpty) {
+            if (loadedFile != null) {
+              _analyzeInput(loadedFile.content);
+            } else if (_textController.text.trim().isNotEmpty) {
               _analyzeInput(_textController.text);
             }
           },
         ),
         const SizedBox(height: 14),
-        Text(
-          'Paste Community Compendium JSON, homebrew entity maps, or an exported Homebrew Bundle JSON package.',
-          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
+        // ── File Upload Section ──────────────────────────────────────────────
+        if (loadedFile == null)
+          OutlinedButton.icon(
+            onPressed: _pickFile,
+            icon: const Icon(Icons.upload_file, size: 18),
+            label: const Text('Upload JSON File'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              foregroundColor: Colors.tealAccent,
+              side: BorderSide(color: Colors.tealAccent.withValues(alpha: 0.6)),
+            ),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.teal.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.tealAccent.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.insert_drive_file, color: Colors.tealAccent, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loadedFile.fileName,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        loadedFile.formattedSize,
+                        style: const TextStyle(color: Colors.white54, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: 'Remove file',
+                  onPressed: () => setState(() => _loadedFile = null),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 14),
+        // ── Paste Divider ────────────────────────────────────────────────────
+        Row(
+          children: [
+            const Expanded(child: Divider()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                loadedFile == null ? 'OR PASTE JSON TEXT' : 'OR PASTE JSON TEXT INSTEAD',
+                style: theme.textTheme.labelSmall?.copyWith(color: Colors.white38),
+              ),
+            ),
+            const Expanded(child: Divider()),
+          ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
+        // ── Paste Area ───────────────────────────────────────────────────────
         TextField(
           controller: _textController,
           maxLines: 8,
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          style: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 12,
+            color: loadedFile != null ? Colors.white30 : null,
+          ),
+          enabled: loadedFile == null,
           decoration: InputDecoration(
             hintText: '{\n  "spell": [...],\n  "monster": [...]\n}',
             filled: true,
-            fillColor: Colors.black26,
+            fillColor: loadedFile != null ? Colors.black12 : Colors.black26,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
+          onChanged: (val) {
+            if (val.trim().isNotEmpty) {
+              setState(() => _loadedFile = null);
+            }
+          },
         ),
         if (_errorMessage != null) ...[
           const SizedBox(height: 12),

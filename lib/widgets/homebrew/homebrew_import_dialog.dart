@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/domain/core_types.dart';
 import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
+import '../../services/io/compendium_file_picker_service.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
 import '../dialogs/app_dialog_frame.dart';
 
@@ -18,6 +19,7 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
 
   RulesetVersion? _selectedRuleset = RulesetVersion.v2024;
   IngestionBatchResult? _previewResult;
+  LoadedCompendiumFile? _loadedFile;
   bool _isImporting = false;
 
   void _handleAnalyze() {
@@ -29,6 +31,17 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
 
     final result = _pipeline.ingestJsonString(input, forceRuleset: _selectedRuleset);
     setState(() => _previewResult = result);
+  }
+
+  Future<void> _pickFile() async {
+    final file = await CompendiumFilePickerService.pickCompendiumJsonFile();
+    if (file == null) return;
+    final result = _pipeline.ingestJsonString(file.content, forceRuleset: _selectedRuleset);
+    setState(() {
+      _loadedFile = file;
+      _textController.clear();
+      _previewResult = result;
+    });
   }
 
   Future<void> _handleCommitImport() async {
@@ -93,6 +106,7 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final preview = _previewResult;
+    final loadedFile = _loadedFile;
 
     return AppDialogFrame(
       icon: Icons.download,
@@ -142,22 +156,89 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
               ),
             ),
             const SizedBox(height: 14),
-            Text(
-              'Paste a standard JSON compendium snippet or bundle (Spells, Monsters, Items, Classes, Races, Feats, Backgrounds, Tables, Rules):',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            // ── File Upload ───────────────────────────────────────────────
+            if (loadedFile == null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _pickFile,
+                  icon: const Icon(Icons.upload_file, size: 18),
+                  label: const Text('Upload JSON File'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    foregroundColor: Colors.tealAccent,
+                    side: BorderSide(color: Colors.tealAccent.withValues(alpha: 0.6)),
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.teal.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.tealAccent.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.insert_drive_file, color: Colors.tealAccent, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loadedFile.fileName,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            loadedFile.formattedSize,
+                            style: const TextStyle(color: Colors.white54, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      tooltip: 'Remove file',
+                      onPressed: () => setState(() {
+                        _loadedFile = null;
+                        _previewResult = null;
+                      }),
+                    ),
+                  ],
+                ),
               ),
+            const SizedBox(height: 14),
+            // ── Paste Divider ─────────────────────────────────────────────
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    loadedFile == null ? 'OR PASTE JSON TEXT' : 'OR PASTE JSON TEXT INSTEAD',
+                    style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             TextField(
               controller: _textController,
               maxLines: 8,
+              enabled: loadedFile == null,
               decoration: const InputDecoration(
                 hintText: '{\n  "class": [...],\n  "race": [...],\n  "feat": [...],\n  "spell": [...],\n  "monster": [...],\n  "item": [...]\n}',
                 alignLabelWithHint: true,
                 border: OutlineInputBorder(),
               ),
-              onChanged: (_) => _handleAnalyze(),
+              onChanged: (val) {
+                if (val.trim().isNotEmpty) setState(() => _loadedFile = null);
+                _handleAnalyze();
+              },
             ),
             const SizedBox(height: 12),
             if (preview != null) ...[

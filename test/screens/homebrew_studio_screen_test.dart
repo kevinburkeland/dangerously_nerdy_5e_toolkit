@@ -168,7 +168,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Bundle Generated'), findsOneWidget);
-      expect(find.text('Copy to Clipboard'), findsOneWidget);
+      expect(find.text('Copy JSON'), findsOneWidget);
+      expect(find.text('Save to File'), findsOneWidget);
     });
 
     testWidgets('opens HomebrewRefresherDialog and executes reparse', (tester) async {
