@@ -705,6 +705,7 @@ class Race extends DomainEntity {
     if (custom['abilityChoiceCount'] is num) return (custom['abilityChoiceCount'] as num).toInt();
     if (custom['flexibleAbilityCount'] is num) return (custom['flexibleAbilityCount'] as num).toInt();
     if (slug == 'human-variant' || custom['isVariantHuman'] == true) return 2;
+    if (slug == 'half-elf' || slug == 'half_elf') return 2;
     if (slug == 'custom-lineage' || custom['isCustomLineage'] == true) return 1;
     return 0;
   }

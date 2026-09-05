@@ -286,5 +286,273 @@ void main() {
       expect(find.text('23'), findsNothing);
       expect(find.text('22'), findsNothing);
     });
+
+    testWidgets('Attributes First preset under 2014 rules prompts for racial skills and flexible attributes on species step (Variant Human)', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final settingsProvider = SettingsProvider(
+        initialSettings: const AppSettings(
+          rulesEdition: DmRulesEdition.v2014,
+          wizardOrderingPreset: WizardOrderingPreset.attributesFirst,
+        ),
+      );
+
+      await tester.pumpWidget(
+        SettingsScope(
+          notifier: settingsProvider,
+          child: const MaterialApp(
+            home: CharacterBuilderScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Guided Builder'));
+      await tester.pumpAndSettle();
+
+      // Step 1: Basics -> Next Step
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 2: Ability Score Allocation -> Auto-assign -> Next Step
+      await tester.tap(find.text('Auto-Assign'));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 3: Class -> Select Fighter -> Next Step
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Class Decisions -> Select Defense -> Next Step
+      if (find.text('Defense').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Defense'));
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Next Step'));
+        await tester.pumpAndSettle();
+      }
+
+      // Step: Species selection -> Select Human (Variant)
+      expect(find.textContaining('Choose Species'), findsOneWidget);
+      await tester.tap(find.text('Human (Variant)'));
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+
+      // Verify that Species Bonus Skills prompt is now visible!
+      expect(find.textContaining('Species Bonus Skills (Human (Variant)):'), findsOneWidget);
+      expect(find.textContaining('skill proficiency choice'), findsOneWidget);
+
+      // Verify that Lineage Ability Choices prompt is visible!
+      expect(find.textContaining('Human (Variant) Lineage Ability Choices (+1):'), findsOneWidget);
+
+      // Verify that Racial Attribute Modifiers and Resulting Attributes summary is visible!
+      expect(find.textContaining('Racial Attribute Modifiers (Human (Variant)):'), findsOneWidget);
+      expect(find.textContaining('Base Scores + Racial Bonuses = Resulting Attributes:'), findsOneWidget);
+
+      // Tap an eligible skill chip in species bonus skills (e.g. Stealth)
+      final stealthChipFinder = find.widgetWithText(FilterChip, 'Stealth');
+      expect(stealthChipFinder, findsOneWidget);
+      await tester.tap(stealthChipFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 / 1 selected'), findsOneWidget);
+
+      // Tap flexible ability choice chips (e.g. DEX +1 and WIS +1)
+      final dexChipFinder = find.widgetWithText(FilterChip, 'DEXTERITY (+1 Bonus)');
+      expect(dexChipFinder, findsOneWidget);
+      await tester.tap(dexChipFinder);
+      await tester.pumpAndSettle();
+
+      // Verify updated resulting attributes reflect DEX +1
+      expect(find.textContaining('DEX: 15 (+2) [+1]'), findsOneWidget);
+    });
+
+    testWidgets('Attributes First preset under 2014 rules with Custom Lineage grants +2 to only ONE attribute instead of two', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final settingsProvider = SettingsProvider(
+        initialSettings: const AppSettings(
+          rulesEdition: DmRulesEdition.v2014,
+          wizardOrderingPreset: WizardOrderingPreset.attributesFirst,
+        ),
+      );
+
+      await tester.pumpWidget(
+        SettingsScope(
+          notifier: settingsProvider,
+          child: const MaterialApp(
+            home: CharacterBuilderScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Guided Builder'));
+      await tester.pumpAndSettle();
+
+      // Step 1: Basics -> Next Step
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 2: Ability Scores -> Auto-assign (15 STR, 14 DEX, 13 CON, 12 INT, 10 WIS, 8 CHA) -> Next Step
+      await tester.tap(find.text('Auto-Assign'));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 3: Class -> Select Fighter -> Next Step
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      if (find.text('Defense').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Defense'));
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Next Step'));
+        await tester.pumpAndSettle();
+      }
+
+      // Step: Species -> Select Custom Lineage
+      await tester.tap(find.text('Custom Lineage'));
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+
+      // Verify prompt for Custom Lineage flexible ability choice (+2 to 1 score)
+      expect(find.textContaining('Custom Lineage Lineage Ability Choices (+2):'), findsOneWidget);
+      expect(find.textContaining('1 / 1 selected'), findsOneWidget);
+
+      // Verify only ONE score received +2:
+      // STR (15 + 2 = 17), other scores have +0 bonus
+      expect(find.text('Racial Attribute Modifiers (Custom Lineage): +2 STR'), findsOneWidget);
+      expect(find.textContaining('STR: 17 (+3) [+2]'), findsOneWidget);
+      // DEX is base 14 without bonus
+      expect(find.textContaining('DEX: 14 (+2)'), findsOneWidget);
+      expect(find.textContaining('[+2]'), findsOneWidget); // Only ONE score has [+2]
+
+      // Now switch +2 to DEX
+      final dexChip = find.widgetWithText(FilterChip, 'DEXTERITY (+2 Bonus)');
+      expect(dexChip, findsOneWidget);
+      await tester.tap(dexChip);
+      await tester.pumpAndSettle();
+
+      // Verify only DEX now has +2 (DEX: 14 + 2 = 16), STR has no bonus (STR: 15)
+      expect(find.text('Racial Attribute Modifiers (Custom Lineage): +2 DEX'), findsOneWidget);
+      expect(find.textContaining('DEX: 16 (+3) [+2]'), findsOneWidget);
+      expect(find.textContaining('STR: 15 (+2)'), findsOneWidget);
+      expect(find.text('Racial Attribute Modifiers (Custom Lineage): +2 STR'), findsNothing);
+      expect(find.textContaining('STR: 17'), findsNothing);
+    });
+
+    testWidgets('Attributes First preset under 2024 rules prompts for 2024 Human Skillful racial bonus skill', (tester) async {
+      tester.view.physicalSize = const Size(1280, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final settingsProvider = SettingsProvider(
+        initialSettings: const AppSettings(
+          rulesEdition: DmRulesEdition.v2024,
+          wizardOrderingPreset: WizardOrderingPreset.attributesFirst,
+        ),
+      );
+
+      await tester.pumpWidget(
+        SettingsScope(
+          notifier: settingsProvider,
+          child: const MaterialApp(
+            home: CharacterBuilderScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Guided Builder'));
+      await tester.pumpAndSettle();
+
+      // Step 1: Basics -> Next Step
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 2: Ability Scores -> Auto-assign -> Next Step
+      await tester.tap(find.text('Auto-Assign'));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 3: Class -> Select Fighter -> Next Step
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Fighter (').last);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      if (find.text('Defense').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Defense'));
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Next Step'));
+        await tester.pumpAndSettle();
+      }
+
+      // Step: Species -> Select Human
+      await tester.tap(find.text('Human'));
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+
+      // Verify Species Bonus Skills prompt is visible for Human Skillful
+      expect(find.textContaining('Species Bonus Skills (Human):'), findsOneWidget);
+      expect(find.textContaining('0 / 1 selected'), findsOneWidget);
+
+      // Select Arcana chip
+      final arcanaChip = find.widgetWithText(FilterChip, 'Arcana');
+      expect(arcanaChip, findsOneWidget);
+      await tester.tap(arcanaChip);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('1 / 1 selected'), findsOneWidget);
+    });
   });
 }

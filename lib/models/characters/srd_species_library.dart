@@ -219,6 +219,8 @@ class SrdSpeciesLibrary {
       'darkvisionFeet': 60,
       'bonusSkillCount': 2,
       'abilityBonuses2014': {'charisma': 2},
+      'abilityChoiceCount': 2,
+      'abilityChoiceBonus': 1,
     },
   );
 

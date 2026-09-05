@@ -818,27 +818,33 @@ class AbilityScoreStep extends StatelessWidget {
               spacing: 8,
               runSpacing: 6,
               children: AbilityType.values.map((ab) {
+                final fixedBonuses = curSpecies?.fixedAbilityBonuses2014 ?? const {};
+                final isFixed = fixedBonuses.containsKey(ab.name.toLowerCase());
                 final isSelected = variantHumanBonuses.contains(ab);
                 return FilterChip(
-                  label: Text('${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
+                  label: Text(isFixed
+                      ? '${ab.name.toUpperCase()} (+${fixedBonuses[ab.name.toLowerCase()]} Fixed)'
+                      : '${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
                   selected: isSelected,
                   selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
                   checkmarkColor: Colors.cyanAccent,
-                  onSelected: (selected) {
-                    HapticService.selectionTick(context);
-                    final updated = Set<AbilityType>.from(variantHumanBonuses);
-                    if (selected) {
-                      if (updated.length >= flexibleCount) {
-                        updated.remove(updated.first);
-                      }
-                      updated.add(ab);
-                    } else {
-                      if (updated.length > 1) {
-                        updated.remove(ab);
-                      }
-                    }
-                    onVariantHumanBonusesChanged(updated);
-                  },
+                  onSelected: isFixed
+                      ? null
+                      : (selected) {
+                          HapticService.selectionTick(context);
+                          final updated = Set<AbilityType>.from(variantHumanBonuses);
+                          if (selected) {
+                            while (updated.length >= flexibleCount && updated.isNotEmpty) {
+                              updated.remove(updated.first);
+                            }
+                            updated.add(ab);
+                          } else {
+                            if (updated.length > 1) {
+                              updated.remove(ab);
+                            }
+                          }
+                          onVariantHumanBonusesChanged(updated);
+                        },
                 );
               }).toList(),
             ),

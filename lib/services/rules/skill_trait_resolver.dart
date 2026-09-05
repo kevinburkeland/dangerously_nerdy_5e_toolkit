@@ -53,13 +53,14 @@ class SkillTraitResolver {
     required String classSlug,
     required Set<SkillType> requestedClassSkills,
     required Set<SkillType> compensatoryPicks,
+    Set<SkillType> speciesBonusSkills = const {},
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
     final granted = <SkillType, String>{};
     final collisions = <SkillType>[];
     final resolved = <SkillType, SkillProficiencyLevel>{};
 
-    // 1. Ingest Species Fixed Skills
+    // 1. Ingest Species Fixed & Bonus Skills
     if (speciesSlug != null) {
       final sSlug = speciesSlug.toLowerCase();
       if (sSlug.contains('elf') && !sSlug.contains('half-elf')) {
@@ -67,6 +68,9 @@ class SkillTraitResolver {
       } else if (sSlug.contains('half-orc') || sSlug.contains('orc')) {
         granted[SkillType.intimidation] = 'Species: Half-Orc (Menacing)';
       }
+    }
+    for (final sk in speciesBonusSkills) {
+      _addOrCollide(granted, collisions, sk, 'Species: Bonus Skill Choice');
     }
 
     // 2. Ingest Background Fixed Skills
