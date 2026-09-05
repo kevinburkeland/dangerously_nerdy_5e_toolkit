@@ -39,6 +39,13 @@ class SrdFeatureOptions {
       grants: {'hasProtectionReaction': true},
     ),
     FeatureOption(
+      id: 'interception',
+      name: 'Interception',
+      descriptionMarkdown:
+          'When a creature you can see hits a target within 5 feet with an attack, you can use your reaction to reduce the damage by 1d10 + your proficiency bonus (requires shield or simple/martial weapon).',
+      grants: {'hasInterceptionReaction': true},
+    ),
+    FeatureOption(
       id: 'two_weapon_fighting',
       name: 'Two-Weapon Fighting',
       descriptionMarkdown:
