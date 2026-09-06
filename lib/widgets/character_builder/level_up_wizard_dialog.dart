@@ -402,8 +402,19 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           skills.add(_selectedFeatSkill!);
         }
         final expertises = <SkillType>{};
-        if (feat != null && feat.hasExpertiseChoice && _selectedFeatExpertise != null) {
-          expertises.add(_selectedFeatExpertise!);
+        if (feat != null && feat.hasExpertiseChoice) {
+          final eligible = <SkillType>{
+            ...widget.character.skillProficiencies.entries
+                .where((e) => e.value != SkillProficiencyLevel.none)
+                .map((e) => e.key),
+            if (_selectedFeatSkill != null) _selectedFeatSkill!,
+          };
+          final finalExp = eligible.contains(_selectedFeatExpertise)
+              ? _selectedFeatExpertise
+              : (_selectedFeatSkill ?? (eligible.isNotEmpty ? eligible.first : null));
+          if (finalExp != null) {
+            expertises.add(finalExp);
+          }
         }
 
         final featureGrants = <String, List<String>>{};
@@ -1585,7 +1596,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   ),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<SkillType>(
-                    key: const Key('levelup_feat_skill_dropdown'),
+                    key: ValueKey('levelup_feat_skill_${_selectedFeatSkill}_$_selectedFeatSlug'),
                     initialValue: _selectedFeatSkill ??
                         (feat.selectableSkills.isNotEmpty
                             ? feat.selectableSkills.first
@@ -1604,10 +1615,21 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                         .toList(),
                     onChanged: (s) {
                       if (s != null) {
+                        final oldSkill = _selectedFeatSkill;
                         setState(() {
                           _selectedFeatSkill = s;
-                          if (feat.hasExpertiseChoice && _selectedFeatExpertise == null) {
-                            _selectedFeatExpertise = s;
+                          if (feat.hasExpertiseChoice) {
+                            final eligible = <SkillType>{
+                              ...widget.character.skillProficiencies.entries
+                                  .where((e) => e.value != SkillProficiencyLevel.none)
+                                  .map((e) => e.key),
+                              s,
+                            };
+                            if (_selectedFeatExpertise == null ||
+                                _selectedFeatExpertise == oldSkill ||
+                                !eligible.contains(_selectedFeatExpertise)) {
+                              _selectedFeatExpertise = s;
+                            }
                           }
                         });
                       }
@@ -1636,7 +1658,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                             : eligible.first);
 
                     return DropdownButtonFormField<SkillType>(
-                      key: const Key('levelup_feat_expertise_dropdown'),
+                      key: ValueKey('levelup_feat_expertise_${effectiveVal}_$_selectedFeatSkill'),
                       initialValue: effectiveVal,
                       decoration: InputDecoration(
                         isDense: true,

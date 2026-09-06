@@ -234,13 +234,18 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
 
       Navigator.of(context).pop();
 
+      final eligible = feat.hasExpertiseChoice ? _getEligibleExpertiseSkills(_chosenSkill) : <SkillType>[];
+      final finalExpertise = eligible.contains(_chosenExpertise)
+          ? _chosenExpertise
+          : (_chosenSkill ?? (eligible.isNotEmpty ? eligible.first : null));
+
       await widget.controller.addFeat(
         featRef,
         reason: _reasonCtrl.text.trim().isNotEmpty ? _reasonCtrl.text.trim() : null,
         abilityBonus: _chosenAbility,
         bonusAmount: feat.statIncreaseAmount > 0 ? feat.statIncreaseAmount : 1,
         skillGrant: _chosenSkill,
-        expertiseGrant: _chosenExpertise,
+        expertiseGrant: feat.hasExpertiseChoice ? finalExpertise : null,
         featureOptions: _chosenOptionId != null ? [_chosenOptionId!] : null,
       );
     }
@@ -629,12 +634,15 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
               }).toList(),
               onChanged: (val) {
                 if (val != null) {
+                  final oldSkill = _chosenSkill;
                   setState(() {
                     _chosenSkill = val;
                     // Recompute eligible expertise options to include this new skill!
                     if (feat.hasExpertiseChoice) {
                       final eligible = _getEligibleExpertiseSkills(val);
-                      if (_chosenExpertise == null || !eligible.contains(_chosenExpertise)) {
+                      if (_chosenExpertise == null ||
+                          _chosenExpertise == oldSkill ||
+                          !eligible.contains(_chosenExpertise)) {
                         _chosenExpertise = val; // Default to the same skill!
                       }
                     }
@@ -670,6 +678,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
                   : (eligible.isNotEmpty ? eligible.first : null);
 
               return DropdownButtonFormField<SkillType>(
+                key: ValueKey('add_feat_expertise_${activeValue}_$_chosenSkill'),
                 initialValue: activeValue,
                 isExpanded: true,
                 decoration: InputDecoration(
