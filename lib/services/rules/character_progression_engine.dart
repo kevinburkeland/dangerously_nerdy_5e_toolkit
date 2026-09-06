@@ -32,12 +32,14 @@ class AsiOrFeatChoice {
   final EntityReference<DomainEntity>? featRef;
   final Set<AbilityType> savingThrowGrants;
   final Set<SkillType> skillGrants;
+  final Set<SkillType> expertiseGrants;
   final AbilityType? chosenFeatAbility;
 
   const AsiOrFeatChoice.asi(this.abilityIncreases)
       : featRef = null,
         savingThrowGrants = const {},
         skillGrants = const {},
+        expertiseGrants = const {},
         chosenFeatAbility = null;
 
   const AsiOrFeatChoice.feat(
@@ -45,6 +47,7 @@ class AsiOrFeatChoice {
     this.abilityIncreases = const {},
     this.savingThrowGrants = const {},
     this.skillGrants = const {},
+    this.expertiseGrants = const {},
     this.chosenFeatAbility,
   }) : featRef = feat;
 
@@ -391,6 +394,9 @@ class CharacterProgressionEngine {
         if (!updatedSkills.containsKey(skill) || updatedSkills[skill] == SkillProficiencyLevel.none) {
           updatedSkills[skill] = SkillProficiencyLevel.proficient;
         }
+      }
+      for (final skill in choice.expertiseGrants) {
+        updatedSkills[skill] = SkillProficiencyLevel.expertise;
       }
     }
 

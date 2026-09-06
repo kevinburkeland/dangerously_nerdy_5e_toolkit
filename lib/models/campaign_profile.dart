@@ -5,6 +5,7 @@ import 'animated_object.dart';
 import 'dm_screen_data.dart';
 import 'domain/character_models.dart';
 import 'domain/session_graph_models.dart';
+import 'party/party_event.dart';
 import 'party/party_purse.dart';
 
 /// Immutable Campaign Profile representing an isolated campaign / DM workspace state.
@@ -20,6 +21,7 @@ class CampaignProfile {
   final Set<String> pinnedRuleIds;
   final String notesMarkdown;
   final PartyPurse partyPurse;
+  final List<PartyEvent> changeLog;
 
   /// Transient, non-serialized field holding characters extracted during deserialization migration.
   final List<Character> _migratedCharacters;
@@ -47,6 +49,7 @@ class CampaignProfile {
     },
     this.notesMarkdown = '',
     this.partyPurse = const PartyPurse(),
+    this.changeLog = const [],
     List<Character> migratedCharacters = const [],
     this.unparsedPartyRoster = const [],
     this.unparsedMinions = const [],
@@ -101,6 +104,7 @@ class CampaignProfile {
     Set<String>? pinnedRuleIds,
     String? notesMarkdown,
     PartyPurse? partyPurse,
+    List<PartyEvent>? changeLog,
     List<Character>? migratedCharacters,
     List<Map<String, dynamic>>? unparsedPartyRoster,
     List<Map<String, dynamic>>? unparsedMinions,
@@ -120,6 +124,9 @@ class CampaignProfile {
           : this.pinnedRuleIds,
       notesMarkdown: notesMarkdown ?? this.notesMarkdown,
       partyPurse: partyPurse ?? this.partyPurse,
+      changeLog: changeLog != null
+          ? List<PartyEvent>.from(changeLog)
+          : this.changeLog,
       migratedCharacters: migratedCharacters ?? _migratedCharacters,
       unparsedPartyRoster: unparsedPartyRoster != null
           ? List<Map<String, dynamic>>.from(unparsedPartyRoster)
@@ -142,6 +149,7 @@ class CampaignProfile {
       'pinnedRuleIds': pinnedRuleIds.toList(),
       'notesMarkdown': notesMarkdown,
       'partyPurse': partyPurse.toMap(),
+      'changeLog': changeLog.map((e) => e.toMap()).toList(),
     };
   }
 
@@ -229,6 +237,17 @@ class CampaignProfile {
       }
     }
 
+    final changeLogList = <PartyEvent>[];
+    if (map['changeLog'] is List) {
+      for (final raw in (map['changeLog'] as List)) {
+        if (raw is Map) {
+          try {
+            changeLogList.add(PartyEvent.fromMap(Map<String, dynamic>.from(raw)));
+          } catch (_) {}
+        }
+      }
+    }
+
     return CampaignProfile(
       id: map['id']?.toString() ?? 'campaign_${DateTime.now().millisecondsSinceEpoch}',
       name: map['name']?.toString() ?? 'Unnamed Campaign',
@@ -251,6 +270,7 @@ class CampaignProfile {
             },
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
       partyPurse: purse,
+      changeLog: changeLogList,
     );
   }
 

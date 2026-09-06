@@ -230,6 +230,23 @@ enum SkillType {
         SkillType.stealth => 'Stealth',
         SkillType.survival => 'Survival',
       };
+
+  static SkillType? tryParse(String? value) {
+    if (value == null) return null;
+    final clean = value.trim().toLowerCase().replaceAll(RegExp(r'[\s_-]+'), '');
+    for (final s in SkillType.values) {
+      final sName = s.name.toLowerCase().replaceAll(RegExp(r'[\s_-]+'), '');
+      final sDisp = s.displayName.toLowerCase().replaceAll(RegExp(r'[\s_-]+'), '');
+      if (clean == sName || clean == sDisp) {
+        return s;
+      }
+    }
+    return null;
+  }
+
+  static SkillType fromLooseString(String? value, {SkillType fallback = SkillType.athletics}) {
+    return tryParse(value) ?? fallback;
+  }
 }
 
 /// Skill Proficiency Levels

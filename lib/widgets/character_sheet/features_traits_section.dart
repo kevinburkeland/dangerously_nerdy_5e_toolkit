@@ -11,6 +11,7 @@ import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
+import 'add_feat_dialog.dart';
 
 @immutable
 class _ExtractedFeature {
@@ -43,6 +44,7 @@ class FeaturesTraitsSection extends StatelessWidget {
     IconData icon = Icons.auto_awesome,
     Widget? glyphWidget,
     Color? accentColor,
+    String? featSlugToRemove,
   }) {
     HapticService.selectionTick(context);
     final theme = Theme.of(context);
@@ -152,6 +154,64 @@ class FeaturesTraitsSection extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 20),
+                if (featSlugToRemove != null) ...[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 44),
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.redAccent),
+                        minimumSize: const Size(double.infinity, 44),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                      label: const Text('Remove Feat', style: TextStyle(color: Colors.redAccent)),
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        final reasonCtrl = TextEditingController();
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (c) => AlertDialog(
+                            title: Text('Remove $name?'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Are you sure you want to remove "$name" from ${controller.character.name}?'),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: reasonCtrl,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Reason / Campaign Log Note (Optional)',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(c, false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                                onPressed: () => Navigator.pop(c, true),
+                                child: const Text('Remove Feat'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await controller.removeFeat(
+                            featSlugToRemove,
+                            reason: reasonCtrl.text.trim().isNotEmpty ? reasonCtrl.text.trim() : null,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 48),
                   child: FilledButton(
@@ -178,6 +238,7 @@ class FeaturesTraitsSection extends StatelessWidget {
     IconData icon = Icons.auto_awesome,
     Widget? glyphWidget,
     required Color color,
+    String? featSlug,
   }) {
     final theme = Theme.of(context);
 
@@ -196,6 +257,7 @@ class FeaturesTraitsSection extends StatelessWidget {
             icon: icon,
             glyphWidget: glyphWidget,
             accentColor: color,
+            featSlugToRemove: featSlug,
           ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
@@ -536,17 +598,63 @@ class FeaturesTraitsSection extends StatelessWidget {
         }),
 
         // Feats Section
-        if (character.feats.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Text(
-            'FEATS (${character.feats.length})',
-            style: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-              color: Colors.amberAccent,
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                'FEATS (${character.feats.length})',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  color: Colors.amberAccent,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
+            TextButton.icon(
+              icon: const Icon(Icons.add, size: 16, color: Colors.amberAccent),
+              label: const Text(
+                'Add Feat',
+                style: TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () => AddFeatDialog.show(context, controller),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        if (character.feats.isEmpty)
+          InkWell(
+            onTap: () => AddFeatDialog.show(context, controller),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade900.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.military_tech_outlined, size: 18, color: Colors.amberAccent),
+                  SizedBox(width: 8),
+                  Text(
+                    'No feats added yet. Tap to add a bonus feat.',
+                    style: TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
           ...character.feats.map((feat) {
             final srdFeat = SrdFeatsLibrary.findBySlug(feat.slug);
             final rawCategory = srdFeat?.category ?? 'Feat';
@@ -561,6 +669,7 @@ class FeaturesTraitsSection extends StatelessWidget {
               name: feat.displayName,
               category: category,
               descriptionMarkdown: desc,
+              featSlug: feat.slug,
               glyphWidget: DndGlyph.feat(
                 category: featCat,
                 featId: feat.slug,
@@ -572,7 +681,6 @@ class FeaturesTraitsSection extends StatelessWidget {
               color: Colors.amberAccent,
             );
           }),
-        ],
       ],
     );
   }

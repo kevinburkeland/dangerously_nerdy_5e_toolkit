@@ -75,6 +75,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   String _selectedFeatSlug = 'tough';
   String _selectedFeatName = 'Tough';
   AbilityType? _selectedFeatAbility;
+  SkillType? _selectedFeatSkill;
+  SkillType? _selectedFeatExpertise;
 
   // Step 5: Spells
   final List<String> _newCantrips = [];
@@ -206,6 +208,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       if (initialFeat.hasAbilityScoreIncrease) {
         _selectedFeatAbility = initialFeat.selectableAbilities.first;
       }
+      if (initialFeat.hasSkillProficiencyChoice) {
+        _selectedFeatSkill = initialFeat.selectableSkills.isNotEmpty
+            ? initialFeat.selectableSkills.first
+            : SkillType.athletics;
+      }
+      if (initialFeat.hasExpertiseChoice) {
+        _selectedFeatExpertise = _selectedFeatSkill ?? SkillType.athletics;
+      }
     }
 
     _diceAnimController = AnimationController(
@@ -316,6 +326,15 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           }
         }
 
+        final skills = <SkillType>{};
+        if (feat != null && feat.hasSkillProficiencyChoice && _selectedFeatSkill != null) {
+          skills.add(_selectedFeatSkill!);
+        }
+        final expertises = <SkillType>{};
+        if (feat != null && feat.hasExpertiseChoice && _selectedFeatExpertise != null) {
+          expertises.add(_selectedFeatExpertise!);
+        }
+
         asiChoice = AsiOrFeatChoice.feat(
           EntityReference<DomainEntity>(
             refType: EntityType.feat,
@@ -325,6 +344,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           abilityIncreases: increases,
           savingThrowGrants: saves,
           chosenFeatAbility: chosenAbility,
+          skillGrants: skills,
+          expertiseGrants: expertises,
         );
       }
     }
@@ -1323,6 +1344,30 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   } else {
                     _selectedFeatAbility = null;
                   }
+                  if (match.hasSkillProficiencyChoice) {
+                    final selectable = match.selectableSkills.isNotEmpty
+                        ? match.selectableSkills
+                        : SkillType.values.toList();
+                    if (_selectedFeatSkill == null || !selectable.contains(_selectedFeatSkill)) {
+                      _selectedFeatSkill = selectable.first;
+                    }
+                  } else {
+                    _selectedFeatSkill = null;
+                  }
+                  if (match.hasExpertiseChoice) {
+                    final eligible = <SkillType>{
+                      ...widget.character.skillProficiencies.entries
+                          .where((e) => e.value != SkillProficiencyLevel.none)
+                          .map((e) => e.key),
+                      if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                    };
+                    if (eligible.isEmpty) eligible.addAll(SkillType.values);
+                    if (_selectedFeatExpertise == null || !eligible.contains(_selectedFeatExpertise)) {
+                      _selectedFeatExpertise = _selectedFeatSkill ?? eligible.first;
+                    }
+                  } else {
+                    _selectedFeatExpertise = null;
+                  }
                 });
               }
             },
@@ -1411,6 +1456,91 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                       );
                     }(),
                   ],
+                ],
+                if (feat.hasSkillProficiencyChoice) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Choose Skill Proficiency:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<SkillType>(
+                    key: const Key('levelup_feat_skill_dropdown'),
+                    initialValue: _selectedFeatSkill ??
+                        (feat.selectableSkills.isNotEmpty
+                            ? feat.selectableSkills.first
+                            : SkillType.athletics),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.black26,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    items: (feat.selectableSkills.isNotEmpty ? feat.selectableSkills : SkillType.values)
+                        .map((s) => DropdownMenuItem(
+                              value: s,
+                              child: Text(s.displayName),
+                            ))
+                        .toList(),
+                    onChanged: (s) {
+                      if (s != null) {
+                        setState(() {
+                          _selectedFeatSkill = s;
+                          if (feat.hasExpertiseChoice && _selectedFeatExpertise == null) {
+                            _selectedFeatExpertise = s;
+                          }
+                        });
+                      }
+                    },
+                  ),
+                ],
+                if (feat.hasExpertiseChoice) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Choose Skill for Expertise (Double Proficiency):',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  const SizedBox(height: 6),
+                  () {
+                    final eligible = <SkillType>{
+                      ...widget.character.skillProficiencies.entries
+                          .where((e) => e.value != SkillProficiencyLevel.none)
+                          .map((e) => e.key),
+                      if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                    };
+                    if (eligible.isEmpty) eligible.addAll(SkillType.values);
+                    final effectiveVal = eligible.contains(_selectedFeatExpertise)
+                        ? _selectedFeatExpertise
+                        : (_selectedFeatSkill != null && eligible.contains(_selectedFeatSkill)
+                            ? _selectedFeatSkill
+                            : eligible.first);
+
+                    return DropdownButtonFormField<SkillType>(
+                      key: const Key('levelup_feat_expertise_dropdown'),
+                      initialValue: effectiveVal,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        filled: true,
+                        fillColor: Colors.black26,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      items: eligible
+                          .map((s) => DropdownMenuItem(
+                                value: s,
+                                child: Text(
+                                  s == _selectedFeatSkill
+                                      ? '${s.displayName} (From this Feat)'
+                                      : s.displayName,
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (s) {
+                        if (s != null) {
+                          setState(() => _selectedFeatExpertise = s);
+                        }
+                      },
+                    );
+                  }(),
                 ],
                 const SizedBox(height: 12),
                 Container(
@@ -2557,6 +2687,20 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                         _buildDiffRow('Feat Ability', 'None', '+${feat.statIncreaseAmount} ${chosenAbility.shortName}', theme, highlightNew: true),
                         if (feat.grantsSavingThrowProficiency)
                           _buildDiffRow('Feat Saving Throw', 'None', '${chosenAbility.shortName} Save Proficiency', theme, highlightNew: true),
+                        if (feat.hasSkillProficiencyChoice && _selectedFeatSkill != null)
+                          _buildDiffRow('Feat Skill', 'None', '${_selectedFeatSkill!.displayName} Proficiency', theme, highlightNew: true),
+                        if (feat.hasExpertiseChoice && _selectedFeatExpertise != null)
+                          _buildDiffRow('Feat Expertise', 'None', '${_selectedFeatExpertise!.displayName} Expertise', theme, highlightNew: true),
+                      ],
+                    );
+                  }
+                  if (feat != null && (feat.hasSkillProficiencyChoice || feat.hasExpertiseChoice)) {
+                    return Column(
+                      children: [
+                        if (feat.hasSkillProficiencyChoice && _selectedFeatSkill != null)
+                          _buildDiffRow('Feat Skill', 'None', '${_selectedFeatSkill!.displayName} Proficiency', theme, highlightNew: true),
+                        if (feat.hasExpertiseChoice && _selectedFeatExpertise != null)
+                          _buildDiffRow('Feat Expertise', 'None', '${_selectedFeatExpertise!.displayName} Expertise', theme, highlightNew: true),
                       ],
                     );
                   }

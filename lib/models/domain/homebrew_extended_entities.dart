@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../dm_screen_data.dart';
-import 'character_models.dart' show AbilityType;
+import 'character_models.dart' show AbilityType, SkillType;
 import 'core_types.dart';
 import 'entity_reference.dart';
 import 'feature_grant.dart';
@@ -1191,6 +1191,45 @@ extension FeatAsiExtension on Feat {
     final rawDesc = customProperties['riderDescription']?.toString();
     if (rawDesc != null && rawDesc.isNotEmpty) return rawDesc;
     return null;
+  }
+
+  /// Whether this feat grants a skill proficiency choice (e.g. Skill Expert).
+  bool get hasSkillProficiencyChoice {
+    if (id.slug.toLowerCase() == 'skill-expert' || name.toLowerCase() == 'skill expert') return true;
+    final sp = customProperties['skillProficiencies'];
+    if (sp is List) {
+      return sp.any((e) => e is Map && (e.containsKey('choose') || e.containsKey('any')));
+    }
+    return false;
+  }
+
+  /// Eligible skills that can be chosen for proficiency (defaults to all 18 skills).
+  List<SkillType> get selectableSkills {
+    final sp = customProperties['skillProficiencies'];
+    if (sp is List) {
+      for (final item in sp) {
+        if (item is Map && item['choose'] is Map) {
+          final from = item['choose']['from'];
+          if (from is List) {
+            final list = <SkillType>[];
+            for (final s in from) {
+              final parsed = SkillType.tryParse(s.toString());
+              if (parsed != null && !list.contains(parsed)) list.add(parsed);
+            }
+            if (list.isNotEmpty) return list;
+          }
+        }
+      }
+    }
+    return SkillType.values;
+  }
+
+  /// Whether this feat grants an expertise choice (e.g. Skill Expert).
+  bool get hasExpertiseChoice {
+    if (id.slug.toLowerCase() == 'skill-expert' || name.toLowerCase() == 'skill expert') return true;
+    final exp = customProperties['expertise'];
+    if (exp is List && exp.isNotEmpty) return true;
+    return false;
   }
 }
 

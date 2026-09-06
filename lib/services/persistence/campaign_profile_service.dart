@@ -1,8 +1,10 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/campaign_profile.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/session_graph_models.dart';
+import '../../models/party/party_event.dart';
 import '../app_services.dart';
 import '../logging_service.dart';
 import '../party/campaign_registry_service.dart';
@@ -344,6 +346,39 @@ class CampaignProfileService extends ChangeNotifier {
       }
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to delete campaign profile: $profileId');
+    }
+  }
+
+  /// Records an event to any campaign profile containing [characterId] or matching [roomCode].
+  Future<void> logCampaignEvent({
+    required String characterId,
+    required String characterName,
+    required String type,
+    required String details,
+    String? roomCode,
+  }) async {
+    final event = PartyEvent(
+      id: 'evt_${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(9999)}',
+      roomCode: roomCode ?? '',
+      type: type,
+      playerName: characterName,
+      details: details,
+      timestamp: DateTime.now(),
+    );
+
+    for (final profile in _memoryCache.values.toList()) {
+      final matchesChar = profile.partyCharacterIds.contains(characterId);
+      final matchesRoom = roomCode != null &&
+          roomCode.isNotEmpty &&
+          profile.roomState.roomCode.toUpperCase() == roomCode.toUpperCase();
+
+      if (matchesChar || matchesRoom) {
+        final updatedLog = [event, ...profile.changeLog];
+        final updatedProfile = profile.copyWith(changeLog: updatedLog);
+        _memoryCache[profile.id] = updatedProfile;
+        await _persistProfileToDisk(updatedProfile);
+        notifyListeners();
+      }
     }
   }
 

@@ -5,8 +5,14 @@ import '../models/dm_screen_data.dart' show DmRulesEdition;
 import '../models/domain/character_models.dart';
 import '../models/domain/entity_reference.dart';
 import '../models/domain/spell_monster_equipment.dart';
+import '../models/characters/srd_feats_library.dart';
+import '../models/domain/homebrew_extended_entities.dart';
+import '../models/party/campaign_membership.dart';
 import '../models/room_roll.dart';
 import '../services/dice_room_service.dart';
+import '../services/party/campaign_registry_service.dart';
+import '../services/party/party_room_service.dart';
+import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/debounced_storage_service.dart';
 import '../services/repository/reference_resolver.dart';
@@ -816,6 +822,238 @@ class CharacterSheetController extends ChangeNotifier {
     }
 
     return result;
+  }
+
+  /// Returns all indexed campaign memberships linking this character.
+  List<CampaignMembership> getLinkedCampaigns() {
+    final registry = CampaignRegistryService();
+    final slug = _character.id.slug.toLowerCase().trim();
+    final name = _character.name.toLowerCase().trim();
+    return registry.memberships.where((m) {
+      final cId = m.characterId?.toLowerCase().trim();
+      return cId != null && (cId == slug || cId == name);
+    }).toList();
+  }
+
+  /// Dispatches audit logging to linked campaigns and party rooms.
+  Future<void> _logCampaignChangeIfLinked({
+    required String type,
+    required String details,
+  }) async {
+    final slug = _character.id.slug;
+    final name = _character.name;
+
+    // 1. Check CampaignRegistryService memberships
+    final memberships = getLinkedCampaigns();
+    for (final m in memberships) {
+      await PartyRoomService().logEvent(
+        roomCode: m.roomCode,
+        type: type,
+        playerName: name,
+        details: details,
+      );
+    }
+
+    // 2. Check CampaignProfileService DM profiles
+    await CampaignProfileService().logCampaignEvent(
+      characterId: slug,
+      characterName: name,
+      type: type,
+      details: details,
+    );
+  }
+
+  /// Adds a feat to the character sheet, optionally granting ability score increases or skill/expertise choices.
+  Future<void> addFeat(
+    EntityReference<DomainEntity> featRef, {
+    String? reason,
+    AbilityType? abilityBonus,
+    int bonusAmount = 1,
+    SkillType? skillGrant,
+    SkillType? expertiseGrant,
+  }) async {
+    final existingFeats = List<EntityReference<DomainEntity>>.from(_character.feats);
+    if (!existingFeats.any((f) => f.slug == featRef.slug)) {
+      existingFeats.add(featRef);
+    }
+
+    var newBonusScores = _character.bonusScores;
+    if (abilityBonus != null) {
+      final curBonus = newBonusScores.getScore(abilityBonus);
+      newBonusScores = newBonusScores.copyWith(
+        strength: abilityBonus == AbilityType.strength ? curBonus + bonusAmount : null,
+        dexterity: abilityBonus == AbilityType.dexterity ? curBonus + bonusAmount : null,
+        constitution: abilityBonus == AbilityType.constitution ? curBonus + bonusAmount : null,
+        intelligence: abilityBonus == AbilityType.intelligence ? curBonus + bonusAmount : null,
+        wisdom: abilityBonus == AbilityType.wisdom ? curBonus + bonusAmount : null,
+        charisma: abilityBonus == AbilityType.charisma ? curBonus + bonusAmount : null,
+      );
+    }
+
+    final updatedSkills = Map<SkillType, SkillProficiencyLevel>.from(_character.skillProficiencies);
+    if (skillGrant != null) {
+      updatedSkills[skillGrant] = SkillProficiencyLevel.proficient;
+    }
+    if (expertiseGrant != null) {
+      updatedSkills[expertiseGrant] = SkillProficiencyLevel.expertise;
+    }
+
+    _character = _character.copyWith(
+      feats: existingFeats,
+      bonusScores: newBonusScores,
+      skillProficiencies: updatedSkills,
+    );
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    // Prepare audit log entry
+    final parts = <String>['Added feat: ${featRef.displayName}'];
+    if (abilityBonus != null) {
+      parts.add('+$bonusAmount ${abilityBonus.shortName}');
+    }
+    if (skillGrant != null && expertiseGrant != null && skillGrant == expertiseGrant) {
+      parts.add('Proficiency & Expertise in ${skillGrant.displayName}');
+    } else {
+      if (skillGrant != null) parts.add('Proficiency: ${skillGrant.displayName}');
+      if (expertiseGrant != null) parts.add('Expertise: ${expertiseGrant.displayName}');
+    }
+    if (reason != null && reason.trim().isNotEmpty) {
+      parts.add('("${reason.trim()}")');
+    }
+    await _logCampaignChangeIfLinked(
+      type: 'featAdded',
+      details: parts.join(' • '),
+    );
+  }
+
+  /// Removes a feat from the character sheet.
+  Future<void> removeFeat(String featSlug, {String? reason}) async {
+    final existingFeats = List<EntityReference<DomainEntity>>.from(_character.feats);
+    final matchIdx = existingFeats.indexWhere((f) => f.slug == featSlug);
+    if (matchIdx == -1) return;
+
+    final removed = existingFeats.removeAt(matchIdx);
+    final feat = SrdFeatsLibrary.findBySlug(featSlug);
+    var newBonusScores = _character.bonusScores;
+    if (feat != null && feat.hasAbilityScoreIncrease) {
+      for (final ab in feat.selectableAbilities) {
+        final curBonus = newBonusScores.getScore(ab);
+        if (curBonus >= feat.statIncreaseAmount) {
+          final reduced = (curBonus - feat.statIncreaseAmount).toInt();
+          newBonusScores = newBonusScores.copyWith(
+            strength: ab == AbilityType.strength ? reduced : null,
+            dexterity: ab == AbilityType.dexterity ? reduced : null,
+            constitution: ab == AbilityType.constitution ? reduced : null,
+            intelligence: ab == AbilityType.intelligence ? reduced : null,
+            wisdom: ab == AbilityType.wisdom ? reduced : null,
+            charisma: ab == AbilityType.charisma ? reduced : null,
+          );
+          break;
+        }
+      }
+    }
+    _character = _character.copyWith(
+      feats: existingFeats,
+      bonusScores: newBonusScores,
+    );
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Removed feat: ${removed.displayName} ("${reason.trim()}")'
+        : 'Removed feat: ${removed.displayName}';
+
+    await _logCampaignChangeIfLinked(
+      type: 'featRemoved',
+      details: details,
+    );
+  }
+
+  /// Modifies an individual ability score on the character sheet.
+  Future<void> modifyAbilityScore(
+    AbilityType ability,
+    int newScore, {
+    String? reason,
+    bool isBaseScore = true,
+  }) async {
+    final oldScore = isBaseScore
+        ? _character.baseScores.getScore(ability)
+        : _character.bonusScores.getScore(ability);
+
+    if (oldScore == newScore) return;
+
+    if (isBaseScore) {
+      final updatedBase = _character.baseScores.copyWith(
+        strength: ability == AbilityType.strength ? newScore : null,
+        dexterity: ability == AbilityType.dexterity ? newScore : null,
+        constitution: ability == AbilityType.constitution ? newScore : null,
+        intelligence: ability == AbilityType.intelligence ? newScore : null,
+        wisdom: ability == AbilityType.wisdom ? newScore : null,
+        charisma: ability == AbilityType.charisma ? newScore : null,
+      );
+      _character = _character.copyWith(baseScores: updatedBase);
+    } else {
+      final updatedBonus = _character.bonusScores.copyWith(
+        strength: ability == AbilityType.strength ? newScore : null,
+        dexterity: ability == AbilityType.dexterity ? newScore : null,
+        constitution: ability == AbilityType.constitution ? newScore : null,
+        intelligence: ability == AbilityType.intelligence ? newScore : null,
+        wisdom: ability == AbilityType.wisdom ? newScore : null,
+        charisma: ability == AbilityType.charisma ? newScore : null,
+      );
+      _character = _character.copyWith(bonusScores: updatedBonus);
+    }
+
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final delta = newScore - oldScore;
+    final deltaStr = delta >= 0 ? '+$delta' : '$delta';
+    final diff = '${ability.shortName}: $oldScore -> $newScore ($deltaStr)';
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Modified stat: $diff ("${reason.trim()}")'
+        : 'Modified stat: $diff';
+
+    await _logCampaignChangeIfLinked(
+      type: 'statModified',
+      details: details,
+    );
+  }
+
+  /// Modifies base ability scores with an entire [AbilityScores] object, logging diffs.
+  Future<void> modifyBaseAbilityScores(AbilityScores newScores, {String? reason}) async {
+    final oldScores = _character.baseScores;
+    final diffs = <String>[];
+
+    for (final ability in AbilityType.values) {
+      final oldS = oldScores.getScore(ability);
+      final newS = newScores.getScore(ability);
+      if (oldS != newS) {
+        final delta = newS - oldS;
+        final deltaStr = delta >= 0 ? '+$delta' : '$delta';
+        diffs.add('${ability.shortName}: $oldS -> $newS ($deltaStr)');
+      }
+    }
+
+    if (diffs.isEmpty) return;
+
+    _character = _character.copyWith(baseScores: newScores);
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final diffString = diffs.join(', ');
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Adjusted stats: $diffString ("${reason.trim()}")'
+        : 'Adjusted stats: $diffString';
+
+    await _logCampaignChangeIfLinked(
+      type: 'statModified',
+      details: details,
+    );
   }
 
   @override

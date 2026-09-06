@@ -81,6 +81,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   String? _selectedBackground;
   String? _selectedFeat;
   AbilityType? _selectedFeatAbility;
+  SkillType? _selectedFeatSkill;
+  SkillType? _selectedFeatExpertise;
   String? _wizardSelectedSubclass;
   final Map<String, List<String>> _wizardSelectedFeatureOptions = {};
   final Set<String> _selectedWizardCantrips = {};
@@ -2740,6 +2742,30 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                         } else {
                           _selectedFeatAbility = null;
                         }
+                        if (feat.hasSkillProficiencyChoice) {
+                          final selectable = feat.selectableSkills.isNotEmpty
+                              ? feat.selectableSkills
+                              : SkillType.values.toList();
+                          if (_selectedFeatSkill == null || !selectable.contains(_selectedFeatSkill)) {
+                            _selectedFeatSkill = selectable.first;
+                          }
+                        } else {
+                          _selectedFeatSkill = null;
+                        }
+                        if (feat.hasExpertiseChoice) {
+                          final eligible = <SkillType>{
+                            ..._wizardSelectedSkills,
+                            ..._speciesBonusSkillPicks,
+                            ..._compensatorySkillPicks,
+                            if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                          };
+                          if (eligible.isEmpty) eligible.addAll(SkillType.values);
+                          if (_selectedFeatExpertise == null || !eligible.contains(_selectedFeatExpertise)) {
+                            _selectedFeatExpertise = _selectedFeatSkill ?? eligible.first;
+                          }
+                        } else {
+                          _selectedFeatExpertise = null;
+                        }
                       });
                     },
                   ),
@@ -2803,6 +2829,109 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                     ),
                                   ),
                                 ],
+                              );
+                            }(),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (isSelected && (feat.hasSkillProficiencyChoice || feat.hasExpertiseChoice)) ...[
+                    const Divider(color: Colors.white12, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (feat.hasSkillProficiencyChoice) ...[
+                            const Text(
+                              'Choose Skill Proficiency:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.cyanAccent,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<SkillType>(
+                              key: const Key('builder_feat_skill_dropdown'),
+                              initialValue: _selectedFeatSkill ??
+                                  (feat.selectableSkills.isNotEmpty
+                                      ? feat.selectableSkills.first
+                                      : SkillType.athletics),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.black26,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              items: (feat.selectableSkills.isNotEmpty ? feat.selectableSkills : SkillType.values)
+                                  .map((s) => DropdownMenuItem(
+                                        value: s,
+                                        child: Text(s.displayName),
+                                      ))
+                                  .toList(),
+                              onChanged: (s) {
+                                if (s != null) {
+                                  setState(() {
+                                    _selectedFeatSkill = s;
+                                    if (feat.hasExpertiseChoice && _selectedFeatExpertise == null) {
+                                      _selectedFeatExpertise = s;
+                                    }
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                          if (feat.hasExpertiseChoice) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Choose Skill for Expertise (Double Proficiency):',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.cyanAccent,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            () {
+                              final eligible = <SkillType>{
+                                ..._wizardSelectedSkills,
+                                ..._speciesBonusSkillPicks,
+                                ..._compensatorySkillPicks,
+                                if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                              };
+                              if (eligible.isEmpty) eligible.addAll(SkillType.values);
+                              final effectiveVal = eligible.contains(_selectedFeatExpertise)
+                                  ? _selectedFeatExpertise
+                                  : (_selectedFeatSkill != null && eligible.contains(_selectedFeatSkill)
+                                      ? _selectedFeatSkill
+                                      : eligible.first);
+
+                              return DropdownButtonFormField<SkillType>(
+                                key: const Key('builder_feat_expertise_dropdown'),
+                                initialValue: effectiveVal,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: Colors.black26,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                items: eligible
+                                    .map((s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(
+                                            s == _selectedFeatSkill
+                                                ? '${s.displayName} (From this Feat)'
+                                                : s.displayName,
+                                          ),
+                                        ))
+                                    .toList(),
+                                onChanged: (s) {
+                                  if (s != null) {
+                                    setState(() => _selectedFeatExpertise = s);
+                                  }
+                                },
                               );
                             }(),
                           ],
@@ -3278,9 +3407,15 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!);
             final chosenAbility = _selectedFeatAbility ??
                 (feat?.selectableAbilities.isNotEmpty == true ? feat!.selectableAbilities.first : null);
-            final extra = (feat != null && feat.hasAbilityScoreIncrease && chosenAbility != null)
-                ? ' (+${feat.statIncreaseAmount} ${chosenAbility.shortName}${feat.grantsSavingThrowProficiency ? ', ${chosenAbility.shortName} Save Prof' : ''})'
+            final skillPart = (feat != null && feat.hasSkillProficiencyChoice && _selectedFeatSkill != null)
+                ? ', ${_selectedFeatSkill!.displayName} Prof'
                 : '';
+            final expPart = (feat != null && feat.hasExpertiseChoice && _selectedFeatExpertise != null)
+                ? ', ${_selectedFeatExpertise!.displayName} Expertise'
+                : '';
+            final extra = (feat != null && feat.hasAbilityScoreIncrease && chosenAbility != null)
+                ? ' (+${feat.statIncreaseAmount} ${chosenAbility.shortName}${feat.grantsSavingThrowProficiency ? ', ${chosenAbility.shortName} Save Prof' : ''}$skillPart$expPart)'
+                : (skillPart.isNotEmpty || expPart.isNotEmpty ? ' (${[skillPart, expPart].where((s) => s.isNotEmpty).join(", ").replaceFirst(", ", "")})' : '');
             return Text(
               '${is2024 ? 'Origin Feat' : 'Feat'}: ${feat?.name ?? _selectedFeat!.toUpperCase()}$extra',
               style: const TextStyle(fontSize: 12, color: Colors.purpleAccent),
@@ -3743,6 +3878,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           if (feat.grantsSavingThrowProficiency) {
             finalSaveProficiencies.add(chosenAbility);
           }
+        }
+      }
+      if (feat != null) {
+        if (feat.hasSkillProficiencyChoice && _selectedFeatSkill != null) {
+          skillMap[_selectedFeatSkill!] = SkillProficiencyLevel.proficient;
+        }
+        if (feat.hasExpertiseChoice && _selectedFeatExpertise != null) {
+          skillMap[_selectedFeatExpertise!] = SkillProficiencyLevel.expertise;
         }
       }
     }

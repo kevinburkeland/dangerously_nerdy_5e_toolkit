@@ -3,6 +3,7 @@ import '../../models/domain/character_models.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
+import 'modify_ability_scores_dialog.dart';
 
 /// Horizontal ribbon / responsive grid displaying the 6 core ability scores,
 /// calculated modifiers, magic item indicators, and quick-roll triggers.
@@ -18,35 +19,67 @@ class AbilityScoresRibbon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final stats = controller.stats;
     final baseScores = controller.character.baseScores;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth < 450 ? 3 : 6;
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 0.85,
-          children: AbilityType.values.map((ability) {
-            final effectiveScore = stats.effectiveScores.getScore(ability);
-            final baseScore = baseScores.getScore(ability);
-            final mod = stats.abilityModifiers[ability] ?? 0;
-            final isModified = effectiveScore != baseScore;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'ABILITY SCORES',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.tune, size: 16),
+              label: const Text(
+                'Adjust Stats',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () => ModifyAbilityScoresDialog.show(context, controller: controller),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth < 450 ? 3 : 6;
+            return GridView.count(
+              crossAxisCount: crossAxisCount,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.85,
+              children: AbilityType.values.map((ability) {
+                final effectiveScore = stats.effectiveScores.getScore(ability);
+                final baseScore = baseScores.getScore(ability);
+                final mod = stats.abilityModifiers[ability] ?? 0;
+                final isModified = effectiveScore != baseScore;
 
-            return _buildAbilityCard(
-              context,
-              ability: ability,
-              score: effectiveScore,
-              modifier: mod,
-              isModified: isModified,
+                return _buildAbilityCard(
+                  context,
+                  ability: ability,
+                  score: effectiveScore,
+                  modifier: mod,
+                  isModified: isModified,
+                );
+              }).toList(),
             );
-          }).toList(),
-        );
-      },
+          },
+        ),
+      ],
     );
   }
 
@@ -69,6 +102,14 @@ class AbilityScoresRibbon extends StatelessWidget {
         } else {
           _showRollFeedback(context, ability, modifier);
         }
+      },
+      onLongPress: () {
+        HapticService.selectionTick(context);
+        ModifyAbilityScoresDialog.show(
+          context,
+          controller: controller,
+          initialFocusedAbility: ability,
+        );
       },
       borderRadius: BorderRadius.circular(14),
       child: Container(

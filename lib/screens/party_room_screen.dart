@@ -1584,6 +1584,12 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
             } else if (evt.type.contains('Restore') || evt.type.contains('Rehydrate')) {
               icon = Icons.restore;
               color = Colors.purple;
+            } else if (evt.type.toLowerCase().contains('feat')) {
+              icon = Icons.military_tech;
+              color = Colors.amberAccent;
+            } else if (evt.type.toLowerCase().contains('stat')) {
+              icon = Icons.trending_up;
+              color = Colors.cyanAccent;
             }
 
             return ListTile(

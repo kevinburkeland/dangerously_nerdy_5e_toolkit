@@ -221,6 +221,10 @@ void main() {
           ],
           manualHpRolls: {1: 8, 2: 5, 3: 5},
         ),
+        skillProficiencies: {
+          SkillType.acrobatics: SkillProficiencyLevel.proficient,
+          SkillType.stealth: SkillProficiencyLevel.expertise,
+        },
         resources: CharacterResourcePool(
           currentHp: 21, // 8+1 + 5+1 + 5+1 = 21
           tempHp: 0,
@@ -330,6 +334,101 @@ void main() {
       expect(leveled.bonusScores.wisdom, equals(1));
       expect(leveled.savingThrowProficiencies, contains(AbilityType.wisdom));
       expect(leveled.skillProficiencies[SkillType.arcana], equals(SkillProficiencyLevel.proficient));
+    });
+
+    test('Skill Expert feat parses ability, skillProficiencies, and expertise from JSON', () {
+      final rawSkillExpert = {
+        'id': {'slug': 'skill-expert', 'ruleset': 'v2014'},
+        'name': 'Skill Expert',
+        'category': 'General',
+        'descriptionMarkdown': 'Increase one ability score of your choice by 1...',
+        'grants': [],
+        'customProperties': {
+          'ability': [
+            {
+              'choose': {
+                'from': ['str', 'dex', 'con', 'int', 'wis', 'cha'],
+                'amount': 1,
+              }
+            }
+          ],
+          'skillProficiencies': [
+            {
+              'choose': {
+                'from': ['athletics', 'acrobatics', 'sleight of hand', 'stealth', 'arcana', 'history', 'investigation', 'nature', 'religion', 'animal handling', 'insight', 'medicine', 'perception', 'survival', 'deception', 'intimidation', 'performance', 'persuasion'],
+                'count': 1,
+              }
+            }
+          ],
+          'expertise': [
+            {'anyProficientSkill': 1}
+          ]
+        }
+      };
+
+      final feat = Feat.fromMap(rawSkillExpert);
+      expect(feat.hasAbilityScoreIncrease, isTrue);
+      expect(feat.selectableAbilities.length, equals(6));
+      expect(feat.hasSkillProficiencyChoice, isTrue);
+      expect(feat.selectableSkills.length, equals(18));
+      expect(feat.hasExpertiseChoice, isTrue);
+    });
+
+    test('Level 4: Skill Expert supports granting skill proficiency and expertise to the SAME skill', () {
+      final rogue = createBaseRogueLevel3();
+      // Initially, rogue is not proficient in athletics
+      expect(rogue.skillProficiencies[SkillType.athletics], isNull);
+
+      const levelUpReq = LevelUpRequest(
+        targetClassSlug: 'rogue',
+        hpChoice: HpProgressionChoice.average(),
+        asiOrFeat: AsiOrFeatChoice.feat(
+          EntityReference(
+            refType: EntityType.feat,
+            slug: 'skill-expert',
+            displayName: 'Skill Expert',
+          ),
+          abilityIncreases: {AbilityType.constitution: 1},
+          skillGrants: {SkillType.athletics},
+          expertiseGrants: {SkillType.athletics},
+          chosenFeatAbility: AbilityType.constitution,
+        ),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(rogue, levelUpReq, resolver: resolver);
+
+      expect(leveled.bonusScores.constitution, equals(1));
+      // Athletics received proficiency AND expertise, ending up as expertise!
+      expect(leveled.skillProficiencies[SkillType.athletics], equals(SkillProficiencyLevel.expertise));
+    });
+
+    test('Level 4: Skill Expert supports granting new skill proficiency and expertise to different skills', () {
+      final rogue = createBaseRogueLevel3();
+      // Rogue has expertise in stealth and proficiency in acrobatics initially (from createBaseRogueLevel3)
+      expect(rogue.skillProficiencies[SkillType.acrobatics], equals(SkillProficiencyLevel.proficient));
+      expect(rogue.skillProficiencies[SkillType.nature], isNull);
+
+      const levelUpReq = LevelUpRequest(
+        targetClassSlug: 'rogue',
+        hpChoice: HpProgressionChoice.average(),
+        asiOrFeat: AsiOrFeatChoice.feat(
+          EntityReference(
+            refType: EntityType.feat,
+            slug: 'skill-expert',
+            displayName: 'Skill Expert',
+          ),
+          abilityIncreases: {AbilityType.dexterity: 1},
+          skillGrants: {SkillType.nature},
+          expertiseGrants: {SkillType.acrobatics},
+          chosenFeatAbility: AbilityType.dexterity,
+        ),
+      );
+
+      final leveled = CharacterProgressionEngine.applyLevelUp(rogue, levelUpReq, resolver: resolver);
+
+      expect(leveled.bonusScores.dexterity, equals(1));
+      expect(leveled.skillProficiencies[SkillType.nature], equals(SkillProficiencyLevel.proficient));
+      expect(leveled.skillProficiencies[SkillType.acrobatics], equals(SkillProficiencyLevel.expertise));
     });
   });
 }
