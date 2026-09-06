@@ -46,8 +46,27 @@ class CompendiumItemParser {
     // Explicitly preserve mechanics
     if (raw.containsKey('weight')) customProperties['weight'] = raw['weight'];
     if (raw.containsKey('value')) customProperties['value'] = raw['value'];
-    if (raw.containsKey('ac')) customProperties['ac'] = raw['ac'];
+    if (raw.containsKey('ac')) {
+      customProperties['ac'] = raw['ac'];
+      final parsedAc = (raw['ac'] is num) ? (raw['ac'] as num).toInt() : int.tryParse(raw['ac'].toString());
+      if (parsedAc != null) {
+        customProperties['baseAc'] ??= parsedAc;
+      }
+    }
     if (raw.containsKey('armor')) customProperties['armor'] = raw['armor'];
+    final tCode = raw['type']?.toString().split('|').first.toUpperCase().trim() ?? '';
+    if (tCode == 'LA') {
+      customProperties['armorType'] ??= 'light';
+    } else if (tCode == 'MA') {
+      customProperties['armorType'] ??= 'medium';
+      customProperties['maxDexBonus'] ??= 2;
+    } else if (tCode == 'HA') {
+      customProperties['armorType'] ??= 'heavy';
+      customProperties['maxDexBonus'] ??= 0;
+    } else if (tCode == 'S') {
+      customProperties['isShield'] ??= true;
+      customProperties['shieldBonus'] ??= 2;
+    }
     if (raw.containsKey('weaponCategory')) customProperties['weaponCategory'] = raw['weaponCategory'];
     if (raw.containsKey('property')) customProperties['property'] = raw['property'];
     if (raw.containsKey('dmg1')) customProperties['dmg1'] = raw['dmg1'];

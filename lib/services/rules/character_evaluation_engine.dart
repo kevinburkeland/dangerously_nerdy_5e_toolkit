@@ -374,7 +374,8 @@ class CharacterEvaluationEngine {
           nameLower.contains('hide') ||
           nameLower.contains('breastplate') ||
           slugLower.contains('armor') ||
-          slugLower.contains('plate');
+          slugLower.contains('plate') ||
+          slugLower.contains('breastplate');
 
       final isArmorSlot = instance.equippedSlot == EquipmentSlot.armor;
       final isArmorType = props['armorType'] != null ||
@@ -384,50 +385,63 @@ class CharacterEvaluationEngine {
 
       if (isArmorSlot || (isArmorType && instance.equippedSlot != EquipmentSlot.shield && props['isShield'] != true && !nameLower.contains('shield'))) {
         hasEquippedArmor = true;
-        int itemBaseAc = (props['baseAc'] as num?)?.toInt() ?? 0;
+        int itemBaseAc = (props['baseAc'] as num?)?.toInt() ?? (props['ac'] as num?)?.toInt() ?? 0;
         String armorType = (props['armorType']?.toString() ?? '').toLowerCase();
+        if (armorType.isEmpty) {
+          final t = (props['type']?.toString() ?? '').toLowerCase();
+          if (t == 'ha' || t.contains('heavy')) {
+            armorType = 'heavy';
+          } else if (t == 'ma' || t.contains('medium')) {
+            armorType = 'medium';
+          } else if (t == 'la' || t.contains('light')) {
+            armorType = 'light';
+          }
+        }
         int? maxDex = (props['maxDexBonus'] as num?)?.toInt();
 
         // Fallback for standard armor names if baseAc or armorType is unspecified
         if (itemBaseAc == 0 || armorType.isEmpty) {
-          if (nameLower.contains('plate') || slugLower.contains('plate')) {
-            if (nameLower.contains('half plate') || slugLower.contains('half plate')) {
-              itemBaseAc = 15;
-              armorType = 'medium';
-              maxDex ??= 2;
-            } else {
-              itemBaseAc = 18;
-              armorType = 'heavy';
-              maxDex ??= 0;
-            }
-          } else if (nameLower.contains('splint')) {
+          final normalized = '$nameLower $slugLower'.replaceAll('-', ' ');
+          if (normalized.contains('breastplate')) {
+            itemBaseAc = 14;
+            armorType = 'medium';
+            maxDex ??= 2;
+          } else if (normalized.contains('half plate')) {
+            itemBaseAc = 15;
+            armorType = 'medium';
+            maxDex ??= 2;
+          } else if (normalized.contains('plate')) {
+            itemBaseAc = 18;
+            armorType = 'heavy';
+            maxDex ??= 0;
+          } else if (normalized.contains('splint')) {
             itemBaseAc = 17;
             armorType = 'heavy';
             maxDex ??= 0;
-          } else if (nameLower.contains('chain mail')) {
+          } else if (normalized.contains('chain mail')) {
             itemBaseAc = 16;
             armorType = 'heavy';
             maxDex ??= 0;
-          } else if (nameLower.contains('ring mail')) {
+          } else if (normalized.contains('ring mail')) {
             itemBaseAc = 14;
             armorType = 'heavy';
             maxDex ??= 0;
-          } else if (nameLower.contains('scale mail') || nameLower.contains('breastplate')) {
+          } else if (normalized.contains('scale mail')) {
             itemBaseAc = 14;
             armorType = 'medium';
             maxDex ??= 2;
-          } else if (nameLower.contains('chain shirt')) {
+          } else if (normalized.contains('chain shirt') || normalized.contains('elven chain')) {
             itemBaseAc = 13;
             armorType = 'medium';
             maxDex ??= 2;
-          } else if (nameLower.contains('hide')) {
+          } else if (normalized.contains('hide')) {
             itemBaseAc = 12;
             armorType = 'medium';
             maxDex ??= 2;
-          } else if (nameLower.contains('studded leather')) {
+          } else if (normalized.contains('studded leather') || normalized.contains('studded')) {
             itemBaseAc = 12;
             armorType = 'light';
-          } else if (nameLower.contains('leather') || nameLower.contains('padded')) {
+          } else if (normalized.contains('leather') || normalized.contains('padded')) {
             itemBaseAc = 11;
             armorType = 'light';
           } else {
@@ -450,10 +464,16 @@ class CharacterEvaluationEngine {
           armorDesc = '$itemBaseAc (${instance.displayName}) + $dexAcBonus DEX';
         }
 
-        final armorMagic = (props['acBonus'] as num?)?.toInt() ??
+        int armorMagic = (props['acBonus'] as num?)?.toInt() ??
             (props['bonusAc'] as num?)?.toInt() ??
             (props['magicBonus'] as num?)?.toInt() ??
             0;
+        if (armorMagic == 0) {
+          final plusMatch = RegExp(r'\+(\d+)').firstMatch(instance.displayName);
+          if (plusMatch != null) {
+            armorMagic = int.tryParse(plusMatch.group(1)!) ?? 0;
+          }
+        }
         if (armorMagic > 0) {
           magicAcBonus += armorMagic;
           magicAcSources.add('+$armorMagic (${instance.displayName})');

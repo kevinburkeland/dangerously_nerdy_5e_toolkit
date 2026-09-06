@@ -1219,7 +1219,7 @@ class Character extends DomainEntity {
         int magic = (props['magicBonus'] as num?)?.toInt() ?? 0;
 
         if (baseAc == null || baseAc == 0) {
-          final standard = _resolveStandardArmor(nameLower, slugLower);
+          final standard = resolveStandardArmor(nameLower, slugLower);
           baseAc = standard.baseAc;
           type ??= standard.armorType;
           maxDex ??= standard.maxDex;
@@ -1302,12 +1302,13 @@ class Character extends DomainEntity {
   }
 
   static bool _isStandardArmorName(String name, String slug) {
-    final combined = '$name $slug'.toLowerCase();
+    final combined = '$name $slug'.toLowerCase().replaceAll('-', ' ');
     return combined.contains('padded') ||
         combined.contains('leather') ||
         combined.contains('studded') ||
         combined.contains('hide') ||
         combined.contains('chain shirt') ||
+        combined.contains('elven chain') ||
         combined.contains('scale mail') ||
         combined.contains('breastplate') ||
         combined.contains('half plate') ||
@@ -1317,40 +1318,43 @@ class Character extends DomainEntity {
         combined.contains('plate');
   }
 
-  static ({int baseAc, String armorType, int? maxDex}) _resolveStandardArmor(
+  static ({int baseAc, String armorType, int? maxDex}) resolveStandardArmor(
     String name,
     String slug,
   ) {
     final combined = '$name $slug'.toLowerCase().replaceAll('-', ' ');
-    if (combined.contains('studded leather')) {
-      return (baseAc: 12, armorType: 'light', maxDex: null);
-    }
-    if (combined.contains('padded') || combined.contains('leather')) {
-      return (baseAc: 11, armorType: 'light', maxDex: null);
-    }
-    if (combined.contains('hide')) {
-      return (baseAc: 12, armorType: 'medium', maxDex: 2);
-    }
-    if (combined.contains('chain shirt')) {
-      return (baseAc: 13, armorType: 'medium', maxDex: 2);
-    }
-    if (combined.contains('scale mail') || combined.contains('breastplate')) {
+    if (combined.contains('breastplate')) {
       return (baseAc: 14, armorType: 'medium', maxDex: 2);
     }
     if (combined.contains('half plate')) {
       return (baseAc: 15, armorType: 'medium', maxDex: 2);
     }
-    if (combined.contains('ring mail')) {
-      return (baseAc: 14, armorType: 'heavy', maxDex: 0);
-    }
-    if (combined.contains('chain mail')) {
-      return (baseAc: 16, armorType: 'heavy', maxDex: 0);
+    if (combined.contains('plate')) {
+      return (baseAc: 18, armorType: 'heavy', maxDex: 0);
     }
     if (combined.contains('splint')) {
       return (baseAc: 17, armorType: 'heavy', maxDex: 0);
     }
-    if (combined.contains('plate')) {
-      return (baseAc: 18, armorType: 'heavy', maxDex: 0);
+    if (combined.contains('chain mail')) {
+      return (baseAc: 16, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('ring mail')) {
+      return (baseAc: 14, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('scale mail')) {
+      return (baseAc: 14, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('chain shirt') || combined.contains('elven chain')) {
+      return (baseAc: 13, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('hide')) {
+      return (baseAc: 12, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('studded leather') || combined.contains('studded')) {
+      return (baseAc: 12, armorType: 'light', maxDex: null);
+    }
+    if (combined.contains('padded') || combined.contains('leather')) {
+      return (baseAc: 11, armorType: 'light', maxDex: null);
     }
     return (baseAc: 11, armorType: 'light', maxDex: null);
   }

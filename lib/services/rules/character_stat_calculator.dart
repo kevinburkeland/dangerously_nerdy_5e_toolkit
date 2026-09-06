@@ -472,9 +472,16 @@ class CharacterStatCalculator {
 
       if (instance.equippedSlot == EquipmentSlot.armor) {
         hasEquippedArmor = true;
-        final itemBaseAc = (props['baseAc'] as num?)?.toInt() ?? 10;
-        final armorType = props['armorType']?.toString().toLowerCase() ?? 'light';
-        final maxDex = (props['maxDexBonus'] as num?)?.toInt();
+        int itemBaseAc = (props['baseAc'] as num?)?.toInt() ?? (props['ac'] as num?)?.toInt() ?? 0;
+        String armorType = (props['armorType']?.toString() ?? '').toLowerCase();
+        int? maxDex = (props['maxDexBonus'] as num?)?.toInt();
+
+        if (itemBaseAc == 0 || armorType.isEmpty) {
+          final standard = Character.resolveStandardArmor(item.name, item.id.slug);
+          if (itemBaseAc == 0) itemBaseAc = standard.baseAc;
+          if (armorType.isEmpty) armorType = standard.armorType;
+          maxDex ??= standard.maxDex;
+        }
 
         baseAc = itemBaseAc;
         if (armorType == 'heavy') {
@@ -489,6 +496,20 @@ class CharacterStatCalculator {
           // Light armor
           dexContribution = abilityMods[AbilityType.dexterity]!;
           acFormula = '$itemBaseAc (${item.name}) + $dexContribution (DEX)';
+        }
+
+        int armorMagic = (props['acBonus'] as num?)?.toInt() ??
+            (props['bonusAc'] as num?)?.toInt() ??
+            (props['magicBonus'] as num?)?.toInt() ??
+            0;
+        if (armorMagic == 0) {
+          final plusMatch = RegExp(r'\+(\d+)').firstMatch(item.name);
+          if (plusMatch != null) {
+            armorMagic = int.tryParse(plusMatch.group(1)!) ?? 0;
+          }
+        }
+        if (armorMagic > 0) {
+          magicAcBonus += armorMagic;
         }
       } else if (instance.equippedSlot == EquipmentSlot.shield || props['isShield'] == true) {
         final sBonus = (props['acBonus'] as num?)?.toInt() ?? 2;

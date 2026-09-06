@@ -913,7 +913,8 @@ class SrdEquipmentLibrary {
       }
 
       // Extract AC bonuses (e.g. Ring/Cloak of Protection, +N Armor/Shield)
-      final acMatch = RegExp(r'(?:armor|shield|ring of protection|cloak of protection)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+      final acMatch = RegExp(r'(?:armor|shield|plate|breastplate|chain|leather|hide|ring of protection|cloak of protection)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name) ??
+          (item.category == ItemCategory.armor ? RegExp(r'\+(\d+)').firstMatch(item.name) : null);
       if (acMatch != null) {
         final b = int.tryParse(acMatch.group(1)!) ?? 0;
         props['bonusAc'] = b;
@@ -933,16 +934,18 @@ class SrdEquipmentLibrary {
       } else if (item.category == ItemCategory.armor || item.tags.contains('armor')) {
         props['defaultSlot'] = EquipmentSlot.armor;
         final nameLower = item.name.toLowerCase();
-        if (nameLower.contains('plate')) {
-          if (nameLower.contains('half plate')) {
-            props['baseAc'] = 15;
-            props['armorType'] = 'medium';
-            props['maxDexBonus'] = 2;
-          } else {
-            props['baseAc'] = 18;
-            props['armorType'] = 'heavy';
-            props['maxDexBonus'] = 0;
-          }
+        if (nameLower.contains('breastplate')) {
+          props['baseAc'] = 14;
+          props['armorType'] = 'medium';
+          props['maxDexBonus'] = 2;
+        } else if (nameLower.contains('half plate')) {
+          props['baseAc'] = 15;
+          props['armorType'] = 'medium';
+          props['maxDexBonus'] = 2;
+        } else if (nameLower.contains('plate')) {
+          props['baseAc'] = 18;
+          props['armorType'] = 'heavy';
+          props['maxDexBonus'] = 0;
         } else if (nameLower.contains('splint')) {
           props['baseAc'] = 17;
           props['armorType'] = 'heavy';
@@ -955,11 +958,11 @@ class SrdEquipmentLibrary {
           props['baseAc'] = 14;
           props['armorType'] = 'heavy';
           props['maxDexBonus'] = 0;
-        } else if (nameLower.contains('scale mail') || nameLower.contains('breastplate')) {
+        } else if (nameLower.contains('scale mail')) {
           props['baseAc'] = 14;
           props['armorType'] = 'medium';
           props['maxDexBonus'] = 2;
-        } else if (nameLower.contains('chain shirt')) {
+        } else if (nameLower.contains('chain shirt') || nameLower.contains('elven chain')) {
           props['baseAc'] = 13;
           props['armorType'] = 'medium';
           props['maxDexBonus'] = 2;
@@ -967,7 +970,7 @@ class SrdEquipmentLibrary {
           props['baseAc'] = 12;
           props['armorType'] = 'medium';
           props['maxDexBonus'] = 2;
-        } else if (nameLower.contains('studded leather')) {
+        } else if (nameLower.contains('studded leather') || nameLower.contains('studded')) {
           props['baseAc'] = 12;
           props['armorType'] = 'light';
         } else if (nameLower.contains('leather') || nameLower.contains('padded')) {

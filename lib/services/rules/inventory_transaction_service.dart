@@ -83,7 +83,8 @@ class InventoryTransactionService {
         nameLower.contains('hide') ||
         nameLower.contains('breastplate') ||
         slugLower.contains('armor') ||
-        slugLower.contains('plate')) {
+        slugLower.contains('plate') ||
+        slugLower.contains('breastplate')) {
       return EquipmentSlot.armor;
     }
 
@@ -129,6 +130,7 @@ class InventoryTransactionService {
     final isTwoHand = props['twoHanded'] == true ||
         tags.contains('two-handed') ||
         tags.contains('twohanded') ||
+        tags.contains('2h') ||
         nameLower.contains('greatsword') ||
         nameLower.contains('greataxe') ||
         nameLower.contains('maul') ||
@@ -136,6 +138,8 @@ class InventoryTransactionService {
         nameLower.contains('glaive') ||
         nameLower.contains('heavy crossbow') ||
         nameLower.contains('longbow') ||
+        nameLower.contains('shortbow') ||
+        nameLower.contains('light crossbow') ||
         nameLower.contains('pike');
 
     if (isTwoHand) {

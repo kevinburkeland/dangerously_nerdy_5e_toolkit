@@ -336,6 +336,17 @@ class CommunityCompendiumAdapters {
       customProperties: {
         'source': source ?? 'HOMEBREW',
         'rawJson': json,
+        if (json.containsKey('ac'))
+          'ac': (json['ac'] is num) ? (json['ac'] as num).toInt() : int.tryParse(json['ac'].toString()),
+        if (json.containsKey('ac'))
+          'baseAc': (json['ac'] is num) ? (json['ac'] as num).toInt() : int.tryParse(json['ac'].toString()),
+        if (typeCode.toUpperCase() == 'LA') 'armorType': 'light',
+        if (typeCode.toUpperCase() == 'MA') 'armorType': 'medium',
+        if (typeCode.toUpperCase() == 'MA') 'maxDexBonus': 2,
+        if (typeCode.toUpperCase() == 'HA') 'armorType': 'heavy',
+        if (typeCode.toUpperCase() == 'HA') 'maxDexBonus': 0,
+        if (typeCode.toUpperCase() == 'S') 'isShield': true,
+        if (typeCode.toUpperCase() == 'S') 'shieldBonus': 2,
       },
     );
   }
