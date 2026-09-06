@@ -34,7 +34,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
   final _resolver = const HomebrewMergeResolver();
 
 
-  RulesetVersion? _selectedRuleset = RulesetVersion.v2024;
+  RulesetVersion? _selectedRuleset;
   ImportAnalysisResult? _analysisResult;
   LoadedCompendiumFile? _loadedFile;
 

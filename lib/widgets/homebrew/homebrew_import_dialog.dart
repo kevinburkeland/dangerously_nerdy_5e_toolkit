@@ -17,7 +17,7 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
   final _textController = TextEditingController();
   final _pipeline = CompendiumJsonIngestionPipeline();
 
-  RulesetVersion? _selectedRuleset = RulesetVersion.v2024;
+  RulesetVersion? _selectedRuleset;
   IngestionBatchResult? _previewResult;
   LoadedCompendiumFile? _loadedFile;
   bool _isImporting = false;
