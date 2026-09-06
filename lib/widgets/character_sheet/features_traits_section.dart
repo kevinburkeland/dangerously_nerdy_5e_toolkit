@@ -414,9 +414,12 @@ class FeaturesTraitsSection extends StatelessWidget {
             ),
           ),
         );
+        final displayCategory = decisionId.startsWith('feat-')
+            ? 'FEAT: ${decisionId.substring(5).replaceAll('-', ' ').toUpperCase()}'
+            : decisionId.replaceAll('-', ' ').toUpperCase();
         optionItems.add({
           'name': opt.name,
-          'category': decisionId.replaceAll('-', ' ').toUpperCase(),
+          'category': displayCategory,
           'description': opt.descriptionMarkdown,
         });
       }

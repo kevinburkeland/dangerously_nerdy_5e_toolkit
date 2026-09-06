@@ -83,6 +83,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   AbilityType? _selectedFeatAbility;
   SkillType? _selectedFeatSkill;
   SkillType? _selectedFeatExpertise;
+  String? _selectedFeatOption;
   String? _wizardSelectedSubclass;
   final Map<String, List<String>> _wizardSelectedFeatureOptions = {};
   final Set<String> _selectedWizardCantrips = {};
@@ -2682,6 +2683,24 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
+  List<FeatureOption> _getEligibleInvocationsForBuilder(Feat feat) {
+    final isWarlock = _selectedClass?.toLowerCase() == 'warlock';
+    final warlockLevel = isWarlock ? 1 : 0;
+    final selectedPacts = _wizardSelectedFeatureOptions.values.expand((opts) => opts);
+    final knownSpells = {..._selectedWizardCantrips, ..._selectedWizardSpells};
+
+    return SrdFeatureOptions.warlockInvocations.where((opt) {
+      final eval = feat.evaluateInvocationPrerequisite(
+        opt,
+        isWarlock: isWarlock,
+        warlockLevel: warlockLevel,
+        selectedPacts: selectedPacts,
+        knownSpellSlugs: knownSpells,
+      );
+      return eval.isMet;
+    }).toList();
+  }
+
   Widget _buildStep5Feats(ThemeData theme) {
     final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
@@ -2698,28 +2717,75 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
               : 'Step 6: ${curSpecies?.name ?? "Species"} Bonus Feat',
           style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           is2024
-              ? 'Choose your 1st-level origin feat granted by your 2024 background.'
+              ? 'Choose your starting 1st-level Origin Feat.'
               : 'As a ${curSpecies?.name ?? "adventurer"}, choose your 1st-level bonus feat from the 2014 SRD Feat Library.',
-          style: const TextStyle(fontSize: 12, color: Colors.white70),
+          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade400),
         ),
         const SizedBox(height: 12),
         ...availableFeats.map((feat) {
           final isSelected = _selectedFeat == feat.id.slug;
-          return Container(
+          return Card(
             margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.purple.shade900.withValues(alpha: 0.3) : Colors.black26,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isSelected ? Colors.purpleAccent : Colors.white12,
-                width: isSelected ? 1.5 : 1.0,
+            color: isSelected ? Colors.cyanAccent.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: isSelected ? Colors.cyanAccent : Colors.transparent,
+                width: 1.5,
               ),
             ),
-            child: Material(
-              color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                HapticService.selectionTick(context);
+                setState(() {
+                  _selectedFeat = feat.id.slug;
+                  if (feat.hasAbilityScoreIncrease) {
+                    if (_selectedFeatAbility == null || !feat.selectableAbilities.contains(_selectedFeatAbility)) {
+                      _selectedFeatAbility = feat.selectableAbilities.first;
+                    }
+                  } else {
+                    _selectedFeatAbility = null;
+                  }
+                  if (feat.hasSkillProficiencyChoice) {
+                    final selectable = feat.selectableSkills.isNotEmpty
+                        ? feat.selectableSkills
+                        : SkillType.values.toList();
+                    if (_selectedFeatSkill == null || !selectable.contains(_selectedFeatSkill)) {
+                      _selectedFeatSkill = selectable.first;
+                    }
+                  } else {
+                    _selectedFeatSkill = null;
+                  }
+                  if (feat.hasExpertiseChoice) {
+                    final eligible = <SkillType>{
+                      ..._wizardSelectedSkills,
+                      ..._speciesBonusSkillPicks,
+                      ..._compensatorySkillPicks,
+                      if (_selectedFeatSkill != null) _selectedFeatSkill!,
+                    };
+                    if (eligible.isEmpty) eligible.addAll(SkillType.values);
+                    if (_selectedFeatExpertise == null || !eligible.contains(_selectedFeatExpertise)) {
+                      _selectedFeatExpertise = _selectedFeatSkill ?? eligible.first;
+                    }
+                  } else {
+                    _selectedFeatExpertise = null;
+                  }
+                  if (feat.hasInvocationChoice) {
+                    final eligible = _getEligibleInvocationsForBuilder(feat);
+                    _selectedFeatOption = eligible.isNotEmpty ? eligible.first.id : null;
+                  } else if (feat.hasFightingStyleChoice) {
+                    _selectedFeatOption = SrdFeatureOptions.fightingStyles.isNotEmpty
+                        ? SrdFeatureOptions.fightingStyles.first.id
+                        : null;
+                  } else {
+                    _selectedFeatOption = null;
+                  }
+                });
+              },
               child: Column(
                 children: [
                   ListTile(
@@ -2736,43 +2802,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                       style: const TextStyle(fontSize: 11.5, color: Colors.white70),
                     ),
                     trailing: isSelected ? const Icon(Icons.check_circle, color: Colors.purpleAccent) : null,
-                    onTap: () {
-                      HapticService.selectionTick(context);
-                      setState(() {
-                        _selectedFeat = feat.id.slug;
-                        if (feat.hasAbilityScoreIncrease) {
-                          if (_selectedFeatAbility == null || !feat.selectableAbilities.contains(_selectedFeatAbility)) {
-                            _selectedFeatAbility = feat.selectableAbilities.first;
-                          }
-                        } else {
-                          _selectedFeatAbility = null;
-                        }
-                        if (feat.hasSkillProficiencyChoice) {
-                          final selectable = feat.selectableSkills.isNotEmpty
-                              ? feat.selectableSkills
-                              : SkillType.values.toList();
-                          if (_selectedFeatSkill == null || !selectable.contains(_selectedFeatSkill)) {
-                            _selectedFeatSkill = selectable.first;
-                          }
-                        } else {
-                          _selectedFeatSkill = null;
-                        }
-                        if (feat.hasExpertiseChoice) {
-                          final eligible = <SkillType>{
-                            ..._wizardSelectedSkills,
-                            ..._speciesBonusSkillPicks,
-                            ..._compensatorySkillPicks,
-                            if (_selectedFeatSkill != null) _selectedFeatSkill!,
-                          };
-                          if (eligible.isEmpty) eligible.addAll(SkillType.values);
-                          if (_selectedFeatExpertise == null || !eligible.contains(_selectedFeatExpertise)) {
-                            _selectedFeatExpertise = _selectedFeatSkill ?? eligible.first;
-                          }
-                        } else {
-                          _selectedFeatExpertise = null;
-                        }
-                      });
-                    },
                   ),
                   if (isSelected && feat.hasAbilityScoreIncrease) ...[
                     const Divider(color: Colors.white12, height: 1),
@@ -2942,6 +2971,142 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                           ],
                         ],
                       ),
+                    ),
+                  ],
+                  if (isSelected && feat.hasInvocationChoice) ...[
+                    const Divider(color: Colors.white12, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: () {
+                        final isWarlock = _selectedClass?.toLowerCase() == 'warlock';
+                        final eligible = _getEligibleInvocationsForBuilder(feat);
+                        final effectiveVal = eligible.any((o) => o.id == _selectedFeatOption)
+                            ? _selectedFeatOption
+                            : (eligible.isNotEmpty ? eligible.first.id : null);
+                        final selectedOpt = eligible.where((o) => o.id == effectiveVal).firstOrNull;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Choose Eldritch Invocation:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purpleAccent,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isWarlock
+                                  ? 'As a Warlock, you may select any invocation whose prerequisites you meet.'
+                                  : 'Without the Warlock class, you may only select invocations with no prerequisites.',
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                            ),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              key: const Key('builder_feat_invocation_dropdown'),
+                              initialValue: effectiveVal,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.black26,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              items: eligible.map((opt) => DropdownMenuItem(
+                                value: opt.id,
+                                child: Text(opt.name),
+                              )).toList(),
+                              onChanged: (optId) {
+                                if (optId != null) {
+                                  setState(() => _selectedFeatOption = optId);
+                                }
+                              },
+                            ),
+                            if (selectedOpt != null && selectedOpt.descriptionMarkdown.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple.shade900.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  selectedOpt.descriptionMarkdown,
+                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      }(),
+                    ),
+                  ],
+                  if (isSelected && feat.hasFightingStyleChoice) ...[
+                    const Divider(color: Colors.white12, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: () {
+                        const styles = SrdFeatureOptions.fightingStyles;
+                        final effectiveVal = styles.any((o) => o.id == _selectedFeatOption)
+                            ? _selectedFeatOption
+                            : (styles.isNotEmpty ? styles.first.id : null);
+                        final selectedOpt = styles.where((o) => o.id == effectiveVal).firstOrNull;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Choose Fighting Style:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orangeAccent,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              key: const Key('builder_feat_fighting_style_dropdown'),
+                              initialValue: effectiveVal,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.black26,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              items: styles.map((opt) => DropdownMenuItem(
+                                value: opt.id,
+                                child: Text(opt.name),
+                              )).toList(),
+                              onChanged: (optId) {
+                                if (optId != null) {
+                                  setState(() => _selectedFeatOption = optId);
+                                }
+                              },
+                            ),
+                            if (selectedOpt != null && selectedOpt.descriptionMarkdown.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade900.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
+                                ),
+                                child: Text(
+                                  selectedOpt.descriptionMarkdown,
+                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
+                                  maxLines: 4,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      }(),
                     ),
                   ],
                 ],
@@ -3946,7 +4111,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     draft.spellsKnown = spellRefs;
     draft.spellsPrepared = spellRefs;
     draft.startingSubclassRef = startingSubclassRef;
-    draft.selectedFeatureOptions = Map<String, List<String>>.from(_wizardSelectedFeatureOptions);
+    final finalFeatureOptions = Map<String, List<String>>.from(_wizardSelectedFeatureOptions);
+    if (hasFeat && _selectedFeat != null && _selectedFeatOption != null) {
+      finalFeatureOptions['feat-$_selectedFeat'] = [_selectedFeatOption!];
+    }
+    draft.selectedFeatureOptions = finalFeatureOptions;
     draft.languages = _allBuilderLanguages.toList();
     draft.toolProficiencies = _allBuilderTools.toList();
 

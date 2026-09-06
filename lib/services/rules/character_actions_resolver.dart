@@ -1327,7 +1327,7 @@ class CharacterActionsResolver {
 
     // 3. Action patterns
     final actRegex = RegExp(
-      r'\b(?:as\s+an|takes?\s+an|use\s+(?:your\s+)?an?)\s*action\b|\baction\s*(?::|to\b)|\b1\s*action\b|\byou\s*can\s*use\s*your\s*action\b',
+      r'\b(?:as\s+an|takes?\s+an|use\s+(?:your\s+)?an?)\s*action\b|\baction\s*(?::|to\b)|\b1\s*action\b|\byou\s*can\s*use\s*your\s*action\b|\byou\s+can\s+cast\b',
     );
     if (actRegex.hasMatch(combined) || title.toLowerCase().contains('(action)')) {
       return ActionType.action;

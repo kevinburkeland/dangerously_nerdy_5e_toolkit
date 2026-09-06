@@ -863,7 +863,8 @@ class CharacterSheetController extends ChangeNotifier {
     );
   }
 
-  /// Adds a feat to the character sheet, optionally granting ability score increases or skill/expertise choices.
+  /// Adds a feat to the character sheet, optionally granting ability score increases,
+  /// skill/expertise choices, or feature option choices (e.g. Eldritch Invocations, Fighting Styles).
   Future<void> addFeat(
     EntityReference<DomainEntity> featRef, {
     String? reason,
@@ -871,6 +872,7 @@ class CharacterSheetController extends ChangeNotifier {
     int bonusAmount = 1,
     SkillType? skillGrant,
     SkillType? expertiseGrant,
+    List<String>? featureOptions,
   }) async {
     final existingFeats = List<EntityReference<DomainEntity>>.from(_character.feats);
     if (!existingFeats.any((f) => f.slug == featRef.slug)) {
@@ -898,10 +900,28 @@ class CharacterSheetController extends ChangeNotifier {
       updatedSkills[expertiseGrant] = SkillProficiencyLevel.expertise;
     }
 
+    var updatedProgression = _character.progression;
+    if (featureOptions != null && featureOptions.isNotEmpty && _character.progression.classes.isNotEmpty) {
+      final featOptKey = 'feat-${featRef.slug}';
+      final updatedClasses = <ClassLevelProgression>[];
+      for (int i = 0; i < _character.progression.classes.length; i++) {
+        final c = _character.progression.classes[i];
+        if (i == 0) {
+          final mergedOptions = Map<String, List<String>>.from(c.selectedFeatureOptions);
+          mergedOptions[featOptKey] = List<String>.from(featureOptions);
+          updatedClasses.add(c.copyWith(selectedFeatureOptions: mergedOptions));
+        } else {
+          updatedClasses.add(c);
+        }
+      }
+      updatedProgression = updatedProgression.copyWith(classes: updatedClasses);
+    }
+
     _character = _character.copyWith(
       feats: existingFeats,
       bonusScores: newBonusScores,
       skillProficiencies: updatedSkills,
+      progression: updatedProgression,
     );
     _recalculateStats();
     notifyListeners();
@@ -917,6 +937,9 @@ class CharacterSheetController extends ChangeNotifier {
     } else {
       if (skillGrant != null) parts.add('Proficiency: ${skillGrant.displayName}');
       if (expertiseGrant != null) parts.add('Expertise: ${expertiseGrant.displayName}');
+    }
+    if (featureOptions != null && featureOptions.isNotEmpty) {
+      parts.add('Options: ${featureOptions.join(', ')}');
     }
     if (reason != null && reason.trim().isNotEmpty) {
       parts.add('("${reason.trim()}")');
@@ -953,9 +976,25 @@ class CharacterSheetController extends ChangeNotifier {
         }
       }
     }
+
+    // Remove feat option choices from all classes
+    var updatedProgression = _character.progression;
+    final featOptKey = 'feat-$featSlug';
+    if (_character.progression.classes.any((c) => c.selectedFeatureOptions.containsKey(featOptKey))) {
+      final updatedClasses = _character.progression.classes.map((c) {
+        if (c.selectedFeatureOptions.containsKey(featOptKey)) {
+          final mergedOptions = Map<String, List<String>>.from(c.selectedFeatureOptions)..remove(featOptKey);
+          return c.copyWith(selectedFeatureOptions: mergedOptions);
+        }
+        return c;
+      }).toList();
+      updatedProgression = updatedProgression.copyWith(classes: updatedClasses);
+    }
+
     _character = _character.copyWith(
       feats: existingFeats,
       bonusScores: newBonusScores,
+      progression: updatedProgression,
     );
     _recalculateStats();
     notifyListeners();

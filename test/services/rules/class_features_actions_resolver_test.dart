@@ -268,11 +268,11 @@ void main() {
     });
 
     test('Warlock level 11 with Moderately Armored feat does NOT receive Fighting Style: Protection reaction', () {
-      final warlock = Character(
-        id: const EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2014),
+      const warlock = Character(
+        id: EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2014),
         name: 'Eldritch Scholar',
-        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        progression: const CharacterProgression(
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
               classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
@@ -288,15 +288,15 @@ void main() {
             ),
           ],
         ),
-        feats: const [
+        feats: [
           EntityReference<DomainEntity>(
             refType: EntityType.feat,
             slug: 'moderately-armored',
             displayName: 'Moderately Armored',
           ),
         ],
-        baseScores: const AbilityScores(strength: 10, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 10, charisma: 18),
-        resources: const CharacterResourcePool(),
+        baseScores: AbilityScores(strength: 10, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 10, charisma: 18),
+        resources: CharacterResourcePool(),
       );
 
       final controller = CharacterSheetController(character: warlock);

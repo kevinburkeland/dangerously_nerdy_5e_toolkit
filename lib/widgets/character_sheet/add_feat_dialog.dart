@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/core_types.dart';
@@ -50,6 +51,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
   AbilityType? _chosenAbility;
   SkillType? _chosenSkill;
   SkillType? _chosenExpertise;
+  String? _chosenOptionId;
 
   // Custom feat properties
   AbilityType? _customAbility;
@@ -120,6 +122,39 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
     } else {
       _chosenExpertise = null;
     }
+
+    // Default feature option choice (invocation, fighting style)
+    if (feat.hasInvocationChoice) {
+      final eligible = _getEligibleInvocations(feat);
+      _chosenOptionId = eligible.isNotEmpty ? eligible.first.id : null;
+    } else if (feat.hasFightingStyleChoice) {
+      _chosenOptionId = SrdFeatureOptions.fightingStyles.isNotEmpty
+          ? SrdFeatureOptions.fightingStyles.first.id
+          : null;
+    } else {
+      _chosenOptionId = null;
+    }
+  }
+
+  /// Calculates eligible invocations under RAW rules for a character taking Eldritch Adept.
+  List<FeatureOption> _getEligibleInvocations(Feat feat) {
+    final character = widget.controller.character;
+    final isWarlock = character.progression.classes.any((c) => c.classRef.slug.toLowerCase() == 'warlock');
+    final warlockClass = character.progression.classes.where((c) => c.classRef.slug.toLowerCase() == 'warlock').firstOrNull;
+    final warlockLevel = warlockClass?.level ?? 0;
+    final selectedPacts = character.progression.classes.expand((c) => c.selectedFeatureOptions.values.expand((opts) => opts));
+    final knownSpells = character.spellsKnown.map((s) => s.slug).toSet();
+
+    return SrdFeatureOptions.warlockInvocations.where((opt) {
+      final eval = feat.evaluateInvocationPrerequisite(
+        opt,
+        isWarlock: isWarlock,
+        warlockLevel: warlockLevel,
+        selectedPacts: selectedPacts,
+        knownSpellSlugs: knownSpells,
+      );
+      return eval.isMet;
+    }).toList();
   }
 
   /// Calculates eligible skills for expertise:
@@ -206,6 +241,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
         bonusAmount: feat.statIncreaseAmount > 0 ? feat.statIncreaseAmount : 1,
         skillGrant: _chosenSkill,
         expertiseGrant: _chosenExpertise,
+        featureOptions: _chosenOptionId != null ? [_chosenOptionId!] : null,
       );
     }
   }
@@ -669,6 +705,149 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
                     setState(() => _chosenExpertise = val);
                   }
                 },
+              );
+            }(),
+            const SizedBox(height: 12),
+          ],
+
+          // 4. Eldritch Invocation Choice
+          if (feat.hasInvocationChoice) ...[
+            () {
+              final character = widget.controller.character;
+              final isWarlock = character.progression.classes.any((c) => c.classRef.slug.toLowerCase() == 'warlock');
+              final eligibleInvocations = _getEligibleInvocations(feat);
+              final activeInvocationId = eligibleInvocations.any((o) => o.id == _chosenOptionId)
+                  ? _chosenOptionId
+                  : (eligibleInvocations.isNotEmpty ? eligibleInvocations.first.id : null);
+              final selectedOpt = eligibleInvocations.where((o) => o.id == activeInvocationId).firstOrNull;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.auto_fix_high, color: Colors.purpleAccent, size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        'Choose Eldritch Invocation:',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.purpleAccent),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isWarlock
+                        ? 'As a Warlock, you may select any invocation whose prerequisites you meet.'
+                        : 'Without the Warlock class, you may only select invocations with no prerequisites.',
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    key: const Key('add_feat_invocation_dropdown'),
+                    initialValue: activeInvocationId,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      isDense: true,
+                    ),
+                    items: eligibleInvocations.map((opt) {
+                      return DropdownMenuItem(
+                        value: opt.id,
+                        child: Text(opt.name, style: const TextStyle(fontSize: 13)),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _chosenOptionId = val);
+                      }
+                    },
+                  ),
+                  if (selectedOpt != null && selectedOpt.descriptionMarkdown.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade900.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        selectedOpt.descriptionMarkdown,
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                ],
+              );
+            }(),
+          ],
+
+          // 5. Fighting Style Choice
+          if (feat.hasFightingStyleChoice) ...[
+            () {
+              final activeStyleId = SrdFeatureOptions.fightingStyles.any((o) => o.id == _chosenOptionId)
+                  ? _chosenOptionId
+                  : (SrdFeatureOptions.fightingStyles.isNotEmpty ? SrdFeatureOptions.fightingStyles.first.id : null);
+              final selectedOpt = SrdFeatureOptions.fightingStyles.where((o) => o.id == activeStyleId).firstOrNull;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.shield, color: Colors.orangeAccent, size: 16),
+                      SizedBox(width: 6),
+                      Text(
+                        'Choose Fighting Style:',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orangeAccent),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    key: const Key('add_feat_fighting_style_dropdown'),
+                    initialValue: activeStyleId,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      isDense: true,
+                    ),
+                    items: SrdFeatureOptions.fightingStyles.map((opt) {
+                      return DropdownMenuItem(
+                        value: opt.id,
+                        child: Text(opt.name, style: const TextStyle(fontSize: 13)),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _chosenOptionId = val);
+                      }
+                    },
+                  ),
+                  if (selectedOpt != null && selectedOpt.descriptionMarkdown.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade900.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        selectedOpt.descriptionMarkdown,
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                ],
               );
             }(),
           ],

@@ -1231,6 +1231,80 @@ extension FeatAsiExtension on Feat {
     if (exp is List && exp.isNotEmpty) return true;
     return false;
   }
+
+  /// Whether this feat grants an Eldritch Invocation choice (e.g. Eldritch Adept).
+  bool get hasInvocationChoice {
+    final slug = id.slug.toLowerCase();
+    if (slug == 'eldritch-adept' || name.toLowerCase() == 'eldritch adept') return true;
+    final ofp = customProperties['optionalfeatureProgression'];
+    if (ofp is List) {
+      for (final item in ofp) {
+        if (item is Map) {
+          final ft = item['featureType'];
+          if (ft is List && ft.any((e) => e.toString().toUpperCase() == 'EI')) return true;
+          final n = item['name']?.toString().toLowerCase() ?? '';
+          if (n.contains('invocation')) return true;
+        }
+      }
+    }
+    final ft = customProperties['featureType'];
+    if (ft is List && ft.any((e) => e.toString().toUpperCase() == 'EI')) return true;
+    return false;
+  }
+
+  /// Number of Eldritch Invocations granted by this feat (typically 1).
+  int get invocationChoiceCount {
+    if (!hasInvocationChoice) return 0;
+    return 1;
+  }
+
+  /// Whether this feat grants a Fighting Style choice (e.g. Fighting Initiate).
+  bool get hasFightingStyleChoice {
+    final slug = id.slug.toLowerCase();
+    if (slug == 'fighting-initiate' || name.toLowerCase() == 'fighting initiate') return true;
+    final ofp = customProperties['optionalfeatureProgression'];
+    if (ofp is List) {
+      for (final item in ofp) {
+        if (item is Map) {
+          final ft = item['featureType'];
+          if (ft is List && ft.any((e) => e.toString().toUpperCase().startsWith('FS'))) return true;
+          final n = item['name']?.toString().toLowerCase() ?? '';
+          if (n.contains('fighting style')) return true;
+        }
+      }
+    }
+    final ft = customProperties['featureType'];
+    if (ft is List && ft.any((e) => e.toString().toUpperCase().startsWith('FS'))) return true;
+    return false;
+  }
+
+  /// Evaluates whether a character can select a specific [FeatureOption] invocation under Eldritch Adept RAW rules.
+  ///
+  /// RAW (TCoE p.79): "If the invocation has a prerequisite of any kind, you can choose that invocation
+  /// only if you're a warlock who meets the prerequisite."
+  FeaturePrerequisiteEvaluation evaluateInvocationPrerequisite(
+    FeatureOption option, {
+    required bool isWarlock,
+    required int warlockLevel,
+    Iterable<String> selectedPacts = const [],
+    Iterable<String> knownSpellSlugs = const [],
+  }) {
+    final prereq = option.prerequisite;
+    if (!prereq.hasPrerequisites) {
+      return FeaturePrerequisiteEvaluation.met;
+    }
+    if (!isWarlock) {
+      return const FeaturePrerequisiteEvaluation(
+        isMet: false,
+        unmetReasons: ['Requires Warlock class to select an invocation with prerequisites'],
+      );
+    }
+    return prereq.evaluate(
+      classLevel: warlockLevel,
+      selectedPacts: selectedPacts,
+      knownSpellSlugs: knownSpellSlugs,
+    );
+  }
 }
 
 /// Character Background origin definition.

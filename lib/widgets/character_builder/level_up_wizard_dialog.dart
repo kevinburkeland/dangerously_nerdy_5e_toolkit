@@ -77,6 +77,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   AbilityType? _selectedFeatAbility;
   SkillType? _selectedFeatSkill;
   SkillType? _selectedFeatExpertise;
+  String? _selectedFeatOption;
 
   // Step 5: Spells
   final List<String> _newCantrips = [];
@@ -217,6 +218,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       if (initialFeat.hasExpertiseChoice) {
         _selectedFeatExpertise = _selectedFeatSkill ?? SkillType.athletics;
       }
+      if (initialFeat.hasInvocationChoice) {
+        final eligible = _getEligibleInvocations(initialFeat);
+        _selectedFeatOption = eligible.isNotEmpty ? eligible.first.id : null;
+      } else if (initialFeat.hasFightingStyleChoice) {
+        _selectedFeatOption = SrdFeatureOptions.fightingStyles.isNotEmpty
+            ? SrdFeatureOptions.fightingStyles.first.id
+            : null;
+      }
     }
 
     _diceAnimController = AnimationController(
@@ -231,6 +240,27 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     _customCantripController.dispose();
     _customSpellController.dispose();
     super.dispose();
+  }
+
+  List<FeatureOption> _getEligibleInvocations(Feat feat) {
+    final character = widget.character;
+    final isWarlock = character.progression.classes.any((c) => c.classRef.slug.toLowerCase() == 'warlock') ||
+        _selectedClassSlug.toLowerCase() == 'warlock';
+    final warlockClass = character.progression.classes.where((c) => c.classRef.slug.toLowerCase() == 'warlock').firstOrNull;
+    final warlockLevel = (warlockClass?.level ?? 0) + (_selectedClassSlug.toLowerCase() == 'warlock' ? 1 : 0);
+    final selectedPacts = character.progression.classes.expand((c) => c.selectedFeatureOptions.values.expand((opts) => opts));
+    final knownSpells = {...character.spellsKnown.map((s) => s.slug), ..._newSpells};
+
+    return SrdFeatureOptions.warlockInvocations.where((opt) {
+      final eval = feat.evaluateInvocationPrerequisite(
+        opt,
+        isWarlock: isWarlock,
+        warlockLevel: warlockLevel,
+        selectedPacts: selectedPacts,
+        knownSpellSlugs: knownSpells,
+      );
+      return eval.isMet;
+    }).toList();
   }
 
   int get _targetClassCurrentLevel {
@@ -336,6 +366,11 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           expertises.add(_selectedFeatExpertise!);
         }
 
+        final featureGrants = <String, List<String>>{};
+        if (_selectedFeatOption != null) {
+          featureGrants['feat-$_selectedFeatSlug'] = [_selectedFeatOption!];
+        }
+
         asiChoice = AsiOrFeatChoice.feat(
           EntityReference<DomainEntity>(
             refType: EntityType.feat,
@@ -347,6 +382,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           chosenFeatAbility: chosenAbility,
           skillGrants: skills,
           expertiseGrants: expertises,
+          featureOptionGrants: featureGrants,
         );
       }
     }
@@ -1390,6 +1426,16 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   } else {
                     _selectedFeatExpertise = null;
                   }
+                  if (match.hasInvocationChoice) {
+                    final eligible = _getEligibleInvocations(match);
+                    _selectedFeatOption = eligible.isNotEmpty ? eligible.first.id : null;
+                  } else if (match.hasFightingStyleChoice) {
+                    _selectedFeatOption = SrdFeatureOptions.fightingStyles.isNotEmpty
+                        ? SrdFeatureOptions.fightingStyles.first.id
+                        : null;
+                  } else {
+                    _selectedFeatOption = null;
+                  }
                 });
               }
             },
@@ -1561,6 +1607,129 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                           setState(() => _selectedFeatExpertise = s);
                         }
                       },
+                    );
+                  }(),
+                ],
+                if (feat.hasInvocationChoice) ...[
+                  const SizedBox(height: 12),
+                  () {
+                    final isWarlock = widget.character.progression.classes.any((c) => c.classRef.slug.toLowerCase() == 'warlock') ||
+                        _selectedClassSlug.toLowerCase() == 'warlock';
+                    final eligible = _getEligibleInvocations(feat);
+                    final effectiveVal = eligible.any((o) => o.id == _selectedFeatOption)
+                        ? _selectedFeatOption
+                        : (eligible.isNotEmpty ? eligible.first.id : null);
+                    final selectedOpt = eligible.where((o) => o.id == effectiveVal).firstOrNull;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Choose Eldritch Invocation:',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.purpleAccent),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isWarlock
+                              ? 'As a Warlock, you may select any invocation whose prerequisites you meet.'
+                              : 'Without the Warlock class, you may only select invocations with no prerequisites.',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
+                        ),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          key: const Key('levelup_feat_invocation_dropdown'),
+                          initialValue: effectiveVal,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: Colors.black26,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          items: eligible.map((opt) => DropdownMenuItem(
+                            value: opt.id,
+                            child: Text(opt.name),
+                          )).toList(),
+                          onChanged: (optId) {
+                            if (optId != null) {
+                              setState(() => _selectedFeatOption = optId);
+                            }
+                          },
+                        ),
+                        if (selectedOpt != null && selectedOpt.descriptionMarkdown.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.shade900.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+                            ),
+                            child: Text(
+                              selectedOpt.descriptionMarkdown,
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  }(),
+                ],
+                if (feat.hasFightingStyleChoice) ...[
+                  const SizedBox(height: 12),
+                  () {
+                    const styles = SrdFeatureOptions.fightingStyles;
+                    final effectiveVal = styles.any((o) => o.id == _selectedFeatOption)
+                        ? _selectedFeatOption
+                        : (styles.isNotEmpty ? styles.first.id : null);
+                    final selectedOpt = styles.where((o) => o.id == effectiveVal).firstOrNull;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Choose Fighting Style:',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orangeAccent),
+                        ),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          key: const Key('levelup_feat_fighting_style_dropdown'),
+                          initialValue: effectiveVal,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: Colors.black26,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          items: styles.map((opt) => DropdownMenuItem(
+                            value: opt.id,
+                            child: Text(opt.name),
+                          )).toList(),
+                          onChanged: (optId) {
+                            if (optId != null) {
+                              setState(() => _selectedFeatOption = optId);
+                            }
+                          },
+                        ),
+                        if (selectedOpt != null && selectedOpt.descriptionMarkdown.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade900.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
+                            ),
+                            child: Text(
+                              selectedOpt.descriptionMarkdown,
+                              style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
                     );
                   }(),
                 ],

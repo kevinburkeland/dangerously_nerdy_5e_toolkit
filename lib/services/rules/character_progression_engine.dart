@@ -34,13 +34,15 @@ class AsiOrFeatChoice {
   final Set<SkillType> skillGrants;
   final Set<SkillType> expertiseGrants;
   final AbilityType? chosenFeatAbility;
+  final Map<String, List<String>> featureOptionGrants;
 
   const AsiOrFeatChoice.asi(this.abilityIncreases)
       : featRef = null,
         savingThrowGrants = const {},
         skillGrants = const {},
         expertiseGrants = const {},
-        chosenFeatAbility = null;
+        chosenFeatAbility = null,
+        featureOptionGrants = const {};
 
   const AsiOrFeatChoice.feat(
     EntityReference<DomainEntity> feat, {
@@ -49,6 +51,7 @@ class AsiOrFeatChoice {
     this.skillGrants = const {},
     this.expertiseGrants = const {},
     this.chosenFeatAbility,
+    this.featureOptionGrants = const {},
   }) : featRef = feat;
 
   bool get isFeat => featRef != null;
@@ -319,6 +322,11 @@ class CharacterProgressionEngine {
         request.selectedFeatureOptions.forEach((k, v) {
           mergedOptions[k] = List<String>.from(v);
         });
+        if (request.asiOrFeat != null && request.asiOrFeat!.featureOptionGrants.isNotEmpty) {
+          request.asiOrFeat!.featureOptionGrants.forEach((k, v) {
+            mergedOptions[k] = List<String>.from(v);
+          });
+        }
 
         updatedClasses.add(cls.copyWith(
           level: newLevel,
@@ -342,6 +350,13 @@ class CharacterProgressionEngine {
           : (request.hpChoice.rolledValue ?? avg);
       newManualHpRolls[newTotalLevel] = addedHp;
 
+      final initialOptions = Map<String, List<String>>.from(request.selectedFeatureOptions);
+      if (request.asiOrFeat != null && request.asiOrFeat!.featureOptionGrants.isNotEmpty) {
+        request.asiOrFeat!.featureOptionGrants.forEach((k, v) {
+          initialOptions[k] = List<String>.from(v);
+        });
+      }
+
       updatedClasses.add(ClassLevelProgression(
         classRef: EntityReference<DomainEntity>(
           refType: EntityType.classDefinition,
@@ -353,7 +368,7 @@ class CharacterProgressionEngine {
         hitDie: hitDie,
         hitPointsRolled: [addedHp],
         isStartingClass: false,
-        selectedFeatureOptions: request.selectedFeatureOptions,
+        selectedFeatureOptions: initialOptions,
       ));
     }
 

@@ -570,6 +570,8 @@ class CharacterProgression {
         if (validDecisionIds == null ||
             validDecisionIds.contains(k) ||
             k.startsWith('$classSlug-') ||
+            k.startsWith('feat-') ||
+            k.contains('invocation') ||
             (k == 'fighting-style' && (classSlug == 'fighter' || classSlug == 'paladin' || classSlug == 'ranger'))) {
           merged.putIfAbsent(k, () => []).addAll(v);
         }
