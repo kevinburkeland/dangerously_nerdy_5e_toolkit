@@ -344,7 +344,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           asiChoice = AsiOrFeatChoice.asi(increases);
         }
       } else {
-        final feat = SrdFeatsLibrary.findBySlug(_selectedFeatSlug);
+        final feat = _availableFeats.where((f) => f.id.slug == _selectedFeatSlug).firstOrNull ??
+            SrdFeatsLibrary.findBySlug(_selectedFeatSlug);
         final increases = <AbilityType, int>{};
         final saves = <AbilityType>{};
         final chosenAbility = _selectedFeatAbility ??
@@ -2976,7 +2977,8 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               if (_isAsiEligible && !_isAsiSelected) ...[
                 _buildDiffRow('Feat Gained', 'None', _selectedFeatName, theme, highlightNew: true),
                 () {
-                  final feat = SrdFeatsLibrary.findBySlug(_selectedFeatSlug);
+                  final feat = _availableFeats.where((f) => f.id.slug == _selectedFeatSlug).firstOrNull ??
+                      SrdFeatsLibrary.findBySlug(_selectedFeatSlug);
                   final chosenAbility = _selectedFeatAbility ??
                       (feat?.selectableAbilities.isNotEmpty == true ? feat!.selectableAbilities.first : null);
                   if (feat != null && feat.hasAbilityScoreIncrease && chosenAbility != null) {

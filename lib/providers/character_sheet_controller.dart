@@ -1010,6 +1010,48 @@ class CharacterSheetController extends ChangeNotifier {
     );
   }
 
+  /// Updates proficiency or expertise level for a specific skill.
+  Future<void> setSkillProficiency(
+    SkillType skill,
+    SkillProficiencyLevel level, {
+    String? reason,
+  }) async {
+    final updatedSkills = Map<SkillType, SkillProficiencyLevel>.from(_character.skillProficiencies);
+    if (level == SkillProficiencyLevel.none) {
+      updatedSkills.remove(skill);
+    } else {
+      updatedSkills[skill] = level;
+    }
+
+    _character = _character.copyWith(
+      skillProficiencies: updatedSkills,
+    );
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+
+    final details = reason != null && reason.trim().isNotEmpty
+        ? 'Updated ${skill.displayName} to ${level.name} ("${reason.trim()}")'
+        : 'Updated ${skill.displayName} to ${level.name}';
+
+    await _logCampaignChangeIfLinked(
+      type: 'skillProficiencyChanged',
+      details: details,
+    );
+  }
+
+  /// Cycles a skill's proficiency level: None -> Proficient -> Expertise -> None.
+  Future<void> cycleSkillProficiency(SkillType skill) async {
+    final current = _character.skillProficiencies[skill] ?? SkillProficiencyLevel.none;
+    final next = switch (current) {
+      SkillProficiencyLevel.none => SkillProficiencyLevel.proficient,
+      SkillProficiencyLevel.jackOfAllTrades => SkillProficiencyLevel.proficient,
+      SkillProficiencyLevel.proficient => SkillProficiencyLevel.expertise,
+      SkillProficiencyLevel.expertise => SkillProficiencyLevel.none,
+    };
+    await setSkillProficiency(skill, next);
+  }
+
   /// Modifies an individual ability score on the character sheet.
   Future<void> modifyAbilityScore(
     AbilityType ability,

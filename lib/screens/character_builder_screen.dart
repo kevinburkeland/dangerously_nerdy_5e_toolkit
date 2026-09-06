@@ -4025,7 +4025,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final finalSaveProficiencies = Set<AbilityType>.from(saveProficiencies);
 
     if (hasFeat && _selectedFeat != null) {
-      final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!);
+      final feat = SrdFeatsLibrary.findBySlug(_selectedFeat!) ??
+          SrdFeatsLibrary.allFeats.where((f) => f.id.slug == _selectedFeat!).firstOrNull;
       if (feat != null && feat.hasAbilityScoreIncrease) {
         final chosenAbility = _selectedFeatAbility ??
             (feat.selectableAbilities.isNotEmpty ? feat.selectableAbilities.first : null);

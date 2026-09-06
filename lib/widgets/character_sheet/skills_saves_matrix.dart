@@ -307,74 +307,129 @@ class _SkillsSavesMatrixState extends State<SkillsSavesMatrix> {
         final skillMod = stats.skillModifiers[skill] ?? (baseAbilityMod + (profBonus * profLevel.multiplier).toInt());
         final modStr = skillMod >= 0 ? '+$skillMod' : '$skillMod';
         final isTrained = profLevel != SkillProficiencyLevel.none;
+        final isExpertise = profLevel == SkillProficiencyLevel.expertise;
+        final isProf = profLevel == SkillProficiencyLevel.proficient;
 
-        return Semantics(
-          button: true,
-          label: '${skill.displayName} (${ability.shortName}) modifier $modStr, ${profLevel.name}',
+        final pipButton = Tooltip(
+          message: '${skill.displayName} (${profLevel.name}). Tap to cycle proficiency.',
+          child: InkWell(
+            key: Key('skill_pip_${skill.name}'),
+            borderRadius: BorderRadius.circular(20),
+            onTap: () {
+              HapticService.selectionTick(context);
+              widget.controller.cycleSkillProficiency(skill);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: _buildProficiencyPip(profLevel, theme),
+            ),
+          ),
+        );
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
           child: Material(
-            color: isTrained
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.18)
-                : Colors.transparent,
+            color: isExpertise
+                ? Colors.amber.withValues(alpha: 0.08)
+                : (isProf
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.18)
+                    : Colors.transparent),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
-              side: isTrained
-                  ? BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.25))
-                  : BorderSide.none,
+              side: isExpertise
+                  ? BorderSide(color: Colors.amber.withValues(alpha: 0.45), width: 1.2)
+                  : (isProf
+                      ? BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.25))
+                      : BorderSide.none),
             ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => _dispatchRoll(
-                title: skill.displayName,
-                subtitle: '${ability.shortName} Skill',
-                modifier: skillMod,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 48),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Row(
-                    children: [
-                      _buildProficiencyPip(profLevel, theme),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Text(
-                              skill.displayName,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: isTrained ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '(${ability.shortName})',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Row(
+                children: [
+                  pipButton,
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      label: '${skill.displayName} (${ability.shortName}) modifier $modStr, ${profLevel.name}',
+                      child: InkWell(
+                        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                        onTap: () => _dispatchRoll(
+                          title: skill.displayName,
+                          subtitle: '${ability.shortName} Skill',
+                          modifier: skillMod,
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isTrained
-                              ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          modStr,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isTrained ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(2, 8, 10, 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      skill.displayName,
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: isTrained ? FontWeight.bold : FontWeight.normal,
+                                        color: isExpertise ? Colors.amberAccent : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '(${ability.shortName})',
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    if (isExpertise) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.amber.withValues(alpha: 0.5), width: 1),
+                                        ),
+                                        child: const Text(
+                                          'EXPERTISE',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.amberAccent,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isExpertise
+                                      ? Colors.amber.withValues(alpha: 0.2)
+                                      : (isProf
+                                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                                          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  modStr,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isExpertise
+                                        ? Colors.amberAccent
+                                        : (isProf ? theme.colorScheme.primary : theme.colorScheme.onSurface),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -387,23 +442,23 @@ class _SkillsSavesMatrixState extends State<SkillsSavesMatrix> {
     return switch (level) {
       SkillProficiencyLevel.none => Icon(
           Icons.circle_outlined,
-          size: 14,
+          size: 16,
           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
         ),
       SkillProficiencyLevel.jackOfAllTrades => Icon(
           Icons.adjust,
-          size: 14,
+          size: 16,
           color: theme.colorScheme.tertiary,
         ),
       SkillProficiencyLevel.proficient => Icon(
           Icons.check_circle,
-          size: 14,
+          size: 16,
           color: theme.colorScheme.primary,
         ),
-      SkillProficiencyLevel.expertise => Icon(
+      SkillProficiencyLevel.expertise => const Icon(
           Icons.stars,
-          size: 14,
-          color: theme.colorScheme.primary,
+          size: 17,
+          color: Colors.amberAccent,
         ),
     };
   }

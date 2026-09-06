@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/domain/feature_grant.dart';
+import '../../models/characters/srd_feats_library.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../repository/reference_resolver.dart';
 import 'character_stat_calculator.dart' show ComputedAttackProfile;
@@ -594,11 +596,22 @@ class CharacterEvaluationEngine {
     }
 
     // 7. Skill Modifiers
+    final grantedExpertises = <SkillType>{};
+    for (final featRef in character.feats) {
+      final feat = SrdFeatsLibrary.findBySlug(featRef.slug);
+      if (feat != null && feat.grants.isNotEmpty) {
+        grantedExpertises.addAll(GrantEvaluator.evaluateExpertiseGrants(feat.grants));
+      }
+    }
+
     final skillMods = <SkillType, int>{};
     for (final skill in SkillType.values) {
       final ability = skill.defaultAbility;
       final mod = abilityMods[ability]!;
-      final profLevel = character.skillProficiencies[skill] ?? SkillProficiencyLevel.none;
+      var profLevel = character.skillProficiencies[skill] ?? SkillProficiencyLevel.none;
+      if (grantedExpertises.contains(skill) && profLevel != SkillProficiencyLevel.expertise) {
+        profLevel = SkillProficiencyLevel.expertise;
+      }
       final skillTotal = mod + (profBonus * profLevel.multiplier).floor() + exhaustion.d20TestPenalty;
       skillMods[skill] = skillTotal;
     }
