@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../models/domain/character_models.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
 import '../../models/party/party_session_state.dart';
+import '../../services/persistence/character_persistence_service.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/party/party_room_service.dart';
 import '../../utils/crypto_utils.dart';
@@ -169,21 +171,63 @@ class JoinCampaignDialog extends StatefulWidget {
 class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
   late final TextEditingController _roomController;
   final _nameController = TextEditingController();
+  final _existingSlotController = TextEditingController();
   final _passkeyController = TextEditingController();
   bool _isDmJoin = false;
   bool _isLoading = false;
   final PartyRoomService _partyService = PartyRoomService();
+  final CharacterPersistenceService _characterService = CharacterPersistenceService();
+
+  List<Character> _savedCharacters = [];
+  Character? _selectedCharacter;
+  bool _useSavedCharacter = true;
+  bool _importAsNew = true;
+  String? _selectedExistingSlot;
+  List<String> _detectedRosterSlots = [];
 
   @override
   void initState() {
     super.initState();
     _roomController = TextEditingController(text: widget.initialRoomCode ?? '');
+    _roomController.addListener(_onRoomCodeChanged);
+    _loadSavedCharacters();
+  }
+
+  void _onRoomCodeChanged() {
+    final code = _roomController.text.trim().toUpperCase();
+    final cached = _partyService.getCachedSession(code);
+    if (cached != null && cached.characterRoster.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _detectedRosterSlots = cached.characterRoster;
+          if (_selectedExistingSlot == null && _detectedRosterSlots.isNotEmpty) {
+            _selectedExistingSlot = _detectedRosterSlots.first;
+          }
+        });
+      }
+    }
+  }
+
+  Future<void> _loadSavedCharacters() async {
+    final chars = await _characterService.loadCharacters();
+    if (mounted) {
+      setState(() {
+        _savedCharacters = chars;
+        if (chars.isNotEmpty) {
+          _selectedCharacter = chars.first;
+          _nameController.text = chars.first.name;
+        }
+      });
+      _onRoomCodeChanged();
+    }
   }
 
   @override
   void dispose() {
+    _roomController.removeListener(_onRoomCodeChanged);
     _roomController.dispose();
     _nameController.dispose();
+    _existingSlotController.dispose();
     _passkeyController.dispose();
     super.dispose();
   }
@@ -217,7 +261,6 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
 
   Future<void> _submit() async {
     final roomCode = _roomController.text.trim().toUpperCase();
-    final playerName = _nameController.text.trim();
     final passkey = _isDmJoin ? _passkeyController.text.trim() : '';
 
     if (roomCode.isEmpty) {
@@ -227,26 +270,51 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
       return;
     }
 
+    final Character? linkedChar = (!_isDmJoin && _useSavedCharacter) ? _selectedCharacter : null;
+    final String targetExistingSlot = _selectedExistingSlot ?? _existingSlotController.text.trim();
+
+    String playerName;
+    if (_isDmJoin) {
+      playerName = _nameController.text.trim().isEmpty ? 'DM' : _nameController.text.trim();
+    } else if (linkedChar != null) {
+      playerName = _importAsNew
+          ? linkedChar.name
+          : (targetExistingSlot.isNotEmpty ? targetExistingSlot : linkedChar.name);
+    } else {
+      playerName = _nameController.text.trim().isEmpty ? 'Adventurer' : _nameController.text.trim();
+    }
+
     setState(() => _isLoading = true);
     HapticService.selectionTick(context);
 
     try {
       final session = await _partyService.joinCampaign(
         roomCode: roomCode,
-        playerName: playerName.isEmpty ? (_isDmJoin ? 'DM' : 'Adventurer') : playerName,
+        playerName: playerName,
         hostKey: passkey.isNotEmpty ? passkey : null,
+        characterId: linkedChar?.id.slug,
+        characterSnapshot: linkedChar,
+        existingRosterName: (!_importAsNew && linkedChar != null && targetExistingSlot.isNotEmpty)
+            ? targetExistingSlot
+            : null,
+        isNewImport: _importAsNew || linkedChar == null,
       );
 
       if (mounted) {
         Navigator.pop(context);
         widget.onJoined?.call(session.roomCode);
         final isDm = passkey.isNotEmpty;
+        final linkMsg = linkedChar != null
+            ? (_importAsNew
+                ? ' (Linked "${linkedChar.name}")'
+                : ' (Linked "${linkedChar.name}" to slot "$targetExistingSlot")')
+            : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               isDm
                   ? 'Joined "${session.campaignName}" (${session.roomCode}) with DM privileges!'
-                  : 'Joined "${session.campaignName}" (${session.roomCode})!',
+                  : 'Joined "${session.campaignName}" (${session.roomCode})$linkMsg!',
             ),
             backgroundColor: Colors.green.shade700,
           ),
@@ -304,7 +372,7 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Enter the 6-character room code provided by your Dungeon Master to connect to the shared party vault and live dice feed.',
+              'Enter the room code provided by your Dungeon Master to connect to the shared party vault and sync character loot.',
               style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 16),
@@ -325,20 +393,188 @@ class _JoinCampaignDialogState extends State<JoinCampaignDialog> {
                 counterText: '',
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _nameController,
-              maxLength: 40,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                labelText: _isDmJoin ? 'Your DM / Display Name' : 'Your Character / Player Name',
-                hintText: _isDmJoin ? 'e.g. Dungeon Master' : 'e.g. Rogar the Barbarian',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                counterText: '',
+            const SizedBox(height: 14),
+
+            // Character Linking Options (if not DM join)
+            if (!_isDmJoin && _savedCharacters.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.person_pin, size: 18, color: colorScheme.primary),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Character Vault Link',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    DropdownButtonFormField<Character?>(
+                      initialValue: _useSavedCharacter ? _selectedCharacter : null,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: 'Select Character',
+                        isDense: true,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      items: [
+                        ..._savedCharacters.map((c) => DropdownMenuItem<Character?>(
+                              value: c,
+                              child: Text(
+                                '${c.name} (Lvl ${c.totalLevel} ${c.speciesRef.displayName})',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            )),
+                        const DropdownMenuItem<Character?>(
+                          value: null,
+                          child: Text('Custom / Guest Name (No Link)'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == null) {
+                            _useSavedCharacter = false;
+                            _selectedCharacter = null;
+                          } else {
+                            _useSavedCharacter = true;
+                            _selectedCharacter = val;
+                            _nameController.text = val.name;
+                          }
+                        });
+                      },
+                    ),
+
+                    if (_useSavedCharacter && _selectedCharacter != null) ...[
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Campaign Roster Placement:',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => setState(() => _importAsNew = true),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _importAsNew ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                                size: 18,
+                                color: _importAsNew ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Import as new character', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                    Text(
+                                      'Adds ${_selectedCharacter!.name} to campaign roster and shares sheet with DM',
+                                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => setState(() => _importAsNew = false),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                          child: Row(
+                            children: [
+                              Icon(
+                                !_importAsNew ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                                size: 18,
+                                color: !_importAsNew ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Link to existing character slot', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                    Text(
+                                      'Take over an existing DM slot or hero name in the campaign',
+                                      style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      if (!_importAsNew) ...[
+                        const SizedBox(height: 6),
+                        if (_detectedRosterSlots.isNotEmpty)
+                          DropdownButtonFormField<String>(
+                            initialValue: _detectedRosterSlots.contains(_selectedExistingSlot)
+                                ? _selectedExistingSlot
+                                : _detectedRosterSlots.first,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: 'Existing Campaign Character Slot',
+                              isDense: true,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            items: _detectedRosterSlots
+                                .map((slot) => DropdownMenuItem(
+                                      value: slot,
+                                      child: Text(slot),
+                                    ))
+                                .toList(),
+                            onChanged: (val) => setState(() => _selectedExistingSlot = val),
+                          )
+                        else
+                          TextField(
+                            controller: _existingSlotController,
+                            decoration: InputDecoration(
+                              labelText: 'Existing Character / Slot Name',
+                              hintText: 'e.g. Valeros or Fighter 1',
+                              isDense: true,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                      ],
+                    ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
+              const SizedBox(height: 12),
+            ],
+
+            if (!_useSavedCharacter || _isDmJoin) ...[
+              TextField(
+                controller: _nameController,
+                maxLength: 40,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+                decoration: InputDecoration(
+                  labelText: _isDmJoin ? 'Your DM / Display Name' : 'Your Character / Player Name',
+                  hintText: _isDmJoin ? 'e.g. Dungeon Master' : 'e.g. Rogar the Barbarian',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  counterText: '',
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+
             InkWell(
               borderRadius: BorderRadius.circular(8),
               onTap: () {
@@ -2329,6 +2565,240 @@ class _TransferCoinDialogState extends State<TransferCoinDialog> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         isDense: true,
       ),
+    );
+  }
+}
+
+/// Dialog to Link or Switch a Saved Character to an active Campaign Room
+class LinkCampaignCharacterDialog extends StatefulWidget {
+  final String roomCode;
+  final VoidCallback? onLinked;
+
+  const LinkCampaignCharacterDialog({
+    super.key,
+    required this.roomCode,
+    this.onLinked,
+  });
+
+  static Future<void> show(BuildContext context, {required String roomCode, VoidCallback? onLinked}) {
+    return showDialog<void>(
+      context: context,
+      builder: (ctx) => LinkCampaignCharacterDialog(roomCode: roomCode, onLinked: onLinked),
+    );
+  }
+
+  @override
+  State<LinkCampaignCharacterDialog> createState() => _LinkCampaignCharacterDialogState();
+}
+
+class _LinkCampaignCharacterDialogState extends State<LinkCampaignCharacterDialog> {
+  final PartyRoomService _partyService = PartyRoomService();
+  final CharacterPersistenceService _characterService = CharacterPersistenceService();
+
+  List<Character> _savedCharacters = [];
+  Character? _selectedCharacter;
+  bool _importAsNew = true;
+  String? _selectedExistingSlot;
+  List<String> _rosterSlots = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final chars = await _characterService.loadCharacters();
+    final session = _partyService.getCachedSession(widget.roomCode);
+    if (mounted) {
+      setState(() {
+        _savedCharacters = chars;
+        if (chars.isNotEmpty) {
+          _selectedCharacter = chars.first;
+        }
+        if (session != null) {
+          _rosterSlots = session.characterRoster;
+          if (_rosterSlots.isNotEmpty) {
+            _selectedExistingSlot = _rosterSlots.first;
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_selectedCharacter == null) return;
+    setState(() => _isLoading = true);
+    HapticService.selectionTick(context);
+
+    try {
+      await _partyService.linkCharacterToCampaign(
+        roomCode: widget.roomCode,
+        character: _selectedCharacter!,
+        existingRosterName: !_importAsNew ? _selectedExistingSlot : null,
+        isNewImport: _importAsNew,
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onLinked?.call();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Linked "${_selectedCharacter!.name}" to campaign room!'),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed linking character: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(Icons.link, color: colorScheme.primary),
+          const SizedBox(width: 10),
+          const Text('Link Character to Campaign', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Link a character from your vault to "${widget.roomCode}". This shares your stats with the DM and automatically syncs gold and claimed loot to your sheet.',
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            if (_savedCharacters.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'No saved characters found in your vault. Create a character first in the Character Builder.',
+                  style: TextStyle(color: colorScheme.error, fontSize: 13),
+                ),
+              )
+            else ...[
+              DropdownButtonFormField<Character>(
+                initialValue: _selectedCharacter,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: 'Select Character',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                items: _savedCharacters
+                    .map((c) => DropdownMenuItem(
+                          value: c,
+                          child: Text('${c.name} (Lvl ${c.totalLevel} ${c.speciesRef.displayName})'),
+                        ))
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedCharacter = val),
+              ),
+              const SizedBox(height: 14),
+              const Text('Campaign Roster Mode:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 6),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => setState(() => _importAsNew = true),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _importAsNew ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                        size: 18,
+                        color: _importAsNew ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Import as new character', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                            Text(
+                              'Adds ${_selectedCharacter?.name ?? "character"} as a new hero in the campaign roster',
+                              style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => setState(() => _importAsNew = false),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                  child: Row(
+                    children: [
+                      Icon(
+                        !_importAsNew ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                        size: 18,
+                        color: !_importAsNew ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Link to existing character slot', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                            Text(
+                              'Associate with a pre-existing roster name in the room',
+                              style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (!_importAsNew && _rosterSlots.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: _rosterSlots.contains(_selectedExistingSlot)
+                      ? _selectedExistingSlot
+                      : _rosterSlots.first,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: 'Existing Campaign Character Slot',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  items: _rosterSlots
+                      .map((slot) => DropdownMenuItem(value: slot, child: Text(slot)))
+                      .toList(),
+                  onChanged: (val) => setState(() => _selectedExistingSlot = val),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.link, size: 18),
+          label: Text(_isLoading ? 'Linking...' : 'Link Character'),
+          onPressed: (_isLoading || _selectedCharacter == null) ? null : _submit,
+        ),
+      ],
     );
   }
 }

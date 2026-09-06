@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import '../../models/domain/character_models.dart';
+import '../../models/domain/core_types.dart';
+import '../../models/domain/entity_reference.dart';
+import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_event.dart';
 import '../../models/party/party_loot_item.dart';
@@ -11,6 +15,8 @@ import '../../utils/crypto_utils.dart';
 import '../../utils/secure_random.dart';
 import '../logging_service.dart';
 import '../dice_room_service.dart';
+import '../persistence/character_persistence_service.dart';
+import '../persistence/campaign_profile_service.dart';
 import 'campaign_registry_service.dart';
 
 class CampaignNotFoundException implements Exception {
@@ -104,21 +110,31 @@ class PartyRoomService {
 
   final CampaignRegistryService _registry;
   final DiceRoomService _diceRoomService;
+  final CharacterPersistenceService _characterPersistenceService;
+  final CampaignProfileService _campaignProfileService;
 
   PartyRoomService._internal()
       : _registry = CampaignRegistryService(),
-        _diceRoomService = DiceRoomService();
+        _diceRoomService = DiceRoomService(),
+        _characterPersistenceService = CharacterPersistenceService(),
+        _campaignProfileService = CampaignProfileService();
 
   @visibleForTesting
   PartyRoomService.newInstance({
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
+    CharacterPersistenceService? characterPersistenceService,
+    CampaignProfileService? campaignProfileService,
   })  : _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),
         _diceRoomService = diceRoomService ??
             // ignore: invalid_use_of_visible_for_testing_member
-            DiceRoomService.newInstance();
+            DiceRoomService.newInstance(),
+        _characterPersistenceService =
+            characterPersistenceService ?? CharacterPersistenceService(),
+        _campaignProfileService =
+            campaignProfileService ?? CampaignProfileService();
 
   bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;
 
@@ -226,6 +242,10 @@ class PartyRoomService {
     required String roomCode,
     required String playerName,
     String? hostKey,
+    String? characterId,
+    Character? characterSnapshot,
+    String? existingRosterName,
+    bool isNewImport = true,
   }) async {
     final cleanCode = roomCode.trim().toUpperCase().replaceAll(' ', '');
     final cleanPlayer = playerName.trim().isEmpty ? 'Adventurer' : playerName.trim();
@@ -297,51 +317,82 @@ class PartyRoomService {
         savedHostKey = providedHostKey;
       }
 
+      final targetCharId = characterId ?? characterSnapshot?.id.slug ?? cleanPlayer;
+      final targetRosterName = (existingRosterName != null && existingRosterName.trim().isNotEmpty)
+          ? existingRosterName.trim()
+          : cleanPlayer;
+
       final membership = CampaignMembership(
         roomCode: matchedCode,
         campaignName: cloudSession.campaignName,
         role: role,
         hostKey: savedHostKey,
-        characterId: cleanPlayer,
+        characterId: targetCharId,
         lastPlayed: DateTime.now(),
       );
       await _registry.saveMembership(membership);
       await _registry.setActiveCampaign(membership);
 
-      // Add player to active players list if not present
-      if (!cloudSession.activePlayers.contains(cleanPlayer)) {
-        final updatedPlayers = [...cloudSession.activePlayers, cleanPlayer];
-        final updatedSession = cloudSession.copyWith(
-          activePlayers: updatedPlayers,
-          version: cloudSession.version + 1,
-          lastUpdated: DateTime.now(),
-        );
-        _localRooms[matchedCode] = updatedSession;
-        if (isFirebaseAvailable) {
-          try {
-            await FirebaseFirestore.instance
-                .collection('rooms')
-                .doc(matchedCode)
-                .update({
-              'activePlayers': FieldValue.arrayUnion([cleanPlayer]),
-              'version': FieldValue.increment(1),
-              'lastUpdated': DateTime.now().toIso8601String(),
-            });
-          } catch (e) {
-            // Non-critical player union error
-          }
-        }
-        cloudSession = updatedSession;
+      var updatedSession = cloudSession;
+      final updatedPlayers = List<String>.from(updatedSession.activePlayers);
+      if (!updatedPlayers.contains(cleanPlayer)) {
+        updatedPlayers.add(cleanPlayer);
       }
 
-      _localRooms[matchedCode] = cloudSession;
+      final updatedRoster = List<String>.from(updatedSession.characterRoster);
+      if (isNewImport && !updatedRoster.contains(targetRosterName)) {
+        updatedRoster.add(targetRosterName);
+      }
+
+      final updatedShared = Map<String, Map<String, dynamic>>.from(updatedSession.sharedCharacters);
+      if (characterSnapshot != null) {
+        updatedShared[characterSnapshot.id.slug] = characterSnapshot.toMap();
+        updatedShared[targetRosterName] = characterSnapshot.toMap();
+        await _characterPersistenceService.saveCharacter(characterSnapshot);
+
+        // Sync with DM profile if active profile matches
+        try {
+          final activeDmProfile = _campaignProfileService.activeProfile;
+          if (activeDmProfile != null) {
+            final matchesRoom = activeDmProfile.id == matchedCode ||
+                activeDmProfile.name.toLowerCase() == cloudSession.campaignName.toLowerCase();
+            if (matchesRoom && !activeDmProfile.partyCharacterIds.contains(characterSnapshot.id.slug)) {
+              final updatedPartyIds = [...activeDmProfile.partyCharacterIds, characterSnapshot.id.slug];
+              await _campaignProfileService.updateActiveProfile(
+                (p) => p.copyWith(partyCharacterIds: updatedPartyIds),
+              );
+            }
+          }
+        } catch (_) {}
+      }
+
+      updatedSession = updatedSession.copyWith(
+        activePlayers: updatedPlayers,
+        characterRoster: updatedRoster,
+        sharedCharacters: updatedShared,
+        version: updatedSession.version + 1,
+        lastUpdated: DateTime.now(),
+      );
+
+      _localRooms[matchedCode] = updatedSession;
+      if (isFirebaseAvailable) {
+        try {
+          await FirebaseFirestore.instance
+              .collection('rooms')
+              .doc(matchedCode)
+              .set(updatedSession.toMap(), SetOptions(merge: true));
+        } catch (e) {
+          // Non-critical player union error
+        }
+      }
+
       _emitSession(matchedCode);
       _diceRoomService.joinRoom(matchedCode, cleanPlayer);
 
       // Flush any pending outbox items
       unawaited(flushOutbox(matchedCode));
 
-      return cloudSession;
+      return updatedSession;
     }
 
     // Case 2: Room not found in Cloud, BUT exists locally with a valid hostKey (or provided hostKey)
@@ -367,6 +418,117 @@ class PartyRoomService {
 
     // Case 3: Does NOT exist anywhere -> Reject without creating documents
     throw CampaignNotFoundException('Campaign not found. Please check code with your DM.');
+  }
+
+  /// Links a player's saved character to a campaign room.
+  /// If [isNewImport] is true, adds the character to the shared campaign roster.
+  /// If [existingRosterName] is provided, associates with that existing roster name.
+  /// Shares character state with the DM via [PartySessionState.sharedCharacters].
+  Future<PartySessionState> linkCharacterToCampaign({
+    required String roomCode,
+    required Character character,
+    String? existingRosterName,
+    bool isNewImport = true,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final targetName = (existingRosterName != null && existingRosterName.trim().isNotEmpty)
+        ? existingRosterName.trim()
+        : character.name.trim();
+
+    // 1. Ensure membership is updated with this character's ID
+    final existingMembership = _registry.getMembership(clean);
+    if (existingMembership != null) {
+      final updatedMembership = existingMembership.copyWith(
+        characterId: character.id.slug,
+        lastPlayed: DateTime.now(),
+      );
+      await _registry.saveMembership(updatedMembership);
+      await _registry.setActiveCampaign(updatedMembership);
+    }
+
+    // 2. Persist character locally
+    await _characterPersistenceService.saveCharacter(character);
+
+    // 3. Update session
+    var current = _localRooms[clean];
+    if (current == null) {
+      final membership = _registry.getMembership(clean);
+      current = PartySessionState(
+        roomCode: clean,
+        campaignName: membership?.campaignName ?? 'Party Campaign',
+        hostKeyHash: '',
+        partyPurse: const PartyPurse(),
+        activePlayers: [targetName],
+        characterRoster: [targetName],
+        sharedCharacters: {
+          character.id.slug: character.toMap(),
+          targetName: character.toMap(),
+        },
+        version: 1,
+        lastUpdated: DateTime.now(),
+        expiresAt: DateTime.now().add(defaultLootExpiration),
+      );
+    } else {
+      final updatedRoster = List<String>.from(current.characterRoster);
+      if (isNewImport && !updatedRoster.contains(targetName)) {
+        updatedRoster.add(targetName);
+      }
+      final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
+      updatedShared[character.id.slug] = character.toMap();
+      updatedShared[targetName] = character.toMap();
+
+      final updatedPlayers = List<String>.from(current.activePlayers);
+      if (!updatedPlayers.contains(targetName)) {
+        updatedPlayers.add(targetName);
+      }
+
+      current = current.copyWith(
+        characterRoster: updatedRoster,
+        sharedCharacters: updatedShared,
+        activePlayers: updatedPlayers,
+        version: current.version + 1,
+        lastUpdated: DateTime.now(),
+      );
+    }
+
+    _localRooms[clean] = current;
+    _emitSession(clean);
+
+    // 4. Sync with DM profile if active profile belongs to this campaign
+    try {
+      final activeDmProfile = _campaignProfileService.activeProfile;
+      if (activeDmProfile != null) {
+        final matchesRoom = activeDmProfile.id == clean ||
+            activeDmProfile.name.toLowerCase() == current.campaignName.toLowerCase();
+        if (matchesRoom && !activeDmProfile.partyCharacterIds.contains(character.id.slug)) {
+          final updatedPartyIds = [...activeDmProfile.partyCharacterIds, character.id.slug];
+          await _campaignProfileService.updateActiveProfile(
+            (p) => p.copyWith(partyCharacterIds: updatedPartyIds),
+          );
+        }
+      }
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed linking character to DM profile');
+    }
+
+    // 5. Cloud update
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.set(current.toMap(), SetOptions(merge: true));
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore linkCharacterToCampaign failed for $clean');
+      }
+    }
+
+    await logEvent(
+      roomCode: clean,
+      type: 'characterLinked',
+      playerName: targetName,
+      details: '$targetName (${character.name}) linked to campaign session',
+    );
+
+    return current;
   }
 
   /// Validates a DM passkey / host key against a room session and promotes local membership to DM / Co-DM
@@ -563,6 +725,10 @@ class PartyRoomService {
   // =========================================================================
   // 3. SUBCOLLECTION-BASED STREAMING
   // =========================================================================
+
+  /// Returns the current in-memory cached state of a room if available
+  PartySessionState? getCachedSession(String roomCode) =>
+      _localRooms[roomCode.trim().toUpperCase()];
 
   /// Stream root session state
   Stream<PartySessionState?> streamSession(String roomCode) {
@@ -1146,6 +1312,199 @@ class PartyRoomService {
     }
   }
 
+  // =========================================================================
+  // CHARACTER VAULT SYNCHRONIZATION HELPERS
+  // =========================================================================
+
+  Future<void> _syncCoinsToCharacter({
+    required String roomCode,
+    required String characterIdentifier,
+    int pp = 0,
+    int gp = 0,
+    int ep = 0,
+    int sp = 0,
+    int cp = 0,
+  }) async {
+    try {
+      final all = await _characterPersistenceService.loadCharacters();
+      final cleanIdent = characterIdentifier.trim().toLowerCase();
+      final membership = _registry.getMembership(roomCode);
+
+      Character? matched;
+      for (final c in all) {
+        if (c.id.slug.toLowerCase() == cleanIdent ||
+            c.name.trim().toLowerCase() == cleanIdent) {
+          matched = c;
+          break;
+        }
+      }
+
+      if (matched == null && membership?.characterId != null) {
+        for (final c in all) {
+          if (c.id.slug.toLowerCase() == membership!.characterId!.toLowerCase()) {
+            matched = c;
+            break;
+          }
+        }
+      }
+
+      if (matched != null) {
+        final updatedPurse = matched.purse.depositCoins(
+          pp: pp,
+          gp: gp,
+          ep: ep,
+          sp: sp,
+          cp: cp,
+        );
+        final updatedChar = matched.copyWith(purse: updatedPurse);
+        await _characterPersistenceService.saveCharacter(updatedChar);
+
+        final clean = roomCode.trim().toUpperCase();
+        final current = _localRooms[clean];
+        if (current != null) {
+          final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
+          updatedShared[updatedChar.id.slug] = updatedChar.toMap();
+          updatedShared[characterIdentifier] = updatedChar.toMap();
+          _localRooms[clean] = current.copyWith(sharedCharacters: updatedShared);
+          _emitSession(clean);
+        }
+      }
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to sync coins to character $characterIdentifier');
+    }
+  }
+
+  Future<void> _syncPurseOverrideToCharacter({
+    required String roomCode,
+    required String characterIdentifier,
+    required PartyPurse newPurse,
+  }) async {
+    try {
+      final all = await _characterPersistenceService.loadCharacters();
+      final cleanIdent = characterIdentifier.trim().toLowerCase();
+      final membership = _registry.getMembership(roomCode);
+
+      Character? matched;
+      for (final c in all) {
+        if (c.id.slug.toLowerCase() == cleanIdent ||
+            c.name.trim().toLowerCase() == cleanIdent) {
+          matched = c;
+          break;
+        }
+      }
+
+      if (matched == null && membership?.characterId != null) {
+        for (final c in all) {
+          if (c.id.slug.toLowerCase() == membership!.characterId!.toLowerCase()) {
+            matched = c;
+            break;
+          }
+        }
+      }
+
+      if (matched != null) {
+        final updatedChar = matched.copyWith(purse: newPurse);
+        await _characterPersistenceService.saveCharacter(updatedChar);
+
+        final clean = roomCode.trim().toUpperCase();
+        final current = _localRooms[clean];
+        if (current != null) {
+          final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
+          updatedShared[updatedChar.id.slug] = updatedChar.toMap();
+          updatedShared[characterIdentifier] = updatedChar.toMap();
+          _localRooms[clean] = current.copyWith(sharedCharacters: updatedShared);
+          _emitSession(clean);
+        }
+      }
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to sync purse override to character $characterIdentifier');
+    }
+  }
+
+  Future<void> _syncLootClaimToCharacter({
+    required String roomCode,
+    required PartyLootItem item,
+    required String? claimingPlayer,
+  }) async {
+    try {
+      final instanceId = 'loot_${item.id}';
+      final allChars = await _characterPersistenceService.loadCharacters();
+      final cleanRoom = roomCode.trim().toUpperCase();
+      final membership = _registry.getMembership(cleanRoom);
+
+      if (claimingPlayer != null && claimingPlayer.trim().isNotEmpty) {
+        final cleanPlayer = claimingPlayer.trim().toLowerCase();
+        Character? matched;
+        for (final c in allChars) {
+          if (c.id.slug.toLowerCase() == cleanPlayer ||
+              c.name.trim().toLowerCase() == cleanPlayer) {
+            matched = c;
+            break;
+          }
+        }
+        if (matched == null && membership?.characterId != null) {
+          for (final c in allChars) {
+            if (c.id.slug.toLowerCase() == membership!.characterId!.toLowerCase()) {
+              matched = c;
+              break;
+            }
+          }
+        }
+
+        if (matched != null) {
+          final itemSlug = item.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+          final instance = InventoryItemInstance(
+            instanceId: instanceId,
+            itemRef: EntityReference<EquipmentItem>(
+              refType: EntityType.equipment,
+              slug: itemSlug.isNotEmpty ? itemSlug : 'vault_item_${item.id}',
+              displayName: item.name,
+            ),
+            quantity: item.count > 0 ? item.count : 1,
+            requiresAttunement: item.requiresAttunement,
+            isAttuned: item.isAttuned,
+            customName: item.name,
+            notes: item.description,
+          );
+
+          final updatedInventory = List<InventoryItemInstance>.from(matched.inventory)
+            ..removeWhere((i) => i.instanceId == instanceId)
+            ..add(instance);
+
+          final updatedChar = matched.copyWith(inventory: updatedInventory);
+          await _characterPersistenceService.saveCharacter(updatedChar);
+
+          final current = _localRooms[cleanRoom];
+          if (current != null) {
+            final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
+            updatedShared[updatedChar.id.slug] = updatedChar.toMap();
+            _localRooms[cleanRoom] = current.copyWith(sharedCharacters: updatedShared);
+            _emitSession(cleanRoom);
+          }
+        }
+      } else {
+        // Returned to vault: remove item instance from any character
+        for (final c in allChars) {
+          if (c.inventory.any((i) => i.instanceId == instanceId)) {
+            final updatedInv = c.inventory.where((i) => i.instanceId != instanceId).toList();
+            final updatedChar = c.copyWith(inventory: updatedInv);
+            await _characterPersistenceService.saveCharacter(updatedChar);
+
+            final current = _localRooms[cleanRoom];
+            if (current != null) {
+              final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
+              updatedShared[updatedChar.id.slug] = updatedChar.toMap();
+              _localRooms[cleanRoom] = current.copyWith(sharedCharacters: updatedShared);
+              _emitSession(cleanRoom);
+            }
+          }
+        }
+      }
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to sync loot claim for item ${item.id}');
+    }
+  }
+
   /// Disperses coins/valuables among selected party member stores, with an optional share for the party reserve.
   Future<void> disperseCoinsToParty({
     required String roomCode,
@@ -1190,6 +1549,11 @@ class PartyRoomService {
       for (final recipient in recipients) {
         final prev = updatedMemberPurses[recipient] ?? const PartyPurse();
         updatedMemberPurses[recipient] = prev.depositCoins(gp: perShareGp);
+        await _syncCoinsToCharacter(
+          roomCode: clean,
+          characterIdentifier: recipient,
+          gp: perShareGp,
+        );
       }
 
       if (includePartyReserve) {
@@ -1220,6 +1584,15 @@ class PartyRoomService {
           sp: spPerShare,
           cp: cpPerShare,
         );
+        await _syncCoinsToCharacter(
+          roomCode: clean,
+          characterIdentifier: recipient,
+          pp: ppPerShare,
+          gp: gpPerShare,
+          ep: epPerShare,
+          sp: spPerShare,
+          cp: cpPerShare,
+        );
       }
 
       if (includePartyReserve) {
@@ -1242,10 +1615,11 @@ class PartyRoomService {
       }
     }
 
-    final updatedSession = current.copyWith(
+    final latestSession = _localRooms[clean] ?? current;
+    final updatedSession = latestSession.copyWith(
       partyPurse: updatedPartyPurse,
       memberPurses: updatedMemberPurses,
-      version: current.version + 1,
+      version: latestSession.version + 1,
       lastUpdated: DateTime.now(),
     );
 
@@ -1296,6 +1670,12 @@ class PartyRoomService {
       );
       _localRooms[clean] = updatedSession;
       _emitSession(clean);
+
+      await _syncPurseOverrideToCharacter(
+        roomCode: clean,
+        characterIdentifier: trimmedName,
+        newPurse: newPurse,
+      );
 
       final noteSuffix = note != null ? ' ($note)' : '';
       await logEvent(
@@ -1349,6 +1729,12 @@ class PartyRoomService {
       _localRooms[clean] = updatedSession;
       _emitSession(clean);
 
+      await _syncPurseOverrideToCharacter(
+        roomCode: clean,
+        characterIdentifier: trimmedName,
+        newPurse: updatedMemberPurse,
+      );
+
       final desc = '$performedBy transferred coins from $trimmedName to Party Reserve ($gp GP, $sp SP, $cp CP)';
       await logEvent(
         roomCode: clean,
@@ -1401,6 +1787,12 @@ class PartyRoomService {
       );
       _localRooms[clean] = updatedSession;
       _emitSession(clean);
+
+      await _syncPurseOverrideToCharacter(
+        roomCode: clean,
+        characterIdentifier: trimmedName,
+        newPurse: updatedMemberPurse,
+      );
 
       final desc = '$performedBy withdrew coins from Party Reserve to $trimmedName ($gp GP, $sp SP, $cp CP)';
       await logEvent(
@@ -1485,6 +1877,12 @@ class PartyRoomService {
       _emitLoot(clean);
     }
 
+    await _syncLootClaimToCharacter(
+      roomCode: clean,
+      item: existing ?? PartyLootItem(id: lootId, name: lootId, createdAt: DateTime.now(), expiresAt: DateTime.now()),
+      claimingPlayer: playerName,
+    );
+
     final isClaim = playerName != null && playerName.isNotEmpty;
     await logEvent(
       roomCode: clean,
@@ -1521,6 +1919,12 @@ class PartyRoomService {
                   PartyLootItem.fromMap(remoteData!);
               lootMap?[lootId] = restored;
               _emitLoot(clean);
+
+              await _syncLootClaimToCharacter(
+                roomCode: clean,
+                item: restored,
+                claimingPlayer: remoteWinner,
+              );
 
               final itemName = existing?.name ?? (remoteData?['name'] as String? ?? 'Item');
               await logEvent(

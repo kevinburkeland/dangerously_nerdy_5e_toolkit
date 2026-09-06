@@ -10,6 +10,7 @@ class PartySessionState {
   final Map<String, PartyPurse> memberPurses;
   final List<String> activePlayers;
   final List<String> characterRoster;
+  final Map<String, Map<String, dynamic>> sharedCharacters;
   final int version;
   final DateTime lastUpdated;
   final DateTime expiresAt;
@@ -22,6 +23,7 @@ class PartySessionState {
     this.memberPurses = const {},
     this.activePlayers = const [],
     this.characterRoster = const [],
+    this.sharedCharacters = const {},
     this.version = 1,
     required this.lastUpdated,
     required this.expiresAt,
@@ -40,6 +42,7 @@ class PartySessionState {
     Map<String, PartyPurse>? memberPurses,
     List<String>? activePlayers,
     List<String>? characterRoster,
+    Map<String, Map<String, dynamic>>? sharedCharacters,
     int? version,
     DateTime? lastUpdated,
     DateTime? expiresAt,
@@ -52,6 +55,7 @@ class PartySessionState {
       memberPurses: memberPurses ?? this.memberPurses,
       activePlayers: activePlayers ?? this.activePlayers,
       characterRoster: characterRoster ?? this.characterRoster,
+      sharedCharacters: sharedCharacters ?? this.sharedCharacters,
       version: version ?? this.version,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       expiresAt: expiresAt ?? this.expiresAt,
@@ -68,6 +72,7 @@ class PartySessionState {
       'memberPurses': memberPurses.map((k, v) => MapEntry(k, v.toMap())),
       'activePlayers': activePlayers,
       'characterRoster': characterRoster,
+      'sharedCharacters': sharedCharacters,
       'version': version,
       'lastUpdated': lastUpdated.toIso8601String(),
       'expiresAt': expiresAt.toIso8601String(),
@@ -101,6 +106,16 @@ class PartySessionState {
         ? rawRoster.map((e) => e.toString()).toList()
         : <String>[];
 
+    final rawShared = map['sharedCharacters'];
+    final Map<String, Map<String, dynamic>> sharedCharacters = {};
+    if (rawShared is Map) {
+      rawShared.forEach((k, v) {
+        if (v is Map) {
+          sharedCharacters[k.toString()] = Map<String, dynamic>.from(v);
+        }
+      });
+    }
+
     return PartySessionState(
       roomCode: (map['roomCode'] ?? map['code']) as String? ?? '',
       campaignName: map['campaignName'] as String? ?? 'Untitled Campaign',
@@ -109,6 +124,7 @@ class PartySessionState {
       memberPurses: memberPurses,
       activePlayers: players,
       characterRoster: roster,
+      sharedCharacters: sharedCharacters,
       version: (map['version'] as num?)?.toInt() ?? 1,
       lastUpdated: map['lastUpdated'] != null
           ? DateTime.tryParse(map['lastUpdated'] as String) ?? DateTime.now()

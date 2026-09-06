@@ -223,6 +223,16 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                       return const SizedBox.shrink();
                     },
                   ),
+                  // Link Character Button
+                  IconButton(
+                    icon: const Icon(Icons.link, color: Colors.tealAccent),
+                    tooltip: 'Link Character to Campaign',
+                    onPressed: () => LinkCampaignCharacterDialog.show(
+                      context,
+                      roomCode: _roomCode,
+                      onLinked: () => setState(() {}),
+                    ),
+                  ),
                   // Party Roster & Character Management Button
                   IconButton(
                     icon: const Icon(Icons.groups, color: Colors.blueAccent),
@@ -564,14 +574,61 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      _playerName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _playerName,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (session?.sharedCharacters.containsKey(_playerName) == true ||
+                            (_currentMembership?.characterId != null &&
+                                _currentMembership!.characterId!.isNotEmpty &&
+                                _currentMembership!.characterId != 'Adventurer' &&
+                                _currentMembership!.characterId != 'DM')) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade800.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.green.shade600, width: 0.8),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_circle, size: 10, color: Colors.green),
+                                SizedBox(width: 3),
+                                Text(
+                                  'Linked',
+                                  style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.green),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  minimumSize: Size.zero,
+                  foregroundColor: Colors.teal,
+                ),
+                icon: const Icon(Icons.link, size: 15),
+                label: const Text('Link', style: TextStyle(fontSize: 12)),
+                onPressed: () => LinkCampaignCharacterDialog.show(
+                  context,
+                  roomCode: _roomCode,
+                  onLinked: () => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: 4),
               TextButton.icon(
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

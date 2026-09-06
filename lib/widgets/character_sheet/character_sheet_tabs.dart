@@ -5,11 +5,15 @@ import '../../models/domain/character_models.dart';
 import '../../models/domain/action_economy_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/party/campaign_membership.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
+import '../../screens/party_room_screen.dart';
+import '../../services/party/campaign_registry_service.dart';
 import '../../services/rules/character_actions_resolver.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
+import '../party/campaign_dialogs.dart';
 import 'features_traits_section.dart';
 import 'interactive_spell_tile.dart';
 import 'languages_tools_section.dart';
@@ -569,6 +573,152 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
     return ListView(
       padding: const EdgeInsets.all(14),
       children: [
+        // Linked Campaign Badge
+        Builder(
+          builder: (context) {
+            final registry = CampaignRegistryService();
+            final memberships = registry.memberships;
+            final linked = memberships.cast<CampaignMembership?>().firstWhere(
+                  (m) => m?.characterId == character.id.slug || m?.characterId == character.name,
+                  orElse: () => null,
+                );
+
+            if (linked == null) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => JoinCampaignDialog.show(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.link_off, size: 16, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Not linked to a campaign room. Tap to join.',
+                            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          ),
+                        ),
+                        Text('Join', style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => PartyRoomScreen(roomCode: linked.roomCode)),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.teal.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.link, size: 16, color: Colors.teal),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'LINKED TO CAMPAIGN',
+                              style: theme.textTheme.labelSmall?.copyWith(color: Colors.teal, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                            ),
+                            Text(
+                              '${linked.campaignName} (${linked.roomCode})',
+                              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, size: 18, color: Colors.teal),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+
+        // Coin Purse Card
+        Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.account_balance_wallet, size: 18, color: Color(0xFFF59E0B)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Coin Purse',
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      '~${character.purse.totalGpEquivalent.toStringAsFixed(1)} GP Total',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFF59E0B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _buildCoinPill('PP', character.purse.pp, const Color(0xFFCBD5E1), theme),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('GP', character.purse.gp, const Color(0xFFEAB308), theme),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('EP', character.purse.ep, const Color(0xFF94A3B8), theme),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('SP', character.purse.sp, const Color(0xFF94A3B8), theme),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('CP', character.purse.cp, const Color(0xFFB45309), theme),
+                ],
+              ),
+            ],
+          ),
+        ),
+
         // Attunement Slot Meter
         Container(
           padding: const EdgeInsets.all(12),
@@ -670,6 +820,32 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
         else
           ...character.inventory.map((item) => _buildInventoryItemCard(context, item)),
       ],
+    );
+  }
+
+  Widget _buildCoinPill(String denom, int count, Color color, ThemeData theme) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              denom,
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '$count',
+              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
