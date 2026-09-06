@@ -287,38 +287,66 @@ class DmDashboardController extends ChangeNotifier {
     await _campaignProfileService.saveProfile(_activeProfile!);
   }
 
-  /// Modifies coins in the active campaign or party's first character purse.
-  Future<void> modifyPurseCoin(String coinKey, int delta) async {
-    if (_activeProfile == null) return;
+  /// Shared party treasury / reserve purse for the active campaign.
+  PartyPurse get partyPurse => _activeProfile?.partyPurse ?? const PartyPurse();
 
-    // If characters exist, update the first character's purse
-    if (partyCharacters.isNotEmpty) {
-      final first = partyCharacters.first;
-      final curPurse = first.purse;
-      final newPurse = PartyPurse(
-        cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 999999) : curPurse.cp,
-        sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 999999) : curPurse.sp,
-        ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 999999) : curPurse.ep,
-        gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 999999) : curPurse.gp,
-        pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 999999) : curPurse.pp,
-      );
-      final updated = first.copyWith(purse: newPurse);
-      _partyCharactersMap[first.id.slug] = updated;
-      notifyListeners();
-      await _characterPersistenceService.saveCharacter(updated);
-    } else {
-      final curPurse = _activeProfile!.partyPurse;
-      final newPurse = PartyPurse(
-        cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 999999) : curPurse.cp,
-        sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 999999) : curPurse.sp,
-        ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 999999) : curPurse.ep,
-        gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 999999) : curPurse.gp,
-        pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 999999) : curPurse.pp,
-      );
-      _activeProfile = _activeProfile!.copyWith(partyPurse: newPurse);
-      notifyListeners();
-      await _campaignProfileService.saveProfile(_activeProfile!);
+  /// Combined wealth across the campaign shared party purse and all linked character personal purses.
+  PartyPurse get totalPartyWealth {
+    var total = partyPurse;
+    for (final char in partyCharacters) {
+      total = total.add(char.purse);
     }
+    return total;
+  }
+
+  /// Modifies coins in the active campaign's shared party treasury.
+  Future<void> modifyPartyPurseCoin(String coinKey, int delta) async {
+    if (_activeProfile == null) return;
+    final curPurse = _activeProfile!.partyPurse;
+    final newPurse = PartyPurse(
+      cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 9999999) : curPurse.cp,
+      sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 9999999) : curPurse.sp,
+      ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 9999999) : curPurse.ep,
+      gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 9999999) : curPurse.gp,
+      pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 9999999) : curPurse.pp,
+    );
+    _activeProfile = _activeProfile!.copyWith(partyPurse: newPurse);
+    notifyListeners();
+    await _campaignProfileService.saveProfileImmediate(_activeProfile!);
+  }
+
+  /// Backward-compatible alias for [modifyPartyPurseCoin].
+  Future<void> modifyPurseCoin(String coinKey, int delta) =>
+      modifyPartyPurseCoin(coinKey, delta);
+
+  /// Modifies coins in a specific linked character's personal coin purse.
+  Future<void> modifyCharacterPurseCoin(String characterId, String coinKey, int delta) async {
+    final char = _partyCharactersMap[characterId];
+    if (char == null) return;
+
+    final curPurse = char.purse;
+    final newPurse = PartyPurse(
+      cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 9999999) : curPurse.cp,
+      sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 9999999) : curPurse.sp,
+      ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 9999999) : curPurse.ep,
+      gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 9999999) : curPurse.gp,
+      pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 9999999) : curPurse.pp,
+    );
+    final updated = char.copyWith(purse: newPurse);
+    _partyCharactersMap[characterId] = updated;
+    notifyListeners();
+    await _characterPersistenceService.saveCharacter(updated);
+  }
+
+  /// Sets or updates a linked character's personal coin purse directly.
+  Future<void> updateCharacterPurse(String characterId, PartyPurse newPurse) async {
+    final char = _partyCharactersMap[characterId];
+    if (char == null) return;
+
+    final updated = char.copyWith(purse: newPurse);
+    _partyCharactersMap[characterId] = updated;
+    notifyListeners();
+    await _characterPersistenceService.saveCharacter(updated);
   }
 
   /// Updates room state (encounter participants, descriptions, links).

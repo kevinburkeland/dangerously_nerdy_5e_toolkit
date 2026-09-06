@@ -8,6 +8,7 @@ import '../models/domain/spell_monster_equipment.dart';
 import '../models/characters/srd_feats_library.dart';
 import '../models/domain/homebrew_extended_entities.dart';
 import '../models/party/campaign_membership.dart';
+import '../models/party/party_purse.dart';
 import '../models/room_roll.dart';
 import '../services/dice_room_service.dart';
 import '../services/party/campaign_registry_service.dart';
@@ -132,6 +133,28 @@ class CharacterSheetController extends ChangeNotifier {
       _isSaving = false;
       notifyListeners();
     }
+  }
+
+  /// Updates the character's coin purse directly and triggers debounced persistence.
+  Future<void> updatePurse(PartyPurse newPurse) async {
+    if (_character.purse == newPurse) return;
+    _character = _character.copyWith(purse: newPurse);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Modifies a single coin denomination in the character's purse (clamped >= 0).
+  Future<void> modifyPurseCoin(String coinKey, int delta) async {
+    final curPurse = _character.purse;
+    final newPurse = PartyPurse(
+      cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 9999999) : curPurse.cp,
+      sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 9999999) : curPurse.sp,
+      ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 9999999) : curPurse.ep,
+      gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 9999999) : curPurse.gp,
+      pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 9999999) : curPurse.pp,
+    );
+    await updatePurse(newPurse);
   }
 
   /// Toggles the equipped state of an inventory item instance.

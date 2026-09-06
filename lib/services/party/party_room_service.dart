@@ -460,6 +460,10 @@ class PartyRoomService {
         partyPurse: const PartyPurse(),
         activePlayers: [targetName],
         characterRoster: [targetName],
+        memberPurses: {
+          targetName: character.purse,
+          character.id.slug: character.purse,
+        },
         sharedCharacters: {
           character.id.slug: character.toMap(),
           targetName: character.toMap(),
@@ -482,10 +486,15 @@ class PartyRoomService {
         updatedPlayers.add(targetName);
       }
 
+      final updatedMemberPurses = Map<String, PartyPurse>.from(current.memberPurses);
+      updatedMemberPurses[targetName] = character.purse;
+      updatedMemberPurses[character.id.slug] = character.purse;
+
       current = current.copyWith(
         characterRoster: updatedRoster,
         sharedCharacters: updatedShared,
         activePlayers: updatedPlayers,
+        memberPurses: updatedMemberPurses,
         version: current.version + 1,
         lastUpdated: DateTime.now(),
       );
@@ -1365,7 +1374,13 @@ class PartyRoomService {
           final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
           updatedShared[updatedChar.id.slug] = updatedChar.toMap();
           updatedShared[characterIdentifier] = updatedChar.toMap();
-          _localRooms[clean] = current.copyWith(sharedCharacters: updatedShared);
+          final updatedPurses = Map<String, PartyPurse>.from(current.memberPurses);
+          updatedPurses[characterIdentifier] = updatedPurse;
+          updatedPurses[updatedChar.id.slug] = updatedPurse;
+          _localRooms[clean] = current.copyWith(
+            sharedCharacters: updatedShared,
+            memberPurses: updatedPurses,
+          );
           _emitSession(clean);
         }
       }
@@ -1412,7 +1427,13 @@ class PartyRoomService {
           final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
           updatedShared[updatedChar.id.slug] = updatedChar.toMap();
           updatedShared[characterIdentifier] = updatedChar.toMap();
-          _localRooms[clean] = current.copyWith(sharedCharacters: updatedShared);
+          final updatedPurses = Map<String, PartyPurse>.from(current.memberPurses);
+          updatedPurses[characterIdentifier] = newPurse;
+          updatedPurses[updatedChar.id.slug] = newPurse;
+          _localRooms[clean] = current.copyWith(
+            sharedCharacters: updatedShared,
+            memberPurses: updatedPurses,
+          );
           _emitSession(clean);
         }
       }

@@ -6,6 +6,7 @@ import '../../models/domain/action_economy_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/campaign_membership.dart';
+import '../../models/party/party_purse.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../screens/party_room_screen.dart';
@@ -684,35 +685,49 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
-                    ),
-                    child: Text(
-                      '~${character.purse.totalGpEquivalent.toStringAsFixed(1)} GP Total',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFFF59E0B),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 16, color: Color(0xFFF59E0B)),
+                        tooltip: 'Adjust Coins',
+                        onPressed: () => _showAdjustCoinsDialog(context),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                        ),
+                        child: Text(
+                          '~${character.purse.totalGpEquivalent.toStringAsFixed(1)} GP Total',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _buildCoinPill('PP', character.purse.pp, const Color(0xFFCBD5E1), theme),
+                  _buildCoinPill('PP', character.purse.pp, const Color(0xFFCBD5E1), theme, 'pp'),
                   const SizedBox(width: 6),
-                  _buildCoinPill('GP', character.purse.gp, const Color(0xFFEAB308), theme),
+                  _buildCoinPill('GP', character.purse.gp, const Color(0xFFEAB308), theme, 'gp'),
                   const SizedBox(width: 6),
-                  _buildCoinPill('EP', character.purse.ep, const Color(0xFF94A3B8), theme),
+                  _buildCoinPill('EP', character.purse.ep, const Color(0xFF94A3B8), theme, 'ep'),
                   const SizedBox(width: 6),
-                  _buildCoinPill('SP', character.purse.sp, const Color(0xFF94A3B8), theme),
+                  _buildCoinPill('SP', character.purse.sp, const Color(0xFF94A3B8), theme, 'sp'),
                   const SizedBox(width: 6),
-                  _buildCoinPill('CP', character.purse.cp, const Color(0xFFB45309), theme),
+                  _buildCoinPill('CP', character.purse.cp, const Color(0xFFB45309), theme, 'cp'),
                 ],
               ),
             ],
@@ -823,27 +838,114 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
     );
   }
 
-  Widget _buildCoinPill(String denom, int count, Color color, ThemeData theme) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          children: [
-            Text(
-              denom,
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+  Future<void> _showAdjustCoinsDialog(BuildContext context, {String? initialDenom}) async {
+    final cur = widget.controller.character.purse;
+    final ppCtrl = TextEditingController(text: cur.pp.toString());
+    final gpCtrl = TextEditingController(text: cur.gp.toString());
+    final epCtrl = TextEditingController(text: cur.ep.toString());
+    final spCtrl = TextEditingController(text: cur.sp.toString());
+    final cpCtrl = TextEditingController(text: cur.cp.toString());
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.account_balance_wallet, color: Color(0xFFF59E0B)),
+              SizedBox(width: 8),
+              Text('Adjust Coin Purse', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildCoinInputField('Platinum Pieces (PP)', ppCtrl, const Color(0xFFCBD5E1)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Gold Pieces (GP)', gpCtrl, const Color(0xFFEAB308)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Electrum Pieces (EP)', epCtrl, const Color(0xFF94A3B8)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Silver Pieces (SP)', spCtrl, const Color(0xFF94A3B8)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Copper Pieces (CP)', cpCtrl, const Color(0xFFB45309)),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              '$count',
-              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final pp = int.tryParse(ppCtrl.text.trim()) ?? cur.pp;
+                final gp = int.tryParse(gpCtrl.text.trim()) ?? cur.gp;
+                final ep = int.tryParse(epCtrl.text.trim()) ?? cur.ep;
+                final sp = int.tryParse(spCtrl.text.trim()) ?? cur.sp;
+                final cp = int.tryParse(cpCtrl.text.trim()) ?? cur.cp;
+
+                final updated = PartyPurse(
+                  pp: pp.clamp(0, 9999999),
+                  gp: gp.clamp(0, 9999999),
+                  ep: ep.clamp(0, 9999999),
+                  sp: sp.clamp(0, 9999999),
+                  cp: cp.clamp(0, 9999999),
+                );
+
+                await widget.controller.updatePurse(updated);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('Save Coins'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCoinInputField(String label, TextEditingController ctrl, Color color) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(Icons.circle, size: 12, color: color),
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+    );
+  }
+
+  Widget _buildCoinPill(String denom, int count, Color color, ThemeData theme, String coinKey) {
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          HapticService.selectionTick(context);
+          _showAdjustCoinsDialog(context, initialDenom: coinKey);
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                denom,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$count',
+                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ),
     );

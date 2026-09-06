@@ -9,7 +9,6 @@ import '../models/domain/character_models.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/entity_reference.dart';
 import '../models/domain/session_graph_models.dart';
-import '../models/party/party_purse.dart';
 import '../providers/dm_dashboard_controller.dart';
 import '../providers/settings_provider.dart';
 import '../services/app_services.dart';
@@ -1077,7 +1076,13 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   void _modifyPurseCoin(String coinKey, int delta) {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-    _controller.modifyPurseCoin(coinKey, delta);
+    _controller.modifyPartyPurseCoin(coinKey, delta);
+  }
+
+  void _modifyCharacterPurseCoin(String characterId, String coinKey, int delta) {
+    if (_activeProfile == null) return;
+    HapticService.selectionTick(context);
+    _controller.modifyCharacterPurseCoin(characterId, coinKey, delta);
   }
 
   @override
@@ -1785,6 +1790,56 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.account_balance_wallet, size: 12, color: Colors.amberAccent),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${char.purse.gp} GP • ~${char.purse.totalGpEquivalent.toStringAsFixed(1)} GP eq',
+                      style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.amberAccent),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                onTap: () => _modifyCharacterPurseCoin(char.id.slug, 'gp', 10),
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text('+10 GP', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                ),
+              ),
+              const SizedBox(width: 4),
+              InkWell(
+                onTap: () => _modifyCharacterPurseCoin(char.id.slug, 'gp', -10),
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text('-10 GP', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                ),
+              ),
+            ],
+          ),
           // Spell Slots Matrix if caster
           if (char.resources.spellSlots.maxSlots.values.any((s) => s > 0)) ...[
             const SizedBox(height: 6),
@@ -2061,7 +2116,8 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   Widget _buildScratchpadAndPurseCard() {
     final theme = Theme.of(context);
     final roster = _controller.partyCharacters;
-    final purse = roster.isNotEmpty ? roster.first.purse : (_activeProfile?.partyPurse ?? const PartyPurse());
+    final partyPurse = _controller.partyPurse;
+    final totalWealth = _controller.totalPartyWealth;
 
     return Card(
       elevation: 2,
@@ -2073,7 +2129,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.note_alt_outlined, color: Colors.pinkAccent, size: 22),
+                const Icon(Icons.account_balance, color: Colors.amberAccent, size: 22),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -2086,9 +2142,26 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    '~${totalWealth.totalGpEquivalent.toStringAsFixed(1)} GP Total Wealth',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amberAccent),
+                  ),
+                ),
               ],
             ),
             const Divider(height: 16),
+            Text(
+              'SHARED PARTY TREASURY (~${partyPurse.totalGpEquivalent.toStringAsFixed(1)} GP)',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.6, color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 6),
             // Party Purse HUD
             Container(
               padding: const EdgeInsets.all(10),
@@ -2100,14 +2173,44 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildCoinColumn('PP', purse.pp, () => _modifyPurseCoin('pp', 1), () => _modifyPurseCoin('pp', -1)),
-                  _buildCoinColumn('GP', purse.gp, () => _modifyPurseCoin('gp', 10), () => _modifyPurseCoin('gp', -10)),
-                  _buildCoinColumn('EP', purse.ep, () => _modifyPurseCoin('ep', 1), () => _modifyPurseCoin('ep', -1)),
-                  _buildCoinColumn('SP', purse.sp, () => _modifyPurseCoin('sp', 10), () => _modifyPurseCoin('sp', -10)),
-                  _buildCoinColumn('CP', purse.cp, () => _modifyPurseCoin('cp', 10), () => _modifyPurseCoin('cp', -10)),
+                  _buildCoinColumn('PP', partyPurse.pp, () => _modifyPurseCoin('pp', 1), () => _modifyPurseCoin('pp', -1)),
+                  _buildCoinColumn('GP', partyPurse.gp, () => _modifyPurseCoin('gp', 10), () => _modifyPurseCoin('gp', -10)),
+                  _buildCoinColumn('EP', partyPurse.ep, () => _modifyPurseCoin('ep', 1), () => _modifyPurseCoin('ep', -1)),
+                  _buildCoinColumn('SP', partyPurse.sp, () => _modifyPurseCoin('sp', 10), () => _modifyPurseCoin('sp', -10)),
+                  _buildCoinColumn('CP', partyPurse.cp, () => _modifyPurseCoin('cp', 10), () => _modifyPurseCoin('cp', -10)),
                 ],
               ),
             ),
+            if (roster.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(
+                'LINKED CHARACTER PURSES',
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: theme.colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: roster.map((c) {
+                  return InkWell(
+                    onTap: () => _openCharacterSheet(c),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        '${c.name}: ${c.purse.gp} GP (~${c.purse.totalGpEquivalent.toStringAsFixed(0)} eq)',
+                        style: TextStyle(fontSize: 10.5, color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
             const SizedBox(height: 12),
             TextField(
               controller: _notesController,
