@@ -52,33 +52,34 @@ class _HomebrewImportDialogState extends State<HomebrewImportDialog> {
     try {
       final persistence = HomebrewPersistenceService();
 
-      for (final spell in _previewResult!.spells) {
-        await persistence.saveCustomSpell(spell);
+      if (_previewResult!.spells.isNotEmpty) {
+        await persistence.saveCustomSpellsBatch(_previewResult!.spells);
       }
-      for (final monster in _previewResult!.monsters) {
-        await persistence.saveCustomMonster(monster);
+      if (_previewResult!.monsters.isNotEmpty) {
+        await persistence.saveCustomMonstersBatch(_previewResult!.monsters);
       }
-      for (final item in _previewResult!.items) {
-        await persistence.saveCustomItem(item);
+      if (_previewResult!.items.isNotEmpty) {
+        await persistence.saveCustomItemsBatch(_previewResult!.items);
       }
-      for (final cl in _previewResult!.classes) {
-        await persistence.saveCustomClass(cl);
+      if (_previewResult!.classes.isNotEmpty) {
+        await persistence.saveCustomClassesBatch(_previewResult!.classes);
       }
-      for (final sub in _previewResult!.subclasses) {
-        await persistence.saveCustomSubclass(sub);
+      if (_previewResult!.subclasses.isNotEmpty) {
+        await persistence.saveCustomSubclassesBatch(_previewResult!.subclasses);
       }
-      for (final race in _previewResult!.races) {
-        await persistence.saveCustomRace(race);
+      if (_previewResult!.races.isNotEmpty) {
+        await persistence.saveCustomRacesBatch(_previewResult!.races);
       }
-      for (final feat in _previewResult!.feats) {
-        await persistence.saveCustomFeat(feat);
+      if (_previewResult!.feats.isNotEmpty) {
+        await persistence.saveCustomFeatsBatch(_previewResult!.feats);
       }
-      for (final bg in _previewResult!.backgrounds) {
-        await persistence.saveCustomBackground(bg);
+      if (_previewResult!.backgrounds.isNotEmpty) {
+        await persistence.saveCustomBackgroundsBatch(_previewResult!.backgrounds);
       }
-      for (final other in _previewResult!.otherEntries) {
-        await persistence.saveCustomOtherEntry(other);
+      if (_previewResult!.otherEntries.isNotEmpty) {
+        await persistence.saveCustomOtherEntriesBatch(_previewResult!.otherEntries);
       }
+      await persistence.syncToLibraries();
 
       if (mounted) {
         Navigator.of(context).pop(_previewResult);

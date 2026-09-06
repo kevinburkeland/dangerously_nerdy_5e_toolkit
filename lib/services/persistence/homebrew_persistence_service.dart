@@ -135,14 +135,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newSpells.isEmpty) return;
     final spells = await loadCustomSpells();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < spells.length; i++)
+        '${spells[i].id.slug}_${spells[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newSpells.length; i++) {
       final spell = newSpells[i];
-      final idx = spells.indexWhere(
-        (s) => s.id.slug == spell.id.slug && s.id.ruleset == spell.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${spell.id.slug}_${spell.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         spells[idx] = spell;
       } else {
+        slugIndex[key] = spells.length;
         spells.add(spell);
       }
     }
@@ -151,9 +155,11 @@ class HomebrewPersistenceService {
       spells.map((s) => json.encode(s.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newSpells.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewSpellsRaw, newSpells[i].id.slug, rawPayloads[i]);
+        payloadMap[newSpells[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewSpellsRaw, payloadMap);
     }
   }
 
@@ -399,14 +405,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newMonsters.isEmpty) return;
     final monsters = await loadCustomMonsters();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < monsters.length; i++)
+        '${monsters[i].id.slug}_${monsters[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newMonsters.length; i++) {
       final monster = newMonsters[i];
-      final idx = monsters.indexWhere(
-        (m) => m.id.slug == monster.id.slug && m.id.ruleset == monster.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${monster.id.slug}_${monster.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         monsters[idx] = monster;
       } else {
+        slugIndex[key] = monsters.length;
         monsters.add(monster);
       }
       MonsterCodexLibrary.addHomebrewMonster(monster);
@@ -416,9 +426,11 @@ class HomebrewPersistenceService {
       monsters.map((m) => json.encode(m.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newMonsters.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewMonstersRaw, newMonsters[i].id.slug, rawPayloads[i]);
+        payloadMap[newMonsters[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewMonstersRaw, payloadMap);
     }
   }
 
@@ -475,14 +487,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newItems.isEmpty) return;
     final items = await loadCustomItems();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < items.length; i++)
+        '${items[i].id.slug}_${items[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newItems.length; i++) {
       final item = newItems[i];
-      final idx = items.indexWhere(
-        (i) => i.id.slug == item.id.slug && i.id.ruleset == item.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${item.id.slug}_${item.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         items[idx] = item;
       } else {
+        slugIndex[key] = items.length;
         items.add(item);
       }
     }
@@ -491,9 +507,11 @@ class HomebrewPersistenceService {
       items.map((i) => json.encode(i.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newItems.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewItemsRaw, newItems[i].id.slug, rawPayloads[i]);
+        payloadMap[newItems[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewItemsRaw, payloadMap);
     }
   }
 
@@ -550,14 +568,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newClasses.isEmpty) return;
     final classes = await loadCustomClasses();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < classes.length; i++)
+        '${classes[i].id.slug}_${classes[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newClasses.length; i++) {
       final c = newClasses[i];
-      final idx = classes.indexWhere(
-        (existing) => existing.id.slug == c.id.slug && existing.id.ruleset == c.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${c.id.slug}_${c.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         classes[idx] = c;
       } else {
+        slugIndex[key] = classes.length;
         classes.add(c);
       }
       SrdClassesLibrary.addCustomClass(c);
@@ -567,9 +589,11 @@ class HomebrewPersistenceService {
       classes.map((c) => json.encode(c.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newClasses.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewClassesRaw, newClasses[i].id.slug, rawPayloads[i]);
+        payloadMap[newClasses[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewClassesRaw, payloadMap);
     }
   }
 
@@ -627,14 +651,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newSubclasses.isEmpty) return;
     final subs = await loadCustomSubclasses();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < subs.length; i++)
+        '${subs[i].id.slug}_${subs[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newSubclasses.length; i++) {
       final s = newSubclasses[i];
-      final idx = subs.indexWhere(
-        (existing) => existing.id.slug == s.id.slug && existing.id.ruleset == s.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${s.id.slug}_${s.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         subs[idx] = s;
       } else {
+        slugIndex[key] = subs.length;
         subs.add(s);
       }
     }
@@ -643,9 +671,11 @@ class HomebrewPersistenceService {
       subs.map((s) => json.encode(s.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newSubclasses.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewSubclassesRaw, newSubclasses[i].id.slug, rawPayloads[i]);
+        payloadMap[newSubclasses[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewSubclassesRaw, payloadMap);
     }
     for (final s in newSubclasses) {
       SrdClassesLibrary.addCustomSubclass(s);
@@ -706,14 +736,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newRaces.isEmpty) return;
     final races = await loadCustomRaces();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < races.length; i++)
+        '${races[i].id.slug}_${races[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newRaces.length; i++) {
       final r = newRaces[i];
-      final idx = races.indexWhere(
-        (existing) => existing.id.slug == r.id.slug && existing.id.ruleset == r.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${r.id.slug}_${r.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         races[idx] = r;
       } else {
+        slugIndex[key] = races.length;
         races.add(r);
       }
       SrdSpeciesLibrary.addCustomSpecies(r);
@@ -723,9 +757,11 @@ class HomebrewPersistenceService {
       races.map((r) => json.encode(r.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newRaces.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewRacesRaw, newRaces[i].id.slug, rawPayloads[i]);
+        payloadMap[newRaces[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewRacesRaw, payloadMap);
     }
   }
 
@@ -783,14 +819,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newFeats.isEmpty) return;
     final feats = await loadCustomFeats();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < feats.length; i++)
+        '${feats[i].id.slug}_${feats[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newFeats.length; i++) {
       final f = newFeats[i];
-      final idx = feats.indexWhere(
-        (existing) => existing.id.slug == f.id.slug && existing.id.ruleset == f.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${f.id.slug}_${f.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         feats[idx] = f;
       } else {
+        slugIndex[key] = feats.length;
         feats.add(f);
       }
       SrdFeatsLibrary.addCustomFeat(f);
@@ -800,9 +840,11 @@ class HomebrewPersistenceService {
       feats.map((f) => json.encode(f.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newFeats.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewFeatsRaw, newFeats[i].id.slug, rawPayloads[i]);
+        payloadMap[newFeats[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewFeatsRaw, payloadMap);
     }
   }
 
@@ -860,14 +902,18 @@ class HomebrewPersistenceService {
   }) async {
     if (newBackgrounds.isEmpty) return;
     final backgrounds = await loadCustomBackgrounds();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < backgrounds.length; i++)
+        '${backgrounds[i].id.slug}_${backgrounds[i].id.ruleset.name}': i,
+    };
     for (int i = 0; i < newBackgrounds.length; i++) {
       final b = newBackgrounds[i];
-      final idx = backgrounds.indexWhere(
-        (existing) => existing.id.slug == b.id.slug && existing.id.ruleset == b.id.ruleset,
-      );
-      if (idx != -1) {
+      final key = '${b.id.slug}_${b.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
         backgrounds[idx] = b;
       } else {
+        slugIndex[key] = backgrounds.length;
         backgrounds.add(b);
       }
       SrdBackgroundsLibrary.addCustomBackground(b);
@@ -877,9 +923,11 @@ class HomebrewPersistenceService {
       backgrounds.map((b) => json.encode(b.toMap())).toList(),
     );
     if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
       for (int i = 0; i < newBackgrounds.length && i < rawPayloads.length; i++) {
-        await _saveRawPayload(_keyHomebrewBackgroundsRaw, newBackgrounds[i].id.slug, rawPayloads[i]);
+        payloadMap[newBackgrounds[i].id.slug] = rawPayloads[i];
       }
+      await _saveRawPayloadsBatch(_keyHomebrewBackgroundsRaw, payloadMap);
     }
   }
 
@@ -931,6 +979,48 @@ class HomebrewPersistenceService {
         name: entry.name,
         descriptionMarkdown: entry.descriptionMarkdown,
       ));
+    }
+  }
+
+  /// Batch saves multiple generic compendium entries to persistent storage.
+  Future<void> saveCustomOtherEntriesBatch(
+    List<HomebrewCompendiumEntry> newEntries, {
+    List<Map<String, dynamic>>? rawPayloads,
+  }) async {
+    if (newEntries.isEmpty) return;
+    final entries = await loadCustomOtherEntries();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < entries.length; i++)
+        '${entries[i].id.slug}_${entries[i].id.ruleset.name}': i,
+    };
+    for (int i = 0; i < newEntries.length; i++) {
+      final entry = newEntries[i];
+      final key = '${entry.id.slug}_${entry.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
+        entries[idx] = entry;
+      } else {
+        slugIndex[key] = entries.length;
+        entries.add(entry);
+      }
+      if (entry.category.toLowerCase().contains('invocation')) {
+        SrdFeatureOptions.addCustomInvocation(FeatureOption(
+          id: entry.id.slug,
+          name: entry.name,
+          descriptionMarkdown: entry.descriptionMarkdown,
+        ));
+      }
+    }
+    await _saveStringList(
+      _keyHomebrewOther,
+      entries.map((e) => json.encode(e.toMap())).toList(),
+    );
+    if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
+      for (int i = 0; i < newEntries.length && i < rawPayloads.length; i++) {
+        payloadMap[newEntries[i].id.slug] = rawPayloads[i];
+      }
+      await _saveRawPayloadsBatch(_keyHomebrewOtherRaw, payloadMap);
     }
   }
 
@@ -1111,6 +1201,11 @@ class HomebrewPersistenceService {
     // 1. Spells
     final existingSpells = await loadCustomSpells();
     final spellSlugs = existingSpells.map((s) => s.id.slug).toSet();
+    final spellIndex = <String, int>{
+      for (int i = 0; i < existingSpells.length; i++)
+        '${existingSpells[i].id.slug}_${existingSpells[i].id.ruleset.name}': i,
+    };
+    bool spellsModified = false;
     for (final item in resolution.spells) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1128,13 +1223,32 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomSpell(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = spellIndex[key];
+      if (idx != null) {
+        existingSpells[idx] = toSave;
+      } else {
+        spellIndex[key] = existingSpells.length;
+        existingSpells.add(toSave);
+      }
+      spellsModified = true;
       tick('Spells');
+    }
+    if (spellsModified) {
+      await _saveStringList(
+        _keyHomebrewSpells,
+        existingSpells.map((s) => json.encode(s.toMap())).toList(),
+      );
     }
 
     // 2. Monsters
     final existingMonsters = await loadCustomMonsters();
     final monsterSlugs = existingMonsters.map((m) => m.id.slug).toSet();
+    final monsterIndex = <String, int>{
+      for (int i = 0; i < existingMonsters.length; i++)
+        '${existingMonsters[i].id.slug}_${existingMonsters[i].id.ruleset.name}': i,
+    };
+    bool monstersModified = false;
     for (final item in resolution.monsters) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1152,13 +1266,32 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomMonster(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = monsterIndex[key];
+      if (idx != null) {
+        existingMonsters[idx] = toSave;
+      } else {
+        monsterIndex[key] = existingMonsters.length;
+        existingMonsters.add(toSave);
+      }
+      monstersModified = true;
       tick('Monsters');
+    }
+    if (monstersModified) {
+      await _saveStringList(
+        _keyHomebrewMonsters,
+        existingMonsters.map((m) => json.encode(m.toMap())).toList(),
+      );
     }
 
     // 3. Items
     final existingItems = await loadCustomItems();
     final itemSlugs = existingItems.map((i) => i.id.slug).toSet();
+    final itemIndex = <String, int>{
+      for (int i = 0; i < existingItems.length; i++)
+        '${existingItems[i].id.slug}_${existingItems[i].id.ruleset.name}': i,
+    };
+    bool itemsModified = false;
     for (final item in resolution.items) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1176,13 +1309,32 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomItem(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = itemIndex[key];
+      if (idx != null) {
+        existingItems[idx] = toSave;
+      } else {
+        itemIndex[key] = existingItems.length;
+        existingItems.add(toSave);
+      }
+      itemsModified = true;
       tick('Items');
+    }
+    if (itemsModified) {
+      await _saveStringList(
+        _keyHomebrewItems,
+        existingItems.map((i) => json.encode(i.toMap())).toList(),
+      );
     }
 
     // 4. Classes
     final existingClasses = await loadCustomClasses();
     final classSlugs = existingClasses.map((c) => c.id.slug).toSet();
+    final classIndex = <String, int>{
+      for (int i = 0; i < existingClasses.length; i++)
+        '${existingClasses[i].id.slug}_${existingClasses[i].id.ruleset.name}': i,
+    };
+    bool classesModified = false;
     for (final item in resolution.classes) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1200,13 +1352,32 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomClass(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = classIndex[key];
+      if (idx != null) {
+        existingClasses[idx] = toSave;
+      } else {
+        classIndex[key] = existingClasses.length;
+        existingClasses.add(toSave);
+      }
+      classesModified = true;
       tick('Classes');
+    }
+    if (classesModified) {
+      await _saveStringList(
+        _keyHomebrewClasses,
+        existingClasses.map((c) => json.encode(c.toMap())).toList(),
+      );
     }
 
     // 5. Subclasses
     final existingSubclasses = await loadCustomSubclasses();
     final subSlugs = existingSubclasses.map((s) => s.id.slug).toSet();
+    final subIndex = <String, int>{
+      for (int i = 0; i < existingSubclasses.length; i++)
+        '${existingSubclasses[i].id.slug}_${existingSubclasses[i].id.ruleset.name}': i,
+    };
+    bool subclassesModified = false;
     for (final item in resolution.subclasses) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1228,13 +1399,32 @@ class HomebrewPersistenceService {
           customProperties: toSave.customProperties,
         );
       }
-      await saveCustomSubclass(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = subIndex[key];
+      if (idx != null) {
+        existingSubclasses[idx] = toSave;
+      } else {
+        subIndex[key] = existingSubclasses.length;
+        existingSubclasses.add(toSave);
+      }
+      subclassesModified = true;
       tick('Subclasses');
+    }
+    if (subclassesModified) {
+      await _saveStringList(
+        _keyHomebrewSubclasses,
+        existingSubclasses.map((s) => json.encode(s.toMap())).toList(),
+      );
     }
 
     // 6. Races
     final existingRaces = await loadCustomRaces();
     final raceSlugs = existingRaces.map((r) => r.id.slug).toSet();
+    final raceIndex = <String, int>{
+      for (int i = 0; i < existingRaces.length; i++)
+        '${existingRaces[i].id.slug}_${existingRaces[i].id.ruleset.name}': i,
+    };
+    bool racesModified = false;
     for (final item in resolution.races) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1252,13 +1442,32 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomRace(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = raceIndex[key];
+      if (idx != null) {
+        existingRaces[idx] = toSave;
+      } else {
+        raceIndex[key] = existingRaces.length;
+        existingRaces.add(toSave);
+      }
+      racesModified = true;
       tick('Races & Species');
+    }
+    if (racesModified) {
+      await _saveStringList(
+        _keyHomebrewRaces,
+        existingRaces.map((r) => json.encode(r.toMap())).toList(),
+      );
     }
 
     // 7. Feats
     final existingFeats = await loadCustomFeats();
     final featSlugs = existingFeats.map((f) => f.id.slug).toSet();
+    final featIndex = <String, int>{
+      for (int i = 0; i < existingFeats.length; i++)
+        '${existingFeats[i].id.slug}_${existingFeats[i].id.ruleset.name}': i,
+    };
+    bool featsModified = false;
     for (final item in resolution.feats) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1276,13 +1485,32 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomFeat(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = featIndex[key];
+      if (idx != null) {
+        existingFeats[idx] = toSave;
+      } else {
+        featIndex[key] = existingFeats.length;
+        existingFeats.add(toSave);
+      }
+      featsModified = true;
       tick('Feats');
+    }
+    if (featsModified) {
+      await _saveStringList(
+        _keyHomebrewFeats,
+        existingFeats.map((f) => json.encode(f.toMap())).toList(),
+      );
     }
 
     // 8. Backgrounds
     final existingBgs = await loadCustomBackgrounds();
     final bgSlugs = existingBgs.map((b) => b.id.slug).toSet();
+    final bgIndex = <String, int>{
+      for (int i = 0; i < existingBgs.length; i++)
+        '${existingBgs[i].id.slug}_${existingBgs[i].id.ruleset.name}': i,
+    };
+    bool bgsModified = false;
     for (final item in resolution.backgrounds) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1300,13 +1528,32 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomBackground(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = bgIndex[key];
+      if (idx != null) {
+        existingBgs[idx] = toSave;
+      } else {
+        bgIndex[key] = existingBgs.length;
+        existingBgs.add(toSave);
+      }
+      bgsModified = true;
       tick('Backgrounds');
+    }
+    if (bgsModified) {
+      await _saveStringList(
+        _keyHomebrewBackgrounds,
+        existingBgs.map((b) => json.encode(b.toMap())).toList(),
+      );
     }
 
     // 9. Other entries
     final existingOthers = await loadCustomOtherEntries();
     final otherSlugs = existingOthers.map((o) => o.id.slug).toSet();
+    final otherIndex = <String, int>{
+      for (int i = 0; i < existingOthers.length; i++)
+        '${existingOthers[i].id.slug}_${existingOthers[i].id.ruleset.name}': i,
+    };
+    bool othersModified = false;
     for (final item in resolution.otherEntries) {
       if (!item.isSelected) continue;
       if (item.disposition == ImportDisposition.collision &&
@@ -1324,8 +1571,22 @@ class HomebrewPersistenceService {
           name: '${toSave.name} (Copy)',
         );
       }
-      await saveCustomOtherEntry(toSave);
+      final key = '${toSave.id.slug}_${toSave.id.ruleset.name}';
+      final idx = otherIndex[key];
+      if (idx != null) {
+        existingOthers[idx] = toSave;
+      } else {
+        otherIndex[key] = existingOthers.length;
+        existingOthers.add(toSave);
+      }
+      othersModified = true;
       tick('Rules & Tables');
+    }
+    if (othersModified) {
+      await _saveStringList(
+        _keyHomebrewOther,
+        existingOthers.map((e) => json.encode(e.toMap())).toList(),
+      );
     }
 
     // Immediately synchronize runtime libraries
@@ -1718,14 +1979,13 @@ class HomebrewPersistenceService {
   // Private: raw payload storage helpers
   // ---------------------------------------------------------------------------
 
-  /// Saves a single raw JSON payload keyed by [entitySlug].
-  /// Uses a `Map<slug, rawJson>` stored in database and syncs to SharedPreferences.
-  Future<void> _saveRawPayload(
+  /// Saves multiple raw JSON payloads keyed by entity slug in a single batch transaction.
+  Future<void> _saveRawPayloadsBatch(
     String key,
-    String entitySlug,
-    Map<String, dynamic> rawPayload, [
+    Map<String, Map<String, dynamic>> payloadsBySlug, [
     SharedPreferences? prefs,
   ]) async {
+    if (payloadsBySlug.isEmpty) return;
     try {
       Map<String, dynamic> map = {};
       if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
@@ -1743,7 +2003,7 @@ class HomebrewPersistenceService {
           map = Map<String, dynamic>.from(json.decode(existing) as Map);
         }
       }
-      map[entitySlug] = rawPayload;
+      map.addAll(payloadsBySlug);
       if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
         await _db.put(AppDatabaseService.boxHomebrewRaw, key, map);
       }
@@ -1753,8 +2013,19 @@ class HomebrewPersistenceService {
         await p.setString(key, json.encode(map));
       } catch (_) {}
     } catch (e, st) {
-      LoggingService().logNonFatal(e, st, reason: 'Failed to save raw payload for $entitySlug');
+      LoggingService().logNonFatal(e, st, reason: 'Failed to batch save raw payloads for $key');
     }
+  }
+
+  /// Saves a single raw JSON payload keyed by [entitySlug].
+  /// Uses a `Map<slug, rawJson>` stored in database and syncs to SharedPreferences.
+  Future<void> _saveRawPayload(
+    String key,
+    String entitySlug,
+    Map<String, dynamic> rawPayload, [
+    SharedPreferences? prefs,
+  ]) async {
+    await _saveRawPayloadsBatch(key, {entitySlug: rawPayload}, prefs);
   }
 
   /// Removes the raw payload for [entitySlug] from [key].
