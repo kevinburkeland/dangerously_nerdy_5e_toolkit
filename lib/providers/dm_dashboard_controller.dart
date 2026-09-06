@@ -166,6 +166,23 @@ class DmDashboardController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reloads a single character from persistence (e.g. after being edited in CharacterSheetView)
+  /// and updates the in-memory party map and UI.
+  Future<void> reloadCharacter(String characterId) async {
+    final updated = await _characterPersistenceService.getCharacter(characterId);
+    if (updated != null) {
+      _partyCharactersMap[characterId] = updated;
+      notifyListeners();
+    }
+  }
+
+  /// Directly updates a character in memory and persists it to [CharacterPersistenceService].
+  Future<void> updateCharacter(Character character) async {
+    await _characterPersistenceService.saveCharacter(character);
+    _partyCharactersMap[character.id.slug] = character;
+    notifyListeners();
+  }
+
   /// Removes a character pointer from the active campaign's party roster.
   Future<void> removeCharacterFromParty(String characterId) async {
     if (_activeProfile == null) return;

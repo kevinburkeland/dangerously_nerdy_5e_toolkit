@@ -46,6 +46,10 @@ class _MockPersistenceService implements CharacterPersistenceService {
       roster.where((c) => ids.contains(c.id.slug)).toList();
 
   @override
+  Future<Character?> getCharacter(String id) async =>
+      roster.where((c) => c.id.slug == id).firstOrNull;
+
+  @override
   Future<void> saveCharacters(List<Character> characters) async {
     for (final c in characters) {
       await saveCharacter(c);

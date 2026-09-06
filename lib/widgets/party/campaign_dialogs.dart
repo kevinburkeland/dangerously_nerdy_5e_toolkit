@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../models/domain/character_models.dart';
+import '../../screens/character_sheet_view.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
@@ -1553,6 +1554,48 @@ class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
     if (mounted) Navigator.pop(context);
   }
 
+  Future<void> _openSheetForRosterCharacter(String name) async {
+    final session = _partyService.getCachedSession(widget.roomCode);
+    Character? targetChar;
+    if (session != null && session.sharedCharacters.isNotEmpty) {
+      final rawMap = session.sharedCharacters[name];
+      if (rawMap != null) {
+        try {
+          targetChar = Character.fromMap(rawMap);
+        } catch (_) {}
+      }
+    }
+
+    if (targetChar == null) {
+      final localChars = await CharacterPersistenceService().loadCharacters();
+      targetChar = localChars.where((c) =>
+        c.name.toLowerCase() == name.toLowerCase() ||
+        c.id.slug == name
+      ).firstOrNull;
+    }
+
+    if (!mounted) return;
+
+    final updated = await Navigator.push<Character?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CharacterSheetView(
+          character: targetChar,
+          isDmMode: true,
+        ),
+      ),
+    );
+
+    if (updated != null) {
+      await _partyService.linkCharacterToCampaign(
+        roomCode: widget.roomCode,
+        character: updated,
+        existingRosterName: name,
+        isNewImport: false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1636,6 +1679,11 @@ class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          IconButton(
+                            icon: const Icon(Icons.badge_outlined, size: 18, color: Colors.blueAccent),
+                            tooltip: 'View Character Sheet',
+                            onPressed: () => _openSheetForRosterCharacter(name),
+                          ),
                           if (!isCurrent)
                             TextButton(
                               onPressed: () => _playAs(name),

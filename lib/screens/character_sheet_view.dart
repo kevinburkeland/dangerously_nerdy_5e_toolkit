@@ -13,11 +13,15 @@ import '../widgets/character_sheet/character_sheet_tabs.dart';
 class CharacterSheetView extends StatefulWidget {
   final Character? character;
   final CharacterSheetController? controller;
+  final ValueChanged<Character>? onCharacterUpdated;
+  final bool isDmMode;
 
   const CharacterSheetView({
     super.key,
     this.character,
     this.controller,
+    this.onCharacterUpdated,
+    this.isDmMode = false,
   });
 
   @override
@@ -93,6 +97,11 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
     }
   }
 
+  Future<void> _handlePop() async {
+    await _controller.flush();
+    widget.onCharacterUpdated?.call(_controller.character);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -104,27 +113,59 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, _) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              _controller.character.name.isEmpty ? 'Character Sheet' : _controller.character.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            elevation: 0,
-            actions: [
-              if (_controller.isSaving)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Center(
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+        return PopScope<Character>(
+          canPop: true,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) {
+              await _handlePop();
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              leading: Navigator.canPop(context)
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () async {
+                        await _handlePop();
+                        if (context.mounted) {
+                          Navigator.of(context).pop(_controller.character);
+                        }
+                      },
+                    )
+                  : null,
+              title: Text(
+                _controller.character.name.isEmpty ? 'Character Sheet' : _controller.character.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              elevation: 0,
+              actions: [
+                if (widget.isDmMode)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Chip(
+                      avatar: const Icon(Icons.shield_outlined, size: 14, color: Colors.amberAccent),
+                      label: const Text(
+                        'DM Mode',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amberAccent),
+                      ),
+                      backgroundColor: Colors.amber.withValues(alpha: 0.15),
+                      side: BorderSide(color: Colors.amber.withValues(alpha: 0.4)),
+                      visualDensity: VisualDensity.compact,
                     ),
                   ),
-                ),
-            ],
-          ),
+                if (_controller.isSaving)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           body: LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= 900;
@@ -178,8 +219,9 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
               );
             },
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 }

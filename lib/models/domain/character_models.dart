@@ -976,6 +976,11 @@ class Character extends DomainEntity {
   int get totalLevel => progression.totalLevel;
   int get proficiencyBonus => totalLevel.dndProficiencyBonus;
 
+  String get classesSummary {
+    if (progression.classes.isEmpty) return 'Adventurer';
+    return progression.classes.map((c) => '${c.classRef.displayName} ${c.level}').join(' / ');
+  }
+
   List<EntityReference<Spell>> get cantrips {
     final list = <EntityReference<Spell>>[];
     for (final spells in allocatedSpells.values) {

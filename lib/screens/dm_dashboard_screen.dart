@@ -18,6 +18,8 @@ import '../utils/secure_random.dart';
 import '../widgets/dm_reference/dm_interactive_tools.dart';
 import '../widgets/dm_reference/dm_rule_card.dart';
 import '../widgets/dm_reference/rules_edition_toggle.dart';
+import '../services/persistence/character_persistence_service.dart';
+import 'character_sheet_view.dart';
 import 'rules_compendium_screen.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
@@ -760,128 +762,235 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     _controller.toggleSpellSlot(characterId, level);
   }
 
+  Future<void> _openCharacterSheet(Character char) async {
+    final updated = await Navigator.push<Character?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CharacterSheetView(
+          character: char,
+          isDmMode: true,
+        ),
+      ),
+    );
+    if (updated != null) {
+      await _controller.updateCharacter(updated);
+    } else {
+      await _controller.reloadCharacter(char.id.slug);
+    }
+  }
+
   Future<void> _showAddSampleCharacterDialog() async {
+    final existingRoster = await CharacterPersistenceService().loadCharacters();
+    final linkedIds = _activeProfile?.partyCharacterIds ?? const [];
+    final unlinkedCharacters = existingRoster.where((c) => !linkedIds.contains(c.id.slug)).toList();
+
+    if (!mounted) return;
+
     final nameCtrl = TextEditingController(text: 'Valeros the Fighter');
     final levelCtrl = TextEditingController(text: '3');
     final acCtrl = TextEditingController(text: '16');
     final hpCtrl = TextEditingController(text: '28');
     final wisCtrl = TextEditingController(text: '12');
+    Character? selectedExisting = unlinkedCharacters.isNotEmpty ? unlinkedCharacters.first : null;
 
     await showDialog<void>(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Add Character to Party Roster'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Character Name', border: OutlineInputBorder()),
-                autofocus: true,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: levelCtrl,
-                      decoration: const InputDecoration(labelText: 'Level', border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: acCtrl,
-                      decoration: const InputDecoration(labelText: 'AC', border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: hpCtrl,
-                      decoration: const InputDecoration(labelText: 'Max HP', border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: wisCtrl,
-                      decoration: const InputDecoration(labelText: 'WIS Score', border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : 'Adventurer';
-                final lvl = int.tryParse(levelCtrl.text.trim()) ?? 1;
-                final hp = int.tryParse(hpCtrl.text.trim()) ?? 20;
-                final ac = int.tryParse(acCtrl.text.trim()) ?? 15;
-                final wis = int.tryParse(wisCtrl.text.trim()) ?? 10;
-                final now = DateTime.now().millisecondsSinceEpoch;
-
-                final char = Character(
-                  id: EntityId(slug: 'hero_$now', ruleset: RulesetVersion.v2024),
-                  name: name,
-                  speciesRef: const EntityReference(slug: 'human', refType: EntityType.species, displayName: 'Human'),
-                  progression: CharacterProgression(
-                    classes: [
-                      ClassLevelProgression(
-                        classRef: const EntityReference(
-                          slug: 'fighter',
-                          refType: EntityType.classDefinition,
-                          displayName: 'Fighter',
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return DefaultTabController(
+              length: unlinkedCharacters.isNotEmpty ? 2 : 1,
+              child: AlertDialog(
+                title: const Text('Add Character to Party Roster'),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (unlinkedCharacters.isNotEmpty)
+                        const TabBar(
+                          tabs: [
+                            Tab(icon: Icon(Icons.person_add_alt_1), text: 'Existing'),
+                            Tab(icon: Icon(Icons.flash_on), text: 'Quick Hero'),
+                          ],
                         ),
-                        level: lvl,
-                        hitDie: 'd10',
+                      SizedBox(
+                        height: 280,
+                        child: TabBarView(
+                          children: [
+                            if (unlinkedCharacters.isNotEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Select a saved character from your library to link to this campaign:',
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  DropdownButtonFormField<Character>(
+                                    initialValue: selectedExisting,
+                                    isExpanded: true,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Saved Character',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: unlinkedCharacters.map((c) {
+                                      return DropdownMenuItem<Character>(
+                                        value: c,
+                                        child: Text(
+                                          '${c.name} (Lvl ${c.totalLevel} ${c.classesSummary})',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) {
+                                      setDialogState(() => selectedExisting = val);
+                                    },
+                                  ),
+                                  const Spacer(),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(Icons.link),
+                                      label: const Text('Link Selected Character'),
+                                      onPressed: selectedExisting == null
+                                          ? null
+                                          : () async {
+                                              await _controller.addCharacterToParty(selectedExisting!);
+                                              if (ctx.mounted) Navigator.pop(ctx);
+                                            },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: nameCtrl,
+                                    decoration: const InputDecoration(labelText: 'Character Name', border: OutlineInputBorder()),
+                                    autofocus: unlinkedCharacters.isEmpty,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: levelCtrl,
+                                          decoration: const InputDecoration(labelText: 'Level', border: OutlineInputBorder()),
+                                          keyboardType: TextInputType.number,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: acCtrl,
+                                          decoration: const InputDecoration(labelText: 'AC', border: OutlineInputBorder()),
+                                          keyboardType: TextInputType.number,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: hpCtrl,
+                                          decoration: const InputDecoration(labelText: 'Max HP', border: OutlineInputBorder()),
+                                          keyboardType: TextInputType.number,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: wisCtrl,
+                                          decoration: const InputDecoration(labelText: 'WIS Score', border: OutlineInputBorder()),
+                                          keyboardType: TextInputType.number,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(Icons.add),
+                                      label: const Text('Create & Link Hero'),
+                                      onPressed: () async {
+                                        final name = nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : 'Adventurer';
+                                        final lvl = int.tryParse(levelCtrl.text.trim()) ?? 1;
+                                        final hp = int.tryParse(hpCtrl.text.trim()) ?? 20;
+                                        final ac = int.tryParse(acCtrl.text.trim()) ?? 15;
+                                        final wis = int.tryParse(wisCtrl.text.trim()) ?? 10;
+                                        final now = DateTime.now().millisecondsSinceEpoch;
+
+                                        final char = Character(
+                                          id: EntityId(slug: 'hero_$now', ruleset: RulesetVersion.v2024),
+                                          name: name,
+                                          speciesRef: const EntityReference(slug: 'human', refType: EntityType.species, displayName: 'Human'),
+                                          progression: CharacterProgression(
+                                            classes: [
+                                              ClassLevelProgression(
+                                                classRef: const EntityReference(
+                                                  slug: 'fighter',
+                                                  refType: EntityType.classDefinition,
+                                                  displayName: 'Fighter',
+                                                ),
+                                                level: lvl,
+                                                hitDie: 'd10',
+                                              ),
+                                            ],
+                                          ),
+                                          customProperties: {
+                                            'armorClass': ac,
+                                            'maxHp': hp,
+                                          },
+                                          baseScores: AbilityScores(
+                                            strength: 16,
+                                            dexterity: 14,
+                                            constitution: 14,
+                                            intelligence: 10,
+                                            wisdom: wis,
+                                            charisma: 8,
+                                          ),
+                                          resources: CharacterResourcePool(
+                                            currentHp: hp,
+                                            spellSlots: SpellSlotPool(
+                                              maxSlots: lvl >= 3 ? const {1: 4, 2: 2} : const {},
+                                              currentSlots: lvl >= 3 ? const {1: 4, 2: 2} : const {},
+                                            ),
+                                          ),
+                                        );
+
+                                        await _controller.addCharacterToParty(char);
+                                        if (ctx.mounted) {
+                                          Navigator.pop(ctx);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  customProperties: {
-                    'armorClass': ac,
-                    'maxHp': hp,
-                  },
-                  baseScores: AbilityScores(
-                    strength: 16,
-                    dexterity: 14,
-                    constitution: 14,
-                    intelligence: 10,
-                    wisdom: wis,
-                    charisma: 8,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel'),
                   ),
-                  resources: CharacterResourcePool(
-                    currentHp: hp,
-                    spellSlots: SpellSlotPool(
-                      maxSlots: lvl >= 3 ? const {1: 4, 2: 2} : const {},
-                      currentSlots: lvl >= 3 ? const {1: 4, 2: 2} : const {},
-                    ),
-                  ),
-                );
-
-                await _controller.addCharacterToParty(char);
-                if (ctx.mounted) {
-                  Navigator.pop(ctx);
-                }
-              },
-              child: const Text('Add Hero'),
-            ),
-          ],
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -1626,20 +1735,41 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      char.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      overflow: TextOverflow.ellipsis,
+                child: InkWell(
+                  onTap: () => _openCharacterSheet(char),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                char.name,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.open_in_new, size: 12, color: theme.colorScheme.primary),
+                          ],
+                        ),
+                        Text(
+                          'Lvl ${char.totalLevel} • AC 16 • Pass. Percept: $passivePerception',
+                          style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Lvl ${char.totalLevel} • AC 16 • Pass. Percept: $passivePerception',
-                      style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
-                    ),
-                  ],
+                  ),
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.badge_outlined, size: 18, color: Colors.cyanAccent),
+                tooltip: 'Open Full Sheet (DM Mode)',
+                onPressed: () => _openCharacterSheet(char),
               ),
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline, size: 18, color: Colors.redAccent),

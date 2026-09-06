@@ -14,6 +14,9 @@ import '../services/party/party_room_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/party/campaign_dialogs.dart';
 import '../widgets/party/loot_conflict_resolution_dialog.dart';
+import '../models/domain/character_models.dart';
+import '../services/persistence/character_persistence_service.dart';
+import 'character_sheet_view.dart';
 import 'dice_roller_screen.dart';
 import 'dm_dashboard_screen.dart';
 
@@ -536,6 +539,51 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     );
   }
 
+  Future<void> _openActiveCharacterSheet(PartySessionState? session) async {
+    Character? targetChar;
+    if (session != null && session.sharedCharacters.isNotEmpty) {
+      final rawMap = session.sharedCharacters[_playerName] ??
+          (_currentMembership?.characterId != null
+              ? session.sharedCharacters[_currentMembership!.characterId]
+              : null);
+      if (rawMap != null) {
+        try {
+          targetChar = Character.fromMap(rawMap);
+        } catch (_) {}
+      }
+    }
+
+    if (targetChar == null) {
+      final localChars = await CharacterPersistenceService().loadCharacters();
+      targetChar = localChars.where((c) =>
+        c.name.toLowerCase() == _playerName.toLowerCase() ||
+        c.id.slug == _currentMembership?.characterId
+      ).firstOrNull;
+    }
+
+    if (!mounted) return;
+
+    final updated = await Navigator.push<Character?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CharacterSheetView(
+          character: targetChar,
+          isDmMode: _isDmOrCoDm,
+        ),
+      ),
+    );
+
+    if (updated != null) {
+      await _partyService.linkCharacterToCampaign(
+        roomCode: _roomCode,
+        character: updated,
+        existingRosterName: _playerName,
+        isNewImport: false,
+      );
+      if (mounted) setState(() {});
+    }
+  }
+
   Widget _buildActiveCharacterBanner(PartySessionState? session, ColorScheme colorScheme, bool isDark) {
     final roster = session?.characterRoster ?? const [];
     final myPurse = session?.getMemberPurse(_playerName) ?? const PartyPurse();
@@ -646,6 +694,17 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                     setState(() => _playerName = name);
                   },
                 ),
+              ),
+              const SizedBox(width: 4),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  foregroundColor: Colors.blueAccent,
+                ),
+                icon: const Icon(Icons.badge_outlined, size: 15),
+                label: const Text('Sheet', style: TextStyle(fontSize: 12)),
+                onPressed: () => _openActiveCharacterSheet(session),
               ),
               if (!_isDmOrCoDm) ...[
                 const SizedBox(width: 4),

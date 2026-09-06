@@ -128,6 +128,12 @@ class CharacterPersistenceService {
     return ids.map((id) => map[id]).whereType<Character>().toList();
   }
 
+  /// Fetches a single character by ID/slug, or null if not found.
+  Future<Character?> getCharacter(String id) async {
+    final list = await getCharactersByIds([id]);
+    return list.firstOrNull;
+  }
+
   /// Saves multiple characters to persistence in bulk.
   Future<void> saveCharacters(List<Character> characters) async {
     if (characters.isEmpty) return;
