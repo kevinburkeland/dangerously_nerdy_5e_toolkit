@@ -1094,7 +1094,20 @@ class HomebrewPersistenceService {
 
   /// Imports an analyzed and resolved [ImportAnalysisResult], writing entities to storage
   /// according to user-selected collision resolutions, and syncs runtime libraries immediately.
-  Future<void> importResolvedBundle(ImportAnalysisResult resolution) async {
+  ///
+  /// [onProgress] is called after every entity write with (saved, total).
+  Future<void> importResolvedBundle(
+    ImportAnalysisResult resolution, {
+    void Function(int saved, int total, String phase)? onProgress,
+  }) async {
+    // Pre-count total selected entities for accurate progress reporting
+    final total = resolution.selectedCount;
+    int saved = 0;
+
+    void tick(String phase) {
+      saved++;
+      onProgress?.call(saved, total, phase);
+    }
     // 1. Spells
     final existingSpells = await loadCustomSpells();
     final spellSlugs = existingSpells.map((s) => s.id.slug).toSet();
@@ -1116,6 +1129,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomSpell(toSave);
+      tick('Spells');
     }
 
     // 2. Monsters
@@ -1139,6 +1153,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomMonster(toSave);
+      tick('Monsters');
     }
 
     // 3. Items
@@ -1162,6 +1177,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomItem(toSave);
+      tick('Items');
     }
 
     // 4. Classes
@@ -1185,6 +1201,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomClass(toSave);
+      tick('Classes');
     }
 
     // 5. Subclasses
@@ -1212,6 +1229,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomSubclass(toSave);
+      tick('Subclasses');
     }
 
     // 6. Races
@@ -1235,6 +1253,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomRace(toSave);
+      tick('Races & Species');
     }
 
     // 7. Feats
@@ -1258,6 +1277,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomFeat(toSave);
+      tick('Feats');
     }
 
     // 8. Backgrounds
@@ -1281,6 +1301,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomBackground(toSave);
+      tick('Backgrounds');
     }
 
     // 9. Other entries
@@ -1304,6 +1325,7 @@ class HomebrewPersistenceService {
         );
       }
       await saveCustomOtherEntry(toSave);
+      tick('Rules & Tables');
     }
 
     // Immediately synchronize runtime libraries

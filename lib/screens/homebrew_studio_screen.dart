@@ -15,7 +15,12 @@ import '../widgets/homebrew/spell_builder_dialog.dart';
 /// Comprehensive Homebrew Studio screen allowing users to create, edit, import, re-parse, and manage
 /// custom spells, monsters, magic items, classes, subclasses, races, feats, backgrounds, and rules.
 class HomebrewStudioScreen extends StatefulWidget {
-  const HomebrewStudioScreen({super.key});
+  final bool useIsolate;
+
+  const HomebrewStudioScreen({
+    super.key,
+    this.useIsolate = true,
+  });
 
   @override
   State<HomebrewStudioScreen> createState() => _HomebrewStudioScreenState();
@@ -440,7 +445,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
   Future<void> _openImportDialog() async {
     final count = await showDialog<int>(
       context: context,
-      builder: (ctx) => const HomebrewImportPreviewDialog(),
+      builder: (ctx) => HomebrewImportPreviewDialog(useIsolate: widget.useIsolate),
     );
     if (count != null && count > 0) {
       await _loadAll();

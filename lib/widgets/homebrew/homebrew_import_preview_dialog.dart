@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
@@ -12,9 +13,15 @@ import '../dialogs/app_dialog_frame.dart';
 class HomebrewImportPreviewDialog extends StatefulWidget {
   final String? initialJson;
 
+  /// When [true] (the default), JSON parsing is offloaded to a Dart isolate via
+  /// [compute] so large files don't freeze the UI. Set [false] in widget tests
+  /// to keep execution synchronous and avoid [pumpAndSettle] timeouts.
+  final bool useIsolate;
+
   const HomebrewImportPreviewDialog({
     super.key,
     this.initialJson,
+    this.useIsolate = true,
   });
 
   @override
@@ -24,14 +31,23 @@ class HomebrewImportPreviewDialog extends StatefulWidget {
 class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialog> {
   final _textController = TextEditingController();
   final _persistence = HomebrewPersistenceService();
-  final _pipeline = CompendiumJsonIngestionPipeline();
   final _resolver = const HomebrewMergeResolver();
+
 
   RulesetVersion? _selectedRuleset = RulesetVersion.v2024;
   ImportAnalysisResult? _analysisResult;
   LoadedCompendiumFile? _loadedFile;
+
+  // Analysis phase
   bool _isAnalyzing = false;
+  String _analyzePhase = 'Parsing JSON\u2026';
+
+  // Commit phase
   bool _isImporting = false;
+  int _importProgress = 0;
+  int _importTotal = 0;
+  String _importPhase = '';
+
   bool _applyToRemainingCollisions = false;
   String? _errorMessage;
 
@@ -55,19 +71,35 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
 
     setState(() {
       _isAnalyzing = true;
+      _analyzePhase = 'Parsing JSON\u2026';
       _errorMessage = null;
     });
 
     try {
-      final ingestion = _pipeline.ingestJsonString(jsonString, forceRuleset: _selectedRuleset);
+      // Offload CPU-bound JSON parsing + ACL pipeline to an isolate so the
+      // UI thread stays responsive during large file processing.
+      final IngestionBatchResult ingestion;
+      if (widget.useIsolate) {
+        ingestion = await compute(
+          _parseJsonInIsolate,
+          _ParseRequest(jsonString, _selectedRuleset),
+        );
+      } else {
+        // Synchronous path used in tests to avoid isolate/pumpAndSettle issues.
+        ingestion = _parseJsonInIsolate(_ParseRequest(jsonString, _selectedRuleset));
+      }
+
       if (ingestion.hasErrors && ingestion.totalEntities == 0) {
-        setState(() {
-          _errorMessage = ingestion.errors.join('\n');
-          _isAnalyzing = false;
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = ingestion.errors.join('\n');
+            _isAnalyzing = false;
+          });
+        }
         return;
       }
 
+      setState(() => _analyzePhase = 'Checking for conflicts\u2026');
       final bundle = ingestion.toBundle();
 
       // Load local items for deduplication
@@ -127,10 +159,26 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
     final analysis = _analysisResult;
     if (analysis == null || !analysis.hasSelected) return;
 
-    setState(() => _isImporting = true);
+    setState(() {
+      _isImporting = true;
+      _importProgress = 0;
+      _importTotal = analysis.selectedCount;
+      _importPhase = 'Preparing\u2026';
+    });
 
     try {
-      await _persistence.importResolvedBundle(analysis);
+      await _persistence.importResolvedBundle(
+        analysis,
+        onProgress: (saved, total, phase) {
+          if (mounted) {
+            setState(() {
+              _importProgress = saved;
+              _importTotal = total;
+              _importPhase = phase;
+            });
+          }
+        },
+      );
       if (mounted) {
         Navigator.of(context).pop(analysis.selectedCount);
       }
@@ -158,22 +206,24 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
       title: analysis == null ? 'Import Homebrew / Compendium JSON' : 'Homebrew Import Preview',
       maxWidth: 680,
       content: _isAnalyzing
-          ? const Center(
+          ? Center(
               child: Padding(
-                padding: EdgeInsets.all(32.0),
+                padding: const EdgeInsets.all(32.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Analyzing schema and checking for conflicts...'),
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(_analyzePhase),
                   ],
                 ),
               ),
             )
-          : analysis == null
-              ? _buildInputView(theme)
-              : _buildAnalysisPreview(theme, analysis),
+          : _isImporting
+              ? _buildImportingView()
+              : analysis == null
+                  ? _buildInputView(theme)
+                  : _buildAnalysisPreview(theme, analysis),
       actions: [
         if (analysis != null)
           TextButton(
@@ -196,16 +246,10 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
             icon: const Icon(Icons.analytics_outlined),
             label: const Text('Analyze Bundle'),
           )
-        else
+        else if (!_isImporting)
           ElevatedButton.icon(
-            onPressed: analysis.hasSelected && !_isImporting ? _commitImport : null,
-            icon: _isImporting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                  )
-                : const Icon(Icons.check_circle_outline),
+            onPressed: analysis.hasSelected ? _commitImport : null,
+            icon: const Icon(Icons.check_circle_outline),
             label: Text('Confirm Import (${analysis.selectedCount} items)'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.tealAccent,
@@ -216,7 +260,51 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
     );
   }
 
+  Widget _buildImportingView() {
+    final progress = _importTotal > 0 ? _importProgress / _importTotal : 0.0;
+    final pct = (_importTotal > 0 ? (progress * 100).round() : 0);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Importing $_importPhase',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              Text(
+                '$_importProgress / $_importTotal',
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 10,
+              backgroundColor: Colors.white12,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.tealAccent),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '$pct% complete',
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInputView(ThemeData theme) {
+
     final loadedFile = _loadedFile;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -675,3 +763,21 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
     );
   }
 }
+
+// ─── Isolate support ────────────────────────────────────────────────────────
+
+/// Payload for the isolate-based JSON parse step.
+class _ParseRequest {
+  final String jsonString;
+  final RulesetVersion? forceRuleset;
+
+  const _ParseRequest(this.jsonString, this.forceRuleset);
+}
+
+/// Top-level function required by [compute] — runs in a separate isolate so
+/// that ACL parsing of large compendium files does not block the UI thread.
+IngestionBatchResult _parseJsonInIsolate(_ParseRequest req) {
+  final pipeline = CompendiumJsonIngestionPipeline();
+  return pipeline.ingestJsonString(req.jsonString, forceRuleset: req.forceRuleset);
+}
+

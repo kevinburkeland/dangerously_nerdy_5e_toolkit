@@ -75,7 +75,7 @@ void main() {
     testWidgets('opens HomebrewImportPreviewDialog and parses compendium JSON', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: HomebrewStudioScreen(),
+          home: HomebrewStudioScreen(useIsolate: false),
         ),
       );
       await tester.pumpAndSettle();
@@ -110,7 +110,7 @@ void main() {
     testWidgets('imports multi-category bundle including classes, races, and feats with deduplication', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: HomebrewStudioScreen(),
+          home: HomebrewStudioScreen(useIsolate: false),
         ),
       );
       await tester.pumpAndSettle();

@@ -280,5 +280,70 @@ void main() {
       expect(analysis.spells.first.resolution, equals(CollisionResolution.duplicateRename));
       expect(analysis.monsters.first.resolution, equals(CollisionResolution.duplicateRename));
     });
+
+    test('importResolvedBundle reports onProgress for each imported entity', () async {
+      final persistence = HomebrewPersistenceService();
+      await persistence.clearAllHomebrew();
+
+      const spell1 = Spell(
+        id: EntityId(slug: 'progress-spell-1', ruleset: RulesetVersion.homebrew),
+        name: 'Progress Spell 1',
+        level: 1,
+        school: 'Evocation',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '30 ft.',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Test',
+      );
+      const spell2 = Spell(
+        id: EntityId(slug: 'progress-spell-2', ruleset: RulesetVersion.homebrew),
+        name: 'Progress Spell 2',
+        level: 2,
+        school: 'Evocation',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '30 ft.',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Test',
+      );
+      const monster1 = Monster(
+        id: EntityId(slug: 'progress-monster-1', ruleset: RulesetVersion.homebrew),
+        name: 'Progress Monster 1',
+        size: 'Medium',
+        monsterType: 'Beast',
+        alignment: 'Unaligned',
+        armorClass: 10,
+        hitPoints: 10,
+        hitDieFormula: '2d8',
+        challengeRating: '1/4',
+        actionsMarkdown: 'Bite',
+      );
+
+      const resolver = HomebrewMergeResolver();
+      final analysis = resolver.analyzeBundle(
+        incomingBundle: HomebrewBundle(
+          appVersion: '1.0.0',
+          exportedAt: DateTime.now(),
+          spells: [spell1, spell2],
+          monsters: [monster1],
+        ),
+      );
+
+      expect(analysis.totalIncoming, equals(3));
+
+      final progressEvents = <(int, int, String)>[];
+      await persistence.importResolvedBundle(
+        analysis,
+        onProgress: (saved, total, phase) {
+          progressEvents.add((saved, total, phase));
+        },
+      );
+
+      expect(progressEvents.length, equals(3));
+      expect(progressEvents[0], equals((1, 3, 'Spells')));
+      expect(progressEvents[1], equals((2, 3, 'Spells')));
+      expect(progressEvents[2], equals((3, 3, 'Monsters')));
+    });
   });
 }
