@@ -567,12 +567,15 @@ class CharacterProgression {
       final validDecisionIds = srdClass?.featureDecisions.map((d) => d.id).toSet();
       final classSlug = c.classRef.slug.toLowerCase();
       c.selectedFeatureOptions.forEach((k, v) {
+        final normK = k.toLowerCase().replaceAll('-', '_');
         if (validDecisionIds == null ||
             validDecisionIds.contains(k) ||
+            validDecisionIds.contains(k.replaceAll('_', '-')) ||
             k.startsWith('$classSlug-') ||
             k.startsWith('feat-') ||
             k.contains('invocation') ||
-            (k == 'fighting-style' && (classSlug == 'fighter' || classSlug == 'paladin' || classSlug == 'ranger'))) {
+            ((normK == 'fighting_style' || normK.contains('fighting_style')) &&
+                (classSlug == 'fighter' || classSlug == 'paladin' || classSlug == 'ranger' || srdClass == null))) {
           merged.putIfAbsent(k, () => []).addAll(v);
         }
       });
