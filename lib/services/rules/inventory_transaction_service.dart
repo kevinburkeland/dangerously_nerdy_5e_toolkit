@@ -189,6 +189,21 @@ class InventoryTransactionService {
 
     final targetItem = inventory[targetIndex];
 
+    var effectiveSlot = slot;
+    if (slot == EquipmentSlot.ring1) {
+      final ring1Occupied = inventory.any((i) =>
+          i.instanceId != instanceId &&
+          i.isEquipped &&
+          i.equippedSlot == EquipmentSlot.ring1);
+      final ring2Occupied = inventory.any((i) =>
+          i.instanceId != instanceId &&
+          i.isEquipped &&
+          i.equippedSlot == EquipmentSlot.ring2);
+      if (ring1Occupied && !ring2Occupied) {
+        effectiveSlot = EquipmentSlot.ring2;
+      }
+    }
+
     // Handle slot conflicts and auto-unequip
     for (int i = 0; i < inventory.length; i++) {
       if (i == targetIndex) continue;
@@ -197,7 +212,7 @@ class InventoryTransactionService {
 
       bool shouldUnequip = false;
 
-      if (slot == EquipmentSlot.twoHand) {
+      if (effectiveSlot == EquipmentSlot.twoHand) {
         // Equipping two-handed weapon unequips main hand, off hand, and shields
         if (current.equippedSlot == EquipmentSlot.mainHand ||
             current.equippedSlot == EquipmentSlot.offHand ||
@@ -205,17 +220,21 @@ class InventoryTransactionService {
             current.equippedSlot == EquipmentSlot.shield) {
           shouldUnequip = true;
         }
-      } else if (slot == EquipmentSlot.mainHand ||
-          slot == EquipmentSlot.offHand ||
-          slot == EquipmentSlot.shield) {
+      } else if (effectiveSlot == EquipmentSlot.mainHand ||
+          effectiveSlot == EquipmentSlot.offHand ||
+          effectiveSlot == EquipmentSlot.shield) {
         // Equipping 1-hand or shield unequips any 2-hand weapon
         if (current.equippedSlot == EquipmentSlot.twoHand ||
-            current.equippedSlot == slot) {
+            current.equippedSlot == effectiveSlot) {
           shouldUnequip = true;
         }
+      } else if (effectiveSlot == EquipmentSlot.wondrous) {
+        // In 5e RAW (DMG p. 141), wondrous items do not occupy a mutually exclusive single equipment slot.
+        // A character can wear/equip multiple wondrous items simultaneously (subject to attunement).
+        shouldUnequip = false;
       } else {
         // Armor, rings, head, boots, cloak: unequip anything in the exact same slot
-        if (current.equippedSlot == slot) {
+        if (current.equippedSlot == effectiveSlot) {
           shouldUnequip = true;
         }
       }
@@ -231,7 +250,7 @@ class InventoryTransactionService {
     // Equip target item
     inventory[targetIndex] = targetItem.copyWith(
       isEquipped: true,
-      equippedSlot: slot,
+      equippedSlot: effectiveSlot,
     );
 
     return character.copyWith(inventory: inventory);

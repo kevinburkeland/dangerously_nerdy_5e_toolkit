@@ -147,6 +147,105 @@ void main() {
       expect(ring1.isAttuned, isTrue);
     });
 
+    test('equipping multiple wondrous items does not unequip existing wondrous items', () {
+      final charWithWondrous = baseCharacter.copyWith(
+        inventory: [
+          ...baseCharacter.inventory,
+          const InventoryItemInstance(
+            instanceId: 'inst-bag-of-holding',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'bag-of-holding',
+              displayName: 'Bag of Holding',
+            ),
+            isEquipped: false,
+            customProperties: {'category': 'wondrous'},
+          ),
+          const InventoryItemInstance(
+            instanceId: 'inst-periapt',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'periapt-of-wound-closure',
+              displayName: 'Periapt of Wound Closure',
+            ),
+            isEquipped: false,
+            customProperties: {'category': 'wondrous'},
+          ),
+          const InventoryItemInstance(
+            instanceId: 'inst-bracers',
+            itemRef: EntityReference(
+              refType: EntityType.equipment,
+              slug: 'bracers-of-defense',
+              displayName: 'Bracers of Defense',
+            ),
+            isEquipped: false,
+            customProperties: {'category': 'wondrous'},
+          ),
+        ],
+      );
+
+      // Equip first wondrous item
+      final step1 = InventoryTransactionService.equipItem(
+        charWithWondrous,
+        'inst-bag-of-holding',
+        EquipmentSlot.wondrous,
+      );
+      final bag1 = step1.inventory.firstWhere((i) => i.instanceId == 'inst-bag-of-holding');
+      expect(bag1.isEquipped, isTrue);
+      expect(bag1.equippedSlot, equals(EquipmentSlot.wondrous));
+
+      // Equip second wondrous item
+      final step2 = InventoryTransactionService.equipItem(
+        step1,
+        'inst-periapt',
+        EquipmentSlot.wondrous,
+      );
+      final bag2 = step2.inventory.firstWhere((i) => i.instanceId == 'inst-bag-of-holding');
+      final periapt2 = step2.inventory.firstWhere((i) => i.instanceId == 'inst-periapt');
+      expect(bag2.isEquipped, isTrue, reason: 'First wondrous item should remain equipped');
+      expect(periapt2.isEquipped, isTrue, reason: 'Second wondrous item should be equipped');
+      expect(bag2.equippedSlot, equals(EquipmentSlot.wondrous));
+      expect(periapt2.equippedSlot, equals(EquipmentSlot.wondrous));
+
+      // Equip third wondrous item
+      final step3 = InventoryTransactionService.equipItem(
+        step2,
+        'inst-bracers',
+        EquipmentSlot.wondrous,
+      );
+      final bag3 = step3.inventory.firstWhere((i) => i.instanceId == 'inst-bag-of-holding');
+      final periapt3 = step3.inventory.firstWhere((i) => i.instanceId == 'inst-periapt');
+      final bracers3 = step3.inventory.firstWhere((i) => i.instanceId == 'inst-bracers');
+      expect(bag3.isEquipped, isTrue);
+      expect(periapt3.isEquipped, isTrue);
+      expect(bracers3.isEquipped, isTrue);
+    });
+
+    test('equipping a second ring automatically fills ring2 when ring1 is occupied', () {
+      // Equip ring 1 into default ring slot (ring1)
+      final step1 = InventoryTransactionService.equipItem(
+        baseCharacter,
+        'inst-ring1',
+        EquipmentSlot.ring1,
+      );
+      final r1Step1 = step1.inventory.firstWhere((i) => i.instanceId == 'inst-ring1');
+      expect(r1Step1.isEquipped, isTrue);
+      expect(r1Step1.equippedSlot, equals(EquipmentSlot.ring1));
+
+      // Equip ring 2 into default ring slot (ring1) -> should automatically allocate ring2
+      final step2 = InventoryTransactionService.equipItem(
+        step1,
+        'inst-ring2',
+        EquipmentSlot.ring1,
+      );
+      final r1Step2 = step2.inventory.firstWhere((i) => i.instanceId == 'inst-ring1');
+      final r2Step2 = step2.inventory.firstWhere((i) => i.instanceId == 'inst-ring2');
+      expect(r1Step2.isEquipped, isTrue, reason: 'Ring 1 should still be equipped in ring1');
+      expect(r1Step2.equippedSlot, equals(EquipmentSlot.ring1));
+      expect(r2Step2.isEquipped, isTrue, reason: 'Ring 2 should be equipped in ring2');
+      expect(r2Step2.equippedSlot, equals(EquipmentSlot.ring2));
+    });
+
     test('atomic loot transfer from LootContainer to Character', () {
       const chest = LootContainer(
         containerId: 'chest-01',
