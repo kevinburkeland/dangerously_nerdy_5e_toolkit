@@ -672,10 +672,19 @@ class CharacterSheetController extends ChangeNotifier {
     EntityReference<Spell> spellRef, {
     bool isCantrip = false,
   }) async {
+    final updatedAllocated = Map<String, List<EntityReference<Spell>>>.from(_character.allocatedSpells);
+    for (final entry in updatedAllocated.entries.toList()) {
+      final filtered = entry.value.where((s) => s.slug != spellRef.slug).toList();
+      updatedAllocated[entry.key] = filtered;
+    }
+
     if (isCantrip) {
       final curCantrips = List<EntityReference<Spell>>.from(_character.cantrips)
         ..removeWhere((c) => c.slug == spellRef.slug);
-      _character = _character.copyWith(cantrips: curCantrips);
+      _character = _character.copyWith(
+        cantrips: curCantrips,
+        allocatedSpells: updatedAllocated,
+      );
     } else {
       final curKnown = List<EntityReference<Spell>>.from(_character.spellsKnown)
         ..removeWhere((s) => s.slug == spellRef.slug);
@@ -684,6 +693,7 @@ class CharacterSheetController extends ChangeNotifier {
       _character = _character.copyWith(
         spellsKnown: curKnown,
         spellsPrepared: curPrep,
+        allocatedSpells: updatedAllocated,
       );
     }
     notifyListeners();

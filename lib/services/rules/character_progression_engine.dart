@@ -422,16 +422,24 @@ class CharacterProgressionEngine {
       }
     }
 
+    // Initialize allocatedSpells copy
+    final updatedAllocated = Map<String, List<EntityReference<Spell>>>.from(character.allocatedSpells);
+
     // Process Replaced Spells
     if (request.replacedSpellIds.isNotEmpty) {
       final toRemove = request.replacedSpellIds.toSet();
       updatedCantrips.removeWhere((c) => toRemove.contains(c.slug));
       updatedSpellsKnown.removeWhere((s) => toRemove.contains(s.slug));
       updatedSpellsPrepared.removeWhere((s) => toRemove.contains(s.slug));
+
+      // Strictly remove replaced spells from allocatedSpells to prevent resurrection via getters
+      for (final entry in updatedAllocated.entries.toList()) {
+        final filteredList = entry.value.where((s) => !toRemove.contains(s.slug)).toList();
+        updatedAllocated[entry.key] = filteredList;
+      }
     }
 
-    // Update allocatedSpells
-    final updatedAllocated = Map<String, List<EntityReference<Spell>>>.from(character.allocatedSpells);
+    // Update allocatedSpells with newly acquired spells & cantrips
     if (request.newCantrips.isNotEmpty) {
       final key = 'class-${request.targetClassSlug}-cantrips';
       final curList = List<EntityReference<Spell>>.from(updatedAllocated[key] ?? []);

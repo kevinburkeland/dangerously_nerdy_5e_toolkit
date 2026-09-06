@@ -89,8 +89,14 @@ class SpellAllocationValidator {
 
   /// Known spells progression table for Warlock (levels 1-20)
   static const Map<int, int> _warlockSpellsKnown = {
-    1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 11,
+    1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 8, 8: 9, 9: 10, 10: 10,
     11: 11, 12: 11, 13: 12, 14: 12, 15: 13, 16: 13, 17: 14, 18: 14, 19: 15, 20: 15,
+  };
+
+  /// Known spells progression table for 1/3 Casters (Eldritch Knight, Arcane Trickster, levels 1-20)
+  static const Map<int, int> _thirdCasterSpellsKnown = {
+    1: 0, 2: 0, 3: 3, 4: 4, 5: 4, 6: 4, 7: 5, 8: 6, 9: 6, 10: 7,
+    11: 8, 12: 8, 13: 9, 14: 10, 15: 10, 16: 11, 17: 11, 18: 11, 19: 12, 20: 13,
   };
 
   /// Known spells progression table for Ranger (2014, levels 1-20)
@@ -103,9 +109,11 @@ class SpellAllocationValidator {
   static int getMaxSpellTierForClass({
     required String classSlug,
     required int classLevel,
+    String? subclassSlug,
     DmRulesEdition edition = DmRulesEdition.v2014,
   }) {
     final slug = classSlug.toLowerCase();
+    final sub = subclassSlug?.toLowerCase().replaceAll('-', '_') ?? '';
     final lvl = classLevel.clamp(1, 20);
 
     if (slug == 'wizard' || slug == 'sorcerer' || slug == 'cleric' || slug == 'druid' || slug == 'bard') {
@@ -121,7 +129,8 @@ class SpellAllocationValidator {
       return ((lvl + 1) ~/ 4) + 1; // 2014: lvl 2-4: 1st, 5-8: 2nd, 9-12: 3rd, 13-16: 4th, 17-20: 5th
     } else if (slug == 'artificer') {
       return ((lvl + 1) ~/ 4) + 1;
-    } else if (slug.contains('eldritch_knight') || slug.contains('arcane_trickster')) {
+    } else if (slug.contains('eldritch_knight') || slug.contains('arcane_trickster') ||
+               sub.contains('eldritch_knight') || sub.contains('arcane_trickster')) {
       if (lvl < 3) return 0;
       if (lvl >= 19) return 4;
       if (lvl >= 13) return 3;
@@ -142,7 +151,7 @@ class SpellAllocationValidator {
     final slug = classSlug.toLowerCase();
     final sub = subclassSlug?.toLowerCase().replaceAll('-', '_') ?? '';
     final lvl = classLevel.clamp(1, 20);
-    final maxTier = getMaxSpellTierForClass(classSlug: slug, classLevel: lvl, edition: edition);
+    final maxTier = getMaxSpellTierForClass(classSlug: slug, classLevel: lvl, subclassSlug: subclassSlug, edition: edition);
 
     switch (slug) {
       case 'wizard':
@@ -214,7 +223,7 @@ class SpellAllocationValidator {
 
         return SpellAllocationLimits(
           maxCantrips: cantrips,
-          maxSpellsKnown: known,
+          maxSpellsKnown: known + (sub.contains('lore') && lvl >= 6 ? 2 : 0),
           maxSpellsPrepared: 0,
           maxSpellSlotLevel: maxTier,
           isSpellcaster: true,
@@ -334,6 +343,36 @@ class SpellAllocationValidator {
           isSpellcaster: true,
           castingAbility: 'Intelligence',
         );
+
+      case 'fighter':
+        if (sub.contains('eldritch_knight')) {
+          final cantrips = lvl < 3 ? 0 : ((lvl >= 10) ? 3 : 2);
+          final known = _thirdCasterSpellsKnown[lvl] ?? 0;
+          return SpellAllocationLimits(
+            maxCantrips: cantrips,
+            maxSpellsKnown: known,
+            maxSpellsPrepared: 0,
+            maxSpellSlotLevel: maxTier,
+            isSpellcaster: lvl >= 3,
+            castingAbility: 'Intelligence',
+          );
+        }
+        return const SpellAllocationLimits.nonCaster();
+
+      case 'rogue':
+        if (sub.contains('arcane_trickster')) {
+          final cantrips = lvl < 3 ? 0 : ((lvl >= 10) ? 3 : 2);
+          final known = _thirdCasterSpellsKnown[lvl] ?? 0;
+          return SpellAllocationLimits(
+            maxCantrips: cantrips,
+            maxSpellsKnown: known,
+            maxSpellsPrepared: 0,
+            maxSpellSlotLevel: maxTier,
+            isSpellcaster: lvl >= 3,
+            castingAbility: 'Intelligence',
+          );
+        }
+        return const SpellAllocationLimits.nonCaster();
 
       default:
         return const SpellAllocationLimits.nonCaster();

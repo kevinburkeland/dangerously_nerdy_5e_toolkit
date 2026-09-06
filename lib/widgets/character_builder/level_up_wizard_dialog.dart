@@ -1494,6 +1494,10 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   bool get _isSpellcaster => _maxAccessibleSpellLevel > 0;
 
   SpellClass? get _targetSpellClass {
+    final effSub = _effectiveSubclassSlug?.toLowerCase() ?? '';
+    if (effSub.contains('eldritch_knight') || effSub.contains('arcane_trickster')) {
+      return SpellClass.wizard;
+    }
     return switch (_selectedClassSlug.toLowerCase()) {
       'wizard' => SpellClass.wizard,
       'cleric' => SpellClass.cleric,
@@ -1593,23 +1597,39 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final availableCantrips = filtered.where((s) => s.level == 0 && !existingCantripSlugs.contains(s.id)).toList();
     final availableLeveled = filtered.where((s) => s.level > 0).toList();
 
-    final curCantripsCount = widget.character.cantrips.length;
-    final maxAllowedNewCantrips = math.max(0, limits.maxCantrips - curCantripsCount);
+    final previousClassLevel = math.max(0, _targetClassNewLevel - 1);
+    final previousLimits = previousClassLevel > 0
+        ? SpellAllocationValidator.getLimitsForClass(
+            classSlug: _selectedClassSlug,
+            classLevel: previousClassLevel,
+            abilityModifier: castingMod,
+            subclassSlug: _effectiveSubclassSlug,
+            edition: edition,
+          )
+        : const SpellAllocationLimits.nonCaster();
 
+    final gainedCantripsProgression = math.max(0, limits.maxCantrips - previousLimits.maxCantrips);
+    final gainedSpellsProgression = math.max(0, limits.maxSpellsKnown - previousLimits.maxSpellsKnown);
+
+    final curCantripsCount = widget.character.cantrips.length;
+    final maxAllowedNewCantrips = math.max(gainedCantripsProgression, limits.maxCantrips - curCantripsCount);
+
+    final effSub = _effectiveSubclassSlug?.toLowerCase() ?? '';
     final isWizard = _selectedClassSlug.toLowerCase() == 'wizard';
     final isSpontaneous = ['sorcerer', 'bard', 'warlock'].contains(_selectedClassSlug.toLowerCase()) ||
-        (_selectedClassSlug.toLowerCase() == 'ranger' && edition == DmRulesEdition.v2014);
+        (_selectedClassSlug.toLowerCase() == 'ranger' && edition == DmRulesEdition.v2014) ||
+        effSub.contains('eldritch_knight') ||
+        effSub.contains('arcane_trickster');
 
     int maxAllowedNewSpells;
     if (isWizard) {
       maxAllowedNewSpells = limits.maxSpellbookLevelUpScribe; // 2
     } else if (isSpontaneous) {
+      final isReplacing = _replacedSpellId != null;
       final curKnownCount = widget.character.spellsKnown.length;
-      final delta = math.max(0, limits.maxSpellsKnown - curKnownCount);
-      maxAllowedNewSpells = delta + (_replacedSpellId != null ? 1 : 0);
-      if (maxAllowedNewSpells == 0 && limits.maxSpellsKnown > 0) {
-        maxAllowedNewSpells = _replacedSpellId != null ? 1 : 0;
-      }
+      final catchUpDelta = math.max(0, limits.maxSpellsKnown - curKnownCount);
+      final baseNewSpells = math.max(gainedSpellsProgression, catchUpDelta);
+      maxAllowedNewSpells = baseNewSpells + (isReplacing ? 1 : 0);
     } else {
       // Prepared casters
       final curPrepCount = widget.character.spellsPrepared.length;
