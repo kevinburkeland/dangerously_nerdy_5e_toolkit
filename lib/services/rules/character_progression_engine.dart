@@ -70,6 +70,7 @@ class LevelUpRequest {
   final Map<String, List<String>> selectedFeatureOptions;
   final List<String> newToolProficiencies;
   final List<String> newLanguages;
+  final EntityReference<Spell>? mysticArcanumSpell;
 
   const LevelUpRequest({
     required this.targetClassSlug,
@@ -85,6 +86,7 @@ class LevelUpRequest {
     this.selectedFeatureOptions = const {},
     this.newToolProficiencies = const [],
     this.newLanguages = const [],
+    this.mysticArcanumSpell,
   });
 }
 
@@ -418,6 +420,13 @@ class CharacterProgressionEngine {
         existingKnownSlugs.add(s.slug);
       }
     }
+    if (request.mysticArcanumSpell != null) {
+      final s = request.mysticArcanumSpell!;
+      if (!existingKnownSlugs.contains(s.slug)) {
+        updatedSpellsKnown.add(s);
+        existingKnownSlugs.add(s.slug);
+      }
+    }
 
     final updatedSpellsPrepared = List<EntityReference<Spell>>.from(character.spellsPrepared);
     final existingPrepSlugs = character.spellsPrepared.map((s) => s.slug).toSet();
@@ -461,6 +470,15 @@ class CharacterProgressionEngine {
       final curSlugs = curList.map((s) => s.slug).toSet();
       for (final s in request.newSpells) {
         if (!curSlugs.contains(s.slug)) curList.add(s);
+      }
+      updatedAllocated[key] = curList;
+    }
+    if (request.mysticArcanumSpell != null) {
+      final key = 'class-${request.targetClassSlug}-mystic-arcanum';
+      final curList = List<EntityReference<Spell>>.from(updatedAllocated[key] ?? []);
+      final curSlugs = curList.map((s) => s.slug).toSet();
+      if (!curSlugs.contains(request.mysticArcanumSpell!.slug)) {
+        curList.add(request.mysticArcanumSpell!);
       }
       updatedAllocated[key] = curList;
     }

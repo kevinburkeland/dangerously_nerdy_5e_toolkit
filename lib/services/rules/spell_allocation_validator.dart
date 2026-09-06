@@ -23,6 +23,7 @@ class SpellAllocationLimits {
   final int magicalSecretsCount; // Number of cross-list magical secret picks
   final Set<SpellClass> allowedMagicalSecretClasses; // Eligible classes for Magical Secrets
   final int mysticArcanumLevel; // 6, 7, 8, or 9 for high-level Warlocks
+  final int mysticArcanumCount; // Total number of Mystic Arcanum picks gained (1 at 11, 2 at 13, 3 at 15, 4 at 17)
   final int alwaysPreparedSubclassCount; // Number of domain/oath spells auto-prepared
 
   const SpellAllocationLimits({
@@ -37,6 +38,7 @@ class SpellAllocationLimits {
     this.magicalSecretsCount = 0,
     this.allowedMagicalSecretClasses = const {},
     this.mysticArcanumLevel = 0,
+    this.mysticArcanumCount = 0,
     this.alwaysPreparedSubclassCount = 0,
   });
 
@@ -52,6 +54,7 @@ class SpellAllocationLimits {
         magicalSecretsCount = 0,
         allowedMagicalSecretClasses = const {},
         mysticArcanumLevel = 0,
+        mysticArcanumCount = 0,
         alwaysPreparedSubclassCount = 0;
 }
 
@@ -276,6 +279,7 @@ class SpellAllocationValidator {
         final cantrips = (lvl >= 10) ? 4 : ((lvl >= 4) ? 3 : 2);
         final known = _warlockSpellsKnown[lvl] ?? 2;
         final mysticTier = (lvl >= 17) ? 9 : ((lvl >= 15) ? 8 : ((lvl >= 13) ? 7 : ((lvl >= 11) ? 6 : 0)));
+        final mysticCount = (lvl >= 17) ? 4 : ((lvl >= 15) ? 3 : ((lvl >= 13) ? 2 : ((lvl >= 11) ? 1 : 0)));
 
         return SpellAllocationLimits(
           maxCantrips: cantrips,
@@ -285,6 +289,7 @@ class SpellAllocationValidator {
           isSpellcaster: true,
           castingAbility: 'Charisma',
           mysticArcanumLevel: mysticTier,
+          mysticArcanumCount: mysticCount,
         );
 
       case 'paladin':
@@ -430,9 +435,25 @@ class SpellAllocationValidator {
 
     // 3. Spontaneous Spells Known Count Check
     if (limits.maxSpellsKnown > 0) {
-      if (spellsKnown.length > limits.maxSpellsKnown) {
+      // In 5e RAW, Mystic Arcanum spells (levels 6-9 for high-level Warlocks) are cast 1/long rest
+      // without expending a spell slot, and do NOT count against the Pact Magic Spells Known limit.
+      final int effectiveKnownCount;
+      if (targetClassSlug.toLowerCase() == 'warlock' && limits.mysticArcanumLevel > 0 && resolver != null) {
+        effectiveKnownCount = spellsKnown.where((ref) {
+          final res = resolver.resolveTyped<Spell>(ref);
+          if (res.isResolved && res.entity != null) {
+            final spell = res.entity!;
+            return !(spell.level >= 6 && spell.level <= limits.mysticArcanumLevel);
+          }
+          return true;
+        }).length;
+      } else {
+        effectiveKnownCount = spellsKnown.length;
+      }
+
+      if (effectiveKnownCount > limits.maxSpellsKnown) {
         errors.add(
-          'Selected ${spellsKnown.length} spells known, exceeding the maximum allowed limit of ${limits.maxSpellsKnown} for $targetClassSlug level $targetClassLevel.',
+          'Selected $effectiveKnownCount spells known, exceeding the maximum allowed limit of ${limits.maxSpellsKnown} for $targetClassSlug level $targetClassLevel.',
         );
       }
     }
@@ -466,7 +487,8 @@ class SpellAllocationValidator {
             // Check Mystic Arcanum exception for Warlock
             final isMysticArcanum = targetClassSlug.toLowerCase() == 'warlock' &&
                 limits.mysticArcanumLevel > 0 &&
-                spell.level == limits.mysticArcanumLevel;
+                spell.level >= 6 &&
+                spell.level <= limits.mysticArcanumLevel;
 
             if (!isMysticArcanum && spell.level > limits.maxSpellSlotLevel) {
               errors.add(
@@ -502,6 +524,7 @@ class SpellAllocationValidator {
     for (final c in character.progression.classes) {
       validGrantIds.add('class-${c.classRef.slug}-cantrips');
       validGrantIds.add('class-${c.classRef.slug}-spells');
+      validGrantIds.add('class-${c.classRef.slug}-mystic-arcanum');
       validGrantIds.add('class-${c.classRef.slug}');
       validGrantIds.add(c.classRef.slug);
     }

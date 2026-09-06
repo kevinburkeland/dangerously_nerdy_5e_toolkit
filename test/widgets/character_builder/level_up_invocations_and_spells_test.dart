@@ -325,6 +325,130 @@ void main() {
       expect(find.textContaining('Mystic Arcanum Milestone (Level 6 Spell)'), findsOneWidget);
     });
 
+    testWidgets('LevelUpWizardDialog allows selecting both traditional spell and Mystic Arcanum without conflict at Level 11', (tester) async {
+      tester.view.physicalSize = const Size(1024, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      // Create level 10 Warlock with 10 spells known
+      final initialSpellsKnown = List.generate(
+        10,
+        (i) => EntityReference<Spell>(
+          refType: EntityType.spell,
+          slug: 'test_warlock_spell_$i',
+          displayName: 'Test Warlock Spell $i',
+        ),
+      );
+
+      final warlock = Character(
+        id: const EntityId(slug: 'test-warlock-10-arcanum', ruleset: RulesetVersion.v2024),
+        name: 'Arcanum Warlock',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
+              subclassRef: EntityReference(refType: EntityType.subclass, slug: 'the_fiend', displayName: 'The Fiend'),
+              level: 10,
+              hitDie: 'd8',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        cantrips: const [
+          EntityReference(refType: EntityType.spell, slug: 'spell_eldritch_blast', displayName: 'Eldritch Blast'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_minor_illusion', displayName: 'Minor Illusion'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_prestidigitation', displayName: 'Prestidigitation'),
+          EntityReference(refType: EntityType.spell, slug: 'spell_mage_hand', displayName: 'Mage Hand'),
+        ],
+        spellsKnown: initialSpellsKnown,
+        baseScores: const AbilityScores(strength: 8, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 18),
+        resources: const CharacterResourcePool(currentHp: 65, currentHitDice: {'d8': 10}),
+      );
+
+      Character? leveledResult;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LevelUpWizardDialog(
+              character: warlock,
+              onLevelUpApplied: (c) => leveledResult = c,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Navigate to Step 5 (Spells)
+      await tester.tap(find.text('Next Step')); // Step 2 (HP)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 3 (Features)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 4 (ASI/Feat)
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Next Step')); // Step 5 (Spells)
+      await tester.pumpAndSettle();
+
+      // Verify quota shows 1 new leveled spell + 1 Mystic Arcanum
+      expect(find.textContaining('Quota for Level 11: 0/1 New Leveled Spell(s)'), findsOneWidget);
+      expect(find.textContaining('+ 1 Mystic Arcanum (Level 6)'), findsOneWidget);
+
+      // Verify Mystic Arcanum card has selection UI
+      expect(find.text('Select Mystic Arcanum Spell:'), findsOneWidget);
+      expect(find.text('0/1 Arcanum Selected'), findsOneWidget);
+
+      // Select Mystic Arcanum spell (Eyebite)
+      expect(find.text('Eyebite'), findsOneWidget);
+      await tester.ensureVisible(find.text('Eyebite'));
+      await tester.tap(find.text('Eyebite'));
+      await tester.pumpAndSettle();
+
+      // Mystic Arcanum count is updated and chip is displayed
+      expect(find.text('1/1 Arcanum Selected'), findsOneWidget);
+      expect(find.textContaining('Mystic Arcanum: Eyebite'), findsOneWidget);
+
+      // Traditional quota must remain 0/1 (Mystic Arcanum did not consume it!)
+      expect(find.textContaining('Quota for Level 11: 0/1 New Leveled Spell(s)'), findsOneWidget);
+
+      // Now select a traditional spell (Burning Hands (L1) from Fiend list)
+      await tester.ensureVisible(find.textContaining('Burning Hands (L1)').first);
+      await tester.tap(find.textContaining('Burning Hands (L1)').first);
+      await tester.pumpAndSettle();
+
+      // Quota is now 1/1
+      expect(find.textContaining('Quota for Level 11: 1/1 New Leveled Spell(s)'), findsOneWidget);
+
+      // Both selected chips are visible in summary
+      expect(find.textContaining('Mystic Arcanum: Eyebite'), findsOneWidget);
+      expect(find.textContaining('1st Level: Burning Hands'), findsOneWidget);
+
+      // Advance to Step 6 (Summary)
+      await tester.tap(find.text('Next Step'));
+      await tester.pumpAndSettle();
+
+      // Step 6 diff shows Mystic Arcanum
+      expect(find.text('Mystic Arcanum'), findsOneWidget);
+      expect(find.text('Eyebite'), findsOneWidget);
+
+      // Confirm Level Up
+      await tester.tap(find.text('CONFIRM LEVEL UP'));
+      await tester.pumpAndSettle();
+
+      expect(leveledResult, isNotNull);
+      // Both spells are in spellsKnown
+      final knownSlugs = leveledResult!.spellsKnown.map((s) => s.slug).toSet();
+      expect(knownSlugs.contains('spell_eyebite'), isTrue);
+      expect(knownSlugs.contains('spell_burning_hands'), isTrue);
+      // Total spells known: 10 initial + 1 traditional + 1 arcanum = 12
+      expect(leveledResult!.spellsKnown.length, 12);
+
+      // Allocated spells contains dedicated grant
+      expect(leveledResult!.allocatedSpells['class-warlock-mystic-arcanum'], isNotNull);
+      expect(leveledResult!.allocatedSpells['class-warlock-mystic-arcanum']!.any((s) => s.slug == 'spell_eyebite'), isTrue);
+    });
+
     testWidgets('LevelUpWizardDialog displays Subclass Granted Spells for Cleric', (tester) async {
       tester.view.physicalSize = const Size(1024, 1200);
       tester.view.devicePixelRatio = 1.0;

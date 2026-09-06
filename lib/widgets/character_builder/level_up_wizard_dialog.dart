@@ -82,6 +82,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   final List<String> _newCantrips = [];
   final List<String> _newSpells = [];
   String? _replacedSpellId;
+  String? _selectedMysticArcanumSpellId;
   String _spellSearchQuery = '';
   SpellClass? _selectedSpellListSource;
   bool _showAllSpellListsForSecrets = false;
@@ -419,6 +420,17 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       );
     }).toList();
 
+    final arcanumRef = _selectedMysticArcanumSpellId != null
+        ? () {
+            final s = SpellbookLibrary.getSpellById(_selectedMysticArcanumSpellId!);
+            return EntityReference<Spell>(
+              refType: EntityType.spell,
+              slug: s?.id ?? _selectedMysticArcanumSpellId!.toLowerCase().replaceAll(' ', '_'),
+              displayName: s?.getName(edition) ?? _selectedMysticArcanumSpellId!,
+            );
+          }()
+        : null;
+
     return LevelUpRequest(
       targetClassSlug: _selectedClassSlug,
       targetClassDisplayName: _selectedClassSlug.toUpperCase(),
@@ -433,6 +445,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       selectedFeatureOptions: Map<String, List<String>>.from(_selectedFeatureOptions),
       newToolProficiencies: _newToolProficiencies.toList(),
       newLanguages: _newLanguages.toList(),
+      mysticArcanumSpell: arcanumRef,
     );
   }
 
@@ -680,6 +693,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                 _selectedSubclass = null;
                 _newCantrips.clear();
                 _newSpells.clear();
+                _selectedMysticArcanumSpellId = null;
               });
             }
           },
@@ -924,6 +938,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       }
     }
     for (final s in _newSpells) {
+      slugs.add(s.toLowerCase().trim());
+      final item = SpellbookLibrary.getSpellById(s);
+      if (item != null) {
+        slugs.add(item.name.toLowerCase().trim());
+      }
+    }
+    if (_selectedMysticArcanumSpellId != null) {
+      final s = _selectedMysticArcanumSpellId!;
       slugs.add(s.toLowerCase().trim());
       final item = SpellbookLibrary.getSpellById(s);
       if (item != null) {
@@ -1599,10 +1621,6 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       return ((lvl + 1) ~/ 2).clamp(1, 9);
     }
     if (slug == 'warlock') {
-      if (lvl >= 17) return 9;
-      if (lvl >= 15) return 8;
-      if (lvl >= 13) return 7;
-      if (lvl >= 11) return 6;
       return ((lvl + 1) ~/ 2).clamp(1, 5);
     }
     if (['paladin', 'ranger'].contains(slug)) {
@@ -1698,13 +1716,6 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final allClassSpells = SpellbookLibrary.allSpells.where((s) {
       if (s.level > maxLvl) return false;
 
-      // Handle Mystic Arcanum high level spells (levels 6-9) for Warlock
-      if (_selectedClassSlug.toLowerCase() == 'warlock' && isMysticArcanumActive && s.level > 5) {
-        if (s.level != limits.mysticArcanumLevel) return false;
-        final rules = s.getRules(edition);
-        return rules.classes.contains(SpellClass.warlock);
-      }
-
       if (_showAllSpellListsForSecrets) {
         return true;
       }
@@ -1739,6 +1750,30 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
             edition: edition,
           )
         : const SpellAllocationLimits.nonCaster();
+
+    final isMysticArcanumMilestone = _selectedClassSlug.toLowerCase() == 'warlock' &&
+        limits.mysticArcanumLevel > previousLimits.mysticArcanumLevel;
+
+    final availableMysticArcanumSpells = isMysticArcanumMilestone
+        ? SpellbookLibrary.allSpells.where((s) {
+            if (s.level != limits.mysticArcanumLevel) return false;
+            final rules = s.getRules(edition);
+            final isWarlock = rules.classes.contains(SpellClass.warlock);
+            final isExpanded = SubclassSpellsLibrary.isExpandedSpell(
+              _selectedClassSlug,
+              _effectiveSubclassSlug,
+              s,
+              edition,
+            );
+            return isWarlock || isExpanded;
+          }).toList()
+        : <SpellItem>[];
+
+    final filteredMysticArcanumSpells = availableMysticArcanumSpells.where((s) {
+      if (_spellSearchQuery.isEmpty) return true;
+      final q = _spellSearchQuery.toLowerCase();
+      return s.getName(edition).toLowerCase().contains(q) || s.id.toLowerCase().contains(q);
+    }).toList();
 
     final gainedCantripsProgression = math.max(0, limits.maxCantrips - previousLimits.maxCantrips);
     final gainedSpellsProgression = math.max(0, limits.maxSpellsKnown - previousLimits.maxSpellsKnown);
@@ -1813,7 +1848,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
         ),
         const SizedBox(height: 4),
         Text(
-          'Quota for Level $_targetClassNewLevel: ${_newSpells.length}/$maxAllowedNewSpells New Leveled Spell(s)${maxAllowedNewCantrips > 0 ? ", ${_newCantrips.length}/$maxAllowedNewCantrips New Cantrip(s)" : ", 0 New Cantrips allowed ($curCantripsCount/${limits.maxCantrips} already known)"}.',
+          'Quota for Level $_targetClassNewLevel: ${_newSpells.length}/$maxAllowedNewSpells New Leveled Spell(s)${maxAllowedNewCantrips > 0 ? ", ${_newCantrips.length}/$maxAllowedNewCantrips New Cantrip(s)" : ", 0 New Cantrips allowed ($curCantripsCount/${limits.maxCantrips} already known)"}${isMysticArcanumMilestone ? " + 1 Mystic Arcanum (Level ${limits.mysticArcanumLevel})" : ""}.',
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
         ),
         const SizedBox(height: 12),
@@ -2008,34 +2043,91 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           const SizedBox(height: 12),
         ],
 
-        // Mystic Arcanum Milestone Callout
+        // Mystic Arcanum Milestone Callout & Selection
         if (isMysticArcanumActive) ...[
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.deepPurple.shade900.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.deepPurpleAccent),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.star, color: Colors.deepPurpleAccent),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.deepPurpleAccent),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Mystic Arcanum Milestone (Level ${limits.mysticArcanumLevel} Spell)',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.deepPurpleAccent),
+                          ),
+                          Text(
+                            'Choose one Level ${limits.mysticArcanumLevel} Warlock spell. You can cast it once per long rest without expending a spell slot. This does NOT consume your normal spell known quota.',
+                            style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (isMysticArcanumMilestone) ...[
+                  const SizedBox(height: 10),
+                  const Divider(color: Colors.deepPurpleAccent, height: 1),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Mystic Arcanum Milestone (Level ${limits.mysticArcanumLevel} Spell)',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.deepPurpleAccent),
+                      const Text(
+                        'Select Mystic Arcanum Spell:',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Text(
-                        'Choose one 6th-9th level Warlock spell. You can cast it once per long rest without expending a spell slot.',
-                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11, color: Colors.white70),
+                        _selectedMysticArcanumSpellId != null ? '1/1 Arcanum Selected' : '0/1 Arcanum Selected',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: _selectedMysticArcanumSpellId != null ? Colors.amberAccent : Colors.white60,
+                        ),
                       ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  if (filteredMysticArcanumSpells.isEmpty)
+                    Text(
+                      'No matching level ${limits.mysticArcanumLevel} Warlock spells found.',
+                      style: const TextStyle(fontSize: 11, color: Colors.white54, fontStyle: FontStyle.italic),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: filteredMysticArcanumSpells.map((s) {
+                        final isSelected = _selectedMysticArcanumSpellId == s.id;
+                        return ChoiceChip(
+                          avatar: DndGlyph.spell(
+                            school: s.school,
+                            level: s.level,
+                            size: 16,
+                            isDarkMode: true,
+                          ),
+                          label: Text(s.getName(edition)),
+                          selected: isSelected,
+                          selectedColor: Colors.deepPurpleAccent.shade700,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedMysticArcanumSpellId = selected ? s.id : null;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                ],
               ],
             ),
           ),
@@ -2114,7 +2206,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
         ],
 
         // Selected Spells Summary Chips
-        if (_newCantrips.isNotEmpty || _newSpells.isNotEmpty) ...[
+        if (_newCantrips.isNotEmpty || _newSpells.isNotEmpty || _selectedMysticArcanumSpellId != null) ...[
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -2132,6 +2224,43 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   spacing: 6,
                   runSpacing: 6,
                   children: [
+                    if (_selectedMysticArcanumSpellId != null) () {
+                      final spell = SpellbookLibrary.getSpellById(_selectedMysticArcanumSpellId!);
+                      return InputChip(
+                        avatar: spell != null
+                            ? DndGlyph.spell(
+                                school: spell.school,
+                                level: spell.level,
+                                size: 16,
+                                isDarkMode: true,
+                              )
+                            : null,
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Mystic Arcanum: ${spell?.getName(edition) ?? _selectedMysticArcanumSpellId}'),
+                            if (spell != null) ...[
+                              const SizedBox(width: 4),
+                              const Icon(Icons.info_outline, size: 12, color: Colors.amberAccent),
+                            ],
+                          ],
+                        ),
+                        backgroundColor: Colors.deepPurple.shade800.withValues(alpha: 0.6),
+                        onDeleted: () => setState(() => _selectedMysticArcanumSpellId = null),
+                        onPressed: spell != null
+                            ? () {
+                                HapticService.selectionTick(context);
+                                SpellComparisonDialog.show(
+                                  context,
+                                  spell: spell,
+                                  edition: edition,
+                                  isPinned: false,
+                                  onTogglePin: () {},
+                                );
+                              }
+                            : null,
+                      );
+                    }(),
                     ..._newCantrips.map((c) {
                       final spell = SpellbookLibrary.getSpellById(c);
                       return InputChip(
@@ -2709,6 +2838,11 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               ],
               if (_selectedSubclass != null)
                 _buildDiffRow('Subclass', 'None', _selectedSubclass!, theme, highlightNew: true),
+              if (_selectedMysticArcanumSpellId != null) () {
+                final spell = SpellbookLibrary.getSpellById(_selectedMysticArcanumSpellId!);
+                final name = spell?.getName(widget.character.id.ruleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014) ?? _selectedMysticArcanumSpellId!;
+                return _buildDiffRow('Mystic Arcanum', 'None', name, theme, highlightNew: true);
+              }(),
             ],
           ),
         ),
