@@ -975,9 +975,22 @@ class CharacterActionsResolver {
     // 4. FIGHTING STYLE REACTIONS
     // ==========================================
     final hasProtection = controller.hasCapabilityFlag('hasProtectionReaction') ||
-        controller.hasCapabilityFlag('protection') ||
-        character.feats.any((f) => f.slug.toLowerCase().contains('protection') || f.displayName.toLowerCase().contains('protection')) ||
-        character.progression.getAllSelectedFeatureOptions().values.any((opts) => opts.any((o) => o.toLowerCase().contains('protection')));
+        character.progression.classes.any((cls) {
+          final classSlug = cls.classRef.slug.toLowerCase();
+          final isFightingStyleClass = classSlug == 'fighter' || classSlug == 'paladin' || classSlug == 'ranger';
+          if (!isFightingStyleClass) return false;
+          return cls.selectedFeatureOptions.entries.any((entry) =>
+              (entry.key.toLowerCase().contains('fighting-style') || entry.key.toLowerCase().contains('fighting_style')) &&
+              entry.value.any((v) => v.toLowerCase() == 'protection' || v.toLowerCase() == 'fighting_style_protection'));
+        }) ||
+        character.feats.any((f) {
+          final slug = f.slug.toLowerCase();
+          final name = f.displayName.toLowerCase();
+          return slug == 'fighting-style-protection' ||
+              slug == 'fighting_style_protection' ||
+              name == 'fighting style: protection' ||
+              name == 'fighting style (protection)';
+        });
 
     if (hasProtection) {
       registerAction(
@@ -993,9 +1006,22 @@ class CharacterActionsResolver {
     }
 
     final hasInterception = controller.hasCapabilityFlag('hasInterceptionReaction') ||
-        controller.hasCapabilityFlag('interception') ||
-        character.feats.any((f) => f.slug.toLowerCase().contains('interception') || f.displayName.toLowerCase().contains('interception')) ||
-        character.progression.getAllSelectedFeatureOptions().values.any((opts) => opts.any((o) => o.toLowerCase().contains('interception')));
+        character.progression.classes.any((cls) {
+          final classSlug = cls.classRef.slug.toLowerCase();
+          final isFightingStyleClass = classSlug == 'fighter' || classSlug == 'paladin' || classSlug == 'ranger';
+          if (!isFightingStyleClass) return false;
+          return cls.selectedFeatureOptions.entries.any((entry) =>
+              (entry.key.toLowerCase().contains('fighting-style') || entry.key.toLowerCase().contains('fighting_style')) &&
+              entry.value.any((v) => v.toLowerCase() == 'interception' || v.toLowerCase() == 'fighting_style_interception'));
+        }) ||
+        character.feats.any((f) {
+          final slug = f.slug.toLowerCase();
+          final name = f.displayName.toLowerCase();
+          return slug == 'fighting-style-interception' ||
+              slug == 'fighting_style_interception' ||
+              name == 'fighting style: interception' ||
+              name == 'fighting style (interception)';
+        });
 
     if (hasInterception) {
       registerAction(

@@ -563,8 +563,16 @@ class CharacterProgression {
   Map<String, List<String>> getAllSelectedFeatureOptions() {
     final merged = <String, List<String>>{};
     for (final c in classes) {
+      final srdClass = SrdClassesLibrary.findBySlug(c.classRef.slug);
+      final validDecisionIds = srdClass?.featureDecisions.map((d) => d.id).toSet();
+      final classSlug = c.classRef.slug.toLowerCase();
       c.selectedFeatureOptions.forEach((k, v) {
-        merged.putIfAbsent(k, () => []).addAll(v);
+        if (validDecisionIds == null ||
+            validDecisionIds.contains(k) ||
+            k.startsWith('$classSlug-') ||
+            (k == 'fighting-style' && (classSlug == 'fighter' || classSlug == 'paladin' || classSlug == 'ranger'))) {
+          merged.putIfAbsent(k, () => []).addAll(v);
+        }
       });
     }
     return merged;

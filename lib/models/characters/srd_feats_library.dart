@@ -413,6 +413,50 @@ class SrdFeatsLibrary {
     },
   );
 
+  static const Feat lightlyArmored = Feat(
+    id: EntityId(slug: 'lightly-armored', ruleset: RulesetVersion.v2014),
+    name: 'Lightly Armored',
+    category: 'General',
+    descriptionMarkdown:
+        '**Armor Training.** You gain proficiency with Light Armor.\n\n'
+        '**Ability Score Increase.** Increase your Strength or Dexterity score by 1, to a maximum of 20.',
+    customProperties: {
+      'selectableAbilities': ['strength', 'dexterity'],
+      'statIncrease': 1,
+      'bonusArmorProficiencies': ['Light Armor'],
+    },
+  );
+
+  static const Feat moderatelyArmored = Feat(
+    id: EntityId(slug: 'moderately-armored', ruleset: RulesetVersion.v2014),
+    name: 'Moderately Armored',
+    prerequisite: 'Proficiency with Light Armor',
+    category: 'General',
+    descriptionMarkdown:
+        '**Armor Training.** You gain proficiency with Medium Armor and Shields.\n\n'
+        '**Ability Score Increase.** Increase your Strength or Dexterity score by 1, to a maximum of 20.',
+    customProperties: {
+      'selectableAbilities': ['strength', 'dexterity'],
+      'statIncrease': 1,
+      'bonusArmorProficiencies': ['Medium Armor', 'Shields'],
+    },
+  );
+
+  static const Feat heavilyArmored = Feat(
+    id: EntityId(slug: 'heavily-armored', ruleset: RulesetVersion.v2014),
+    name: 'Heavily Armored',
+    prerequisite: 'Proficiency with Medium Armor',
+    category: 'General',
+    descriptionMarkdown:
+        '**Armor Training.** You gain proficiency with Heavy Armor.\n\n'
+        '**Ability Score Increase.** Increase your Strength score by 1, to a maximum of 20.',
+    customProperties: {
+      'selectableAbilities': ['strength'],
+      'statIncrease': 1,
+      'bonusArmorProficiencies': ['Heavy Armor'],
+    },
+  );
+
   static const Feat mountedCombatant = Feat(
     id: EntityId(slug: 'mounted-combatant', ruleset: RulesetVersion.v2024),
     name: 'Mounted Combatant',
@@ -582,6 +626,9 @@ class SrdFeatsLibrary {
     inspiringLeader,
     mageSlayer,
     mediumArmorMaster,
+    lightlyArmored,
+    moderatelyArmored,
+    heavilyArmored,
     mountedCombatant,
     observant,
     ritualCaster,

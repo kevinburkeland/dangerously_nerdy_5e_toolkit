@@ -266,6 +266,51 @@ void main() {
       final reactionNames = resolved.reactions.map((a) => a.name).toList();
       expect(reactionNames, contains('Fighting Style: Protection'));
     });
+
+    test('Warlock level 11 with Moderately Armored feat does NOT receive Fighting Style: Protection reaction', () {
+      final warlock = Character(
+        id: const EntityId(slug: 'warlock-test', ruleset: RulesetVersion.v2014),
+        name: 'Eldritch Scholar',
+        speciesRef: const EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        progression: const CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'warlock', displayName: 'Warlock'),
+              level: 11,
+              hitDie: 'd8',
+              isStartingClass: true,
+              selectedFeatureOptions: {
+                'warlock-invocations-2': ['agonizing_blast', 'armor_of_shadows'],
+                'warlock-pact-boon-3-2014': ['pact_of_the_tome'],
+                // Stale option that may have leaked from builder
+                'fighter-fighting-style-1-2014': ['protection'],
+              },
+            ),
+          ],
+        ),
+        feats: const [
+          EntityReference<DomainEntity>(
+            refType: EntityType.feat,
+            slug: 'moderately-armored',
+            displayName: 'Moderately Armored',
+          ),
+        ],
+        baseScores: const AbilityScores(strength: 10, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 10, charisma: 18),
+        resources: const CharacterResourcePool(),
+      );
+
+      final controller = CharacterSheetController(character: warlock);
+      final stats = CharacterEvaluationEngine.evaluate(warlock);
+      final resolved = CharacterActionsResolver.resolve(
+        character: warlock,
+        stats: stats,
+        controller: controller,
+      );
+
+      final reactionNames = resolved.reactions.map((a) => a.name).toList();
+      expect(reactionNames, isNot(contains('Fighting Style: Protection')));
+      expect(reactionNames, isNot(contains('Fighting Style: Interception')));
+    });
   });
 
   group('Homebrew Parsing Robustness & Action Economy Extraction', () {

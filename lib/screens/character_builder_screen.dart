@@ -2107,6 +2107,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             if (v == null) return;
             HapticService.selectionTick(context);
             setState(() {
+              if (_selectedClass != v) {
+                _wizardSelectedFeatureOptions.clear();
+                _selectedWizardCantrips.clear();
+                _selectedWizardSpells.clear();
+              }
               _selectedClass = v;
               final newCls = SrdClassesLibrary.findBySlug(v, ruleset: _selectedRuleset)!;
               _abilityScoreController.setClass(
