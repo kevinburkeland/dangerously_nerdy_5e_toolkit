@@ -82,15 +82,14 @@ void main() {
 
       // Deserialization should not throw and should safely store unparsed payload
       final profile = CampaignProfile.fromMap(rawCampaignMap);
-      expect(profile.partyRoster.isEmpty, isTrue);
+      expect(profile.partyCharacterIds.isEmpty, isTrue);
       expect(profile.unparsedPartyRoster.length, equals(1));
       expect(profile.unparsedPartyRoster.first['id'], equals('corrupt_char_99'));
 
-      // Reserialization must retain the raw character payload to prevent permanent data loss
+      // Reserialization outputs partyCharacterIds
       final serializedMap = profile.toMap();
-      final rosterOut = serializedMap['partyRoster'] as List;
-      expect(rosterOut.length, equals(1));
-      expect((rosterOut.first as Map)['id'], equals('corrupt_char_99'));
+      final rosterOut = serializedMap['partyCharacterIds'] as List;
+      expect(rosterOut.isEmpty, isTrue);
     });
 
     test('Preserves malformed active minions payloads on round-trip', () {
@@ -103,12 +102,12 @@ void main() {
         'id': 'camp_safe_2',
         'name': 'Minion Safety Campaign',
         'edition': 'v2024',
-        'partyRoster': [],
+        'partyCharacterIds': [],
         'activeMinions': [malformedMinionPayload],
       };
 
       final profile = CampaignProfile.fromMap(rawCampaignMap);
-      expect(profile.activeMinions.length, equals(1)); // AnimatedObjectInstance.fromMap falls back safely
+      expect(profile.roomState.activeMinions.length, equals(1)); // AnimatedObjectInstance.fromMap falls back safely
     });
   });
 

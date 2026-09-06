@@ -120,6 +120,29 @@ class CharacterPersistenceService {
     return roster;
   }
 
+  /// Fetches characters matching the given IDs/slugs, preserving the order of the requested IDs.
+  Future<List<Character>> getCharactersByIds(List<String> ids) async {
+    if (ids.isEmpty) return <Character>[];
+    final all = await loadCharacters();
+    final map = {for (final c in all) c.id.slug: c};
+    return ids.map((id) => map[id]).whereType<Character>().toList();
+  }
+
+  /// Saves multiple characters to persistence in bulk.
+  Future<void> saveCharacters(List<Character> characters) async {
+    if (characters.isEmpty) return;
+    final roster = List<Character>.from(await loadCharacters());
+    for (final charToSave in characters) {
+      final index = roster.indexWhere((c) => c.id.slug == charToSave.id.slug);
+      if (index >= 0) {
+        roster[index] = charToSave;
+      } else {
+        roster.add(charToSave);
+      }
+    }
+    await saveRoster(roster);
+  }
+
   /// Deletes a character by slug from the roster.
   Future<List<Character>> deleteCharacter(String characterSlug) async {
     final roster = List<Character>.from(await loadCharacters());

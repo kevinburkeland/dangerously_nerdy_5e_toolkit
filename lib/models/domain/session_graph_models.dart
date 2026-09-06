@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../animated_object.dart';
 import 'loot_models.dart';
 
 /// Entity Types bindable within a session or room node
@@ -192,6 +193,7 @@ class RoomNodeState {
   final List<RoomEntityLink> entityLinks;
   final List<LootContainer> containers;
   final List<EncounterParticipant> activeEncounter;
+  final List<AnimatedObjectInstance> activeMinions;
   final Map<String, dynamic> customProperties;
 
   const RoomNodeState({
@@ -202,6 +204,7 @@ class RoomNodeState {
     this.entityLinks = const [],
     this.containers = const [],
     this.activeEncounter = const [],
+    this.activeMinions = const [],
     this.customProperties = const {},
   });
 
@@ -213,6 +216,7 @@ class RoomNodeState {
     List<RoomEntityLink>? entityLinks,
     List<LootContainer>? containers,
     List<EncounterParticipant>? activeEncounter,
+    List<AnimatedObjectInstance>? activeMinions,
     Map<String, dynamic>? customProperties,
   }) {
     return RoomNodeState(
@@ -223,6 +227,9 @@ class RoomNodeState {
       entityLinks: entityLinks ?? this.entityLinks,
       containers: containers ?? this.containers,
       activeEncounter: activeEncounter ?? this.activeEncounter,
+      activeMinions: activeMinions != null
+          ? List<AnimatedObjectInstance>.from(activeMinions)
+          : this.activeMinions,
       customProperties: customProperties ?? this.customProperties,
     );
   }
@@ -235,10 +242,22 @@ class RoomNodeState {
         'entityLinks': entityLinks.map((e) => e.toMap()).toList(),
         'containers': containers.map((c) => c.toMap()).toList(),
         'activeEncounter': activeEncounter.map((e) => e.toMap()).toList(),
+        'activeMinions': activeMinions.map((m) => m.toMap()).toList(),
         'customProperties': customProperties,
       };
 
   factory RoomNodeState.fromMap(Map<String, dynamic> map) {
+    final rawMinions = map['activeMinions'] as List? ?? [];
+    final minionsList = <AnimatedObjectInstance>[];
+    for (final raw in rawMinions) {
+      if (raw is Map) {
+        try {
+          minionsList.add(
+              AnimatedObjectInstance.fromMap(Map<String, dynamic>.from(raw)));
+        } catch (_) {}
+      }
+    }
+
     return RoomNodeState(
       roomId: map['roomId']?.toString() ?? '',
       roomCode: map['roomCode']?.toString() ?? '',
@@ -257,6 +276,7 @@ class RoomNodeState {
           .map((e) =>
               EncounterParticipant.fromMap(Map<String, dynamic>.from(e)))
           .toList(),
+      activeMinions: minionsList,
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );

@@ -10,6 +10,7 @@ import '../models/domain/core_types.dart';
 import '../models/domain/entity_reference.dart';
 import '../models/domain/session_graph_models.dart';
 import '../models/party/party_purse.dart';
+import '../providers/dm_dashboard_controller.dart';
 import '../providers/settings_provider.dart';
 import '../services/app_services.dart';
 import '../services/haptic_service.dart';
@@ -33,79 +34,60 @@ class DmDashboardScreen extends StatefulWidget {
 }
 
 class _DmDashboardScreenState extends State<DmDashboardScreen> {
+  final DmDashboardController _controller = DmDashboardController();
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
   bool _isLoading = true;
   int _currentRound = 1;
   final TextEditingController _notesController = TextEditingController();
+  String? _lastLoadedProfileId;
 
   @override
   void initState() {
     super.initState();
+    _controller.addListener(_onControllerChanged);
     _loadData();
+  }
+
+  void _onControllerChanged() {
+    if (mounted) {
+      final active = _controller.activeProfile;
+      if (active != null && active.id != _lastLoadedProfileId) {
+        _lastLoadedProfileId = active.id;
+        _notesController.text = active.notesMarkdown;
+      }
+      setState(() {
+        _allProfiles = _controller.allProfiles;
+        _activeProfile = active;
+        _isLoading = _controller.isLoading;
+        _currentRound = _controller.currentRound;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
+    _controller.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    final service = AppServices.instance.campaignProfileService;
-    final profiles = await service.loadAllProfiles();
-
-    CampaignProfile active;
-    if (widget.initialCampaignId != null) {
-      final req = widget.initialCampaignId!.trim().toUpperCase();
-      active = profiles.where((p) {
-            final pid = p.id.toUpperCase();
-            final rcode = p.roomState.roomCode.toUpperCase();
-            return pid == req || pid == 'CAMPAIGN_$req' || rcode == req;
-          }).firstOrNull ??
-          await service.getActiveProfile();
-    } else {
-      active = await service.getActiveProfile();
-    }
-
-    if (mounted) {
-      setState(() {
-        _allProfiles = profiles;
-        _activeProfile = active;
-        _notesController.text = active.notesMarkdown;
-        _isLoading = false;
-      });
-    }
+    await _controller.loadData(initialCampaignId: widget.initialCampaignId);
   }
 
   void _persistActiveProfile({bool immediate = false}) {
     if (_activeProfile == null) return;
-    final updated = _activeProfile!.copyWith(
-      notesMarkdown: _notesController.text,
-      lastPlayedAt: DateTime.now(),
-    );
-    _activeProfile = updated;
-
-    final service = AppServices.instance.campaignProfileService;
-    if (immediate) {
-      service.saveProfileImmediate(updated);
-    } else {
-      service.saveProfile(updated);
-    }
+    _controller.updateNotes(_notesController.text, immediate: immediate);
   }
 
   void _onEditionChanged(DmRulesEdition newEdition) {
     if (_activeProfile == null) return;
     if (_activeProfile!.edition == newEdition) return;
     HapticService.selectionTick(context);
-    final updated = _activeProfile!.copyWith(edition: newEdition);
-    setState(() {
-      _activeProfile = updated;
-    });
     SettingsScope.maybeOf(context)?.setRulesEdition(newEdition);
-    final service = AppServices.instance.campaignProfileService;
-    service.saveProfile(updated);
+    _controller.changeEdition(newEdition);
   }
 
   // --- Campaign Switching & Lifecycle Actions ---
@@ -198,7 +180,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                             ),
                           ),
                           subtitle: Text(
-                            '${prof.edition.label} Edition • ${prof.partyRoster.length} Players • ${prof.roomState.activeEncounter.length} Encounter',
+                            '${prof.edition.label} Edition • ${prof.partyCharacterIds.length} Players • ${prof.roomState.activeEncounter.length} Encounter',
                             style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                           ),
                           trailing: PopupMenuButton<String>(
@@ -253,9 +235,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   }
 
   Future<void> _switchCampaign(String profileId) async {
-    final service = AppServices.instance.campaignProfileService;
-    await service.switchProfile(profileId);
-    await _loadData();
+    await _controller.switchProfile(profileId);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -771,45 +751,13 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   void _modifyCharacterHp(String characterId, int delta) {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-
-    final roster = _activeProfile!.partyRoster.map((c) {
-      if (c.id.slug != characterId) return c;
-      final curHp = (c.resources.currentHp + delta).clamp(0, 999);
-      final updatedPool = c.resources.copyWith(currentHp: curHp);
-      return c.copyWith(resources: updatedPool);
-    }).toList();
-
-    setState(() {
-      _activeProfile = _activeProfile!.copyWith(partyRoster: roster);
-    });
-    _persistActiveProfile();
+    _controller.modifyCharacterHp(characterId, delta);
   }
 
   void _toggleSpellSlot(String characterId, int level) {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-
-    final roster = _activeProfile!.partyRoster.map((c) {
-      if (c.id.slug != characterId) return c;
-      final maxSlots = c.resources.spellSlots.maxSlots[level] ?? 0;
-      if (maxSlots <= 0) return c;
-
-      final current = c.resources.spellSlots.currentSlots[level] ?? maxSlots;
-      final next = current <= 0 ? maxSlots : current - 1;
-
-      final updatedCur = Map<int, int>.from(c.resources.spellSlots.currentSlots);
-      updatedCur[level] = next;
-
-      final updatedPool = c.resources.copyWith(
-        spellSlots: c.resources.spellSlots.copyWith(currentSlots: updatedCur),
-      );
-      return c.copyWith(resources: updatedPool);
-    }).toList();
-
-    setState(() {
-      _activeProfile = _activeProfile!.copyWith(partyRoster: roster);
-    });
-    _persistActiveProfile();
+    _controller.toggleSpellSlot(characterId, level);
   }
 
   Future<void> _showAddSampleCharacterDialog() async {
@@ -880,27 +828,35 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                final name = nameCtrl.text.trim();
-                if (name.isEmpty) return;
+              onPressed: () async {
+                final name = nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : 'Adventurer';
                 final lvl = int.tryParse(levelCtrl.text.trim()) ?? 1;
-                final hp = int.tryParse(hpCtrl.text.trim()) ?? 10;
+                final hp = int.tryParse(hpCtrl.text.trim()) ?? 20;
+                final ac = int.tryParse(acCtrl.text.trim()) ?? 15;
                 final wis = int.tryParse(wisCtrl.text.trim()) ?? 10;
-
                 final now = DateTime.now().millisecondsSinceEpoch;
+
                 final char = Character(
-                  id: EntityId(slug: 'char_$now', ruleset: RulesetVersion.homebrew),
+                  id: EntityId(slug: 'hero_$now', ruleset: RulesetVersion.v2024),
                   name: name,
                   speciesRef: const EntityReference(slug: 'human', refType: EntityType.species, displayName: 'Human'),
                   progression: CharacterProgression(
                     classes: [
                       ClassLevelProgression(
-                        classRef: const EntityReference(slug: 'fighter', refType: EntityType.classDefinition, displayName: 'Fighter'),
+                        classRef: const EntityReference(
+                          slug: 'fighter',
+                          refType: EntityType.classDefinition,
+                          displayName: 'Fighter',
+                        ),
                         level: lvl,
                         hitDie: 'd10',
                       ),
                     ],
                   ),
+                  customProperties: {
+                    'armorClass': ac,
+                    'maxHp': hp,
+                  },
                   baseScores: AbilityScores(
                     strength: 16,
                     dexterity: 14,
@@ -918,12 +874,10 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   ),
                 );
 
-                final roster = List<Character>.from(_activeProfile?.partyRoster ?? [])..add(char);
-                setState(() {
-                  _activeProfile = _activeProfile!.copyWith(partyRoster: roster);
-                });
-                _persistActiveProfile();
-                Navigator.pop(ctx);
+                await _controller.addCharacterToParty(char);
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                }
               },
               child: const Text('Add Hero'),
             ),
@@ -938,21 +892,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   void _modifyMinionHp(String minionId, int delta) {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-
-    final minions = _activeProfile!.activeMinions.map((m) {
-      if (m.id != minionId) return m;
-      if (delta < 0) {
-        m.takeDamage(delta.abs());
-      } else {
-        m.heal(delta);
-      }
-      return m;
-    }).toList();
-
-    setState(() {
-      _activeProfile = _activeProfile!.copyWith(activeMinions: minions);
-    });
-    _persistActiveProfile();
+    _controller.modifyMinionHp(minionId, delta);
   }
 
   Future<void> _showAddMinionDialog() async {
@@ -1010,11 +950,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                       maxHp: selectedSize.maxHp,
                     );
 
-                    final minions = List<AnimatedObjectInstance>.from(_activeProfile?.activeMinions ?? [])..add(minion);
-                    setState(() {
-                      _activeProfile = _activeProfile!.copyWith(activeMinions: minions);
-                    });
-                    _persistActiveProfile();
+                    _controller.addMinion(minion);
                     Navigator.pop(ctx);
                   },
                   child: const Text('Summon'),
@@ -1032,24 +968,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   void _modifyPurseCoin(String coinKey, int delta) {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-
-    final roster = List<Character>.from(_activeProfile!.partyRoster);
-    if (roster.isNotEmpty) {
-      final first = roster.first;
-      final curPurse = first.purse;
-      final newPurse = PartyPurse(
-        cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 999999) : curPurse.cp,
-        sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 999999) : curPurse.sp,
-        ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 999999) : curPurse.ep,
-        gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 999999) : curPurse.gp,
-        pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 999999) : curPurse.pp,
-      );
-      roster[0] = first.copyWith(purse: newPurse);
-      setState(() {
-        _activeProfile = _activeProfile!.copyWith(partyRoster: roster);
-      });
-      _persistActiveProfile();
-    }
+    _controller.modifyPurseCoin(coinKey, delta);
   }
 
   @override
@@ -1626,7 +1545,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
 
   Widget _buildPartyVitalityCard() {
     final theme = Theme.of(context);
-    final roster = _activeProfile!.partyRoster;
+    final roster = _controller.partyCharacters;
 
     return Card(
       elevation: 2,
@@ -1776,7 +1695,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
 
   Widget _buildMinionsCard() {
     final theme = Theme.of(context);
-    final minions = _activeProfile!.activeMinions;
+    final minions = _controller.activeMinions;
 
     return Card(
       elevation: 2,
@@ -1888,14 +1807,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
             icon: const Icon(Icons.delete_outline, size: 16),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            onPressed: () {
-              final updated = List<AnimatedObjectInstance>.from(_activeProfile!.activeMinions)
-                ..removeWhere((item) => item.id == m.id);
-              setState(() {
-                _activeProfile = _activeProfile!.copyWith(activeMinions: updated);
-              });
-              _persistActiveProfile();
-            },
+            onPressed: () => _controller.removeMinion(m.id),
           ),
         ],
       ),
@@ -2018,8 +1930,8 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
 
   Widget _buildScratchpadAndPurseCard() {
     final theme = Theme.of(context);
-    final roster = _activeProfile!.partyRoster;
-    final purse = roster.isNotEmpty ? roster.first.purse : const PartyPurse();
+    final roster = _controller.partyCharacters;
+    final purse = roster.isNotEmpty ? roster.first.purse : (_activeProfile?.partyPurse ?? const PartyPurse());
 
     return Card(
       elevation: 2,

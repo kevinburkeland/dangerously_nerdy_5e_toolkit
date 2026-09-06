@@ -65,6 +65,10 @@ class CampaignProfileService extends ChangeNotifier {
         if (rawJson != null && rawJson.isNotEmpty) {
           try {
             final profile = CampaignProfile.fromJson(rawJson);
+            if (profile.migratedCharacters.isNotEmpty) {
+              await CharacterPersistenceService().saveCharacters(profile.migratedCharacters);
+              await _persistProfileToDisk(profile);
+            }
             _memoryCache[id] = profile;
             profiles.add(profile);
           } catch (e, st) {
@@ -95,7 +99,7 @@ class CampaignProfileService extends ChangeNotifier {
                 ? m.campaignName.trim()
                 : 'Campaign ${m.roomCode}',
           ).copyWith(
-            partyRoster: savedCharacters,
+            partyCharacterIds: savedCharacters.map((c) => c.id.slug).toList(),
             roomState: RoomNodeState(
               roomId: 'room_${m.roomCode}',
               roomCode: m.roomCode,

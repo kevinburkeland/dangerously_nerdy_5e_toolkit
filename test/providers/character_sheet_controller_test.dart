@@ -29,6 +29,15 @@ class _FakePersistenceService implements CharacterPersistenceService {
 
   @override
   Future<List<Character>> deleteCharacter(String slug) async => [];
+
+  @override
+  Future<List<Character>> getCharactersByIds(List<String> ids) async =>
+      savedCharacter != null && ids.contains(savedCharacter!.id.slug) ? [savedCharacter!] : [];
+
+  @override
+  Future<void> saveCharacters(List<Character> characters) async {
+    if (characters.isNotEmpty) savedCharacter = characters.last;
+  }
 }
 
 void main() {

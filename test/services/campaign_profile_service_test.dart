@@ -4,12 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
@@ -27,19 +23,19 @@ void main() {
         edition: DmRulesEdition.v2024,
         createdAt: now,
         lastPlayedAt: now,
-        roomState: const RoomNodeState(
+        roomState: RoomNodeState(
           roomId: 'room_101',
           roomCode: 'CR-101',
           title: 'Shadow Gates',
           description: 'Dark fog surrounds the gates.',
-          entityLinks: [
+          entityLinks: const [
             RoomEntityLink(
               refType: SessionRefType.monster,
               entityId: 'monster_wolf',
               displayName: 'Dire Wolf',
             ),
           ],
-          activeEncounter: [
+          activeEncounter: const [
             EncounterParticipant(
               participantId: 'p_1',
               entityLink: RoomEntityLink(
@@ -54,41 +50,17 @@ void main() {
               isActiveTurn: true,
             ),
           ],
+          activeMinions: [
+            AnimatedObjectInstance(
+              id: 'minion_sword',
+              name: 'Flying Longsword',
+              size: ObjectSize.small,
+              currentHp: 25,
+              maxHp: 25,
+            ),
+          ],
         ),
-        partyRoster: [
-          const Character(
-            id: EntityId(slug: 'cleric_1', ruleset: RulesetVersion.v2024),
-            name: 'Cleric of Light',
-            speciesRef: EntityReference(slug: 'elf', refType: EntityType.species, displayName: 'Elf'),
-            progression: CharacterProgression(
-              classes: [
-                ClassLevelProgression(
-                  classRef: EntityReference(slug: 'cleric', refType: EntityType.classDefinition, displayName: 'Cleric'),
-                  level: 3,
-                  hitDie: 'd8',
-                ),
-              ],
-            ),
-            baseScores: AbilityScores.standardArray(),
-            resources: CharacterResourcePool(
-              currentHp: 24,
-              spellSlots: SpellSlotPool(
-                maxSlots: {1: 4, 2: 2},
-                currentSlots: {1: 3, 2: 2},
-              ),
-            ),
-            purse: PartyPurse(gp: 150, sp: 20),
-          ),
-        ],
-        activeMinions: [
-          AnimatedObjectInstance(
-            id: 'minion_sword',
-            name: 'Flying Longsword',
-            size: ObjectSize.small,
-            currentHp: 25,
-            maxHp: 25,
-          ),
-        ],
+        partyCharacterIds: const ['cleric_1'],
         pinnedRuleIds: const {'concentration', 'falling', 'cover'},
         notesMarkdown: '# Session 1 Log\nThe party entered the Barovian woods.',
       );
@@ -100,12 +72,68 @@ void main() {
       expect(restored.name, equals('The Vampire Must Fall'));
       expect(restored.edition, equals(DmRulesEdition.v2024));
       expect(restored.roomState.activeEncounter.length, equals(1));
-      expect(restored.partyRoster.length, equals(1));
-      expect(restored.partyRoster.first.name, equals('Cleric of Light'));
-      expect(restored.activeMinions.length, equals(1));
-      expect(restored.activeMinions.first.name, equals('Flying Longsword'));
+      expect(restored.partyCharacterIds.length, equals(1));
+      expect(restored.partyCharacterIds.first, equals('cleric_1'));
+      expect(restored.roomState.activeMinions.length, equals(1));
+      expect(restored.roomState.activeMinions.first.name, equals('Flying Longsword'));
       expect(restored.pinnedRuleIds.contains('concentration'), isTrue);
       expect(restored.notesMarkdown, contains('Session 1 Log'));
+      expect(map.containsKey('partyRoster'), isFalse);
+      expect(map.containsKey('activeMinions'), isFalse);
+      expect(map['partyCharacterIds'], equals(['cleric_1']));
+    });
+
+    test('Legacy migration gateway extracts nested characters and root minions safely', () {
+      final legacyCharacterMap = {
+        'id': {'slug': 'fighter_legacy', 'ruleset': 'v2024'},
+        'name': 'Grom the Barbarian',
+        'speciesRef': {'slug': 'human', 'refType': 'species', 'displayName': 'Human'},
+        'progression': {
+          'classes': [
+            {
+              'classRef': {'slug': 'barbarian', 'refType': 'classDefinition', 'displayName': 'Barbarian'},
+              'level': 4,
+              'hitDie': 'd12',
+            }
+          ]
+        },
+        'baseScores': {'strength': 18, 'dexterity': 14, 'constitution': 16, 'intelligence': 8, 'wisdom': 12, 'charisma': 10},
+        'resources': {'currentHp': 45},
+      };
+
+      final legacyMinionMap = {
+        'id': 'minion_coin',
+        'name': 'Silver Coin',
+        'size': 'tiny',
+        'currentHp': 20,
+        'maxHp': 20,
+      };
+
+      final legacyPayload = {
+        'id': 'campaign_legacy_1',
+        'name': 'Legacy Dungeon Campaign',
+        'edition': 'v2024',
+        'createdAt': DateTime.now().toIso8601String(),
+        'lastPlayedAt': DateTime.now().toIso8601String(),
+        'partyRoster': [legacyCharacterMap],
+        'activeMinions': [legacyMinionMap],
+        'notesMarkdown': '# Old Notes',
+      };
+
+      final profile = CampaignProfile.fromMap(legacyPayload);
+
+      // Verify migration gateway extracted character and minion
+      expect(profile.partyCharacterIds, equals(['fighter_legacy']));
+      expect(profile.migratedCharacters.length, equals(1));
+      expect(profile.migratedCharacters.first.name, equals('Grom the Barbarian'));
+      expect(profile.roomState.activeMinions.length, equals(1));
+      expect(profile.roomState.activeMinions.first.name, equals('Silver Coin'));
+
+      // Reserialization must output flat structure
+      final flattened = profile.toMap();
+      expect(flattened['partyCharacterIds'], equals(['fighter_legacy']));
+      expect(flattened.containsKey('partyRoster'), isFalse);
+      expect(flattened.containsKey('activeMinions'), isFalse);
     });
 
     test('Default factory initializes staging area and core pinned rules', () {

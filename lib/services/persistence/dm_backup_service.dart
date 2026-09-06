@@ -8,6 +8,7 @@ import '../../utils/campaign_file_downloader.dart';
 import '../logging_service.dart';
 import '../preset_service.dart';
 import 'campaign_profile_service.dart';
+import 'character_persistence_service.dart';
 import 'dpr_persistence_service.dart';
 import 'homebrew_persistence_service.dart';
 
@@ -179,6 +180,9 @@ class DmBackupService {
       }
 
       final profile = CampaignProfile.fromMap(campaignMap);
+      if (profile.migratedCharacters.isNotEmpty) {
+        await CharacterPersistenceService().saveCharacters(profile.migratedCharacters);
+      }
       // Ensure unique ID on import to prevent accidental key collisions with active games
       final now = DateTime.now();
       final sanitizedProfile = profile.copyWith(

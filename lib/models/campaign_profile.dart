@@ -16,11 +16,14 @@ class CampaignProfile {
   final DateTime createdAt;
   final DateTime lastPlayedAt;
   final RoomNodeState roomState;
-  final List<Character> partyRoster;
-  final List<AnimatedObjectInstance> activeMinions;
+  final List<String> partyCharacterIds;
   final Set<String> pinnedRuleIds;
   final String notesMarkdown;
   final PartyPurse partyPurse;
+
+  /// Transient, non-serialized field holding characters extracted during deserialization migration.
+  final List<Character> _migratedCharacters;
+  List<Character> get migratedCharacters => _migratedCharacters;
 
   /// Fallback storage preserving raw unparsed child entity payloads
   /// to guarantee 0% data loss across serialization cycles if a child fails parsing.
@@ -34,8 +37,7 @@ class CampaignProfile {
     required this.createdAt,
     required this.lastPlayedAt,
     required this.roomState,
-    this.partyRoster = const [],
-    this.activeMinions = const [],
+    this.partyCharacterIds = const [],
     this.pinnedRuleIds = const {
       'concentration',
       'falling',
@@ -45,9 +47,10 @@ class CampaignProfile {
     },
     this.notesMarkdown = '',
     this.partyPurse = const PartyPurse(),
+    List<Character> migratedCharacters = const [],
     this.unparsedPartyRoster = const [],
     this.unparsedMinions = const [],
-  });
+  }) : _migratedCharacters = migratedCharacters;
 
   /// Factory creating a fresh default campaign profile.
   factory CampaignProfile.defaultProfile({
@@ -74,8 +77,7 @@ class CampaignProfile {
         containers: const [],
         activeEncounter: const [],
       ),
-      partyRoster: const [],
-      activeMinions: const [],
+      partyCharacterIds: const [],
       pinnedRuleIds: const {
         'concentration',
         'falling',
@@ -95,11 +97,11 @@ class CampaignProfile {
     DateTime? createdAt,
     DateTime? lastPlayedAt,
     RoomNodeState? roomState,
-    List<Character>? partyRoster,
-    List<AnimatedObjectInstance>? activeMinions,
+    List<String>? partyCharacterIds,
     Set<String>? pinnedRuleIds,
     String? notesMarkdown,
     PartyPurse? partyPurse,
+    List<Character>? migratedCharacters,
     List<Map<String, dynamic>>? unparsedPartyRoster,
     List<Map<String, dynamic>>? unparsedMinions,
   }) {
@@ -110,11 +112,15 @@ class CampaignProfile {
       createdAt: createdAt ?? this.createdAt,
       lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
       roomState: roomState ?? this.roomState,
-      partyRoster: partyRoster != null ? List<Character>.from(partyRoster) : this.partyRoster,
-      activeMinions: activeMinions != null ? List<AnimatedObjectInstance>.from(activeMinions) : this.activeMinions,
-      pinnedRuleIds: pinnedRuleIds != null ? Set<String>.from(pinnedRuleIds) : this.pinnedRuleIds,
+      partyCharacterIds: partyCharacterIds != null
+          ? List<String>.from(partyCharacterIds)
+          : this.partyCharacterIds,
+      pinnedRuleIds: pinnedRuleIds != null
+          ? Set<String>.from(pinnedRuleIds)
+          : this.pinnedRuleIds,
       notesMarkdown: notesMarkdown ?? this.notesMarkdown,
       partyPurse: partyPurse ?? this.partyPurse,
+      migratedCharacters: migratedCharacters ?? _migratedCharacters,
       unparsedPartyRoster: unparsedPartyRoster != null
           ? List<Map<String, dynamic>>.from(unparsedPartyRoster)
           : this.unparsedPartyRoster,
@@ -132,14 +138,7 @@ class CampaignProfile {
       'createdAt': createdAt.toIso8601String(),
       'lastPlayedAt': lastPlayedAt.toIso8601String(),
       'roomState': roomState.toMap(),
-      'partyRoster': [
-        ...partyRoster.map((c) => c.toMap()),
-        ...unparsedPartyRoster,
-      ],
-      'activeMinions': [
-        ...activeMinions.map((m) => m.toMap()),
-        ...unparsedMinions,
-      ],
+      'partyCharacterIds': partyCharacterIds,
       'pinnedRuleIds': pinnedRuleIds.toList(),
       'notesMarkdown': notesMarkdown,
       'partyPurse': partyPurse.toMap(),
@@ -157,7 +156,7 @@ class CampaignProfile {
     final lastPlayedAt = DateTime.tryParse(map['lastPlayedAt']?.toString() ?? '') ?? createdAt;
 
     final roomMap = map['roomState'] is Map ? Map<String, dynamic>.from(map['roomState'] as Map) : <String, dynamic>{};
-    final roomState = roomMap.isNotEmpty
+    var roomState = roomMap.isNotEmpty
         ? RoomNodeState.fromMap(roomMap)
         : RoomNodeState(
             roomId: map['id']?.toString() ?? 'room_default',
@@ -165,41 +164,55 @@ class CampaignProfile {
             title: '${map['name']?.toString() ?? "Campaign"} Staging',
           );
 
-    final rosterList = <Character>[];
+    final extractedIds = <String>[];
+    final extractedChars = <Character>[];
     final unparsedRoster = <Map<String, dynamic>>[];
 
-    for (final raw in (map['partyRoster'] as List? ?? [])) {
-      if (raw is Map) {
-        final itemMap = Map<String, dynamic>.from(raw);
-        try {
-          rosterList.add(Character.fromMap(itemMap));
-        } catch (e, st) {
-          LoggingService().logNonFatal(
-            e,
-            st,
-            reason: 'Failed to deserialize Character in CampaignProfile. Preserving raw payload to prevent data loss.',
-          );
-          unparsedRoster.add(itemMap);
+    // Iterate through map['partyCharacterIds'] or legacy map['partyRoster']
+    final rawParty = map['partyCharacterIds'] ?? map['partyRoster'] ?? [];
+    if (rawParty is List) {
+      for (final raw in rawParty) {
+        if (raw is String) {
+          extractedIds.add(raw);
+        } else if (raw is Map) {
+          final itemMap = Map<String, dynamic>.from(raw);
+          try {
+            final parsedChar = Character.fromMap(itemMap);
+            extractedIds.add(parsedChar.id.slug);
+            extractedChars.add(parsedChar);
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to deserialize Character in CampaignProfile. Preserving raw payload to prevent data loss.',
+            );
+            unparsedRoster.add(itemMap);
+          }
         }
       }
     }
 
-    final minionsList = <AnimatedObjectInstance>[];
+    // Ephemeral combat state migration: migrate legacy root activeMinions to roomState.activeMinions
     final unparsedMinionList = <Map<String, dynamic>>[];
-
-    for (final raw in (map['activeMinions'] as List? ?? [])) {
-      if (raw is Map) {
-        final itemMap = Map<String, dynamic>.from(raw);
-        try {
-          minionsList.add(AnimatedObjectInstance.fromMap(itemMap));
-        } catch (e, st) {
-          LoggingService().logNonFatal(
-            e,
-            st,
-            reason: 'Failed to deserialize AnimatedObjectInstance in CampaignProfile. Preserving raw payload to prevent data loss.',
-          );
-          unparsedMinionList.add(itemMap);
+    if (map['activeMinions'] is List && (map['activeMinions'] as List).isNotEmpty) {
+      final legacyMinions = <AnimatedObjectInstance>[];
+      for (final raw in (map['activeMinions'] as List)) {
+        if (raw is Map) {
+          final itemMap = Map<String, dynamic>.from(raw);
+          try {
+            legacyMinions.add(AnimatedObjectInstance.fromMap(itemMap));
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to deserialize AnimatedObjectInstance in CampaignProfile.',
+            );
+            unparsedMinionList.add(itemMap);
+          }
         }
+      }
+      if (legacyMinions.isNotEmpty && roomState.activeMinions.isEmpty) {
+        roomState = roomState.copyWith(activeMinions: legacyMinions);
       }
     }
 
@@ -223,8 +236,8 @@ class CampaignProfile {
       createdAt: createdAt,
       lastPlayedAt: lastPlayedAt,
       roomState: roomState,
-      partyRoster: rosterList,
-      activeMinions: minionsList,
+      partyCharacterIds: extractedIds,
+      migratedCharacters: extractedChars,
       unparsedPartyRoster: unparsedRoster,
       unparsedMinions: unparsedMinionList,
       pinnedRuleIds: pinned.isNotEmpty
@@ -256,8 +269,8 @@ class CampaignProfile {
           edition == other.edition &&
           notesMarkdown == other.notesMarkdown &&
           partyPurse == other.partyPurse &&
-          listEquals(partyRoster, other.partyRoster) &&
-          listEquals(activeMinions, other.activeMinions) &&
+          roomState == other.roomState &&
+          listEquals(partyCharacterIds, other.partyCharacterIds) &&
           listEquals(unparsedPartyRoster, other.unparsedPartyRoster) &&
           listEquals(unparsedMinions, other.unparsedMinions) &&
           setEquals(pinnedRuleIds, other.pinnedRuleIds);
@@ -269,12 +282,12 @@ class CampaignProfile {
       edition.hashCode ^
       notesMarkdown.hashCode ^
       partyPurse.hashCode ^
-      partyRoster.length ^
-      activeMinions.length ^
+      roomState.hashCode ^
+      partyCharacterIds.length ^
       unparsedPartyRoster.length ^
       unparsedMinions.length ^
       pinnedRuleIds.length;
 
   @override
-  String toString() => 'CampaignProfile(id: $id, name: $name, edition: ${edition.label}, roster: ${partyRoster.length}, minions: ${activeMinions.length})';
+  String toString() => 'CampaignProfile(id: $id, name: $name, edition: ${edition.label}, partyCharacterIds: ${partyCharacterIds.length}, minions: ${roomState.activeMinions.length})';
 }

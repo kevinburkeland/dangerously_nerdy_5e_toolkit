@@ -40,6 +40,17 @@ class _MockPersistenceService implements CharacterPersistenceService {
     roster.removeWhere((c) => c.id.slug == slug);
     return roster;
   }
+
+  @override
+  Future<List<Character>> getCharactersByIds(List<String> ids) async =>
+      roster.where((c) => ids.contains(c.id.slug)).toList();
+
+  @override
+  Future<void> saveCharacters(List<Character> characters) async {
+    for (final c in characters) {
+      await saveCharacter(c);
+    }
+  }
 }
 
 void main() {

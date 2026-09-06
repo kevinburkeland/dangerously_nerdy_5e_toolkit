@@ -3,16 +3,19 @@ import '../../models/domain/character_models.dart';
 
 /// HUD widget rendering party vital statistics (HP, AC, PP, Spell Slots, Levels).
 class DmDashboardPartyHud extends StatelessWidget {
-  final List<Character> partyRoster;
+  final List<Character> partyCharacters;
   final ValueChanged<Character>? onSelectCharacter;
   final VoidCallback? onAddCharacter;
 
   const DmDashboardPartyHud({
     super.key,
-    required this.partyRoster,
+    List<Character>? partyCharacters,
+    List<Character>? partyRoster,
     this.onSelectCharacter,
     this.onAddCharacter,
-  });
+  }) : partyCharacters = partyCharacters ?? partyRoster ?? const [];
+
+  List<Character> get partyRoster => partyCharacters;
 
   Color _getHpColor(int current, int max) {
     if (current <= 0) return Colors.red.shade900;
