@@ -332,6 +332,7 @@ class SrdFeatureOptions {
 
   static List<FeatureOption> _customPactBoons = [];
   static List<FeatureOption> _customInvocations = [];
+  static List<FeatureOption> _customInfusions = [];
 
   /// Dynamic list of all available Pact Boons (Base SRD/TCE + Custom Homebrew)
   static List<FeatureOption> get warlockPactBoons => [
@@ -351,13 +352,19 @@ class SrdFeatureOptions {
         ...warlockPactBoons,
       ];
 
-  /// All feature options across all classes, custom invocations, and pact boons
+  /// Dynamic list of all custom Artificer Infusions (from homebrew / compendiums)
+  static List<FeatureOption> get artificerInfusions => [
+        ..._customInfusions,
+      ];
+
+  /// All feature options across all classes, custom invocations, pact boons, and infusions
   static List<FeatureOption> get allOptions => [
         ...fightingStyles,
         ...clericDivineOrders,
         ...druidPrimalOrders,
         ...warlockPactBoons,
         ...warlockInvocations,
+        ...artificerInfusions,
       ];
 
   /// Sets the list of custom homebrew Pact Boons
@@ -370,6 +377,11 @@ class SrdFeatureOptions {
     _customInvocations = List<FeatureOption>.from(custom);
   }
 
+  /// Sets the list of custom homebrew Artificer Infusions
+  static void setCustomInfusions(List<FeatureOption> custom) {
+    _customInfusions = List<FeatureOption>.from(custom);
+  }
+
   /// Adds or replaces a custom homebrew invocation
   static void addCustomInvocation(FeatureOption opt) {
     _customInvocations.removeWhere((o) => o.id == opt.id);
@@ -379,6 +391,17 @@ class SrdFeatureOptions {
   /// Removes a custom homebrew invocation by id
   static void removeCustomInvocation(String id) {
     _customInvocations.removeWhere((o) => o.id == id);
+  }
+
+  /// Adds or replaces a custom homebrew infusion
+  static void addCustomInfusion(FeatureOption opt) {
+    _customInfusions.removeWhere((o) => o.id == opt.id);
+    _customInfusions.add(opt);
+  }
+
+  /// Removes a custom homebrew infusion by id
+  static void removeCustomInfusion(String id) {
+    _customInfusions.removeWhere((o) => o.id == id);
   }
 }
 

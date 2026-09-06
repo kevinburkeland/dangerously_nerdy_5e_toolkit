@@ -293,6 +293,29 @@ class HomebrewPersistenceService {
             ))
         .toList();
     SrdFeatureOptions.setCustomInvocations(customInvocations);
+
+    final customInfusions = others
+        .where((e) {
+          final cat = e.category.toLowerCase();
+          final isPactBoon = cat.contains('pact boon') || cat.contains('pb') || e.name.toLowerCase().startsWith('pact of the');
+          if (isPactBoon) return false;
+          final isInvocation = cat.contains('invocation') ||
+              cat.contains('ei') ||
+              e.customProperties['featureType']?.toString().toUpperCase().contains('EI') == true;
+          if (isInvocation) return false;
+          return cat.contains('infusion') ||
+              cat.contains('ai') ||
+              e.customProperties['featureType']?.toString().toUpperCase().contains('AI') == true ||
+              e.customProperties['featureType']?.toString().toUpperCase().contains('INF') == true;
+        })
+        .map((e) => FeatureOption(
+              id: e.id.slug,
+              name: e.name,
+              descriptionMarkdown: e.descriptionMarkdown,
+              customProperties: e.customProperties,
+            ))
+        .toList();
+    SrdFeatureOptions.setCustomInfusions(customInfusions);
   }
 
   /// Converts a [Spell] domain entity to a [SpellItem] for [SpellbookLibrary].

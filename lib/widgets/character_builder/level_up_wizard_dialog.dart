@@ -242,6 +242,37 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     super.dispose();
   }
 
+  Set<String> _getAllAlreadySelectedFeatureOptionIds({String? excludeDecisionId}) {
+    final ids = <String>{};
+    final existing = widget.character.progression.getAllSelectedFeatureOptions();
+    for (final list in existing.values) {
+      for (final id in list) {
+        ids.add(id.toLowerCase().trim());
+      }
+    }
+    for (final entry in _selectedFeatureOptions.entries) {
+      if (excludeDecisionId != null && entry.key == excludeDecisionId) continue;
+      for (final id in entry.value) {
+        ids.add(id.toLowerCase().trim());
+      }
+    }
+    if (widget.character.customProperties.containsKey('featInvocationChoice')) {
+      ids.add(widget.character.customProperties['featInvocationChoice'].toString().toLowerCase().trim());
+    }
+    return ids;
+  }
+
+  bool _isOptionRepeatable(FeatureOption opt) {
+    if (opt.customProperties['repeatable'] == true || opt.grants['repeatable'] == true) {
+      return true;
+    }
+    final desc = opt.descriptionMarkdown.toLowerCase();
+    if (desc.contains('you can take this') || (desc.contains('you can choose this') && desc.contains('more than once'))) {
+      return true;
+    }
+    return false;
+  }
+
   List<FeatureOption> _getEligibleInvocations(Feat feat) {
     final character = widget.character;
     final isWarlock = character.progression.classes.any((c) => c.classRef.slug.toLowerCase() == 'warlock') ||
@@ -250,8 +281,16 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final warlockLevel = (warlockClass?.level ?? 0) + (_selectedClassSlug.toLowerCase() == 'warlock' ? 1 : 0);
     final selectedPacts = character.progression.classes.expand((c) => c.selectedFeatureOptions.values.expand((opts) => opts));
     final knownSpells = {...character.spellsKnown.map((s) => s.slug), ..._newSpells};
+    final alreadySelected = _getAllAlreadySelectedFeatureOptionIds();
 
     return SrdFeatureOptions.warlockInvocations.where((opt) {
+      if (!_isOptionRepeatable(opt)) {
+        final optId = opt.id.toLowerCase().trim();
+        final optName = opt.name.toLowerCase().trim();
+        if (alreadySelected.contains(optId) || alreadySelected.contains(optName)) {
+          return false;
+        }
+      }
       final eval = feat.evaluateInvocationPrerequisite(
         opt,
         isWarlock: isWarlock,
@@ -1109,6 +1148,18 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           ...decisions.map((decision) {
             final selected = _selectedFeatureOptions[decision.id] ??= [];
 
+            final alreadySelected = _getAllAlreadySelectedFeatureOptionIds(excludeDecisionId: decision.id);
+            final eligibleOptions = decision.availableOptions.where((opt) {
+              if (selected.contains(opt.id)) return true;
+              if (_isOptionRepeatable(opt)) return true;
+              final optId = opt.id.toLowerCase().trim();
+              final optName = opt.name.toLowerCase().trim();
+              if (alreadySelected.contains(optId) || alreadySelected.contains(optName)) {
+                return false;
+              }
+              return true;
+            }).toList();
+
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(14),
@@ -1151,7 +1202,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: decision.availableOptions.map((opt) {
+                    children: eligibleOptions.map((opt) {
                       final isSelected = selected.contains(opt.id);
                       final eval = opt.prerequisite.evaluate(
                         classLevel: _targetClassNewLevel,
@@ -1680,7 +1731,13 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                 if (feat.hasFightingStyleChoice) ...[
                   const SizedBox(height: 12),
                   () {
-                    const styles = SrdFeatureOptions.fightingStyles;
+                    final alreadySelected = _getAllAlreadySelectedFeatureOptionIds();
+                    final eligibleStyles = SrdFeatureOptions.fightingStyles.where((s) {
+                      final sId = s.id.toLowerCase().trim();
+                      final sName = s.name.toLowerCase().trim();
+                      return !alreadySelected.contains(sId) && !alreadySelected.contains(sName);
+                    }).toList();
+                    final styles = eligibleStyles.isNotEmpty ? eligibleStyles : SrdFeatureOptions.fightingStyles;
                     final effectiveVal = styles.any((o) => o.id == _selectedFeatOption)
                         ? _selectedFeatOption
                         : (styles.isNotEmpty ? styles.first.id : null);
@@ -1906,9 +1963,44 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
           s.id.toLowerCase().contains(q);
     }).toList();
 
-    final existingCantripSlugs = widget.character.cantrips.map((c) => c.slug).toSet();
-    final availableCantrips = filtered.where((s) => s.level == 0 && !existingCantripSlugs.contains(s.id)).toList();
-    final availableLeveled = filtered.where((s) => s.level > 0).toList();
+    final existingCantripSlugs = <String>{};
+    for (final c in widget.character.cantrips) {
+      existingCantripSlugs.add(c.slug.toLowerCase().trim());
+      existingCantripSlugs.add(c.displayName.toLowerCase().trim());
+    }
+    final availableCantrips = filtered.where((s) {
+      if (s.level != 0) return false;
+      final id = s.id.toLowerCase().trim();
+      final name = s.getName(edition).toLowerCase().trim();
+      return !existingCantripSlugs.contains(id) && !existingCantripSlugs.contains(name);
+    }).toList();
+
+    final existingKnownOrPrepared = <String>{};
+    for (final s in widget.character.spellsKnown) {
+      if (_replacedSpellId != null && (_replacedSpellId == s.slug || _replacedSpellId == s.displayName)) {
+        continue;
+      }
+      existingKnownOrPrepared.add(s.slug.toLowerCase().trim());
+      existingKnownOrPrepared.add(s.displayName.toLowerCase().trim());
+    }
+    for (final s in widget.character.spellsPrepared) {
+      if (_replacedSpellId != null && (_replacedSpellId == s.slug || _replacedSpellId == s.displayName)) {
+        continue;
+      }
+      existingKnownOrPrepared.add(s.slug.toLowerCase().trim());
+      existingKnownOrPrepared.add(s.displayName.toLowerCase().trim());
+    }
+    for (final s in alwaysPreparedSpells) {
+      existingKnownOrPrepared.add(s.id.toLowerCase().trim());
+      existingKnownOrPrepared.add(s.getName(edition).toLowerCase().trim());
+    }
+
+    final availableLeveled = filtered.where((s) {
+      if (s.level <= 0) return false;
+      final id = s.id.toLowerCase().trim();
+      final name = s.getName(edition).toLowerCase().trim();
+      return !existingKnownOrPrepared.contains(id) && !existingKnownOrPrepared.contains(name);
+    }).toList();
 
     final previousClassLevel = math.max(0, _targetClassNewLevel - 1);
     final previousLimits = previousClassLevel > 0
@@ -1927,6 +2019,11 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     final availableMysticArcanumSpells = isMysticArcanumMilestone
         ? SpellbookLibrary.allSpells.where((s) {
             if (s.level != limits.mysticArcanumLevel) return false;
+            final id = s.id.toLowerCase().trim();
+            final name = s.getName(edition).toLowerCase().trim();
+            if (existingKnownOrPrepared.contains(id) || existingKnownOrPrepared.contains(name)) {
+              return false;
+            }
             final rules = s.getRules(edition);
             final isWarlock = rules.classes.contains(SpellClass.warlock);
             final isExpanded = SubclassSpellsLibrary.isExpandedSpell(

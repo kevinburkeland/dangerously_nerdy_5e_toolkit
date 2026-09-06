@@ -539,7 +539,25 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                   final cat = e.incomingEntity.category.toLowerCase();
                   final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
                   final isEi = cat.contains('invocation') || cat.contains('ei');
-                  return !isPb && !isEi;
+                  final isInf = cat.contains('infusion') || cat.contains('ai');
+                  return !isPb && !isEi && isInf;
+                }))
+                  _buildCategorySection(
+                    'Infusions',
+                    analysis.otherEntries.where((e) {
+                      final cat = e.incomingEntity.category.toLowerCase();
+                      final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
+                      final isEi = cat.contains('invocation') || cat.contains('ei');
+                      final isInf = cat.contains('infusion') || cat.contains('ai');
+                      return !isPb && !isEi && isInf;
+                    }).toList(),
+                  ),
+                if (analysis.otherEntries.any((e) {
+                  final cat = e.incomingEntity.category.toLowerCase();
+                  final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
+                  final isEi = cat.contains('invocation') || cat.contains('ei');
+                  final isInf = cat.contains('infusion') || cat.contains('ai');
+                  return !isPb && !isEi && !isInf;
                 }))
                   _buildCategorySection(
                     'Rules & Tables',
@@ -547,7 +565,8 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                       final cat = e.incomingEntity.category.toLowerCase();
                       final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
                       final isEi = cat.contains('invocation') || cat.contains('ei');
-                      return !isPb && !isEi;
+                      final isInf = cat.contains('infusion') || cat.contains('ai');
+                      return !isPb && !isEi && !isInf;
                     }).toList(),
                   ),
               ],

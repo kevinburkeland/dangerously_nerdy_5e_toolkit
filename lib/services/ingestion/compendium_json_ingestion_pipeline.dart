@@ -568,6 +568,7 @@ class CompendiumJsonIngestionPipeline {
       'subclassfeature', 'subclassfeatures', 'race', 'races', 'species', 'lineage', 'lineages',
       'subrace', 'subraces', 'feat', 'feats', 'background', 'backgrounds',
       'invocation', 'invocations', 'eldritchinvocation', 'eldritchinvocations',
+      'infusion', 'infusions', 'artificerinfusion', 'artificerinfusions',
       'optionalfeature', 'optionalfeatures', 'table', 'tables', 'reward', 'rewards',
       'condition', 'conditions', 'hazard', 'hazards', 'variantrule', 'variantrules', 'rule', 'rules',
       'monsterfluff', 'spellfluff', 'itemfluff', 'racefluff', 'classfluff', 'featfluff', 'backgroundfluff', 'fluff',
@@ -811,6 +812,15 @@ class CompendiumJsonIngestionPipeline {
       }
       otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: category));
     }, 'Eldritch Invocation');
+
+    ingestKeys([
+      'infusion',
+      'infusions',
+      'artificerinfusion',
+      'artificerinfusions',
+    ], (raw) {
+      otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Infusion'));
+    }, 'Infusion');
 
     // Other Compendium Entities & Optional Features
     ingestKeys(['optionalfeature', 'optionalfeatures'], (raw) {
