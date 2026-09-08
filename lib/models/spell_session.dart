@@ -380,7 +380,7 @@ class SpellSession {
     return {
       'presetId': activePreset.id,
       'spellLevel': spellLevel,
-      'activeObjects': activeObjects.map((o) => o.toMap()).toList(),
+      'activeObjects': activeObjects.map((o) => AnimatedObjectDto.fromDomain(o).toMap()).toList(),
     };
   }
 
@@ -395,7 +395,7 @@ class SpellSession {
     if (rawObjects is List) {
       objects = rawObjects
           .whereType<Map>()
-          .map((m) => AnimatedObjectInstance.fromMap(Map<String, dynamic>.from(m)))
+          .map((m) => AnimatedObjectDto.fromMap(Map<String, dynamic>.from(m)).toDomain())
           .toList();
     }
     return SpellSession(

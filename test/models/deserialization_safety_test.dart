@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/campaign_profile.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
@@ -81,13 +82,13 @@ void main() {
       };
 
       // Deserialization should not throw and should safely store unparsed payload
-      final profile = CampaignProfile.fromMap(rawCampaignMap);
+      final profile = CampaignProfileDto.fromMap(rawCampaignMap).toDomain();
       expect(profile.partyCharacterIds.isEmpty, isTrue);
       expect(profile.unparsedPartyRoster.length, equals(1));
       expect(profile.unparsedPartyRoster.first['id'], equals('corrupt_char_99'));
 
       // Reserialization outputs partyCharacterIds
-      final serializedMap = profile.toMap();
+      final serializedMap = CampaignProfileDto.fromDomain(profile).toMap();
       final rosterOut = serializedMap['partyCharacterIds'] as List;
       expect(rosterOut.isEmpty, isTrue);
     });
@@ -106,8 +107,8 @@ void main() {
         'activeMinions': [malformedMinionPayload],
       };
 
-      final profile = CampaignProfile.fromMap(rawCampaignMap);
-      expect(profile.roomState.activeMinions.length, equals(1)); // AnimatedObjectInstance.fromMap falls back safely
+      final profile = CampaignProfileDto.fromMap(rawCampaignMap).toDomain();
+      expect(profile.roomState.activeMinions.length, equals(1)); // AnimatedObjectDto.fromMap falls back safely
     });
   });
 

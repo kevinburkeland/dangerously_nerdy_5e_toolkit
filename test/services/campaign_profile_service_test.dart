@@ -65,8 +65,8 @@ void main() {
         notesMarkdown: '# Session 1 Log\nThe party entered the Barovian woods.',
       );
 
-      final map = profile.toMap();
-      final restored = CampaignProfile.fromMap(map);
+      final map = CampaignProfileDto.fromDomain(profile).toMap();
+      final restored = CampaignProfileDto.fromMap(map).toDomain();
 
       expect(restored.id, equals('camp_test_101'));
       expect(restored.name, equals('The Vampire Must Fall'));
@@ -120,7 +120,7 @@ void main() {
         'notesMarkdown': '# Old Notes',
       };
 
-      final profile = CampaignProfile.fromMap(legacyPayload);
+      final profile = CampaignProfileDto.fromMap(legacyPayload).toDomain();
 
       // Verify migration gateway extracted character and minion
       expect(profile.partyCharacterIds, equals(['fighter_legacy']));
@@ -130,7 +130,7 @@ void main() {
       expect(profile.roomState.activeMinions.first.name, equals('Silver Coin'));
 
       // Reserialization must output flat structure
-      final flattened = profile.toMap();
+      final flattened = CampaignProfileDto.fromDomain(profile).toMap();
       expect(flattened['partyCharacterIds'], equals(['fighter_legacy']));
       expect(flattened.containsKey('partyRoster'), isFalse);
       expect(flattened.containsKey('activeMinions'), isFalse);

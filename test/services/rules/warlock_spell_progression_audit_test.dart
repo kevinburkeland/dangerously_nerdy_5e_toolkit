@@ -384,6 +384,11 @@ class _MockAuditPersistence implements CharacterPersistenceService {
   Future<void> saveActiveCharacterId(String slug) async {}
 
   @override
+  Future<void> clearActiveCharacterId() async {
+    savedCharacter = null;
+  }
+
+  @override
   Future<void> saveRoster(List<Character> newRoster) async {
     roster = List.from(newRoster);
   }

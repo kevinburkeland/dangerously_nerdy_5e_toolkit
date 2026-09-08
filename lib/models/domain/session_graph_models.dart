@@ -242,7 +242,7 @@ class RoomNodeState {
         'entityLinks': entityLinks.map((e) => e.toMap()).toList(),
         'containers': containers.map((c) => c.toMap()).toList(),
         'activeEncounter': activeEncounter.map((e) => e.toMap()).toList(),
-        'activeMinions': activeMinions.map((m) => m.toMap()).toList(),
+        'activeMinions': activeMinions.map((m) => AnimatedObjectDto.fromDomain(m).toMap()).toList(),
         'customProperties': customProperties,
       };
 
@@ -253,7 +253,7 @@ class RoomNodeState {
       if (raw is Map) {
         try {
           minionsList.add(
-              AnimatedObjectInstance.fromMap(Map<String, dynamic>.from(raw)));
+              AnimatedObjectDto.fromMap(Map<String, dynamic>.from(raw)).toDomain());
         } catch (_) {}
       }
     }

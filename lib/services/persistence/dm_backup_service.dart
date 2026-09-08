@@ -104,7 +104,7 @@ class DmBackupService {
       'appVersion': currentAppVersion,
       'exportedAt': DateTime.now().toIso8601String(),
       'type': 'campaign_profile',
-      'campaign': profile.toMap(),
+      'campaign': CampaignProfileDto.fromDomain(profile).toMap(),
     };
     return const JsonEncoder.withIndent('  ').convert(payload);
   }
@@ -137,7 +137,7 @@ class DmBackupService {
       'appVersion': currentAppVersion,
       'exportedAt': DateTime.now().toIso8601String(),
       'type': 'full_system_snapshot',
-      'campaignProfiles': allProfiles.map((p) => p.toMap()).toList(),
+      'campaignProfiles': allProfiles.map((p) => CampaignProfileDto.fromDomain(p).toMap()).toList(),
       'dicePresets': customPresets.map((p) => p.toMap()).toList(),
       'dprProfiles': dprProfiles.map((p) => p.toMap()).toList(),
       'customSpells': customSpells.map((s) => s.toMap()).toList(),
@@ -179,7 +179,7 @@ class DmBackupService {
         return null;
       }
 
-      final profile = CampaignProfile.fromMap(campaignMap);
+      final profile = CampaignProfileDto.fromMap(campaignMap).toDomain();
       if (profile.migratedCharacters.isNotEmpty) {
         await CharacterPersistenceService().saveCharacters(profile.migratedCharacters);
       }
@@ -223,7 +223,7 @@ class DmBackupService {
       for (final p in profilesArr) {
         if (p is Map<String, dynamic>) {
           try {
-            final profile = CampaignProfile.fromMap(p);
+            final profile = CampaignProfileDto.fromMap(p).toDomain();
             await campaignService.saveProfileImmediate(profile);
           } catch (_) {}
         }

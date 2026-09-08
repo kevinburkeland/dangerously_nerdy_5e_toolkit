@@ -1,4 +1,9 @@
 import 'package:flutter/foundation.dart';
+import '../application/services/combat_encounter_service.dart';
+import '../domain/ports/i_campaign_repository.dart';
+import '../domain/ports/i_character_repository.dart';
+import '../infrastructure/repositories/local_campaign_repository.dart';
+import '../infrastructure/repositories/local_character_repository.dart';
 import '../models/animated_object.dart';
 import '../models/campaign_profile.dart';
 import '../models/dm_screen_data.dart';
@@ -11,12 +16,12 @@ import '../data/acl/character_telemetry_dto.dart';
 import '../data/acl/character_telemetry_resolver.dart';
 
 /// State management controller for DM Dashboard.
-/// Implements relational character loading via foreign key pointers (`partyCharacterIds`),
-/// isolating high-frequency combat mutations (HP, spell slots) to O(1) character saves
-/// without re-serializing heavy campaign metadata like `notesMarkdown`.
+/// Refactored to depend on abstract Ports ([ICampaignRepository], [ICharacterRepository])
+/// and Application Services ([CombatEncounterService]) in alignment with Hexagonal Architecture.
 class DmDashboardController extends ChangeNotifier {
-  final CampaignProfileService _campaignProfileService;
-  final CharacterPersistenceService _characterPersistenceService;
+  final ICampaignRepository _campaignProfileService;
+  final ICharacterRepository _characterPersistenceService;
+  final CombatEncounterService _combatEncounterService;
 
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
@@ -27,12 +32,24 @@ class DmDashboardController extends ChangeNotifier {
   int _currentRound = 1;
 
   DmDashboardController({
+    ICampaignRepository? campaignRepository,
+    ICharacterRepository? characterRepository,
+    CombatEncounterService? combatEncounterService,
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
   })  : _campaignProfileService =
-            campaignProfileService ?? CampaignProfileService(),
+            campaignRepository ?? campaignProfileService ?? LocalCampaignRepository(),
         _characterPersistenceService =
-            characterPersistenceService ?? CharacterPersistenceService();
+            characterRepository ?? characterPersistenceService ?? LocalCharacterRepository(),
+        _combatEncounterService = combatEncounterService ??
+            CombatEncounterService(
+              characterRepo: characterRepository ?? characterPersistenceService ?? LocalCharacterRepository(),
+              campaignRepo: campaignRepository ?? campaignProfileService ?? LocalCampaignRepository(),
+            );
+
+  CombatEncounterService get combatEncounterService => _combatEncounterService;
+  ICampaignRepository get campaignRepository => _campaignProfileService;
+  ICharacterRepository get characterRepository => _characterPersistenceService;
 
   CampaignProfile? get activeProfile => _activeProfile;
   List<CampaignProfile> get allProfiles => _allProfiles;
@@ -105,7 +122,7 @@ class DmDashboardController extends ChangeNotifier {
 
     _allProfiles = await _campaignProfileService.loadAllProfiles();
 
-    CampaignProfile active;
+    CampaignProfile? active;
     if (initialCampaignId != null) {
       final req = initialCampaignId.trim().toUpperCase();
       active = _allProfiles.where((p) {
@@ -118,7 +135,7 @@ class DmDashboardController extends ChangeNotifier {
       active = await _campaignProfileService.getActiveProfile();
     }
 
-    _activeProfile = active;
+    _activeProfile = active ?? (_allProfiles.isNotEmpty ? _allProfiles.first : CampaignProfile.defaultProfile());
     await _loadPartyCharacters();
 
     _isLoading = false;
@@ -127,7 +144,7 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Switches active campaign profile and resolves relational characters.
   Future<void> switchProfile(String profileId) async {
-    await _campaignProfileService.switchProfile(profileId);
+    await _campaignProfileService.setActiveProfileId(profileId);
     _activeProfile = await _campaignProfileService.getActiveProfile();
     _allProfiles = _campaignProfileService.allProfiles;
     await _loadPartyCharacters();
@@ -155,15 +172,13 @@ class DmDashboardController extends ChangeNotifier {
     final char = _partyCharactersMap[characterId];
     if (char == null) return;
 
-    final curHp = (char.resources.currentHp + delta).clamp(0, 999);
-    final updatedPool = char.resources.copyWith(currentHp: curHp);
-    final updatedChar = char.copyWith(resources: updatedPool);
+    final updatedChar = await _combatEncounterService.modifyCharacterHp(
+      character: char,
+      delta: delta,
+    );
 
     _partyCharactersMap[characterId] = updatedChar;
     notifyListeners();
-
-    // Persist only the single character entity
-    await _characterPersistenceService.saveCharacter(updatedChar);
   }
 
   /// Toggles a character's spell slot and persists ONLY to [CharacterPersistenceService].
@@ -244,52 +259,34 @@ class DmDashboardController extends ChangeNotifier {
   Future<void> modifyMinionHp(String minionId, int delta) async {
     if (_activeProfile == null) return;
 
-    final minions = _activeProfile!.roomState.activeMinions.map((m) {
-      if (m.id != minionId) return m;
-      if (delta < 0) {
-        m.takeDamage(delta.abs());
-      } else {
-        m.heal(delta);
-      }
-      return m;
-    }).toList();
-
-    final updatedRoom =
-        _activeProfile!.roomState.copyWith(activeMinions: minions);
-    _activeProfile = _activeProfile!.copyWith(roomState: updatedRoom);
+    _activeProfile = await _combatEncounterService.modifyMinionHp(
+      profile: _activeProfile!,
+      minionId: minionId,
+      delta: delta,
+    );
     notifyListeners();
-
-    await _campaignProfileService.saveProfile(_activeProfile!);
   }
 
   /// Adds a new animated object minion to [RoomNodeState].
   Future<void> addMinion(AnimatedObjectInstance minion) async {
     if (_activeProfile == null) return;
 
-    final minions =
-        List<AnimatedObjectInstance>.from(_activeProfile!.roomState.activeMinions)
-          ..add(minion);
-    final updatedRoom =
-        _activeProfile!.roomState.copyWith(activeMinions: minions);
-    _activeProfile = _activeProfile!.copyWith(roomState: updatedRoom);
+    _activeProfile = await _combatEncounterService.addMinion(
+      profile: _activeProfile!,
+      minion: minion,
+    );
     notifyListeners();
-
-    await _campaignProfileService.saveProfile(_activeProfile!);
   }
 
   /// Removes an animated object minion from [RoomNodeState].
   Future<void> removeMinion(String minionId) async {
     if (_activeProfile == null) return;
 
-    final minions =
-        List<AnimatedObjectInstance>.from(_activeProfile!.roomState.activeMinions)
-          ..removeWhere((m) => m.id == minionId);
-    final updatedRoom =
-        _activeProfile!.roomState.copyWith(activeMinions: minions);
-    _activeProfile = _activeProfile!.copyWith(roomState: updatedRoom);
+    _activeProfile = await _combatEncounterService.removeMinion(
+      profile: _activeProfile!,
+      minionId: minionId,
+    );
     notifyListeners();
-
-    await _campaignProfileService.saveProfile(_activeProfile!);
   }
 
   // --- Campaign Profile Operations ---

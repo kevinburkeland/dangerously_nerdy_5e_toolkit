@@ -186,8 +186,8 @@ void main() {
         customAccentColor: const Color(0xFFFF5722),
       );
 
-      final map = obj.toMap();
-      final restored = AnimatedObjectInstance.fromMap(map);
+      final map = AnimatedObjectDto.fromDomain(obj).toMap();
+      final restored = AnimatedObjectDto.fromMap(map).toDomain();
 
       expect(restored.id, obj.id);
       expect(restored.name, obj.name);

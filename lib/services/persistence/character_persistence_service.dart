@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/ports/i_character_repository.dart';
 import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
 import '../rules/character_homebrew_validator.dart';
 import 'app_database_service.dart';
 
 /// Persistence service for saving, loading, and deleting characters in local storage.
-/// Backed by Hive / IndexedDB via [AppDatabaseService], bypassing 5MB localStorage limits.
-class CharacterPersistenceService {
+/// Implements [ICharacterRepository] for domain port compatibility.
+class CharacterPersistenceService implements ICharacterRepository {
   static const String _kSavedRosterKey = 'saved_characters_roster_v1';
   static const String _kActiveCharacterIdKey = 'saved_active_character_id_v1';
 
@@ -20,6 +21,7 @@ class CharacterPersistenceService {
 
   /// Loads all saved characters from local database.
   /// Automatically migrates legacy records from SharedPreferences if database is unseeded.
+  @override
   Future<List<Character>> loadCharacters() async {
     try {
       // 1. Check local IndexedDB / Hive database (if open)
@@ -70,6 +72,7 @@ class CharacterPersistenceService {
   }
 
   /// Saves the complete character roster to local database and syncs to SharedPreferences for safety.
+  @override
   Future<void> saveRoster(List<Character> roster) async {
     try {
       final listMaps = roster.map((c) => c.toMap()).toList();
@@ -98,6 +101,7 @@ class CharacterPersistenceService {
   }
 
   /// Saves or updates a single character in the roster.
+  @override
   Future<List<Character>> saveCharacter(Character character) async {
     var charToSave = character;
     if (charToSave.customProperties['usedHomebrew'] == null) {
@@ -121,6 +125,7 @@ class CharacterPersistenceService {
   }
 
   /// Fetches characters matching the given IDs/slugs, preserving the order of the requested IDs.
+  @override
   Future<List<Character>> getCharactersByIds(List<String> ids) async {
     if (ids.isEmpty) return <Character>[];
     final all = await loadCharacters();
@@ -129,12 +134,14 @@ class CharacterPersistenceService {
   }
 
   /// Fetches a single character by ID/slug, or null if not found.
+  @override
   Future<Character?> getCharacter(String id) async {
     final list = await getCharactersByIds([id]);
     return list.firstOrNull;
   }
 
   /// Saves multiple characters to persistence in bulk.
+  @override
   Future<void> saveCharacters(List<Character> characters) async {
     if (characters.isEmpty) return;
     final roster = List<Character>.from(await loadCharacters());
@@ -150,6 +157,7 @@ class CharacterPersistenceService {
   }
 
   /// Deletes a character by slug from the roster.
+  @override
   Future<List<Character>> deleteCharacter(String characterSlug) async {
     final roster = List<Character>.from(await loadCharacters());
     roster.removeWhere((c) => c.id.slug == characterSlug);
@@ -158,6 +166,7 @@ class CharacterPersistenceService {
   }
 
   /// Loads the active character ID.
+  @override
   Future<String?> loadActiveCharacterId() async {
     try {
       final dbVal = _db.get(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
@@ -172,11 +181,24 @@ class CharacterPersistenceService {
   }
 
   /// Saves the active character ID.
+  @override
   Future<void> saveActiveCharacterId(String slug) async {
     try {
       await _db.put(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey, slug);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kActiveCharacterIdKey, slug);
+    } catch (e) {
+      // Non-fatal
+    }
+  }
+
+  /// Clears the active character ID.
+  @override
+  Future<void> clearActiveCharacterId() async {
+    try {
+      await _db.delete(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kActiveCharacterIdKey);
     } catch (e) {
       // Non-fatal
     }

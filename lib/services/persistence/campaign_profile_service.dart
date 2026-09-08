@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/campaign_profile.dart';
+import '../../domain/models/campaign_profile.dart';
+import '../../domain/ports/i_campaign_repository.dart';
+import '../../infrastructure/dtos/campaign_profile_dto.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_event.dart';
@@ -12,8 +14,8 @@ import 'app_database_service.dart';
 import 'character_persistence_service.dart';
 
 /// Centralized service coordinator for multi-campaign profile lifecycles and debounced persistence.
-/// Backed by Hive / IndexedDB via [AppDatabaseService], bypassing 5MB localStorage limits.
-class CampaignProfileService extends ChangeNotifier {
+/// Implements [ICampaignRepository] for domain port compatibility.
+class CampaignProfileService extends ChangeNotifier implements ICampaignRepository {
   static const String profileKeyPrefix = 'dn5e_campaign_profile_';
   static const String profileIndexKey = 'dn5e_campaign_profile_index';
   static const String activeProfileIdKey = 'dn5e_campaign_active_id';
@@ -27,12 +29,16 @@ class CampaignProfileService extends ChangeNotifier {
   String? _activeProfileId;
   bool _initialized = false;
 
+  @override
   String? get activeProfileId => _activeProfileId;
+  @override
   CampaignProfile? get activeProfile =>
       _activeProfileId != null ? _memoryCache[_activeProfileId] : null;
+  @override
   List<CampaignProfile> get allProfiles => _memoryCache.values.toList();
 
   /// Loads all saved campaign profiles from persistent storage.
+  @override
   Future<List<CampaignProfile>> loadAllProfiles() async {
     try {
       List<String> indexList = [];
@@ -66,7 +72,7 @@ class CampaignProfileService extends ChangeNotifier {
 
         if (rawJson != null && rawJson.isNotEmpty) {
           try {
-            final profile = CampaignProfile.fromJson(rawJson);
+            final profile = CampaignProfileDto.fromJson(rawJson).toDomain();
             if (profile.migratedCharacters.isNotEmpty) {
               await CharacterPersistenceService().saveCharacters(profile.migratedCharacters);
               await _persistProfileToDisk(profile);
@@ -134,7 +140,16 @@ class CampaignProfileService extends ChangeNotifier {
     return [defaultProfile];
   }
 
+  /// Retrieves a campaign profile by ID from cache or persistent storage.
+  @override
+  Future<CampaignProfile?> getProfile(String id) async {
+    if (_memoryCache.containsKey(id)) return _memoryCache[id];
+    final all = await loadAllProfiles();
+    return all.where((p) => p.id == id).firstOrNull;
+  }
+
   /// Gets the currently active campaign profile, initializing if empty.
+  @override
   Future<CampaignProfile> getActiveProfile() async {
     if (!_initialized || _memoryCache.isEmpty) {
       await loadAllProfiles();
@@ -179,6 +194,7 @@ class CampaignProfileService extends ChangeNotifier {
   }
 
   /// Saves a campaign profile with debounced asynchronous persistence.
+  @override
   Future<void> saveProfile(CampaignProfile profile) async {
     final updated = profile.copyWith(lastPlayedAt: DateTime.now());
     _memoryCache[updated.id] = updated;
@@ -212,6 +228,7 @@ class CampaignProfileService extends ChangeNotifier {
   }
 
   /// Saves and flushes a campaign profile directly to disk without debouncing.
+  @override
   Future<void> saveProfileImmediate(CampaignProfile profile) async {
     final updated = profile.copyWith(lastPlayedAt: DateTime.now());
     _memoryCache[updated.id] = updated;
@@ -222,7 +239,7 @@ class CampaignProfileService extends ChangeNotifier {
   /// Internal disk persistence implementation
   Future<void> _persistProfileToDisk(CampaignProfile profile) async {
     try {
-      final jsonStr = profile.toJson();
+      final jsonStr = CampaignProfileDto.fromDomain(profile).toJson();
       final prefs = await SharedPreferences.getInstance();
       var indexList = prefs.getStringList(profileIndexKey) ?? <String>[];
 
@@ -278,6 +295,10 @@ class CampaignProfileService extends ChangeNotifier {
     }
   }
 
+  /// Sets the active campaign profile ID and persists the selection.
+  @override
+  Future<void> setActiveProfileId(String id) => switchProfile(id);
+
   /// Clones an existing campaign profile with an isolated ID and custom title.
   Future<CampaignProfile> cloneProfile(String profileId, [String? newName]) async {
     CampaignProfile? source = _memoryCache[profileId];
@@ -309,6 +330,7 @@ class CampaignProfileService extends ChangeNotifier {
   }
 
   /// Deletes a campaign profile by ID from memory and disk.
+  @override
   Future<void> deleteProfile(String profileId) async {
     try {
       _memoryCache.remove(profileId);

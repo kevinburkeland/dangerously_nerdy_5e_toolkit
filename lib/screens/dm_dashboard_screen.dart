@@ -526,40 +526,20 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   void _nextTurn() {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-    final participants = List<EncounterParticipant>.from(_activeProfile!.roomState.activeEncounter);
-    if (participants.isEmpty) return;
-
-    final activeIndex = participants.indexWhere((p) => p.isActiveTurn);
-    int nextIndex = (activeIndex + 1) % participants.length;
-
-    if (nextIndex == 0 && activeIndex != -1) {
-      setState(() => _currentRound++);
-    }
-
-    final updated = participants.asMap().entries.map((entry) {
-      final i = entry.key;
-      final p = entry.value;
-      return p.copyWith(isActiveTurn: i == nextIndex);
-    }).toList();
-
+    final updated = _controller.combatEncounterService.nextTurn(
+      _activeProfile!.roomState.activeEncounter,
+      onNewRound: (round) => setState(() => _currentRound = round),
+      currentRound: _currentRound,
+    );
     _updateEncounter(updated);
   }
 
   void _prevTurn() {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-    final participants = List<EncounterParticipant>.from(_activeProfile!.roomState.activeEncounter);
-    if (participants.isEmpty) return;
-
-    final activeIndex = participants.indexWhere((p) => p.isActiveTurn);
-    int prevIndex = activeIndex <= 0 ? participants.length - 1 : activeIndex - 1;
-
-    final updated = participants.asMap().entries.map((entry) {
-      final i = entry.key;
-      final p = entry.value;
-      return p.copyWith(isActiveTurn: i == prevIndex);
-    }).toList();
-
+    final updated = _controller.combatEncounterService.prevTurn(
+      _activeProfile!.roomState.activeEncounter,
+    );
     _updateEncounter(updated);
   }
 
@@ -575,62 +555,23 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
   void _applyDamageOrHeal(String participantId, int delta) {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-
-    final participants = _activeProfile!.roomState.activeEncounter.map((p) {
-      if (p.participantId != participantId) return p;
-
-      if (delta < 0) {
-        // Damage: Deplete Temp HP first
-        int dmg = delta.abs();
-        int curTemp = p.tempHp;
-        int curHp = p.currentHp;
-
-        if (curTemp > 0) {
-          if (dmg <= curTemp) {
-            curTemp -= dmg;
-            dmg = 0;
-          } else {
-            dmg -= curTemp;
-            curTemp = 0;
-          }
-        }
-
-        curHp = (curHp - dmg).clamp(0, p.maxHp);
-        final isDefeated = curHp <= 0;
-        return p.copyWith(
-          currentHp: curHp,
-          tempHp: curTemp,
-          isDefeated: isDefeated,
-        );
-      } else {
-        // Healing: Clamp to maxHp, doesn't modify tempHp
-        final curHp = (p.currentHp + delta).clamp(0, p.maxHp);
-        return p.copyWith(
-          currentHp: curHp,
-          isDefeated: curHp <= 0,
-        );
-      }
-    }).toList();
-
-    _updateEncounter(participants);
+    final updated = _controller.combatEncounterService.applyParticipantDamageOrHeal(
+      participants: _activeProfile!.roomState.activeEncounter,
+      participantId: participantId,
+      delta: delta,
+    );
+    _updateEncounter(updated);
   }
 
   void _toggleCondition(String participantId, String conditionName) {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
-
-    final participants = _activeProfile!.roomState.activeEncounter.map((p) {
-      if (p.participantId != participantId) return p;
-      final conditions = List<String>.from(p.activeConditions);
-      if (conditions.contains(conditionName)) {
-        conditions.remove(conditionName);
-      } else {
-        conditions.add(conditionName);
-      }
-      return p.copyWith(activeConditions: conditions);
-    }).toList();
-
-    _updateEncounter(participants);
+    final updated = _controller.combatEncounterService.toggleParticipantCondition(
+      participants: _activeProfile!.roomState.activeEncounter,
+      participantId: participantId,
+      conditionName: conditionName,
+    );
+    _updateEncounter(updated);
   }
 
   Future<void> _showAddCombatantDialog() async {

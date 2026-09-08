@@ -14,8 +14,9 @@ import '../models/room_roll.dart';
 import '../services/dice_room_service.dart';
 import '../services/party/campaign_registry_service.dart';
 import '../services/party/party_room_service.dart';
+import '../domain/ports/i_character_repository.dart';
+import '../infrastructure/repositories/local_character_repository.dart';
 import '../services/persistence/campaign_profile_service.dart';
-import '../services/persistence/character_persistence_service.dart';
 import '../services/persistence/debounced_storage_service.dart';
 import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
@@ -27,7 +28,7 @@ import '../utils/secure_random.dart';
 /// State controller for managing an active Character sheet, handling live stat recalculation,
 /// resource management, equipment/attunement toggles, condition management, and debounced persistence.
 class CharacterSheetController extends ChangeNotifier {
-  final CharacterPersistenceService _persistenceService;
+  final ICharacterRepository _persistenceService;
   final DebouncedStorageService _debouncedStorage;
   final ReferenceResolver? _resolver;
 
@@ -37,11 +38,11 @@ class CharacterSheetController extends ChangeNotifier {
 
   CharacterSheetController({
     required Character character,
-    CharacterPersistenceService? persistenceService,
+    ICharacterRepository? persistenceService,
     DebouncedStorageService? debouncedStorage,
     ReferenceResolver? resolver,
   })  : _character = character,
-        _persistenceService = persistenceService ?? CharacterPersistenceService(),
+        _persistenceService = persistenceService ?? LocalCharacterRepository(),
         _debouncedStorage = debouncedStorage ?? DebouncedStorageService(),
         _resolver = resolver {
     _recalculateStats();
