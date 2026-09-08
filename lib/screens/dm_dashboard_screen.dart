@@ -20,6 +20,7 @@ import '../widgets/dm_reference/rules_edition_toggle.dart';
 import '../services/persistence/character_persistence_service.dart';
 import 'character_sheet_view.dart';
 import 'rules_compendium_screen.dart';
+import '../widgets/party/party_vitality_hud.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
 class DmDashboardScreen extends StatefulWidget {
@@ -1692,28 +1693,62 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
               ],
             ),
             const Divider(height: 20),
-            if (roster.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Hero to Party Roster'),
-                    onPressed: _showAddSampleCharacterDialog,
-                  ),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: roster.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, i) {
-                  final char = roster[i];
-                  return _buildCharacterVitalityTile(char);
-                },
-              ),
+            Builder(
+              builder: (context) {
+                final remoteOnlyDisplays = _controller.resolvedTelemetryMap.values
+                    .where((disp) => !roster.any((c) => c.id.slug == disp.id || c.name == disp.name))
+                    .toList();
+
+                if (roster.isEmpty && remoteOnlyDisplays.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Hero to Party Roster'),
+                        onPressed: _showAddSampleCharacterDialog,
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (roster.isNotEmpty)
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: roster.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, i) {
+                          final char = roster[i];
+                          return _buildCharacterVitalityTile(char);
+                        },
+                      ),
+                    if (remoteOnlyDisplays.isNotEmpty) ...[
+                      if (roster.isNotEmpty) const SizedBox(height: 14),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          'REMOTE TELEMETRY MEMBERS (${remoteOnlyDisplays.length})',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      ...remoteOnlyDisplays.map((disp) => PartyVitalityHud(
+                            character: disp,
+                            isCompact: true,
+                          )),
+                    ],
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),

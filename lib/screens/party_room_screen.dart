@@ -19,6 +19,8 @@ import '../services/persistence/character_persistence_service.dart';
 import 'character_sheet_view.dart';
 import 'dice_roller_screen.dart';
 import 'dm_dashboard_screen.dart';
+import '../data/acl/character_telemetry_dto.dart';
+import '../widgets/party/party_vitality_hud.dart';
 
 /// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,
 /// Coin Purse with Party Share distribution, Live Dice Feed, and History/Audit Log with Host Trash Recovery.
@@ -790,6 +792,42 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
               ],
             ),
           ),
+
+          // Live combat vitality telemetry if linked
+          if (session != null) ...[
+            Builder(
+              builder: (context) {
+                CharacterTelemetryDto? activeTelemetry = session.partyTelemetry[_playerName] ??
+                    (_currentMembership?.characterId != null
+                        ? session.partyTelemetry[_currentMembership!.characterId]
+                        : null);
+                if (activeTelemetry == null && session.sharedCharacters.isNotEmpty) {
+                  final rawMap = session.sharedCharacters[_playerName] ??
+                      (_currentMembership?.characterId != null
+                          ? session.sharedCharacters[_currentMembership!.characterId]
+                          : null);
+                  if (rawMap != null) {
+                    if (rawMap.containsKey('hp') || rawMap.containsKey('id')) {
+                      try {
+                        activeTelemetry = CharacterTelemetryDto.fromMap(rawMap);
+                      } catch (_) {
+                        activeTelemetry = CharacterTelemetryDto.fromLegacyCharacterMap(rawMap);
+                      }
+                    }
+                  }
+                }
+                if (activeTelemetry == null) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: PartyVitalityHud.fromDto(
+                    dto: activeTelemetry,
+                    isCompact: true,
+                    onTap: () => _openActiveCharacterSheet(session),
+                  ),
+                );
+              },
+            ),
+          ],
 
           if (roster.isNotEmpty) ...[
             const SizedBox(height: 10),

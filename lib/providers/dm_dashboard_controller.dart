@@ -7,6 +7,8 @@ import '../models/domain/session_graph_models.dart';
 import '../models/party/party_purse.dart';
 import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/character_persistence_service.dart';
+import '../data/acl/character_telemetry_dto.dart';
+import '../data/acl/character_telemetry_resolver.dart';
 
 /// State management controller for DM Dashboard.
 /// Implements relational character loading via foreign key pointers (`partyCharacterIds`),
@@ -19,6 +21,8 @@ class DmDashboardController extends ChangeNotifier {
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
   final Map<String, Character> _partyCharactersMap = {};
+  final Map<String, CharacterTelemetryDto> _remoteTelemetryMap = {};
+  final Map<String, ResolvedCharacterDisplay> _resolvedTelemetryMap = {};
   bool _isLoading = true;
   int _currentRound = 1;
 
@@ -34,8 +38,47 @@ class DmDashboardController extends ChangeNotifier {
   List<CampaignProfile> get allProfiles => _allProfiles;
   Map<String, Character> get partyCharactersMap =>
       Map.unmodifiable(_partyCharactersMap);
+  Map<String, CharacterTelemetryDto> get remoteTelemetryMap =>
+      Map.unmodifiable(_remoteTelemetryMap);
+  Map<String, ResolvedCharacterDisplay> get resolvedTelemetryMap =>
+      Map.unmodifiable(_resolvedTelemetryMap);
   bool get isLoading => _isLoading;
   int get currentRound => _currentRound;
+
+  /// Ingests ephemeral character telemetry from remote party members and resolves display models.
+  Future<void> updateRemoteTelemetry(Map<String, CharacterTelemetryDto> telemetry) async {
+    _remoteTelemetryMap.clear();
+    _remoteTelemetryMap.addAll(telemetry);
+    for (final entry in telemetry.entries) {
+      final resolved = await CharacterTelemetryResolver.resolve(entry.value);
+      _resolvedTelemetryMap[entry.key] = resolved;
+    }
+    notifyListeners();
+  }
+
+  /// Updates or resolves telemetry for a single character.
+  Future<void> updateSingleRemoteTelemetry(CharacterTelemetryDto dto) async {
+    _remoteTelemetryMap[dto.id] = dto;
+    final resolved = await CharacterTelemetryResolver.resolve(dto);
+    _resolvedTelemetryMap[dto.id] = resolved;
+    notifyListeners();
+  }
+
+  /// Resolves display data for a character ID, checking remote telemetry first,
+  /// then falling back to local character entity conversion.
+  Future<ResolvedCharacterDisplay?> getOrResolveCharacterDisplay(String characterId) async {
+    if (_resolvedTelemetryMap.containsKey(characterId)) {
+      return _resolvedTelemetryMap[characterId];
+    }
+    final localChar = _partyCharactersMap[characterId];
+    if (localChar != null) {
+      final dto = localChar.toTelemetryDto();
+      final resolved = await CharacterTelemetryResolver.resolve(dto);
+      _resolvedTelemetryMap[characterId] = resolved;
+      return resolved;
+    }
+    return null;
+  }
 
   /// Ordered party characters corresponding to active profile's [partyCharacterIds].
   List<Character> get partyCharacters {

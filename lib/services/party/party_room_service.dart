@@ -10,6 +10,7 @@ import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_event.dart';
 import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
+import '../../data/acl/character_telemetry_dto.dart';
 import '../../models/party/party_session_state.dart';
 import '../../utils/crypto_utils.dart';
 import '../../utils/secure_random.dart';
@@ -345,9 +346,13 @@ class PartyRoomService {
       }
 
       final updatedShared = Map<String, Map<String, dynamic>>.from(updatedSession.sharedCharacters);
+      final updatedTelemetry = Map<String, CharacterTelemetryDto>.from(updatedSession.partyTelemetry);
       if (characterSnapshot != null) {
-        updatedShared[characterSnapshot.id.slug] = characterSnapshot.toMap();
-        updatedShared[targetRosterName] = characterSnapshot.toMap();
+        final telemetry = characterSnapshot.toTelemetryDto();
+        updatedTelemetry[characterSnapshot.id.slug] = telemetry;
+        updatedTelemetry[targetRosterName] = telemetry;
+        updatedShared[characterSnapshot.id.slug] = telemetry.toMap();
+        updatedShared[targetRosterName] = telemetry.toMap();
         await _characterPersistenceService.saveCharacter(characterSnapshot);
 
         // Sync with DM profile if active profile matches
@@ -370,6 +375,7 @@ class PartyRoomService {
         activePlayers: updatedPlayers,
         characterRoster: updatedRoster,
         sharedCharacters: updatedShared,
+        partyTelemetry: updatedTelemetry,
         version: updatedSession.version + 1,
         lastUpdated: DateTime.now(),
       );
@@ -453,6 +459,7 @@ class PartyRoomService {
     var current = _localRooms[clean];
     if (current == null) {
       final membership = _registry.getMembership(clean);
+      final telemetry = character.toTelemetryDto();
       current = PartySessionState(
         roomCode: clean,
         campaignName: membership?.campaignName ?? 'Party Campaign',
@@ -465,8 +472,12 @@ class PartyRoomService {
           character.id.slug: character.purse,
         },
         sharedCharacters: {
-          character.id.slug: character.toMap(),
-          targetName: character.toMap(),
+          character.id.slug: telemetry.toMap(),
+          targetName: telemetry.toMap(),
+        },
+        partyTelemetry: {
+          character.id.slug: telemetry,
+          targetName: telemetry,
         },
         version: 1,
         lastUpdated: DateTime.now(),
@@ -477,9 +488,13 @@ class PartyRoomService {
       if (isNewImport && !updatedRoster.contains(targetName)) {
         updatedRoster.add(targetName);
       }
+      final telemetry = character.toTelemetryDto();
       final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
-      updatedShared[character.id.slug] = character.toMap();
-      updatedShared[targetName] = character.toMap();
+      final updatedTelemetry = Map<String, CharacterTelemetryDto>.from(current.partyTelemetry);
+      updatedShared[character.id.slug] = telemetry.toMap();
+      updatedShared[targetName] = telemetry.toMap();
+      updatedTelemetry[character.id.slug] = telemetry;
+      updatedTelemetry[targetName] = telemetry;
 
       final updatedPlayers = List<String>.from(current.activePlayers);
       if (!updatedPlayers.contains(targetName)) {
@@ -493,6 +508,7 @@ class PartyRoomService {
       current = current.copyWith(
         characterRoster: updatedRoster,
         sharedCharacters: updatedShared,
+        partyTelemetry: updatedTelemetry,
         activePlayers: updatedPlayers,
         memberPurses: updatedMemberPurses,
         version: current.version + 1,

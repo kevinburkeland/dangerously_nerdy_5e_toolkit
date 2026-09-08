@@ -10,6 +10,8 @@ import '../spellbook_data.dart';
 import '../dm_screen_data.dart' show DmRulesEdition;
 import '../characters/srd_classes_library.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
+import '../../services/rules/character_evaluation_engine.dart';
+import '../../data/acl/character_telemetry_dto.dart';
 
 /// 5e Core Ability Score Keys
 enum AbilityType {
@@ -1557,6 +1559,68 @@ class Character extends DomainEntity {
     }
 
     return bestAbility;
+  }
+
+  /// Projects current combat state, vitality, and typed entity pointers (slugs) into a
+  /// lightweight [CharacterTelemetryDto] for room networking and DM HUD telemetry.
+  CharacterTelemetryDto toTelemetryDto() {
+    final classPointers = progression.classes.map((c) {
+      return ClassLevelPointerDto(
+        classSlug: c.classRef.slug,
+        subclassSlug: c.subclassRef?.slug,
+        level: c.level,
+      );
+    }).toList();
+
+    final activeSpellSlots = <String, int>{};
+    resources.spellSlots.currentSlots.forEach((lvl, curr) {
+      activeSpellSlots['cur_$lvl'] = curr;
+    });
+    resources.spellSlots.maxSlots.forEach((lvl, max) {
+      activeSpellSlots['max_$lvl'] = max;
+    });
+
+    final wisMod = effectiveAbilityScores.getModifier(AbilityType.wisdom);
+    final hasPerception = skillProficiencies.containsKey(SkillType.perception);
+    final profLevel = skillProficiencies[SkillType.perception] ?? SkillProficiencyLevel.none;
+    final percBonus = hasPerception ? (proficiencyBonus * profLevel.multiplier).floor() : 0;
+    final passivePerc = 10 + wisMod + percBonus;
+
+    final equippedSlugs = inventory
+        .where((i) => i.isEquipped)
+        .map((i) => i.itemRef.slug)
+        .toList();
+
+    int calculatedMaxHp = 10;
+    try {
+      calculatedMaxHp = CharacterEvaluationEngine.evaluate(this).maxHp;
+    } catch (_) {
+      calculatedMaxHp = math.max(10, resources.currentHp);
+    }
+
+    return CharacterTelemetryDto(
+      id: id.slug,
+      name: name,
+      speciesSlug: speciesRef.slug,
+      backgroundSlug: backgroundRef?.slug,
+      classPointers: classPointers,
+      currentHp: resources.currentHp,
+      maxHp: calculatedMaxHp,
+      tempHp: resources.tempHp,
+      armorClass: armorClass,
+      speed: baseSpeedFeet,
+      level: totalLevel,
+      passivePerception: passivePerc,
+      exhaustionLevel: resources.exhaustionLevel,
+      deathSaveSuccesses: resources.deathSaveSuccesses,
+      deathSaveFailures: resources.deathSaveFailures,
+      conditions: conditions.map((c) => c.conditionName).toList(),
+      spellSlots: activeSpellSlots,
+      featSlugs: feats.map((f) => f.slug).toList(),
+      equippedItemSlugs: equippedSlugs,
+      rulesEdition: rulesEdition.name,
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   @override

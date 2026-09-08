@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../data/acl/character_telemetry_dto.dart';
 import 'party_purse.dart';
 
 /// Root campaign room document state stored at /rooms/{roomCode}
@@ -11,6 +12,7 @@ class PartySessionState {
   final List<String> activePlayers;
   final List<String> characterRoster;
   final Map<String, Map<String, dynamic>> sharedCharacters;
+  final Map<String, CharacterTelemetryDto> partyTelemetry;
   final int version;
   final DateTime lastUpdated;
   final DateTime expiresAt;
@@ -24,6 +26,7 @@ class PartySessionState {
     this.activePlayers = const [],
     this.characterRoster = const [],
     this.sharedCharacters = const {},
+    this.partyTelemetry = const {},
     this.version = 1,
     required this.lastUpdated,
     required this.expiresAt,
@@ -32,6 +35,11 @@ class PartySessionState {
   /// Helper to retrieve or initialize a character's personal coin store
   PartyPurse getMemberPurse(String characterName) {
     return memberPurses[characterName] ?? const PartyPurse();
+  }
+
+  /// Helper to retrieve telemetry for a character or member
+  CharacterTelemetryDto? getTelemetry(String key) {
+    return partyTelemetry[key];
   }
 
   PartySessionState copyWith({
@@ -43,6 +51,7 @@ class PartySessionState {
     List<String>? activePlayers,
     List<String>? characterRoster,
     Map<String, Map<String, dynamic>>? sharedCharacters,
+    Map<String, CharacterTelemetryDto>? partyTelemetry,
     int? version,
     DateTime? lastUpdated,
     DateTime? expiresAt,
@@ -56,6 +65,7 @@ class PartySessionState {
       activePlayers: activePlayers ?? this.activePlayers,
       characterRoster: characterRoster ?? this.characterRoster,
       sharedCharacters: sharedCharacters ?? this.sharedCharacters,
+      partyTelemetry: partyTelemetry ?? this.partyTelemetry,
       version: version ?? this.version,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       expiresAt: expiresAt ?? this.expiresAt,
@@ -73,6 +83,7 @@ class PartySessionState {
       'activePlayers': activePlayers,
       'characterRoster': characterRoster,
       'sharedCharacters': sharedCharacters,
+      'partyTelemetry': partyTelemetry.map((k, v) => MapEntry(k, v.toMap())),
       'version': version,
       'lastUpdated': lastUpdated.toIso8601String(),
       'expiresAt': expiresAt.toIso8601String(),
@@ -106,12 +117,29 @@ class PartySessionState {
         ? rawRoster.map((e) => e.toString()).toList()
         : <String>[];
 
+    final rawTelemetry = map['partyTelemetry'] ?? map['telemetry'];
+    final Map<String, CharacterTelemetryDto> partyTelemetry = {};
+    if (rawTelemetry is Map) {
+      rawTelemetry.forEach((k, v) {
+        if (v is Map) {
+          partyTelemetry[k.toString()] = CharacterTelemetryDto.fromMap(Map<String, dynamic>.from(v));
+        }
+      });
+    }
+
     final rawShared = map['sharedCharacters'];
     final Map<String, Map<String, dynamic>> sharedCharacters = {};
     if (rawShared is Map) {
       rawShared.forEach((k, v) {
         if (v is Map) {
-          sharedCharacters[k.toString()] = Map<String, dynamic>.from(v);
+          final m = Map<String, dynamic>.from(v);
+          sharedCharacters[k.toString()] = m;
+          // Graceful fallback: If telemetry was not present, extract from legacy full Character JSON
+          if (!partyTelemetry.containsKey(k.toString())) {
+            try {
+              partyTelemetry[k.toString()] = CharacterTelemetryDto.fromLegacyCharacterMap(m);
+            } catch (_) {}
+          }
         }
       });
     }
@@ -125,6 +153,7 @@ class PartySessionState {
       activePlayers: players,
       characterRoster: roster,
       sharedCharacters: sharedCharacters,
+      partyTelemetry: partyTelemetry,
       version: (map['version'] as num?)?.toInt() ?? 1,
       lastUpdated: map['lastUpdated'] != null
           ? DateTime.tryParse(map['lastUpdated'] as String) ?? DateTime.now()
