@@ -4,7 +4,7 @@
 
 # 🧙‍♂️ DangerouslyNerdy 5e Toolkit
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
@@ -456,9 +456,10 @@ All AI-generated contributions were thoroughly audited, tested, verified, and re
 
 ---
 
-## 📄 License & Legal Notice
+## 📄 License & Governance
 
-- **Software License**: Licensed under the **[MIT License](LICENSE)**.
+- **Software License**: Licensed under the **[GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)**.
+- **Contribution Model**: Contributions are governed by the **[Developer Certificate of Origin (DCO)](CONTRIBUTING.md)** under an inbound=outbound AGPLv3 model with decentralized copyright ownership (no CLA required).
 - **SRD 5.1 & 5.2 Attribution**: Game mechanics derived from the System Reference Document 5.1 & 5.2 are used under the **[Creative Commons Attribution 4.0 International License (CC-BY-4.0)](LEGAL_ATTRIBUTION_MODAL.md)**.
 - **Privacy Policy**: View our **[Privacy Policy](PRIVACY_POLICY.md)**.
 - **Terms of Service**: View our **[Terms of Service](TERMS_OF_SERVICE.md)**.

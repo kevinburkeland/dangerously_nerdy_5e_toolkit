@@ -20,6 +20,7 @@ import '../widgets/room_banner_widget.dart';
 import 'dm_dashboard_screen.dart';
 import 'party_room_screen.dart';
 import 'settings_screen.dart';
+import '../presentation/common/site_footer.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -477,6 +478,7 @@ class _LandingScreenState extends State<LandingScreen> {
                             ),
                           ],
                         ),
+                        const SiteFooter(),
                       ],
                     ),
                   ),
