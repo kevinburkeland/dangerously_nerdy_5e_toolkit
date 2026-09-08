@@ -169,6 +169,17 @@ class _AttributionContent extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Text(
+          'Software License & Dual-Licensing Scope',
+          style: TextStyle(color: purpleHeader, fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '• Software Codebase: The application software, simulation engines, calculators, and user interface are open source licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).\n\n'
+          '• Tabletop Game Mechanics: Rules text, spell statistics, creature stat blocks, and mechanics derived from Wizards of the Coast SRD 5.1 & 5.2 are licensed under the Creative Commons Attribution 4.0 International License (CC-BY-4.0).',
+          style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 12, height: 1.4),
+        ),
+        const SizedBox(height: 14),
+        Text(
           'System Reference Document 5.1 & 5.2 (SRD 5.1 & SRD 5.2) License',
           style: TextStyle(color: cyanHeader, fontWeight: FontWeight.bold, fontSize: 15),
         ),

@@ -27,16 +27,19 @@ class FakeUrlLauncherPlatform extends UrlLauncherPlatform
 
 void main() {
   group('Repository Governance & Licensing Verification', () {
-    test('LICENSE file contains full AGPL-3.0 text and SRD attribution', () {
+    test('LICENSE file contains full AGPL-3.0 text, breakdown header, and SRD attribution', () {
       final licenseFile = File('LICENSE');
       expect(licenseFile.existsSync(), isTrue);
       final content = licenseFile.readAsStringSync();
+      expect(content, contains('PROJECT LICENSING & CONTENT BREAKDOWN'));
+      expect(content, contains('APPLICATION SOURCE CODE & SOFTWARE: GNU AGPLv3'));
+      expect(content, contains('D&D 5e GAME CONTENT & RULES MECHANICS: CREATIVE COMMONS CC-BY-4.0'));
       expect(content, contains('GNU AFFERO GENERAL PUBLIC LICENSE'));
       expect(content, contains('Version 3, 19 November 2007'));
       expect(content, contains('System Reference Document 5.1 & 5.2'));
     });
 
-    test('CONTRIBUTING.md explicitly rejects CLA in favor of DCO and requires git commit -s', () {
+    test('CONTRIBUTING.md explicitly rejects CLA in favor of DCO and defines dual licensing scope', () {
       final contributingFile = File('CONTRIBUTING.md');
       expect(contributingFile.existsSync(), isTrue);
       final content = contributingFile.readAsStringSync();
@@ -44,14 +47,21 @@ void main() {
       expect(content, contains('we deliberately do not use a Contributor License Agreement (CLA)'));
       expect(content, contains('git commit -s'));
       expect(content, contains('inbound = outbound'));
+      expect(content, contains('Dual Licensing Scope: AGPL-3.0 vs. SRD CC-BY-4.0'));
+      expect(content, contains('Software Implementation & Code'));
+      expect(content, contains('GNU AGPLv3'));
+      expect(content, contains('D&D 5e Rules Content & Game Mechanics'));
+      expect(content, contains('Creative Commons CC-BY-4.0'));
+      expect(content, contains('Third-Party Product Identity'));
     });
 
-    test('README.md includes AGPLv3 badge and DCO inbound=outbound governance notice', () {
+    test('README.md includes AGPLv3 badge and clearly distinguishes AGPL software from SRD CC-BY-4.0 mechanics', () {
       final readmeFile = File('README.md');
       expect(readmeFile.existsSync(), isTrue);
       final content = readmeFile.readAsStringSync();
       expect(content, contains('License-AGPL%20v3-blue.svg'));
-      expect(content, contains('GNU Affero General Public License v3.0 (AGPL-3.0)'));
+      expect(content, contains('Application Software (AGPL-3.0)'));
+      expect(content, contains('Game Content & Mechanics (CC-BY-4.0)'));
       expect(content, contains('Developer Certificate of Origin (DCO)'));
     });
   });

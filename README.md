@@ -458,8 +458,10 @@ All AI-generated contributions were thoroughly audited, tested, verified, and re
 
 ## 📄 License & Governance
 
-- **Software License**: Licensed under the **[GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)**.
-- **Contribution Model**: Contributions are governed by the **[Developer Certificate of Origin (DCO)](CONTRIBUTING.md)** under an inbound=outbound AGPLv3 model with decentralized copyright ownership (no CLA required).
-- **SRD 5.1 & 5.2 Attribution**: Game mechanics derived from the System Reference Document 5.1 & 5.2 are used under the **[Creative Commons Attribution 4.0 International License (CC-BY-4.0)](LEGAL_ATTRIBUTION_MODAL.md)**.
+This project operates under a clear dual-licensing structure separating software logic from tabletop game rules:
+
+- **Application Software (AGPL-3.0)**: The Flutter codebase, application architecture, simulation algorithms (Monte Carlo combat arena, DPR binomial calculators), Anti-Corruption Layer (ACL) compendium ingestion, and build scripts are licensed under the **[GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)**.
+- **Game Content & Mechanics (CC-BY-4.0)**: All tabletop RPG rules, spell matrices, creature stat blocks, equipment tables, and game mechanics derived from the System Reference Document 5.1 & 5.2 are licensed under the **[Creative Commons Attribution 4.0 International License (CC-BY-4.0)](LEGAL_ATTRIBUTION_MODAL.md)**.
+- **Contribution Model**: Governed by the **[Developer Certificate of Origin (DCO)](CONTRIBUTING.md)** under an inbound=outbound model with decentralized copyright ownership (no CLA required).
 - **Privacy Policy**: View our **[Privacy Policy](PRIVACY_POLICY.md)**.
 - **Terms of Service**: View our **[Terms of Service](TERMS_OF_SERVICE.md)**.

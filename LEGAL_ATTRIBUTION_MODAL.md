@@ -40,9 +40,14 @@ All spell calculations, spell point tables, and dice mechanics in this tool adhe
 
 ---
 
-## 4. Software License & Third-Party Libraries
+## 4. Software License & Dual-Licensing Separation
 
-DangerouslyNerdy 5e Toolkit is built using the Flutter framework and Dart runtime environment.
+DangerouslyNerdy 5e Toolkit operates under a dual-licensing framework:
 
+- **Application Codebase:** Licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. Source code is publicly available at:  
+  https://github.com/kevinburkeland/dangerously_nerdy_5e_toolkit
+- **Game Content & Rules Mechanics:** Licensed under the **Creative Commons Attribution 4.0 International License (CC-BY-4.0)** via the SRD 5.1 & 5.2 attribution notice above.
+
+### Third-Party Frameworks & Dependencies:
 - **Flutter SDK:** Copyright 2014 The Flutter Authors. Licensed under the BSD-3-Clause License.
 - **Firebase Core & Cloud Firestore:** Copyright 2020 Google LLC. Licensed under the Apache License 2.0.

@@ -1,3 +1,24 @@
+===============================================================================
+PROJECT LICENSING & CONTENT BREAKDOWN
+===============================================================================
+
+1. APPLICATION SOURCE CODE & SOFTWARE: GNU AGPLv3
+   All software source code, Flutter UI components, state architecture,
+   simulation engines (Monte Carlo fighting arena, DPR calculators), dice
+   rolling math, Anti-Corruption Layer (ACL) parsers, and build scripts in
+   this repository are licensed under the GNU Affero General Public License
+   v3.0 (AGPL-3.0). See "GNU AFFERO GENERAL PUBLIC LICENSE" below.
+
+2. D&D 5e GAME CONTENT & RULES MECHANICS: CREATIVE COMMONS CC-BY-4.0
+   Game mechanics, stat blocks, spells, creature statistics, equipment tables,
+   rules text, and formulas derived from the System Reference Document 5.1
+   ("SRD 5.1") and System Reference Document 5.2 ("SRD 5.2") by Wizards of
+   the Coast LLC are licensed under the Creative Commons Attribution 4.0
+   International License (CC-BY-4.0). See "System Reference Document 5.1 & 5.2
+   Attribution Notice" at the end of this document.
+
+===============================================================================
+
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
