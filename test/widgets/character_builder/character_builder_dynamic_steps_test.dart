@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart' show DmRulesEdition;
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('CharacterBuilderScreen Dynamic Steps Widget Tests', () {
     testWidgets('Wizard renders dynamic Class Decisions step for Fighter', (tester) async {
       tester.view.physicalSize = const Size(1280, 1000);
@@ -110,8 +118,8 @@ void main() {
 
       // Advance through Class Decisions, Background, Ability Scores, Equipment until Spells
       while (!tester.any(find.textContaining('Spells & Cantrips'))) {
-        if (tester.any(find.text('Soldier'))) {
-          await tester.tap(find.text('Soldier'));
+        if (tester.any(find.text('Acolyte'))) {
+          await tester.tap(find.text('Acolyte'));
           await tester.pumpAndSettle();
         }
         if (tester.any(find.text('Auto-Assign'))) {
@@ -179,10 +187,10 @@ void main() {
       await tester.tap(find.textContaining('Fighter (').last);
       await tester.pumpAndSettle();
 
-      // Deselect Acrobatics and select Athletics to test collision with Soldier
+      // Deselect Acrobatics and select Insight to test collision with Acolyte
       await tester.tap(find.widgetWithText(FilterChip, 'Acrobatics').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilterChip, 'Athletics').first);
+      await tester.tap(find.widgetWithText(FilterChip, 'Insight').first);
       await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -800));
       await tester.pumpAndSettle();
@@ -199,9 +207,9 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      // Step 4: Background -> Select Soldier (grants Athletics & Intimidation)
+      // Step 4: Background -> Select Acolyte (grants Insight & Religion)
       expect(find.text('Step 4: Choose Background Origin'), findsOneWidget);
-      await tester.tap(find.text('Soldier'));
+      await tester.tap(find.text('Acolyte'));
       await tester.pumpAndSettle();
 
       // Navigate back to Class step to observe skill collision
@@ -216,9 +224,9 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      // Fighter has Athletics selected by default and Soldier also grants Athletics
+      // Fighter has Insight selected and Acolyte also grants Insight
       expect(find.text('Step 3: Choose Class & Starting Skills'), findsOneWidget);
-      expect(find.textContaining('Skill Collision Detected: Athletics'), findsOneWidget);
+      expect(find.textContaining('Skill Collision Detected: Insight'), findsOneWidget);
       expect(find.textContaining('Compensatory Pick(s):'), findsOneWidget);
     });
 
@@ -390,6 +398,32 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
+      final customLineage = Race(
+        id: const EntityId(slug: 'custom-lineage', ruleset: RulesetVersion.v2014),
+        name: 'Custom Lineage',
+        size: 'Medium or Small',
+        speed: '30 ft.',
+        abilityScoreSummary: '+2 to One Score, 1 Feat, Darkvision or 1 Skill (Lineage / Homebrew)',
+        traitsMarkdown:
+            '**Creature Type.** You are a Humanoid.\n\n'
+            '**Size.** You are Medium or Small (your choice).\n\n'
+            '**Speed.** Your base walking speed is 30 feet.\n\n'
+            '**Ability Score Increase.** One ability score of your choice increases by 2.\n\n'
+            '**Feat.** You gain one Feat of your choice from the Feat library.\n\n'
+            '**Variable Trait.** You gain Darkvision with a range of 60 feet or proficiency in one skill of your choice.',
+        customProperties: const {
+          'hasDarkvision': true,
+          'darkvisionFeet': 60,
+          'isCustomLineage': true,
+          'bonusSkillCount': 1,
+          'bonusFeatCount': 1,
+          'abilityChoiceCount': 1,
+          'abilityChoiceBonus': 2,
+        },
+      );
+      await HomebrewPersistenceService().saveCustomRace(customLineage);
+      addTearDown(() => HomebrewPersistenceService().deleteCustomRace('custom-lineage'));
+
       final settingsProvider = SettingsProvider(
         initialSettings: const AppSettings(
           rulesEdition: DmRulesEdition.v2014,
@@ -444,6 +478,8 @@ void main() {
       }
 
       // Step: Species -> Select Custom Lineage
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Custom Lineage'));
       await tester.pumpAndSettle();
 

@@ -81,8 +81,12 @@ void main() {
         equals(SrdMatchResult.exactSrdMatch),
       );
       expect(
-        index.checkEntity(slug: 'alert', name: 'Alert', type: EntityType.feat),
+        index.checkEntity(slug: 'grappler', name: 'Grappler', type: EntityType.feat),
         equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(slug: 'alert', name: 'Alert', type: EntityType.feat),
+        equals(SrdMatchResult.notSrd),
       );
       expect(
         index.checkEntity(slug: 'acolyte', name: 'Acolyte', type: EntityType.background),

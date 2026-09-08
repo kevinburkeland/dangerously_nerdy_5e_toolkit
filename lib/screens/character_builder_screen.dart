@@ -1148,7 +1148,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   List<String> _getWizardStepTypes() {
     final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
     final is2024 = _selectedRuleset == RulesetVersion.v2024;
-    final hasFeatStep = is2024 || (curSpecies?.grantsBonusFeat ?? false);
+    final hasFeatStep = (is2024 && SrdFeatsLibrary.getOriginFeats().isNotEmpty) ||
+        (curSpecies?.grantsBonusFeat ?? false);
     final curClass = _selectedClass != null ? SrdClassesLibrary.findBySlug(_selectedClass!, ruleset: _selectedRuleset) : null;
     final isCaster = _isSpellcasterClass(_selectedClass, _selectedRuleset);
     final hasSubclass = curClass != null && curClass.getSubclassLevel(_selectedRuleset) == 1 && curClass.subclasses.isNotEmpty;

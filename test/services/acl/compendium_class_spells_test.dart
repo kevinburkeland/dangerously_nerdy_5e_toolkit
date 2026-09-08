@@ -294,7 +294,9 @@ void main() {
       expect(names, contains('spare the dying'));
       expect(names, contains('blindness/deafness'));
 
-      // Also verify SubclassSpellsLibrary fallback directly inspects sub
+      // Also verify SubclassSpellsLibrary dynamically resolves from loaded subclasses
+      SrdClassesLibrary.addCustomSubclass(sub);
+      addTearDown(() => SrdClassesLibrary.removeCustomSubclass('the-undying'));
       final expanded = SubclassSpellsLibrary.getExpandedSpells('warlock', 'the-undying');
       expect(expanded, contains('false life'));
       expect(expanded, contains('blindness/deafness'));

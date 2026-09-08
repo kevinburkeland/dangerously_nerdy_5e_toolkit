@@ -321,13 +321,6 @@ class SrdFeatureOptions {
           'Your patron bestows a grimoire called the Book of Shadows. You learn 3 cantrips from any class list and can cast ritual spells.',
       grants: {'bonusCantripCount': 3, 'ritualCasting': true, 'tomePact': true},
     ),
-    FeatureOption(
-      id: 'pact_of_the_talisman',
-      name: 'Pact of the Talisman',
-      descriptionMarkdown:
-          'Your patron gives you an amulet, a talisman that can aid the wearer when the need is great. When the wearer fails an ability check, they can add a d4 to the roll, potentially turning the roll into a success. This benefit can be used a number of times equal to your proficiency bonus, restored on a long rest.',
-      grants: {'talismanPact': true},
-    ),
   ];
 
   static List<FeatureOption> _customPactBoons = [];
@@ -539,14 +532,6 @@ class SrdClassesLibrary {
             '**Disciple of Life.** Healing spells restore an additional 2 + spell level HP.\n\n'
             '**Preserve Life.** Channel Divinity to heal injured allies within 30 feet.',
       ),
-      Subclass(
-        id: EntityId(slug: 'light-domain', ruleset: RulesetVersion.v2024),
-        name: 'Light Domain',
-        classSlug: 'cleric',
-        featuresMarkdown:
-            '**Warding Flare.** Impose Disadvantage on an attacker within 30 feet.\n\n'
-            '**Radiance of the Dawn.** Channel Divinity to blast radiant energy 30 ft around you.',
-      ),
     ],
   );
 
@@ -610,13 +595,6 @@ class SrdClassesLibrary {
             '**Natural Recovery.** Regain spell slots on Short Rest.\n\n'
             '**Circle Spells.** Gain bonus domain spells based on chosen biome.',
       ),
-      Subclass(
-        id: EntityId(slug: 'circle-of-the-moon', ruleset: RulesetVersion.v2024),
-        name: 'Circle of the Moon',
-        classSlug: 'druid',
-        featuresMarkdown:
-            '**Combat Wild Shape.** Transform as a Bonus Action and assume higher CR beast forms.',
-      ),
     ],
   );
 
@@ -679,13 +657,6 @@ class SrdClassesLibrary {
         featuresMarkdown:
             '**Improved Critical.** Your weapon attacks score a critical hit on a roll of 19 or 20.\n\n'
             '**Remarkable Athlete.** Bonus to non-proficient STR, DEX, and CON checks; increased jump distance.',
-      ),
-      Subclass(
-        id: EntityId(slug: 'battle-master', ruleset: RulesetVersion.v2024),
-        name: 'Battle Master',
-        classSlug: 'fighter',
-        featuresMarkdown:
-            '**Combat Superiority.** Superiority dice (d8-d12) to fuel tactical battle maneuvers.',
       ),
     ],
   );
@@ -971,14 +942,6 @@ class SrdClassesLibrary {
           'baseAc': 13,
         },
       ),
-      Subclass(
-        id: EntityId(slug: 'wild-magic', ruleset: RulesetVersion.v2024),
-        name: 'Wild Magic',
-        classSlug: 'sorcerer',
-        featuresMarkdown:
-            '**Tides of Chaos.** Gain Advantage on one d20 roll before taking a long rest.\n\n'
-            '**Wild Magic Surge.** Rolling a 1 on a d20 test triggers chaotic surges.',
-      ),
     ],
   );
 
@@ -1110,14 +1073,6 @@ class SrdClassesLibrary {
         featuresMarkdown:
             '**Dark One\'s Blessing.** Gain temporary HP equal to CHA mod + Warlock Level upon reducing a hostile creature to 0 HP.\n\n'
             '**Dark One\'s Own Luck.** Add 1d10 to an ability check or saving throw.',
-      ),
-      const Subclass(
-        id: EntityId(slug: 'archfey-patron', ruleset: RulesetVersion.v2024),
-        name: 'The Archfey',
-        classSlug: 'warlock',
-        featuresMarkdown:
-            '**Fey Presence.** Cause creatures in a 10-foot cube to become charmed or frightened.\n\n'
-            '**Misty Escape.** Turn invisible and teleport 60 ft as a Reaction upon taking damage.',
       ),
     ],
   );

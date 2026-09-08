@@ -63,10 +63,10 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 4 Background -> Select Soldier -> Step 5 Ability Scores
-      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
-      if (soldierFinder.evaluate().isNotEmpty) {
-        await tester.tap(soldierFinder.first);
+      // Step 4 Background -> Select Acolyte -> Step 5 Ability Scores
+      final acolyteFinder = find.widgetWithText(ListTile, 'Acolyte');
+      if (acolyteFinder.evaluate().isNotEmpty) {
+        await tester.tap(acolyteFinder.first);
         await tester.pumpAndSettle();
       }
       await tester.drag(find.byType(ListView), const Offset(0, -600));
@@ -74,7 +74,7 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 5 Ability Scores -> Step 6 Feats
+      // Advance past Ability Scores
       if (find.text('Auto-Assign').evaluate().isNotEmpty) {
         await tester.tap(find.text('Auto-Assign'));
         await tester.pumpAndSettle();
@@ -82,9 +82,11 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      // Step 6 Feats -> Step 7 Spells & Cantrips
-      await tester.tap(find.text('Next Step'));
-      await tester.pumpAndSettle();
+      // If Feats step is present, advance through it to Spells & Cantrips
+      if (find.textContaining('Spells & Cantrips').evaluate().isEmpty) {
+        await tester.tap(find.text('Next Step'));
+        await tester.pumpAndSettle();
+      }
       expect(find.textContaining('Spells & Cantrips'), findsOneWidget);
 
       // Step 7 Spells -> Step 8 Equipment

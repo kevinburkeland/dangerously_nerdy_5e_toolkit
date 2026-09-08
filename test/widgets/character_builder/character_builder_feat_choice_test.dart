@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.dart';
 
@@ -11,6 +12,29 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
+
+      const resilient = Feat(
+        id: EntityId(slug: 'resilient', ruleset: RulesetVersion.v2014),
+        name: 'Resilient',
+        category: 'General',
+        descriptionMarkdown:
+            '**Stat & Save Mastery.** Choose one ability score: increase the chosen score by 1, and you gain proficiency in saving throws using that chosen ability score.',
+        customProperties: {
+          'selectableAbilities': [
+            'strength',
+            'dexterity',
+            'constitution',
+            'intelligence',
+            'wisdom',
+            'charisma',
+          ],
+          'grantsSavingThrowProficiency': true,
+          'statIncrease': 1,
+          'riderDescription': 'Gain saving throw proficiency in the chosen ability.',
+        },
+      );
+      SrdFeatsLibrary.addCustomFeat(resilient);
+      addTearDown(() => SrdFeatsLibrary.removeCustomFeat('resilient'));
 
       await tester.pumpWidget(
         const MaterialApp(
@@ -74,10 +98,10 @@ void main() {
 
       // Step 5: Background -> Step 6 (Scores)
       expect(find.textContaining('Choose Background'), findsOneWidget);
-      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
-      await tester.scrollUntilVisible(soldierFinder, 150, scrollable: find.byType(Scrollable).first);
+      final acolyteFinder = find.widgetWithText(ListTile, 'Acolyte');
+      await tester.scrollUntilVisible(acolyteFinder, 150, scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
-      await tester.tap(soldierFinder);
+      await tester.tap(acolyteFinder);
       await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
@@ -234,10 +258,10 @@ void main() {
       }
 
       // Step 5: Background
-      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
-      await tester.scrollUntilVisible(soldierFinder, 150, scrollable: find.byType(Scrollable).first);
+      final acolyteFinder = find.widgetWithText(ListTile, 'Acolyte');
+      await tester.scrollUntilVisible(acolyteFinder, 150, scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
-      await tester.tap(soldierFinder);
+      await tester.tap(acolyteFinder);
       await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();

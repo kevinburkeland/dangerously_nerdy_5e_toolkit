@@ -199,12 +199,12 @@ void main() {
       expect(invocations.any((i) => i.id == 'pact_of_the_chain'), isFalse);
       expect(invocations.any((i) => i.id == 'pact_of_the_talisman'), isFalse);
 
-      // Pact Boons must contain all 4 pacts
+      // Pact Boons must contain the 3 SRD pacts
       final pactIds = pactBoons.map((p) => p.id).toSet();
       expect(pactIds.contains('pact_of_the_blade'), isTrue);
       expect(pactIds.contains('pact_of_the_chain'), isTrue);
       expect(pactIds.contains('pact_of_the_tome'), isTrue);
-      expect(pactIds.contains('pact_of_the_talisman'), isTrue);
+      expect(pactIds.contains('pact_of_the_talisman'), isFalse);
     });
 
     test('2014 Warlock progression strictly separates Invocations (Lvl 2) and Pact Boon (Lvl 3)', () {
@@ -222,7 +222,8 @@ void main() {
       final pactBoonDecision = lvl3Decisions.firstWhere((d) => d.type == FeatureChoiceType.pactBoon);
       expect(pactBoonDecision.levelRequired, equals(3));
       final pactIds = pactBoonDecision.availableOptions.map((o) => o.id).toSet();
-      expect(pactIds, containsAll(['pact_of_the_blade', 'pact_of_the_chain', 'pact_of_the_tome', 'pact_of_the_talisman']));
+      expect(pactIds, containsAll(['pact_of_the_blade', 'pact_of_the_chain', 'pact_of_the_tome']));
+      expect(pactIds.contains('pact_of_the_talisman'), isFalse);
     });
   });
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_backgrounds_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
@@ -135,6 +137,20 @@ void main() {
         ),
         baseScores: AbilityScores(strength: 16),
       );
+
+      const soldierBg = Background(
+        id: EntityId(slug: 'soldier', ruleset: RulesetVersion.v2024),
+        name: 'Soldier',
+        descriptionMarkdown:
+            'You trained in military tactics and discipline.\n\n'
+            '**Feature: Military Rank**\n'
+            'You have a military rank from your career as a soldier.\n\n'
+            '**Origin Feat:** Savage Attacker\n'
+            '**Ability Scores:** +2 STR / +1 CON\n'
+            '**Skill Proficiencies:** Athletics, Intimidation',
+      );
+      SrdBackgroundsLibrary.addCustomBackground(soldierBg);
+      addTearDown(() => SrdBackgroundsLibrary.removeCustomBackground('soldier'));
 
       final controller = CharacterSheetController(character: character2014);
 

@@ -385,10 +385,10 @@ void main() {
       expect(find.text('Step 4: Choose Background'), findsOneWidget);
       expect(find.textContaining('Origin Feat:'), findsNothing);
 
-      // Select Soldier
-      final soldierFinder = find.widgetWithText(ListTile, 'Soldier');
-      if (soldierFinder.evaluate().isNotEmpty) {
-        await tester.tap(soldierFinder.first);
+      // Select Acolyte
+      final acolyteFinder = find.widgetWithText(ListTile, 'Acolyte');
+      if (acolyteFinder.evaluate().isNotEmpty) {
+        await tester.tap(acolyteFinder.first);
         await tester.pumpAndSettle();
       }
 
@@ -480,9 +480,9 @@ void main() {
       await tester.tap(find.text('Next Step'));
       await tester.pumpAndSettle();
 
-      final soldierFinder2 = find.widgetWithText(ListTile, 'Soldier');
-      if (soldierFinder2.evaluate().isNotEmpty) {
-        await tester.tap(soldierFinder2.first);
+      final acolyteFinder2 = find.widgetWithText(ListTile, 'Acolyte');
+      if (acolyteFinder2.evaluate().isNotEmpty) {
+        await tester.tap(acolyteFinder2.first);
         await tester.pumpAndSettle();
       }
 
@@ -499,8 +499,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Human (Variant) Bonus Feat'), findsOneWidget);
 
-      final mobileFinder = find.widgetWithText(ListTile, 'Mobile');
-      await tester.tap(mobileFinder);
+      final grapplerFinder = find.widgetWithText(ListTile, 'Grappler');
+      await tester.tap(grapplerFinder);
       await tester.pumpAndSettle();
 
       // Step 6 -> Step 7 (Equipment)

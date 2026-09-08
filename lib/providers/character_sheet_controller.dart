@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/dice_roll.dart';
 import '../models/dm_screen_data.dart' show DmRulesEdition;
 import '../models/domain/character_models.dart';
+import '../models/domain/core_types.dart';
 import '../models/domain/entity_reference.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../models/characters/srd_feats_library.dart';
@@ -980,9 +981,14 @@ class CharacterSheetController extends ChangeNotifier {
     if (matchIdx == -1) return;
 
     final removed = existingFeats.removeAt(matchIdx);
-    final feat = SrdFeatsLibrary.findBySlug(featSlug);
+    final feat = SrdFeatsLibrary.findBySlug(featSlug) ??
+        Feat(
+          id: EntityId(slug: featSlug, ruleset: _character.id.ruleset),
+          name: removed.displayName,
+          descriptionMarkdown: '',
+        );
     var newBonusScores = _character.bonusScores;
-    if (feat != null && feat.hasAbilityScoreIncrease) {
+    if (feat.hasAbilityScoreIncrease) {
       for (final ab in feat.selectableAbilities) {
         final curBonus = newBonusScores.getScore(ab);
         if (curBonus >= feat.statIncreaseAmount) {

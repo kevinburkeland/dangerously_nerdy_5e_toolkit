@@ -40,9 +40,9 @@ void main() {
           await tester.pumpAndSettle();
         }
       } else if (find.textContaining('Choose Background').evaluate().isNotEmpty) {
-        final soldier = find.widgetWithText(ListTile, 'Soldier');
-        if (soldier.evaluate().isNotEmpty) {
-          await tester.tap(soldier.first);
+        final acolyte = find.widgetWithText(ListTile, 'Acolyte');
+        if (acolyte.evaluate().isNotEmpty) {
+          await tester.tap(acolyte.first);
           await tester.pumpAndSettle();
         }
       }
@@ -172,6 +172,26 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      final customLineageRace = Race(
+        id: const EntityId(slug: 'custom-lineage', ruleset: RulesetVersion.v2014),
+        name: 'Custom Lineage',
+        size: 'Medium or Small',
+        speed: '30 ft.',
+        abilityScoreSummary: '+2 to One Score, 1 Feat, Darkvision or 1 Skill (Lineage / Homebrew)',
+        traitsMarkdown: 'Humanoid',
+        customProperties: const {
+          'hasDarkvision': true,
+          'darkvisionFeet': 60,
+          'isCustomLineage': true,
+          'bonusSkillCount': 1,
+          'bonusFeatCount': 1,
+          'abilityChoiceCount': 1,
+          'abilityChoiceBonus': 2,
+        },
+      );
+      await HomebrewPersistenceService().saveCustomRace(customLineageRace);
+      addTearDown(() => HomebrewPersistenceService().deleteCustomRace('custom-lineage'));
 
       await tester.tap(find.text('Guided Builder'));
       await tester.pumpAndSettle();

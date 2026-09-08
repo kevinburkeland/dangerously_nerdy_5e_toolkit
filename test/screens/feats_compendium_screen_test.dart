@@ -2,15 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/feats_compendium_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/feats/feat_card.dart';
 
+import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
+  const alertFeat = Feat(
+    id: EntityId(slug: 'alert', ruleset: RulesetVersion.v2024),
+    name: 'Alert',
+    category: 'Origin',
+    descriptionMarkdown: '**Initiative Proficiency.** Always on the lookout.',
+    customProperties: {
+      'has2024Revision': true,
+      'revisions2024': 'Origin Feat in 2024',
+    },
+  );
+
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    await HomebrewPersistenceService().saveCustomFeat(alertFeat);
+  });
+
+  tearDown(() async {
+    await HomebrewPersistenceService().deleteCustomFeat('alert');
   });
 
   Widget buildTestScreen({SettingsProvider? provider, DmRulesEdition? edition}) {
@@ -62,13 +82,12 @@ void main() {
     // Verify 2014 feats are fully populated
     expect(find.byType(FeatCard), findsWidgets);
     expect(find.text('Alert'), findsWidgets);
-    expect(find.text('Healer'), findsWidgets);
-    expect(find.text('Lucky'), findsWidgets);
+    expect(find.text('Grappler'), findsWidgets);
 
-    // Search for War Caster
-    await tester.enterText(find.byType(TextField), 'War Caster');
+    // Search for Grappler
+    await tester.enterText(find.byType(TextField), 'Grappler');
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(FeatCard, 'War Caster'), findsOneWidget);
+    expect(find.widgetWithText(FeatCard, 'Grappler'), findsOneWidget);
   });
 
   testWidgets('FeatCard shows General Feat in 2014 mode and Origin Feat in 2024 mode for Alert', (tester) async {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
@@ -180,6 +182,29 @@ void main() {
           ),
         ),
       );
+
+      const resilientFeat = Feat(
+        id: EntityId(slug: 'resilient', ruleset: RulesetVersion.v2024),
+        name: 'Resilient',
+        category: 'General',
+        descriptionMarkdown:
+            '**Ability Increase.** Choose one ability score: increase it by 1.\n\n'
+            '**Saving Throw Proficiency.** You gain proficiency in saving throws using the chosen ability.',
+        customProperties: {
+          'selectableAbilities': [
+            'strength',
+            'dexterity',
+            'constitution',
+            'intelligence',
+            'wisdom',
+            'charisma',
+          ],
+          'statIncrease': 1,
+          'grantsSavingThrowProficiency': true,
+        },
+      );
+      SrdFeatsLibrary.addCustomFeat(resilientFeat);
+      addTearDown(() => SrdFeatsLibrary.removeCustomFeat('resilient'));
 
       await tester.tap(find.text('Open Wizard'));
       await tester.pumpAndSettle();

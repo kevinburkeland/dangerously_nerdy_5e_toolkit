@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_feats_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
@@ -12,7 +11,11 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_stat_calcu
 void main() {
   group('FeatAsiExtension Tests', () {
     test('Resilient feat has all 6 abilities, requires choice, and grants saving throw', () {
-      const resilient = SrdFeatsLibrary.resilient;
+      const resilient = Feat(
+        id: EntityId(slug: 'resilient', ruleset: RulesetVersion.v2024),
+        name: 'Resilient',
+        descriptionMarkdown: '',
+      );
       expect(resilient.hasAbilityScoreIncrease, isTrue);
       expect(resilient.requiresAbilityChoice, isTrue);
       expect(resilient.selectableAbilities.length, equals(6));
@@ -23,7 +26,11 @@ void main() {
     });
 
     test('Athlete feat allows STR or DEX choice and does not grant saving throw', () {
-      const athlete = SrdFeatsLibrary.athlete;
+      const athlete = Feat(
+        id: EntityId(slug: 'athlete', ruleset: RulesetVersion.v2024),
+        name: 'Athlete',
+        descriptionMarkdown: '',
+      );
       expect(athlete.hasAbilityScoreIncrease, isTrue);
       expect(athlete.requiresAbilityChoice, isTrue);
       expect(athlete.selectableAbilities, equals([AbilityType.strength, AbilityType.dexterity]));
@@ -32,7 +39,11 @@ void main() {
     });
 
     test('Observant feat allows INT or WIS choice', () {
-      const observant = SrdFeatsLibrary.observant;
+      const observant = Feat(
+        id: EntityId(slug: 'observant', ruleset: RulesetVersion.v2024),
+        name: 'Observant',
+        descriptionMarkdown: '',
+      );
       expect(observant.hasAbilityScoreIncrease, isTrue);
       expect(observant.requiresAbilityChoice, isTrue);
       expect(observant.selectableAbilities, equals([AbilityType.intelligence, AbilityType.wisdom]));
@@ -40,7 +51,11 @@ void main() {
     });
 
     test('Actor feat has fixed single ability (CHA)', () {
-      const actor = SrdFeatsLibrary.actor;
+      const actor = Feat(
+        id: EntityId(slug: 'actor', ruleset: RulesetVersion.v2024),
+        name: 'Actor',
+        descriptionMarkdown: '',
+      );
       expect(actor.hasAbilityScoreIncrease, isTrue);
       expect(actor.requiresAbilityChoice, isFalse);
       expect(actor.selectableAbilities, equals([AbilityType.charisma]));
@@ -48,7 +63,11 @@ void main() {
     });
 
     test('Heavy Armor Master has fixed single ability (STR)', () {
-      const ham = SrdFeatsLibrary.heavyArmorMaster;
+      const ham = Feat(
+        id: EntityId(slug: 'heavy-armor-master', ruleset: RulesetVersion.v2024),
+        name: 'Heavy Armor Master',
+        descriptionMarkdown: '',
+      );
       expect(ham.hasAbilityScoreIncrease, isTrue);
       expect(ham.requiresAbilityChoice, isFalse);
       expect(ham.selectableAbilities, equals([AbilityType.strength]));

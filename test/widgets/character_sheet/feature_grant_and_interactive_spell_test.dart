@@ -330,8 +330,8 @@ void main() {
         feats: [
           EntityReference<DomainEntity>(
             refType: EntityType.feat,
-            slug: 'alert',
-            displayName: 'Alert',
+            slug: 'grappler',
+            displayName: 'Grappler',
           ),
         ],
       );
@@ -359,7 +359,7 @@ void main() {
       expect(find.text('Agonizing Blast'), findsOneWidget);
 
       // Verify feat
-      expect(find.text('Alert'), findsOneWidget);
+      expect(find.text('Grappler'), findsOneWidget);
 
       // Tap on Agonizing Blast chip to open reference modal
       await tester.tap(find.text('Agonizing Blast'));
@@ -373,12 +373,12 @@ void main() {
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
 
-      // Tap on Alert feat chip
-      await tester.tap(find.text('Alert'));
+      // Tap on Grappler feat chip
+      await tester.tap(find.text('Grappler'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Alert'), findsAtLeastNWidgets(2));
-      expect(find.textContaining('Initiative'), findsAtLeastNWidgets(1));
+      expect(find.text('Grappler'), findsAtLeastNWidgets(2));
+      expect(find.textContaining('grappling'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('Visual stress test: 2.0x Text Scale renders without RenderFlex overflow', (tester) async {

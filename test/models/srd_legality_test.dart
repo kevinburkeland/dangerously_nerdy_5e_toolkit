@@ -39,6 +39,22 @@ void main() {
       'tenser\'s',
       'evard\'s',
       'melf\'s',
+      'hexblade',
+      'fathomless',
+      'genie',
+      'undead patron',
+      'undying',
+      'pact of the talisman',
+      'custom lineage',
+      'battle master',
+      'circle of the moon',
+      'light domain',
+      'wild magic sorcery',
+      'archfey patron',
+      'sharpshooter',
+      'great weapon master',
+      'war caster',
+      'polearm master',
     ];
 
     test('SRD summons library contains no WotC Product Identity terms in names or descriptions', () {
@@ -153,9 +169,12 @@ void main() {
 
     test('Subclass Spells Library contains no WotC Product Identity terms', () {
       final warlockSpells = SubclassSpellsLibrary.getExpandedSpells('warlock', 'great_old_one');
-      final fathomlessSpells = SubclassSpellsLibrary.getExpandedSpells('warlock', 'fathomless');
+      final fiendSpells = SubclassSpellsLibrary.getExpandedSpells('warlock', 'fiend');
 
-      final allSpellNames = {...warlockSpells, ...fathomlessSpells};
+      expect(SubclassSpellsLibrary.getExpandedSpells('warlock', 'fathomless'), isEmpty);
+      expect(SubclassSpellsLibrary.getExpandedSpells('warlock', 'hexblade'), isEmpty);
+
+      final allSpellNames = {...warlockSpells, ...fiendSpells};
       for (final spell in allSpellNames) {
         final lower = spell.toLowerCase();
         for (final forbidden in forbiddenProductIdentity) {

@@ -8,25 +8,22 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart
 
 void main() {
   group('SRD Character Libraries Tests', () {
-    test('SrdFeatsLibrary contains expected 2014 and 2024 feats', () {
+    test('SrdFeatsLibrary contains only the Grappler feat under strict SRD compliance', () {
       final allFeats = SrdFeatsLibrary.allFeats;
-      expect(allFeats.length, greaterThanOrEqualTo(15));
+      expect(allFeats.length, equals(1));
+      expect(allFeats.first.name, equals('Grappler'));
+      expect(allFeats.first.id.slug, equals('grappler'));
 
       final originFeats = SrdFeatsLibrary.getOriginFeats();
-      expect(originFeats.length, greaterThanOrEqualTo(10));
-      expect(originFeats.any((f) => f.name == 'Alert'), isTrue);
-      expect(originFeats.any((f) => f.name == 'Savage Attacker'), isTrue);
-      expect(originFeats.any((f) => f.name == 'Tough'), isTrue);
-      expect(originFeats.any((f) => f.name == 'Magic Initiate'), isTrue);
+      expect(originFeats, isEmpty);
 
       final generalFeats = SrdFeatsLibrary.getGeneralFeats();
-      expect(generalFeats.any((f) => f.name == 'Great Weapon Master'), isTrue);
-      expect(generalFeats.any((f) => f.name == 'War Caster'), isTrue);
-      expect(generalFeats.any((f) => f.name == 'Sentinel'), isTrue);
+      expect(generalFeats.length, equals(1));
+      expect(generalFeats.first.name, equals('Grappler'));
 
-      final findBySlug = SrdFeatsLibrary.findBySlug('savage-attacker');
+      final findBySlug = SrdFeatsLibrary.findBySlug('grappler');
       expect(findBySlug, isNotNull);
-      expect(findBySlug!.name, 'Savage Attacker');
+      expect(findBySlug!.name, equals('Grappler'));
     });
 
     test('SrdSkillsLibrary contains all 18 standard 5e skills with abilities', () {
@@ -74,6 +71,7 @@ void main() {
     test('SrdSpeciesLibrary contains core SRD species with traits', () {
       final species = SrdSpeciesLibrary.allSpecies;
       expect(species.length, greaterThanOrEqualTo(9));
+      expect(species.any((s) => s.id.slug == 'custom-lineage'), isFalse);
 
       final human = SrdSpeciesLibrary.findBySlug('human');
       expect(human, isNotNull);
@@ -89,21 +87,17 @@ void main() {
       expect(dwarf!.customProperties['poisonResistance'], isTrue);
     });
 
-    test('SrdBackgroundsLibrary contains background options with skill grants', () {
+    test('SrdBackgroundsLibrary contains only the Acolyte background under strict SRD compliance', () {
       final bgs = SrdBackgroundsLibrary.allBackgrounds;
-      expect(bgs.length, greaterThanOrEqualTo(10));
-
-      final soldier = SrdBackgroundsLibrary.findBySlug('soldier');
-      expect(soldier, isNotNull);
-      expect(soldier!.skillProficiencies, containsAll(['Athletics', 'Intimidation']));
+      expect(bgs.length, equals(1));
 
       final acolyte = SrdBackgroundsLibrary.findBySlug('acolyte');
       expect(acolyte, isNotNull);
-      expect(acolyte!.skillProficiencies, containsAll(['Insight', 'Religion']));
+      expect(acolyte!.name, equals('Acolyte'));
+      expect(acolyte.skillProficiencies, containsAll(['Insight', 'Religion']));
 
-      final criminal = SrdBackgroundsLibrary.findBySlug('criminal');
-      expect(criminal, isNotNull);
-      expect(criminal!.skillProficiencies, containsAll(['Deception', 'Stealth']));
+      expect(SrdBackgroundsLibrary.findBySlug('soldier'), isNull);
+      expect(SrdBackgroundsLibrary.findBySlug('criminal'), isNull);
     });
   });
 }

@@ -159,8 +159,8 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      // Step: Background -> Select Soldier
-      await tester.tap(find.text('Soldier'));
+      // Step: Background -> Select Acolyte
+      await tester.tap(find.text('Acolyte'));
       await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView), const Offset(0, -500));
       await tester.pumpAndSettle();
@@ -226,7 +226,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Step 5: Ability Score Allocation'), findsNothing);
-      expect(find.textContaining('Feat'), findsWidgets);
+      expect(find.textContaining('Equipment'), findsWidgets);
     });
 
     testWidgets('Unassigning score returns it to pool and re-disables Next Step', (tester) async {

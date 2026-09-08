@@ -119,7 +119,7 @@ void main() {
   });
 
   group('CharacterBuilderScreen Skill Overlap & Wizard Progression Widget Tests', () {
-    testWidgets('Soldier background colliding with Fighter Athletics locks Next Step until replacement is chosen', (tester) async {
+    testWidgets('Acolyte background colliding with Fighter Insight locks Next Step until replacement is chosen', (tester) async {
       tester.view.physicalSize = const Size(1280, 2000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -160,9 +160,9 @@ void main() {
       await tester.tap(acrobaticsChipFinder);
       await tester.pumpAndSettle();
 
-      // Select Athletics chip for Fighter
-      final athleticsChipFinder = find.widgetWithText(FilterChip, 'Athletics').first;
-      await tester.tap(athleticsChipFinder);
+      // Select Insight chip for Fighter
+      final insightChipFinder = find.widgetWithText(FilterChip, 'Insight').first;
+      await tester.tap(insightChipFinder);
       await tester.pumpAndSettle();
 
       // Advance to next step (Fighting style if present)
@@ -183,8 +183,8 @@ void main() {
       // We are now on Step 4: Background!
       expect(find.textContaining('Choose Background'), findsOneWidget);
 
-      // Tap Soldier background (grants Athletics & Intimidation)
-      await tester.tap(find.text('Soldier'));
+      // Tap Acolyte background (grants Insight & Religion)
+      await tester.tap(find.text('Acolyte'));
       await tester.pumpAndSettle();
 
       // VERIFY: Collision alert is displayed!

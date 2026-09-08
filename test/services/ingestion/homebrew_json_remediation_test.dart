@@ -144,19 +144,18 @@ void main() {
     test('4. Background Parser resolves _copy against SRD base backgrounds and cleans origin feats', () {
       final parser = CompendiumBackgroundParser();
 
-      // Background with _copy linking to Criminal and an origin feat with source pipe
+      // Background with _copy linking to Acolyte and an origin feat with source pipe
       final bg = parser.parseBackground({
-        'name': 'Port City Criminal',
-        '_copy': {'name': 'Criminal', 'source': 'PHB'},
+        'name': 'Temple Initiate',
+        '_copy': {'name': 'Acolyte', 'source': 'PHB'},
         'originFeat': 'Alert|PHB',
         'feats': [{'feat': 'Alert|PHB'}],
       });
 
       expect(bg.originFeat, equals('Alert'));
-      expect(bg.skillProficiencies, containsAll(['Deception', 'Stealth']));
-      expect(bg.toolProficiencies, contains('Thieves\' Tools'));
+      expect(bg.skillProficiencies, containsAll(['Insight', 'Religion']));
       expect(bg.descriptionMarkdown, isNotEmpty);
-      expect(GrantEvaluator.evaluateGrantedSkills(bg.grants).map((s) => s.displayName), containsAll(['Deception', 'Stealth']));
+      expect(GrantEvaluator.evaluateGrantedSkills(bg.grants).map((s) => s.displayName), containsAll(['Insight', 'Religion']));
       expect(bg.grants.any((g) => g.type == GrantType.bonusFeat && g.payload['feat'] == 'Alert'), isTrue);
     });
 
@@ -235,7 +234,7 @@ void main() {
         'backgrounds': [
           {
             'name': 'Bounty Hunter Copy',
-            '_copy': {'name': 'Criminal', 'source': 'PHB'},
+            '_copy': {'name': 'Acolyte', 'source': 'PHB'},
             'originFeat': 'Skilled|PHB',
           }
         ],
@@ -267,7 +266,7 @@ void main() {
 
       // Verify backgrounds revitalization
       expect(compendium.backgrounds.first.originFeat, equals('Skilled'));
-      expect(compendium.backgrounds.first.skillProficiencies, contains('Deception'));
+      expect(compendium.backgrounds.first.skillProficiencies, contains('Insight'));
 
       // Verify generic entry revitalization
       expect(compendium.otherEntries.first.category, equals('Eldritch Invocation'));
