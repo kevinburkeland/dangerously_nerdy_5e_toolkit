@@ -31,4 +31,10 @@ abstract class ICampaignRepository {
 
   /// Sets the active campaign profile ID and persists the selection.
   Future<void> setActiveProfileId(String id);
+
+  /// Reactive stream broadcasting updates to the active campaign profile.
+  Stream<CampaignProfile?> watchActiveProfile();
+
+  /// Reactive stream broadcasting updates to the list of all campaign profiles.
+  Stream<List<CampaignProfile>> watchAllProfiles();
 }

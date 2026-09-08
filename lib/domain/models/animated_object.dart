@@ -1,6 +1,6 @@
-import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../utils/dice_formatters.dart';
 import '../../models/srd_summons/srd_summons_library.dart';
+import 'value_objects/hit_points.dart';
 
 /// Represents standard 5e animated object size classifications and combat metrics.
 /// Pure Dart domain model decoupled from Flutter UI dependencies.
@@ -125,9 +125,7 @@ class AnimatedObjectInstance {
   final String id;
   String name;
   final ObjectSize size;
-  int _currentHp;
-  final int maxHp;
-  int _tempHp;
+  HitPoints hitPoints;
   String damageType; // Bludgeoning, Piercing, Slashing, Fire, etc.
   bool isSilvered;
 
@@ -150,8 +148,9 @@ class AnimatedObjectInstance {
     required this.id,
     required this.name,
     required this.size,
-    required int currentHp,
-    required int maxHp,
+    HitPoints? hitPoints,
+    int? currentHp,
+    int? maxHp,
     int tempHp = 0,
     this.damageType = 'Bludgeoning',
     this.isSilvered = false,
@@ -170,9 +169,12 @@ class AnimatedObjectInstance {
     int? customAccentColorValue,
     Object? customAccentColor,
   })  : customAccentColorValue = customAccentColorValue ?? _extractColorValue(customAccentColor),
-        maxHp = maxHp < 1 ? 1 : maxHp,
-        _currentHp = currentHp.clamp(0, maxHp < 1 ? 1 : maxHp),
-        _tempHp = tempHp < 0 ? 0 : tempHp;
+        hitPoints = hitPoints ??
+            HitPoints(
+              currentHp: currentHp ?? (maxHp ?? 10),
+              maxHp: maxHp ?? 10,
+              tempHp: tempHp,
+            );
 
   static int? _extractColorValue(Object? c) {
     if (c == null) return null;
@@ -180,14 +182,16 @@ class AnimatedObjectInstance {
     return null;
   }
 
-  int get currentHp => _currentHp;
+  int get currentHp => hitPoints.currentHp;
   set currentHp(int value) {
-    _currentHp = value.clamp(0, maxHp);
+    hitPoints = hitPoints.copyWith(currentHp: value);
   }
 
-  int get tempHp => _tempHp;
+  int get maxHp => hitPoints.maxHp;
+
+  int get tempHp => hitPoints.tempHp;
   set tempHp(int value) {
-    _tempHp = value < 0 ? 0 : value;
+    hitPoints = hitPoints.setTempHp(value);
   }
 
   /// Resolves the full 5e SRD MinionStatBlock for this creature instance.
@@ -259,42 +263,31 @@ class AnimatedObjectInstance {
         secondaryDamageType: secondaryDamageType,
       );
 
-  bool get isDead => _currentHp <= 0;
+  bool get isDead => hitPoints.isDead;
 
   /// Safe calculation of remaining HP percentage, strictly protected against NaN / division-by-zero.
-  double get hpPercent => _currentHp.ratioOf(maxHp);
+  double get hpPercent => hitPoints.hpPercent;
 
-  /// Mutating damage application with Temporary HP absorption (5e RAW).
+  /// Mutating damage application with Temporary HP absorption (5e RAW) via HitPoints Value Object.
   void takeDamage(int amount) {
-    if (amount <= 0) return;
-    int remaining = amount;
-    if (_tempHp > 0) {
-      if (remaining <= _tempHp) {
-        _tempHp -= remaining;
-        return;
-      } else {
-        remaining -= _tempHp;
-        _tempHp = 0;
-      }
-    }
-    _currentHp = (_currentHp - remaining).clamp(0, maxHp);
+    hitPoints = hitPoints.takeDamage(amount);
   }
 
-  /// Mutating healing application clamped to [0, maxHp] (does not affect Temp HP).
+  /// Mutating healing application clamped to [0, maxHp] via HitPoints Value Object.
   void heal(int amount) {
-    if (amount <= 0) return;
-    _currentHp = (_currentHp + amount).clamp(0, maxHp);
+    hitPoints = hitPoints.heal(amount);
   }
 
-  /// Sets Temporary HP (non-stacking, overrides if positive).
+  /// Sets Temporary HP (non-stacking, overrides if positive) via HitPoints Value Object.
   void grantTempHp(int amount) {
-    _tempHp = amount < 0 ? 0 : amount;
+    hitPoints = hitPoints.grantTempHp(amount);
   }
 
   AnimatedObjectInstance copyWith({
     String? id,
     String? name,
     ObjectSize? size,
+    HitPoints? hitPoints,
     int? currentHp,
     int? maxHp,
     int? tempHp,
@@ -313,13 +306,20 @@ class AnimatedObjectInstance {
     int? customAccentColorValue,
     Object? customAccentColor,
   }) {
+    final resolvedHp = hitPoints ??
+        (currentHp != null || maxHp != null || tempHp != null
+            ? this.hitPoints.copyWith(
+                currentHp: currentHp,
+                maxHp: maxHp,
+                tempHp: tempHp,
+              )
+            : this.hitPoints);
+
     return AnimatedObjectInstance(
       id: id ?? this.id,
       name: name ?? this.name,
       size: size ?? this.size,
-      currentHp: currentHp ?? _currentHp,
-      maxHp: maxHp ?? this.maxHp,
-      tempHp: tempHp ?? _tempHp,
+      hitPoints: resolvedHp,
       damageType: damageType ?? this.damageType,
       isSilvered: isSilvered ?? this.isSilvered,
       customAc: customAc ?? this.customAc,
@@ -345,9 +345,8 @@ class AnimatedObjectInstance {
           id == other.id &&
           name == other.name &&
           size == other.size &&
-          _currentHp == other._currentHp &&
+          hitPoints == other.hitPoints &&
           maxHp == other.maxHp &&
-          _tempHp == other._tempHp &&
           damageType == other.damageType &&
           isSilvered == other.isSilvered &&
           customAc == other.customAc &&
@@ -367,9 +366,8 @@ class AnimatedObjectInstance {
         id,
         name,
         size,
-        _currentHp,
+        hitPoints,
         maxHp,
-        _tempHp,
         damageType,
         isSilvered,
         customAc,
@@ -387,5 +385,5 @@ class AnimatedObjectInstance {
 
   @override
   String toString() =>
-      'AnimatedObjectInstance(id: $id, name: $name, size: ${size.displayName}, HP: $_currentHp/$maxHp, AC: $ac)';
+      'AnimatedObjectInstance(id: $id, name: $name, size: ${size.displayName}, HP: $currentHp/$maxHp, AC: $ac)';
 }

@@ -30,28 +30,10 @@ class CombatEncounterService {
   }) async {
     if (amount <= 0) return character;
 
-    final curHp = character.resources.currentHp;
-    final curTemp = character.resources.tempHp;
-
-    int newHp = curHp;
-    int newTemp = curTemp;
-
-    if (curTemp > 0) {
-      if (amount <= curTemp) {
-        newTemp = curTemp - amount;
-      } else {
-        final remainingDamage = amount - curTemp;
-        newTemp = 0;
-        newHp = math.max(0, curHp - remainingDamage);
-      }
-    } else {
-      newHp = math.max(0, curHp - amount);
-    }
-
+    final updatedHp = character.resources.hitPoints.takeDamage(amount);
     final updated = character.copyWith(
       resources: character.resources.copyWith(
-        currentHp: newHp,
-        tempHp: newTemp,
+        hitPoints: updatedHp,
       ),
     );
 
@@ -68,19 +50,21 @@ class CombatEncounterService {
   }) async {
     if (amount <= 0) return character;
 
-    final curHp = character.resources.currentHp;
     final effectiveMaxHp = maxHp ?? () {
       try {
         return CharacterEvaluationEngine.evaluate(character).maxHp;
       } catch (_) {
-        return math.max(10, curHp);
+        return math.max(10, character.resources.currentHp);
       }
     }();
-    final newHp = math.min(effectiveMaxHp, curHp + amount);
+
+    final updatedHp = character.resources.hitPoints
+        .copyWith(maxHp: effectiveMaxHp)
+        .heal(amount);
 
     final updated = character.copyWith(
       resources: character.resources.copyWith(
-        currentHp: newHp,
+        hitPoints: updatedHp,
       ),
     );
 
@@ -107,9 +91,9 @@ class CombatEncounterService {
     required Character character,
     required int tempHp,
   }) async {
-    final clampedTemp = math.max(0, tempHp);
+    final updatedHp = character.resources.hitPoints.setTempHp(tempHp);
     final updated = character.copyWith(
-      resources: character.resources.copyWith(tempHp: clampedTemp),
+      resources: character.resources.copyWith(hitPoints: updatedHp),
     );
     await characterRepo.saveCharacter(updated);
     return updated;
@@ -215,32 +199,16 @@ class CombatEncounterService {
       if (p.participantId != participantId) return p;
 
       if (delta < 0) {
-        int dmg = delta.abs();
-        int curTemp = p.tempHp;
-        int curHp = p.currentHp;
-
-        if (curTemp > 0) {
-          if (dmg <= curTemp) {
-            curTemp -= dmg;
-            dmg = 0;
-          } else {
-            dmg -= curTemp;
-            curTemp = 0;
-          }
-        }
-
-        curHp = (curHp - dmg).clamp(0, p.maxHp);
-        final isDefeated = curHp <= 0;
+        final updatedHp = p.hitPoints.takeDamage(delta.abs());
         return p.copyWith(
-          currentHp: curHp,
-          tempHp: curTemp,
-          isDefeated: isDefeated,
+          hitPoints: updatedHp,
+          isDefeated: updatedHp.isDead,
         );
       } else {
-        final curHp = (p.currentHp + delta).clamp(0, p.maxHp);
+        final updatedHp = p.hitPoints.heal(delta);
         return p.copyWith(
-          currentHp: curHp,
-          isDefeated: curHp <= 0,
+          hitPoints: updatedHp,
+          isDefeated: updatedHp.isDead,
         );
       }
     }).toList();

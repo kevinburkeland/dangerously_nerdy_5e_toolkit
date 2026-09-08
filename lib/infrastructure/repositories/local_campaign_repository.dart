@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
@@ -12,21 +12,29 @@ import '../dtos/campaign_profile_dto.dart';
 import 'local_character_repository.dart';
 
 /// Concrete infrastructure adapter implementing [ICampaignRepository]
-/// with in-memory caching, debounced persistence, and Hive/IndexedDB ([AppDatabaseService]) storage.
-class LocalCampaignRepository extends ChangeNotifier implements ICampaignRepository {
+/// with in-memory caching, debounced persistence, Hive/IndexedDB ([AppDatabaseService]) storage,
+/// and reactive broadcast Streams. Completely decoupled from UI frameworks (no ChangeNotifier).
+class LocalCampaignRepository implements ICampaignRepository {
   static const String profileKeyPrefix = 'dn5e_campaign_profile_';
   static const String profileIndexKey = 'dn5e_campaign_profile_index';
   static const String activeProfileIdKey = 'dn5e_campaign_active_id';
 
-  static final LocalCampaignRepository _instance = LocalCampaignRepository._internal();
-  factory LocalCampaignRepository() => _instance;
-  LocalCampaignRepository._internal();
-
-  final AppDatabaseService _db = AppDatabaseService.instance;
-  final ICharacterRepository _characterRepo = LocalCharacterRepository();
+  final AppDatabaseService _db;
+  final ICharacterRepository _characterRepo;
   final Map<String, CampaignProfile> _memoryCache = {};
   String? _activeProfileId;
   bool _initialized = false;
+
+  final StreamController<CampaignProfile?> _activeProfileController =
+      StreamController<CampaignProfile?>.broadcast(sync: true);
+  final StreamController<List<CampaignProfile>> _allProfilesController =
+      StreamController<List<CampaignProfile>>.broadcast(sync: true);
+
+  LocalCampaignRepository({
+    AppDatabaseService? db,
+    ICharacterRepository? characterRepo,
+  })  : _db = db ?? AppDatabaseService.instance,
+        _characterRepo = characterRepo ?? LocalCharacterRepository();
 
   @override
   String? get activeProfileId => _activeProfileId;
@@ -154,7 +162,7 @@ class LocalCampaignRepository extends ChangeNotifier implements ICampaignReposit
 
       await _persistIndex();
       _initialized = true;
-      notifyListeners();
+      _emitState();
       return profiles;
     } catch (e, st) {
       LoggingService().logNonFatal(
@@ -164,6 +172,27 @@ class LocalCampaignRepository extends ChangeNotifier implements ICampaignReposit
       );
       return [];
     }
+  }
+
+  @override
+  Stream<CampaignProfile?> watchActiveProfile() => _activeProfileController.stream;
+
+  @override
+  Stream<List<CampaignProfile>> watchAllProfiles() => _allProfilesController.stream;
+
+  void _emitState() {
+    if (!_activeProfileController.isClosed) {
+      _activeProfileController.add(activeProfile);
+    }
+    if (!_allProfilesController.isClosed) {
+      _allProfilesController.add(allProfiles);
+    }
+  }
+
+  /// Closes the underlying broadcast stream controllers.
+  void dispose() {
+    _activeProfileController.close();
+    _allProfilesController.close();
   }
 
   @override
@@ -181,7 +210,7 @@ class LocalCampaignRepository extends ChangeNotifier implements ICampaignReposit
   @override
   Future<void> saveProfile(CampaignProfile profile) async {
     _memoryCache[profile.id] = profile;
-    notifyListeners();
+    _emitState();
 
     AppServices.instance.debouncedStorage.scheduleWrite(
       'save_campaign_profile_${profile.id}',
@@ -195,7 +224,7 @@ class LocalCampaignRepository extends ChangeNotifier implements ICampaignReposit
     await AppServices.instance.debouncedStorage.flushKey('save_campaign_profile_${profile.id}');
     _memoryCache[profile.id] = profile;
     await _persistProfileToDisk(profile);
-    notifyListeners();
+    _emitState();
   }
 
   @override
@@ -219,7 +248,7 @@ class LocalCampaignRepository extends ChangeNotifier implements ICampaignReposit
         await setActiveProfileId(_activeProfileId!);
       }
     }
-    notifyListeners();
+    _emitState();
   }
 
   @override
@@ -232,7 +261,7 @@ class LocalCampaignRepository extends ChangeNotifier implements ICampaignReposit
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(activeProfileIdKey, id);
     } catch (_) {}
-    notifyListeners();
+    _emitState();
   }
 
   Future<void> _persistProfileToDisk(CampaignProfile profile) async {

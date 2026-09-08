@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +29,28 @@ class CampaignProfileService extends ChangeNotifier implements ICampaignReposito
   final Map<String, CampaignProfile> _memoryCache = {};
   String? _activeProfileId;
   bool _initialized = false;
+
+  final StreamController<CampaignProfile?> _activeProfileController =
+      StreamController<CampaignProfile?>.broadcast(sync: true);
+  final StreamController<List<CampaignProfile>> _allProfilesController =
+      StreamController<List<CampaignProfile>>.broadcast(sync: true);
+
+  @override
+  Stream<CampaignProfile?> watchActiveProfile() => _activeProfileController.stream;
+
+  @override
+  Stream<List<CampaignProfile>> watchAllProfiles() => _allProfilesController.stream;
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    if (!_activeProfileController.isClosed) {
+      _activeProfileController.add(activeProfile);
+    }
+    if (!_allProfilesController.isClosed) {
+      _allProfilesController.add(allProfiles);
+    }
+  }
 
   @override
   String? get activeProfileId => _activeProfileId;

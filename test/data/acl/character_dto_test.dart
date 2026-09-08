@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/data/acl/character_dto.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_dto.dart';
 
 void main() {
   group('CharacterDto Serialization & ACL Integrity', () {

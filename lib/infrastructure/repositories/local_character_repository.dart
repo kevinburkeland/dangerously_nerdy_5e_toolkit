@@ -12,11 +12,10 @@ class LocalCharacterRepository implements ICharacterRepository {
   static const String _kSavedRosterKey = 'saved_characters_roster_v1';
   static const String _kActiveCharacterIdKey = 'saved_active_character_id_v1';
 
-  static final LocalCharacterRepository _instance = LocalCharacterRepository._internal();
-  factory LocalCharacterRepository() => _instance;
-  LocalCharacterRepository._internal();
+  final AppDatabaseService _db;
 
-  final AppDatabaseService _db = AppDatabaseService.instance;
+  LocalCharacterRepository({AppDatabaseService? db})
+      : _db = db ?? AppDatabaseService.instance;
 
   @override
   Future<List<Character>> loadCharacters() async {

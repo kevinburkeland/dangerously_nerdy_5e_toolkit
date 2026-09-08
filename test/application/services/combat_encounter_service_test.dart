@@ -97,6 +97,12 @@ class _FakeCampaignRepo implements ICampaignRepository {
 
   @override
   Future<void> setActiveProfileId(String id) async {}
+
+  @override
+  Stream<CampaignProfile?> watchActiveProfile() => Stream.value(currentProfile);
+
+  @override
+  Stream<List<CampaignProfile>> watchAllProfiles() => Stream.value(allProfiles);
 }
 
 void main() {

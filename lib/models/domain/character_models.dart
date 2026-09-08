@@ -12,6 +12,7 @@ import '../characters/srd_classes_library.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../services/rules/character_evaluation_engine.dart';
 import '../../data/acl/character_telemetry_dto.dart';
+import '../../domain/models/value_objects/hit_points.dart';
 
 /// 5e Core Ability Score Keys
 enum AbilityType {
@@ -740,6 +741,12 @@ class CharacterResourcePool {
   final int exhaustionLevel; // clamped 0-10
   final bool hasHeroicInspiration;
 
+  HitPoints get hitPoints => HitPoints(
+        currentHp: currentHp,
+        maxHp: 9999,
+        tempHp: tempHp,
+      );
+
   const CharacterResourcePool({
     this.currentHp = 10,
     this.tempHp = 0,
@@ -756,6 +763,7 @@ class CharacterResourcePool {
         exhaustionLevel = exhaustionLevel < 0 ? 0 : (exhaustionLevel > 10 ? 10 : exhaustionLevel);
 
   CharacterResourcePool copyWith({
+    HitPoints? hitPoints,
     int? currentHp,
     int? tempHp,
     Map<String, int>? currentHitDice,
@@ -767,9 +775,12 @@ class CharacterResourcePool {
     int? exhaustionLevel,
     bool? hasHeroicInspiration,
   }) {
+    final resolvedCurrentHp = hitPoints?.currentHp ?? currentHp ?? this.currentHp;
+    final resolvedTempHp = hitPoints?.tempHp ?? tempHp ?? this.tempHp;
+
     return CharacterResourcePool(
-      currentHp: currentHp ?? this.currentHp,
-      tempHp: tempHp ?? this.tempHp,
+      currentHp: resolvedCurrentHp,
+      tempHp: resolvedTempHp,
       currentHitDice: currentHitDice != null ? Map.unmodifiable(currentHitDice) : this.currentHitDice,
       spellSlots: spellSlots ?? this.spellSlots,
       customResourcesCurrent:
@@ -796,9 +807,15 @@ class CharacterResourcePool {
       };
 
   factory CharacterResourcePool.fromMap(Map<String, dynamic> map) {
+    final curHp = (map['currentHp'] as num?)?.toInt() ?? 10;
+    final tHp = (map['tempHp'] as num?)?.toInt() ?? 0;
+    final hp = map['hitPoints'] is Map
+        ? HitPoints.fromMap(Map<String, dynamic>.from(map['hitPoints'] as Map))
+        : HitPoints(currentHp: curHp, maxHp: 9999, tempHp: tHp);
+
     return CharacterResourcePool(
-      currentHp: (map['currentHp'] as num?)?.toInt() ?? 10,
-      tempHp: (map['tempHp'] as num?)?.toInt() ?? 0,
+      currentHp: hp.currentHp,
+      tempHp: hp.tempHp,
       currentHitDice: Map<String, int>.from(map['currentHitDice'] as Map? ?? {}),
       spellSlots: SpellSlotPool.fromMap(
           Map<String, dynamic>.from(map['spellSlots'] as Map? ?? {})),

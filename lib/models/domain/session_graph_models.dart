@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../domain/models/value_objects/hit_points.dart';
 import '../animated_object.dart';
 import 'loot_models.dart';
 
@@ -106,13 +107,19 @@ class EncounterParticipant {
   final bool isDefeated;
   final bool isActiveTurn;
 
+  HitPoints get hitPoints => HitPoints(
+        currentHp: currentHp,
+        maxHp: maxHp,
+        tempHp: tempHp,
+      );
+
   const EncounterParticipant({
     required this.participantId,
     required this.entityLink,
     this.initiativeScore = 10,
     this.initiativeTieBreaker = 0,
-    required this.currentHp,
-    required this.maxHp,
+    this.currentHp = 10,
+    this.maxHp = 10,
     this.tempHp = 0,
     this.armorClass = 10,
     this.activeConditions = const [],
@@ -125,6 +132,7 @@ class EncounterParticipant {
     RoomEntityLink? entityLink,
     int? initiativeScore,
     int? initiativeTieBreaker,
+    HitPoints? hitPoints,
     int? currentHp,
     int? maxHp,
     int? tempHp,
@@ -133,14 +141,18 @@ class EncounterParticipant {
     bool? isDefeated,
     bool? isActiveTurn,
   }) {
+    final int resolvedCurrentHp = hitPoints?.currentHp ?? currentHp ?? this.currentHp;
+    final int resolvedMaxHp = hitPoints?.maxHp ?? maxHp ?? this.maxHp;
+    final int resolvedTempHp = hitPoints?.tempHp ?? tempHp ?? this.tempHp;
+
     return EncounterParticipant(
       participantId: participantId ?? this.participantId,
       entityLink: entityLink ?? this.entityLink,
       initiativeScore: initiativeScore ?? this.initiativeScore,
       initiativeTieBreaker: initiativeTieBreaker ?? this.initiativeTieBreaker,
-      currentHp: currentHp ?? this.currentHp,
-      maxHp: maxHp ?? this.maxHp,
-      tempHp: tempHp ?? this.tempHp,
+      currentHp: resolvedCurrentHp,
+      maxHp: resolvedMaxHp,
+      tempHp: resolvedTempHp,
       armorClass: armorClass ?? this.armorClass,
       activeConditions: activeConditions ?? this.activeConditions,
       isDefeated: isDefeated ?? this.isDefeated,
@@ -163,6 +175,13 @@ class EncounterParticipant {
       };
 
   factory EncounterParticipant.fromMap(Map<String, dynamic> map) {
+    final cur = (map['currentHp'] as num?)?.toInt() ?? 10;
+    final max = (map['maxHp'] as num?)?.toInt() ?? 10;
+    final temp = (map['tempHp'] as num?)?.toInt() ?? 0;
+    final hp = map['hitPoints'] is Map
+        ? HitPoints.fromMap(Map<String, dynamic>.from(map['hitPoints'] as Map))
+        : HitPoints(currentHp: cur, maxHp: max, tempHp: temp);
+
     return EncounterParticipant(
       participantId: map['participantId']?.toString() ?? '',
       entityLink: RoomEntityLink.fromMap(
@@ -170,9 +189,9 @@ class EncounterParticipant {
       initiativeScore: (map['initiativeScore'] as num?)?.toInt() ?? 10,
       initiativeTieBreaker:
           (map['initiativeTieBreaker'] as num?)?.toInt() ?? 0,
-      currentHp: (map['currentHp'] as num?)?.toInt() ?? 10,
-      maxHp: (map['maxHp'] as num?)?.toInt() ?? 10,
-      tempHp: (map['tempHp'] as num?)?.toInt() ?? 0,
+      currentHp: hp.currentHp,
+      maxHp: hp.maxHp,
+      tempHp: hp.tempHp,
       armorClass: (map['armorClass'] as num?)?.toInt() ?? 10,
       activeConditions: (map['activeConditions'] as List? ?? [])
           .whereType<String>()
