@@ -9,7 +9,7 @@ void main() {
     test('formatSlugToTitle converts kebab and snake case to clean Title Case', () {
       expect(CharacterTelemetryResolver.formatSlugToTitle('blood-hunter'), 'Blood Hunter');
       expect(CharacterTelemetryResolver.formatSlugToTitle('order_of_the_ghostslayer'), 'Order Of The Ghostslayer');
-      expect(CharacterTelemetryResolver.formatSlugToTitle('arcane-trickster'), 'Arcane Trickster');
+      expect(CharacterTelemetryResolver.formatSlugToTitle('homebrew-shadow-mage'), 'Homebrew Shadow Mage');
       expect(CharacterTelemetryResolver.formatSlugToTitle('champion'), 'Champion');
       expect(CharacterTelemetryResolver.formatSlugToTitle(''), 'Unknown');
     });

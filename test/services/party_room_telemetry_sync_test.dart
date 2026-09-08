@@ -25,8 +25,8 @@ void main() {
         )
         ..backgroundRef = const EntityReference(
           refType: EntityType.background,
-          slug: 'sage',
-          displayName: 'Sage',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         )
         ..startingClassRef = const EntityReference(
           refType: EntityType.classDefinition,

@@ -5,23 +5,23 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver
 
 void main() {
   group('SkillTraitResolver RAW Tests', () {
-    test('Skill collision detection: Soldier Fighter overlaps Athletics and Intimidation', () {
+    test('Skill collision detection: Acolyte Cleric overlaps Insight and Religion', () {
       final report = SkillTraitResolver.resolveSkills(
         speciesSlug: 'human',
-        backgroundSlug: 'soldier', // grants Athletics & Intimidation
-        classSlug: 'fighter',
-        requestedClassSkills: {SkillType.athletics, SkillType.intimidation}, // collisions!
-        compensatoryPicks: {SkillType.perception, SkillType.survival},
+        backgroundSlug: 'acolyte', // grants Insight & Religion
+        classSlug: 'cleric',
+        requestedClassSkills: {SkillType.insight, SkillType.religion}, // collisions!
+        compensatoryPicks: {SkillType.perception, SkillType.history},
         edition: DmRulesEdition.v2024,
       );
 
-      expect(report.collidingSkills, contains(SkillType.athletics));
-      expect(report.collidingSkills, contains(SkillType.intimidation));
+      expect(report.collidingSkills, contains(SkillType.insight));
+      expect(report.collidingSkills, contains(SkillType.religion));
       expect(report.compensatoryPicksEarned, 2);
-      expect(report.resolvedProficiencies.containsKey(SkillType.athletics), isTrue);
-      expect(report.resolvedProficiencies.containsKey(SkillType.intimidation), isTrue);
+      expect(report.resolvedProficiencies.containsKey(SkillType.insight), isTrue);
+      expect(report.resolvedProficiencies.containsKey(SkillType.religion), isTrue);
       expect(report.resolvedProficiencies.containsKey(SkillType.perception), isTrue);
-      expect(report.resolvedProficiencies.containsKey(SkillType.survival), isTrue);
+      expect(report.resolvedProficiencies.containsKey(SkillType.history), isTrue);
     });
 
     test('Species fixed skill: Elf gains Perception and detects collision with Sailor background', () {

@@ -28,8 +28,8 @@ void main() {
         ),
         backgroundRef: EntityReference<DomainEntity>(
           refType: EntityType.background,
-          slug: 'soldier',
-          displayName: 'Soldier',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         ),
         progression: CharacterProgression(
           classes: [

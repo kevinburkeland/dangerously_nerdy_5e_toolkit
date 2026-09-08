@@ -30,8 +30,8 @@ Character _createTestHero(String slug, String name) {
       ),
       backgroundRef: const EntityReference(
         refType: EntityType.background,
-        slug: 'soldier',
-        displayName: 'Soldier',
+        slug: 'acolyte',
+        displayName: 'Acolyte',
       ),
       startingClassSlug: 'fighter',
       startingClassDisplayName: 'Fighter',

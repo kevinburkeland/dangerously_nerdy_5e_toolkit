@@ -49,8 +49,8 @@ void main() {
       // Step 2: Assign Background second
       draft.backgroundRef = const EntityReference(
         refType: EntityType.background,
-        slug: 'soldier',
-        displayName: 'Soldier',
+        slug: 'acolyte',
+        displayName: 'Acolyte',
       );
       expect(draft.hasValidBackground, isTrue);
       expect(draft.isReadyForCompilation, isFalse);
@@ -96,8 +96,8 @@ void main() {
         ),
         backgroundRef: const EntityReference(
           refType: EntityType.background,
-          slug: 'sage',
-          displayName: 'Sage',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         ),
         baseScores: const AbilityScores(),
       );
@@ -152,8 +152,8 @@ void main() {
         startingClassHitDie: 'd10',
         backgroundRef: const EntityReference(
           refType: EntityType.background,
-          slug: 'soldier',
-          displayName: 'Soldier',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         ),
         baseScores: const AbilityScores(
           strength: 15,
@@ -194,7 +194,7 @@ void main() {
       expect(character.name, equals('Valeros'));
       expect(character.rulesEdition, equals(DmRulesEdition.v2024));
       expect(character.speciesRef.slug, equals('human'));
-      expect(character.backgroundRef?.slug, equals('soldier'));
+      expect(character.backgroundRef?.slug, equals('acolyte'));
       expect(character.progression.classes.length, equals(1));
       expect(character.progression.classes.first.classRef.slug, equals('fighter'));
       expect(character.progression.classes.first.level, equals(1));
@@ -232,8 +232,8 @@ void main() {
         startingClassHitDie: 'd6',
         backgroundRef: const EntityReference(
           refType: EntityType.background,
-          slug: 'sage',
-          displayName: 'Sage',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         ),
         baseScores: const AbilityScores(
           strength: 8,

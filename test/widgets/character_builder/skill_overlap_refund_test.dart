@@ -24,22 +24,22 @@ void main() {
     });
 
     test('Selecting class skills and overlapping background grants refunds', () {
-      // Fighter selects Athletics and History
-      controller.setSelectedSkills({SkillType.athletics, SkillType.history});
+      // Cleric selects Insight and History
+      controller.setSelectedSkills({SkillType.insight, SkillType.history});
       expect(controller.refundedSkillChoices, equals(0));
 
-      // Soldier grants Athletics and Intimidation -> Overlap: Athletics
-      controller.setBackgroundSlug('soldier');
+      // Acolyte grants Insight and Religion -> Overlap: Insight
+      controller.setBackgroundSlug('acolyte');
 
-      expect(controller.grantedBackgroundSkills, contains(SkillType.athletics));
-      expect(controller.grantedBackgroundSkills, contains(SkillType.intimidation));
-      expect(controller.collidingSkills, equals({SkillType.athletics}));
+      expect(controller.grantedBackgroundSkills, contains(SkillType.insight));
+      expect(controller.grantedBackgroundSkills, contains(SkillType.religion));
+      expect(controller.collidingSkills, equals({SkillType.insight}));
       expect(controller.refundedSkillChoices, equals(1));
     });
 
     test('Resolving refunded skill adds to bonusReplacementSkills and decrements counter', () {
-      controller.setSelectedSkills({SkillType.athletics, SkillType.history});
-      controller.setBackgroundSlug('soldier');
+      controller.setSelectedSkills({SkillType.insight, SkillType.history});
+      controller.setBackgroundSlug('acolyte');
       expect(controller.refundedSkillChoices, equals(1));
 
       // Pick Stealth as replacement
@@ -50,8 +50,8 @@ void main() {
     });
 
     test('Unresolving refunded skill removes from replacements and restores refund count', () {
-      controller.setSelectedSkills({SkillType.athletics, SkillType.history});
-      controller.setBackgroundSlug('soldier');
+      controller.setSelectedSkills({SkillType.insight, SkillType.history});
+      controller.setBackgroundSlug('acolyte');
       controller.resolveRefundedSkill(SkillType.stealth);
       expect(controller.refundedSkillChoices, equals(0));
 
@@ -61,11 +61,11 @@ void main() {
     });
 
     test('Multiple overlaps from background grant corresponding refund count', () {
-      // Rogue/Fighter selects Athletics AND Intimidation
-      controller.setSelectedSkills({SkillType.athletics, SkillType.intimidation});
-      controller.setBackgroundSlug('soldier'); // grants Athletics & Intimidation
+      // Cleric selects Insight AND Religion
+      controller.setSelectedSkills({SkillType.insight, SkillType.religion});
+      controller.setBackgroundSlug('acolyte'); // grants Insight & Religion
 
-      expect(controller.collidingSkills, equals({SkillType.athletics, SkillType.intimidation}));
+      expect(controller.collidingSkills, equals({SkillType.insight, SkillType.religion}));
       expect(controller.refundedSkillChoices, equals(2));
 
       controller.resolveRefundedSkill(SkillType.survival);
@@ -93,25 +93,25 @@ void main() {
     });
 
     test('Switching to non-colliding background clears unneeded refunds', () {
-      controller.setSelectedSkills({SkillType.athletics, SkillType.history});
-      controller.setBackgroundSlug('soldier'); // collides on Athletics
+      controller.setSelectedSkills({SkillType.insight, SkillType.history});
+      controller.setBackgroundSlug('acolyte'); // collides on Insight
       expect(controller.refundedSkillChoices, equals(1));
 
-      // Switch to Acolyte (Insight, Religion) -> No collision with Athletics/History
-      controller.setBackgroundSlug('acolyte');
+      // Clearing background removes collision
+      controller.setBackgroundSlug(null);
       expect(controller.collidingSkills, isEmpty);
       expect(controller.refundedSkillChoices, equals(0));
     });
 
     test('availableReplacementSkills excludes class, background, species, and selected replacements', () {
-      controller.setSelectedSkills({SkillType.athletics});
-      controller.setBackgroundSlug('soldier'); // grants athletics, intimidation
+      controller.setSelectedSkills({SkillType.insight});
+      controller.setBackgroundSlug('acolyte'); // grants insight, religion
       controller.setSpeciesSlug('elf'); // grants perception
       controller.resolveRefundedSkill(SkillType.stealth);
 
       final available = controller.availableReplacementSkills;
-      expect(available.contains(SkillType.athletics), isFalse);
-      expect(available.contains(SkillType.intimidation), isFalse);
+      expect(available.contains(SkillType.insight), isFalse);
+      expect(available.contains(SkillType.religion), isFalse);
       expect(available.contains(SkillType.perception), isFalse);
       expect(available.contains(SkillType.stealth), isFalse);
       expect(available.contains(SkillType.arcana), isTrue);

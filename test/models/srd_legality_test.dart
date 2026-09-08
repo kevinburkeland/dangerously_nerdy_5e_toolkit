@@ -168,13 +168,15 @@ void main() {
     });
 
     test('Subclass Spells Library contains no WotC Product Identity terms', () {
-      final warlockSpells = SubclassSpellsLibrary.getExpandedSpells('warlock', 'great_old_one');
       final fiendSpells = SubclassSpellsLibrary.getExpandedSpells('warlock', 'fiend');
 
+      expect(SubclassSpellsLibrary.getExpandedSpells('warlock', 'great_old_one'), isEmpty);
+      expect(SubclassSpellsLibrary.getExpandedSpells('warlock', 'archfey'), isEmpty);
+      expect(SubclassSpellsLibrary.getExpandedSpells('warlock', 'celestial'), isEmpty);
       expect(SubclassSpellsLibrary.getExpandedSpells('warlock', 'fathomless'), isEmpty);
       expect(SubclassSpellsLibrary.getExpandedSpells('warlock', 'hexblade'), isEmpty);
 
-      final allSpellNames = {...warlockSpells, ...fiendSpells};
+      final allSpellNames = {...fiendSpells};
       for (final spell in allSpellNames) {
         final lower = spell.toLowerCase();
         for (final forbidden in forbiddenProductIdentity) {

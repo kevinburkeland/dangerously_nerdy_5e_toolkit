@@ -19,7 +19,7 @@ void main() {
         id: EntityId(slug: 'wizard-lvl-2', ruleset: RulesetVersion.v2024),
         name: 'Elminster Apprentice',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(

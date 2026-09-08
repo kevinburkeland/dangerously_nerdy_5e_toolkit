@@ -30,7 +30,7 @@ void main() {
         id: EntityId(slug: 'test-warlock', ruleset: RulesetVersion.v2024),
         name: 'Warlock Hero',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: EntityReference(refType: EntityType.background, slug: 'soldier', displayName: 'Soldier'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         cantrips: [
           EntityReference<Spell>(
             refType: EntityType.spell,
@@ -136,7 +136,7 @@ void main() {
         id: EntityId(slug: 'test-fiend-warlock', ruleset: RulesetVersion.v2024),
         name: 'Fiend Warlock',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
-        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
@@ -186,7 +186,7 @@ void main() {
         id: EntityId(slug: 'test-barbarian', ruleset: RulesetVersion.v2024),
         name: 'Barbarian',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'orc', displayName: 'Orc'),
-        backgroundRef: EntityReference(refType: EntityType.background, slug: 'soldier', displayName: 'Soldier'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
@@ -287,7 +287,7 @@ void main() {
         id: EntityId(slug: 'test-warlock-10', ruleset: RulesetVersion.v2024),
         name: 'High Warlock',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
-        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
@@ -344,7 +344,7 @@ void main() {
         id: const EntityId(slug: 'test-warlock-10-arcanum', ruleset: RulesetVersion.v2024),
         name: 'Arcanum Warlock',
         speciesRef: const EntityReference(refType: EntityType.species, slug: 'tiefling', displayName: 'Tiefling'),
-        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        backgroundRef: const EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: const CharacterProgression(
           classes: [
             ClassLevelProgression(
@@ -507,7 +507,7 @@ void main() {
         id: EntityId(slug: 'test-warlock-2014', ruleset: RulesetVersion.v2014),
         name: 'Classic Warlock',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
-        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(
@@ -619,7 +619,7 @@ void main() {
         id: EntityId(slug: 'test-wizard', ruleset: RulesetVersion.v2024),
         name: 'Wizard Scholar',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'elf', displayName: 'Elf'),
-        backgroundRef: EntityReference(refType: EntityType.background, slug: 'sage', displayName: 'Sage'),
+        backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: CharacterProgression(
           classes: [
             ClassLevelProgression(

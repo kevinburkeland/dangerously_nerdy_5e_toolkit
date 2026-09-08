@@ -77,7 +77,7 @@ void main() {
         id: 'hero-123',
         name: 'Aelar',
         speciesSlug: 'elf',
-        backgroundSlug: 'sage',
+        backgroundSlug: 'acolyte',
         classPointers: const [
           ClassLevelPointerDto(classSlug: 'wizard', subclassSlug: 'evoker', level: 5),
         ],
@@ -93,7 +93,7 @@ void main() {
         deathSaveFailures: 0,
         conditions: const ['poisoned'],
         spellSlots: const {'1': 4, '2': 3, '3': 2},
-        featSlugs: const ['warcaster'],
+        featSlugs: const ['homebrew-combat-caster'],
         equippedItemSlugs: const ['quarterstaff', 'robe-of-stars'],
         rulesEdition: '2024',
         timestamp: 1725700000000,
@@ -103,7 +103,7 @@ void main() {
       expect(map['id'], 'hero-123');
       expect(map['n'], 'Aelar');
       expect(map['sp'], 'elf');
-      expect(map['bg'], 'sage');
+      expect(map['bg'], 'acolyte');
       expect(map['hp'], 28);
       expect(map['mhp'], 32);
       expect(map['thp'], 5);
@@ -114,7 +114,7 @@ void main() {
       expect(map['exh'], 1);
       expect(map['cnd'], ['poisoned']);
       expect(map['ss'], {'1': 4, '2': 3, '3': 2});
-      expect(map['ft'], ['warcaster']);
+      expect(map['ft'], ['homebrew-combat-caster']);
       expect(map['eq'], ['quarterstaff', 'robe-of-stars']);
       expect(map['re'], '2024');
       expect(map['ts'], 1725700000000);
@@ -132,7 +132,7 @@ void main() {
       expect(restored.armorClass, 15);
       expect(restored.conditions, ['poisoned']);
       expect(restored.spellSlots, {'1': 4, '2': 3, '3': 2});
-      expect(restored.featSlugs, ['warcaster']);
+      expect(restored.featSlugs, ['homebrew-combat-caster']);
       expect(restored.equippedItemSlugs, ['quarterstaff', 'robe-of-stars']);
     });
 
@@ -147,8 +147,8 @@ void main() {
         )
         ..backgroundRef = const EntityReference(
           refType: EntityType.background,
-          slug: 'criminal',
-          displayName: 'Criminal',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         )
         ..startingClassRef = const EntityReference(
           refType: EntityType.classDefinition,
@@ -202,7 +202,7 @@ void main() {
 
       expect(dto.name, 'Eldrin Shadowcloak');
       expect(dto.speciesSlug, 'elf');
-      expect(dto.backgroundSlug, 'criminal');
+      expect(dto.backgroundSlug, 'acolyte');
       expect(dto.classPointers.length, 1);
       expect(dto.classPointers.first.classSlug, 'rogue');
       expect(dto.currentHp, greaterThan(0));

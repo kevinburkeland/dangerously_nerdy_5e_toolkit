@@ -127,7 +127,7 @@ void main() {
       expect(char.armorClass, equals(16));
     });
 
-    test('Medium armor caps DEX at 2, but Medium Armor Master raises cap to 3', () {
+    test('Medium armor caps DEX at 2, but Homebrew Armor Expert raises cap to 3', () {
       const scaleMail = InventoryItemInstance(
         instanceId: 'item-scale-mail',
         itemRef: EntityReference(
@@ -147,20 +147,20 @@ void main() {
       // 14 (Scale mail) + 2 (capped DEX) = 16
       expect(charWithoutMam.armorClass, equals(16));
 
-      // With Medium Armor Master feat
+      // With Homebrew Armor Expert feat
       final charWithMam = _createTestCharacter(
         baseScores: const AbilityScores(dexterity: 16), // +3 DEX
         inventory: [scaleMail],
         feats: [
           const EntityReference(
             refType: EntityType.feat,
-            displayName: 'Medium Armor Master',
-            slug: 'medium-armor-master',
+            displayName: 'Homebrew Armor Expert',
+            slug: 'homebrew-armor-expert',
           ),
         ],
       );
 
-      // 14 (Scale mail) + 3 (DEX cap is 3 with MAM) = 17
+      // 14 (Scale mail) + 3 (DEX cap is 3 with MAM/HAE) = 17
       expect(charWithMam.armorClass, equals(17));
     });
 
@@ -303,14 +303,14 @@ void main() {
       expect(char.initiativeBonus, equals(3));
     });
 
-    test('Alert feat 2014 adds flat +5 bonus', () {
+    test('Homebrew Initiative Boost feat 2014 adds flat +5 bonus', () {
       final char = _createTestCharacter(
         baseScores: const AbilityScores(dexterity: 14), // +2
         feats: [
           const EntityReference(
             refType: EntityType.feat,
-            displayName: 'Alert',
-            slug: 'alert',
+            displayName: 'Homebrew Initiative Boost',
+            slug: 'homebrew-initiative-boost',
           ),
         ],
         rulesEdition: DmRulesEdition.v2014,
@@ -319,14 +319,14 @@ void main() {
       expect(char.initiativeBonus, equals(7));
     });
 
-    test('Alert feat 2024 adds proficiency bonus', () {
+    test('Homebrew Initiative Boost feat 2024 adds proficiency bonus', () {
       final char = _createTestCharacter(
         baseScores: const AbilityScores(dexterity: 14), // +2
         feats: [
           const EntityReference(
             refType: EntityType.feat,
-            displayName: 'Alert',
-            slug: 'alert',
+            displayName: 'Homebrew Initiative Boost',
+            slug: 'homebrew-initiative-boost',
           ),
         ],
         rulesEdition: DmRulesEdition.v2024,
@@ -500,8 +500,8 @@ void main() {
   group('Character Builder Controller - Skill Overlap & Refund State Tracking', () {
     test('pendingReplacementSkills reflects resolved refunds', () {
       final controller = CharacterBuilderController();
-      controller.setSelectedSkills({SkillType.athletics, SkillType.history});
-      controller.setBackgroundSlug('soldier'); // grants Athletics & Intimidation -> 1 collision
+      controller.setSelectedSkills({SkillType.insight, SkillType.history});
+      controller.setBackgroundSlug('acolyte'); // grants Insight & Religion -> 1 collision (insight)
 
       expect(controller.refundedSkillChoices, equals(1));
       expect(controller.pendingReplacementSkills, isEmpty);

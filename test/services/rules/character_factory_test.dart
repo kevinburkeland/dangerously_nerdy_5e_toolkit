@@ -54,8 +54,8 @@ void main() {
         ),
         backgroundRef: EntityReference(
           refType: EntityType.background,
-          slug: 'soldier',
-          displayName: 'Soldier',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         ),
         startingClassSlug: 'fighter',
         startingClassDisplayName: 'Fighter',
@@ -113,8 +113,8 @@ void main() {
         ),
         backgroundRef: EntityReference(
           refType: EntityType.background,
-          slug: 'sage',
-          displayName: 'Sage',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         ),
         startingClassSlug: 'wizard',
         startingClassDisplayName: 'Wizard',

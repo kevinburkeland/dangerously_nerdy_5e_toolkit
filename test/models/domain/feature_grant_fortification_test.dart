@@ -66,11 +66,11 @@ void main() {
       expect(cantrips.grantId, 'high_elf_cantrip_grant');
 
       final spell = FeatureGrant.bonusSpell(
-        grantId: 'fey_touched_misty_step',
+        grantId: 'homebrew_fey_step_grant',
         slug: 'misty-step',
         displayName: 'Misty Step',
       );
-      expect(spell.grantId, 'fey_touched_misty_step');
+      expect(spell.grantId, 'homebrew_fey_step_grant');
 
       final darkvision = FeatureGrant.darkvisionRange(
         60,

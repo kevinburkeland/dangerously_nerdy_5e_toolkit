@@ -68,8 +68,8 @@ void main() {
       // Step: Assign background fourth
       draft.backgroundRef = const EntityReference(
         refType: EntityType.background,
-        slug: 'soldier',
-        displayName: 'Soldier',
+        slug: 'acolyte',
+        displayName: 'Acolyte',
       );
       expect(draft.hasValidBackground, isTrue);
       expect(draft.isReadyForCompilation, isFalse); // Name still empty
@@ -123,8 +123,8 @@ void main() {
         )
         ..backgroundRef = const EntityReference(
           refType: EntityType.background,
-          slug: 'sage',
-          displayName: 'Sage',
+          slug: 'acolyte',
+          displayName: 'Acolyte',
         )
         ..startingClassRef = const EntityReference(
           refType: EntityType.classDefinition,
@@ -154,7 +154,7 @@ void main() {
 
       expect(character.name, equals('Gildor Inglorion'));
       expect(character.speciesRef.slug, equals('elf'));
-      expect(character.backgroundRef?.slug, equals('sage'));
+      expect(character.backgroundRef?.slug, equals('acolyte'));
       expect(character.baseScores.intelligence, equals(15));
       expect(character.bonusScores.intelligence, equals(2));
       expect(character.progression.classes.length, equals(1));
@@ -187,16 +187,16 @@ void main() {
         slug: 'wizard',
         displayName: 'Wizard',
       );
-      const sageRef = EntityReference(
+      const acolyteRef = EntityReference(
         refType: EntityType.background,
-        slug: 'sage',
-        displayName: 'Sage',
+        slug: 'acolyte',
+        displayName: 'Acolyte',
       );
 
       controller.setName('Eldrin');
       controller.setSpecies(elfRef);
       controller.setClass(wizardRef, hitDie: 'd6');
-      controller.setBackground(sageRef);
+      controller.setBackground(acolyteRef);
 
       expect(controller.hasValidSpecies, isTrue);
       expect(controller.hasValidClass, isTrue);
@@ -204,7 +204,7 @@ void main() {
       expect(controller.draft.characterName, equals('Eldrin'));
       expect(controller.draft.speciesRef?.slug, equals('elf'));
       expect(controller.draft.startingClassRef?.slug, equals('wizard'));
-      expect(controller.draft.backgroundRef?.slug, equals('sage'));
+      expect(controller.draft.backgroundRef?.slug, equals('acolyte'));
     });
   });
 }

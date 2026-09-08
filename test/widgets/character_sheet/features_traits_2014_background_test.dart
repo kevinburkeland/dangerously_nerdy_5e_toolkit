@@ -105,7 +105,7 @@ void main() {
       expect(find.textContaining('Origin Feat'), findsNothing);
     });
 
-    testWidgets('2014 Soldier displays Military Rank without Origin Feat', (tester) async {
+    testWidgets('2014 Homebrew Veteran displays Veteran Acumen without Origin Feat', (tester) async {
       const character2014 = Character(
         id: EntityId(slug: 'fighter-2014', ruleset: RulesetVersion.v2014),
         name: 'Captain Marcus',
@@ -117,8 +117,8 @@ void main() {
         ),
         backgroundRef: EntityReference<DomainEntity>(
           refType: EntityType.background,
-          slug: 'soldier',
-          displayName: 'Soldier',
+          slug: 'homebrew-veteran',
+          displayName: 'Homebrew Veteran',
         ),
         resources: CharacterResourcePool(),
         progression: CharacterProgression(
@@ -138,19 +138,19 @@ void main() {
         baseScores: AbilityScores(strength: 16),
       );
 
-      const soldierBg = Background(
-        id: EntityId(slug: 'soldier', ruleset: RulesetVersion.v2024),
-        name: 'Soldier',
+      const veteranBg = Background(
+        id: EntityId(slug: 'homebrew-veteran', ruleset: RulesetVersion.v2024),
+        name: 'Homebrew Veteran',
         descriptionMarkdown:
             'You trained in military tactics and discipline.\n\n'
-            '**Feature: Military Rank**\n'
-            'You have a military rank from your career as a soldier.\n\n'
+            '**Feature: Veteran Acumen**\n'
+            'You have seasoned combat instincts from your past campaigns.\n\n'
             '**Origin Feat:** Savage Attacker\n'
             '**Ability Scores:** +2 STR / +1 CON\n'
             '**Skill Proficiencies:** Athletics, Intimidation',
       );
-      SrdBackgroundsLibrary.addCustomBackground(soldierBg);
-      addTearDown(() => SrdBackgroundsLibrary.removeCustomBackground('soldier'));
+      SrdBackgroundsLibrary.addCustomBackground(veteranBg);
+      addTearDown(() => SrdBackgroundsLibrary.removeCustomBackground('homebrew-veteran'));
 
       final controller = CharacterSheetController(character: character2014);
 
@@ -164,11 +164,11 @@ void main() {
         ),
       );
 
-      // Tap Soldier chip
-      await tester.tap(find.text('Soldier'));
+      // Tap Homebrew Veteran chip
+      await tester.tap(find.text('Homebrew Veteran'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Military Rank'), findsOneWidget);
+      expect(find.textContaining('Veteran Acumen'), findsOneWidget);
       expect(find.textContaining('Origin Feat'), findsNothing);
       expect(find.textContaining('Ability Scores:'), findsNothing);
     });

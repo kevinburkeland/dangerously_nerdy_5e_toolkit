@@ -1147,16 +1147,24 @@ class Character extends DomainEntity {
     for (final featRef in feats) {
       final slug = featRef.slug.toLowerCase().replaceAll('-', '_');
       final name = featRef.displayName.toLowerCase().replaceAll(' ', '_');
-      if (flagKey == 'mediumArmorMaster' &&
-          (slug.contains('medium_armor_master') || name.contains('medium_armor_master'))) {
+      if ((flagKey == 'mediumArmorMaster' || flagKey == 'homebrewArmorExpert') &&
+          (slug.contains('medium_armor_master') ||
+           name.contains('medium_armor_master') ||
+           slug.contains('homebrew_armor_expert') ||
+           name.contains('homebrew_armor_expert') ||
+           slug.contains('armor_expert'))) {
         return true;
       }
       if (flagKey == 'observant' &&
           (slug.contains('observant') || name.contains('observant'))) {
         return true;
       }
-      if (flagKey == 'alert' &&
-          (slug.contains('alert') || name.contains('alert'))) {
+      if ((flagKey == 'alert' || flagKey == 'homebrewInitiativeBoost') &&
+          (slug.contains('alert') ||
+           name.contains('alert') ||
+           slug.contains('homebrew_initiative_boost') ||
+           name.contains('homebrew_initiative_boost') ||
+           slug.contains('initiative_boost'))) {
         return true;
       }
       if (flagKey == 'jackOfAllTrades' &&
@@ -1257,7 +1265,7 @@ class Character extends DomainEntity {
       if (armorType == 'heavy') {
         dexContribution = 0;
       } else if (armorType == 'medium') {
-        final hasMam = hasCapabilityFlag('mediumArmorMaster');
+        final hasMam = hasCapabilityFlag('mediumArmorMaster') || hasCapabilityFlag('homebrewArmorExpert');
         final cap = hasMam ? 3 : (armorMaxDex ?? 2);
         dexContribution = math.min(dexMod, cap);
       }
@@ -1371,7 +1379,7 @@ class Character extends DomainEntity {
     final dexMod = effectiveAbilityScores.getModifier(AbilityType.dexterity);
     int bonus = dexMod;
 
-    final hasAlert = hasCapabilityFlag('alert');
+    final hasAlert = hasCapabilityFlag('alert') || hasCapabilityFlag('homebrewInitiativeBoost');
     if (hasAlert) {
       if (rulesEdition == DmRulesEdition.v2024) {
         bonus += proficiencyBonus;
