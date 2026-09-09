@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1141%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1297%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -100,6 +100,10 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - **Tier 2 (Deterministic Last-Write-Wins Claims)**: Automatic claim race resolution if two disconnected players claim the same item offline; losing clients unbind smoothly and receive real-time notification toasts.
   - **Tier 3 (Host Diff & Structural Fork Dialog)**: Interactive visual diff modal (`LootConflictResolutionDialog`) allowing Game Masters to compare divergent Cloud vs Local versions side-by-side and choose *Use Cloud*, *Overwrite with Local*, or *Keep Both (Duplicate Item)*.
   - **Purse Overdraft Clamping**: Prevents negative coin balances by clamping overdrawn spends to zero and logging high-priority warning alerts.
+* **Decentralized CvRDT State Synchronization**:
+  - Peer-to-peer and cloud synchronization powered by Convergent Replicated Data Types (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`).
+  - Strict lexicographical tie-breaking by device `nodeId` guarantees deterministic convergence across offline partitions.
+  - Delta fast-forwarding and milestone snapshots via `RoomStateReconciliationService` with automatic tombstone pruning to prevent memory leaks.
 * **Append-Only Audit Stream**: Live event log capturing coin deposits, withdrawals, loot additions, claims, attunements, and restorations.
 
 ---
@@ -263,40 +267,49 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 
 ---
 
+### 🏛️ 19. Hexagonal Architecture & Pure Domain Core
+* **Strict Hexagonal Separation (Ports & Adapters)**:
+  - **Domain Core (`lib/domain/`)**: Pure Dart business logic and entities. Zero Flutter or external storage dependencies. Enforced by automated architecture purity tests (`test/domain/domain_purity_test.dart`).
+  - **Application Layer (`lib/application/services/`)**: Orchestrates use cases (state reconciliation, combat encounter lifecycle, party room streaming).
+  - **Infrastructure Layer (`lib/infrastructure/`)**: Adapters implementing domain ports, persistent repositories, and fault-tolerant DTOs.
+* **Fault-Tolerant Data Transfer Objects (DTOs)**:
+  - Strict numeric bounds clamping for safe tabletop play (HP `0..999`, Level `1..20`, Currency `>= 0`).
+  - `unparsedPayload` preservation prevents data loss of custom homebrew traits across schema migrations.
+
+---
+
 ## 🛠 Project Structure
 
 ```
 dangerously_nerdy_5e_toolkit/
+├── .agents/                        # AI coding directives & modular architecture rules
+│   └── rules/                      # architecture.md, crdt_and_sync.md, dnd_rulesets.md, a11y_and_ui.md, etc.
+├── AGENTS.md                       # Master AI agent directives & codebase navigation index
+├── GEMINI.md                       # Gemini / Antigravity AI directives & quick rules
+├── docs/                           # Architecture specifications & CRDT safety guidelines
+│   ├── ARCHITECTURE.md             # Hexagonal architecture & layer boundaries
+│   └── DATA_SAFETY_AND_CRDT.md     # CvRDT tombstone pruning & deterministic HLC ordering
 ├── lib/
 │   ├── main.dart                   # Entry point, lifecycle listeners, & theme provider setup
 │   ├── firebase_options.dart       # Firebase configuration initialization
-│   ├── data/
-│   │   └── acl/                    # Compendium schema mappings & AST tag definitions
-│   ├── domain/                     # Domain contracts & simulation interfaces
-│   │   ├── models/                 # Domain entities & value objects
-│   │   ├── rules/                  # Rule strategy definitions
-│   │   └── simulation/             # Simulation contracts
-│   ├── models/                     # Core data models
-│   │   ├── animated_object.dart    # Minion statblocks, size rules, & HP tracker
-│   │   ├── app_settings.dart       # Theme mode, accent color, & haptic preferences
-│   │   ├── arena/                  # Monster Arena combatants, action results, & battlegrounds
-│   │   ├── characters/             # Character progression, species, classes, feats, backgrounds
-│   │   ├── custom_preset.dart      # Custom dice pool preset data model
-│   │   ├── dice_roll.dart          # Roll pool breakdown & calculation
-│   │   ├── dm_screen_data.dart     # DM reference rules (2014 & 2024 comparison)
-│   │   ├── dpr/                    # DPR calculation & combatant profile models
-│   │   ├── landing_tool_item.dart  # Launcher tool definitions & categories
-│   │   ├── magic_items/            # Magic item compendium models & item catalogs
-│   │   ├── monster_codex/          # Monster codex, statblocks, & bestiary catalogs
-│   │   ├── party/                  # Campaign rooms, shared vault items, purses, & memberships
-│   │   ├── spells/                 # SpellItem, editions, schools, and modular SRD catalogs
-│   │   ├── srd_summons/            # SRD 5.1 summon presets & statblocks
-│   │   └── tables/                 # Rollable table definitions & loot models
+│   ├── domain/                     # Pure Dart Domain Core (ZERO Flutter imports)
+│   │   ├── crdt/                   # CvRDTs: HybridLogicalClock, CrdtLwwRegister, CrdtOrSet
+│   │   ├── models/                 # Immutable entities: AnimatedObject, CampaignProfile, WeaponMastery
+│   │   │   └── value_objects/      # HitPoints value object
+│   │   ├── ports/                  # Abstract interfaces: ICampaignRepository, ICharacterRepository, IPartySyncPort
+│   │   ├── rules/                  # Pure mechanical contracts: RulesetContext
+│   │   └── simulation/             # Simulation contracts: DprSimulator, PrecomputedAttack
+│   ├── application/                # Use Cases & Orchestration
+│   │   └── services/               # RoomStateReconciliationService, CombatEncounterService, PartyRoomService
+│   ├── infrastructure/             # Adapters, DTOs & Concrete Storage
+│   │   ├── di/                     # Service Locator: injection_container.dart (sl)
+│   │   ├── dtos/                   # CharacterDto, CampaignProfileDto, AnimatedObjectDto
+│   │   │   └── crdt/               # Fault-tolerant CRDT DTOs: HybridLogicalClockDto, CrdtLwwRegisterDto, CrdtOrSetDto
+│   │   ├── repositories/           # LocalCampaignRepository, LocalCharacterRepository
+│   │   └── resolvers/              # CharacterTelemetryResolver
 │   ├── presentation/
-│   │   └── core/                   # Accessible core widgets & semantic action tiles
-│   ├── providers/                  # State management providers
-│   │   ├── character_sheet_controller.dart # Reactive character sheet state & mutators
-│   │   └── settings_provider.dart  # Reactive theme & settings provider
+│   │   └── core/                   # Accessible core widgets & AccessibleActionTile
+│   ├── providers/                  # Reactive state controllers: CharacterSheetController, SettingsProvider
 │   ├── screens/                    # Application screens
 │   │   ├── arena_simulator_screen.dart # Monster Fighting Arena & Monte Carlo simulator
 │   │   ├── character_builder_screen.dart # 2014/2024 Character Creator & Point Buy Studio
@@ -320,7 +333,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── species_codex_screen.dart # Species, Lineages, & Races codex
 │   │   ├── spellbook_screen.dart   # 5e Spellbook companion & rules reference screen
 │   │   └── table_index_screen.dart # Rollable table index & loot oracle
-│   ├── services/                   # Data services & business logic
+│   ├── services/                   # Legacy domain services, ACL parsers, & rules engines
 │   │   ├── acl/                    # 5etools / Community Anti-Corruption Layer parsers
 │   │   ├── fluff/                  # Creature and item lore & description services
 │   │   ├── importers/              # Community compendium import adapters & tag parsers
@@ -353,34 +366,15 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── pwa_helper.dart         # PWA installation prompt helper (cross-platform stub/web)
 │   │   └── secure_random.dart      # Cryptographically secure RNG generator
 │   └── widgets/                    # Modular UI components
-│       ├── app_logo.dart           # Pure Flutter vector tech+fantasy d20 logo & interactive spin
-│       ├── arena/                  # Arena clash stage, combatant cards, combat log, & Monte Carlo modal
-│       ├── batch_attack/           # Batch attack results summary & tactical rollers
-│       ├── character_builder/      # Ability score generator, background step, level-up wizard
-│       ├── character_sheet/        # Vitals HUD, actions ribbon, skills matrix, short rest dialog
-│       ├── classes/                # Class progression charts & archetype displays
-│       ├── common/                 # Shared widgets, search headers, & markdown formatters
-│       ├── dialogs/                # Action economy guide, conditions, presets, & legal notices
-│       ├── dice_roller/            # 3D dice visualizer, pool builders, roll history, & presets
-│       ├── dm_dashboard/           # Encounter cards, party vitality HUD, & minion counters
-│       ├── dm_reference/           # Dual-rulebook comparison cards, edition toggles, & diff badges
-│       ├── dpr/                    # Animated Bezier canvas chart with multi-curve & mode support
-│       ├── feats/                  # Feat cards, prerequisite badges, & boon filters
-│       ├── fx/                     # Critical hit visual effects & overlays
-│       ├── glyphs/                 # Vector procedural school glyphs & token painters
-│       ├── homebrew/               # Builders (monster/spell/item), bundle importer, & preview modals
-│       ├── interactive/            # Interactive tactile cards & buttons
-│       ├── item_compendium/        # Item cards, detail sheets, and filter modals
-│       ├── meters/                 # Animated resource meters & HP bars
-│       ├── minions/                # Active session header, object cards, & squad builder
-│       ├── monster_codex/          # Monster cards, comparison dialogs, and roll modals
-│       ├── party/                  # Campaign dialogs, loot conflict diff modal, & coin dispersers
-│       ├── races/                  # Species traits, speeds, darkvision, & lineage badges
-│       ├── spellbook/              # Spell cards, quick-roll dialogs, compare modals, filter sheets
-│       └── tables/                 # Rollable table cards & loot dispersal modals
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with icon font packaging & cache-busting
-├── test/                           # Unit, widget, accessibility, & resilience test suites (1,141 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (1,297 tests)
+│   ├── accessibility/              # A11y & dynamic type scaling tests
+│   ├── application/                # Orchestration & reconciliation service tests
+│   ├── domain/                     # Domain purity & CRDT logic tests
+│   ├── infrastructure/             # DTO serialization & repository tests
+│   ├── presentation/               # Accessible core & footer widget tests
+│   └── widgets/                    # Character sheet, arena, dice roller, & modal tests
 ├── web/                            # Web platform manifest, strict CSP, & network-first service worker
 ├── firestore.rules                 # Production-hardened security rules for Firestore campaigns
 ├── firestore.indexes.json          # Firestore indexes configuration
@@ -388,9 +382,25 @@ dangerously_nerdy_5e_toolkit/
 ├── PRIVACY_POLICY.md               # Data minimization & privacy policy
 ├── TERMS_OF_SERVICE.md             # Terms of service & EULA
 ├── pubspec.yaml                    # Flutter dependencies & metadata
-├── LICENSE                         # MIT License file
+├── LICENSE                         # AGPL-3.0 License file
 └── README.md
 ```
+
+---
+
+## 🧭 Architecture Directives & Agent Guidelines
+
+To facilitate rapid, accurate parsing and maintain architectural purity across human contributors and AI assistants:
+
+* **Master Directives**: See [AGENTS.md](file:///AGENTS.md) for the comprehensive architecture blueprint, anti-pattern rules, and fast navigation table.
+* **Modular Directives**: Consult [.agents/rules/](file:///.agents/rules/) for targeted specifications:
+  - [Architecture & Layer Boundaries](file:///.agents/rules/architecture.md)
+  - [CvRDT & Distributed State Directives](file:///.agents/rules/crdt_and_sync.md)
+  - [Dual-Edition Ruleset Matrix (2014 vs 2024)](file:///.agents/rules/dnd_rulesets.md)
+  - [Accessibility (a11y) & UI Standards](file:///.agents/rules/a11y_and_ui.md)
+  - [Data Safety, DTOs & Pre-Computation](file:///.agents/rules/data_and_performance.md)
+  - [Testing & Build Workflows](file:///.agents/rules/testing_and_workflows.md)
+* **IDE Rules**: [.antigravityrules](file:///.antigravityrules) and [GEMINI.md](file:///GEMINI.md) provide instant context ingestion for AI development environments.
 
 ---
 
@@ -432,7 +442,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, and resilience test suite (**1,141 tests with 100% pass rate**):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,297 tests with 100% pass rate**):
 ```bash
 flutter test
 ```
@@ -448,8 +458,8 @@ flutter analyze
 
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
-- Implementation of multi-tier conflict resolution, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, character progression pipelines, Anti-Corruption Layer (ACL) compendium parsers, and cryptographically secure RNG utilities.
-- Writing comprehensive unit and widget tests (1,141 automated tests).
+- Implementation of multi-tier conflict resolution, CvRDT state replication, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, character progression pipelines, Anti-Corruption Layer (ACL) compendium parsers, and cryptographically secure RNG utilities.
+- Writing comprehensive unit, widget, domain purity, and resilience tests (1,297 automated tests).
 - UI styling, 3D dice physics, responsive layout refinements, and documentation.
 
 All AI-generated contributions were thoroughly audited, tested, verified, and refined by human developers to ensure high code quality, security, and accuracy to 5e RAW rules.

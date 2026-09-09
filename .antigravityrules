@@ -3,29 +3,38 @@
 You are an expert Flutter/Dart software architect. When generating or modifying code in this repository, you must strictly adhere to the following directives:
 
 ## 1. Domain-Driven Design & Hexagonal Architecture
-- **Zero Flutter in Domain:** Files in `lib/domain/` MUST NOT import `package:flutter/...`.
-- **Ports and Adapters:** Domain logic defines Interfaces (Ports) in `lib/domain/ports/`. Infrastructure classes in `lib/infrastructure/` implement these interfaces (Adapters).
-- **Immutable Entities:** Use immutable pure Dart classes (`@immutable` or standard `const` constructors) for all Domain models. State mutation must return a new instance via `copyWith()`.
+- **Zero Flutter in Domain:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use `package:meta/meta.dart` for pure annotations. Verified automatically by `test/domain/domain_purity_test.dart`.
+- **Ports and Adapters:** Domain logic defines Interfaces (Ports) in `lib/domain/ports/`. Infrastructure classes in `lib/infrastructure/repositories/` implement these interfaces (Adapters).
+- **Immutable Entities:** Use immutable pure Dart classes (`@immutable` or standard `const` constructors) for all Domain models and value objects (`lib/domain/models/value_objects/`). State mutations must return a new instance via `copyWith()`.
+- **Application Orchestration:** Application services live in `lib/application/services/` to coordinate between Domain rules and Infrastructure ports.
 
-## 2. Dual-Ruleset Awareness
+## 2. Distributed State & CvRDT Directives
+- **Hybrid Logical Clock (HLC):** `HybridLogicalClock` combines timestamp `l`, counter `c`, and `nodeId`. Use `nodeId` as the strict deterministic lexicographical tie-breaker on collisions. Never use random tie-breakers.
+- **Tombstone Pruning:** Observed-Remove Sets (`CrdtOrSet`) must implement `prune(threshold)` to purge historical tombstones and prevent memory bloat.
+- **Delta Fast-Forward:** Base room state is hydrated from snapshot milestones, with incremental CRDT deltas reconciled on top via `RoomStateReconciliationService`.
+
+## 3. Dual-Ruleset Awareness (2014 RAW vs 2024 Revised)
 - The engine supports both 2014 (SRD 5.1) and 2024 (SRD 5.2) D&D mechanics.
-- Always check or pass the `DmRulesEdition` enum when calculating derived stats, action economies (e.g., potion drinking), or exhaustion. 
+- Always check or pass the `DmRulesEdition` enum (`DmRulesEdition.dnd2014` vs `DmRulesEdition.dnd2024`) or inspect `RulesetContext` when calculating derived stats, action economies (e.g., potion drinking), or exhaustion.
 - Do not hardcode 2014 or 2024 mechanics as the sole truth.
 
-## 3. Performance & Pre-Computation
+## 4. Performance & Pre-Computation
 - **No Runtime Regex:** Do not use RegExp parsing inside combat loops, Monte Carlo simulations, or DPR calculations.
-- **Cache Complex Math:** Parse string-based traits into numeric equivalents (e.g., `MonsterCombatProfile`) during ingestion/initialization, NOT during execution.
+- **Cache Complex Math:** Parse string-based traits into numeric equivalents (e.g., `MonsterCombatProfile`, `PrecomputedAttack`) during ingestion/initialization, NOT during execution.
 
-## 4. Anti-Corruption & Data Safety
+## 5. Anti-Corruption & Data Safety
 - **DTO Isolation:** Network/Disk JSON must map to Data Transfer Objects (DTOs) in `lib/infrastructure/dtos/` before being mapped to Domain entities.
-- **Strict Clamping:** All numeric data extracted from JSON must be clamped to safe tabletop bounds (e.g., HP `0..999`, Level `1..20`).
-- **Unparsed Payload Preservation:** Always preserve unrecognized JSON keys in an `unparsedPayload` map to prevent data loss of homebrew traits during schema migrations.
+- **Strict Clamping:** All numeric data extracted from JSON must be clamped to safe tabletop bounds (e.g., HP `0..999`, Level `1..20`, Currency `>= 0`).
+- **Unparsed Payload Preservation:** Always preserve unrecognized JSON keys in an `unparsedPayload` map to prevent data loss of custom homebrew traits during schema migrations.
 
-## 5. Accessibility (a11y) Standards
+## 6. Accessibility (a11y) Standards
 - **Touch Targets:** All interactive widgets MUST be at least 48x48dp (`minSize: const Size(48, 48)`).
-- **Semantics:** Use `Semantics` widgets with clear `label` strings that expand abbreviations (e.g., "STR" -> "Strength").
+- **Semantics:** Use `Semantics` widgets with clear `label` strings that expand abbreviations (e.g., "STR" -> "Strength", "AC" -> "Armor Class").
 - **Dynamic Type:** UI must not throw `RenderFlex` overflow errors up to `TextScaler.linear(2.0)`. Use `Wrap`, `SingleChildScrollView`, or `Flexible`.
 - **Reduced Motion:** Wrap animations in `if (!MediaQuery.disableAnimationsOf(context))` checks.
 
-## 6. SRD & Legal Compliance
-- **No Product Identity:** DO NOT generate code, tests, or mock data containing WotC Product Identity terms (e.g., Beholder, Mind Flayer, Strahd, Hexblade). Use generic SRD equivalents only.
+## 7. SRD & Legal Compliance
+- **No Product Identity:** DO NOT generate code, tests, or mock data containing WotC Product Identity terms (e.g., Beholder, Mind Flayer, Strahd, Hexblade). Use generic SRD equivalents only (CC-BY-4.0).
+
+---
+*For in-depth directory mappings, architecture specs, and testing workflows, consult [AGENTS.md](file:///AGENTS.md) and [.agents/rules/](file:///.agents/rules/).*
