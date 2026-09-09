@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uuid/uuid.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/hybrid_logical_clock.dart';
 
 void main() {
@@ -142,6 +143,37 @@ void main() {
       expect(c1, equals(c2));
       expect(c1.hashCode, equals(c2.hashCode));
       expect(c1, isNot(equals(c3)));
+    });
+
+    test('Tie-Breaker Collision Test: 1,000 UUID-backed HLCs at the exact same physical millisecond result in 0 collisions and perfect sort order', () {
+      const fixedPt = 1700000000000;
+      const fixedCounter = 0;
+      const uuid = Uuid();
+
+      final clocks = List.generate(
+        1000,
+        (_) => HybridLogicalClock(
+          physicalTime: fixedPt,
+          logicalCounter: fixedCounter,
+          nodeId: uuid.v4(),
+        ),
+      );
+
+      // Verify 0 collisions in node IDs
+      final uniqueNodeIds = clocks.map((c) => c.nodeId).toSet();
+      expect(uniqueNodeIds.length, equals(1000));
+
+      // Verify deterministic sorting via compareTo()
+      clocks.sort();
+
+      for (var i = 0; i < clocks.length - 1; i++) {
+        final current = clocks[i];
+        final next = clocks[i + 1];
+
+        expect(current.compareTo(next), lessThan(0));
+        expect(next.isAfter(current), isTrue);
+        expect(current.isBefore(next), isTrue);
+      }
     });
   });
 }

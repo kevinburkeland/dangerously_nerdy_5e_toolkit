@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/session_graph_models.dart';

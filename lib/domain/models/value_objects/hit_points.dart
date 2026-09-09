@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// Immutable Value Object encapsulating Hit Points, Temporary Hit Points,
 /// damage absorption (5e RAW), and healing bounded by maximum HP.

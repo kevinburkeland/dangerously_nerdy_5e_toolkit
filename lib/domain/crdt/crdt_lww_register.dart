@@ -4,6 +4,9 @@ import 'hybrid_logical_clock.dart';
 /// Last-Write-Wins (LWW) Register CRDT primitive for single-value fields
 /// (e.g. HP, Initiative). Uses [HybridLogicalClock] timestamps to deterministically
 /// reconcile concurrent updates.
+///
+/// IMPORTANT: The type [T] MUST be a deeply immutable value object or primitive.
+/// Mutating [T] internally bypasses the HLC timestamp and breaks distributed consensus.
 @immutable
 class CrdtLwwRegister<T> {
   final T value;

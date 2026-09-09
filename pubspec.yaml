@@ -19,6 +19,7 @@ dependencies:
   file_picker: ^12.2.0
   url_launcher: ^6.3.0
   meta: ^1.19.0
+  uuid: ^4.6.0
 
 dev_dependencies:
   flutter_test:
