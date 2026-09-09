@@ -16,9 +16,16 @@ class HybridLogicalClock implements Comparable<HybridLogicalClock> {
     required this.nodeId,
   });
 
-  factory HybridLogicalClock.now(String nodeId) {
+  factory HybridLogicalClock.now(
+    String nodeId, {
+    int offsetMs = 0,
+    int Function()? timeProvider,
+  }) {
+    final base = timeProvider != null
+        ? timeProvider()
+        : DateTime.now().toUtc().millisecondsSinceEpoch;
     return HybridLogicalClock(
-      physicalTime: DateTime.now().toUtc().millisecondsSinceEpoch,
+      physicalTime: base + offsetMs,
       logicalCounter: 0,
       nodeId: nodeId,
     );
@@ -26,8 +33,14 @@ class HybridLogicalClock implements Comparable<HybridLogicalClock> {
 
   /// Advances the clock locally. If physical time has moved forward, resets
   /// the logical counter to 0; otherwise increments the logical counter.
-  HybridLogicalClock tick() {
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+  HybridLogicalClock tick({
+    int offsetMs = 0,
+    int Function()? timeProvider,
+  }) {
+    final base = timeProvider != null
+        ? timeProvider()
+        : DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = base + offsetMs;
     if (now > physicalTime) {
       return HybridLogicalClock(
         physicalTime: now,
@@ -44,8 +57,15 @@ class HybridLogicalClock implements Comparable<HybridLogicalClock> {
 
   /// Reconciles local clock with a remote clock, taking the max physical time
   /// and resolving the logical counter causality.
-  HybridLogicalClock merge(HybridLogicalClock remote) {
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+  HybridLogicalClock merge(
+    HybridLogicalClock remote, {
+    int offsetMs = 0,
+    int Function()? timeProvider,
+  }) {
+    final base = timeProvider != null
+        ? timeProvider()
+        : DateTime.now().toUtc().millisecondsSinceEpoch;
+    final now = base + offsetMs;
     final maxPhysical = math.max(physicalTime, remote.physicalTime);
     final nextPhysical = math.max(maxPhysical, now);
 

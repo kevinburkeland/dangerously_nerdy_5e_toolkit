@@ -203,5 +203,52 @@ void main() {
       expect(restoredSet.tombstones.length, equals(1));
       expect(restoredSet.tombstones['minion-deleted-3'], equals(tombstoneTs));
     });
+
+    test('Strict Type Casting Test: handles <dynamic, dynamic> maps without throwing type errors', () {
+      // Construct explicitly typed <dynamic, dynamic> nested structures
+      final dynamic dynamicInnerItem = <dynamic, dynamic>{
+        'v': 42,
+        'ts': <dynamic, dynamic>{
+          'pt': 1700000000000,
+          'lc': 1,
+          'node': 'dyn-node-1',
+        },
+      };
+
+      final dynamic dynamicInnerTombstone = <dynamic, dynamic>{
+        'pt': 1700000000500,
+        'lc': 0,
+        'node': 'dyn-node-2',
+      };
+
+      final dynamic dynamicPayload = <dynamic, dynamic>{
+        'items': <dynamic, dynamic>{
+          'item-dyn': dynamicInnerItem,
+        },
+        'tombstones': <dynamic, dynamic>{
+          'tomb-dyn': dynamicInnerTombstone,
+        },
+      };
+
+      // Ensure CrdtLwwRegisterDto directly handles <dynamic, dynamic>
+      final register = CrdtLwwRegisterDto.fromMap<int>(
+        dynamicInnerItem as Map<dynamic, dynamic>,
+        (raw) => raw as int,
+      );
+      expect(register, isNotNull);
+      expect(register!.value, equals(42));
+      expect(register.timestamp.nodeId, equals('dyn-node-1'));
+
+      // Ensure CrdtOrSetDto handles nested <dynamic, dynamic> maps without type erasure crash
+      final crdtSet = CrdtOrSetDto.fromMap<int>(
+        dynamicPayload as Map<dynamic, dynamic>,
+        (raw) => raw as int,
+      );
+
+      expect(crdtSet.items.containsKey('item-dyn'), isTrue);
+      expect(crdtSet.items['item-dyn']!.value, equals(42));
+      expect(crdtSet.tombstones.containsKey('tomb-dyn'), isTrue);
+      expect(crdtSet.tombstones['tomb-dyn']!.nodeId, equals('dyn-node-2'));
+    });
   });
 }

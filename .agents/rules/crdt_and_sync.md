@@ -33,4 +33,10 @@ Located at `lib/domain/crdt/crdt_or_set.dart`:
 Located at `lib/application/services/room_state_reconciliation_service.dart`:
 - Event logs grow unbounded over time.
 - **Delta Fast-Forward Pattern:** Clients receive incremental state deltas. To derive current room state, the client takes the last stable milestone snapshot and applies incoming CRDT deltas on top using deterministic `merge()` logic.
-- **Fault-Tolerant Serialization:** All CRDT DTOs in `lib/infrastructure/dtos/crdt/` must gracefully handle missing keys, malformed timestamps, or unexpected types without throwing uncaught exceptions.
+- **Authoritative Milestone Pruning:** Pruning must be decoupled from local client clocks to protect against clock drift or spoofing. Use `RoomStateReconciliationService.executeMilestonePrune(targetSet, serverAcknowledgedEpochMs, hostNodeId)` where the threshold is anchored strictly to an authoritative server/ledger snapshot timestamp.
+- **Network Time Synchronization:**
+  - `INetworkTimePort` in `lib/domain/ports/i_network_time_port.dart` abstracts external time resolution.
+  - `ClockSyncService` calculates physical time skew (`offsetMs = networkTime - localTime`) and caches it, falling back to 0 on transport failure.
+  - `HybridLogicalClock.now()`, `tick()`, and `merge()` accept `offsetMs` to guarantee causal ordering immune to client clock spoofing.
+- **Defensive Type Casting & Anti-Corruption:** All CRDT DTOs (`CrdtOrSetDto`, `CrdtLwwRegisterDto`) must enforce strict `Map<String, dynamic>.from(...)` casting on nested maps to avoid runtime `_Map<dynamic, dynamic>` type-erasure exceptions during deserialization.
+

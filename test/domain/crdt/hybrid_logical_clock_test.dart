@@ -175,5 +175,41 @@ void main() {
         expect(current.isBefore(next), isTrue);
       }
     });
+
+    test('Network Offset Support: now() adjusts physical time by offsetMs', () {
+      final before = DateTime.now().toUtc().millisecondsSinceEpoch;
+      const offset = 50000;
+      final hlc = HybridLogicalClock.now('node-offset', offsetMs: offset);
+      final after = DateTime.now().toUtc().millisecondsSinceEpoch;
+
+      expect(hlc.physicalTime, greaterThanOrEqualTo(before + offset));
+      expect(hlc.physicalTime, lessThanOrEqualTo(after + offset));
+      expect(hlc.logicalCounter, equals(0));
+      expect(hlc.nodeId, equals('node-offset'));
+    });
+
+    test('Clock Spoofing Mitigation: negative offsetMs neutralizes future-skewed local time', () {
+      final localNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+      const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+      // Negative offset representing network time being 1 year behind local spoof
+      final hlc = HybridLogicalClock.now('spoofed-node', offsetMs: -oneYearMs);
+
+      // Verify physical time is ~1 year prior to local machine clock
+      final expectedTime = localNow - oneYearMs;
+      expect((hlc.physicalTime - expectedTime).abs(), lessThanOrEqualTo(100));
+    });
+
+    test('tick() and merge() accept offsetMs to preserve network-synchronized time', () {
+      const offset = 10000;
+      final initial = HybridLogicalClock.now('node-tick', offsetMs: offset);
+      final ticked = initial.tick(offsetMs: offset);
+
+      expect(ticked.physicalTime, greaterThanOrEqualTo(initial.physicalTime));
+
+      const remote = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'remote');
+      final merged = ticked.merge(remote, offsetMs: offset);
+      expect(merged.physicalTime, greaterThanOrEqualTo(ticked.physicalTime));
+    });
   });
 }
+

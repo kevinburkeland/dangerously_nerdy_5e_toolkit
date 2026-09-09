@@ -22,4 +22,19 @@ class RoomStateReconciliationService {
 
     return targetSet.prune(globallyAcknowledgedThreshold);
   }
+
+  /// Prunes tombstones using an authoritative milestone timestamp provided by the ledger/server.
+  CrdtOrSet<T> executeMilestonePrune<T>(
+    CrdtOrSet<T> targetSet,
+    int serverAcknowledgedEpochMs,
+    String hostNodeId,
+  ) {
+    final threshold = HybridLogicalClock(
+      physicalTime: serverAcknowledgedEpochMs,
+      logicalCounter: 0,
+      nodeId: hostNodeId,
+    );
+
+    return targetSet.prune(threshold);
+  }
 }

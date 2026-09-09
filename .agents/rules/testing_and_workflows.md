@@ -2,7 +2,7 @@
 
 ## 1. Targeted Test Commands
 
-Always prefer running targeted tests during active development rather than the entire 1,297-test suite to ensure fast feedback loops (< 5 seconds):
+Always prefer running targeted tests during active development rather than the entire 1,325-test suite to ensure fast feedback loops (< 5 seconds):
 
 ```bash
 # Domain purity & pure Dart rules

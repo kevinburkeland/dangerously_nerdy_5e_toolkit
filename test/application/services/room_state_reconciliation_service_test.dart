@@ -80,5 +80,31 @@ void main() {
       expect(pruned.tombstones.containsKey('tomb-3'), isTrue);
       expect(pruned.tombstones['tomb-3'], equals(recentTs));
     });
+
+    test('Milestone Pruning Safety: executeMilestonePrune translates epoch ms and prunes tombstones', () {
+      const pastTs1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
+      const pastTs2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeB');
+      const recentTs = HybridLogicalClock(physicalTime: 5000, logicalCounter: 0, nodeId: 'nodeC');
+
+      const setWithTombstones = CrdtOrSet<String>(
+        tombstones: {
+          'old-tomb-1': pastTs1,
+          'old-tomb-2': pastTs2,
+          'active-tomb': recentTs,
+        },
+      );
+
+      // Server acknowledges snapshot at epoch 3000
+      final pruned = service.executeMilestonePrune(
+        setWithTombstones,
+        3000,
+        'server-host',
+      );
+
+      expect(pruned.tombstones.containsKey('old-tomb-1'), isFalse);
+      expect(pruned.tombstones.containsKey('old-tomb-2'), isFalse);
+      expect(pruned.tombstones.containsKey('active-tomb'), isTrue);
+      expect(pruned.tombstones['active-tomb'], equals(recentTs));
+    });
   });
 }

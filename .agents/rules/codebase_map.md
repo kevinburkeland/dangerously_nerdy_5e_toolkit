@@ -26,4 +26,4 @@ Use this cheat sheet to immediately navigate to the relevant files without expen
 | **Persistence & Database** | `lib/services/persistence/` | `AppDatabaseService`, `HomebrewPersistenceService`, `CharacterPersistenceService` |
 | **Security & Firestore** | `firestore.rules`, `firestore.indexes.json` | Room security, passkey validation, rate limiting |
 | **Web Build Scripts** | `scripts/build_web.sh` | PWA cache busting, service worker version injection |
-| **Automated Tests** | `test/` (1,297 tests across unit, widget, accessibility, architecture) | `test/domain/domain_purity_test.dart`, `test/domain/crdt/`, `test/application/`, `test/infrastructure/` |
+| **Automated Tests** | `test/` (1,325 tests across unit, widget, accessibility, architecture) | `test/domain/domain_purity_test.dart`, `test/domain/crdt/`, `test/application/`, `test/infrastructure/` |

@@ -15,11 +15,11 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── crdt/                       # Distributed state: HybridLogicalClock, CrdtLwwRegister, CrdtOrSet
 │   │   ├── models/                     # Immutable entities: AnimatedObject, CampaignProfile, WeaponMastery
 │   │   │   └── value_objects/          # Value objects: HitPoints
-│   │   ├── ports/                      # Abstract interfaces: ICampaignRepository, ICharacterRepository, IPartySyncPort
+│   │   ├── ports/                      # Abstract interfaces: ICampaignRepository, ICharacterRepository, IPartySyncPort, INetworkTimePort
 │   │   ├── rules/                      # Pure mechanical contracts: RulesetContext
 │   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack
 │   ├── application/                    # Use Cases & Orchestration
-│   │   └── services/                   # RoomStateReconciliationService, CombatEncounterService, PartyRoomService
+│   │   └── services/                   # RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService
 │   ├── infrastructure/                 # Adapters, DTOs & Concrete I/O
 │   │   ├── di/                         # Service Locator: injection_container.dart (sl)
 │   │   ├── dtos/                       # CharacterDto, CampaignProfileDto, AnimatedObjectDto
@@ -38,7 +38,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,297 passing tests)
+├── test/                               # Comprehensive test suite (1,325 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -60,7 +60,9 @@ dangerously_nerdy_5e_toolkit/
 
 ### 2. Decentralized State & CvRDT Directives
 - **Hybrid Logical Clock (HLC):** Implements `Comparable`. When physical timestamps (`l`) and counters (`c`) collide, use `nodeId` (device ID string) as the deterministic lexicographical tie-breaker. Random tie-breakers are strictly forbidden.
+- **Clock Spoofing Mitigation:** Network time synchronization via `INetworkTimePort` and `ClockSyncService` computes physical clock offsets (`offsetMs`), neutralizing device clock tampering or skew.
 - **Observed-Remove Set (`CrdtOrSet`):** Deletions create tombstones. Always implement `prune(threshold)` to prevent memory leaks from unbounded tombstone accumulation.
+- **Milestone Pruning Decoupling:** Prune tombstones via `RoomStateReconciliationService.executeMilestonePrune` using authoritative server/ledger timestamps, decoupled from unverified local clock estimations.
 - **LWW Register (`CrdtLwwRegister`):** Modifications return a new immutable instance.
 - **Delta Fast-Forward:** Base room state is hydrated from snapshot milestones, with incremental CRDT deltas reconciled on top via `RoomStateReconciliationService`.
 

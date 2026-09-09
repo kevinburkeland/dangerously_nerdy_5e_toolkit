@@ -41,7 +41,9 @@ class CrdtOrSetDto {
       rawItems.forEach((key, val) {
         if (val is Map) {
           try {
-            final reg = CrdtLwwRegisterDto.fromMap<T>(val, valueDecoder);
+            // Strict casting to prevent type erasure crashes
+            final safeMap = Map<String, dynamic>.from(val);
+            final reg = CrdtLwwRegisterDto.fromMap<T>(safeMap, valueDecoder);
             if (reg != null) {
               items[key.toString()] = reg;
             }
@@ -57,7 +59,8 @@ class CrdtOrSetDto {
       rawTombstones.forEach((key, val) {
         if (val is Map) {
           try {
-            tombstones[key.toString()] = HybridLogicalClockDto.fromMap(val);
+            final safeMap = Map<String, dynamic>.from(val);
+            tombstones[key.toString()] = HybridLogicalClockDto.fromMap(safeMap);
           } catch (_) {
             // Skip corrupted tombstone
           }
