@@ -47,5 +47,6 @@ Located at `lib/application/services/room_sync_orchestrator.dart`:
 - **Echo Loop Prevention Mutex:** Setting `_isProcessingNetworkPayload = true` during inbound payload deserialization and persistence prevents local database stream listeners from echoing received state back to the mesh. The lock is safely released in a `finally` block via `scheduleMicrotask(() => _isProcessingNetworkPayload = false)`.
 - **Clock-Skew Corrected Outbound Sync:** Outbound broadcasts inject `clockSyncService.currentOffsetMs` into timestamps.
 - **Host Periodic Milestone Pruning:** Host DM nodes periodically execute milestone flushes and prune expired tombstones via `RoomStateReconciliationService.executeMilestonePrune()`.
+- **Connection Telemetry & Accessible Badge:** `RoomSyncOrchestrator.watchTelemetry()` combines transport state transitions and periodic peer heartbeat counts into `RoomConnectionTelemetry` (`isOffline`, `connectionLabel`, `peerCount`). Rendered via `RoomConnectionBadge` (`lib/presentation/widgets/room_connection_badge.dart`) with `Semantics` label expansion for screen readers.
 
 

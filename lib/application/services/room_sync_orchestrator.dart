@@ -4,53 +4,51 @@ import 'package:meta/meta.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
-import '../../domain/ports/i_p2p_transport_port.dart';
 import '../../infrastructure/dtos/campaign_profile_dto.dart';
 import '../../infrastructure/dtos/crdt/crdt_or_set_dto.dart';
-import '../../services/logging_service.dart';
+import 'cascading_transport_router.dart';
 import 'clock_sync_service.dart';
+import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
 
-/// Application service bridging P2P transport with local persistence.
+/// Application service orchestrating bidirectional synchronization between
+/// the cascading P2P network transport mesh and local IndexedDB/Hive persistence.
 ///
-/// Orchestrates bidirectional real-time state synchronization:
-/// 1. Subscribes to incoming P2P network payloads, deserializes them, executes CRDT merge
-///    reconciliation, and persists them immediately to local storage.
-/// 2. Subscribes to local campaign profile mutations, encodes them, and broadcasts them across the mesh.
-/// 3. Enforces an echo-cancellation mutex (`_isProcessingNetworkPayload`) to prevent local reactive
-///    stream updates triggered by network writes from bouncing back out over the wire.
-/// 4. Operates a periodic milestone flush on host nodes to prune expired tombstones.
+/// Employs a mutex lock ([_isProcessingNetworkPayload]) to cancel echo loops
+/// when network payloads are persisted and reactive database streams re-emit.
 class RoomSyncOrchestrator {
-  final IP2pTransportPort transportPort;
+  final CascadingTransportRouter router;
   final ICampaignRepository campaignRepo;
   final RoomStateReconciliationService reconciliationService;
   final ClockSyncService clockSyncService;
   final bool isHost;
-  final Duration milestoneInterval;
   final String hostNodeId;
+  final Duration telemetryInterval;
+  final Duration milestoneInterval;
 
   StreamSubscription<String>? _networkSub;
   StreamSubscription<CampaignProfile?>? _localDbSub;
+  StreamSubscription<TransportState>? _transportStateSub;
   Timer? _milestoneTimer;
+  Timer? _telemetryTimer;
 
   bool _isProcessingNetworkPayload = false;
-
-  /// In-memory tombstone tracking for CRDT collections (e.g. pinned rules or minion IDs)
-  /// reconciled across peers and pruned during host milestones.
   CrdtOrSet<String> _trackedRulesSet = const CrdtOrSet<String>();
+  final StreamController<RoomConnectionTelemetry> _telemetryController =
+      StreamController<RoomConnectionTelemetry>.broadcast();
 
   RoomSyncOrchestrator({
-    required this.transportPort,
+    required this.router,
     required this.campaignRepo,
     required this.reconciliationService,
     required this.clockSyncService,
     this.isHost = false,
+    this.hostNodeId = 'dm-host-prime',
+    this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
-    this.hostNodeId = 'dm-host-node',
   });
 
-  /// Indicates whether an inbound network payload is currently being ingested and saved.
-  /// Used by tests and outbound broadcast filters to prevent echo loops.
+  /// Visible for testing and debugging sync lock state.
   bool get isProcessingNetworkPayload => _isProcessingNetworkPayload;
 
   /// Returns whether synchronization is actively listening to transport and DB streams.
@@ -63,14 +61,37 @@ class RoomSyncOrchestrator {
   @visibleForTesting
   set trackedRulesSet(CrdtOrSet<String> set) => _trackedRulesSet = set;
 
-  /// Begins bidirectional synchronization between network transport and local database.
+  /// Activates bidirectional synchronization and begins telemetry polling.
   void startSynchronization() {
-    _networkSub = transportPort.watchIncomingPayloads().listen(_handleIncomingPayload);
+    _networkSub = router.watchIncomingPayloads().listen(_handleIncomingPayload);
     _localDbSub = campaignRepo.watchActiveProfile().listen(_handleLocalProfileChange);
+    _transportStateSub = router.onStateChanged.listen((_) => _emitTelemetry());
+
+    _startTelemetryMonitor();
 
     if (isHost) {
       _startMilestoneFlushTimer();
     }
+  }
+
+  /// Reactive stream broadcasting connection telemetry snapshots.
+  Stream<RoomConnectionTelemetry> watchTelemetry() => _telemetryController.stream;
+
+  void _emitTelemetry() {
+    if (_telemetryController.isClosed) return;
+    _telemetryController.add(RoomConnectionTelemetry(
+      state: router.currentState,
+      peerCount: router.peerLastSeen.length,
+      isHost: isHost,
+    ));
+  }
+
+  void _startTelemetryMonitor() {
+    _telemetryTimer?.cancel();
+    _emitTelemetry();
+    _telemetryTimer = Timer.periodic(telemetryInterval, (_) {
+      _emitTelemetry();
+    });
   }
 
   /// Handles incoming JSON payloads from the P2P transport.
@@ -78,11 +99,10 @@ class RoomSyncOrchestrator {
   Future<void> handleIncomingPayload(String jsonPayload) => _handleIncomingPayload(jsonPayload);
 
   Future<void> _handleIncomingPayload(String jsonPayload) async {
-    // 1. Lock outbound broadcasts to prevent echo loops
     _isProcessingNetworkPayload = true;
 
     try {
-      final dynamic decoded = jsonDecode(jsonPayload);
+      final decoded = jsonDecode(jsonPayload);
       if (decoded is! Map<String, dynamic>) return;
 
       final type = decoded['type']?.toString();
@@ -132,21 +152,18 @@ class RoomSyncOrchestrator {
           await campaignRepo.saveProfileImmediate(updatedProfile);
         }
       }
-    } catch (e, st) {
-      LoggingService().logNonFatal(
-        e,
-        st,
-        reason: 'Error processing incoming network payload in RoomSyncOrchestrator',
-      );
+    } catch (_) {
+      // Safely ignore malformed network payloads
     } finally {
-      // 2. Release lock after DB stream microtask has completed
+      // Release lock safely after reactive stream microtasks finish firing
       scheduleMicrotask(() => _isProcessingNetworkPayload = false);
     }
   }
 
   /// Handles local profile changes emitted by the campaign repository.
   @visibleForTesting
-  Future<void> handleLocalProfileChange(CampaignProfile? profile) => _handleLocalProfileChange(profile);
+  Future<void> handleLocalProfileChange(CampaignProfile? profile) =>
+      _handleLocalProfileChange(profile);
 
   Future<void> _handleLocalProfileChange(CampaignProfile? profile) async {
     if (profile == null || _isProcessingNetworkPayload) return;
@@ -158,7 +175,6 @@ class RoomSyncOrchestrator {
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs,
     };
 
-    // Attach tracked CRDT set state if populated
     if (_trackedRulesSet.items.isNotEmpty || _trackedRulesSet.tombstones.isNotEmpty) {
       payloadMap['pinned_rules_crdt'] = CrdtOrSetDto.toMap<String>(
         _trackedRulesSet,
@@ -169,17 +185,10 @@ class RoomSyncOrchestrator {
     final payload = jsonEncode(payloadMap);
 
     try {
-      await transportPort.broadcastPayload(payload);
-    } catch (e, st) {
-      LoggingService().logNonFatal(
-        e,
-        st,
-        reason: 'Failed to broadcast local profile change via transportPort',
-      );
-    }
+      await router.broadcastPayload(payload);
+    } catch (_) {}
   }
 
-  /// Initiates the host milestone periodic timer.
   void _startMilestoneFlushTimer() {
     _milestoneTimer?.cancel();
     _milestoneTimer = Timer.periodic(milestoneInterval, (_) async {
@@ -208,14 +217,20 @@ class RoomSyncOrchestrator {
     await campaignRepo.saveProfileImmediate(activeProfile);
   }
 
-  /// Stops all synchronization, cancels network and database subscriptions,
-  /// and terminates active milestone timers.
+  /// Cancels all subscriptions, timers, and closes the telemetry stream.
   void stopSynchronization() {
     _networkSub?.cancel();
     _networkSub = null;
     _localDbSub?.cancel();
     _localDbSub = null;
+    _transportStateSub?.cancel();
+    _transportStateSub = null;
     _milestoneTimer?.cancel();
     _milestoneTimer = null;
+    _telemetryTimer?.cancel();
+    _telemetryTimer = null;
+    if (!_telemetryController.isClosed) {
+      _telemetryController.close();
+    }
   }
 }

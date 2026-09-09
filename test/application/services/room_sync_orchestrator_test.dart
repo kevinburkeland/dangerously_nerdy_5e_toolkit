@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connection_telemetry.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/crdt_or_set.dart';
@@ -121,7 +123,9 @@ class MockNetworkTimePort implements INetworkTimePort {
 
 void main() {
   group('RoomSyncOrchestrator Tests', () {
-    late MockTransportPort mockTransport;
+    late MockTransportPort mockWebRtc;
+    late MockTransportPort mockFallback;
+    late CascadingTransportRouter router;
     late MockCampaignRepository mockRepo;
     late RoomStateReconciliationService reconciliationService;
     late MockNetworkTimePort mockTimePort;
@@ -143,7 +147,14 @@ void main() {
     );
 
     setUp(() async {
-      mockTransport = MockTransportPort();
+      mockWebRtc = MockTransportPort();
+      mockFallback = MockTransportPort();
+      router = CascadingTransportRouter(
+        webRtcAdapter: mockWebRtc,
+        firebaseFallbackAdapter: mockFallback,
+      );
+      await router.initializeRoom('CR-101', 'localNode1');
+
       mockRepo = MockCampaignRepository();
       mockRepo.emitProfile(initialProfile);
 
@@ -156,11 +167,12 @@ void main() {
       await clockSyncService.synchronizeClock();
 
       orchestrator = RoomSyncOrchestrator(
-        transportPort: mockTransport,
+        router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
         isHost: false,
+        telemetryInterval: const Duration(milliseconds: 50),
       );
     });
 
@@ -192,7 +204,7 @@ void main() {
       expect(mockRepo.savedImmediateProfiles.first.name, equals('Curse of the Frost - Chapter 2'));
 
       // Assert that echo loop prevention mutex suppressed broadcastPayload()
-      expect(mockTransport.broadcastedPayloads, isEmpty);
+      expect(mockWebRtc.broadcastedPayloads, isEmpty);
     });
 
     test('Outbound Sync Test: genuine local UI mutation triggers mesh broadcast', () async {
@@ -209,9 +221,9 @@ void main() {
       // Allow event loop to process stream listener
       await Future<void>.delayed(Duration.zero);
 
-      expect(mockTransport.broadcastedPayloads.length, equals(1));
+      expect(mockWebRtc.broadcastedPayloads.length, equals(1));
 
-      final broadcasted = jsonDecode(mockTransport.broadcastedPayloads.first) as Map<String, dynamic>;
+      final broadcasted = jsonDecode(mockWebRtc.broadcastedPayloads.first) as Map<String, dynamic>;
       expect(broadcasted['type'], equals('room_sync_full'));
       expect(broadcasted['payload'], isNotNull);
       expect(broadcasted['payload']['name'], equals('Locally Mutated Campaign Title'));
@@ -246,8 +258,8 @@ void main() {
 
       await Future<void>.delayed(Duration.zero);
 
-      expect(mockTransport.broadcastedPayloads.length, equals(1));
-      final decoded = jsonDecode(mockTransport.broadcastedPayloads.first) as Map<String, dynamic>;
+      expect(mockWebRtc.broadcastedPayloads.length, equals(1));
+      final decoded = jsonDecode(mockWebRtc.broadcastedPayloads.first) as Map<String, dynamic>;
       expect(decoded['payload']['name'], equals('Subsequent Local User Edit'));
     });
 
@@ -290,7 +302,7 @@ void main() {
 
     test('Host Milestone Prune Test: host flushes snapshot and prunes historical tombstones', () async {
       final hostOrchestrator = RoomSyncOrchestrator(
-        transportPort: mockTransport,
+        router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
@@ -330,6 +342,30 @@ void main() {
       expect(mockRepo.savedImmediateProfiles.isNotEmpty, isTrue);
 
       hostOrchestrator.stopSynchronization();
+    });
+
+    test('Telemetry Stream Test: watchTelemetry emits periodic telemetry reflecting router state and peerCount', () async {
+      router.recordPeerHeartbeat('peer-1');
+      router.recordPeerHeartbeat('peer-2');
+
+      final emittedTelemetry = <RoomConnectionTelemetry>[];
+      final sub = orchestrator.watchTelemetry().listen(emittedTelemetry.add);
+
+      orchestrator.startSynchronization();
+
+      // Initial emission happens immediately on startSynchronization
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(emittedTelemetry.isNotEmpty, isTrue);
+      expect(emittedTelemetry.first.state, equals(TransportState.p2pEstablished));
+      expect(emittedTelemetry.first.peerCount, equals(2));
+      expect(emittedTelemetry.first.connectionLabel, equals('WebRTC P2P'));
+      expect(emittedTelemetry.first.isOffline, isFalse);
+
+      // Wait for periodic timer (50ms)
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(emittedTelemetry.length, greaterThanOrEqualTo(2));
+
+      await sub.cancel();
     });
 
     test('Teardown & Cleanup Test: stopSynchronization releases subscriptions and timers cleanly', () {
