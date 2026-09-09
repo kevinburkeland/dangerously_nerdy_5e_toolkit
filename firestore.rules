@@ -61,6 +61,47 @@ service cloud.firestore {
 
       allow delete: if false;
 
+      // --- SUBCOLLECTION: WEBRTC EPHEMERAL SIGNALING ---
+      // Used strictly for transient WebRTC handshake data.
+      match /signaling/{signalId} {
+        // Read access required for mesh participants to receive offers/answers
+        allow get, list: if true;
+        
+        allow create: if request.resource.data.roomCode == roomCode
+                      && request.resource.data.fromNodeId is string
+                      && request.resource.data.fromNodeId.size() > 0
+                      && request.resource.data.toNodeId is string
+                      && request.resource.data.type in ['offer', 'answer', 'candidate', 'peerJoin', 'peerLeave']
+                      // sdp and candidate are optional depending on the type, but if present must be strings/maps
+                      && (!('sdp' in request.resource.data) || request.resource.data.sdp is string)
+                      && (!('candidate' in request.resource.data) || request.resource.data.candidate is map)
+                      && request.resource.data.timestamp is number;
+
+        // CRITICAL: Must allow delete for the zero-persistence cleanup lifecycle
+        // once the P2P connection is established.
+        allow delete: if true;
+        
+        allow update: if false;
+      }
+
+      // --- SUBCOLLECTION: CRDT FALLBACK RELAY ---
+      // Used when P2P NAT traversal fails. Routes JSON CRDT payloads.
+      match /relay_messages/{messageId} {
+        // Read access required for fallback participants
+        allow get, list: if true;
+        
+        allow create: if request.resource.data.senderId is string
+                      && request.resource.data.senderId.size() > 0
+                      && request.resource.data.payload is string
+                      // HARD LIMIT: Prevent malicious actors from dumping massive payloads (Cap at ~60KB)
+                      && request.resource.data.payload.size() < 60000 
+                      && request.resource.data.timestamp is number;
+        
+        // Append-only ledger. Do not allow clients to tamper with or delete history.
+        // NOTE: Setup a 24-hour TTL policy in Google Cloud Console for this collection group.
+        allow update, delete: if false; 
+      }
+
       // --- SUBCOLLECTION: LOOT VAULT ---
       match /loot/{lootId} {
         allow get: if true;
