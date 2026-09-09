@@ -20,6 +20,7 @@ dependencies:
   url_launcher: ^6.3.0
   meta: ^1.19.0
   uuid: ^4.6.0
+  flutter_webrtc: ^1.6.2+hotfix.1
 
 dev_dependencies:
   flutter_test:

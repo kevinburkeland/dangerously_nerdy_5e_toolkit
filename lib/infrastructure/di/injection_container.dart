@@ -1,6 +1,7 @@
 import '../../application/services/combat_encounter_service.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_character_repository.dart';
+import '../../domain/ports/i_p2p_transport_port.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../repositories/local_campaign_repository.dart';
 import '../repositories/local_character_repository.dart';
@@ -65,6 +66,7 @@ Future<void> initServiceLocator({
   AppDatabaseService? databaseService,
   ICharacterRepository? characterRepo,
   ICampaignRepository? campaignRepo,
+  IP2pTransportPort? p2pTransport,
 }) async {
   final db = databaseService ?? AppDatabaseService.instance;
   sl.registerSingleton<AppDatabaseService>(db);
@@ -79,4 +81,8 @@ Future<void> initServiceLocator({
         characterRepo: sl<ICharacterRepository>(),
         campaignRepo: sl<ICampaignRepository>(),
       ));
+
+  if (p2pTransport != null) {
+    sl.registerSingleton<IP2pTransportPort>(p2pTransport);
+  }
 }
