@@ -1,4 +1,5 @@
 import '../../application/services/combat_encounter_service.dart';
+import '../../application/services/room_state_reconciliation_service.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_character_repository.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
@@ -81,6 +82,8 @@ Future<void> initServiceLocator({
         characterRepo: sl<ICharacterRepository>(),
         campaignRepo: sl<ICampaignRepository>(),
       ));
+
+  sl.registerLazySingleton<RoomStateReconciliationService>(() => RoomStateReconciliationService());
 
   if (p2pTransport != null) {
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);

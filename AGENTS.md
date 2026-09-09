@@ -19,7 +19,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── rules/                      # Pure mechanical contracts: RulesetContext
 │   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack
 │   ├── application/                    # Use Cases & Orchestration
-│   │   └── services/                   # RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService
+│   │   └── services/                   # RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator
 │   ├── infrastructure/                 # Adapters, DTOs & Concrete I/O
 │   │   ├── di/                         # Service Locator: injection_container.dart (sl)
 │   │   ├── dtos/                       # CharacterDto, CampaignProfileDto, AnimatedObjectDto
@@ -38,7 +38,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,325 passing tests)
+├── test/                               # Comprehensive test suite (1,331 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -65,6 +65,7 @@ dangerously_nerdy_5e_toolkit/
 - **Milestone Pruning Decoupling:** Prune tombstones via `RoomStateReconciliationService.executeMilestonePrune` using authoritative server/ledger timestamps, decoupled from unverified local clock estimations.
 - **LWW Register (`CrdtLwwRegister`):** Modifications return a new immutable instance.
 - **Delta Fast-Forward:** Base room state is hydrated from snapshot milestones, with incremental CRDT deltas reconciled on top via `RoomStateReconciliationService`.
+- **Echo Loop Prevention Mutex:** `RoomSyncOrchestrator` locks outbound broadcasts (`_isProcessingNetworkPayload = true`) while ingesting and saving incoming network payloads, releasing via `scheduleMicrotask()` to prevent reactive database listeners from echoing inbound changes back to the transport mesh.
 
 ### 3. Dual-Ruleset Awareness (2014 RAW vs 2024 Revised)
 - The engine supports both **2014 (SRD 5.1)** and **2024 (SRD 5.2)** D&D mechanics.

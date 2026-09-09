@@ -40,3 +40,12 @@ Located at `lib/application/services/room_state_reconciliation_service.dart`:
   - `HybridLogicalClock.now()`, `tick()`, and `merge()` accept `offsetMs` to guarantee causal ordering immune to client clock spoofing.
 - **Defensive Type Casting & Anti-Corruption:** All CRDT DTOs (`CrdtOrSetDto`, `CrdtLwwRegisterDto`) must enforce strict `Map<String, dynamic>.from(...)` casting on nested maps to avoid runtime `_Map<dynamic, dynamic>` type-erasure exceptions during deserialization.
 
+## 5. Transport Orchestration & Echo Loop Prevention
+
+Located at `lib/application/services/room_sync_orchestrator.dart`:
+- **Bidirectional Wiring:** Glues `IP2pTransportPort` with local persistence `ICampaignRepository` (`watchIncomingPayloads()` and `watchActiveProfile()`).
+- **Echo Loop Prevention Mutex:** Setting `_isProcessingNetworkPayload = true` during inbound payload deserialization and persistence prevents local database stream listeners from echoing received state back to the mesh. The lock is safely released in a `finally` block via `scheduleMicrotask(() => _isProcessingNetworkPayload = false)`.
+- **Clock-Skew Corrected Outbound Sync:** Outbound broadcasts inject `clockSyncService.currentOffsetMs` into timestamps.
+- **Host Periodic Milestone Pruning:** Host DM nodes periodically execute milestone flushes and prune expired tombstones via `RoomStateReconciliationService.executeMilestonePrune()`.
+
+
