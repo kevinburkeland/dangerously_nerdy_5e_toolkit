@@ -18,3 +18,5 @@ For full codebase documentation, directory maps, and engineering directives, see
 4. **DTO Safety:** Map JSON to DTOs in `lib/infrastructure/dtos/` with numeric bounds clamping and `unparsedPayload` retention.
 5. **A11y:** 48x48dp touch targets minimum, expand abbreviations in `Semantics` labels, support `TextScaler.linear(2.0)`.
 6. **No Product Identity:** Strictly SRD 5.1 & 5.2 open content (CC-BY-4.0).
+7. **Continuous Documentation & Living Rules Protocol:** Before completing any run, sync [README.md](file:///README.md) (features, tests, architecture) and audit/codify newly learned patterns or corrections into [AGENTS.md](file:///AGENTS.md), [GEMINI.md](file:///GEMINI.md), and [.agents/rules/](file:///.agents/rules/).
+

@@ -94,6 +94,16 @@ dangerously_nerdy_5e_toolkit/
 ### 7. Legal & SRD Compliance
 - **Zero Product Identity:** Prohibited terms: Beholder, Mind Flayer, Illithid, Displacer Beast, Strahd, Hexblade, etc. Use generic SRD equivalents only (CC-BY-4.0).
 
+### 8. Continuous Documentation & Living AI Rules Protocol (Definition of Done)
+Before completing any engineering task, the agent MUST perform this two-gate audit:
+- **Gate 1: README.md Synchronization:**
+  - Verify if test counts changed (update badges and metrics across documentation).
+  - Update feature matrices, architecture notes, and CLI commands if new capabilities or endpoints were added.
+- **Gate 2: Self-Refining Rules Audit:**
+  - If a new architecture pattern, port/adapter convention, or mechanical rule was established, codify it into `.agents/rules/<topic>.md` and update index maps.
+  - If a non-obvious bug, framework quirk (Flutter web, IndexedDB/Hive, a11y overflow), or user correction was encountered, add a preventative directive to avoid future regressions.
+  - Keep the Fast Codebase Navigation Index in `AGENTS.md` up to date.
+
 ---
 
 ## ⚡ Fast Development & Test Workflows

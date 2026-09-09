@@ -36,5 +36,9 @@ You are an expert Flutter/Dart software architect. When generating or modifying 
 ## 7. SRD & Legal Compliance
 - **No Product Identity:** DO NOT generate code, tests, or mock data containing WotC Product Identity terms (e.g., Beholder, Mind Flayer, Strahd, Hexblade). Use generic SRD equivalents only (CC-BY-4.0).
 
+## 8. Continuous Documentation & Living Rules Protocol (Definition of Done)
+- **README Synchronization:** Verify and update [README.md](file:///README.md) (feature status, test counts, architecture notes, and CLI scripts) upon completing any feature or refactor.
+- **AI Rules Refinement:** Before completing each run, check if newly established conventions, architectural patterns, or bug fixes should be codified into [AGENTS.md](file:///AGENTS.md), [GEMINI.md](file:///GEMINI.md), or [.agents/rules/](file:///.agents/rules/) to continuously prevent regressions.
+
 ---
 *For in-depth directory mappings, architecture specs, and testing workflows, consult [AGENTS.md](file:///AGENTS.md) and [.agents/rules/](file:///.agents/rules/).*
