@@ -81,16 +81,23 @@ void main() {
         'activeMinions': [],
       };
 
-      // Deserialization should not throw and should safely store unparsed payload
-      final profile = CampaignProfileDto.fromMap(rawCampaignMap).toDomain();
-      expect(profile.partyCharacterIds.isEmpty, isTrue);
-      expect(profile.unparsedPartyRoster.length, equals(1));
-      expect(profile.unparsedPartyRoster.first['id'], equals('corrupt_char_99'));
+      // Deserialization stores unparsed payload in DTO / infrastructure, while domain remains pure
+      final dto = CampaignProfileDto.fromMap(rawCampaignMap);
+      expect(dto.unparsedPartyRoster.length, equals(1));
+      expect(dto.unparsedPartyRoster.first['id'], equals('corrupt_char_99'));
 
-      // Reserialization outputs partyCharacterIds
-      final serializedMap = CampaignProfileDto.fromDomain(profile).toMap();
-      final rosterOut = serializedMap['partyCharacterIds'] as List;
-      expect(rosterOut.isEmpty, isTrue);
+      final profile = dto.toDomain();
+      expect(profile.partyCharacterIds.isEmpty, isTrue);
+
+      // Reserialization preserves unparsed payloads when injected via DTO
+      final serializedMap = CampaignProfileDto.fromDomain(
+        profile,
+        unparsedPartyRoster: dto.unparsedPartyRoster,
+      ).toMap();
+      expect(serializedMap['unparsedPartyRoster'], isNotNull);
+      final unparsedOut = serializedMap['unparsedPartyRoster'] as List;
+      expect(unparsedOut.length, equals(1));
+      expect(unparsedOut.first['id'], equals('corrupt_char_99'));
     });
 
     test('Preserves malformed active minions payloads on round-trip', () {

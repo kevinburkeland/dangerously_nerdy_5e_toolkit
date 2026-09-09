@@ -79,7 +79,7 @@ class CharacterDto {
 
   /// Converts this DTO into a domain [Character] entity.
   Character toDomain() {
-    if (_rawMap.isNotEmpty && _rawMap.containsKey('progression')) {
+    if (_rawMap.isNotEmpty) {
       return Character.fromMap(_rawMap);
     }
     return Character.fromMap(toJson());
@@ -87,7 +87,7 @@ class CharacterDto {
 
   /// Serializes to a Map for database storage or network transmission.
   Map<String, dynamic> toMap() {
-    if (_rawMap.isNotEmpty && _rawMap.containsKey('progression')) {
+    if (_rawMap.isNotEmpty) {
       return _rawMap;
     }
     return toJson();

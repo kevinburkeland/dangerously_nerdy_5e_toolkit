@@ -19,7 +19,7 @@ import '../services/persistence/character_persistence_service.dart';
 import 'character_sheet_view.dart';
 import 'dice_roller_screen.dart';
 import 'dm_dashboard_screen.dart';
-import '../data/acl/character_telemetry_dto.dart';
+import '../infrastructure/dtos/character_telemetry_dto.dart';
 import '../widgets/party/party_vitality_hud.dart';
 
 /// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,

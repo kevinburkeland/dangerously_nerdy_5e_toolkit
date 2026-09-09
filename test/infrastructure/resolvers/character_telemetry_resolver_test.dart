@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/data/acl/character_telemetry_dto.dart';
-import 'package:dangerously_nerdy_5e_toolkit/data/acl/character_telemetry_resolver.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_telemetry_dto.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/resolvers/character_telemetry_resolver.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

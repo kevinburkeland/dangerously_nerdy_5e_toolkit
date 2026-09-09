@@ -10,7 +10,7 @@ import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_event.dart';
 import '../../models/party/party_loot_item.dart';
 import '../../models/party/party_purse.dart';
-import '../../data/acl/character_telemetry_dto.dart';
+import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../models/party/party_session_state.dart';
 import '../../utils/crypto_utils.dart';
 import '../../utils/secure_random.dart';

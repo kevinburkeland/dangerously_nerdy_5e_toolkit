@@ -179,7 +179,11 @@ class EncounterParticipant {
     final max = (map['maxHp'] as num?)?.toInt() ?? 10;
     final temp = (map['tempHp'] as num?)?.toInt() ?? 0;
     final hp = map['hitPoints'] is Map
-        ? HitPoints.fromMap(Map<String, dynamic>.from(map['hitPoints'] as Map))
+        ? HitPoints(
+            currentHp: ((map['hitPoints'] as Map)['currentHp'] as num?)?.toInt() ?? cur,
+            maxHp: ((map['hitPoints'] as Map)['maxHp'] as num?)?.toInt() ?? max,
+            tempHp: ((map['hitPoints'] as Map)['tempHp'] as num?)?.toInt() ?? temp,
+          )
         : HitPoints(currentHp: cur, maxHp: max, tempHp: temp);
 
     return EncounterParticipant(

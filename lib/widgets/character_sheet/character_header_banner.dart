@@ -129,18 +129,18 @@ class CharacterHeaderBanner extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Expanded(
-                          child: Text(
-                            character.name.isEmpty ? 'Unnamed Hero' : character.name,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          character.name.isEmpty ? 'Unnamed Hero' : character.name,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         // Total Level Pill
                         Container(
@@ -160,7 +160,6 @@ class CharacterHeaderBanner extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
                         // Level Up Action Chip
                         InkWell(
                           key: const Key('character_sheet_level_up_button'),
@@ -204,8 +203,7 @@ class CharacterHeaderBanner extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (onSwitchHero != null) ...[
-                          const SizedBox(width: 8),
+                        if (onSwitchHero != null)
                           InkWell(
                             key: const Key('character_sheet_roster_button'),
                             borderRadius: BorderRadius.circular(12),
@@ -243,8 +241,7 @@ class CharacterHeaderBanner extends StatelessWidget {
                             ),
                           ),
                         ],
-                      ],
-                    ),
+                      ),
                     const SizedBox(height: 4),
                     Text(
                       classSummary.isEmpty ? 'Level 1 Adventurer' : classSummary,

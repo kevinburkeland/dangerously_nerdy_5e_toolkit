@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../../data/acl/character_telemetry_dto.dart';
+import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import 'party_purse.dart';
 
 /// Root campaign room document state stored at /rooms/{roomCode}

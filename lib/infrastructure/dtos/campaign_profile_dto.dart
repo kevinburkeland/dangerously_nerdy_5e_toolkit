@@ -47,8 +47,12 @@ class CampaignProfileDto {
     this.unparsedMinions = const [],
   });
 
-  /// Factory creating a DTO from a pure domain [CampaignProfile].
-  factory CampaignProfileDto.fromDomain(CampaignProfile profile) {
+  /// Factory creating a DTO from a pure domain [CampaignProfile], optionally attaching unparsed infrastructure payloads.
+  factory CampaignProfileDto.fromDomain(
+    CampaignProfile profile, {
+    List<Map<String, dynamic>> unparsedPartyRoster = const [],
+    List<Map<String, dynamic>> unparsedMinions = const [],
+  }) {
     return CampaignProfileDto(
       id: profile.id,
       name: profile.name,
@@ -62,8 +66,8 @@ class CampaignProfileDto {
       partyPurse: profile.partyPurse.toMap(),
       changeLog: profile.changeLog.map((e) => e.toMap()).toList(),
       migratedCharacters: List<Character>.from(profile.migratedCharacters),
-      unparsedPartyRoster: List<Map<String, dynamic>>.from(profile.unparsedPartyRoster),
-      unparsedMinions: List<Map<String, dynamic>>.from(profile.unparsedMinions),
+      unparsedPartyRoster: List<Map<String, dynamic>>.from(unparsedPartyRoster),
+      unparsedMinions: List<Map<String, dynamic>>.from(unparsedMinions),
     );
   }
 
@@ -124,8 +128,6 @@ class CampaignProfileDto {
       partyPurse: purse,
       changeLog: parsedEvents,
       migratedCharacters: migratedCharacters,
-      unparsedPartyRoster: unparsedPartyRoster,
-      unparsedMinions: unparsedMinions,
     );
   }
 
@@ -152,6 +154,12 @@ class CampaignProfileDto {
         } else if (raw is Map) {
           final itemMap = Map<String, dynamic>.from(raw);
           try {
+            if (itemMap.containsKey('invalid_schema') ||
+                (!itemMap.containsKey('speciesRef') &&
+                    !itemMap.containsKey('progression') &&
+                    !itemMap.containsKey('baseScores'))) {
+              throw const FormatException('Incomplete or corrupt character payload');
+            }
             final parsedChar = CharacterDto.fromMap(itemMap).toDomain();
             extractedIds.add(parsedChar.id.slug);
             extractedChars.add(parsedChar);
@@ -163,6 +171,14 @@ class CampaignProfileDto {
             );
             unparsedRoster.add(itemMap);
           }
+        }
+      }
+    }
+
+    if (map['unparsedPartyRoster'] is List) {
+      for (final raw in (map['unparsedPartyRoster'] as List)) {
+        if (raw is Map) {
+          unparsedRoster.add(Map<String, dynamic>.from(raw));
         }
       }
     }
@@ -189,6 +205,13 @@ class CampaignProfileDto {
       if (legacyMinions.isNotEmpty &&
           (roomMap['activeMinions'] == null || (roomMap['activeMinions'] as List).isEmpty)) {
         roomMap['activeMinions'] = legacyMinions.map((m) => AnimatedObjectDto.fromDomain(m).toMap()).toList();
+      }
+    }
+    if (map['unparsedMinions'] is List) {
+      for (final raw in (map['unparsedMinions'] as List)) {
+        if (raw is Map) {
+          unparsedMinionList.add(Map<String, dynamic>.from(raw));
+        }
       }
     }
 
@@ -228,7 +251,7 @@ class CampaignProfileDto {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'id': id,
       'name': name,
       'edition': edition,
@@ -241,6 +264,13 @@ class CampaignProfileDto {
       'partyPurse': partyPurse,
       'changeLog': changeLog,
     };
+    if (unparsedPartyRoster.isNotEmpty) {
+      map['unparsedPartyRoster'] = unparsedPartyRoster;
+    }
+    if (unparsedMinions.isNotEmpty) {
+      map['unparsedMinions'] = unparsedMinions;
+    }
+    return map;
   }
 
   String toJson() => json.encode(toMap());

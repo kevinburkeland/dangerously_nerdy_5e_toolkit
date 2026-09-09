@@ -12,8 +12,8 @@ import '../models/domain/session_graph_models.dart';
 import '../models/party/party_purse.dart';
 import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/character_persistence_service.dart';
-import '../data/acl/character_telemetry_dto.dart';
-import '../data/acl/character_telemetry_resolver.dart';
+import '../infrastructure/dtos/character_telemetry_dto.dart';
+import '../infrastructure/resolvers/character_telemetry_resolver.dart';
 
 /// State management controller for DM Dashboard.
 /// Refactored to depend on abstract Ports ([ICampaignRepository], [ICharacterRepository])

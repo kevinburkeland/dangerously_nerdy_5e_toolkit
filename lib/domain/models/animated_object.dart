@@ -118,18 +118,32 @@ enum ObjectSize {
     return ObjectSize.medium;
   }
 }
+/// Pure domain representation of minion identity markers for table distinguishing.
+/// Decoupled from Flutter UI colors.
+enum MinionMarker {
+  standard,
+  alpha,
+  beta,
+  gamma,
+  delta,
+  epsilon;
 
-/// Represents an individual active summon or animated object instance.
-/// Pure Domain Entity without persistence or serialization concerns.
+  static MinionMarker fromString(String? name) {
+    if (name == null) return MinionMarker.standard;
+    return MinionMarker.values.firstWhere(
+      (m) => m.name.toLowerCase() == name.toLowerCase(),
+      orElse: () => MinionMarker.standard,
+    );
+  }
+}
+
 class AnimatedObjectInstance {
   final String id;
   String name;
   final ObjectSize size;
   HitPoints hitPoints;
-  String damageType; // Bludgeoning, Piercing, Slashing, Fire, etc.
-  bool isSilvered;
-
-  // Optional custom stat block overrides for generic minion summons
+  final String damageType;
+  final bool isSilvered;
   final int? customAc;
   final int? customAttackBonus;
   final int? customDamageDiceCount;
@@ -142,7 +156,7 @@ class AnimatedObjectInstance {
   final String? specialTrait;
   final String? statBlockId;
   final MinionStatBlock? originalStatBlock;
-  final int? customAccentColorValue;
+  final MinionMarker marker;
 
   AnimatedObjectInstance({
     required this.id,
@@ -166,21 +180,13 @@ class AnimatedObjectInstance {
     this.secondaryDamageType,
     this.hasPackTactics = false,
     this.specialTrait,
-    int? customAccentColorValue,
-    Object? customAccentColor,
-  })  : customAccentColorValue = customAccentColorValue ?? _extractColorValue(customAccentColor),
-        hitPoints = hitPoints ??
+    this.marker = MinionMarker.standard,
+  })  : hitPoints = hitPoints ??
             HitPoints(
               currentHp: currentHp ?? (maxHp ?? 10),
               maxHp: maxHp ?? 10,
               tempHp: tempHp,
             );
-
-  static int? _extractColorValue(Object? c) {
-    if (c == null) return null;
-    if (c is int) return c;
-    return null;
-  }
 
   int get currentHp => hitPoints.currentHp;
   set currentHp(int value) {
@@ -241,7 +247,6 @@ class AnimatedObjectInstance {
       secondaryDamageType: statBlock.secondaryDamageType,
       hasPackTactics: statBlock.hasPackTactics,
       specialTrait: statBlock.specialTrait,
-      customAccentColorValue: statBlock.accentColor.toARGB32(),
     );
   }
 
@@ -273,15 +278,21 @@ class AnimatedObjectInstance {
     hitPoints = hitPoints.takeDamage(amount);
   }
 
-  /// Mutating healing application clamped to [0, maxHp] via HitPoints Value Object.
+  void applyDamage(int damage) => takeDamage(damage);
+
+  /// Mutating healing application capped to Max HP via HitPoints Value Object.
   void heal(int amount) {
     hitPoints = hitPoints.heal(amount);
   }
 
-  /// Sets Temporary HP (non-stacking, overrides if positive) via HitPoints Value Object.
+  void applyHeal(int healAmount) => heal(healAmount);
+
+  /// Mutating Temporary HP application (RAW: non-stacking, highest wins).
   void grantTempHp(int amount) {
     hitPoints = hitPoints.grantTempHp(amount);
   }
+
+  void applyTempHp(int temp) => grantTempHp(temp);
 
   AnimatedObjectInstance copyWith({
     String? id,
@@ -303,8 +314,7 @@ class AnimatedObjectInstance {
     String? secondaryDamageType,
     bool? hasPackTactics,
     String? specialTrait,
-    int? customAccentColorValue,
-    Object? customAccentColor,
+    MinionMarker? marker,
   }) {
     final resolvedHp = hitPoints ??
         (currentHp != null || maxHp != null || tempHp != null
@@ -332,8 +342,7 @@ class AnimatedObjectInstance {
       secondaryDamageType: secondaryDamageType ?? this.secondaryDamageType,
       hasPackTactics: hasPackTactics ?? this.hasPackTactics,
       specialTrait: specialTrait ?? this.specialTrait,
-      customAccentColorValue: customAccentColorValue ??
-          (customAccentColor != null ? _extractColorValue(customAccentColor) : this.customAccentColorValue),
+      marker: marker ?? this.marker,
     );
   }
 
@@ -346,7 +355,6 @@ class AnimatedObjectInstance {
           name == other.name &&
           size == other.size &&
           hitPoints == other.hitPoints &&
-          maxHp == other.maxHp &&
           damageType == other.damageType &&
           isSilvered == other.isSilvered &&
           customAc == other.customAc &&
@@ -359,7 +367,7 @@ class AnimatedObjectInstance {
           secondaryDamageType == other.secondaryDamageType &&
           hasPackTactics == other.hasPackTactics &&
           specialTrait == other.specialTrait &&
-          customAccentColorValue == other.customAccentColorValue;
+          marker == other.marker;
 
   @override
   int get hashCode => Object.hashAll([
@@ -367,7 +375,6 @@ class AnimatedObjectInstance {
         name,
         size,
         hitPoints,
-        maxHp,
         damageType,
         isSilvered,
         customAc,
@@ -380,7 +387,7 @@ class AnimatedObjectInstance {
         secondaryDamageType,
         hasPackTactics,
         specialTrait,
-        customAccentColorValue,
+        marker,
       ]);
 
   @override

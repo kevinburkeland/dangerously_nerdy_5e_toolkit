@@ -1,5 +1,5 @@
 import 'dart:async';
-import '../../data/acl/character_telemetry_dto.dart';
+import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../models/party/party_session_state.dart';
 
 /// Port (interface) defining remote room synchronization operations in the Domain layer.

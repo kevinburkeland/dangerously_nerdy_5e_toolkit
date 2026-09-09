@@ -11,7 +11,7 @@ import '../dm_screen_data.dart' show DmRulesEdition;
 import '../characters/srd_classes_library.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../services/rules/character_evaluation_engine.dart';
-import '../../data/acl/character_telemetry_dto.dart';
+import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../domain/models/value_objects/hit_points.dart';
 
 /// 5e Core Ability Score Keys
@@ -810,7 +810,11 @@ class CharacterResourcePool {
     final curHp = (map['currentHp'] as num?)?.toInt() ?? 10;
     final tHp = (map['tempHp'] as num?)?.toInt() ?? 0;
     final hp = map['hitPoints'] is Map
-        ? HitPoints.fromMap(Map<String, dynamic>.from(map['hitPoints'] as Map))
+        ? HitPoints(
+            currentHp: ((map['hitPoints'] as Map)['currentHp'] as num?)?.toInt() ?? curHp,
+            maxHp: ((map['hitPoints'] as Map)['maxHp'] as num?)?.toInt() ?? 9999,
+            tempHp: ((map['hitPoints'] as Map)['tempHp'] as num?)?.toInt() ?? tHp,
+          )
         : HitPoints(currentHp: curHp, maxHp: 9999, tempHp: tHp);
 
     return CharacterResourcePool(
@@ -1747,7 +1751,9 @@ class Character extends DomainEntity {
     }
 
     return Character(
-      id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
+      id: map['id'] is Map
+          ? EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map))
+          : EntityId(slug: map['id']?.toString() ?? '', ruleset: RulesetVersion.v2024),
       name: map['name']?.toString() ?? '',
       speciesRef: EntityReference<DomainEntity>.fromMap(
           Map<String, dynamic>.from(map['speciesRef'] as Map? ?? {})),

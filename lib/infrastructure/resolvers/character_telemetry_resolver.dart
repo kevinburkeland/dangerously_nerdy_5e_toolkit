@@ -6,7 +6,7 @@ import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
-import 'character_telemetry_dto.dart';
+import '../dtos/character_telemetry_dto.dart';
 
 /// Resolved presentation information for a single class level progression.
 @immutable

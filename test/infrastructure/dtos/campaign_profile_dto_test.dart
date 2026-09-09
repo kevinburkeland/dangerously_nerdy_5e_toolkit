@@ -105,11 +105,11 @@ void main() {
       };
 
       final dto = CampaignProfileDto.fromMap(corruptRaw);
-      final domain = dto.toDomain();
+      expect(dto.unparsedPartyRoster.length, equals(1));
+      expect(dto.unparsedPartyRoster.first['id'], equals('broken_999'));
 
+      final domain = dto.toDomain();
       expect(domain.partyCharacterIds.isEmpty, isTrue);
-      expect(domain.unparsedPartyRoster.length, equals(1));
-      expect(domain.unparsedPartyRoster.first['id'], equals('broken_999'));
     });
   });
 }

@@ -306,11 +306,16 @@ extension ObjectSizeUI on ObjectSize {
 }
 
 extension AnimatedObjectInstanceUI on AnimatedObjectInstance {
-  Color? get customAccentColor =>
-      customAccentColorValue != null ? Color(customAccentColorValue!) : null;
+  Color? get customAccentColor => switch (marker) {
+        MinionMarker.standard => null,
+        MinionMarker.alpha => const Color(0xFFE53935),
+        MinionMarker.beta => const Color(0xFF1E88E5),
+        MinionMarker.gamma => const Color(0xFF43A047),
+        MinionMarker.delta => const Color(0xFFFB8C00),
+        MinionMarker.epsilon => const Color(0xFF8E24AA),
+      };
 
-  Color get effectiveAccentColor =>
-      customAccentColorValue != null ? Color(customAccentColorValue!) : size.accentColor;
+  Color get effectiveAccentColor => customAccentColor ?? size.accentColor;
 
   Color get accentColor => effectiveAccentColor;
 }

@@ -25,11 +25,6 @@ class CampaignProfile {
   final List<Character> _migratedCharacters;
   List<Character> get migratedCharacters => _migratedCharacters;
 
-  /// Fallback storage preserving raw unparsed child entity payloads
-  /// to guarantee 0% data loss across serialization cycles if a child fails parsing.
-  final List<Map<String, dynamic>> unparsedPartyRoster;
-  final List<Map<String, dynamic>> unparsedMinions;
-
   const CampaignProfile({
     required this.id,
     required this.name,
@@ -49,8 +44,6 @@ class CampaignProfile {
     this.partyPurse = const PartyPurse(),
     this.changeLog = const [],
     List<Character> migratedCharacters = const [],
-    this.unparsedPartyRoster = const [],
-    this.unparsedMinions = const [],
   }) : _migratedCharacters = migratedCharacters;
 
   /// Factory creating a fresh default campaign profile.
@@ -104,8 +97,6 @@ class CampaignProfile {
     PartyPurse? partyPurse,
     List<PartyEvent>? changeLog,
     List<Character>? migratedCharacters,
-    List<Map<String, dynamic>>? unparsedPartyRoster,
-    List<Map<String, dynamic>>? unparsedMinions,
   }) {
     return CampaignProfile(
       id: id ?? this.id,
@@ -126,12 +117,6 @@ class CampaignProfile {
           ? List<PartyEvent>.from(changeLog)
           : this.changeLog,
       migratedCharacters: migratedCharacters ?? _migratedCharacters,
-      unparsedPartyRoster: unparsedPartyRoster != null
-          ? List<Map<String, dynamic>>.from(unparsedPartyRoster)
-          : this.unparsedPartyRoster,
-      unparsedMinions: unparsedMinions != null
-          ? List<Map<String, dynamic>>.from(unparsedMinions)
-          : this.unparsedMinions,
     );
   }
 

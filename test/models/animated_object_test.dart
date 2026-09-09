@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 
@@ -183,7 +182,7 @@ void main() {
         customDamageBonus: 3,
         hasPackTactics: true,
         specialTrait: 'Reckless Attack',
-        customAccentColor: const Color(0xFFFF5722),
+        marker: MinionMarker.alpha,
       );
 
       final map = AnimatedObjectDto.fromDomain(obj).toMap();

@@ -24,6 +24,7 @@ class AnimatedObjectDto {
   final String? secondaryDamageType;
   final bool hasPackTactics;
   final String? specialTrait;
+  final String marker;
   final int? customAccentColor;
 
   const AnimatedObjectDto({
@@ -45,6 +46,7 @@ class AnimatedObjectDto {
     this.secondaryDamageType,
     this.hasPackTactics = false,
     this.specialTrait,
+    this.marker = 'standard',
     this.customAccentColor,
   });
 
@@ -69,7 +71,7 @@ class AnimatedObjectDto {
       secondaryDamageType: minion.secondaryDamageType,
       hasPackTactics: minion.hasPackTactics,
       specialTrait: minion.specialTrait,
-      customAccentColor: minion.customAccentColorValue,
+      marker: minion.marker.name,
     );
   }
 
@@ -94,7 +96,7 @@ class AnimatedObjectDto {
       secondaryDamageType: secondaryDamageType,
       hasPackTactics: hasPackTactics,
       specialTrait: specialTrait,
-      customAccentColorValue: customAccentColor,
+      marker: MinionMarker.fromString(marker),
     );
   }
 
@@ -107,6 +109,10 @@ class AnimatedObjectDto {
     final customDSides = (map['customDamageDiceSides'] as num?)?.toInt().clamp(0, 100);
     final secDCount = ((map['secondaryDamageDiceCount'] as num?)?.toInt() ?? 0).clamp(0, 50);
     final secDSides = ((map['secondaryDamageDiceSides'] as num?)?.toInt() ?? 0).clamp(0, 100);
+
+    final rawMarker = map['marker']?.toString();
+    final legacyColor = (map['customAccentColor'] as num?)?.toInt();
+    final markerName = rawMarker ?? (legacyColor != null ? 'alpha' : 'standard');
 
     return AnimatedObjectDto(
       id: map['id']?.toString() ?? '',
@@ -127,12 +133,13 @@ class AnimatedObjectDto {
       secondaryDamageType: map['secondaryDamageType']?.toString(),
       hasPackTactics: map['hasPackTactics'] as bool? ?? false,
       specialTrait: map['specialTrait']?.toString(),
-      customAccentColor: (map['customAccentColor'] as num?)?.toInt(),
+      marker: markerName,
+      customAccentColor: legacyColor,
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'id': id,
       'name': name,
       'size': size,
@@ -151,8 +158,12 @@ class AnimatedObjectDto {
       'secondaryDamageType': secondaryDamageType,
       'hasPackTactics': hasPackTactics,
       'specialTrait': specialTrait,
-      'customAccentColor': customAccentColor,
+      'marker': marker,
     };
+    if (customAccentColor != null) {
+      map['customAccentColor'] = customAccentColor;
+    }
+    return map;
   }
 
   String toJson() => json.encode(toMap());

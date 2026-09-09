@@ -21,7 +21,7 @@ void main() {
         customDamageBonus: 4,
         hasPackTactics: false,
         specialTrait: 'Heavy Slam',
-        customAccentColorValue: 0xFF1E88E5,
+        marker: MinionMarker.beta,
       );
 
       final dto = AnimatedObjectDto.fromDomain(domain);
@@ -44,7 +44,21 @@ void main() {
       expect(restored.customDamageBonus, equals(4));
       expect(restored.hasPackTactics, isFalse);
       expect(restored.specialTrait, equals('Heavy Slam'));
-      expect(restored.customAccentColorValue, equals(0xFF1E88E5));
+      expect(restored.marker, equals(MinionMarker.beta));
+    });
+
+    test('Legacy customAccentColor is safely migrated to MinionMarker', () {
+      final legacyMap = {
+        'id': 'legacy_minion',
+        'name': 'Legacy Broom',
+        'size': 'small',
+        'currentHp': 10,
+        'maxHp': 10,
+        'customAccentColor': 0xFF1E88E5,
+      };
+
+      final restored = AnimatedObjectDto.fromMap(legacyMap).toDomain();
+      expect(restored.marker, equals(MinionMarker.alpha));
     });
 
     test('Clamps negative HP and temporary HP safely during deserialization', () {

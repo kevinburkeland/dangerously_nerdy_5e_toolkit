@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../data/acl/character_telemetry_dto.dart';
-import '../../data/acl/character_telemetry_resolver.dart';
+import '../../infrastructure/dtos/character_telemetry_dto.dart';
+import '../../infrastructure/resolvers/character_telemetry_resolver.dart';
 
 /// Interactive vitality and combat meter HUD widget for a party member.
 /// Renders live HP, temporary HP, AC, speed, passive perception, death saves,

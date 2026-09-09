@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:dangerously_nerdy_5e_toolkit/data/acl/character_telemetry_dto.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/character_telemetry_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart' show DmRulesEdition;
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_draft.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';

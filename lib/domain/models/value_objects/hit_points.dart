@@ -96,19 +96,6 @@ class HitPoints {
     );
   }
 
-  Map<String, dynamic> toMap() => {
-        'currentHp': currentHp,
-        'maxHp': maxHp,
-        'tempHp': tempHp,
-      };
-
-  factory HitPoints.fromMap(Map<String, dynamic> map, {int fallbackMaxHp = 10}) {
-    final max = (map['maxHp'] as num?)?.toInt() ?? fallbackMaxHp;
-    final cur = (map['currentHp'] as num?)?.toInt() ?? max;
-    final temp = (map['tempHp'] as num?)?.toInt() ?? 0;
-    return HitPoints(currentHp: cur, maxHp: max, tempHp: temp);
-  }
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

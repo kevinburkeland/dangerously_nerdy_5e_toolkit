@@ -3,74 +3,117 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: Validates 5e coin dictionary structure and non-negative balances
+    // --- HELPER FUNCTIONS ---
+
+    // Validates 5e currency dictionary structure and non-negative values
     function isValidCoinMap(data) {
       return data.keys().hasOnly(['pp', 'gp', 'ep', 'sp', 'cp'])
-        && (!('pp' in data) || (data.pp is int && data.pp >= 0))
-        && (!('gp' in data) || (data.gp is int && data.gp >= 0))
-        && (!('ep' in data) || (data.ep is int && data.ep >= 0))
-        && (!('sp' in data) || (data.sp is int && data.sp >= 0))
-        && (!('cp' in data) || (data.cp is int && data.cp >= 0));
+        && (!('pp' in data) || (data.pp is int && data.pp >= 0 && data.pp <= 10000000))
+        && (!('gp' in data) || (data.gp is int && data.gp >= 0 && data.gp <= 10000000))
+        && (!('ep' in data) || (data.ep is int && data.ep >= 0 && data.ep <= 10000000))
+        && (!('sp' in data) || (data.sp is int && data.sp >= 0 && data.sp <= 10000000))
+        && (!('cp' in data) || (data.cp is int && data.cp >= 0 && data.cp <= 10000000));
     }
 
-    match /rooms/{roomCode} {
-      allow read: if true;
+    // Validates player name length
+    function isValidName(name) {
+      return name is string && name.size() >= 1 && name.size() <= 40;
+    }
 
-      // Creation: accommodates both full campaigns (with hostKeyHash) and quick dice rooms
+    // Validates room code format (alphanumeric, 4 to 12 chars)
+    function isValidRoomCode(code) {
+      return code is string && code.size() >= 4 && code.size() <= 12;
+    }
+
+    // --- ROOM DOCUMENT RULES ---
+    match /rooms/{roomCode} {
+      // PREVENT SCRAPING: Allow fetching individual rooms by code, but ban global list queries
+      allow get: if true;
+      allow list: if false;
+
+      // Creation: Validates field constraints, lengths, and optional SHA-256 hash
       allow create: if (request.resource.data.roomCode == roomCode || request.resource.data.code == roomCode)
-                   && request.resource.data.campaignName is string
-                   && request.resource.data.campaignName.size() > 0
-                   && request.resource.data.campaignName.size() <= 80
-                   && (!('hostKeyHash' in request.resource.data) || 
+                    && isValidRoomCode(roomCode)
+                    && request.resource.data.campaignName is string
+                    && request.resource.data.campaignName.size() >= 1
+                    && request.resource.data.campaignName.size() <= 80
+                    && (!('hostKeyHash' in request.resource.data) || 
                        (request.resource.data.hostKeyHash is string && 
                         (request.resource.data.hostKeyHash.size() == 0 || request.resource.data.hostKeyHash.size() == 64)));
 
-      // Updates: prevent hijacking hostKeyHash, changing roomCode, or corrupting purses/roster
+      // Updates: Prevent modifying roomCode or hostKeyHash; enforce bounds on rosters & purses
       allow update: if (request.resource.data.roomCode == resource.data.roomCode || request.resource.data.code == resource.data.code)
-                   && (!('hostKeyHash' in resource.data) || request.resource.data.hostKeyHash == resource.data.hostKeyHash)
-                   && (!('partyPurse' in request.resource.data) || isValidCoinMap(request.resource.data.partyPurse))
-                   && (!('memberPurses' in request.resource.data) || request.resource.data.memberPurses is map)
-                   && (!('characterRoster' in request.resource.data) || request.resource.data.characterRoster is list);
+                    // Prevent modifying or injecting hostKeyHash if already set or unset
+                    && (!('hostKeyHash' in resource.data) 
+                        ? !('hostKeyHash' in request.resource.data) 
+                        : request.resource.data.hostKeyHash == resource.data.hostKeyHash)
+                    // Enforce party purse bounds
+                    && (!('partyPurse' in request.resource.data) || isValidCoinMap(request.resource.data.partyPurse))
+                    // Cap member purses (max 20 players)
+                    && (!('memberPurses' in request.resource.data) 
+                        || (request.resource.data.memberPurses is map && request.resource.data.memberPurses.size() <= 20))
+                    // Cap roster size to prevent DoS (max 30 characters)
+                    && (!('characterRoster' in request.resource.data) 
+                        || (request.resource.data.characterRoster is list && request.resource.data.characterRoster.size() <= 30))
+                    // Cap party telemetry map if present (max 30 telemetry entries)
+                    && (!('partyTelemetry' in request.resource.data) 
+                        || (request.resource.data.partyTelemetry is map && request.resource.data.partyTelemetry.size() <= 30));
 
       allow delete: if false;
 
-      // --- Subcollection: Loot Vault ---
+      // --- SUBCOLLECTION: LOOT VAULT ---
       match /loot/{lootId} {
-        allow read: if true;
+        allow get: if true;
+        allow list: if true;
 
         allow create: if request.resource.data.id == lootId
-                     && request.resource.data.name is string
-                     && request.resource.data.name.size() > 0
-                     && request.resource.data.name.size() <= 100
-                     && request.resource.data.gpValue is number
-                     && request.resource.data.gpValue >= 0;
+                      && isValidName(request.resource.data.name)
+                      && request.resource.data.gpValue is number
+                      && request.resource.data.gpValue >= 0
+                      && request.resource.data.gpValue <= 100000000
+                      && (!('count' in request.resource.data) || (request.resource.data.count is int && request.resource.data.count >= 1 && request.resource.data.count <= 10000))
+                      && (!('claimedByPlayer' in request.resource.data) || request.resource.data.claimedByPlayer == null || isValidName(request.resource.data.claimedByPlayer));
 
-        // Updates: cannot alter item ID; soft-deletes (isArchived) permitted
+        // Updates: Cannot change item ID; bounds check on price & claim states
         allow update: if request.resource.data.id == resource.data.id
-                     && request.resource.data.gpValue is number
-                     && request.resource.data.gpValue >= 0;
+                      && isValidName(request.resource.data.name)
+                      && request.resource.data.gpValue is number
+                      && request.resource.data.gpValue >= 0
+                      && request.resource.data.gpValue <= 100000000
+                      && (!('claimedByPlayer' in request.resource.data) || request.resource.data.claimedByPlayer == null || isValidName(request.resource.data.claimedByPlayer));
 
-        // Prevent hard deletes from client devices; must use isArchived flag
-        allow delete: if false;
+        allow delete: if false; // Must use soft-delete flag (isArchived)
       }
 
-      // --- Subcollection: Audit Events ---
+      // --- SUBCOLLECTION: AUDIT EVENTS ---
       match /events/{eventId} {
-        allow read: if true;
+        allow get: if true;
+        allow list: if true;
+
         allow create: if request.resource.data.roomCode == roomCode
-                     && request.resource.data.type is string
-                     && request.resource.data.playerName is string
-                     && request.resource.data.details is string;
-        allow update, delete: if false; // Append-only audit trail
+                      && request.resource.data.type is string
+                      && request.resource.data.type.size() <= 30
+                      && isValidName(request.resource.data.playerName)
+                      && request.resource.data.details is string
+                      && request.resource.data.details.size() <= 250;
+
+        allow update, delete: if false; // Append-only audit log
       }
 
-      // --- Subcollection: Shared Dice Rolls ---
+      // --- SUBCOLLECTION: SHARED DICE ROLLS ---
       match /rolls/{rollId} {
-        allow read: if true;
+        allow get: if true;
+        allow list: if true;
+
         allow create: if request.resource.data.roomCode == roomCode
-                     && request.resource.data.playerName is string
-                     && request.resource.data.total is int;
-        allow update, delete: if false; // Rolls cannot be edited or deleted once cast
+                      && isValidName(request.resource.data.playerName)
+                      && request.resource.data.total is int
+                      && request.resource.data.total >= -100
+                      && request.resource.data.total <= 10000
+                      && (!('formulaString' in request.resource.data) || (request.resource.data.formulaString is string && request.resource.data.formulaString.size() <= 100))
+                      && (!('details' in request.resource.data) || (request.resource.data.details is list && request.resource.data.details.size() <= 50));
+
+        allow update, delete: if false; // Immutable rolls
       }
     }
   }

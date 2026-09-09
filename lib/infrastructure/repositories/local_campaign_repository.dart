@@ -11,6 +11,20 @@ import '../../services/persistence/app_database_service.dart';
 import '../dtos/campaign_profile_dto.dart';
 import 'local_character_repository.dart';
 
+/// Infrastructure-level cache holding raw unparsed JSON payloads
+/// to preserve 100% data fidelity on round-trip without leaking into the Domain layer.
+class UnparsedPayloadCache {
+  final List<Map<String, dynamic>> unparsedPartyRoster;
+  final List<Map<String, dynamic>> unparsedMinions;
+
+  const UnparsedPayloadCache({
+    this.unparsedPartyRoster = const [],
+    this.unparsedMinions = const [],
+  });
+
+  bool get isEmpty => unparsedPartyRoster.isEmpty && unparsedMinions.isEmpty;
+}
+
 /// Concrete infrastructure adapter implementing [ICampaignRepository]
 /// with in-memory caching, debounced persistence, Hive/IndexedDB ([AppDatabaseService]) storage,
 /// and reactive broadcast Streams. Completely decoupled from UI frameworks (no ChangeNotifier).
@@ -22,6 +36,7 @@ class LocalCampaignRepository implements ICampaignRepository {
   final AppDatabaseService _db;
   final ICharacterRepository _characterRepo;
   final Map<String, CampaignProfile> _memoryCache = {};
+  final Map<String, UnparsedPayloadCache> _unparsedCache = {};
   String? _activeProfileId;
   bool _initialized = false;
 
@@ -80,6 +95,12 @@ class LocalCampaignRepository implements ICampaignRepository {
         if (rawJson != null && rawJson.isNotEmpty) {
           try {
             final dto = CampaignProfileDto.fromJson(rawJson);
+            if (dto.unparsedPartyRoster.isNotEmpty || dto.unparsedMinions.isNotEmpty) {
+              _unparsedCache[id] = UnparsedPayloadCache(
+                unparsedPartyRoster: dto.unparsedPartyRoster,
+                unparsedMinions: dto.unparsedMinions,
+              );
+            }
             final profile = dto.toDomain();
             if (profile.migratedCharacters.isNotEmpty) {
               await _characterRepo.saveCharacters(profile.migratedCharacters);
@@ -231,6 +252,7 @@ class LocalCampaignRepository implements ICampaignRepository {
   Future<void> deleteProfile(String id) async {
     if (!_initialized) await loadAllProfiles();
     _memoryCache.remove(id);
+    _unparsedCache.remove(id);
 
     try {
       if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
@@ -266,7 +288,12 @@ class LocalCampaignRepository implements ICampaignRepository {
 
   Future<void> _persistProfileToDisk(CampaignProfile profile) async {
     try {
-      final dto = CampaignProfileDto.fromDomain(profile);
+      final cachedUnparsed = _unparsedCache[profile.id];
+      final dto = CampaignProfileDto.fromDomain(
+        profile,
+        unparsedPartyRoster: cachedUnparsed?.unparsedPartyRoster ?? const [],
+        unparsedMinions: cachedUnparsed?.unparsedMinions ?? const [],
+      );
       final jsonStr = dto.toJson();
       if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
         await _db.put(
