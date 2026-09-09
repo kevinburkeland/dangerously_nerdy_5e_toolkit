@@ -27,7 +27,8 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── repositories/               # LocalCampaignRepository, LocalCharacterRepository
 │   │   └── resolvers/                  # CharacterTelemetryResolver
 │   ├── presentation/
-│   │   └── core/                       # Accessible core widgets: AccessibleActionTile
+│   │   ├── core/                       # Accessible core widgets: AccessibleActionTile
+│   │   └── widgets/                    # Accessible badges & widgets: RoomConnectionBadge
 │   ├── providers/                      # CharacterSheetController, SettingsProvider
 │   ├── screens/                        # Top-level screen layouts (Character Sheet, Arena, DPR, Compendiums)
 │   ├── services/                       # Legacy services, ACL parsers, rules engines, persistence
@@ -38,7 +39,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,338 passing tests)
+├── test/                               # Comprehensive test suite (1,340 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests

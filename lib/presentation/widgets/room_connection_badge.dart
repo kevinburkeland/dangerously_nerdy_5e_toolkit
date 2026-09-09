@@ -26,7 +26,7 @@ class RoomConnectionBadge extends StatelessWidget {
 
         if (data.isOffline) {
           icon = Icons.cloud_off;
-          color = Colors.red;
+          color = Colors.redAccent;
         } else if (data.state == TransportState.p2pEstablished) {
           icon = Icons.lan;
           color = Colors.green;
@@ -38,21 +38,43 @@ class RoomConnectionBadge extends StatelessWidget {
           color = Colors.grey;
         }
 
+        final semanticText = data.isOffline
+            ? 'Network Status: Offline.'
+            : 'Network Status: ${data.connectionLabel}, ${data.peerCount} peers connected.';
+
         return Semantics(
-          label:
-              'Network Status: ${data.connectionLabel}, ${data.peerCount} peers connected.',
+          label: semanticText,
           container: true,
-          child: Chip(
-            avatar: Icon(icon, color: color, size: 16),
-            label: Text(
-              '${data.connectionLabel} (${data.peerCount})',
-              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+          excludeSemantics: true,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              border: Border.all(color: color.withValues(alpha: 0.5)),
+              borderRadius: BorderRadius.circular(24.0),
             ),
-            backgroundColor: color.withValues(alpha: 0.1),
-            side: BorderSide(color: color.withValues(alpha: 0.5)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8.0),
+                Flexible(
+                  child: Text(
+                    '${data.connectionLabel} (${data.peerCount})',
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 }
+

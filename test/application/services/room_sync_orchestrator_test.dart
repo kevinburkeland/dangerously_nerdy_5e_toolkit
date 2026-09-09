@@ -375,5 +375,44 @@ void main() {
       orchestrator.stopSynchronization();
       expect(orchestrator.isSynchronizing, isFalse);
     });
+
+    test('TransportPort fallback test: generic IP2pTransportPort defaults to connecting and peerCount 0', () async {
+      final genericMock = MockTransportPort();
+      final genericOrchestrator = RoomSyncOrchestrator(
+        transportPort: genericMock,
+        campaignRepo: mockRepo,
+        reconciliationService: reconciliationService,
+        clockSyncService: clockSyncService,
+        telemetryInterval: const Duration(milliseconds: 20),
+      );
+
+      expect(genericOrchestrator.router, isNull);
+      expect(genericOrchestrator.telemetryInterval, equals(const Duration(milliseconds: 20)));
+
+      final telemetrySnapshots = <RoomConnectionTelemetry>[];
+      final sub = genericOrchestrator.watchTelemetry().listen(telemetrySnapshots.add);
+
+      genericOrchestrator.startSynchronization();
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+
+      expect(telemetrySnapshots.isNotEmpty, isTrue);
+      expect(telemetrySnapshots.first.state, equals(TransportState.connecting));
+      expect(telemetrySnapshots.first.peerCount, equals(0));
+      expect(telemetrySnapshots.first.isOffline, isTrue);
+
+      await sub.cancel();
+      genericOrchestrator.stopSynchronization();
+    });
+
+    test('Default telemetryInterval is 2 seconds', () {
+      final defaultOrchestrator = RoomSyncOrchestrator(
+        router: router,
+        campaignRepo: mockRepo,
+        reconciliationService: reconciliationService,
+        clockSyncService: clockSyncService,
+      );
+
+      expect(defaultOrchestrator.telemetryInterval, equals(const Duration(seconds: 2)));
+    });
   });
 }

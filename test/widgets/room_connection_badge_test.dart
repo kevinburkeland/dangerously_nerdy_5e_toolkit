@@ -64,7 +64,7 @@ void main() {
       ));
 
       expect(
-        find.bySemanticsLabel('Network Status: Connecting..., 0 peers connected.'),
+        find.bySemanticsLabel('Network Status: Offline.'),
         findsOneWidget,
       );
       expect(find.text('Connecting... (0)'), findsOneWidget);
@@ -151,7 +151,7 @@ void main() {
         peerCount: 2,
         isHost: false,
       ));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.text('Firebase Relay (2)'), findsOneWidget);
       expect(find.byIcon(Icons.cloud_queue), findsOneWidget);
@@ -163,7 +163,7 @@ void main() {
       await controller.close();
     });
 
-    testWidgets('Renders cleanly at TextScaler 2.0 without overflow errors', (tester) async {
+    testWidgets('Renders cleanly at TextScaler 2.0 in a constrained width without overflow errors', (tester) async {
       final controller = StreamController<RoomConnectionTelemetry>();
       const telemetry = RoomConnectionTelemetry(
         state: TransportState.p2pEstablished,
@@ -171,15 +171,32 @@ void main() {
         isHost: true,
       );
 
-      await tester.pumpWidget(buildTestWidget(
-        stream: controller.stream,
-        initialTelemetry: telemetry,
-        textScaleFactor: 2.0,
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+              child: Center(
+                child: SizedBox(
+                  width: 100, // Constrained width
+                  child: RoomConnectionBadge(
+                    telemetryStream: controller.stream,
+                    initialTelemetry: telemetry,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
 
       expect(tester.takeException(), isNull);
-      expect(find.byType(Chip), findsOneWidget);
+      expect(find.byType(RoomConnectionBadge), findsOneWidget);
       expect(find.text('WebRTC P2P (5)'), findsOneWidget);
+
+      // Verify touch target minHeight constraint (at least 48dp)
+      final size = tester.getSize(find.byType(RoomConnectionBadge));
+      expect(size.height, greaterThanOrEqualTo(48.0));
 
       await controller.close();
     });

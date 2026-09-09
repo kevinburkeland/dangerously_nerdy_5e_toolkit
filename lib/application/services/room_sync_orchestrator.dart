@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
+import '../../domain/ports/i_p2p_transport_port.dart';
 import '../../infrastructure/dtos/campaign_profile_dto.dart';
 import '../../infrastructure/dtos/crdt/crdt_or_set_dto.dart';
 import 'cascading_transport_router.dart';
@@ -17,7 +18,7 @@ import 'room_state_reconciliation_service.dart';
 /// Employs a mutex lock ([_isProcessingNetworkPayload]) to cancel echo loops
 /// when network payloads are persisted and reactive database streams re-emit.
 class RoomSyncOrchestrator {
-  final CascadingTransportRouter router;
+  final IP2pTransportPort transportPort;
   final ICampaignRepository campaignRepo;
   final RoomStateReconciliationService reconciliationService;
   final ClockSyncService clockSyncService;
@@ -25,6 +26,11 @@ class RoomSyncOrchestrator {
   final String hostNodeId;
   final Duration telemetryInterval;
   final Duration milestoneInterval;
+
+  CascadingTransportRouter? get router =>
+      transportPort is CascadingTransportRouter
+          ? (transportPort as CascadingTransportRouter)
+          : null;
 
   StreamSubscription<String>? _networkSub;
   StreamSubscription<CampaignProfile?>? _localDbSub;
@@ -38,7 +44,8 @@ class RoomSyncOrchestrator {
       StreamController<RoomConnectionTelemetry>.broadcast();
 
   RoomSyncOrchestrator({
-    required this.router,
+    IP2pTransportPort? transportPort,
+    CascadingTransportRouter? router,
     required this.campaignRepo,
     required this.reconciliationService,
     required this.clockSyncService,
@@ -46,7 +53,11 @@ class RoomSyncOrchestrator {
     this.hostNodeId = 'dm-host-prime',
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
-  });
+  })  : transportPort = transportPort ?? router!,
+        assert(
+          transportPort != null || router != null,
+          'Must provide either transportPort or router',
+        );
 
   /// Visible for testing and debugging sync lock state.
   bool get isProcessingNetworkPayload => _isProcessingNetworkPayload;
@@ -63,9 +74,13 @@ class RoomSyncOrchestrator {
 
   /// Activates bidirectional synchronization and begins telemetry polling.
   void startSynchronization() {
-    _networkSub = router.watchIncomingPayloads().listen(_handleIncomingPayload);
+    _networkSub = transportPort.watchIncomingPayloads().listen(_handleIncomingPayload);
     _localDbSub = campaignRepo.watchActiveProfile().listen(_handleLocalProfileChange);
-    _transportStateSub = router.onStateChanged.listen((_) => _emitTelemetry());
+    if (transportPort is CascadingTransportRouter) {
+      _transportStateSub = (transportPort as CascadingTransportRouter)
+          .onStateChanged
+          .listen((_) => _emitTelemetry());
+    }
 
     _startTelemetryMonitor();
 
@@ -80,8 +95,12 @@ class RoomSyncOrchestrator {
   void _emitTelemetry() {
     if (_telemetryController.isClosed) return;
     _telemetryController.add(RoomConnectionTelemetry(
-      state: router.currentState,
-      peerCount: router.peerLastSeen.length,
+      state: transportPort is CascadingTransportRouter
+          ? (transportPort as CascadingTransportRouter).currentState
+          : TransportState.connecting,
+      peerCount: transportPort is CascadingTransportRouter
+          ? (transportPort as CascadingTransportRouter).peerLastSeen.length
+          : 0,
       isHost: isHost,
     ));
   }
@@ -185,7 +204,7 @@ class RoomSyncOrchestrator {
     final payload = jsonEncode(payloadMap);
 
     try {
-      await router.broadcastPayload(payload);
+      await transportPort.broadcastPayload(payload);
     } catch (_) {}
   }
 
