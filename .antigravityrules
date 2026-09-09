@@ -1,0 +1,31 @@
+# DangerouslyNerdy 5e Toolkit: AI Coding Directives
+
+You are an expert Flutter/Dart software architect. When generating or modifying code in this repository, you must strictly adhere to the following directives:
+
+## 1. Domain-Driven Design & Hexagonal Architecture
+- **Zero Flutter in Domain:** Files in `lib/domain/` MUST NOT import `package:flutter/...`.
+- **Ports and Adapters:** Domain logic defines Interfaces (Ports) in `lib/domain/ports/`. Infrastructure classes in `lib/infrastructure/` implement these interfaces (Adapters).
+- **Immutable Entities:** Use immutable pure Dart classes (`@immutable` or standard `const` constructors) for all Domain models. State mutation must return a new instance via `copyWith()`.
+
+## 2. Dual-Ruleset Awareness
+- The engine supports both 2014 (SRD 5.1) and 2024 (SRD 5.2) D&D mechanics.
+- Always check or pass the `DmRulesEdition` enum when calculating derived stats, action economies (e.g., potion drinking), or exhaustion. 
+- Do not hardcode 2014 or 2024 mechanics as the sole truth.
+
+## 3. Performance & Pre-Computation
+- **No Runtime Regex:** Do not use RegExp parsing inside combat loops, Monte Carlo simulations, or DPR calculations.
+- **Cache Complex Math:** Parse string-based traits into numeric equivalents (e.g., `MonsterCombatProfile`) during ingestion/initialization, NOT during execution.
+
+## 4. Anti-Corruption & Data Safety
+- **DTO Isolation:** Network/Disk JSON must map to Data Transfer Objects (DTOs) in `lib/infrastructure/dtos/` before being mapped to Domain entities.
+- **Strict Clamping:** All numeric data extracted from JSON must be clamped to safe tabletop bounds (e.g., HP `0..999`, Level `1..20`).
+- **Unparsed Payload Preservation:** Always preserve unrecognized JSON keys in an `unparsedPayload` map to prevent data loss of homebrew traits during schema migrations.
+
+## 5. Accessibility (a11y) Standards
+- **Touch Targets:** All interactive widgets MUST be at least 48x48dp (`minSize: const Size(48, 48)`).
+- **Semantics:** Use `Semantics` widgets with clear `label` strings that expand abbreviations (e.g., "STR" -> "Strength").
+- **Dynamic Type:** UI must not throw `RenderFlex` overflow errors up to `TextScaler.linear(2.0)`. Use `Wrap`, `SingleChildScrollView`, or `Flexible`.
+- **Reduced Motion:** Wrap animations in `if (!MediaQuery.disableAnimationsOf(context))` checks.
+
+## 6. SRD & Legal Compliance
+- **No Product Identity:** DO NOT generate code, tests, or mock data containing WotC Product Identity terms (e.g., Beholder, Mind Flayer, Strahd, Hexblade). Use generic SRD equivalents only.
