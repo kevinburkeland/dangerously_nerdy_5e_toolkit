@@ -89,3 +89,7 @@ Thumbs.db
 .history
 .svn/
 .swiftpm/
+
+# Mutation Testing
+mutation-test-report/
+mutation-test.xml

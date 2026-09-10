@@ -1412,4 +1412,69 @@ void main() {
       expect(missing, isEmpty, reason: 'Missing spells from SRD 5.1: $missing');
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // SpellItem.getName() — Mutation-targeted tests
+  // The two survived mutations change && to || in:
+  //   if (edition == DmRulesEdition.v2014 && name2014 != null) return name2014!;
+  //   if (edition == DmRulesEdition.v2024 && name2024 != null) return name2024!;
+  // Without these tests a "|| name2014 != null" mutation passes because the
+  // existing tests only call getName() on spells that HAVE both name fields set.
+  // ---------------------------------------------------------------------------
+  group('SpellItem.getName() — null-branch fallback (mutation guards)', () {
+    // A spell with ONLY a 2024 rename (name2014 is null)
+    // → asking for v2014 must return the base name, not name2024.
+    test('getName returns base name for v2014 when name2014 is null', () {
+      final spellWithOnlyNew = SpellbookLibrary.allSpells
+          .where((s) => s.name2014 == null && s.name2024 != null)
+          .firstOrNull;
+
+      if (spellWithOnlyNew != null) {
+        // The 2014 request MUST fall through to the base name
+        expect(spellWithOnlyNew.getName(DmRulesEdition.v2014),
+            equals(spellWithOnlyNew.name));
+        // The 2024 request MUST return the override name
+        expect(spellWithOnlyNew.getName(DmRulesEdition.v2024),
+            equals(spellWithOnlyNew.name2024));
+      } else {
+        // If no such spell exists in the library, verify for every null-name2014 spell
+        for (final s in SpellbookLibrary.allSpells) {
+          if (s.name2014 == null) {
+            expect(s.getName(DmRulesEdition.v2014), equals(s.name));
+          }
+        }
+      }
+    });
+
+    // A spell with ONLY a 2014 name override (name2024 is null)
+    // → asking for v2024 must return the base name, not name2014.
+    test('getName returns base name for v2024 when name2024 is null', () {
+      final spellWithOnlyOld = SpellbookLibrary.allSpells
+          .where((s) => s.name2024 == null && s.name2014 != null)
+          .firstOrNull;
+
+      if (spellWithOnlyOld != null) {
+        expect(spellWithOnlyOld.getName(DmRulesEdition.v2024),
+            equals(spellWithOnlyOld.name));
+        expect(spellWithOnlyOld.getName(DmRulesEdition.v2014),
+            equals(spellWithOnlyOld.name2014));
+      } else {
+        for (final s in SpellbookLibrary.allSpells) {
+          if (s.name2024 == null) {
+            expect(s.getName(DmRulesEdition.v2024), equals(s.name));
+          }
+        }
+      }
+    });
+
+    // Belt-and-suspenders: for ALL spells, getName() must never return empty.
+    test('getName always returns a non-empty string for every spell and edition', () {
+      for (final spell in SpellbookLibrary.allSpells) {
+        expect(spell.getName(DmRulesEdition.v2014).isNotEmpty, isTrue,
+            reason: 'Empty getName(v2014) for spell ${spell.id}');
+        expect(spell.getName(DmRulesEdition.v2024).isNotEmpty, isTrue,
+            reason: 'Empty getName(v2024) for spell ${spell.id}');
+      }
+    });
+  });
 }
