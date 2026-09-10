@@ -206,6 +206,7 @@ class _LiveRoomRollFeedState extends State<LiveRoomRollFeed> {
         const SizedBox(height: 8),
         StreamBuilder<List<RoomRoll>>(
           stream: _rollStream,
+          initialData: widget.roomService.getCachedRolls(widget.roomCode),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Container(

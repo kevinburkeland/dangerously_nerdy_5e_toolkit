@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_connection_telemetry.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/room_banner_widget.dart';
 
@@ -117,5 +121,35 @@ void main() {
     expect(roomService.isSessionRemembered, isTrue);
 
     roomService.leaveRoom();
+  });
+
+  testWidgets('RoomBannerWidget renders RoomConnectionBadge with active telemetry when connected', (WidgetTester tester) async {
+    final telemetryController = StreamController<RoomConnectionTelemetry>.broadcast();
+    addTearDown(() => telemetryController.close());
+
+    await tester.pumpWidget(createTestableWidget(
+      RoomBannerWidget(
+        activeRoomCode: 'ROOM-CONNECTED',
+        playerName: 'Gimli',
+        telemetryStream: telemetryController.stream,
+        initialTelemetry: const RoomConnectionTelemetry(
+          state: TransportState.webRtc,
+          peerCount: 3,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RoomConnectionBadge), findsOneWidget);
+    expect(find.text('WebRTC P2P (3)'), findsOneWidget);
+
+    // Update telemetry dynamically
+    telemetryController.add(const RoomConnectionTelemetry(
+      state: TransportState.localWifi,
+      peerCount: 5,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Local Wi-Fi (5)'), findsOneWidget);
   });
 }

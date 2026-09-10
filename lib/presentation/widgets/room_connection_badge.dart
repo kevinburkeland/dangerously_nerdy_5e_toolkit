@@ -6,11 +6,13 @@ import '../../application/services/room_connection_telemetry.dart';
 class RoomConnectionBadge extends StatelessWidget {
   final Stream<RoomConnectionTelemetry> telemetryStream;
   final RoomConnectionTelemetry? initialTelemetry;
+  final bool compact;
 
   const RoomConnectionBadge({
     super.key,
     required this.telemetryStream,
     this.initialTelemetry,
+    this.compact = false,
   });
 
   @override
@@ -50,24 +52,28 @@ class RoomConnectionBadge extends StatelessWidget {
           container: true,
           excludeSemantics: true,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 48.0),
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            constraints: BoxConstraints(minHeight: compact ? 28.0 : 48.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 8.0 : 12.0,
+              vertical: compact ? 3.0 : 8.0,
+            ),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               border: Border.all(color: color.withValues(alpha: 0.5)),
-              borderRadius: BorderRadius.circular(24.0),
+              borderRadius: BorderRadius.circular(compact ? 14.0 : 24.0),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: color, size: 20),
-                const SizedBox(width: 8.0),
+                Icon(icon, color: color, size: compact ? 14 : 20),
+                SizedBox(width: compact ? 5.0 : 8.0),
                 Flexible(
                   child: Text(
                     '${data.connectionLabel} (${data.peerCount})',
                     style: TextStyle(
                       color: color,
                       fontWeight: FontWeight.bold,
+                      fontSize: compact ? 11 : 13,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

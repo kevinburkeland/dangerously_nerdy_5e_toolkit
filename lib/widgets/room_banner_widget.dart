@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../application/services/room_connection_telemetry.dart';
+import '../application/services/room_sync_orchestrator.dart';
+import '../infrastructure/di/injection_container.dart';
+import '../presentation/widgets/room_connection_badge.dart';
 import '../services/dice_room_service.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/join_create_room_dialog.dart';
@@ -11,6 +15,8 @@ class RoomBannerWidget extends StatelessWidget {
   final bool compact;
   final Function(String roomCode, String playerName)? onJoinRoom;
   final VoidCallback? onLeaveRoom;
+  final Stream<RoomConnectionTelemetry>? telemetryStream;
+  final RoomConnectionTelemetry? initialTelemetry;
 
   RoomBannerWidget({
     super.key,
@@ -20,6 +26,8 @@ class RoomBannerWidget extends StatelessWidget {
     this.compact = false,
     this.onJoinRoom,
     this.onLeaveRoom,
+    this.telemetryStream,
+    this.initialTelemetry,
   }) : roomService = roomService ?? DiceRoomService();
 
   void _showJoinCreateRoomDialog(BuildContext context, String? currentName, String? currentRoom) {
@@ -140,6 +148,18 @@ class RoomBannerWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               if (isConnected) ...[
+                RoomConnectionBadge(
+                  compact: true,
+                  telemetryStream: telemetryStream ??
+                      (sl.isRegistered<RoomSyncOrchestrator>()
+                          ? sl<RoomSyncOrchestrator>().watchTelemetry()
+                          : const Stream.empty()),
+                  initialTelemetry: initialTelemetry ??
+                      (sl.isRegistered<RoomSyncOrchestrator>()
+                          ? sl<RoomSyncOrchestrator>().currentTelemetry
+                          : null),
+                ),
+                const SizedBox(width: 4),
                 IconButton(
                   icon: Icon(Icons.copy, color: primary, size: 17),
                   tooltip: 'Copy Room Code',

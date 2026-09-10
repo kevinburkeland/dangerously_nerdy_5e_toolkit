@@ -274,6 +274,10 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                           (sl.isRegistered<RoomSyncOrchestrator>()
                               ? sl<RoomSyncOrchestrator>().watchTelemetry()
                               : const Stream.empty()),
+                      initialTelemetry: _orchestrator?.currentTelemetry ??
+                          (sl.isRegistered<RoomSyncOrchestrator>()
+                              ? sl<RoomSyncOrchestrator>().currentTelemetry
+                              : null),
                     ),
                   ),
                   // Connection / Outbox Sync Status Badge
@@ -384,7 +388,14 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                       } else if (val == 'addLoot') {
                         AddLootItemDialog.show(context, roomCode: _roomCode, playerName: _playerName);
                       } else if (val == 'diceRoller') {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const DiceRollerScreen()));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DiceRollerScreen(
+                              roomService: _diceService,
+                            ),
+                          ),
+                        );
                       } else if (val == 'claimDm') {
                         ClaimDmPasskeyDialog.show(
                           context,
@@ -485,9 +496,9 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
               body: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildVaultTab(session, tabletop, isDark),
-                  _buildDiceFeedTab(tabletop, isDark),
-                  _buildHistoryAndTrashTab(tabletop, isDark),
+                  _KeepAliveTab(child: _buildVaultTab(session, tabletop, isDark)),
+                  _KeepAliveTab(child: _buildDiceFeedTab(tabletop, isDark)),
+                  _KeepAliveTab(child: _buildHistoryAndTrashTab(tabletop, isDark)),
                 ],
               ),
             );
@@ -1600,6 +1611,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   Widget _buildDiceFeedTab(TabletopColors tabletop, bool isDark) {
     return StreamBuilder<List<RoomRoll>>(
       stream: _rollStream,
+      initialData: _diceService.getCachedRolls(_roomCode),
       builder: (context, snapshot) {
         final rolls = snapshot.data ?? [];
 
@@ -1619,7 +1631,11 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                 ElevatedButton.icon(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const DiceRollerScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => DiceRollerScreen(
+                        roomService: _diceService,
+                      ),
+                    ),
                   ),
                   icon: const Icon(Icons.casino),
                   label: const Text('Open Dice Roller'),
@@ -1652,6 +1668,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     }
 
     return Card(
+      key: ValueKey(roll.id),
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       color: cardColor,
@@ -1843,5 +1860,25 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
 
   String _formatDateTime(DateTime dt) {
     return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _KeepAliveTab extends StatefulWidget {
+  final Widget child;
+  const _KeepAliveTab({required this.child});
+
+  @override
+  State<_KeepAliveTab> createState() => _KeepAliveTabState();
+}
+
+class _KeepAliveTabState extends State<_KeepAliveTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

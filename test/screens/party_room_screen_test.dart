@@ -14,6 +14,8 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orch
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_network_time_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 
 class _MockSyncTransport implements IP2pTransportPort {
@@ -49,6 +51,7 @@ void main() {
     PartyRoomService partyService,
     CampaignRegistryService registry, {
     String? initialPlayerName,
+    DiceRoomService? diceService,
   }) {
     return MaterialApp(
       theme: AppTheme.darkTheme,
@@ -57,6 +60,7 @@ void main() {
         initialPlayerName: initialPlayerName ?? 'DM',
         partyService: partyService,
         registry: registry,
+        diceService: diceService,
       ),
     );
   }
@@ -297,6 +301,84 @@ void main() {
       expect(find.text('Connecting... (0)'), findsOneWidget);
 
       orchestrator.stopSynchronization();
+    });
+
+    testWidgets('Live dice feed immediately renders cached rolls and persists across tab switches', (tester) async {
+      const roomCode = 'ROOM-FEED-TEST';
+      final membership = CampaignMembership(
+        roomCode: roomCode,
+        campaignName: 'Dice Feed Campaign',
+        role: CampaignRole.player,
+        characterId: 'Aragorn',
+        lastPlayed: DateTime.now(),
+      );
+      await registry.saveMembership(membership);
+
+      final diceService = DiceRoomService.newInstance();
+      final roll1 = RoomRoll(
+        id: 'feed-roll-1',
+        roomCode: roomCode,
+        playerName: 'Legolas',
+        timestamp: DateTime.now(),
+        formulaString: '1d20 + 7',
+        total: 24,
+        individualRolls: [17],
+        isCrit: false,
+        isFumble: false,
+      );
+      diceService.ingestRemoteRoll(roll1);
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        roomCode,
+        partyService,
+        registry,
+        initialPlayerName: 'Aragorn',
+        diceService: diceService,
+      ));
+      await tester.pumpAndSettle();
+
+      // Switch to Dice Feed tab
+      await tester.tap(find.text('Dice Feed'));
+      await tester.pumpAndSettle();
+
+      // Verify roll1 is immediately visible without visiting roll app
+      expect(find.text('Legolas'), findsOneWidget);
+      expect(find.text('24'), findsOneWidget);
+      expect(find.text('No dice rolls logged yet for this room.\nRoll dice to broadcast in real time!'), findsNothing);
+
+      // Switch to Party Vault tab (tab 0)
+      await tester.tap(find.text('Party Vault'));
+      await tester.pumpAndSettle();
+      expect(find.text('Party Coin Vault & Reserve'), findsOneWidget);
+
+      // Switch back to Dice Feed tab (tab 1)
+      await tester.tap(find.text('Dice Feed'));
+      await tester.pumpAndSettle();
+
+      // Verify roll1 is STILL visible and did NOT disappear
+      expect(find.text('Legolas'), findsOneWidget);
+      expect(find.text('24'), findsOneWidget);
+
+      // Ingest a second roll in real-time
+      final roll2 = RoomRoll(
+        id: 'feed-roll-2',
+        roomCode: roomCode,
+        playerName: 'Gimli',
+        timestamp: DateTime.now(),
+        formulaString: '1d12 + 5',
+        total: 16,
+        individualRolls: [11],
+        isCrit: false,
+        isFumble: false,
+      );
+      diceService.ingestRemoteRoll(roll2);
+      await tester.pumpAndSettle();
+
+      // Both rolls should now be present in the live feed
+      expect(find.text('Gimli'), findsOneWidget);
+      expect(find.text('16'), findsOneWidget);
+      expect(find.text('Legolas'), findsOneWidget);
+      expect(find.text('24'), findsOneWidget);
     });
   });
 }

@@ -94,20 +94,46 @@ class RoomSyncOrchestrator {
     }
   }
 
+  /// Returns the current telemetry snapshot synchronously.
+  RoomConnectionTelemetry get currentTelemetry => RoomConnectionTelemetry(
+        state: transportPort is CascadingTransportRouter
+            ? (transportPort as CascadingTransportRouter).currentState
+            : TransportState.connecting,
+        peerCount: transportPort is CascadingTransportRouter
+            ? (transportPort as CascadingTransportRouter).peerLastSeen.length
+            : 0,
+        isHost: isHost,
+      );
+
   /// Reactive stream broadcasting connection telemetry snapshots.
-  Stream<RoomConnectionTelemetry> watchTelemetry() => _telemetryController.stream;
+  /// Immediately emits the latest [currentTelemetry] to each new subscriber upon listening.
+  Stream<RoomConnectionTelemetry> watchTelemetry() {
+    late StreamController<RoomConnectionTelemetry> subController;
+    StreamSubscription<RoomConnectionTelemetry>? sub;
+
+    subController = StreamController<RoomConnectionTelemetry>.broadcast(
+      onListen: () {
+        subController.add(currentTelemetry);
+        sub = _telemetryController.stream.listen(
+          (t) {
+            if (!subController.isClosed) subController.add(t);
+          },
+          onError: (err, st) {
+            if (!subController.isClosed) subController.addError(err, st);
+          },
+        );
+      },
+      onCancel: () {
+        sub?.cancel();
+      },
+    );
+
+    return subController.stream;
+  }
 
   void _emitTelemetry() {
     if (_telemetryController.isClosed) return;
-    _telemetryController.add(RoomConnectionTelemetry(
-      state: transportPort is CascadingTransportRouter
-          ? (transportPort as CascadingTransportRouter).currentState
-          : TransportState.connecting,
-      peerCount: transportPort is CascadingTransportRouter
-          ? (transportPort as CascadingTransportRouter).peerLastSeen.length
-          : 0,
-      isHost: isHost,
-    ));
+    _telemetryController.add(currentTelemetry);
   }
 
   void _startTelemetryMonitor() {

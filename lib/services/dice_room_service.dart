@@ -26,6 +26,7 @@ class DiceRoomService {
   static const _kPersistedRoomCode = 'dice_room_persisted_code';
   static const _kPersistedPlayerName = 'dice_room_persisted_player_name';
   static const _kPersistedRemember = 'dice_room_persisted_remember';
+  static const _kPersistedRoomRollsPrefix = 'dice_room_rolls_';
 
   static final DiceRoomService _instance = DiceRoomService._internal();
   factory DiceRoomService() => _instance;
@@ -65,6 +66,7 @@ class DiceRoomService {
             isRemembered: true,
           );
         }
+        await _loadPersistedRolls(savedRoom.trim().toUpperCase());
       }
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
@@ -88,6 +90,7 @@ class DiceRoomService {
 
       // Async write to persistent storage
       _persistSession(cleanCode, cleanName, remember);
+      _loadPersistedRolls(cleanCode);
 
       // Immediately touch/initialize room document in Firestore so campaign features & other players connect instantly
       if (isFirebaseAvailable) {
@@ -190,7 +193,74 @@ class DiceRoomService {
   /// Deterministically checks if Firebase Core has been initialized with active apps.
   bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;
 
-  /// Returns a unified broadcast stream of real-time rolls for a given room code (last 24 hours, up to 100 rolls)
+  /// Returns a synchronous unmodifiable list of all currently cached rolls for the room (last 24 hours, up to 100).
+  List<RoomRoll> getCachedRolls(String roomCode) {
+    final cleanCode = roomCode.trim().toUpperCase();
+    final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
+    final rolls = _localRooms[cleanCode] ?? [];
+    return List.unmodifiable(
+      rolls.where((r) => r.timestamp.isAfter(cutoff24h)),
+    );
+  }
+
+  Future<void> _loadPersistedRolls(String roomCode) async {
+    final cleanCode = roomCode.trim().toUpperCase();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('$_kPersistedRoomRollsPrefix$cleanCode');
+      if (raw != null && raw.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(raw);
+        final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
+        final loaded = decoded
+            .map((item) => RoomRoll.fromMap(Map<String, dynamic>.from(item as Map)))
+            .where((r) => r.timestamp.isAfter(cutoff24h))
+            .toList();
+
+        final current = _localRooms[cleanCode] ?? [];
+        final map = <String, RoomRoll>{};
+        for (final r in current) {
+          map[r.id] = r;
+        }
+        for (final r in loaded) {
+          map.putIfAbsent(r.id, () => r);
+        }
+        final merged = map.values.toList()
+          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        _localRooms[cleanCode] = merged.take(100).toList();
+
+        if (_localControllers.containsKey(cleanCode) && !_localControllers[cleanCode]!.isClosed) {
+          _localControllers[cleanCode]!.add(getCachedRolls(cleanCode));
+        }
+      }
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to load persisted rolls for room $cleanCode',
+      );
+    }
+  }
+
+  void _persistRolls(String roomCode) {
+    final cleanCode = roomCode.trim().toUpperCase();
+    unawaited(() async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final rolls = _localRooms[cleanCode] ?? [];
+        final raw = jsonEncode(rolls.map((r) => r.toMap(useFirestoreTimestamp: false)).toList());
+        await prefs.setString('$_kPersistedRoomRollsPrefix$cleanCode', raw);
+      } catch (e, stackTrace) {
+        LoggingService().logNonFatal(
+          e,
+          stackTrace,
+          reason: 'Failed to persist rolls for room $cleanCode',
+        );
+      }
+    }());
+  }
+
+  /// Returns a unified broadcast stream of real-time rolls for a given room code (last 24 hours, up to 100 rolls).
+  /// Every new subscriber immediately receives the latest cached rolls on subscription, followed by live broadcasts.
   Stream<List<RoomRoll>> streamRoomRolls(String roomCode) {
     final cleanCode = roomCode.trim().toUpperCase();
     final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
@@ -199,6 +269,11 @@ class DiceRoomService {
     if (!_localControllers.containsKey(cleanCode) || _localControllers[cleanCode]!.isClosed) {
       _localControllers[cleanCode] = StreamController<List<RoomRoll>>.broadcast();
       _localRooms[cleanCode] ??= [];
+    }
+
+    // If local room is empty, attempt to load persisted rolls from local storage
+    if ((_localRooms[cleanCode] ?? []).isEmpty) {
+      _loadPersistedRolls(cleanCode);
     }
 
     // Connect Firestore real-time listener if available and not already listening
@@ -230,8 +305,9 @@ class DiceRoomService {
           _localRooms[cleanCode] = merged.take(100).toList();
 
           if (_localControllers.containsKey(cleanCode) && !_localControllers[cleanCode]!.isClosed) {
-            _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
+            _localControllers[cleanCode]!.add(getCachedRolls(cleanCode));
           }
+          _persistRolls(cleanCode);
         }, onError: (error, stackTrace) {
           LoggingService().logNonFatal(
             error,
@@ -248,17 +324,37 @@ class DiceRoomService {
       }
     }
 
-    // Emit current list immediately on subscribe (filtered to last 24 hours)
-    Future.microtask(() {
-      if (_localControllers.containsKey(cleanCode) && !_localControllers[cleanCode]!.isClosed) {
-        final recentRolls = (_localRooms[cleanCode] ?? [])
-            .where((r) => r.timestamp.isAfter(cutoff24h))
-            .toList();
-        _localControllers[cleanCode]!.add(List.unmodifiable(recentRolls));
-      }
-    });
+    final roomBroadcast = _localControllers[cleanCode]!;
 
-    return _localControllers[cleanCode]!.stream;
+    late StreamController<List<RoomRoll>> subscriberController;
+    StreamSubscription<List<RoomRoll>>? sub;
+
+    subscriberController = StreamController<List<RoomRoll>>.broadcast(
+      onListen: () {
+        final currentRolls = getCachedRolls(cleanCode);
+        if (currentRolls.isNotEmpty) {
+          subscriberController.add(currentRolls);
+        }
+
+        sub = roomBroadcast.stream.listen(
+          (rolls) {
+            if (!subscriberController.isClosed) {
+              subscriberController.add(rolls);
+            }
+          },
+          onError: (error, stackTrace) {
+            if (!subscriberController.isClosed) {
+              subscriberController.addError(error, stackTrace);
+            }
+          },
+        );
+      },
+      onCancel: () {
+        sub?.cancel();
+      },
+    );
+
+    return subscriberController.stream;
   }
 
   /// Ingests a roll received from a remote transport (P2P mesh, relay, or network bridge)
@@ -280,8 +376,9 @@ class DiceRoomService {
           .take(100)
           .toList();
       if (!_localControllers[cleanCode]!.isClosed) {
-        _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
+        _localControllers[cleanCode]!.add(getCachedRolls(cleanCode));
       }
+      _persistRolls(cleanCode);
     }
   }
 
@@ -305,8 +402,9 @@ class DiceRoomService {
           .take(100)
           .toList();
       if (!_localControllers[cleanCode]!.isClosed) {
-        _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
+        _localControllers[cleanCode]!.add(getCachedRolls(cleanCode));
       }
+      _persistRolls(cleanCode);
     }
 
     // 2. Broadcast via P2P transport mesh if available
