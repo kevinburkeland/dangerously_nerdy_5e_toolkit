@@ -57,6 +57,9 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
           'sdpSemantics': 'unified-plan',
         };
 
+  /// Ephemeral signaling adapter managing WebRTC handshakes.
+  FirebaseSignalingAdapter? get signalingAdapter => _signalingAdapter;
+
   /// Map of connected peer node IDs to their last active timestamp (epoch ms).
   Map<String, int> get peerLastActiveTimestamps =>
       Map.unmodifiable(_peerLastActiveTimestamps);
@@ -126,7 +129,12 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
 
     switch (message.type) {
       case SignalingType.peerJoin:
-        await _handlePeerJoin(peerId, message.id);
+        if (peerId != _localNodeId) {
+          await connectToPeer(peerId);
+        }
+        if (_signalingAdapter != null) {
+          await _signalingAdapter?.deleteSignal(message.id);
+        }
       case SignalingType.peerLeave:
         prunePeer(peerId);
         if (_signalingAdapter != null) {
@@ -140,30 +148,6 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
         if (message.candidate != null) {
           await _handleCandidate(peerId, message.candidate!, message.id);
         }
-    }
-  }
-
-  /// Handles peer discovery: deterministic tie-breaker prevents offer glare.
-  Future<void> _handlePeerJoin(String peerId, String signalId) async {
-    if (_isDisposed) return;
-
-    recordPeerActivity(peerId);
-
-    if (_peerConnections.containsKey(peerId)) {
-      return;
-    }
-
-    if (_localNodeId != null && _localNodeId!.compareTo(peerId) > 0) {
-      // Deterministic offerer: node with lexicographically greater ID initiates offer
-      await connectToPeer(peerId);
-    } else {
-      // Node with smaller ID replies with targeted join acknowledgment
-      final signaling = _signalingAdapter;
-      if (signaling != null) {
-        try {
-          await signaling.sendTargetedJoin(toNodeId: peerId);
-        } catch (_) {}
-      }
     }
   }
 

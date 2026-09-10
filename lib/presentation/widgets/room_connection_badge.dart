@@ -27,7 +27,10 @@ class RoomConnectionBadge extends StatelessWidget {
         if (data.isOffline) {
           icon = Icons.cloud_off;
           color = Colors.redAccent;
-        } else if (data.state == TransportState.p2pEstablished) {
+        } else if (data.state == TransportState.localWifi) {
+          icon = Icons.wifi;
+          color = Colors.green;
+        } else if (data.state == TransportState.webRtc) {
           icon = Icons.lan;
           color = Colors.green;
         } else if (data.state == TransportState.fallbackRelay) {

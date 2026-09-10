@@ -19,8 +19,9 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── rules/                      # Pure mechanical contracts: RulesetContext
 │   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack
 │   ├── application/                    # Use Cases & Orchestration
-│   │   └── services/                   # RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator
+│   │   └── services/                   # CascadingTransportRouter, RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator
 │   ├── infrastructure/                 # Adapters, DTOs & Concrete I/O
+│   │   ├── adapters/                   # Transport & Time Adapters: LocalWifiAdapter, WebRtcMeshAdapter, FirebaseSignalingAdapter, FirebaseFallbackAdapter, SystemNetworkTimePort
 │   │   ├── di/                         # Service Locator: injection_container.dart (sl)
 │   │   ├── dtos/                       # CharacterDto, CampaignProfileDto, AnimatedObjectDto
 │   │   │   └── crdt/                   # HybridLogicalClockDto, CrdtLwwRegisterDto, CrdtOrSetDto
@@ -39,7 +40,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,351 passing tests)
+├── test/                               # Comprehensive test suite (1,361 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests

@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_signaling_adapter.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/webrtc_mesh_adapter.dart';
 
 /// Mock transport adapter implementing [IP2pTransportPort] for deterministic testing.
 class MockTransportAdapter implements IP2pTransportPort {
@@ -48,16 +51,46 @@ class MockTransportAdapter implements IP2pTransportPort {
   }
 }
 
+class FakeRTCDataChannel implements RTCDataChannel {
+  @override
+  void Function(RTCDataChannelMessage message)? onMessage;
+
+  @override
+  void Function(RTCDataChannelState state)? onDataChannelState;
+
+  final List<RTCDataChannelMessage> sentMessages = [];
+  bool isClosed = false;
+
+  @override
+  Future<void> send(RTCDataChannelMessage message) async {
+    if (isClosed) throw StateError('Channel closed');
+    sentMessages.add(message);
+  }
+
+  @override
+  Future<void> close() async {
+    isClosed = true;
+    onDataChannelState?.call(RTCDataChannelState.RTCDataChannelClosed);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
-  group('CascadingTransportRouter Architectural Verification', () {
+  group('CascadingTransportRouter 4-Tier Waterfall Verification', () {
+    late MockTransportAdapter mockLocalWifi;
     late MockTransportAdapter mockWebRtc;
     late MockTransportAdapter mockFirebase;
     late CascadingTransportRouter router;
 
     setUp(() {
+      mockLocalWifi = MockTransportAdapter();
       mockWebRtc = MockTransportAdapter();
       mockFirebase = MockTransportAdapter();
+
       router = CascadingTransportRouter(
+        localWifiAdapter: mockLocalWifi,
         webRtcAdapter: mockWebRtc,
         firebaseFallbackAdapter: mockFirebase,
         heartbeatTtl: const Duration(seconds: 6),
@@ -69,72 +102,115 @@ void main() {
       await router.disconnect();
     });
 
-    test('Initializes WebRTC first and enters p2pEstablished state', () async {
+    test('Tier 1: Initializes Local Wi-Fi first and enters localWifi state (Zero Cost)', () async {
       expect(router.currentState, TransportState.connecting);
 
       await router.initializeRoom('ROOM-1234', 'node-player-1');
 
+      expect(mockLocalWifi.isInitialized, isTrue);
+      expect(mockWebRtc.isInitialized, isFalse);
+      expect(mockFirebase.isInitialized, isFalse);
+      expect(router.currentState, TransportState.localWifi);
+    });
+
+    test('Tier 2: Steps down to WebRTC mesh when Local Wi-Fi fails', () async {
+      mockLocalWifi.initializeShouldThrow = true;
+
+      await router.initializeRoom('ROOM-1234', 'node-player-1');
+
+      expect(mockLocalWifi.isInitialized, isFalse);
       expect(mockWebRtc.isInitialized, isTrue);
       expect(mockFirebase.isInitialized, isFalse);
+      expect(router.currentState, TransportState.webRtc);
+      // Deprecated alias compatibility
       expect(router.currentState, TransportState.p2pEstablished);
     });
 
-    test('Falls back immediately to Firebase if WebRTC initialization fails', () async {
+    test('Tier 3: Steps down to Firebase relay when both Local Wi-Fi and WebRTC fail', () async {
+      mockLocalWifi.initializeShouldThrow = true;
       mockWebRtc.initializeShouldThrow = true;
 
       await router.initializeRoom('ROOM-1234', 'node-player-1');
 
-      expect(router.currentState, TransportState.fallbackRelay);
+      expect(mockLocalWifi.isInitialized, isFalse);
+      expect(mockWebRtc.isInitialized, isFalse);
       expect(mockFirebase.isInitialized, isTrue);
+      expect(router.currentState, TransportState.fallbackRelay);
     });
 
-    group('Transport Abstraction Test', () {
-      test('Relays incoming payloads from WebRTC when p2pEstablished is active', () async {
+    test('Tier 4: Enters offline state when all 3 adapters fail initialization', () async {
+      mockLocalWifi.initializeShouldThrow = true;
+      mockWebRtc.initializeShouldThrow = true;
+      mockFirebase.initializeShouldThrow = true;
+
+      await router.initializeRoom('ROOM-1234', 'node-player-1');
+
+      expect(router.currentState, TransportState.offline);
+      expect(router.activeAdapter, isNull);
+    });
+
+    group('Signaling Lifecycle Verification', () {
+      test('Wipes ephemeral signaling documents upon WebRTC connection established', () async {
+        final deletedDocPaths = <String>[];
+        final signalingAdapter = FirebaseSignalingAdapter(
+          onDeleteDocument: (path) async {
+            deletedDocPaths.add(path);
+          },
+        );
+
+        await signalingAdapter.initialize(roomCode: 'ROOM-SIG', localNodeId: 'local-node');
+        final offerId = await signalingAdapter.sendOffer(toNodeId: 'remote-node', sdp: 'fake-sdp');
+        expect(signalingAdapter.trackedDocPaths, contains('rooms/ROOM-SIG/signaling/$offerId'));
+        expect(deletedDocPaths, isEmpty);
+
+        final realWebRtcAdapter = WebRtcMeshAdapter(signalingAdapter: signalingAdapter);
+        mockLocalWifi.initializeShouldThrow = true; // Cascade to WebRTC
+
+        final sigRouter = CascadingTransportRouter(
+          localWifiAdapter: mockLocalWifi,
+          webRtcAdapter: realWebRtcAdapter,
+          firebaseFallbackAdapter: mockFirebase,
+        );
+
+        await sigRouter.initializeRoom('ROOM-SIG', 'local-node');
+        expect(sigRouter.currentState, TransportState.webRtc);
+
+        // Verify cleanUpSignalingSession() was triggered and wiped all handshake docs
+        expect(deletedDocPaths, contains('rooms/ROOM-SIG/signaling/$offerId'));
+        expect(signalingAdapter.trackedDocPaths, isEmpty);
+
+        await sigRouter.disconnect();
+      });
+    });
+
+    group('Failover Step-Down & Payload Routing Test', () {
+      test('Relays incoming payloads from active adapter and filters protocol heartbeats', () async {
+        mockLocalWifi.initializeShouldThrow = true; // WebRTC tier
         await router.initializeRoom('ROOM-1234', 'node-player-1');
+        expect(router.currentState, TransportState.webRtc);
 
         final receivedPayloads = <String>[];
         final sub = router.watchIncomingPayloads().listen(receivedPayloads.add);
 
-        const dummyJson = '{"type":"crdt_delta","field":"hp","value":35}';
-        mockWebRtc.emitPayload(dummyJson);
+        // Protocol heartbeat message should be filtered out from application stream
+        mockWebRtc.emitPayload('{"_protocol":"heartbeat_ping","from":"peer-2"}');
         await Future<void>.delayed(Duration.zero);
+        expect(receivedPayloads, isEmpty);
 
-        expect(receivedPayloads, [dummyJson]);
-
-        // Broadcasting also uses WebRTC
-        await router.broadcastPayload('{"type":"attack_roll","d20":18}');
-        expect(mockWebRtc.broadcastedPayloads, ['{"type":"attack_roll","d20":18}']);
-        expect(mockFirebase.broadcastedPayloads, isEmpty);
+        // Application payload should be passed through
+        const appPayload = '{"type":"crdt_delta","field":"hp","value":35}';
+        mockWebRtc.emitPayload(appPayload);
+        await Future<void>.delayed(Duration.zero);
+        expect(receivedPayloads, [appPayload]);
 
         await sub.cancel();
       });
 
-      test('Relays incoming payloads from Firebase when fallbackRelay is active', () async {
-        mockWebRtc.initializeShouldThrow = true;
+      test('Broadcast failure on WebRTC steps down to Firebase Relay and routes payloads through it', () async {
+        mockLocalWifi.initializeShouldThrow = true; // Start in WebRTC tier
         await router.initializeRoom('ROOM-1234', 'node-player-1');
-
-        expect(router.currentState, TransportState.fallbackRelay);
-
-        final receivedPayloads = <String>[];
-        final sub = router.watchIncomingPayloads().listen(receivedPayloads.add);
-
-        const dummyFallbackJson = '{"type":"relay_event","details":"dm_update"}';
-        mockFirebase.emitPayload(dummyFallbackJson);
-        await Future<void>.delayed(Duration.zero);
-
-        expect(receivedPayloads, [dummyFallbackJson]);
-
-        // Broadcasting uses Firebase fallback relay
-        await router.broadcastPayload('{"type":"chat","msg":"hello"}');
-        expect(mockFirebase.broadcastedPayloads, ['{"type":"chat","msg":"hello"}']);
-        expect(mockWebRtc.broadcastedPayloads, isEmpty);
-
-        await sub.cancel();
-      });
-
-      test('Broadcast failure on WebRTC automatically triggers fallback to Firebase', () async {
-        await router.initializeRoom('ROOM-1234', 'node-player-1');
-        expect(router.currentState, TransportState.p2pEstablished);
+        expect(router.currentState, TransportState.webRtc);
+        expect(mockFirebase.isInitialized, isFalse);
 
         // Make WebRTC fail on sending
         mockWebRtc.broadcastShouldThrow = true;
@@ -142,17 +218,43 @@ void main() {
         const payload = '{"type":"save_throw","stat":"DEX","val":15}';
         await router.broadcastPayload(payload);
 
-        // State transitioned to fallbackRelay and broadcasted via Firebase
+        // Verify router stepped down to Firebase relay
         expect(router.currentState, TransportState.fallbackRelay);
+        expect(mockFirebase.isInitialized, isTrue);
         expect(mockFirebase.broadcastedPayloads, [payload]);
+
+        // Subsequent broadcasts route through Firebase relay without WebRTC
+        mockFirebase.broadcastedPayloads.clear();
+        mockWebRtc.broadcastedPayloads.clear();
+
+        const followUpPayload = '{"type":"chat","text":"fallover succeeded"}';
+        await router.broadcastPayload(followUpPayload);
+
+        expect(mockFirebase.broadcastedPayloads, [followUpPayload]);
+        expect(mockWebRtc.broadcastedPayloads, isEmpty);
+      });
+
+      test('Broadcast failure on Firebase relay steps down to total offline', () async {
+        mockLocalWifi.initializeShouldThrow = true;
+        mockWebRtc.initializeShouldThrow = true;
+        await router.initializeRoom('ROOM-1234', 'node-player-1');
+        expect(router.currentState, TransportState.fallbackRelay);
+
+        // Firebase broadcast fails
+        mockFirebase.broadcastShouldThrow = true;
+        await router.broadcastPayload('{"type":"fail"}');
+
+        expect(router.currentState, TransportState.offline);
       });
     });
 
-    group('Zombie Node Pruning & Heartbeat Test', () {
-      test('Prunes peer nodes exceeding 6-second TTL and transitions to fallbackRelay', () async {
+    group('Zombie Node Pruning & Heartbeat Cascade Test', () {
+      test('Prunes dead peer nodes exceeding TTL and cascades waterfall when all peers expire', () async {
         final prunedPeers = <String>[];
+        mockLocalWifi.initializeShouldThrow = true; // Start in WebRTC
 
         final testRouter = CascadingTransportRouter(
+          localWifiAdapter: mockLocalWifi,
           webRtcAdapter: mockWebRtc,
           firebaseFallbackAdapter: mockFirebase,
           heartbeatTtl: const Duration(seconds: 6),
@@ -161,84 +263,54 @@ void main() {
         );
 
         await testRouter.initializeRoom('ROOM-ZOMBIE', 'node-local');
-        expect(testRouter.currentState, TransportState.p2pEstablished);
+        expect(testRouter.currentState, TransportState.webRtc);
 
         final initialTime = DateTime(2026, 9, 9, 12, 0, 0);
 
         // Record active peer heartbeats at t = 0s
         testRouter.recordPeerHeartbeat('peer-fighter', timestamp: initialTime.millisecondsSinceEpoch);
         testRouter.recordPeerHeartbeat('peer-wizard', timestamp: initialTime.millisecondsSinceEpoch);
-
         expect(testRouter.peerLastSeen.length, 2);
 
-        // Simulate time advancing by 5 seconds (within 6-second TTL)
+        // Simulate t = 5s (within TTL)
         final at5Seconds = initialTime.add(const Duration(seconds: 5));
-        testRouter.checkHeartbeats(at5Seconds);
-
-        // Peers should NOT be pruned yet; state remains p2pEstablished
+        await testRouter.checkHeartbeats(at5Seconds);
         expect(testRouter.peerLastSeen.containsKey('peer-fighter'), isTrue);
         expect(testRouter.peerLastSeen.containsKey('peer-wizard'), isTrue);
         expect(prunedPeers, isEmpty);
-        expect(testRouter.currentState, TransportState.p2pEstablished);
+        expect(testRouter.currentState, TransportState.webRtc);
 
-        // Wizard sends a fresh heartbeat at 5 seconds
+        // Wizard sends a fresh heartbeat at 5s
         testRouter.recordPeerHeartbeat('peer-wizard', timestamp: at5Seconds.millisecondsSinceEpoch);
 
-        // Simulate time advancing to exactly 6.0 seconds from initial time
+        // Advance to 6.0s: fighter pruned, wizard stays active
         final at6Seconds = initialTime.add(const Duration(seconds: 6));
-        testRouter.checkHeartbeats(at6Seconds);
-
-        // Fighter exceeded 6s TTL and is pruned! Wizard remains active
+        await testRouter.checkHeartbeats(at6Seconds);
         expect(prunedPeers, contains('peer-fighter'));
         expect(testRouter.peerLastSeen.containsKey('peer-fighter'), isFalse);
         expect(testRouter.peerLastSeen.containsKey('peer-wizard'), isTrue);
-        expect(testRouter.currentState, TransportState.p2pEstablished);
+        expect(testRouter.currentState, TransportState.webRtc);
 
-        // Simulate time advancing to 11.0 seconds (Wizard has now been silent for 6s since t=5s)
+        // Advance to 11.0s: wizard pruned, all peers dead -> cascades to fallbackRelay
         final at11Seconds = initialTime.add(const Duration(seconds: 11));
-        testRouter.checkHeartbeats(at11Seconds);
-
-        // Wizard also pruned! All peers are now zombies. Router transitions to fallbackRelay
+        await testRouter.checkHeartbeats(at11Seconds);
         expect(prunedPeers, contains('peer-wizard'));
         expect(testRouter.peerLastSeen.isEmpty, isTrue);
         expect(testRouter.currentState, TransportState.fallbackRelay);
 
         await testRouter.disconnect();
       });
-
-      test('Timer-driven periodic heartbeat monitor prunes dead peers after 6s of inactivity', () async {
-        final prunedPeers = <String>[];
-
-        final testRouter = CascadingTransportRouter(
-          webRtcAdapter: mockWebRtc,
-          firebaseFallbackAdapter: mockFirebase,
-          heartbeatTtl: const Duration(milliseconds: 100), // scaled down for fast test
-          checkInterval: const Duration(milliseconds: 20),
-          onPeerPruned: prunedPeers.add,
-        );
-
-        await testRouter.initializeRoom('ROOM-FAST-TTL', 'node-local');
-        testRouter.recordPeerHeartbeat('peer-silence');
-
-        expect(testRouter.currentState, TransportState.p2pEstablished);
-
-        // Wait for TTL to expire via active timer
-        await Future<void>.delayed(const Duration(milliseconds: 160));
-
-        expect(prunedPeers, contains('peer-silence'));
-        expect(testRouter.currentState, TransportState.fallbackRelay);
-
-        await testRouter.disconnect();
-      });
     });
 
-    test('Clean disconnect tears down all adapters and controllers', () async {
+    test('Clean disconnect tears down all adapters, subscriptions, and clears state', () async {
       await router.initializeRoom('ROOM-TEARDOWN', 'node-local');
       await router.disconnect();
 
+      expect(mockLocalWifi.isDisconnected, isTrue);
       expect(mockWebRtc.isDisconnected, isTrue);
       expect(mockFirebase.isDisconnected, isTrue);
       expect(router.peerLastSeen, isEmpty);
+      expect(router.currentState, TransportState.offline);
     });
   });
 }

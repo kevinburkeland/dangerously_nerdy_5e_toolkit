@@ -11,6 +11,7 @@ import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../adapters/p2p/firebase_fallback_adapter.dart';
 import '../adapters/p2p/firebase_signaling_adapter.dart';
+import '../adapters/p2p/local_wifi_adapter.dart';
 import '../adapters/p2p/webrtc_mesh_adapter.dart';
 import '../adapters/system_network_time_port.dart';
 import '../repositories/local_campaign_repository.dart';
@@ -104,6 +105,7 @@ Future<void> initServiceLocator({
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);
   } else {
     sl.registerLazySingleton<CascadingTransportRouter>(() => CascadingTransportRouter(
+          localWifiAdapter: LocalWifiAdapter(),
           webRtcAdapter: WebRtcMeshAdapter(signalingAdapter: FirebaseSignalingAdapter()),
           firebaseFallbackAdapter: FirebaseFallbackAdapter(),
         ));

@@ -3,18 +3,26 @@ import 'dart:convert';
 import '../../domain/ports/i_p2p_transport_port.dart';
 import '../../infrastructure/adapters/p2p/webrtc_mesh_adapter.dart';
 
-/// Connection states for the cascading transport hierarchy.
+/// Connection states for the 4-tier cascading transport hierarchy.
 enum TransportState {
   connecting,
-  p2pEstablished,
+  localWifi,
+  webRtc,
   fallbackRelay,
+  offline;
+
+  /// Backwards compatibility alias for code expecting [p2pEstablished].
+  @Deprecated('Use webRtc instead')
+  static const TransportState p2pEstablished = TransportState.webRtc;
 }
 
-/// Application service orchestrating a 3-tier cascading transport model:
-/// 1. P2P WebRTC DataChannel mesh.
-/// 2. Automatic heartbeat tracking with 6-second Zombie Node Pruning.
-/// 3. Transparent fallback to Firebase cloud relay when P2P is lost or fails.
+/// Application service orchestrating a 4-tier cost-optimized cascading transport model:
+/// 1. Tier 1: Local Wi-Fi / LAN (Zero Cost)
+/// 2. Tier 2: WebRTC P2P DataChannel mesh with Ephemeral Firebase Signaling (Zero Cost)
+/// 3. Tier 3: Firebase Firestore Cloud Relay (Metered Fallback)
+/// 4. Tier 4: Total Offline (Disconnected)
 class CascadingTransportRouter implements IP2pTransportPort {
+  final IP2pTransportPort localWifiAdapter;
   final IP2pTransportPort webRtcAdapter;
   final IP2pTransportPort firebaseFallbackAdapter;
   final Duration heartbeatTtl;
@@ -23,6 +31,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
   final void Function(String peerId)? onPeerPruned;
 
   TransportState _currentState = TransportState.connecting;
+  IP2pTransportPort? _activeAdapter;
   String? _roomCode;
   String? _localNodeId;
 
@@ -31,16 +40,14 @@ class CascadingTransportRouter implements IP2pTransportPort {
   final StreamController<TransportState> _stateController =
       StreamController<TransportState>.broadcast();
 
-  StreamSubscription<String>? _webRtcSubscription;
-  StreamSubscription<Set<String>>? _webRtcPeerSub;
-  StreamSubscription<String>? _fallbackSubscription;
-  Timer? _heartbeatMonitorTimer;
+  StreamSubscription<String>? _activeSubscription;
+  Timer? _heartbeatTimer;
   Timer? _fallbackHeartbeatTimer;
 
-  /// Internal tracking of peer last seen timestamps (nodeId -> epoch ms).
   final Map<String, int> _peerLastSeen = {};
 
   CascadingTransportRouter({
+    required this.localWifiAdapter,
     required this.webRtcAdapter,
     required this.firebaseFallbackAdapter,
     this.heartbeatTtl = const Duration(seconds: 6),
@@ -52,6 +59,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
   TransportState get currentState => _currentState;
   Stream<TransportState> get onStateChanged => _stateController.stream;
   Map<String, int> get peerLastSeen => Map.unmodifiable(_peerLastSeen);
+  IP2pTransportPort? get activeAdapter => _activeAdapter;
 
   @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
@@ -59,55 +67,73 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _localNodeId = localNodeId;
     _changeState(TransportState.connecting);
 
+    // Tier 1: Local Wi-Fi (Zero Cost)
     try {
-      await webRtcAdapter.initializeRoom(_roomCode!, _localNodeId!);
-      _changeState(TransportState.p2pEstablished);
+      await _activateAdapter(localWifiAdapter, TransportState.localWifi);
+      return;
+    } catch (_) {}
 
-      _webRtcSubscription = webRtcAdapter
-          .watchIncomingPayloads()
-          .listen(_handleIncomingWebRtcPayload);
+    // Tier 2: WebRTC P2P Mesh (Zero Cost Data Channel, Ephemeral Signaling)
+    try {
+      await _activateAdapter(webRtcAdapter, TransportState.webRtc);
+      return;
+    } catch (_) {}
 
-      if (webRtcAdapter is WebRtcMeshAdapter) {
-        _webRtcPeerSub = (webRtcAdapter as WebRtcMeshAdapter).onPeersChanged.listen((peers) {
-          if (peers.isNotEmpty) {
-            _fallbackHeartbeatTimer?.cancel();
-            _fallbackHeartbeatTimer = null;
-            _changeState(TransportState.p2pEstablished);
-            for (final peerId in peers) {
-              recordPeerHeartbeat(peerId);
-            }
-          }
-        });
-      }
-    } catch (_) {
-      // Immediate fallback to Firebase relay if WebRTC setup fails
-      await _triggerFallback();
+    // Tier 3: Firebase Cloud Relay (Incurs Cost)
+    try {
+      await _activateAdapter(firebaseFallbackAdapter, TransportState.fallbackRelay);
+      return;
+    } catch (_) {}
+
+    // Tier 4: Total Offline
+    _changeState(TransportState.offline);
+  }
+
+  Future<void> _activateAdapter(
+    IP2pTransportPort adapter,
+    TransportState targetState,
+  ) async {
+    await adapter.initializeRoom(_roomCode!, _localNodeId!);
+
+    await _activeSubscription?.cancel();
+    _activeAdapter = adapter;
+    _changeState(targetState);
+
+    _activeSubscription =
+        _activeAdapter!.watchIncomingPayloads().listen(_handleIncomingPayload);
+
+    // Ephemeral signaling guarantee: aggressively wipe handshake docs upon WebRTC connection
+    if (targetState == TransportState.webRtc && adapter is WebRtcMeshAdapter) {
+      await adapter.signalingAdapter?.cleanUpSignalingSession();
+    }
+
+    if (targetState == TransportState.fallbackRelay) {
+      _startFallbackHeartbeats();
+    } else {
+      _fallbackHeartbeatTimer?.cancel();
+      _fallbackHeartbeatTimer = null;
     }
 
     _startHeartbeatMonitor();
   }
 
-  void _changeState(TransportState newState) {
-    if (_currentState != newState) {
-      _currentState = newState;
-      _stateController.add(newState);
-    }
-  }
-
-  void _handleIncomingWebRtcPayload(String payload) {
-    // Inspect payload for sender identity and heartbeat updates
+  void _handleIncomingPayload(String payload) {
     try {
       if (payload.startsWith('{')) {
         final decoded = jsonDecode(payload);
-        if (decoded is Map<String, dynamic>) {
+        if (decoded is Map) {
           final sender = decoded['from'] ?? decoded['senderId'];
           if (sender is String && sender.isNotEmpty && sender != _localNodeId) {
-            recordPeerHeartbeat(sender);
+            _peerLastSeen[sender] = DateTime.now().millisecondsSinceEpoch;
+          }
+          if (decoded['_protocol'] == 'relay_heartbeat' ||
+              decoded['_protocol'] == 'heartbeat_ping' ||
+              decoded['_protocol'] == 'heartbeat_pong') {
+            return;
           }
         }
       }
     } catch (_) {}
-
     _payloadController.add(payload);
   }
 
@@ -118,86 +144,60 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
   @override
   Future<void> broadcastPayload(String jsonPayload) async {
-    if (_currentState == TransportState.p2pEstablished) {
-      try {
-        await webRtcAdapter.broadcastPayload(jsonPayload);
-      } catch (_) {
-        await _triggerFallback();
-        await firebaseFallbackAdapter.broadcastPayload(jsonPayload);
-      }
-    } else {
-      await firebaseFallbackAdapter.broadcastPayload(jsonPayload);
-    }
-  }
+    if (_activeAdapter == null || _currentState == TransportState.offline) return;
 
-  @override
-  Stream<String> watchIncomingPayloads() => _payloadController.stream;
-
-  /// Transitions transport to Firebase fallback relay, initializing it if necessary.
-  Future<void> _triggerFallback() async {
-    if (_currentState == TransportState.fallbackRelay) return;
-
-    _changeState(TransportState.fallbackRelay);
-    _startFallbackHeartbeats();
-
-    if (_fallbackSubscription == null && _roomCode != null && _localNodeId != null) {
-      try {
-        await firebaseFallbackAdapter.initializeRoom(_roomCode!, _localNodeId!);
-      } catch (_) {}
-
-      _fallbackSubscription = firebaseFallbackAdapter
-          .watchIncomingPayloads()
-          .listen(_handleIncomingFallbackPayload);
-    }
-  }
-
-  void _handleIncomingFallbackPayload(String payload) {
     try {
-      if (payload.startsWith('{')) {
-        final decoded = jsonDecode(payload);
-        if (decoded is Map<String, dynamic>) {
-          final sender = decoded['from'] ?? decoded['senderId'];
-          if (sender is String && sender.isNotEmpty && sender != _localNodeId) {
-            recordPeerHeartbeat(sender);
-          }
-          if (decoded['_protocol'] == 'relay_heartbeat') {
-            return;
-          }
-        }
-      }
-    } catch (_) {}
-
-    _payloadController.add(payload);
-  }
-
-  void _startFallbackHeartbeats() {
-    _fallbackHeartbeatTimer?.cancel();
-    _fallbackHeartbeatTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (_currentState != TransportState.fallbackRelay || _localNodeId == null) return;
+      await _activeAdapter!.broadcastPayload(jsonPayload);
+    } catch (_) {
+      // Failover step down waterfall if transmission fails
+      await _stepDownWaterfall();
       try {
-        final ping = jsonEncode({
-          '_protocol': 'relay_heartbeat',
-          'from': _localNodeId,
-          'timestamp': DateTime.now().millisecondsSinceEpoch,
-        });
-        firebaseFallbackAdapter.broadcastPayload(ping);
-      } catch (_) {}
-    });
+        await _activeAdapter?.broadcastPayload(jsonPayload);
+      } catch (_) {
+        _changeState(TransportState.offline);
+      }
+    }
   }
 
-  /// Starts the periodic heartbeat monitor that prunes nodes exceeding the 6-second TTL.
+  Future<void> _stepDownWaterfall() async {
+    await _activeSubscription?.cancel();
+    _activeSubscription = null;
+    await _activeAdapter?.disconnect();
+    _activeAdapter = null;
+
+    if (_currentState == TransportState.localWifi) {
+      try {
+        await _activateAdapter(webRtcAdapter, TransportState.webRtc);
+        return;
+      } catch (_) {}
+    }
+
+    if (_currentState == TransportState.localWifi ||
+        _currentState == TransportState.webRtc) {
+      try {
+        await _activateAdapter(
+          firebaseFallbackAdapter,
+          TransportState.fallbackRelay,
+        );
+        return;
+      } catch (_) {}
+    }
+
+    _changeState(TransportState.offline);
+  }
+
   void _startHeartbeatMonitor() {
-    _heartbeatMonitorTimer?.cancel();
-    _heartbeatMonitorTimer = Timer.periodic(checkInterval, (_) {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(checkInterval, (_) {
       checkHeartbeats();
     });
   }
 
-  /// Evaluates peer heartbeats against the 6-second TTL.
-  /// Prunes zombie nodes and triggers fallback if active peers drop to zero.
-  void checkHeartbeats([DateTime? currentTime]) {
+  /// Evaluates peer heartbeats against the TTL.
+  /// Prunes zombie nodes and steps down the waterfall if active peers drop to zero.
+  Future<void> checkHeartbeats([DateTime? currentTime]) async {
     final now = (currentTime ?? DateTime.now()).millisecondsSinceEpoch;
-    final ttlMs = heartbeatTtl.inMilliseconds;
+    final ttl = heartbeatTtl.inMilliseconds;
 
     // Merge external provider timestamps if available
     if (peerTimestampProvider != null) {
@@ -212,7 +212,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
     final zombieNodes = <String>[];
     for (final entry in _peerLastSeen.entries) {
-      if (now - entry.value >= ttlMs) {
+      if (now - entry.value >= ttl) {
         zombieNodes.add(entry.key);
       }
     }
@@ -222,33 +222,59 @@ class CascadingTransportRouter implements IP2pTransportPort {
       onPeerPruned?.call(zombieId);
     }
 
-    // If all peers went zombie during p2pEstablished, trigger fallback to cloud relay
-    if (_currentState == TransportState.p2pEstablished && _peerLastSeen.isEmpty && zombieNodes.isNotEmpty) {
-      _triggerFallback();
+    // Step down waterfall if all peers went zombie during local or P2P session
+    if ((_currentState == TransportState.localWifi ||
+            _currentState == TransportState.webRtc) &&
+        _peerLastSeen.isEmpty &&
+        zombieNodes.isNotEmpty) {
+      await _stepDownWaterfall();
+    }
+  }
+
+  void _startFallbackHeartbeats() {
+    _fallbackHeartbeatTimer?.cancel();
+    _fallbackHeartbeatTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_currentState != TransportState.fallbackRelay || _localNodeId == null) {
+        return;
+      }
+      try {
+        final ping = jsonEncode({
+          '_protocol': 'relay_heartbeat',
+          'from': _localNodeId,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+        firebaseFallbackAdapter.broadcastPayload(ping);
+      } catch (_) {}
+    });
+  }
+
+  void _changeState(TransportState newState) {
+    if (_currentState != newState) {
+      _currentState = newState;
+      _stateController.add(newState);
     }
   }
 
   @override
-  Future<void> disconnect() async {
-    _heartbeatMonitorTimer?.cancel();
-    _heartbeatMonitorTimer = null;
+  Stream<String> watchIncomingPayloads() => _payloadController.stream;
 
+  @override
+  Future<void> disconnect() async {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
     _fallbackHeartbeatTimer?.cancel();
     _fallbackHeartbeatTimer = null;
 
-    await _webRtcSubscription?.cancel();
-    _webRtcSubscription = null;
+    await _activeSubscription?.cancel();
+    _activeSubscription = null;
 
-    await _webRtcPeerSub?.cancel();
-    _webRtcPeerSub = null;
-
-    await _fallbackSubscription?.cancel();
-    _fallbackSubscription = null;
-
-    _peerLastSeen.clear();
-
+    await localWifiAdapter.disconnect();
     await webRtcAdapter.disconnect();
     await firebaseFallbackAdapter.disconnect();
+
+    _activeAdapter = null;
+    _peerLastSeen.clear();
+    _changeState(TransportState.offline);
 
     await _payloadController.close();
     await _stateController.close();

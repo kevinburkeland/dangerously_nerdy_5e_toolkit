@@ -21,6 +21,7 @@ class MockTransportPort implements IP2pTransportPort {
   final List<String> broadcastedPayloads = [];
   final StreamController<String> _incomingController = StreamController<String>.broadcast();
   bool broadcastShouldThrow = false;
+  bool initializeShouldThrow = false;
   bool isDisconnected = false;
 
   @override
@@ -39,7 +40,11 @@ class MockTransportPort implements IP2pTransportPort {
   }
 
   @override
-  Future<void> initializeRoom(String roomCode, String localNodeId) async {}
+  Future<void> initializeRoom(String roomCode, String localNodeId) async {
+    if (initializeShouldThrow) {
+      throw StateError('Simulated initialization failure');
+    }
+  }
 
   @override
   Future<void> disconnect() async {
@@ -123,6 +128,7 @@ class MockNetworkTimePort implements INetworkTimePort {
 
 void main() {
   group('RoomSyncOrchestrator Tests', () {
+    late MockTransportPort mockWifi;
     late MockTransportPort mockWebRtc;
     late MockTransportPort mockFallback;
     late CascadingTransportRouter router;
@@ -147,9 +153,11 @@ void main() {
     );
 
     setUp(() async {
+      mockWifi = MockTransportPort()..initializeShouldThrow = true;
       mockWebRtc = MockTransportPort();
       mockFallback = MockTransportPort();
       router = CascadingTransportRouter(
+        localWifiAdapter: mockWifi,
         webRtcAdapter: mockWebRtc,
         firebaseFallbackAdapter: mockFallback,
       );

@@ -67,3 +67,20 @@ Located at `lib/application/services/room_sync_orchestrator.dart`:
 - **Transport Lifecycle Bootstrap:**
   - `initServiceLocator()` MUST be invoked during application startup in `main.dart` to ensure `CascadingTransportRouter` and `RoomSyncOrchestrator` are registered.
   - Interactive room screens (`PartyRoomScreen`) automatically attach `RoomSyncOrchestrator.watchTelemetry()` to `RoomConnectionBadge` and cleanly disconnect upon screen disposal.
+
+## 8. 4-Tier Cost-Optimized Transport Waterfall & Ephemeral Signaling
+Located at `lib/application/services/cascading_transport_router.dart`:
+- **Waterfall Sequence:**
+  1. **Tier 1 (Local Wi-Fi / LAN)**: `LocalWifiAdapter` provides zero-latency, zero-cloud-cost direct local network communication. If unavailable on the platform or unconfigured, throws `UnsupportedError` to cascade down.
+  2. **Tier 2 (WebRTC P2P Mesh)**: `WebRtcMeshAdapter` creates full-mesh WebRTC DataChannels using Firestore strictly for ephemeral SDP/ICE signaling.
+  3. **Tier 3 (Firebase Cloud Relay)**: `FirebaseFallbackAdapter` serves as metered fallback, strictly dormant during healthy local Wi-Fi or WebRTC sessions. Activated only upon unhandled transmission failure, timeout, or total zombie peer pruning.
+  4. **Tier 4 (Offline Mode)**: Complete offline isolation when all transports fail.
+- **Ephemeral Signaling Zero-Persistence Guarantee:**
+  - `FirebaseSignalingAdapter.cleanUpSignalingSession()` is invoked immediately upon P2P connection establishment (`TransportState.webRtc` / DataChannel open), deleting all offers, answers, and ICE candidates from Firestore. Handshake documents are NEVER retained in cloud storage.
+- **Late-Joiner Re-Signaling & 60-Second Sliding TTL:**
+  - When initializing signaling (`FirebaseSignalingAdapter.initialize`), Firestore queries enforce a strict 60-second sliding window (`timestamp >= now - 60000`) on incoming signals, discarding stale handshake residue.
+  - Late-joining clients broadcast an ephemeral `SignalingType.peerJoin` message (`toNodeId: '*'`).
+  - Active peers in `WebRtcMeshAdapter` receive `peerJoin`, automatically call `connectToPeer(lateJoinerNodeId)` to dispatch a fresh, targeted SDP offer, and consume/delete the join message immediately, eliminating fallback to metered cloud relay.
+- **Failover Step-Down & Payload Routing:**
+  - Broadcast failures on the active adapter invoke `_stepDownWaterfall()`, cleanly disconnecting the failing adapter and activating the next tier down before retrying transmission.
+  - `checkHeartbeats()` continuously monitors peer activity against `heartbeatTtl` (6 seconds); if active peers drop to zero in Tier 1 or Tier 2, the router automatically steps down to Tier 3 cloud relay.

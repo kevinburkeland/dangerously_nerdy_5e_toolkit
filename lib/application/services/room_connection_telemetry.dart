@@ -19,15 +19,21 @@ class RoomConnectionTelemetry {
     switch (state) {
       case TransportState.connecting:
         return 'Connecting...';
-      case TransportState.p2pEstablished:
+      case TransportState.localWifi:
+        return 'Local Wi-Fi';
+      case TransportState.webRtc:
         return 'WebRTC P2P';
       case TransportState.fallbackRelay:
         return 'Firebase Relay';
+      case TransportState.offline:
+        return 'Offline';
     }
   }
 
   /// Whether the connection is offline or unestablished with zero connected peers.
-  bool get isOffline => state == TransportState.connecting && peerCount == 0;
+  bool get isOffline =>
+      state == TransportState.offline ||
+      (state == TransportState.connecting && peerCount == 0);
 
   @override
   bool operator ==(Object other) =>

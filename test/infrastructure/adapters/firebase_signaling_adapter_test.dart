@@ -85,14 +85,15 @@ void main() {
       final receivedSignals = <SignalingMessage>[];
       final sub = adapter.watchIncomingSignals().listen(receivedSignals.add);
 
-      const incoming = SignalingMessage(
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final incoming = SignalingMessage(
         id: 'incoming-signal-1',
         roomCode: 'ROOM-BETA',
         fromNodeId: 'node-beta',
         toNodeId: 'node-alpha',
         type: SignalingType.offer,
         sdp: 'remote-sdp-offer',
-        timestamp: 1000,
+        timestamp: now,
       );
 
       adapter.emitIncomingSignal(incoming);
@@ -106,6 +107,63 @@ void main() {
       expect(deletedPaths, contains('rooms/ROOM-BETA/signaling/incoming-signal-1'));
 
       await sub.cancel();
+    });
+
+    test('Cost Safety Sliding TTL Verification: ignores signals older than 60s window', () async {
+      await adapter.initialize(roomCode: 'ROOM-TTL', localNodeId: 'node-alpha');
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      expect(adapter.lastPruningThreshold, isNotNull);
+      expect(adapter.lastPruningThreshold!, lessThanOrEqualTo(now - 59000));
+      expect(adapter.lastPruningThreshold!, greaterThanOrEqualTo(now - 61000));
+
+      final receivedSignals = <SignalingMessage>[];
+      final sub = adapter.watchIncomingSignals().listen(receivedSignals.add);
+
+      // Stale signal from 75 seconds ago
+      final staleSignal = SignalingMessage(
+        id: 'stale-signal-1',
+        roomCode: 'ROOM-TTL',
+        fromNodeId: 'node-stale',
+        toNodeId: 'node-alpha',
+        type: SignalingType.offer,
+        sdp: 'stale-sdp',
+        timestamp: now - 75000,
+      );
+
+      adapter.emitIncomingSignal(staleSignal);
+      await Future<void>.delayed(Duration.zero);
+
+      // Must be completely ignored and NOT tracked or emitted
+      expect(receivedSignals, isEmpty);
+      expect(adapter.trackedDocPaths.contains('rooms/ROOM-TTL/signaling/stale-signal-1'), isFalse);
+
+      // Fresh signal from 10 seconds ago
+      final freshSignal = SignalingMessage(
+        id: 'fresh-signal-1',
+        roomCode: 'ROOM-TTL',
+        fromNodeId: 'node-fresh',
+        toNodeId: 'node-alpha',
+        type: SignalingType.peerJoin,
+        timestamp: now - 10000,
+      );
+
+      adapter.emitIncomingSignal(freshSignal);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(receivedSignals.length, 1);
+      expect(receivedSignals.first.id, 'fresh-signal-1');
+      expect(adapter.trackedDocPaths, contains('rooms/ROOM-TTL/signaling/fresh-signal-1'));
+
+      await sub.cancel();
+    });
+
+    test('broadcastJoin dispatches a wildcard peerJoin signal to all room participants', () async {
+      await adapter.initialize(roomCode: 'ROOM-JOIN', localNodeId: 'node-joiner');
+
+      final joinId = await adapter.broadcastJoin();
+      expect(joinId.isNotEmpty, isTrue);
+      expect(adapter.trackedDocPaths, contains('rooms/ROOM-JOIN/signaling/$joinId'));
     });
   });
 }

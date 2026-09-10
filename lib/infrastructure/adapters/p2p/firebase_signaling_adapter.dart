@@ -19,10 +19,13 @@ class FirebaseSignalingAdapter {
   /// Tracks all document paths created or received during signaling
   /// to ensure total cleanup after P2P handshake completion.
   final Set<String> _trackedDocPaths = {};
+  final int slidingTtlMs;
+  int? _lastPruningThreshold;
 
   FirebaseSignalingAdapter({
     FirebaseFirestore? firestore,
     Future<void> Function(String path)? onDeleteDocument,
+    this.slidingTtlMs = 60000,
   })  : _firestore = firestore,
         _onDeleteDocument = onDeleteDocument;
 
@@ -35,6 +38,7 @@ class FirebaseSignalingAdapter {
   String? get currentRoomCode => _roomCode;
   String? get localNodeId => _localNodeId;
   Set<String> get trackedDocPaths => Set.unmodifiable(_trackedDocPaths);
+  int? get lastPruningThreshold => _lastPruningThreshold;
 
   /// Initializes signaling for the given room and node ID.
   Future<void> initialize({
@@ -44,14 +48,19 @@ class FirebaseSignalingAdapter {
     _roomCode = roomCode.trim().toUpperCase();
     _localNodeId = localNodeId;
 
+    // Strict 60-second sliding TTL window to prune historical signaling residue
+    final pruningThreshold = DateTime.now().millisecondsSinceEpoch - slidingTtlMs;
+    _lastPruningThreshold = pruningThreshold;
+
     if (isFirebaseAvailable) {
       final collection = _effectiveFirestore
           .collection('rooms')
           .doc(_roomCode)
           .collection('signaling');
 
-      // Listen for signals targeted at this node or broadcast
+      // Listen for signals targeted at this node or broadcast within sliding TTL window
       _firestoreSubscription = collection
+          .where('timestamp', isGreaterThanOrEqualTo: pruningThreshold)
           .where('toNodeId', whereIn: [_localNodeId, '*'])
           .snapshots()
           .listen((snapshot) {
@@ -68,6 +77,11 @@ class FirebaseSignalingAdapter {
               }
             }
           });
+
+      // Broadcast join presence for late-joiner detection
+      try {
+        await broadcastJoin();
+      } catch (_) {}
     }
   }
 
@@ -165,7 +179,13 @@ class FirebaseSignalingAdapter {
       _incomingSignalsController.stream;
 
   /// Injects an incoming signal (used for testing or non-cloud signaling).
+  /// Enforces sliding TTL to discard expired signaling residue.
   void emitIncomingSignal(SignalingMessage message) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - message.timestamp > slidingTtlMs) {
+      // Discard stale signaling residue beyond sliding TTL
+      return;
+    }
     final path = 'rooms/${message.roomCode}/signaling/${message.id}';
     _trackedDocPaths.add(path);
     _incomingSignalsController.add(message);

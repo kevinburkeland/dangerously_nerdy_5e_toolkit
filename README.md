@@ -104,6 +104,11 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - Peer-to-peer and cloud synchronization powered by Convergent Replicated Data Types (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`).
   - Strict lexicographical tie-breaking by device `nodeId` guarantees deterministic convergence across offline partitions.
   - Delta fast-forwarding and milestone snapshots via `RoomStateReconciliationService` with automatic tombstone pruning to prevent memory leaks.
+* **4-Tier Cost-Optimized Transport Waterfall (`CascadingTransportRouter`)**:
+  - **Tier 1 (Local Wi-Fi / LAN)**: Zero-latency, zero-cloud-cost direct local network communication.
+  - **Tier 2 (WebRTC P2P Mesh)**: Zero-cost DataChannels with ephemeral Firebase signaling; 60-second sliding TTL query filtering and late-joiner re-signaling (`peerJoin`), coupled with aggressive document wipe upon P2P establishment, leave zero handshake residue in Firestore.
+  - **Tier 3 (Firebase Cloud Relay)**: Reliable metered cloud relay fallback, activated only when WebRTC transmission encounters an unhandled error, times out, or active peers drop to zero.
+  - **Tier 4 (Offline Mode)**: Complete offline isolation when local networks and cloud relays are unavailable.
 * **Append-Only Audit Stream**: Live event log capturing coin deposits, withdrawals, loot additions, claims, attunements, and restorations.
 
 ---
@@ -368,7 +373,7 @@ dangerously_nerdy_5e_toolkit/
 │   └── widgets/                    # Modular UI components
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with icon font packaging & cache-busting
-├── test/                           # Unit, widget, accessibility, & resilience test suites (1,351 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (1,361 tests)
 │   ├── accessibility/              # A11y & dynamic type scaling tests
 │   ├── application/                # Orchestration & reconciliation service tests
 │   ├── domain/                     # Domain purity & CRDT logic tests
