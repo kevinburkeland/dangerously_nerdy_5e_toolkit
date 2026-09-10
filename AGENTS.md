@@ -16,7 +16,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── models/                     # Immutable entities: AnimatedObject, CampaignProfile, WeaponMastery
 │   │   │   └── value_objects/          # Value objects: HitPoints
 │   │   ├── ports/                      # Abstract interfaces: ICampaignRepository, ICharacterRepository, IP2pTransportPort, INetworkTimePort
-│   │   ├── rules/                      # Pure mechanical contracts: RulesetContext
+│   │   ├── rules/                      # Pure mechanical contracts: RulesetContext, CharacterValidationEngine
 │   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack
 │   ├── application/                    # Use Cases & Orchestration
 │   │   └── services/                   # CascadingTransportRouter, RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator
@@ -40,7 +40,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,464 passing tests)
+├── test/                               # Comprehensive test suite (1,474 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests

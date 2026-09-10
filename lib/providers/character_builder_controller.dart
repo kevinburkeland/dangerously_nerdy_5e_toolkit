@@ -8,6 +8,7 @@ import '../models/domain/entity_reference.dart';
 import '../models/characters/srd_backgrounds_library.dart';
 import '../models/characters/srd_species_library.dart';
 import '../services/rules/character_factory.dart';
+import '../domain/rules/character_validation_engine.dart';
 
 /// State manager for 5e Character Builder attribute generation, consumable resource pools,
 /// progression validation, skill overlap refunds, and character draft state.
@@ -75,6 +76,8 @@ class CharacterBuilderController extends ChangeNotifier {
   bool get hasValidBackground => _draft.hasValidBackground;
   bool get hasValidScores => _draft.hasValidScores;
   bool get isReadyForCompilation => _draft.isReadyForCompilation;
+  List<ValidationIssue> get validationIssues =>
+      CharacterValidationEngine.validateDraft(_draft);
 
   // --- Skill Refund Getters ---
   int get refundedSkillChoices => _refundedSkillChoices;
@@ -187,9 +190,18 @@ class CharacterBuilderController extends ChangeNotifier {
     // Prune bonus replacement skills that now collide with granted or selected skills
     _bonusReplacementSkills.removeWhere((s) => granted.contains(s) || selected.contains(s));
 
-    // Calculate unspent refunds
+    // Reset orphaned skill refunds if replacement count exceeds required overlaps
     final requiredRefunds = overlaps.length;
+    while (_bonusReplacementSkills.length > requiredRefunds) {
+      _bonusReplacementSkills.remove(_bonusReplacementSkills.last);
+    }
+
+    // Calculate unspent refunds
     _refundedSkillChoices = math.max(0, requiredRefunds - _bonusReplacementSkills.length);
+  }
+
+  void _reconcileDraftInvariants() {
+    CharacterValidationEngine.reconcileDraft(_draft);
   }
 
   /// Resolves one refunded skill by adding it to [bonusReplacementSkills]
@@ -233,6 +245,8 @@ class CharacterBuilderController extends ChangeNotifier {
 
   void setRulesEdition(DmRulesEdition edition) {
     _draft.rulesEdition = edition;
+    _reconcileDraftInvariants();
+    _recalculateSkillOverlaps();
     notifyListeners();
   }
 
@@ -240,6 +254,7 @@ class CharacterBuilderController extends ChangeNotifier {
     _draft.speciesRef = speciesRef;
     _selectedSpeciesSlug = speciesRef?.slug;
     _recalculateSkillOverlaps();
+    _reconcileDraftInvariants();
     notifyListeners();
   }
 
@@ -255,6 +270,7 @@ class CharacterBuilderController extends ChangeNotifier {
       _draft.speciesRef = null;
     }
     _recalculateSkillOverlaps();
+    _reconcileDraftInvariants();
     notifyListeners();
   }
 
@@ -263,6 +279,7 @@ class CharacterBuilderController extends ChangeNotifier {
     if (hitDie != null) {
       _draft.startingClassHitDie = hitDie;
     }
+    _reconcileDraftInvariants();
     notifyListeners();
   }
 
@@ -270,6 +287,7 @@ class CharacterBuilderController extends ChangeNotifier {
     _draft.backgroundRef = backgroundRef;
     _selectedBackgroundSlug = backgroundRef?.slug;
     _recalculateSkillOverlaps();
+    _reconcileDraftInvariants();
     notifyListeners();
   }
 
@@ -285,11 +303,13 @@ class CharacterBuilderController extends ChangeNotifier {
       _draft.backgroundRef = null;
     }
     _recalculateSkillOverlaps();
+    _reconcileDraftInvariants();
     notifyListeners();
   }
 
   void setScores(AbilityScores? scores) {
     _draft.baseScores = scores;
+    _reconcileDraftInvariants();
     notifyListeners();
   }
 
@@ -302,11 +322,31 @@ class CharacterBuilderController extends ChangeNotifier {
       _draft.selectedSkills = {for (final s in skills) s: SkillProficiencyLevel.proficient};
     }
     _recalculateSkillOverlaps();
+    _reconcileDraftInvariants();
+    notifyListeners();
+  }
+
+  void setOriginFeats(List<EntityReference<DomainEntity>> feats) {
+    _draft.originFeats = List.from(feats);
+    _reconcileDraftInvariants();
+    notifyListeners();
+  }
+
+  void addOriginFeat(EntityReference<DomainEntity> feat) {
+    _draft.originFeats.add(feat);
+    _reconcileDraftInvariants();
+    notifyListeners();
+  }
+
+  void removeOriginFeat(String slug) {
+    _draft.originFeats.removeWhere((f) => f.slug == slug);
+    _reconcileDraftInvariants();
     notifyListeners();
   }
 
   void _syncDraftScores() {
     _draft.baseScores = isAbilityAllocationComplete ? effectiveBaseScores : null;
+    _reconcileDraftInvariants();
   }
 
   // --- Getters ---

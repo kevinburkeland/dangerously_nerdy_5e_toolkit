@@ -40,3 +40,11 @@ The toolkit natively supports both the **2014 Rules As Written (SRD 5.1)** and t
   - Prohibited: Beholder, Gauth, Carrion Crawler, Displacer Beast, Githyanki, Githzerai, Kuotoa, Mind Flayer, Illithid, Slaad, Umber Hulk, Yuan-ti, Strahd, Elminster, Hexblade, etc.
   - Permitted: SRD 5.1 & SRD 5.2 monsters and subclasses (e.g., Red Dragon, Knight, Wolf, Skeleton, Zombie, Ogre, Mage, Champion, Evoker, etc.).
 - Attribution is governed by `LEGAL_ATTRIBUTION_MODAL.md` under CC-BY-4.0.
+
+## 4. Character Edition Locking & Pipeline Invariant Reconciliation
+
+- **Edition-Locked Sheets:** Character sheets are locked to their initial edition (`DmRulesEdition.v2014` vs `DmRulesEdition.v2024`). Do not build ad-hoc runtime cross-edition translation engines into `CharacterSheetController`.
+- **Builder / Draft Reconciliation:** Invariant reconciliation belongs in the draft compilation pipeline via `CharacterValidationEngine.reconcileDraft` and `CharacterDraft.reconcile()`:
+  - 2014 mode automatically prunes origin feats and resets background ability bonuses to zero.
+  - Feat prerequisites (e.g. Grappler requiring STR or DEX 13+) are evaluated via `CharacterValidationEngine.validateDraft(draft)` and surfaced in `CharacterBuilderController.validationIssues`.
+  - Orphaned skill refunds are pruned whenever overlapping skills or backgrounds change.

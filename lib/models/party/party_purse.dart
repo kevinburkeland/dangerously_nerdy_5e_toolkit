@@ -63,6 +63,43 @@ class PartyPurse {
     );
   }
 
+  /// Atomically deducts a cost denominated in GP equivalent, making change
+  /// and repacking into optimal coin denominations (PP -> GP -> EP -> SP -> CP).
+  ///
+  /// Throws [StateError] if total purse value in GP is less than [costGp].
+  PartyPurse deductGpEquivalent(double costGp) {
+    if (costGp <= 0) return this;
+    final costInCp = (costGp * 100).round();
+    int balanceInCp = (pp * 1000) + (gp * 100) + (ep * 50) + (sp * 10) + cp;
+
+    if (balanceInCp < costInCp) {
+      throw StateError('Insufficient funds: purse has $totalGpEquivalent GP, needed $costGp GP');
+    }
+
+    balanceInCp -= costInCp;
+
+    // Re-pack into optimal coin denominations (highest denomination first)
+    final newPp = balanceInCp ~/ 1000;
+    balanceInCp %= 1000;
+
+    final newGp = balanceInCp ~/ 100;
+    balanceInCp %= 100;
+
+    final newEp = balanceInCp ~/ 50;
+    balanceInCp %= 50;
+
+    final newSp = balanceInCp ~/ 10;
+    final newCp = balanceInCp % 10;
+
+    return PartyPurse(
+      pp: newPp,
+      gp: newGp,
+      ep: newEp,
+      sp: newSp,
+      cp: newCp,
+    );
+  }
+
   /// Deposits coin increments (never reducing below 0)
   PartyPurse depositCoins({
     int cp = 0,

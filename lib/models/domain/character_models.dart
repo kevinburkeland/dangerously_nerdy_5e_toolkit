@@ -111,6 +111,8 @@ class AbilityScores {
     );
   }
 
+  AbilityScores operator +(AbilityScores other) => withBonus(other);
+
   AbilityScores copyWith({
     int? strength,
     int? dexterity,

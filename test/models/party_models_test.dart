@@ -185,6 +185,37 @@ void main() {
       expect(overdrawn.pp, equals(2));
     });
 
+    test('PartyPurse deductGpEquivalent makes change and repacks into optimal denominations', () {
+      // Coin Breakdown Deduct Test: 1 PP = 10 GP; deduct 0.5 GP (5 SP) => 9.5 GP (9 GP, 1 EP)
+      const purse = PartyPurse(pp: 1);
+      final result = purse.deductGpEquivalent(0.5);
+
+      expect(result.pp, equals(0));
+      expect(result.gp, equals(9));
+      expect(result.ep, equals(1));
+      expect(result.sp, equals(0));
+      expect(result.cp, equals(0));
+      expect(result.totalGpEquivalent, equals(9.5));
+
+      // Deduct zero or negative cost returns same purse
+      expect(purse.deductGpEquivalent(0), equals(purse));
+      expect(purse.deductGpEquivalent(-5.0), equals(purse));
+
+      // Exact balance deduction returns empty purse
+      final exactResult = purse.deductGpEquivalent(10.0);
+      expect(exactResult.isEmpty, isTrue);
+
+      // Insufficient funds throws StateError
+      expect(
+        () => purse.deductGpEquivalent(15.0),
+        throwsA(isA<StateError>().having(
+          (e) => e.message,
+          'message',
+          contains('Insufficient funds'),
+        )),
+      );
+    });
+
     test('PartySessionState memberPurses serialization and helper getMemberPurse', () {
       final now = DateTime.now();
       final session = PartySessionState(

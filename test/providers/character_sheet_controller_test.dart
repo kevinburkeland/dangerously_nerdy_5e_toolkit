@@ -347,6 +347,136 @@ void main() {
         expect(controller.character.toolProficiencies, equals(["Thieves' Tools", "Lute"]));
       });
     });
+
+    test('Multiclass Hit Die Recovery Test: greedy allocation to highest die face', () async {
+      const multiclassChar = Character(
+        id: EntityId(slug: 'multi-hero', ruleset: RulesetVersion.v2024),
+        name: 'MultiHero',
+        speciesRef: EntityReference<DomainEntity>(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'fighter',
+                displayName: 'Fighter',
+              ),
+              level: 1,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'wizard',
+                displayName: 'Wizard',
+              ),
+              level: 1,
+              hitDie: 'd6',
+            ),
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'rogue',
+                displayName: 'Rogue',
+              ),
+              level: 1,
+              hitDie: 'd8',
+            ),
+          ],
+        ),
+        baseScores: AbilityScores(
+          strength: 10,
+          dexterity: 10,
+          constitution: 10,
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        resources: CharacterResourcePool(
+          currentHp: 1,
+          currentHitDice: {
+            'd10': 0,
+            'd8': 0,
+            'd6': 0,
+          },
+        ),
+      );
+
+      final mcController = CharacterSheetController(
+        character: multiclassChar,
+        persistenceService: fakePersistence,
+      );
+
+      // Level 3 total: diceBudget = math.max(1, 3 ~/ 2) = 1 die
+      await mcController.applyLongRest();
+
+      final dice = mcController.character.resources.currentHitDice;
+      expect(dice['d10'], equals(1));
+      expect(dice['d8'], equals(0));
+      expect(dice['d6'], equals(0));
+    });
+
+    test('Dynamic Max HP Healing Test: healing clamps against dynamically evaluated max HP', () async {
+      // Base CON 10 with level 1 base max HP 10, boosted to evaluated max HP 25 via Tough feat and level progression
+      const buffedChar = Character(
+        id: EntityId(slug: 'dynamic-hp-hero', ruleset: RulesetVersion.v2024),
+        name: 'BuffedHero',
+        speciesRef: EntityReference<DomainEntity>(
+          refType: EntityType.species,
+          slug: 'human',
+          displayName: 'Human',
+        ),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference<DomainEntity>(
+                refType: EntityType.classDefinition,
+                slug: 'fighter',
+                displayName: 'Fighter',
+              ),
+              level: 2,
+              hitDie: 'd10',
+              hitPointsRolled: [11], // 10 (lvl 1) + 11 (lvl 2) = 21
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        feats: [
+          EntityReference<DomainEntity>(
+            refType: EntityType.feat,
+            slug: 'tough', // +2 HP per level => +4 HP => 21 + 4 = 25
+            displayName: 'Tough',
+          ),
+        ],
+        baseScores: AbilityScores(
+          strength: 10,
+          dexterity: 10,
+          constitution: 10, // Base CON 10 (+0 mod)
+          intelligence: 10,
+          wisdom: 10,
+          charisma: 10,
+        ),
+        resources: CharacterResourcePool(
+          currentHp: 5,
+        ),
+      );
+
+      final dynController = CharacterSheetController(
+        character: buffedChar,
+        persistenceService: fakePersistence,
+      );
+
+      expect(dynController.stats.maxHp, equals(25));
+
+      // Healing 30 should clamp to 25 (evaluated max HP), not 10
+      await dynController.heal(30);
+      expect(dynController.character.resources.currentHp, equals(25));
+    });
   });
 }
 

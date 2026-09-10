@@ -12,7 +12,13 @@ import '../../services/rules/character_factory.dart' show StartingEquipmentItemR
 /// compiling into an immutable [Character] domain entity.
 class CharacterDraft {
   String? characterName;
-  DmRulesEdition rulesEdition;
+  DmRulesEdition _rulesEdition;
+  DmRulesEdition get rulesEdition => _rulesEdition;
+  set rulesEdition(DmRulesEdition edition) {
+    _rulesEdition = edition;
+    reconcile();
+  }
+
   EntityReference<DomainEntity>? speciesRef;
   EntityReference<DomainEntity>? backgroundRef;
   EntityReference<DomainEntity>? startingClassRef;
@@ -37,7 +43,7 @@ class CharacterDraft {
 
   CharacterDraft({
     this.characterName,
-    this.rulesEdition = DmRulesEdition.v2024,
+    DmRulesEdition rulesEdition = DmRulesEdition.v2024,
     this.speciesRef,
     this.backgroundRef,
     this.startingClassRef,
@@ -57,7 +63,8 @@ class CharacterDraft {
     this.startingSubclassRef,
     Map<String, List<String>>? selectedFeatureOptions,
     this.baseSpeedFeet = 30,
-  })  : selectedSkills = selectedSkills != null ? Map.from(selectedSkills) : {},
+  })  : _rulesEdition = rulesEdition,
+        selectedSkills = selectedSkills != null ? Map.from(selectedSkills) : {},
         savingThrowProficiencies = savingThrowProficiencies != null ? Set.from(savingThrowProficiencies) : {},
         toolProficiencies = toolProficiencies != null ? List.from(toolProficiencies) : [],
         languages = languages != null ? List.from(languages) : ['Common'],
@@ -66,7 +73,67 @@ class CharacterDraft {
         spellsKnown = spellsKnown != null ? List.from(spellsKnown) : [],
         spellsPrepared = spellsPrepared != null ? List.from(spellsPrepared) : [],
         originFeats = originFeats != null ? List.from(originFeats) : [],
-        selectedFeatureOptions = selectedFeatureOptions != null ? Map.from(selectedFeatureOptions) : {};
+        selectedFeatureOptions = selectedFeatureOptions != null ? Map.from(selectedFeatureOptions) : {} {
+    reconcile();
+  }
+
+  /// Reconciles ruleset-dependent invariants in-place.
+  void reconcile() {
+    if (_rulesEdition == DmRulesEdition.v2014) {
+      if (originFeats.isNotEmpty) {
+        originFeats.clear();
+      }
+      bonusScores = const AbilityScores.zero();
+    }
+  }
+
+  CharacterDraft copyWith({
+    String? characterName,
+    DmRulesEdition? rulesEdition,
+    EntityReference<DomainEntity>? speciesRef,
+    EntityReference<DomainEntity>? backgroundRef,
+    EntityReference<DomainEntity>? startingClassRef,
+    String? startingClassHitDie,
+    AbilityScores? baseScores,
+    Map<SkillType, SkillProficiencyLevel>? selectedSkills,
+    AbilityScores? bonusScores,
+    Set<AbilityType>? savingThrowProficiencies,
+    List<String>? toolProficiencies,
+    List<String>? languages,
+    List<StartingEquipmentItemRequest>? startingEquipment,
+    PartyPurse? startingPurse,
+    List<EntityReference<Spell>>? cantrips,
+    List<EntityReference<Spell>>? spellsKnown,
+    List<EntityReference<Spell>>? spellsPrepared,
+    List<EntityReference<DomainEntity>>? originFeats,
+    EntityReference<DomainEntity>? startingSubclassRef,
+    Map<String, List<String>>? selectedFeatureOptions,
+    int? baseSpeedFeet,
+  }) {
+    return CharacterDraft(
+      characterName: characterName ?? this.characterName,
+      rulesEdition: rulesEdition ?? this.rulesEdition,
+      speciesRef: speciesRef ?? this.speciesRef,
+      backgroundRef: backgroundRef ?? this.backgroundRef,
+      startingClassRef: startingClassRef ?? this.startingClassRef,
+      startingClassHitDie: startingClassHitDie ?? this.startingClassHitDie,
+      baseScores: baseScores ?? this.baseScores,
+      selectedSkills: selectedSkills ?? this.selectedSkills,
+      bonusScores: bonusScores ?? this.bonusScores,
+      savingThrowProficiencies: savingThrowProficiencies ?? this.savingThrowProficiencies,
+      toolProficiencies: toolProficiencies ?? this.toolProficiencies,
+      languages: languages ?? this.languages,
+      startingEquipment: startingEquipment ?? this.startingEquipment,
+      startingPurse: startingPurse ?? this.startingPurse,
+      cantrips: cantrips ?? this.cantrips,
+      spellsKnown: spellsKnown ?? this.spellsKnown,
+      spellsPrepared: spellsPrepared ?? this.spellsPrepared,
+      originFeats: originFeats ?? this.originFeats,
+      startingSubclassRef: startingSubclassRef ?? this.startingSubclassRef,
+      selectedFeatureOptions: selectedFeatureOptions ?? this.selectedFeatureOptions,
+      baseSpeedFeet: baseSpeedFeet ?? this.baseSpeedFeet,
+    );
+  }
 
   // --- Granular Validation Getters ---
   bool get hasValidSpecies => speciesRef != null;

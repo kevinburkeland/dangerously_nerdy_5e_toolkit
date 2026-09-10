@@ -252,17 +252,20 @@ class CharacterSheetController extends ChangeNotifier {
     _schedulePersist();
   }
 
-  /// Heals the character by [amount], clamping at [stats.maxHp].
+  /// Heals the character by [amount], clamping at dynamic evaluated max HP.
   Future<void> heal(int amount) async {
     if (amount <= 0) return;
-    final curHp = _character.resources.currentHp;
-    final maxHp = _stats.maxHp;
-    final newHp = math.min(maxHp, curHp + amount);
+
+    // Resolve dynamic maximum HP accounting for active CON buffs, Tough feat, etc.
+    final evaluated = CharacterEvaluationEngine.evaluate(_character);
+    final effectiveMaxHp = evaluated.maxHp;
+
+    final updatedHp = _character.resources.hitPoints
+        .copyWith(maxHp: effectiveMaxHp)
+        .heal(amount);
 
     _character = _character.copyWith(
-      resources: _character.resources.copyWith(
-        currentHp: newHp,
-      ),
+      resources: _character.resources.copyWith(hitPoints: updatedHp),
     );
     _recalculateStats();
     notifyListeners();
@@ -515,49 +518,47 @@ class CharacterSheetController extends ChangeNotifier {
   /// - Resets Temp HP to 0
   /// - Clears death save successes and failures
   /// - Restores all spell slots & pact slots
+  /// Performs a standard 5e Long Rest:
+  /// - Restores Current HP to maximum
+  /// - Resets Temp HP to 0
+  /// - Clears death save successes and failures
+  /// - Restores all spell slots & pact slots
   /// - Reduces exhaustion level by 1
-  /// - Restores spent hit dice up to half of character's total level (min 1 if any spent)
+  /// - Restores spent hit dice greedily up to half of character's total level (min 1)
   Future<void> applyLongRest() async {
-    final maxHp = _stats.maxHp;
-    final spellSlots = _character.resources.spellSlots;
-    final restoredSlots = Map<int, int>.from(spellSlots.maxSlots);
-    final restoredSpellSlots = spellSlots.copyWith(
-      currentSlots: restoredSlots,
-      pactMagicCurrent: spellSlots.pactMagicMax,
-    );
+    final evaluated = CharacterEvaluationEngine.evaluate(_character);
+    final totalLevel = _character.totalLevel;
 
-    // Calculate max hit dice pool per die type
-    final maxHitDice = <String, int>{};
-    int totalCharacterLevel = 0;
-    for (final c in _character.progression.classes) {
-      maxHitDice[c.hitDie] = (maxHitDice[c.hitDie] ?? 0) + c.level;
-      totalCharacterLevel += c.level;
-    }
-    if (totalCharacterLevel == 0) {
-      totalCharacterLevel = math.max(1, _character.totalLevel);
-    }
+    // RAW: Regain at least 1 Hit Die, up to half total character level
+    int diceBudget = math.max(1, totalLevel ~/ 2);
 
-    // Regain spent hit dice up to half the character's total level (minimum 1)
-    int diceToRegain = math.max(1, (totalCharacterLevel / 2).floor());
+    // Group current available dice and capacity by die face
     final currentDice = Map<String, int>.from(_character.resources.currentHitDice);
 
-    // If currentHitDice was empty, initialize from max
-    for (final entry in maxHitDice.entries) {
-      if (!currentDice.containsKey(entry.key)) {
-        currentDice[entry.key] = entry.value;
-      }
+    // Determine total capacity per die type from class progression
+    final maxDicePerType = <String, int>{};
+    for (final cls in _character.progression.classes) {
+      maxDicePerType[cls.hitDie] = (maxDicePerType[cls.hitDie] ?? 0) + cls.level;
     }
 
-    for (final entry in maxHitDice.entries) {
-      if (diceToRegain <= 0) break;
-      final die = entry.key;
-      final maxCount = entry.value;
-      final curCount = currentDice[die] ?? maxCount;
-      final spent = maxCount - curCount;
-      if (spent > 0) {
-        final recoverAmount = math.min(spent, diceToRegain);
-        currentDice[die] = curCount + recoverAmount;
-        diceToRegain -= recoverAmount;
+    // Sort die faces descending (d12 -> d10 -> d8 -> d6) for greedy allocation
+    final sortedFaces = maxDicePerType.keys.toList()
+      ..sort((a, b) {
+        final valA = int.tryParse(a.replaceAll('d', '')) ?? 0;
+        final valB = int.tryParse(b.replaceAll('d', '')) ?? 0;
+        return valB.compareTo(valA);
+      });
+
+    for (final face in sortedFaces) {
+      if (diceBudget <= 0) break;
+      final maxCapacity = maxDicePerType[face] ?? 0;
+      final current = currentDice[face] ?? 0;
+      final missing = maxCapacity - current;
+
+      if (missing > 0) {
+        final restore = math.min(missing, diceBudget);
+        currentDice[face] = current + restore;
+        diceBudget -= restore;
       }
     }
 
@@ -573,21 +574,37 @@ class CharacterSheetController extends ChangeNotifier {
       ));
     }
 
-    _character = _character.copyWith(
-      resources: _character.resources.copyWith(
-        currentHp: maxHp,
-        tempHp: 0,
-        deathSaveSuccesses: 0,
-        deathSaveFailures: 0,
-        exhaustionLevel: newExhaustion,
-        currentHitDice: currentDice,
-        spellSlots: restoredSpellSlots,
-      ),
-      conditions: conditions,
+    // Restore spell slots: combine evaluated slots with any explicit resources.spellSlots maxes
+    final existingPool = _character.resources.spellSlots;
+    final maxSlots = Map<int, int>.from(existingPool.maxSlots);
+    for (final entry in evaluated.computedSpellSlots.maxSlots.entries) {
+      maxSlots[entry.key] = math.max(maxSlots[entry.key] ?? 0, entry.value);
+    }
+    final pactMax = math.max(existingPool.pactMagicMax, evaluated.computedSpellSlots.pactMagicMax);
+    final pactLevel = math.max(existingPool.pactMagicSlotLevel, evaluated.computedSpellSlots.pactMagicSlotLevel);
+
+    final restoredSpellSlots = SpellSlotPool(
+      maxSlots: maxSlots,
+      currentSlots: Map<int, int>.from(maxSlots),
+      pactMagicMax: pactMax,
+      pactMagicCurrent: pactMax,
+      pactMagicSlotLevel: pactLevel,
     );
-    _recalculateStats();
-    notifyListeners();
-    _schedulePersist();
+
+    final updatedResources = _character.resources.copyWith(
+      currentHp: evaluated.maxHp,
+      tempHp: 0,
+      deathSaveSuccesses: 0,
+      deathSaveFailures: 0,
+      exhaustionLevel: newExhaustion,
+      currentHitDice: currentDice,
+      spellSlots: restoredSpellSlots,
+    );
+
+    await setCharacter(_character.copyWith(
+      resources: updatedResources,
+      conditions: conditions,
+    ));
   }
 
   /// Consumes or recovers a spell slot of a given level.
