@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/dm_dashboard_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
@@ -43,6 +44,7 @@ void main() {
       // App Bar
       expect(find.text('Vampire Lord of the Mist'), findsOneWidget);
       expect(find.text('2024'), findsOneWidget);
+      expect(find.byType(RoomConnectionBadge), findsOneWidget);
 
       // 5 HUD Cards
       expect(find.text('Combat & Turn Tracker'), findsOneWidget);

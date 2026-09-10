@@ -21,6 +21,7 @@ import '../services/persistence/character_persistence_service.dart';
 import 'character_sheet_view.dart';
 import 'rules_compendium_screen.dart';
 import '../widgets/party/party_vitality_hud.dart';
+import '../presentation/widgets/room_connection_badge.dart';
 
 /// Comprehensive Dungeon Master Command Console and multi-campaign dashboard.
 class DmDashboardScreen extends StatefulWidget {
@@ -1066,6 +1067,13 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
           ),
         ),
         actions: [
+          // P2P Room Connection Telemetry Badge
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: RoomConnectionBadge(
+              telemetryStream: _controller.telemetryStream ?? const Stream.empty(),
+            ),
+          ),
           // Interactive Rules Edition Toggle (2014 RAW / 2024 Revised)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),

@@ -14,6 +14,9 @@ import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../infrastructure/dtos/character_telemetry_dto.dart';
 import '../infrastructure/resolvers/character_telemetry_resolver.dart';
+import '../infrastructure/di/injection_container.dart';
+import '../application/services/room_connection_telemetry.dart';
+import '../application/services/room_sync_orchestrator.dart';
 
 /// State management controller for DM Dashboard.
 /// Refactored to depend on abstract Ports ([ICampaignRepository], [ICharacterRepository])
@@ -22,6 +25,7 @@ class DmDashboardController extends ChangeNotifier {
   final ICampaignRepository _campaignProfileService;
   final ICharacterRepository _characterPersistenceService;
   final CombatEncounterService _combatEncounterService;
+  final RoomSyncOrchestrator? _roomSyncOrchestrator;
 
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
@@ -37,6 +41,7 @@ class DmDashboardController extends ChangeNotifier {
     CombatEncounterService? combatEncounterService,
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
+    RoomSyncOrchestrator? roomSyncOrchestrator,
   })  : _campaignProfileService =
             campaignRepository ?? campaignProfileService ?? LocalCampaignRepository(),
         _characterPersistenceService =
@@ -45,11 +50,18 @@ class DmDashboardController extends ChangeNotifier {
             CombatEncounterService(
               characterRepo: characterRepository ?? characterPersistenceService ?? LocalCharacterRepository(),
               campaignRepo: campaignRepository ?? campaignProfileService ?? LocalCampaignRepository(),
-            );
+            ),
+        _roomSyncOrchestrator = roomSyncOrchestrator ??
+            (sl.isRegistered<RoomSyncOrchestrator>()
+                ? sl<RoomSyncOrchestrator>()
+                : null);
 
   CombatEncounterService get combatEncounterService => _combatEncounterService;
   ICampaignRepository get campaignRepository => _campaignProfileService;
   ICharacterRepository get characterRepository => _characterPersistenceService;
+  RoomSyncOrchestrator? get roomSyncOrchestrator => _roomSyncOrchestrator;
+  Stream<RoomConnectionTelemetry>? get telemetryStream =>
+      _roomSyncOrchestrator?.watchTelemetry();
 
   CampaignProfile? get activeProfile => _activeProfile;
   List<CampaignProfile> get allProfiles => _allProfiles;

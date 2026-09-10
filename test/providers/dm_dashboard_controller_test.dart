@@ -9,6 +9,11 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/dm_dashboard_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_network_time_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/campaign_profile_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/character_persistence_service.dart';
@@ -256,5 +261,44 @@ void main() {
       expect(savedBackMap['partyCharacterIds'], equals(['cleric_nested']));
       expect(savedBackMap.containsKey('partyRoster'), isFalse);
     });
+
+    test('Injecting RoomSyncOrchestrator exposes telemetryStream to controller', () {
+      final mockTransport = _MockTransportPort();
+      final orchestrator = RoomSyncOrchestrator(
+        transportPort: mockTransport,
+        campaignRepo: campaignService,
+        reconciliationService: RoomStateReconciliationService(),
+        clockSyncService: ClockSyncService(
+          networkTimePort: _MockNetworkTimePort(),
+        ),
+      );
+
+      final orchController = DmDashboardController(
+        campaignProfileService: campaignService,
+        characterPersistenceService: characterService,
+        roomSyncOrchestrator: orchestrator,
+      );
+
+      expect(orchController.roomSyncOrchestrator, equals(orchestrator));
+      expect(orchController.telemetryStream, isNotNull);
+
+      orchestrator.stopSynchronization();
+    });
   });
+}
+
+class _MockTransportPort implements IP2pTransportPort {
+  @override
+  Future<void> broadcastPayload(String jsonPayload) async {}
+  @override
+  Stream<String> watchIncomingPayloads() => const Stream.empty();
+  @override
+  Future<void> initializeRoom(String roomCode, String localNodeId) async {}
+  @override
+  Future<void> disconnect() async {}
+}
+
+class _MockNetworkTimePort implements INetworkTimePort {
+  @override
+  Future<int> getNetworkTimeMs() async => 1700000000000;
 }
