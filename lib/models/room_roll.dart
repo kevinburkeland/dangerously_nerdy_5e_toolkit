@@ -53,21 +53,29 @@ class RoomRoll {
   Map<String, dynamic> toMap({bool useFirestoreTimestamp = true}) {
     final cleanCode = roomCode.trim().toUpperCase();
     final cleanPlayer = playerName.trim().isNotEmpty ? playerName.trim() : 'Adventurer';
+    final clampedPlayer = cleanPlayer.length > 80 ? cleanPlayer.substring(0, 80) : cleanPlayer;
+    final clampedFormula = formulaString.length > 200 ? formulaString.substring(0, 200) : formulaString;
     final expireDate = timestamp.add(const Duration(hours: 24));
-    return {
+    final map = <String, dynamic>{
       'id': id,
       'roomCode': cleanCode,
-      'playerName': cleanPlayer,
+      'playerName': clampedPlayer,
       'timestamp': useFirestoreTimestamp ? Timestamp.fromDate(timestamp) : timestamp.millisecondsSinceEpoch,
       'expireAt': useFirestoreTimestamp ? Timestamp.fromDate(expireDate) : expireDate.millisecondsSinceEpoch,
-      'formulaString': formulaString,
+      'formulaString': clampedFormula,
       'total': total,
       'individualRolls': individualRolls,
-      'droppedRolls': droppedRolls,
-      'details': details,
       'isCrit': isCrit,
       'isFumble': isFumble,
     };
+
+    if (droppedRolls != null && droppedRolls!.isNotEmpty) {
+      map['droppedRolls'] = droppedRolls;
+    }
+    if (details != null && details!.isNotEmpty) {
+      map['details'] = details!.take(50).toList();
+    }
+    return map;
   }
 
   factory RoomRoll.fromMap(Map<String, dynamic> map) {
@@ -79,6 +87,8 @@ class RoomRoll {
       ts = DateTime.fromMillisecondsSinceEpoch(rawTs);
     } else if (rawTs is DateTime) {
       ts = rawTs;
+    } else if (rawTs is String) {
+      ts = DateTime.tryParse(rawTs) ?? DateTime.now();
     } else {
       ts = DateTime.now();
     }

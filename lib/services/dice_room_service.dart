@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../domain/ports/i_p2p_transport_port.dart';
+import '../infrastructure/di/injection_container.dart';
 import '../models/room_roll.dart';
 import '../utils/secure_random.dart';
 import 'logging_service.dart';
@@ -179,34 +182,41 @@ class DiceRoomService {
     }
   }
 
-  // In-memory fallback stream for local/offline testing
+  // Unified in-memory room rolls cache, broadcast stream controllers & Firestore subscriptions
   final Map<String, List<RoomRoll>> _localRooms = {};
   final Map<String, StreamController<List<RoomRoll>>> _localControllers = {};
+  final Map<String, StreamSubscription<QuerySnapshot<Map<String, dynamic>>>> _firestoreSubscriptions = {};
 
   /// Deterministically checks if Firebase Core has been initialized with active apps.
   bool get isFirebaseAvailable => Firebase.apps.isNotEmpty;
 
-  /// Returns a stream of real-time rolls for a given room code (from last 24 hours, up to 100 rolls)
+  /// Returns a unified broadcast stream of real-time rolls for a given room code (last 24 hours, up to 100 rolls)
   Stream<List<RoomRoll>> streamRoomRolls(String roomCode) {
     final cleanCode = roomCode.trim().toUpperCase();
     final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
 
-    if (isFirebaseAvailable) {
+    // Ensure unified broadcast controller exists for this room
+    if (!_localControllers.containsKey(cleanCode) || _localControllers[cleanCode]!.isClosed) {
+      _localControllers[cleanCode] = StreamController<List<RoomRoll>>.broadcast();
+      _localRooms[cleanCode] ??= [];
+    }
+
+    // Connect Firestore real-time listener if available and not already listening
+    if (isFirebaseAvailable && !_firestoreSubscriptions.containsKey(cleanCode)) {
       try {
-        return FirebaseFirestore.instance
+        _firestoreSubscriptions[cleanCode] = FirebaseFirestore.instance
             .collection('rooms')
             .doc(cleanCode)
             .collection('rolls')
             .orderBy('timestamp', descending: true)
             .limit(100)
             .snapshots()
-            .map((snapshot) {
+            .listen((snapshot) {
           final remoteRolls = snapshot.docs
               .map((doc) => RoomRoll.fromMap(doc.data()))
               .where((r) => r.timestamp.isAfter(cutoff24h))
               .toList();
 
-          // Merge remote rolls with any optimistic local rolls in _localRooms
           final localList = _localRooms[cleanCode] ?? [];
           final rollMap = <String, RoomRoll>{};
           for (final r in remoteRolls) {
@@ -218,14 +228,16 @@ class DiceRoomService {
           final merged = rollMap.values.toList()
             ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
           _localRooms[cleanCode] = merged.take(100).toList();
-          return List<RoomRoll>.unmodifiable(_localRooms[cleanCode]!);
-        }).handleError((error, stackTrace) {
+
+          if (_localControllers.containsKey(cleanCode) && !_localControllers[cleanCode]!.isClosed) {
+            _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
+          }
+        }, onError: (error, stackTrace) {
           LoggingService().logNonFatal(
             error,
             stackTrace,
             reason: 'Firestore streamRoomRolls error for room $cleanCode; falling back to local rolls',
           );
-          return List<RoomRoll>.unmodifiable(_localRooms[cleanCode] ?? []);
         });
       } catch (e, stackTrace) {
         LoggingService().logNonFatal(
@@ -234,12 +246,6 @@ class DiceRoomService {
           reason: 'Firestore stream initialization failed for room $cleanCode; falling back to in-memory',
         );
       }
-    }
-
-    // Local in-memory broadcast fallback
-    if (!_localControllers.containsKey(cleanCode)) {
-      _localControllers[cleanCode] = StreamController<List<RoomRoll>>.broadcast();
-      _localRooms[cleanCode] = [];
     }
 
     // Emit current list immediately on subscribe (filtered to last 24 hours)
@@ -255,15 +261,39 @@ class DiceRoomService {
     return _localControllers[cleanCode]!.stream;
   }
 
-  /// Broadcasts a roll to the specified room
-  Future<void> broadcastRoll(RoomRoll roll) async {
+  /// Ingests a roll received from a remote transport (P2P mesh, relay, or network bridge)
+  void ingestRemoteRoll(RoomRoll roll) {
     final cleanCode = roll.roomCode.trim().toUpperCase();
-
-    // 1. Immediately cache in local room list and notify local listeners for instant UI
     if (!_localRooms.containsKey(cleanCode)) {
       _localRooms[cleanCode] = [];
     }
-    if (!_localControllers.containsKey(cleanCode)) {
+    if (!_localControllers.containsKey(cleanCode) || _localControllers[cleanCode]!.isClosed) {
+      _localControllers[cleanCode] = StreamController<List<RoomRoll>>.broadcast();
+    }
+
+    if (!_localRooms[cleanCode]!.any((r) => r.id == roll.id)) {
+      _localRooms[cleanCode]!.insert(0, roll);
+      _localRooms[cleanCode]!.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
+      _localRooms[cleanCode] = _localRooms[cleanCode]!
+          .where((r) => r.timestamp.isAfter(cutoff24h))
+          .take(100)
+          .toList();
+      if (!_localControllers[cleanCode]!.isClosed) {
+        _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
+      }
+    }
+  }
+
+  /// Broadcasts a roll to the specified room across local cache, P2P mesh, and cloud Firestore
+  Future<void> broadcastRoll(RoomRoll roll) async {
+    final cleanCode = roll.roomCode.trim().toUpperCase();
+
+    // 1. Immediately cache in local room list and notify local listeners for instant 0ms latency UI
+    if (!_localRooms.containsKey(cleanCode)) {
+      _localRooms[cleanCode] = [];
+    }
+    if (!_localControllers.containsKey(cleanCode) || _localControllers[cleanCode]!.isClosed) {
       _localControllers[cleanCode] = StreamController<List<RoomRoll>>.broadcast();
     }
 
@@ -279,7 +309,26 @@ class DiceRoomService {
       }
     }
 
-    // 2. Broadcast to Firestore if available
+    // 2. Broadcast via P2P transport mesh if available
+    try {
+      if (sl.isRegistered<IP2pTransportPort>()) {
+        final p2pPayload = jsonEncode({
+          'type': 'dice_roll',
+          'roomCode': cleanCode,
+          'payload': roll.toMap(useFirestoreTimestamp: false),
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+        unawaited(sl<IP2pTransportPort>().broadcastPayload(p2pPayload));
+      }
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'P2P broadcastRoll failed for room $cleanCode; cloud transport preserved',
+      );
+    }
+
+    // 3. Broadcast to Firestore if available
     if (isFirebaseAvailable) {
       try {
         await FirebaseFirestore.instance
@@ -310,6 +359,10 @@ class DiceRoomService {
 
   void disposeRoomStream(String roomCode) {
     final cleanCode = roomCode.trim().toUpperCase();
+    if (_firestoreSubscriptions.containsKey(cleanCode)) {
+      _firestoreSubscriptions[cleanCode]?.cancel();
+      _firestoreSubscriptions.remove(cleanCode);
+    }
     if (_localControllers.containsKey(cleanCode)) {
       _localControllers[cleanCode]?.close();
       _localControllers.remove(cleanCode);

@@ -11,6 +11,8 @@ import 'cascading_transport_router.dart';
 import 'clock_sync_service.dart';
 import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
+import '../../models/room_roll.dart';
+import '../../services/dice_room_service.dart';
 
 /// Application service orchestrating bidirectional synchronization between
 /// the cascading P2P network transport mesh and local IndexedDB/Hive persistence.
@@ -22,6 +24,7 @@ class RoomSyncOrchestrator {
   final ICampaignRepository campaignRepo;
   final RoomStateReconciliationService reconciliationService;
   final ClockSyncService clockSyncService;
+  final DiceRoomService diceRoomService;
   final bool isHost;
   final String hostNodeId;
   final Duration telemetryInterval;
@@ -49,11 +52,13 @@ class RoomSyncOrchestrator {
     required this.campaignRepo,
     required this.reconciliationService,
     required this.clockSyncService,
+    DiceRoomService? diceRoomService,
     this.isHost = false,
     this.hostNodeId = 'dm-host-prime',
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
   })  : transportPort = transportPort ?? router!,
+        diceRoomService = diceRoomService ?? DiceRoomService(),
         assert(
           transportPort != null || router != null,
           'Must provide either transportPort or router',
@@ -169,6 +174,14 @@ class RoomSyncOrchestrator {
             pinnedRuleIds: _trackedRulesSet.activeValues.toSet(),
           );
           await campaignRepo.saveProfileImmediate(updatedProfile);
+        }
+      } else if (type == 'dice_roll') {
+        final payloadData = decoded['payload'];
+        if (payloadData is Map) {
+          try {
+            final roll = RoomRoll.fromMap(Map<String, dynamic>.from(payloadData));
+            diceRoomService.ingestRemoteRoll(roll);
+          } catch (_) {}
         }
       }
     } catch (_) {

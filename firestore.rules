@@ -15,9 +15,9 @@ service cloud.firestore {
         && (!('cp' in data) || (data.cp is int && data.cp >= 0 && data.cp <= 10000000));
     }
 
-    // Validates player name length
+    // Validates player name length (allows custom character slugs and titles)
     function isValidName(name) {
-      return name is string && name.size() >= 1 && name.size() <= 40;
+      return name is string && name.size() >= 1 && name.size() <= 80;
     }
 
     // Validates room code format (alphanumeric, 4 to 12 chars)
@@ -151,8 +151,9 @@ service cloud.firestore {
                       && request.resource.data.total is int
                       && request.resource.data.total >= -100
                       && request.resource.data.total <= 10000
-                      && (!('formulaString' in request.resource.data) || (request.resource.data.formulaString is string && request.resource.data.formulaString.size() <= 100))
-                      && (!('details' in request.resource.data) || (request.resource.data.details is list && request.resource.data.details.size() <= 50));
+                      && (!('formulaString' in request.resource.data) || request.resource.data.formulaString == null || (request.resource.data.formulaString is string && request.resource.data.formulaString.size() <= 200))
+                      && (!('details' in request.resource.data) || request.resource.data.details == null || (request.resource.data.details is list && request.resource.data.details.size() <= 100))
+                      && (!('droppedRolls' in request.resource.data) || request.resource.data.droppedRolls == null || request.resource.data.droppedRolls is list);
 
         allow update, delete: if false; // Immutable rolls
       }

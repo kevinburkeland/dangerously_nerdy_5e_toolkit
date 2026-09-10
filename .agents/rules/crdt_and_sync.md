@@ -49,4 +49,12 @@ Located at `lib/application/services/room_sync_orchestrator.dart`:
 - **Host Periodic Milestone Pruning:** Host DM nodes periodically execute milestone flushes and prune expired tombstones via `RoomStateReconciliationService.executeMilestonePrune()`.
 - **Connection Telemetry & Accessible Badge:** `RoomSyncOrchestrator.watchTelemetry()` combines transport state transitions and periodic peer heartbeat counts into `RoomConnectionTelemetry` (`isOffline`, `connectionLabel`, `peerCount`). Rendered via `RoomConnectionBadge` (`lib/presentation/widgets/room_connection_badge.dart`) with `Semantics` label expansion for screen readers.
 
+## 6. Real-Time Dice Roll Broadcast & Security Rules Guardrails
+- **Unified Stream Controller:** `DiceRoomService.streamRoomRolls` maintains a unified broadcast controller per room (`_localControllers[cleanCode]`). Real-time cloud listeners (Firestore snapshots) and P2P mesh payloads feed directly into `_localControllers[cleanCode]`. Local optimistic updates and remote sync share the exact same stream, eliminating detached listeners or UI flickering.
+- **CEL / Firestore Security Rules Null-Key Safety:** In Firestore Security Rules (Common Expression Language), `'field' in request.resource.data` evaluates to `true` even when `'field': null` is present in the payload. If an allow condition specifies `(!('field' in request.resource.data) || (request.resource.data.field is list))`, documents with `'field': null` will evaluate to `false` and throw `PERMISSION_DENIED`. Always:
+  1. Omit null optional keys during DTO serialization (`RoomRoll.toMap()`), and
+  2. Include explicit null allowances in security rules: `(!('field' in request.resource.data) || request.resource.data.field == null || request.resource.data.field is list)`.
+- **String & Int Cross-Format Deserialization:** Robust tabletop payloads may be serialized as Firestore `Timestamp`, numeric millisecond timestamps, ISO 8601 strings, or native `DateTime`. Deserializers (`RoomRoll.fromMap`) must handle all variations seamlessly.
+
+
 

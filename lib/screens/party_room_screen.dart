@@ -58,6 +58,8 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   late String _roomCode;
   late String _playerName;
 
+  late Stream<List<RoomRoll>> _rollStream;
+
   StreamSubscription<ClaimConflictEvent>? _claimConflictSub;
   StreamSubscription<PurseOverdraftEvent>? _overdraftSub;
 
@@ -82,6 +84,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
         'Adventurer';
 
     _diceService.joinRoom(_roomCode, _playerName);
+    _rollStream = _diceService.streamRoomRolls(_roomCode);
     _registry.updateLastPlayed(_roomCode);
 
     _claimConflictSub = _partyService.claimConflictStream.listen((event) {
@@ -115,6 +118,17 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
         );
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant PartyRoomScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final cleanCode = widget.roomCode.trim().toUpperCase();
+    if (oldWidget.roomCode.trim().toUpperCase() != cleanCode || oldWidget.diceService != widget.diceService) {
+      _diceService = widget.diceService;
+      _roomCode = cleanCode;
+      _rollStream = _diceService.streamRoomRolls(_roomCode);
+    }
   }
 
   @override
@@ -1542,7 +1556,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
 
   Widget _buildDiceFeedTab(TabletopColors tabletop, bool isDark) {
     return StreamBuilder<List<RoomRoll>>(
-      stream: _diceService.streamRoomRolls(_roomCode),
+      stream: _rollStream,
       builder: (context, snapshot) {
         final rolls = snapshot.data ?? [];
 
