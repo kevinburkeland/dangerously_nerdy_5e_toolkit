@@ -1,9 +1,18 @@
+import '../../application/services/cascading_transport_router.dart';
+import '../../application/services/clock_sync_service.dart';
 import '../../application/services/combat_encounter_service.dart';
 import '../../application/services/room_state_reconciliation_service.dart';
+import '../../application/services/room_sync_orchestrator.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_character_repository.dart';
+import '../../domain/ports/i_network_time_port.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
+import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
+import '../adapters/p2p/firebase_fallback_adapter.dart';
+import '../adapters/p2p/firebase_signaling_adapter.dart';
+import '../adapters/p2p/webrtc_mesh_adapter.dart';
+import '../adapters/system_network_time_port.dart';
 import '../repositories/local_campaign_repository.dart';
 import '../repositories/local_character_repository.dart';
 
@@ -85,7 +94,27 @@ Future<void> initServiceLocator({
 
   sl.registerLazySingleton<RoomStateReconciliationService>(() => RoomStateReconciliationService());
 
+  sl.registerLazySingleton<INetworkTimePort>(() => const SystemNetworkTimePort());
+
+  sl.registerLazySingleton<ClockSyncService>(() => ClockSyncService(
+        networkTimePort: sl<INetworkTimePort>(),
+      ));
+
   if (p2pTransport != null) {
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);
+  } else {
+    sl.registerLazySingleton<CascadingTransportRouter>(() => CascadingTransportRouter(
+          webRtcAdapter: WebRtcMeshAdapter(signalingAdapter: FirebaseSignalingAdapter()),
+          firebaseFallbackAdapter: FirebaseFallbackAdapter(),
+        ));
+    sl.registerLazySingleton<IP2pTransportPort>(() => sl<CascadingTransportRouter>());
   }
+
+  sl.registerLazySingleton<RoomSyncOrchestrator>(() => RoomSyncOrchestrator(
+        transportPort: sl<IP2pTransportPort>(),
+        campaignRepo: sl<ICampaignRepository>(),
+        reconciliationService: sl<RoomStateReconciliationService>(),
+        clockSyncService: sl<ClockSyncService>(),
+        diceRoomService: DiceRoomService(),
+      ));
 }

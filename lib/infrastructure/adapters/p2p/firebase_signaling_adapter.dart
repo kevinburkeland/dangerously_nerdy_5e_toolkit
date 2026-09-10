@@ -107,6 +107,22 @@ class FirebaseSignalingAdapter {
     );
   }
 
+  /// Broadcasts a peerJoin signal to all peers in the room (`toNodeId: '*'`).
+  Future<String> broadcastJoin() async {
+    return _sendSignal(
+      toNodeId: '*',
+      type: SignalingType.peerJoin,
+    );
+  }
+
+  /// Sends a targeted peerJoin response signal to a specific peer.
+  Future<String> sendTargetedJoin({required String toNodeId}) async {
+    return _sendSignal(
+      toNodeId: toNodeId,
+      type: SignalingType.peerJoin,
+    );
+  }
+
   Future<String> _sendSignal({
     required String toNodeId,
     required SignalingType type,

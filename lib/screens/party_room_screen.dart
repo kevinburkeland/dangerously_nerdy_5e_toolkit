@@ -21,6 +21,8 @@ import 'dice_roller_screen.dart';
 import 'dm_dashboard_screen.dart';
 import '../infrastructure/dtos/character_telemetry_dto.dart';
 import '../infrastructure/di/injection_container.dart';
+import '../application/services/cascading_transport_router.dart';
+import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../widgets/party/party_vitality_hud.dart';
@@ -33,6 +35,8 @@ class PartyRoomScreen extends StatefulWidget {
   final PartyRoomService partyService;
   final CampaignRegistryService registry;
   final DiceRoomService diceService;
+  final RoomSyncOrchestrator? orchestrator;
+  final CascadingTransportRouter? router;
 
   PartyRoomScreen({
     super.key,
@@ -41,6 +45,8 @@ class PartyRoomScreen extends StatefulWidget {
     PartyRoomService? partyService,
     CampaignRegistryService? registry,
     DiceRoomService? diceService,
+    this.orchestrator,
+    this.router,
   })  : partyService = partyService ?? PartyRoomService(),
         registry = registry ?? CampaignRegistryService(),
         diceService = diceService ?? DiceRoomService();
@@ -54,6 +60,10 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   late final PartyRoomService _partyService;
   late final CampaignRegistryService _registry;
   late final DiceRoomService _diceService;
+
+  RoomSyncOrchestrator? _orchestrator;
+  CascadingTransportRouter? _router;
+  Stream<RoomConnectionTelemetry>? _telemetryStream;
 
   late String _roomCode;
   late String _playerName;
@@ -86,6 +96,8 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     _diceService.joinRoom(_roomCode, _playerName);
     _rollStream = _diceService.streamRoomRolls(_roomCode);
     _registry.updateLastPlayed(_roomCode);
+
+    _initSyncServices();
 
     _claimConflictSub = _partyService.claimConflictStream.listen((event) {
       if (mounted && event.roomCode == _roomCode) {
@@ -120,6 +132,34 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     });
   }
 
+  Future<void> _initSyncServices() async {
+    if (widget.orchestrator != null) {
+      _orchestrator = widget.orchestrator;
+      _router = widget.router;
+      _telemetryStream = widget.orchestrator!.watchTelemetry();
+      if (mounted) setState(() {});
+      return;
+    }
+
+    if (sl.isRegistered<RoomSyncOrchestrator>()) {
+      final orchestrator = sl<RoomSyncOrchestrator>();
+      _orchestrator = orchestrator;
+      _router = sl.isRegistered<CascadingTransportRouter>()
+          ? sl<CascadingTransportRouter>()
+          : null;
+      _telemetryStream = orchestrator.watchTelemetry();
+
+      final localNodeId = '$_playerName-${_roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+      if (_router != null) {
+        unawaited(_router!.initializeRoom(_roomCode, localNodeId));
+      }
+      orchestrator.startSynchronization();
+
+      if (mounted) setState(() {});
+      return;
+    }
+  }
+
   @override
   void didUpdateWidget(covariant PartyRoomScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -133,6 +173,8 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
 
   @override
   void dispose() {
+    _orchestrator?.stopSynchronization();
+    _router?.disconnect();
     _claimConflictSub?.cancel();
     _overdraftSub?.cancel();
     _tabController.dispose();
@@ -228,9 +270,10 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: RoomConnectionBadge(
-                      telemetryStream: sl.isRegistered<RoomSyncOrchestrator>()
-                          ? sl<RoomSyncOrchestrator>().watchTelemetry()
-                          : const Stream.empty(),
+                      telemetryStream: _telemetryStream ??
+                          (sl.isRegistered<RoomSyncOrchestrator>()
+                              ? sl<RoomSyncOrchestrator>().watchTelemetry()
+                              : const Stream.empty()),
                     ),
                   ),
                   // Connection / Outbox Sync Status Badge

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import '../../domain/ports/i_p2p_transport_port.dart';
+import '../../infrastructure/adapters/p2p/webrtc_mesh_adapter.dart';
 
 /// Connection states for the cascading transport hierarchy.
 enum TransportState {
@@ -31,8 +32,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
       StreamController<TransportState>.broadcast();
 
   StreamSubscription<String>? _webRtcSubscription;
+  StreamSubscription<Set<String>>? _webRtcPeerSub;
   StreamSubscription<String>? _fallbackSubscription;
   Timer? _heartbeatMonitorTimer;
+  Timer? _fallbackHeartbeatTimer;
 
   /// Internal tracking of peer last seen timestamps (nodeId -> epoch ms).
   final Map<String, int> _peerLastSeen = {};
@@ -63,6 +66,19 @@ class CascadingTransportRouter implements IP2pTransportPort {
       _webRtcSubscription = webRtcAdapter
           .watchIncomingPayloads()
           .listen(_handleIncomingWebRtcPayload);
+
+      if (webRtcAdapter is WebRtcMeshAdapter) {
+        _webRtcPeerSub = (webRtcAdapter as WebRtcMeshAdapter).onPeersChanged.listen((peers) {
+          if (peers.isNotEmpty) {
+            _fallbackHeartbeatTimer?.cancel();
+            _fallbackHeartbeatTimer = null;
+            _changeState(TransportState.p2pEstablished);
+            for (final peerId in peers) {
+              recordPeerHeartbeat(peerId);
+            }
+          }
+        });
+      }
     } catch (_) {
       // Immediate fallback to Firebase relay if WebRTC setup fails
       await _triggerFallback();
@@ -85,7 +101,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
         final decoded = jsonDecode(payload);
         if (decoded is Map<String, dynamic>) {
           final sender = decoded['from'] ?? decoded['senderId'];
-          if (sender is String && sender.isNotEmpty) {
+          if (sender is String && sender.isNotEmpty && sender != _localNodeId) {
             recordPeerHeartbeat(sender);
           }
         }
@@ -122,6 +138,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     if (_currentState == TransportState.fallbackRelay) return;
 
     _changeState(TransportState.fallbackRelay);
+    _startFallbackHeartbeats();
 
     if (_fallbackSubscription == null && _roomCode != null && _localNodeId != null) {
       try {
@@ -130,8 +147,42 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
       _fallbackSubscription = firebaseFallbackAdapter
           .watchIncomingPayloads()
-          .listen(_payloadController.add);
+          .listen(_handleIncomingFallbackPayload);
     }
+  }
+
+  void _handleIncomingFallbackPayload(String payload) {
+    try {
+      if (payload.startsWith('{')) {
+        final decoded = jsonDecode(payload);
+        if (decoded is Map<String, dynamic>) {
+          final sender = decoded['from'] ?? decoded['senderId'];
+          if (sender is String && sender.isNotEmpty && sender != _localNodeId) {
+            recordPeerHeartbeat(sender);
+          }
+          if (decoded['_protocol'] == 'relay_heartbeat') {
+            return;
+          }
+        }
+      }
+    } catch (_) {}
+
+    _payloadController.add(payload);
+  }
+
+  void _startFallbackHeartbeats() {
+    _fallbackHeartbeatTimer?.cancel();
+    _fallbackHeartbeatTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_currentState != TransportState.fallbackRelay || _localNodeId == null) return;
+      try {
+        final ping = jsonEncode({
+          '_protocol': 'relay_heartbeat',
+          'from': _localNodeId,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        });
+        firebaseFallbackAdapter.broadcastPayload(ping);
+      } catch (_) {}
+    });
   }
 
   /// Starts the periodic heartbeat monitor that prunes nodes exceeding the 6-second TTL.
@@ -145,8 +196,6 @@ class CascadingTransportRouter implements IP2pTransportPort {
   /// Evaluates peer heartbeats against the 6-second TTL.
   /// Prunes zombie nodes and triggers fallback if active peers drop to zero.
   void checkHeartbeats([DateTime? currentTime]) {
-    if (_currentState != TransportState.p2pEstablished) return;
-
     final now = (currentTime ?? DateTime.now()).millisecondsSinceEpoch;
     final ttlMs = heartbeatTtl.inMilliseconds;
 
@@ -173,8 +222,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
       onPeerPruned?.call(zombieId);
     }
 
-    // If all peers went zombie, trigger fallback to cloud relay
-    if (_peerLastSeen.isEmpty && zombieNodes.isNotEmpty) {
+    // If all peers went zombie during p2pEstablished, trigger fallback to cloud relay
+    if (_currentState == TransportState.p2pEstablished && _peerLastSeen.isEmpty && zombieNodes.isNotEmpty) {
       _triggerFallback();
     }
   }
@@ -184,8 +233,14 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _heartbeatMonitorTimer?.cancel();
     _heartbeatMonitorTimer = null;
 
+    _fallbackHeartbeatTimer?.cancel();
+    _fallbackHeartbeatTimer = null;
+
     await _webRtcSubscription?.cancel();
     _webRtcSubscription = null;
+
+    await _webRtcPeerSub?.cancel();
+    _webRtcPeerSub = null;
 
     await _fallbackSubscription?.cancel();
     _fallbackSubscription = null;

@@ -200,5 +200,43 @@ void main() {
 
       await controller.close();
     });
+
+    testWidgets('Dynamically transitions from Connecting (0) to WebRTC P2P (1) to Firebase Relay (1)', (tester) async {
+      final controller = StreamController<RoomConnectionTelemetry>.broadcast();
+
+      await tester.pumpWidget(buildTestWidget(
+        stream: controller.stream,
+        initialTelemetry: const RoomConnectionTelemetry(
+          state: TransportState.connecting,
+          peerCount: 0,
+        ),
+      ));
+
+      // Initial state
+      expect(find.text('Connecting... (0)'), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+
+      // Connected over WebRTC P2P with 1 peer (phone <-> laptop)
+      controller.add(const RoomConnectionTelemetry(
+        state: TransportState.p2pEstablished,
+        peerCount: 1,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('WebRTC P2P (1)'), findsOneWidget);
+      expect(find.byIcon(Icons.lan), findsOneWidget);
+
+      // Falls back to Firebase Relay with 1 peer
+      controller.add(const RoomConnectionTelemetry(
+        state: TransportState.fallbackRelay,
+        peerCount: 1,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Firebase Relay (1)'), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_queue), findsOneWidget);
+
+      await controller.close();
+    });
   });
 }

@@ -6,6 +6,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
+import 'infrastructure/di/injection_container.dart';
 import 'models/app_settings.dart';
 import 'providers/settings_provider.dart';
 import 'screens/landing_screen.dart';
@@ -42,6 +43,7 @@ void main() {
     // 1. Initialize local NoSQL database & web lifecycle before rendering Frame 1
     try {
       await AppDatabaseService.instance.init();
+      await initServiceLocator();
       setupWebLifecycle(services.debouncedStorage);
     } catch (e, stackTrace) {
       logger.logNonFatal(

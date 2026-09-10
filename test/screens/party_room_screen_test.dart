@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,38 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/party_room_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_network_time_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connection_badge.dart';
+
+class _MockSyncTransport implements IP2pTransportPort {
+  final StreamController<String> _incoming = StreamController<String>.broadcast();
+  bool disconnected = false;
+
+  @override
+  Future<void> broadcastPayload(String jsonPayload) async {}
+
+  @override
+  Stream<String> watchIncomingPayloads() => _incoming.stream;
+
+  @override
+  Future<void> initializeRoom(String roomCode, String localNodeId) async {}
+
+  @override
+  Future<void> disconnect() async {
+    disconnected = true;
+    await _incoming.close();
+  }
+}
+
+class _MockTimePort implements INetworkTimePort {
+  @override
+  Future<int> getNetworkTimeMs() async => DateTime.now().millisecondsSinceEpoch;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -236,6 +269,34 @@ void main() {
 
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('PartyRoomScreen embeds RoomConnectionBadge and receives telemetry', (tester) async {
+      const roomCode = 'ROOM-CONN01';
+      final transport = _MockSyncTransport();
+      final orchestrator = RoomSyncOrchestrator(
+        transportPort: transport,
+        campaignRepo: LocalCampaignRepository(),
+        reconciliationService: RoomStateReconciliationService(),
+        clockSyncService: ClockSyncService(networkTimePort: _MockTimePort()),
+      );
+
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: PartyRoomScreen(
+          roomCode: roomCode,
+          initialPlayerName: 'DM',
+          partyService: partyService,
+          registry: registry,
+          orchestrator: orchestrator,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RoomConnectionBadge), findsOneWidget);
+      expect(find.text('Connecting... (0)'), findsOneWidget);
+
+      orchestrator.stopSynchronization();
     });
   });
 }

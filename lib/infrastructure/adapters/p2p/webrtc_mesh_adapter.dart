@@ -38,6 +38,8 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
 
   final StreamController<String> _incomingPayloadsController =
       StreamController<String>.broadcast();
+  final StreamController<Set<String>> _peersChangedController =
+      StreamController<Set<String>>.broadcast();
   StreamSubscription<SignalingMessage>? _signalingSubscription;
   Timer? _heartbeatTimer;
 
@@ -62,6 +64,9 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   /// Currently connected peer node IDs.
   Set<String> get connectedPeers => Set.unmodifiable(_dataChannels.keys);
 
+  /// Reactive stream emitting the active set of connected peers on connection changes.
+  Stream<Set<String>> get onPeersChanged => _peersChangedController.stream;
+
   @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
     _roomCode = roomCode.trim().toUpperCase();
@@ -77,6 +82,11 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
 
       _signalingSubscription =
           signaling.watchIncomingSignals().listen(_handleIncomingSignal);
+
+      // Broadcast join presence so existing peers can establish connections
+      try {
+        await signaling.broadcastJoin();
+      } catch (_) {}
     }
 
     // Start sending periodic heartbeat pings (every 2 seconds)
@@ -108,13 +118,20 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     }
   }
 
-  /// Handles incoming ephemeral signaling message (offer, answer, candidate).
+  /// Handles incoming ephemeral signaling message (offer, answer, candidate, peerJoin).
   Future<void> _handleIncomingSignal(SignalingMessage message) async {
     if (_isDisposed || message.fromNodeId == _localNodeId) return;
 
     final peerId = message.fromNodeId;
 
     switch (message.type) {
+      case SignalingType.peerJoin:
+        await _handlePeerJoin(peerId, message.id);
+      case SignalingType.peerLeave:
+        prunePeer(peerId);
+        if (_signalingAdapter != null) {
+          await _signalingAdapter?.deleteSignal(message.id);
+        }
       case SignalingType.offer:
         await _handleOffer(peerId, message.sdp!, message.id);
       case SignalingType.answer:
@@ -123,8 +140,30 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
         if (message.candidate != null) {
           await _handleCandidate(peerId, message.candidate!, message.id);
         }
-      default:
-        break;
+    }
+  }
+
+  /// Handles peer discovery: deterministic tie-breaker prevents offer glare.
+  Future<void> _handlePeerJoin(String peerId, String signalId) async {
+    if (_isDisposed) return;
+
+    recordPeerActivity(peerId);
+
+    if (_peerConnections.containsKey(peerId)) {
+      return;
+    }
+
+    if (_localNodeId != null && _localNodeId!.compareTo(peerId) > 0) {
+      // Deterministic offerer: node with lexicographically greater ID initiates offer
+      await connectToPeer(peerId);
+    } else {
+      // Node with smaller ID replies with targeted join acknowledgment
+      final signaling = _signalingAdapter;
+      if (signaling != null) {
+        try {
+          await signaling.sendTargetedJoin(toNodeId: peerId);
+        } catch (_) {}
+      }
     }
   }
 
@@ -268,6 +307,9 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     dc.onDataChannelState = (state) {
       if (state == RTCDataChannelState.RTCDataChannelOpen) {
         _peerLastActiveTimestamps[peerId] = DateTime.now().millisecondsSinceEpoch;
+        if (!_peersChangedController.isClosed) {
+          _peersChangedController.add(connectedPeers);
+        }
         // P2P DataChannel is open! Ephemeral cleanup guarantee
         _signalingAdapter?.cleanUpSignalingSession();
       } else if (state == RTCDataChannelState.RTCDataChannelClosed) {
@@ -292,6 +334,9 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     _dataChannels.remove(peerId)?.close();
     _peerConnections.remove(peerId)?.close();
     _peerLastActiveTimestamps.remove(peerId);
+    if (!_peersChangedController.isClosed) {
+      _peersChangedController.add(connectedPeers);
+    }
   }
 
   @override
@@ -344,5 +389,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     _peerLastActiveTimestamps.clear();
 
     await _signalingAdapter?.cleanUpSignalingSession();
+    await _incomingPayloadsController.close();
+    await _peersChangedController.close();
   }
 }

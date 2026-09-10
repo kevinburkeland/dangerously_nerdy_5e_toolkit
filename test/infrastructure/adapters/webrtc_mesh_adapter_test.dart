@@ -115,5 +115,30 @@ void main() {
       expect(adapter.connectedPeers.contains('peer-to-close'), isFalse);
       expect(adapter.peerLastActiveTimestamps.containsKey('peer-to-close'), isFalse);
     });
+
+    test('Emits onPeersChanged stream when data channels are registered and closed', () async {
+      await adapter.initializeRoom('ROOM-MESH', 'local-node');
+
+      final peerEvents = <Set<String>>[];
+      final sub = adapter.onPeersChanged.listen(peerEvents.add);
+
+      final fakeChannel = FakeRTCDataChannel();
+      adapter.registerMockDataChannel('peer-live', fakeChannel);
+
+      // Trigger data channel open state
+      fakeChannel.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(peerEvents, isNotEmpty);
+      expect(peerEvents.last, contains('peer-live'));
+
+      // Close data channel
+      adapter.prunePeer('peer-live');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(peerEvents.last, isEmpty);
+
+      await sub.cancel();
+    });
   });
 }
