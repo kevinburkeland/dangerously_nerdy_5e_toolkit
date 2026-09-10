@@ -56,5 +56,14 @@ Located at `lib/application/services/room_sync_orchestrator.dart`:
   2. Include explicit null allowances in security rules: `(!('field' in request.resource.data) || request.resource.data.field == null || request.resource.data.field is list)`.
 - **String & Int Cross-Format Deserialization:** Robust tabletop payloads may be serialized as Firestore `Timestamp`, numeric millisecond timestamps, ISO 8601 strings, or native `DateTime`. Deserializers (`RoomRoll.fromMap`) must handle all variations seamlessly.
 
-
-
+## 7. WebRTC P2P Peer Discovery, Glare Prevention & Transport Lifecycle
+- **Peer Join Announcements:** When initializing a room mesh (`WebRtcMeshAdapter.initializeRoom`), the local node immediately dispatches an ephemeral broadcast `SignalingType.peerJoin` message (`toNodeId: '*'`) to announce its arrival to active peers.
+- **Deterministic Glare Prevention:** To eliminate race conditions where two peers simultaneously create SDP offers for each other ("glare"), peer discovery uses a strict lexicographical tie-breaker:
+  - If `localNodeId.compareTo(peerId) > 0`, the local node acts as the offerer and invokes `connectToPeer(peerId)`.
+  - If `localNodeId.compareTo(peerId) < 0`, the local node sends a targeted `peerJoin` acknowledgment (`toNodeId: peerId`), signaling the higher-ranked peer to initiate the offer.
+- **Cascading Heartbeat & Fallback Tracking:**
+  - P2P DataChannels exchange periodic heartbeat pings every 2 seconds to update `peerLastSeen` timestamps.
+  - When in `TransportState.fallbackRelay`, clients periodically broadcast `relay_heartbeat` pings so cloud-relayed participants maintain accurate peer counts and active room awareness.
+- **Transport Lifecycle Bootstrap:**
+  - `initServiceLocator()` MUST be invoked during application startup in `main.dart` to ensure `CascadingTransportRouter` and `RoomSyncOrchestrator` are registered.
+  - Interactive room screens (`PartyRoomScreen`) automatically attach `RoomSyncOrchestrator.watchTelemetry()` to `RoomConnectionBadge` and cleanly disconnect upon screen disposal.
