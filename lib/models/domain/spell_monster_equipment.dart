@@ -41,9 +41,9 @@ class EvaluationMath {
   Map<String, dynamic> toMap() => {
         'diceFormula': diceFormula,
         'damageType': damageType.name,
+        'isAttackRoll': isAttackRoll,
+        'requiresSave': requiresSave,
         if (scalingFormula != null) 'scalingFormula': scalingFormula,
-        if (isAttackRoll) 'isAttackRoll': true,
-        if (requiresSave) 'requiresSave': true,
       };
 
   factory EvaluationMath.fromMap(Map<String, dynamic> map) {

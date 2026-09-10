@@ -130,10 +130,12 @@ class SpellDto {
       json['range'] ?? resolvedRange,
       resolvedDescription,
     );
-    final resolvedRangeDistance = (json['rangeDistanceFeet'] as num?)?.toInt() ??
-        (rangeInfo['rangeDistanceFeet'] as int? ?? 0);
-    final resolvedRangeType = json['rangeType']?.toString() ??
-        (rangeInfo['rangeType'] as String? ?? 'ranged');
+    final resolvedRangeDistance = (rangeInfo['rangeDistanceFeet'] as int?) ??
+        (json['rangeDistanceFeet'] as num?)?.toInt() ??
+        0;
+    final resolvedRangeType = (rangeInfo['rangeType'] as String?) ??
+        json['rangeType']?.toString() ??
+        'ranged';
 
     // Components resolution
     SpellComponents resolvedComponents = const SpellComponents();

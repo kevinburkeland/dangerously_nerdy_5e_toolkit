@@ -361,5 +361,72 @@ void main() {
       expect(coldDm.requiresSave, isTrue);
       expect(coldDm.scalingFormula, equals('1d6'));
     });
+
+    test('deserialization priority correctly overrides stale raw fields and persists boolean flags in exported JSON', () {
+      // 1. Stale raw JSON where rangeType and rangeDistanceFeet were un-normalized or corrupted
+      final staleRawJson = {
+        'id': 'elemental-absorption',
+        'name': 'Elemental Absorption',
+        'level': 1,
+        'range': 'Self',
+        'rangeDistanceFeet': 60, // Stale/corrupt un-normalized field
+        'rangeType': 'ranged',    // Stale/corrupt un-normalized field
+        'higherLevelsMarkdown':
+            'When you cast this spell using a spell slot of 2nd level or higher, the extra damage increases by 1d6 for each slot level above 1st.',
+        'damageMath': [
+          {'diceFormula': '1d6', 'damageType': 'untyped'},
+        ],
+      };
+
+      final dto = SpellDto.fromJson(staleRawJson);
+      expect(dto.rangeDistanceFeet, equals(0));
+      expect(dto.rangeType, equals('self'));
+
+      final exported = dto.toMap();
+      expect(exported['rangeDistanceFeet'], equals(0));
+      expect(exported['rangeType'], equals('self'));
+
+      // 2. Variable damage root field override in exported JSON
+      final chaosJson = {
+        'id': 'chaotic-blast',
+        'name': 'Chaotic Blast',
+        'level': 1,
+        'damageType': 'acid', // Stale/default type
+        'descriptionMarkdown':
+            'You hurl an erratic burst of energy at one creature in range. A d8 determines the attack\'s damage type: 1 - acid, 2 - cold, 3 - fire, 4 - force, 5 - lightning, 6 - poison, 7 - psychic, 8 - thunder.',
+        'damageMath': [
+          {'diceFormula': '2d8+1d6', 'damageType': 'acid'},
+        ],
+      };
+      final chaosDto = SpellDto.fromJson(chaosJson);
+      expect(chaosDto.damageType, equals('variable'));
+      final exportedChaos = chaosDto.toMap();
+      expect(exportedChaos['damageType'], equals('variable'));
+
+      // 3. Boolean flags in EvaluationMath exported JSON survive round-trip
+      final frostJson = {
+        'id': 'frost-shard',
+        'name': 'Frost Shard',
+        'level': 1,
+        'descriptionMarkdown':
+            'You fling a shard of ice at one creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 piercing damage. Hit or miss, the shard explodes. Each creature within 5 feet must succeed on a Dexterity saving throw or take 2d6 cold damage.',
+        'damageMath': [
+          {'diceFormula': '1d10', 'damageType': 'piercing'},
+          {'diceFormula': '2d6', 'damageType': 'cold'},
+        ],
+      };
+      final frostDto = SpellDto.fromJson(frostJson);
+      final exportedFrost = frostDto.toMap();
+      final exportedMath = (exportedFrost['damageMath'] as List).cast<Map<String, dynamic>>();
+
+      final piercingMap = exportedMath.firstWhere((m) => m['diceFormula'] == '1d10');
+      final coldMap = exportedMath.firstWhere((m) => m['diceFormula'] == '2d6');
+
+      expect(piercingMap['isAttackRoll'], isTrue);
+      expect(piercingMap['requiresSave'], isFalse);
+
+      expect(coldMap['isAttackRoll'], isFalse);
+      expect(coldMap['requiresSave'], isTrue);
+    });
   });
 }

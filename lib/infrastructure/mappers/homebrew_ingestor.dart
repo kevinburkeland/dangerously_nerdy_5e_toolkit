@@ -166,13 +166,19 @@ class HomebrewIngestor {
   /// Detects variable or selectable damage types in spell descriptions,
   /// preventing default lock-in to the first matched type (e.g. "acid").
   static String resolveDamageType(String rawDescription, String firstMatchedType) {
+    final lowerFirst = firstMatchedType.toLowerCase();
+    if (lowerFirst == 'variable' || lowerFirst == 'choose') {
+      return 'variable';
+    }
     final lower = rawDescription.toLowerCase();
     if (lower.contains('choose acid, cold, fire, lightning') ||
         lower.contains("determines the attack's damage type") ||
         lower.contains("determines the attack’s damage type") ||
         lower.contains('choose acid') ||
         lower.contains('variable damage') ||
-        lower.contains('damage type is variable')) {
+        lower.contains('damage type is variable') ||
+        (lower.contains('you choose') && lower.contains('damage')) ||
+        (lower.contains('choose') && lower.contains('damage type'))) {
       return 'variable';
     }
     return firstMatchedType;
