@@ -20,6 +20,9 @@ import 'character_sheet_view.dart';
 import 'dice_roller_screen.dart';
 import 'dm_dashboard_screen.dart';
 import '../infrastructure/dtos/character_telemetry_dto.dart';
+import '../infrastructure/di/injection_container.dart';
+import '../application/services/room_sync_orchestrator.dart';
+import '../presentation/widgets/room_connection_badge.dart';
 import '../widgets/party/party_vitality_hud.dart';
 
 /// Comprehensive multi-tab Party Room Screen featuring Shared Party Vault,
@@ -207,6 +210,15 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                   ],
                 ),
                 actions: [
+                  // P2P Room Connection Telemetry Badge
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: RoomConnectionBadge(
+                      telemetryStream: sl.isRegistered<RoomSyncOrchestrator>()
+                          ? sl<RoomSyncOrchestrator>().watchTelemetry()
+                          : const Stream.empty(),
+                    ),
+                  ),
                   // Connection / Outbox Sync Status Badge
                   ValueListenableBuilder<int>(
                     valueListenable: _partyService.pendingOutboxCount,

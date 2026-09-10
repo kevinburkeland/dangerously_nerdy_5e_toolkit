@@ -51,11 +51,13 @@ class RoomRoll {
   }
 
   Map<String, dynamic> toMap({bool useFirestoreTimestamp = true}) {
+    final cleanCode = roomCode.trim().toUpperCase();
+    final cleanPlayer = playerName.trim().isNotEmpty ? playerName.trim() : 'Adventurer';
     final expireDate = timestamp.add(const Duration(hours: 24));
     return {
       'id': id,
-      'roomCode': roomCode,
-      'playerName': playerName,
+      'roomCode': cleanCode,
+      'playerName': cleanPlayer,
       'timestamp': useFirestoreTimestamp ? Timestamp.fromDate(timestamp) : timestamp.millisecondsSinceEpoch,
       'expireAt': useFirestoreTimestamp ? Timestamp.fromDate(expireDate) : expireDate.millisecondsSinceEpoch,
       'formulaString': formulaString,

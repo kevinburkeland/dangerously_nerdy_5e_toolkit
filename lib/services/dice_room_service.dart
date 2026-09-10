@@ -197,19 +197,35 @@ class DiceRoomService {
             .collection('rooms')
             .doc(cleanCode)
             .collection('rolls')
-            .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(cutoff24h))
             .orderBy('timestamp', descending: true)
             .limit(100)
             .snapshots()
             .map((snapshot) {
-          return snapshot.docs.map((doc) => RoomRoll.fromMap(doc.data())).toList();
+          final remoteRolls = snapshot.docs
+              .map((doc) => RoomRoll.fromMap(doc.data()))
+              .where((r) => r.timestamp.isAfter(cutoff24h))
+              .toList();
+
+          // Merge remote rolls with any optimistic local rolls in _localRooms
+          final localList = _localRooms[cleanCode] ?? [];
+          final rollMap = <String, RoomRoll>{};
+          for (final r in remoteRolls) {
+            rollMap[r.id] = r;
+          }
+          for (final r in localList) {
+            rollMap.putIfAbsent(r.id, () => r);
+          }
+          final merged = rollMap.values.toList()
+            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          _localRooms[cleanCode] = merged.take(100).toList();
+          return List<RoomRoll>.unmodifiable(_localRooms[cleanCode]!);
         }).handleError((error, stackTrace) {
           LoggingService().logNonFatal(
             error,
             stackTrace,
-            reason: 'Firestore streamRoomRolls error for room $cleanCode',
+            reason: 'Firestore streamRoomRolls error for room $cleanCode; falling back to local rolls',
           );
-          return <RoomRoll>[];
+          return List<RoomRoll>.unmodifiable(_localRooms[cleanCode] ?? []);
         });
       } catch (e, stackTrace) {
         LoggingService().logNonFatal(
@@ -243,6 +259,27 @@ class DiceRoomService {
   Future<void> broadcastRoll(RoomRoll roll) async {
     final cleanCode = roll.roomCode.trim().toUpperCase();
 
+    // 1. Immediately cache in local room list and notify local listeners for instant UI
+    if (!_localRooms.containsKey(cleanCode)) {
+      _localRooms[cleanCode] = [];
+    }
+    if (!_localControllers.containsKey(cleanCode)) {
+      _localControllers[cleanCode] = StreamController<List<RoomRoll>>.broadcast();
+    }
+
+    if (!_localRooms[cleanCode]!.any((r) => r.id == roll.id)) {
+      _localRooms[cleanCode]!.insert(0, roll);
+      final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
+      _localRooms[cleanCode] = _localRooms[cleanCode]!
+          .where((r) => r.timestamp.isAfter(cutoff24h))
+          .take(100)
+          .toList();
+      if (!_localControllers[cleanCode]!.isClosed) {
+        _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
+      }
+    }
+
+    // 2. Broadcast to Firestore if available
     if (isFirebaseAvailable) {
       try {
         await FirebaseFirestore.instance
@@ -251,34 +288,14 @@ class DiceRoomService {
             .collection('rolls')
             .doc(roll.id)
             .set(roll.toMap());
-        return;
       } catch (e, stackTrace) {
         LoggingService().logNonFatal(
           e,
           stackTrace,
-          reason: 'Firestore broadcastRoll failed for room $cleanCode; falling back to in-memory',
+          reason: 'Firestore broadcastRoll failed for room $cleanCode; local fallback preserved',
         );
       }
     }
-
-    // Local in-memory fallback
-    if (!_localRooms.containsKey(cleanCode)) {
-      _localRooms[cleanCode] = [];
-    }
-    if (!_localControllers.containsKey(cleanCode)) {
-      _localControllers[cleanCode] = StreamController<List<RoomRoll>>.broadcast();
-    }
-
-    _localRooms[cleanCode]!.insert(0, roll);
-
-    // Keep only rolls from last 24 hours up to 100 max
-    final cutoff24h = DateTime.now().subtract(const Duration(hours: 24));
-    _localRooms[cleanCode] = _localRooms[cleanCode]!
-        .where((r) => r.timestamp.isAfter(cutoff24h))
-        .take(100)
-        .toList();
-
-    _localControllers[cleanCode]!.add(List.unmodifiable(_localRooms[cleanCode]!));
   }
 
   /// Helper to generate a random 6-character uppercase room code

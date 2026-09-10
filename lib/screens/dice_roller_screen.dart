@@ -171,8 +171,10 @@ class _DiceRollerScreenState extends State<DiceRollerScreen> {
 
     // Send roll to room if connected
     final currentRoomCode = _roomService.activeRoomCode;
-    final currentPlayerName = _roomService.playerName;
-    if (currentRoomCode != null && currentPlayerName != null) {
+    final currentPlayerName = (_roomService.playerName != null && _roomService.playerName!.trim().isNotEmpty)
+        ? _roomService.playerName!.trim()
+        : 'Adventurer';
+    if (currentRoomCode != null && currentRoomCode.isNotEmpty) {
       final roomRoll = RoomRoll.fromDiceRollResult(
         id: '${DateTime.now().microsecondsSinceEpoch}_${secureRandom.nextInt(1000000)}',
         roomCode: currentRoomCode,
