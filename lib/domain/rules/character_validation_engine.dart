@@ -34,6 +34,42 @@ class ValidationIssue {
 class CharacterValidationEngine {
   const CharacterValidationEngine._();
 
+  /// Calculates overlapping proficiencies between Background, Species, and Class.
+  /// Returns an exact integer count of refunded wildcard skills to drive the UI state.
+  static int calculateSkillRefunds(CharacterDraft draft) {
+    final Set<SkillType> grantedPool = {};
+    int collisions = 0;
+
+    void applySkills(Iterable<SkillType> incoming) {
+      for (final skill in incoming) {
+        if (grantedPool.contains(skill)) {
+          collisions++;
+        } else {
+          grantedPool.add(skill);
+        }
+      }
+    }
+
+    applySkills(draft.backgroundRef?.grantedSkills ?? []);
+    applySkills(draft.speciesRef?.grantedSkills ?? []);
+    applySkills(draft.startingClassRef?.grantedSkills ?? []);
+
+    return collisions;
+  }
+
+  /// ASI Bifurcation Guard
+  static CharacterDraft reconcileAsiBifurcation(CharacterDraft draft) {
+    var updated = draft;
+    if (updated.rulesEdition == DmRulesEdition.v2014) {
+      // 2014: Strip background ASIs
+      updated = updated.copyWith(backgroundBonusScores: const AbilityScores.zero());
+    } else {
+      // 2024: Strip species ASIs
+      updated = updated.copyWith(speciesBonusScores: const AbilityScores.zero());
+    }
+    return updated;
+  }
+
   /// Reconciles draft invariants across ruleset shifts and prerequisite changes.
   static CharacterDraft reconcileDraft(CharacterDraft draft) {
     draft.reconcile();
@@ -44,7 +80,8 @@ class CharacterValidationEngine {
       updated = updated.copyWith(originFeats: const []);
     }
 
-    // Rule 2: Ensure background ability bonus count matches ruleset
+    // Rule 2: Enforce ASI source bifurcation
+    updated = reconcileAsiBifurcation(updated);
     if (updated.rulesEdition == DmRulesEdition.v2014) {
       // In 2014, bonuses come from Species/Race, not Background
       updated = updated.copyWith(bonusScores: const AbilityScores.zero());

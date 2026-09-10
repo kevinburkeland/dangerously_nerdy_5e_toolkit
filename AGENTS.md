@@ -23,8 +23,9 @@ dangerously_nerdy_5e_toolkit/
 │   ├── infrastructure/                 # Adapters, DTOs & Concrete I/O
 │   │   ├── adapters/                   # Transport & Time Adapters: LocalWifiTransportAdapter, WebRtcMeshAdapter, FirebaseSignalingAdapter, FirebaseFallbackAdapter, SystemNetworkTimePort
 │   │   ├── di/                         # Service Locator: injection_container.dart (sl)
-│   │   ├── dtos/                       # CharacterDto, CampaignProfileDto, AnimatedObjectDto
+│   │   ├── dtos/                       # CharacterDto, SpellDto, CampaignProfileDto, AnimatedObjectDto
 │   │   │   └── crdt/                   # HybridLogicalClockDto, CrdtLwwRegisterDto, CrdtOrSetDto
+│   │   ├── mappers/                    # Anti-Corruption Layer Mappers: HomebrewIngestor
 │   │   ├── repositories/               # LocalCampaignRepository, LocalCharacterRepository
 │   │   └── resolvers/                  # CharacterTelemetryResolver
 │   ├── presentation/
@@ -40,7 +41,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,474 passing tests)
+├── test/                               # Comprehensive test suite (1,482 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests

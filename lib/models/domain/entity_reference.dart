@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'core_types.dart';
+import 'character_models.dart' show SkillType;
 
 /// Base contract for all identifiable domain entities.
 abstract class DomainEntity {
@@ -43,12 +44,14 @@ class EntityReference<T extends DomainEntity> {
   final String slug;
   final RulesetVersion? rulesetPreferred;
   final String displayName;
+  final List<SkillType> grantedSkills;
 
   const EntityReference({
     required this.refType,
     required this.slug,
     required this.displayName,
     this.rulesetPreferred,
+    this.grantedSkills = const [],
   });
 
   Map<String, dynamic> toMap() => {
@@ -56,6 +59,7 @@ class EntityReference<T extends DomainEntity> {
         'slug': slug,
         'rulesetPreferred': rulesetPreferred?.name,
         'displayName': displayName,
+        'grantedSkills': grantedSkills.map((s) => s.name).toList(),
       };
 
   factory EntityReference.fromMap(Map<String, dynamic> map) {
@@ -74,11 +78,27 @@ class EntityReference<T extends DomainEntity> {
       );
     }
 
+    final rawSkills = map['grantedSkills'] as List?;
+    final skills = <SkillType>[];
+    if (rawSkills != null) {
+      for (final s in rawSkills) {
+        final skStr = s.toString();
+        final found = SkillType.values.cast<SkillType?>().firstWhere(
+          (val) => val?.name == skStr,
+          orElse: () => null,
+        );
+        if (found != null) {
+          skills.add(found);
+        }
+      }
+    }
+
     return EntityReference<T>(
       refType: refType,
       slug: map['slug']?.toString() ?? '',
       displayName: map['displayName']?.toString() ?? map['slug']?.toString() ?? '',
       rulesetPreferred: ruleset,
+      grantedSkills: skills,
     );
   }
 
@@ -90,14 +110,16 @@ class EntityReference<T extends DomainEntity> {
           refType == other.refType &&
           slug == other.slug &&
           rulesetPreferred == other.rulesetPreferred &&
-          displayName == other.displayName;
+          displayName == other.displayName &&
+          listEquals(grantedSkills, other.grantedSkills);
 
   @override
   int get hashCode =>
       refType.hashCode ^
       slug.hashCode ^
       rulesetPreferred.hashCode ^
-      displayName.hashCode;
+      displayName.hashCode ^
+      Object.hashAll(grantedSkills);
 
   @override
   String toString() => 'Ref<$refType>($slug, pref: $rulesetPreferred)';

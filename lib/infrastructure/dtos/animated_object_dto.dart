@@ -26,6 +26,7 @@ class AnimatedObjectDto {
   final String? specialTrait;
   final String marker;
   final int? customAccentColor;
+  final Map<String, dynamic> unparsedPayload;
 
   const AnimatedObjectDto({
     required this.id,
@@ -48,6 +49,7 @@ class AnimatedObjectDto {
     this.specialTrait,
     this.marker = 'standard',
     this.customAccentColor,
+    this.unparsedPayload = const {},
   });
 
   /// Factory creating a DTO from a pure domain [AnimatedObjectInstance].
@@ -102,6 +104,36 @@ class AnimatedObjectDto {
 
   /// Deserializes a raw Map payload into [AnimatedObjectDto] with clamping safety.
   factory AnimatedObjectDto.fromMap(Map<String, dynamic> map) {
+    const knownKeys = {
+      'id',
+      'name',
+      'size',
+      'currentHp',
+      'maxHp',
+      'tempHp',
+      'damageType',
+      'isSilvered',
+      'customAc',
+      'customAttackBonus',
+      'customDamageDiceCount',
+      'customDamageDiceSides',
+      'customDamageBonus',
+      'secondaryDamageDiceCount',
+      'secondaryDamageDiceSides',
+      'secondaryDamageType',
+      'hasPackTactics',
+      'specialTrait',
+      'marker',
+      'customAccentColor',
+    };
+
+    final unparsed = <String, dynamic>{};
+    map.forEach((key, value) {
+      if (!knownKeys.contains(key)) {
+        unparsed[key] = value;
+      }
+    });
+
     final maxHp = ((map['maxHp'] as num?)?.toInt() ?? 10).clamp(1, 9999);
     final curHp = ((map['currentHp'] as num?)?.toInt() ?? maxHp).clamp(0, maxHp);
     final tempHp = ((map['tempHp'] as num?)?.toInt() ?? 0).clamp(0, 9999);
@@ -135,6 +167,7 @@ class AnimatedObjectDto {
       specialTrait: map['specialTrait']?.toString(),
       marker: markerName,
       customAccentColor: legacyColor,
+      unparsedPayload: unparsed,
     );
   }
 
@@ -163,6 +196,13 @@ class AnimatedObjectDto {
     if (customAccentColor != null) {
       map['customAccentColor'] = customAccentColor;
     }
+
+    unparsedPayload.forEach((key, value) {
+      if (!map.containsKey(key)) {
+        map[key] = value;
+      }
+    });
+
     return map;
   }
 

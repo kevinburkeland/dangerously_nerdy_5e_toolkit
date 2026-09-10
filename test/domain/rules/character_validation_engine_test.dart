@@ -106,5 +106,93 @@ void main() {
       final issues = CharacterValidationEngine.validateDraft(draft);
       expect(issues, isEmpty);
     });
+
+    test('Skill Overlap Resolver: calculateSkillRefunds accurately detects overlaps across sources', () {
+      final draftNoCollision = CharacterDraft(
+        backgroundRef: const EntityReference(
+          refType: EntityType.background,
+          slug: 'acolyte',
+          displayName: 'Acolyte',
+          grantedSkills: [SkillType.insight, SkillType.religion],
+        ),
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+          grantedSkills: [SkillType.perception],
+        ),
+        startingClassRef: const EntityReference(
+          refType: EntityType.classDefinition,
+          slug: 'fighter',
+          displayName: 'Fighter',
+          grantedSkills: [SkillType.athletics],
+        ),
+      );
+
+      expect(CharacterValidationEngine.calculateSkillRefunds(draftNoCollision), equals(0));
+
+      // 1 Collision: Elf (Perception) + Sailor (Perception, Athletics)
+      final draftOneCollision = CharacterDraft(
+        backgroundRef: const EntityReference(
+          refType: EntityType.background,
+          slug: 'sailor',
+          displayName: 'Sailor',
+          grantedSkills: [SkillType.athletics, SkillType.perception],
+        ),
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+          grantedSkills: [SkillType.perception],
+        ),
+      );
+      expect(CharacterValidationEngine.calculateSkillRefunds(draftOneCollision), equals(1));
+
+      // 2 Collisions: Background (Perception, Athletics) + Species (Perception) + Class (Athletics)
+      final draftTwoCollisions = CharacterDraft(
+        backgroundRef: const EntityReference(
+          refType: EntityType.background,
+          slug: 'sailor',
+          displayName: 'Sailor',
+          grantedSkills: [SkillType.athletics, SkillType.perception],
+        ),
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+          grantedSkills: [SkillType.perception],
+        ),
+        startingClassRef: const EntityReference(
+          refType: EntityType.classDefinition,
+          slug: 'fighter',
+          displayName: 'Fighter',
+          grantedSkills: [SkillType.athletics],
+        ),
+      );
+      expect(CharacterValidationEngine.calculateSkillRefunds(draftTwoCollisions), equals(2));
+    });
+
+    test('ASI Bifurcation: 2014 strips background ASIs while 2024 strips species ASIs', () {
+      final initialDraft2014 = CharacterDraft(
+        rulesEdition: DmRulesEdition.v2014,
+        backgroundBonusScores: const AbilityScores(strength: 2, constitution: 1),
+        speciesBonusScores: const AbilityScores(dexterity: 2),
+      );
+
+      final bifurcated2014 = CharacterValidationEngine.reconcileAsiBifurcation(initialDraft2014);
+      expect(bifurcated2014.backgroundBonusScores, equals(const AbilityScores.zero()));
+      expect(bifurcated2014.speciesBonusScores.dexterity, equals(2));
+
+      final initialDraft2024 = CharacterDraft(
+        rulesEdition: DmRulesEdition.v2024,
+        backgroundBonusScores: const AbilityScores(strength: 2, constitution: 1),
+        speciesBonusScores: const AbilityScores(dexterity: 2),
+      );
+
+      final bifurcated2024 = CharacterValidationEngine.reconcileAsiBifurcation(initialDraft2024);
+      expect(bifurcated2024.speciesBonusScores, equals(const AbilityScores.zero()));
+      expect(bifurcated2024.backgroundBonusScores.strength, equals(2));
+      expect(bifurcated2024.backgroundBonusScores.constitution, equals(1));
+    });
   });
 }

@@ -27,6 +27,8 @@ class CharacterDraft {
   Map<SkillType, SkillProficiencyLevel> selectedSkills;
 
   // Extended compilation properties
+  AbilityScores backgroundBonusScores;
+  AbilityScores speciesBonusScores;
   AbilityScores bonusScores;
   Set<AbilityType> savingThrowProficiencies;
   List<String> toolProficiencies;
@@ -50,6 +52,8 @@ class CharacterDraft {
     this.startingClassHitDie,
     this.baseScores,
     Map<SkillType, SkillProficiencyLevel>? selectedSkills,
+    this.backgroundBonusScores = const AbilityScores.zero(),
+    this.speciesBonusScores = const AbilityScores.zero(),
     this.bonusScores = const AbilityScores.zero(),
     Set<AbilityType>? savingThrowProficiencies,
     List<String>? toolProficiencies,
@@ -83,7 +87,10 @@ class CharacterDraft {
       if (originFeats.isNotEmpty) {
         originFeats.clear();
       }
+      backgroundBonusScores = const AbilityScores.zero();
       bonusScores = const AbilityScores.zero();
+    } else {
+      speciesBonusScores = const AbilityScores.zero();
     }
   }
 
@@ -96,6 +103,8 @@ class CharacterDraft {
     String? startingClassHitDie,
     AbilityScores? baseScores,
     Map<SkillType, SkillProficiencyLevel>? selectedSkills,
+    AbilityScores? backgroundBonusScores,
+    AbilityScores? speciesBonusScores,
     AbilityScores? bonusScores,
     Set<AbilityType>? savingThrowProficiencies,
     List<String>? toolProficiencies,
@@ -119,6 +128,8 @@ class CharacterDraft {
       startingClassHitDie: startingClassHitDie ?? this.startingClassHitDie,
       baseScores: baseScores ?? this.baseScores,
       selectedSkills: selectedSkills ?? this.selectedSkills,
+      backgroundBonusScores: backgroundBonusScores ?? this.backgroundBonusScores,
+      speciesBonusScores: speciesBonusScores ?? this.speciesBonusScores,
       bonusScores: bonusScores ?? this.bonusScores,
       savingThrowProficiencies: savingThrowProficiencies ?? this.savingThrowProficiencies,
       toolProficiencies: toolProficiencies ?? this.toolProficiencies,
