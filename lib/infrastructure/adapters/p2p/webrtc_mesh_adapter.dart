@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import '../../../application/services/cascading_transport_router.dart' show TransportState;
 import '../../../domain/ports/i_p2p_transport_port.dart';
 import 'firebase_signaling_adapter.dart';
 import 'signaling_message.dart';
@@ -59,6 +60,13 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
 
   /// Ephemeral signaling adapter managing WebRTC handshakes.
   FirebaseSignalingAdapter? get signalingAdapter => _signalingAdapter;
+
+  @override
+  TransportState get currentState =>
+      _isDisposed ? TransportState.offline : (_dataChannels.isNotEmpty ? TransportState.webRtc : TransportState.connecting);
+
+  @override
+  Map<String, int> get peerLastSeen => peerLastActiveTimestamps;
 
   /// Map of connected peer node IDs to their last active timestamp (epoch ms).
   Map<String, int> get peerLastActiveTimestamps =>

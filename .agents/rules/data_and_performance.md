@@ -29,3 +29,12 @@ Never trust raw numeric values from JSON or user input:
   - When ingesting multi-megabyte 5etools or homebrew compendiums, offload parsing to background isolates (`compute()` or dedicated isolates) to maintain 60/120fps UI responsiveness.
 - **Search Pre-computation:**
   - Spellbook and compendium searches must use tokenized search indices rather than filtering full text collections on every keystroke.
+
+## 4. Single-Source Persistence & Debounced Disk I/O
+
+- **Single Storage Engine Truth:**
+  - Repositories (`LocalCampaignRepository`, `LocalCharacterRepository`) must persist strictly to Hive/IndexedDB boxes (`AppDatabaseService`). Dual-writing to `SharedPreferences` during regular saves is prohibited.
+  - `SharedPreferences` reads are strictly isolated as legacy fallback inside `loadAllProfiles()` / `loadCharacters()` when the primary database box is empty.
+- **Debounced Disk Writes & In-Memory Caching:**
+  - Rapid character mutations must update an in-memory cache immediately and debounce disk persistence via `AppServices.instance.debouncedStorage.scheduleWrite` (300ms default) to avoid main-thread I/O bottlenecks.
+  - When widget tests trigger state changes, ensure test frames advance past debounce durations (`pump(const Duration(milliseconds: 400))`) and always invoke `AppServices.reset()` in `tearDown()` to cancel pending debounce timers.

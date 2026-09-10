@@ -29,7 +29,7 @@ This repository strictly follows **Domain-Driven Design (DDD)** combined with **
 The pure Dart center of the application.
 - **`models/`**: Immutable business entities (e.g., `AnimatedObject`, `CampaignProfile`, `WeaponMastery`).
 - **`models/value_objects/`**: Immutable value objects (e.g., `HitPoints`).
-- **`ports/`**: Abstract interfaces defining domain requirements (e.g., `ICampaignRepository`, `ICharacterRepository`, `IPartySyncPort`).
+- **`ports/`**: Abstract interfaces defining domain requirements (e.g., `ICampaignRepository`, `ICharacterRepository`, `IP2pTransportPort`, `INetworkTimePort`).
 - **`rules/`**: Pure mechanical logic contracts (e.g., `RulesetContext`).
 - **`simulation/`**: Combat simulation contracts and precomputed attack profiles (`DprSimulator`, `PrecomputedAttack`).
 - **`crdt/`**: Distributed data structures (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`).

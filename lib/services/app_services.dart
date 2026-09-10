@@ -3,6 +3,7 @@ import 'importers/community_compendium_importer_service.dart';
 import 'logging_service.dart';
 import 'minion_session_service.dart';
 import 'persistence/app_backup_service.dart';
+import 'persistence/app_database_service.dart';
 import 'persistence/campaign_profile_service.dart';
 import 'persistence/debounced_storage_service.dart';
 import 'persistence/dm_backup_service.dart';
@@ -128,6 +129,8 @@ class AppServices {
     _instance.presetService.clearCacheForTesting();
     _instance.minionSession.clearCacheForTesting();
     _instance.campaignProfileService.clearCacheForTesting();
+    // ignore: invalid_use_of_visible_for_testing_member
+    AppDatabaseService.instance.resetForTesting();
     _instance = AppServices._();
   }
 }

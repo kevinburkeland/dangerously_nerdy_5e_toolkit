@@ -96,12 +96,8 @@ class RoomSyncOrchestrator {
 
   /// Returns the current telemetry snapshot synchronously.
   RoomConnectionTelemetry get currentTelemetry => RoomConnectionTelemetry(
-        state: transportPort is CascadingTransportRouter
-            ? (transportPort as CascadingTransportRouter).currentState
-            : TransportState.connecting,
-        peerCount: transportPort is CascadingTransportRouter
-            ? (transportPort as CascadingTransportRouter).peerLastSeen.length
-            : 0,
+        state: transportPort.currentState,
+        peerCount: transportPort.peerLastSeen.length,
         isHost: isHost,
       );
 

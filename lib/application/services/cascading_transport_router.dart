@@ -56,8 +56,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
     this.onPeerPruned,
   });
 
+  @override
   TransportState get currentState => _currentState;
   Stream<TransportState> get onStateChanged => _stateController.stream;
+  @override
   Map<String, int> get peerLastSeen => Map.unmodifiable(_peerLastSeen);
   IP2pTransportPort? get activeAdapter => _activeAdapter;
 

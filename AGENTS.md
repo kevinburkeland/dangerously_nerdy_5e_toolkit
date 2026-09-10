@@ -15,13 +15,13 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── crdt/                       # Distributed state: HybridLogicalClock, CrdtLwwRegister, CrdtOrSet
 │   │   ├── models/                     # Immutable entities: AnimatedObject, CampaignProfile, WeaponMastery
 │   │   │   └── value_objects/          # Value objects: HitPoints
-│   │   ├── ports/                      # Abstract interfaces: ICampaignRepository, ICharacterRepository, IPartySyncPort, INetworkTimePort
+│   │   ├── ports/                      # Abstract interfaces: ICampaignRepository, ICharacterRepository, IP2pTransportPort, INetworkTimePort
 │   │   ├── rules/                      # Pure mechanical contracts: RulesetContext
 │   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack
 │   ├── application/                    # Use Cases & Orchestration
 │   │   └── services/                   # CascadingTransportRouter, RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator
 │   ├── infrastructure/                 # Adapters, DTOs & Concrete I/O
-│   │   ├── adapters/                   # Transport & Time Adapters: LocalWifiAdapter, WebRtcMeshAdapter, FirebaseSignalingAdapter, FirebaseFallbackAdapter, SystemNetworkTimePort
+│   │   ├── adapters/                   # Transport & Time Adapters: LocalWifiTransportAdapter, WebRtcMeshAdapter, FirebaseSignalingAdapter, FirebaseFallbackAdapter, SystemNetworkTimePort
 │   │   ├── di/                         # Service Locator: injection_container.dart (sl)
 │   │   ├── dtos/                       # CharacterDto, CampaignProfileDto, AnimatedObjectDto
 │   │   │   └── crdt/                   # HybridLogicalClockDto, CrdtLwwRegisterDto, CrdtOrSetDto
@@ -40,7 +40,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,361 passing tests)
+├── test/                               # Comprehensive test suite (1,464 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests

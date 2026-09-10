@@ -65,15 +65,13 @@ class LocalCampaignRepository implements ICampaignRepository {
   Future<List<CampaignProfile>> loadAllProfiles() async {
     try {
       List<String> indexList = [];
-      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
-        final dbIndex = _db.get(AppDatabaseService.boxCampaignProfiles, profileIndexKey);
-        if (dbIndex is List) {
-          indexList = dbIndex.map((e) => e.toString()).toList();
-        }
+      final dbIndex = _db.get(AppDatabaseService.boxCampaignProfiles, profileIndexKey);
+      if (dbIndex is List) {
+        indexList = dbIndex.map((e) => e.toString()).toList();
       }
 
-      final prefs = await SharedPreferences.getInstance();
       if (indexList.isEmpty) {
+        final prefs = await SharedPreferences.getInstance();
         indexList = prefs.getStringList(profileIndexKey) ?? <String>[];
       }
 
@@ -81,13 +79,11 @@ class LocalCampaignRepository implements ICampaignRepository {
       _memoryCache.clear();
 
       for (final id in indexList) {
-        String? rawJson;
-        if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
-          rawJson = _db.get(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id')?.toString();
-        }
+        String? rawJson = _db.get(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id')?.toString();
         if (rawJson == null || rawJson.isEmpty) {
+          final prefs = await SharedPreferences.getInstance();
           rawJson = prefs.getString('$profileKeyPrefix$id');
-          if (rawJson != null && rawJson.isNotEmpty && _db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
+          if (rawJson != null && rawJson.isNotEmpty) {
             await _db.put(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id', rawJson);
           }
         }
@@ -163,11 +159,11 @@ class LocalCampaignRepository implements ICampaignRepository {
       }
 
       // Load active profile ID
-      String? activeId;
-      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
-        activeId = _db.get(AppDatabaseService.boxCampaignProfiles, activeProfileIdKey)?.toString();
+      String? activeId = _db.get(AppDatabaseService.boxCampaignProfiles, activeProfileIdKey)?.toString();
+      if (activeId == null || activeId.isEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        activeId = prefs.getString(activeProfileIdKey);
       }
-      activeId ??= prefs.getString(activeProfileIdKey);
 
       if (activeId != null && _memoryCache.containsKey(activeId)) {
         _activeProfileId = activeId;
@@ -255,11 +251,7 @@ class LocalCampaignRepository implements ICampaignRepository {
     _unparsedCache.remove(id);
 
     try {
-      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
-        await _db.delete(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id');
-      }
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('$profileKeyPrefix$id');
+      await _db.delete(AppDatabaseService.boxCampaignProfiles, '$profileKeyPrefix$id');
     } catch (_) {}
 
     await _persistIndex();
@@ -277,11 +269,7 @@ class LocalCampaignRepository implements ICampaignRepository {
   Future<void> setActiveProfileId(String id) async {
     _activeProfileId = id;
     try {
-      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
-        await _db.put(AppDatabaseService.boxCampaignProfiles, activeProfileIdKey, id);
-      }
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(activeProfileIdKey, id);
+      await _db.put(AppDatabaseService.boxCampaignProfiles, activeProfileIdKey, id);
     } catch (_) {}
     _emitState();
   }
@@ -295,18 +283,11 @@ class LocalCampaignRepository implements ICampaignRepository {
         unparsedMinions: cachedUnparsed?.unparsedMinions ?? const [],
       );
       final jsonStr = dto.toJson();
-      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
-        await _db.put(
-          AppDatabaseService.boxCampaignProfiles,
-          '$profileKeyPrefix${profile.id}',
-          jsonStr,
-        );
-      }
-
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('$profileKeyPrefix${profile.id}', jsonStr);
-      } catch (_) {}
+      await _db.put(
+        AppDatabaseService.boxCampaignProfiles,
+        '$profileKeyPrefix${profile.id}',
+        jsonStr,
+      );
     } catch (e) {
       LoggingService().logWarning('Failed to persist campaign profile: $e', e);
     }
@@ -315,15 +296,11 @@ class LocalCampaignRepository implements ICampaignRepository {
   Future<void> _persistIndex() async {
     try {
       final idList = _memoryCache.keys.toList();
-      if (_db.isBoxOpen(AppDatabaseService.boxCampaignProfiles)) {
-        await _db.put(
-          AppDatabaseService.boxCampaignProfiles,
-          profileIndexKey,
-          idList,
-        );
-      }
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(profileIndexKey, idList);
+      await _db.put(
+        AppDatabaseService.boxCampaignProfiles,
+        profileIndexKey,
+        idList,
+      );
     } catch (e) {
       LoggingService().logWarning('Failed to persist campaign index: $e', e);
     }

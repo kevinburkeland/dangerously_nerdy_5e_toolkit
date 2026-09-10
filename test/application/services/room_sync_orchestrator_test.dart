@@ -25,6 +25,12 @@ class MockTransportPort implements IP2pTransportPort {
   bool isDisconnected = false;
 
   @override
+  TransportState currentState = TransportState.connecting;
+
+  @override
+  Map<String, int> peerLastSeen = {};
+
+  @override
   Future<void> broadcastPayload(String jsonPayload) async {
     if (broadcastShouldThrow) {
       throw StateError('Simulated transport broadcast failure');
@@ -410,6 +416,25 @@ void main() {
 
       await sub.cancel();
       genericOrchestrator.stopSynchronization();
+    });
+
+    test('Interface Polymorphism Verification: generic mock IP2pTransportPort directly drives currentTelemetry', () {
+      final genericMock = MockTransportPort()
+        ..currentState = TransportState.localWifi
+        ..peerLastSeen = {'peerA': 1000, 'peerB': 2000};
+
+      final genericOrchestrator = RoomSyncOrchestrator(
+        transportPort: genericMock,
+        campaignRepo: mockRepo,
+        reconciliationService: reconciliationService,
+        clockSyncService: clockSyncService,
+      );
+
+      // Verify that currentTelemetry accurately reflects port state without casting
+      final telemetry = genericOrchestrator.currentTelemetry;
+      expect(telemetry.state, equals(TransportState.localWifi));
+      expect(telemetry.peerCount, equals(2));
+      expect(telemetry.isOffline, isFalse);
     });
 
     test('Default telemetryInterval is 2 seconds', () {

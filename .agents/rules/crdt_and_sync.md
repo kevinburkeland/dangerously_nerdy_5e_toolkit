@@ -84,3 +84,15 @@ Located at `lib/application/services/cascading_transport_router.dart`:
 - **Failover Step-Down & Payload Routing:**
   - Broadcast failures on the active adapter invoke `_stepDownWaterfall()`, cleanly disconnecting the failing adapter and activating the next tier down before retrying transmission.
   - `checkHeartbeats()` continuously monitors peer activity against `heartbeatTtl` (6 seconds); if active peers drop to zero in Tier 1 or Tier 2, the router automatically steps down to Tier 3 cloud relay.
+
+## 9. IP2pTransportPort Unification & Interface Polymorphism
+Located at `lib/domain/ports/i_p2p_transport_port.dart`:
+- **Single Domain Transport Contract:**
+  - `IP2pTransportPort` is the unified domain interface for all real-time mesh networking and state propagation.
+  - Enriched with `TransportState get currentState;` and `Map<String, int> get peerLastSeen;`.
+- **Zero Downcasting Invariant:**
+  - Downcasting `transportPort as CascadingTransportRouter` is strictly prohibited.
+  - Application services (`RoomSyncOrchestrator`) must interact exclusively with the polymorphic `IP2pTransportPort` contract.
+- **IPartySyncPort Deprecation:**
+  - `IPartySyncPort` is deprecated (`@Deprecated('Use RoomSyncOrchestrator and IP2pTransportPort instead.')`).
+  - DI container (`injection_container.dart`) registers `IP2pTransportPort -> CascadingTransportRouter`, and consumers inject `RoomSyncOrchestrator` and `IP2pTransportPort`.

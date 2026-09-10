@@ -7,6 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_sheet_view.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/app_services.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +94,11 @@ void main() {
       controller = CharacterSheetController(character: baseCharacter);
     });
 
+    tearDown(() {
+      controller.dispose();
+      AppServices.reset();
+    });
+
     testWidgets('Renders character name, class level, vital HUD cards, and ability ribbon', (tester) async {
       tester.view.physicalSize = const Size(1200, 1000);
       tester.view.devicePixelRatio = 1.0;
@@ -146,6 +152,7 @@ void main() {
       await tester.tap(equipButton.first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
 
       // Check controller and UI AC
       expect(controller.stats.armorClass, equals(18));
@@ -171,6 +178,7 @@ void main() {
 
       await tester.tap(inspirationChip);
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(controller.hasInspiration, isTrue);
@@ -203,6 +211,7 @@ void main() {
 
       await tester.tap(attuneButton);
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('1 / 3 Attuned'), findsOneWidget);

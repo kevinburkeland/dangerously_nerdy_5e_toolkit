@@ -105,7 +105,7 @@ Future<void> initServiceLocator({
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);
   } else {
     sl.registerLazySingleton<CascadingTransportRouter>(() => CascadingTransportRouter(
-          localWifiAdapter: LocalWifiAdapter(),
+          localWifiAdapter: LocalWifiTransportAdapter(),
           webRtcAdapter: WebRtcMeshAdapter(signalingAdapter: FirebaseSignalingAdapter()),
           firebaseFallbackAdapter: FirebaseFallbackAdapter(),
         ));

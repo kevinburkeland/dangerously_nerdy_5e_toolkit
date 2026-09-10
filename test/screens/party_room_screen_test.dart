@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/party_room_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart' show TransportState;
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
@@ -21,6 +22,12 @@ import 'package:dangerously_nerdy_5e_toolkit/presentation/widgets/room_connectio
 class _MockSyncTransport implements IP2pTransportPort {
   final StreamController<String> _incoming = StreamController<String>.broadcast();
   bool disconnected = false;
+
+  @override
+  TransportState currentState = TransportState.connecting;
+
+  @override
+  Map<String, int> peerLastSeen = const {};
 
   @override
   Future<void> broadcastPayload(String jsonPayload) async {}

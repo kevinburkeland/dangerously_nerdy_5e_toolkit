@@ -3,6 +3,9 @@ import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../models/party/party_session_state.dart';
 
 /// Port (interface) defining remote room synchronization operations in the Domain layer.
+///
+/// Deprecated in favor of [RoomSyncOrchestrator] and [IP2pTransportPort].
+@Deprecated('Use RoomSyncOrchestrator and IP2pTransportPort instead.')
 abstract class IPartySyncPort {
   /// Creates a new campaign room on the remote network and returns the generated room code.
   Future<String> createCampaignRoom(String roomName, String dmPasskey);

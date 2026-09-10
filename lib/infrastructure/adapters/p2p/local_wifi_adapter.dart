@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../application/services/cascading_transport_router.dart' show TransportState;
 import '../../../domain/ports/i_p2p_transport_port.dart';
 
 /// Transport adapter for Tier 1 Local Wi-Fi / LAN communication.
@@ -28,6 +29,13 @@ class LocalWifiAdapter implements IP2pTransportPort {
   bool get isInitialized => _isInitialized;
   String? get roomCode => _roomCode;
   String? get localNodeId => _localNodeId;
+
+  @override
+  TransportState get currentState =>
+      _isInitialized ? TransportState.localWifi : TransportState.offline;
+
+  @override
+  Map<String, int> get peerLastSeen => const {};
 
   @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
@@ -78,3 +86,13 @@ class LocalWifiAdapter implements IP2pTransportPort {
     await _incomingPayloadsController.close();
   }
 }
+
+/// Concrete adapter class representing the Tier 1 Local Wi-Fi transport adapter.
+class LocalWifiTransportAdapter extends LocalWifiAdapter {
+  LocalWifiTransportAdapter({
+    super.onInitialize,
+    super.onBroadcast,
+    super.onDisconnect,
+  });
+}
+

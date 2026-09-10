@@ -20,6 +20,12 @@ class MockTransportAdapter implements IP2pTransportPort {
       StreamController<String>.broadcast();
 
   @override
+  TransportState currentState = TransportState.connecting;
+
+  @override
+  Map<String, int> peerLastSeen = const {};
+
+  @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
     if (initializeShouldThrow) {
       throw StateError('Simulated network initialization failure');

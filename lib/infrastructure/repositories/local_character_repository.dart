@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/ports/i_character_repository.dart';
 import '../../models/domain/character_models.dart';
+import '../../services/app_services.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../dtos/character_dto.dart';
@@ -13,28 +14,35 @@ class LocalCharacterRepository implements ICharacterRepository {
   static const String _kActiveCharacterIdKey = 'saved_active_character_id_v1';
 
   final AppDatabaseService _db;
+  List<Character>? _cachedRoster;
 
   LocalCharacterRepository({AppDatabaseService? db})
       : _db = db ?? AppDatabaseService.instance;
 
   @override
   Future<List<Character>> loadCharacters() async {
+    if (_cachedRoster != null) {
+      return List<Character>.from(_cachedRoster!);
+    }
+
     try {
       // 1. Check local IndexedDB / Hive database
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
-        if (raw != null) {
-          if (raw is List) {
-            return raw
-                .map((item) => CharacterDto.fromMap(
-                    Map<String, dynamic>.from(item is Map ? item : json.decode(item.toString()) as Map)).toDomain())
-                .toList();
-          } else if (raw is String && raw.isNotEmpty) {
-            final decoded = json.decode(raw) as List<dynamic>;
-            return decoded
-                .map((item) => CharacterDto.fromMap(Map<String, dynamic>.from(item as Map)).toDomain())
-                .toList();
-          }
+      final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
+      if (raw != null) {
+        if (raw is List) {
+          final roster = raw
+              .map((item) => CharacterDto.fromMap(
+                  Map<String, dynamic>.from(item is Map ? item : json.decode(item.toString()) as Map)).toDomain())
+              .toList();
+          _cachedRoster = List<Character>.from(roster);
+          return roster;
+        } else if (raw is String && raw.isNotEmpty) {
+          final decoded = json.decode(raw) as List<dynamic>;
+          final roster = decoded
+              .map((item) => CharacterDto.fromMap(Map<String, dynamic>.from(item as Map)).toDomain())
+              .toList();
+          _cachedRoster = List<Character>.from(roster);
+          return roster;
         }
       }
 
@@ -47,13 +55,8 @@ class LocalCharacterRepository implements ICharacterRepository {
             .map((item) => CharacterDto.fromMap(Map<String, dynamic>.from(item as Map)).toDomain())
             .toList();
         if (list.isNotEmpty) {
-          if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-            await _db.put(
-              AppDatabaseService.boxCharacters,
-              _kSavedRosterKey,
-              list.map((c) => CharacterDto.fromDomain(c).toMap()).toList(),
-            );
-          }
+          await _persistRosterToDisk(list);
+          _cachedRoster = List<Character>.from(list);
           return list;
         }
       }
@@ -63,6 +66,7 @@ class LocalCharacterRepository implements ICharacterRepository {
         e,
       );
     }
+    _cachedRoster = <Character>[];
     return <Character>[];
   }
 
@@ -86,29 +90,26 @@ class LocalCharacterRepository implements ICharacterRepository {
     return ids.map((id) => map[id]).whereType<Character>().toList();
   }
 
-  @override
-  Future<void> saveRoster(List<Character> roster) async {
+  Future<void> _persistRosterToDisk(List<Character> roster) async {
     try {
       final listMaps = roster.map((c) => CharacterDto.fromDomain(c).toMap()).toList();
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        await _db.put(
-          AppDatabaseService.boxCharacters,
-          _kSavedRosterKey,
-          listMaps,
-        );
-      }
-
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final encoded = json.encode(listMaps);
-        await prefs.setString(_kSavedRosterKey, encoded);
-      } catch (_) {}
+      await _db.put(
+        AppDatabaseService.boxCharacters,
+        _kSavedRosterKey,
+        listMaps,
+      );
     } catch (e) {
       LoggingService().logWarning(
         'Failed to save characters roster to repository: $e',
         e,
       );
     }
+  }
+
+  @override
+  Future<void> saveRoster(List<Character> roster) async {
+    _cachedRoster = List<Character>.from(roster);
+    await _persistRosterToDisk(roster);
   }
 
   @override
@@ -123,7 +124,15 @@ class LocalCharacterRepository implements ICharacterRepository {
     } else {
       roster.add(character);
     }
-    await saveRoster(roster);
+
+    _cachedRoster = List<Character>.from(roster);
+
+    // Save in-memory cache and debounce disk I/O
+    AppServices.instance.debouncedStorage.scheduleWrite(
+      'save_character_roster',
+      () => _persistRosterToDisk(roster),
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   @override
@@ -139,7 +148,15 @@ class LocalCharacterRepository implements ICharacterRepository {
         roster.add(char);
       }
     }
-    await saveRoster(roster);
+
+    _cachedRoster = List<Character>.from(roster);
+
+    // Save in-memory cache and debounce disk I/O
+    AppServices.instance.debouncedStorage.scheduleWrite(
+      'save_character_roster',
+      () => _persistRosterToDisk(roster),
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   @override
@@ -148,17 +165,16 @@ class LocalCharacterRepository implements ICharacterRepository {
     roster.removeWhere(
       (c) => c.id.slug == characterId || c.name == characterId,
     );
-    await saveRoster(roster);
+    _cachedRoster = List<Character>.from(roster);
+    await _persistRosterToDisk(roster);
   }
 
   @override
   Future<String?> loadActiveCharacterId() async {
     try {
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        final id = _db.get(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
-        if (id != null && id.toString().isNotEmpty) {
-          return id.toString();
-        }
+      final id = _db.get(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
+      if (id != null && id.toString().isNotEmpty) {
+        return id.toString();
       }
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_kActiveCharacterIdKey);
@@ -170,22 +186,15 @@ class LocalCharacterRepository implements ICharacterRepository {
   @override
   Future<void> saveActiveCharacterId(String id) async {
     try {
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        await _db.put(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey, id);
-      }
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_kActiveCharacterIdKey, id);
+      await _db.put(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey, id);
     } catch (_) {}
   }
 
   @override
   Future<void> clearActiveCharacterId() async {
     try {
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        await _db.delete(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
-      }
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_kActiveCharacterIdKey);
+      await _db.delete(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
     } catch (_) {}
   }
 }
+

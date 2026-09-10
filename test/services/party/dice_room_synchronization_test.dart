@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart' show TransportState;
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
@@ -17,6 +18,12 @@ import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 class MockP2pTransport implements IP2pTransportPort {
   final List<String> broadcasted = [];
   final StreamController<String> _incomingController = StreamController<String>.broadcast();
+
+  @override
+  TransportState get currentState => TransportState.webRtc;
+
+  @override
+  Map<String, int> get peerLastSeen => const {};
 
   @override
   Future<void> broadcastPayload(String jsonPayload) async {

@@ -2,14 +2,13 @@ import 'package:flutter/foundation.dart';
 import '../application/services/combat_encounter_service.dart';
 import '../domain/ports/i_campaign_repository.dart';
 import '../domain/ports/i_character_repository.dart';
-import '../infrastructure/repositories/local_campaign_repository.dart';
-import '../infrastructure/repositories/local_character_repository.dart';
 import '../models/animated_object.dart';
 import '../models/campaign_profile.dart';
 import '../models/dm_screen_data.dart';
 import '../models/domain/character_models.dart';
 import '../models/domain/session_graph_models.dart';
 import '../models/party/party_purse.dart';
+import '../services/app_services.dart';
 import '../services/persistence/campaign_profile_service.dart';
 import '../services/persistence/character_persistence_service.dart';
 import '../infrastructure/dtos/character_telemetry_dto.dart';
@@ -42,14 +41,28 @@ class DmDashboardController extends ChangeNotifier {
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
-  })  : _campaignProfileService =
-            campaignRepository ?? campaignProfileService ?? LocalCampaignRepository(),
-        _characterPersistenceService =
-            characterRepository ?? characterPersistenceService ?? LocalCharacterRepository(),
+  })  : _campaignProfileService = campaignRepository ??
+            campaignProfileService ??
+            (sl.isRegistered<ICampaignRepository>()
+                ? sl<ICampaignRepository>()
+                : AppServices.instance.campaignProfileService),
+        _characterPersistenceService = characterRepository ??
+            characterPersistenceService ??
+            (sl.isRegistered<ICharacterRepository>()
+                ? sl<ICharacterRepository>()
+                : CharacterPersistenceService()),
         _combatEncounterService = combatEncounterService ??
             CombatEncounterService(
-              characterRepo: characterRepository ?? characterPersistenceService ?? LocalCharacterRepository(),
-              campaignRepo: campaignRepository ?? campaignProfileService ?? LocalCampaignRepository(),
+              characterRepo: characterRepository ??
+                  characterPersistenceService ??
+                  (sl.isRegistered<ICharacterRepository>()
+                      ? sl<ICharacterRepository>()
+                      : CharacterPersistenceService()),
+              campaignRepo: campaignRepository ??
+                  campaignProfileService ??
+                  (sl.isRegistered<ICampaignRepository>()
+                      ? sl<ICampaignRepository>()
+                      : AppServices.instance.campaignProfileService),
             ),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()

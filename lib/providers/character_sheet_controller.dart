@@ -117,6 +117,7 @@ class CharacterSheetController extends ChangeNotifier {
   /// Flushes pending persistence immediately.
   Future<void> flush() async {
     await _debouncedStorage.flushKey(_debounceTaskKey);
+    await _debouncedStorage.flushKey('save_character_roster');
   }
 
   /// Persists the active character immediately.

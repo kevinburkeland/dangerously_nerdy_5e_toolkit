@@ -7,6 +7,8 @@ import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_campaign_repository.
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_character_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_network_time_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_party_sync_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/local_wifi_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/repositories/local_character_repository.dart';
@@ -65,6 +67,10 @@ void main() {
       final router = sl<CascadingTransportRouter>();
       expect(router, isA<CascadingTransportRouter>());
       expect(sl<IP2pTransportPort>(), equals(router));
+      expect(router.localWifiAdapter, isA<LocalWifiTransportAdapter>());
+
+      // Assert deprecated IPartySyncPort is not registered in container
+      expect(sl.isRegistered<IPartySyncPort>(), isFalse);
 
       final orchestrator = sl<RoomSyncOrchestrator>();
       expect(orchestrator, isA<RoomSyncOrchestrator>());
