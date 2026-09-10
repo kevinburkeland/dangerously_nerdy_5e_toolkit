@@ -11,17 +11,39 @@ class EvaluationMath {
   final String diceFormula; // e.g. "8d6"
   final DamageType damageType;
   final String? scalingFormula; // e.g. "+1d6 per slot above 3rd"
+  final bool isAttackRoll;
+  final bool requiresSave;
 
   const EvaluationMath({
     required this.diceFormula,
     required this.damageType,
     this.scalingFormula,
+    this.isAttackRoll = false,
+    this.requiresSave = false,
   });
+
+  EvaluationMath copyWith({
+    String? diceFormula,
+    DamageType? damageType,
+    String? scalingFormula,
+    bool? isAttackRoll,
+    bool? requiresSave,
+  }) {
+    return EvaluationMath(
+      diceFormula: diceFormula ?? this.diceFormula,
+      damageType: damageType ?? this.damageType,
+      scalingFormula: scalingFormula ?? this.scalingFormula,
+      isAttackRoll: isAttackRoll ?? this.isAttackRoll,
+      requiresSave: requiresSave ?? this.requiresSave,
+    );
+  }
 
   Map<String, dynamic> toMap() => {
         'diceFormula': diceFormula,
         'damageType': damageType.name,
-        'scalingFormula': scalingFormula,
+        if (scalingFormula != null) 'scalingFormula': scalingFormula,
+        if (isAttackRoll) 'isAttackRoll': true,
+        if (requiresSave) 'requiresSave': true,
       };
 
   factory EvaluationMath.fromMap(Map<String, dynamic> map) {
@@ -34,6 +56,8 @@ class EvaluationMath {
       diceFormula: map['diceFormula']?.toString() ?? '',
       damageType: damageType,
       scalingFormula: map['scalingFormula']?.toString(),
+      isAttackRoll: map['isAttackRoll'] == true,
+      requiresSave: map['requiresSave'] == true,
     );
   }
 
@@ -44,14 +68,23 @@ class EvaluationMath {
           runtimeType == other.runtimeType &&
           diceFormula == other.diceFormula &&
           damageType == other.damageType &&
-          scalingFormula == other.scalingFormula;
+          scalingFormula == other.scalingFormula &&
+          isAttackRoll == other.isAttackRoll &&
+          requiresSave == other.requiresSave;
 
   @override
   int get hashCode =>
-      diceFormula.hashCode ^ damageType.hashCode ^ scalingFormula.hashCode;
+      diceFormula.hashCode ^
+      damageType.hashCode ^
+      scalingFormula.hashCode ^
+      isAttackRoll.hashCode ^
+      requiresSave.hashCode;
 
   @override
-  String toString() => '$diceFormula ${damageType.name}';
+  String toString() {
+    final delivery = isAttackRoll ? ' (attack)' : (requiresSave ? ' (save)' : '');
+    return '$diceFormula ${damageType.name}$delivery';
+  }
 }
 
 /// Standardized spell component flags
@@ -176,6 +209,9 @@ class Spell extends DomainEntity {
   final CastingTime castingTime;
   final SpellDuration duration;
   final String range;
+  final int rangeDistanceFeet;
+  final String rangeType;
+  final String? damageType;
   final SpellComponents components;
   final String descriptionMarkdown;
   final String? higherLevelsMarkdown;
@@ -192,6 +228,9 @@ class Spell extends DomainEntity {
     required this.castingTime,
     required this.duration,
     required this.range,
+    this.rangeDistanceFeet = 0,
+    this.rangeType = 'ranged',
+    this.damageType,
     required this.components,
     required this.descriptionMarkdown,
     this.higherLevelsMarkdown,
@@ -212,6 +251,9 @@ class Spell extends DomainEntity {
         'castingTime': castingTime.toMap(),
         'duration': duration.toMap(),
         'range': range,
+        'rangeDistanceFeet': rangeDistanceFeet,
+        'rangeType': rangeType,
+        if (damageType != null) 'damageType': damageType,
         'components': components.toMap(),
         'descriptionMarkdown': descriptionMarkdown,
         'higherLevelsMarkdown': higherLevelsMarkdown,
@@ -231,6 +273,9 @@ class Spell extends DomainEntity {
       duration: SpellDuration.fromMap(
           Map<String, dynamic>.from(map['duration'] as Map? ?? {})),
       range: map['range']?.toString() ?? 'Self',
+      rangeDistanceFeet: (map['rangeDistanceFeet'] as num?)?.toInt() ?? 0,
+      rangeType: map['rangeType']?.toString() ?? 'ranged',
+      damageType: map['damageType']?.toString(),
       components: SpellComponents.fromMap(
           Map<String, dynamic>.from(map['components'] as Map? ?? {})),
       descriptionMarkdown: map['descriptionMarkdown']?.toString() ?? '',
@@ -256,6 +301,9 @@ class Spell extends DomainEntity {
     CastingTime? castingTime,
     SpellDuration? duration,
     String? range,
+    int? rangeDistanceFeet,
+    String? rangeType,
+    String? damageType,
     SpellComponents? components,
     String? descriptionMarkdown,
     String? higherLevelsMarkdown,
@@ -271,6 +319,9 @@ class Spell extends DomainEntity {
       castingTime: castingTime ?? this.castingTime,
       duration: duration ?? this.duration,
       range: range ?? this.range,
+      rangeDistanceFeet: rangeDistanceFeet ?? this.rangeDistanceFeet,
+      rangeType: rangeType ?? this.rangeType,
+      damageType: damageType ?? this.damageType,
       components: components ?? this.components,
       descriptionMarkdown: descriptionMarkdown ?? this.descriptionMarkdown,
       higherLevelsMarkdown: higherLevelsMarkdown ?? this.higherLevelsMarkdown,

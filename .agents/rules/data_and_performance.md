@@ -38,3 +38,12 @@ Never trust raw numeric values from JSON or user input:
 - **Debounced Disk Writes & In-Memory Caching:**
   - Rapid character mutations must update an in-memory cache immediately and debounce disk persistence via `AppServices.instance.debouncedStorage.scheduleWrite` (300ms default) to avoid main-thread I/O bottlenecks.
   - When widget tests trigger state changes, ensure test frames advance past debounce durations (`pump(const Duration(milliseconds: 400))`) and always invoke `AppServices.reset()` in `tearDown()` to cancel pending debounce timers.
+
+## 5. Spell Normalization & Ingestor ACL Pre-Computation
+
+To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
+- **Levelled Scaling Extraction:** `higherLevelsMarkdown` dice formulas (e.g. `1d6`) must be extracted into `damageMath.scalingFormula` during ingestion rather than parsed at runtime.
+- **Variable Damage Types:** Spells with selectable or randomized damage types (e.g. Chromatic Orb, Chaos Bolt) must resolve `damageType` to `variable` / `DamageType.variable` to avoid false defaults like `acid`.
+- **Range & Spatial Geometry:** Natural language ranges (e.g. `"30-foot line"`, `{"type": "line", "distance": {"amount": 30}}`) must normalize into `rangeDistanceFeet` (int) and `rangeType` (string/enum: `"line"`, `"cone"`, `"radius"`, `"self"`, `"touch"`, `"ranged"`). Touch and self default to 0 feet.
+- **Multi-Stage Delivery Flags:** Multi-stage damage payloads (e.g., Ice Knife) must pre-tag delivery mechanisms on `EvaluationMath` (`isAttackRoll`, `requiresSave`) to avoid runtime NLP during combat resolution.
+

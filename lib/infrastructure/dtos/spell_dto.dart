@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../mappers/homebrew_ingestor.dart';
 
 /// Data Transfer Object for [Spell], isolating full document serialization,
 /// legacy unparsed payload preservation, and external ACL boundary transformations
@@ -16,6 +17,9 @@ class SpellDto {
   final String castingTime;
   final String duration;
   final String range;
+  final int rangeDistanceFeet;
+  final String rangeType;
+  final String damageType;
   final SpellComponents components;
   final String descriptionMarkdown;
   final String? higherLevelsMarkdown;
@@ -34,6 +38,9 @@ class SpellDto {
     this.castingTime = '1 action',
     this.duration = 'Instantaneous',
     this.range = 'Self',
+    this.rangeDistanceFeet = 0,
+    this.rangeType = 'ranged',
+    this.damageType = 'untyped',
     this.components = const SpellComponents(),
     this.descriptionMarkdown = '',
     this.higherLevelsMarkdown,
@@ -56,11 +63,15 @@ class SpellDto {
       'castingTime',
       'duration',
       'range',
+      'rangeDistanceFeet',
+      'rangeType',
+      'damageType',
       'components',
       'description',
       'descriptionMarkdown',
       'higherLevelsMarkdown',
       'higherLevels',
+      'entriesHigherLevel',
       'damageMath',
       'relatedEntityRefs',
       'customProperties',
@@ -108,6 +119,21 @@ class SpellDto {
     }
 
     final resolvedRange = json['range']?.toString() ?? 'Self';
+    final resolvedDescription = json['descriptionMarkdown']?.toString() ?? json['description']?.toString() ?? '';
+    final resolvedHigherLevels = json['higherLevelsMarkdown']?.toString() ??
+        json['higherLevels']?.toString() ??
+        (json['entriesHigherLevel'] is List
+            ? (json['entriesHigherLevel'] as List).join('\n')
+            : json['entriesHigherLevel']?.toString());
+
+    final rangeInfo = HomebrewIngestor.normalizeRange(
+      json['range'] ?? resolvedRange,
+      resolvedDescription,
+    );
+    final resolvedRangeDistance = (json['rangeDistanceFeet'] as num?)?.toInt() ??
+        (rangeInfo['rangeDistanceFeet'] as int? ?? 0);
+    final resolvedRangeType = json['rangeType']?.toString() ??
+        (rangeInfo['rangeType'] as String? ?? 'ranged');
 
     // Components resolution
     SpellComponents resolvedComponents = const SpellComponents();
@@ -115,11 +141,8 @@ class SpellDto {
       resolvedComponents = SpellComponents.fromMap(Map<String, dynamic>.from(json['components'] as Map));
     }
 
-    final resolvedDescription = json['descriptionMarkdown']?.toString() ?? json['description']?.toString() ?? '';
-    final resolvedHigherLevels = json['higherLevelsMarkdown']?.toString() ?? json['higherLevels']?.toString();
-
     // Damage math resolution
-    final resolvedDamageMath = <EvaluationMath>[];
+    var resolvedDamageMath = <EvaluationMath>[];
     if (json['damageMath'] is List) {
       for (final dm in json['damageMath'] as List) {
         if (dm is Map) {
@@ -128,7 +151,89 @@ class SpellDto {
           } catch (_) {}
         }
       }
+    } else if (json['damageMath'] is Map) {
+      try {
+        resolvedDamageMath.add(EvaluationMath.fromMap(Map<String, dynamic>.from(json['damageMath'] as Map)));
+      } catch (_) {}
     }
+
+    // If damageMath was not explicitly supplied, extract from markdown/text
+    if (resolvedDamageMath.isEmpty && resolvedDescription.isNotEmpty) {
+      final damageRegex = RegExp(
+        r'(?:\{@damage\s+)?(\d+d\d+)(?:\|([a-zA-Z]+))?\}?|\b(\d+d\d+)\s*(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)?\b',
+        caseSensitive: false,
+      );
+      for (final m in damageRegex.allMatches(resolvedDescription)) {
+        final formula = m.group(1) ?? m.group(3) ?? '';
+        final typeStr = m.group(2) ?? m.group(4);
+        if (formula.isNotEmpty) {
+          resolvedDamageMath.add(EvaluationMath(
+            diceFormula: formula,
+            damageType: DamageType.fromLooseString(typeStr),
+          ));
+        }
+      }
+    }
+
+    // Correct any mislabeled damage types from the description before scaling & delivery enrichment
+    resolvedDamageMath = HomebrewIngestor.correctDamageTypesFromDescription(
+      resolvedDamageMath,
+      resolvedDescription,
+    );
+
+    // Extract higher levels scaling dice formula into damageMath.scalingFormula
+    final extractedScaling = HomebrewIngestor.extractHigherLevelsDice(resolvedHigherLevels);
+    if (extractedScaling != null && resolvedDamageMath.isNotEmpty) {
+      bool applied = false;
+      for (var i = 0; i < resolvedDamageMath.length; i++) {
+        final dm = resolvedDamageMath[i];
+        if (dm.scalingFormula == null || dm.scalingFormula!.isEmpty) {
+          final typeName = dm.damageType.name.toLowerCase();
+          final mentionsType = resolvedHigherLevels != null &&
+              typeName != 'untyped' &&
+              resolvedHigherLevels.toLowerCase().contains(typeName);
+          if (mentionsType || resolvedDamageMath.length == 1) {
+            resolvedDamageMath[i] = dm.copyWith(scalingFormula: extractedScaling);
+            applied = true;
+          }
+        }
+      }
+      if (!applied) {
+        for (var i = 0; i < resolvedDamageMath.length; i++) {
+          final dm = resolvedDamageMath[i];
+          if (dm.scalingFormula == null || dm.scalingFormula!.isEmpty) {
+            resolvedDamageMath[i] = dm.copyWith(scalingFormula: extractedScaling);
+            break;
+          }
+        }
+      }
+    }
+
+    // Variable damage type resolution (Chromatic Orb, Chaos Bolt, etc.)
+    String firstMatchedType = json['damageType']?.toString() ??
+        (resolvedDamageMath.isNotEmpty && resolvedDamageMath.first.damageType != DamageType.untyped
+            ? resolvedDamageMath.first.damageType.name
+            : 'untyped');
+
+    final resolvedDamageType = HomebrewIngestor.resolveDamageType(
+      '$resolvedName $resolvedDescription ${resolvedHigherLevels ?? ''}',
+      firstMatchedType,
+    );
+
+    if (resolvedDamageType == 'variable') {
+      for (var i = 0; i < resolvedDamageMath.length; i++) {
+        final dm = resolvedDamageMath[i];
+        if (dm.damageType == DamageType.acid || dm.damageType == DamageType.untyped) {
+          resolvedDamageMath[i] = dm.copyWith(damageType: DamageType.variable);
+        }
+      }
+    }
+
+    // Enrich damage delivery methods (isAttackRoll, requiresSave)
+    final enrichedDamageMath = HomebrewIngestor.enrichDamageDelivery(
+      resolvedDamageMath,
+      '$resolvedDescription ${resolvedHigherLevels ?? ''}',
+    );
 
     // Related entity refs resolution
     final resolvedRefs = <EntityReference<DomainEntity>>[];
@@ -154,10 +259,13 @@ class SpellDto {
       castingTime: resolvedCastingTime,
       duration: resolvedDuration,
       range: resolvedRange,
+      rangeDistanceFeet: resolvedRangeDistance,
+      rangeType: resolvedRangeType,
+      damageType: resolvedDamageType,
       components: resolvedComponents,
       descriptionMarkdown: resolvedDescription,
       higherLevelsMarkdown: resolvedHigherLevels,
-      damageMath: resolvedDamageMath,
+      damageMath: enrichedDamageMath,
       relatedEntityRefs: resolvedRefs,
       customProperties: resolvedCustomProps,
       unparsedPayload: unparsed,
@@ -183,6 +291,9 @@ class SpellDto {
       castingTime: spell.castingTime.triggerCondition ?? '${spell.castingTime.cost} ${spell.castingTime.actionType.name}',
       duration: spell.duration.rawText ?? spell.duration.type.name,
       range: spell.range,
+      rangeDistanceFeet: spell.rangeDistanceFeet,
+      rangeType: spell.rangeType,
+      damageType: spell.damageType ?? (spell.damageMath.isNotEmpty ? spell.damageMath.first.damageType.name : 'untyped'),
       components: spell.components,
       descriptionMarkdown: spell.descriptionMarkdown,
       higherLevelsMarkdown: spell.higherLevelsMarkdown,
@@ -221,6 +332,9 @@ class SpellDto {
         rawText: duration,
       ),
       range: range,
+      rangeDistanceFeet: rangeDistanceFeet,
+      rangeType: rangeType,
+      damageType: damageType,
       components: components,
       descriptionMarkdown: descriptionMarkdown,
       higherLevelsMarkdown: higherLevelsMarkdown,
@@ -240,6 +354,9 @@ class SpellDto {
       'castingTime': castingTime,
       'duration': duration,
       'range': range,
+      'rangeDistanceFeet': rangeDistanceFeet,
+      'rangeType': rangeType,
+      'damageType': damageType,
       'components': components.toMap(),
       'descriptionMarkdown': descriptionMarkdown,
     };

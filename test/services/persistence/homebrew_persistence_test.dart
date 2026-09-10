@@ -97,8 +97,8 @@ void main() {
 
     test('hydrates LayeredPriorityRepository with saved homebrew entities', () async {
       const spell = Spell(
-        id: EntityId(slug: 'chaos-bolt-homebrew', ruleset: RulesetVersion.homebrew),
-        name: 'Chaos Bolt (Homebrew)',
+        id: EntityId(slug: 'chaotic-blast-homebrew', ruleset: RulesetVersion.homebrew),
+        name: 'Chaotic Blast (Homebrew)',
         level: 1,
         school: 'Evocation',
         castingTime: CastingTime(cost: 1, actionType: ActionType.action),
@@ -113,9 +113,9 @@ void main() {
       final repository = LayeredPriorityRepository();
       await persistence.hydrateRepository(repository);
 
-      final lookupResult = repository.lookup<Spell>('chaos-bolt-homebrew');
+      final lookupResult = repository.lookup<Spell>('chaotic-blast-homebrew');
       expect(lookupResult, isNotNull);
-      expect(lookupResult!.name, equals('Chaos Bolt (Homebrew)'));
+      expect(lookupResult!.name, equals('Chaotic Blast (Homebrew)'));
     });
     test('batch deletes custom entities by slug list and cleans up storage', () async {
       const spell1 = Spell(

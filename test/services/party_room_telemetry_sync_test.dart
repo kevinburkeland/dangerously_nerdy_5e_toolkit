@@ -16,7 +16,7 @@ void main() {
   group('Party Room Telemetry Sync & Payload Compression', () {
     test('telemetry packet size is < 1.5 KB (down from ~30 KB legacy sheet) with zero markdown', () {
       final draft = CharacterDraft()
-        ..characterName = 'Archmage Mordenkainen the Elder'
+        ..characterName = 'Archmage Aldous the Elder'
         ..rulesEdition = DmRulesEdition.v2024
         ..speciesRef = const EntityReference(
           refType: EntityType.species,

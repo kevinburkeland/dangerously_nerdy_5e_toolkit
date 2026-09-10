@@ -198,7 +198,7 @@ class _HomebrewExportDialogState extends State<HomebrewExportDialog> {
             controller: _nameController,
             decoration: const InputDecoration(
               labelText: 'Bundle Name',
-              hintText: 'e.g. Grim Hollow Spells & Subclasses',
+              hintText: 'e.g. Custom Campaign Spells & Subclasses',
               border: OutlineInputBorder(),
             ),
           ),

@@ -62,7 +62,7 @@ void main() {
         ),
         partyCharacterIds: const ['cleric_1'],
         pinnedRuleIds: const {'concentration', 'falling', 'cover'},
-        notesMarkdown: '# Session 1 Log\nThe party entered the Barovian woods.',
+        notesMarkdown: '# Session 1 Log\nThe party entered the shadowy woods.',
       );
 
       final map = CampaignProfileDto.fromDomain(profile).toMap();

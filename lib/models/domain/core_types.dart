@@ -56,12 +56,14 @@ enum DamageType {
   radiant,
   slashing,
   thunder,
-  untyped;
+  untyped,
+  variable;
 
   /// Safely resolves a loose or unstructured string into a canonical [DamageType].
   static DamageType fromLooseString(String? key) {
     if (key == null) return DamageType.untyped;
     final clean = key.trim().toLowerCase();
+    if (clean == 'choose' || clean == 'variable') return DamageType.variable;
     for (final val in DamageType.values) {
       if (val.name.toLowerCase() == clean) return val;
     }

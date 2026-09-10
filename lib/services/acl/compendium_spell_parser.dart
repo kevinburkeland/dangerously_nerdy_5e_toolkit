@@ -1,3 +1,4 @@
+import '../../infrastructure/mappers/homebrew_ingestor.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
@@ -69,16 +70,25 @@ class CompendiumSpellParser {
       }
     }
 
+    // Variable damage check
+    final descLower = transformed.markdown.toLowerCase();
+    final variableCheck = HomebrewIngestor.resolveDamageType(
+      '$name $descLower ${higherLevelsMarkdown ?? ''}',
+      'untyped',
+    );
+    final isVariable = variableCheck == 'variable';
+
     // Infer damage type if damageMath has untyped damage
     if (damageMath.isNotEmpty) {
       DamageType? inferred;
-      if (raw['damageInflict'] is List && (raw['damageInflict'] as List).isNotEmpty) {
+      if (isVariable) {
+        inferred = DamageType.variable;
+      } else if (raw['damageInflict'] is List && (raw['damageInflict'] as List).isNotEmpty) {
         inferred = DamageType.fromLooseString((raw['damageInflict'] as List).first?.toString());
       }
       if (inferred == null || inferred == DamageType.untyped) {
-        final descLower = transformed.markdown.toLowerCase();
         for (final dt in DamageType.values) {
-          if (dt != DamageType.untyped && descLower.contains('${dt.name} damage')) {
+          if (dt != DamageType.untyped && dt != DamageType.variable && descLower.contains('${dt.name} damage')) {
             inferred = dt;
             break;
           }
@@ -86,12 +96,8 @@ class CompendiumSpellParser {
       }
       if (inferred != null && inferred != DamageType.untyped) {
         damageMath = damageMath.map((m) {
-          if (m.damageType == DamageType.untyped) {
-            return EvaluationMath(
-              diceFormula: m.diceFormula,
-              damageType: inferred!,
-              scalingFormula: m.scalingFormula,
-            );
+          if (m.damageType == DamageType.untyped || (isVariable && m.damageType == DamageType.acid)) {
+            return m.copyWith(damageType: inferred!);
           }
           return m;
         }).toList();
@@ -106,16 +112,52 @@ class CompendiumSpellParser {
         final firstScale = scaling.values.first?.toString();
         if (firstScale != null && damageMath.isNotEmpty) {
           damageMath = [
-            EvaluationMath(
-              diceFormula: damageMath.first.diceFormula,
-              damageType: damageMath.first.damageType,
-              scalingFormula: '+$firstScale per higher slot',
-            ),
+            damageMath.first.copyWith(scalingFormula: '+$firstScale per higher slot'),
             ...damageMath.skip(1),
           ];
         }
       }
+    } else if (higherLevelsMarkdown != null && damageMath.isNotEmpty) {
+      final extracted = HomebrewIngestor.extractHigherLevelsDice(higherLevelsMarkdown);
+      if (extracted != null) {
+        bool applied = false;
+        for (var i = 0; i < damageMath.length; i++) {
+          final dm = damageMath[i];
+          if (dm.scalingFormula == null || dm.scalingFormula!.isEmpty) {
+            final typeName = dm.damageType.name.toLowerCase();
+            final mentionsType = typeName != 'untyped' && higherLevelsMarkdown.toLowerCase().contains(typeName);
+            if (mentionsType || damageMath.length == 1) {
+              damageMath[i] = dm.copyWith(scalingFormula: extracted);
+              applied = true;
+            }
+          }
+        }
+        if (!applied) {
+          for (var i = 0; i < damageMath.length; i++) {
+            final dm = damageMath[i];
+            if (dm.scalingFormula == null || dm.scalingFormula!.isEmpty) {
+              damageMath[i] = dm.copyWith(scalingFormula: extracted);
+              break;
+            }
+          }
+        }
+      }
     }
+
+    // Enrich damage delivery methods (isAttackRoll, requiresSave)
+    damageMath = HomebrewIngestor.enrichDamageDelivery(
+      damageMath,
+      '${transformed.markdown} ${higherLevelsMarkdown ?? ''}',
+    );
+
+    final rangeNorm = HomebrewIngestor.normalizeRange(raw['range'] ?? rangeStr);
+    final rangeDistanceFeet = (raw['rangeDistanceFeet'] as num?)?.toInt() ??
+        (rangeNorm['rangeDistanceFeet'] as int? ?? 0);
+    final rangeType = raw['rangeType']?.toString() ??
+        (rangeNorm['rangeType'] as String? ?? 'ranged');
+    final resolvedDamageType = isVariable
+        ? 'variable'
+        : (damageMath.isNotEmpty ? damageMath.first.damageType.name : 'untyped');
 
     // Capture all auxiliary & unmapped fields in customProperties to guarantee 0% data loss
     final customProperties = <String, dynamic>{};
@@ -167,6 +209,9 @@ class CompendiumSpellParser {
       castingTime: castingTime,
       duration: duration,
       range: rangeStr,
+      rangeDistanceFeet: rangeDistanceFeet,
+      rangeType: rangeType,
+      damageType: resolvedDamageType,
       components: components,
       descriptionMarkdown: transformed.markdown,
       higherLevelsMarkdown: higherLevelsMarkdown,

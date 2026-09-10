@@ -17,7 +17,7 @@ void main() {
       // Level 2 Wizard leveling to Level 3 (unlocks 2nd-level spells)
       const wizard = Character(
         id: EntityId(slug: 'wizard-lvl-2', ruleset: RulesetVersion.v2024),
-        name: 'Elminster Apprentice',
+        name: 'Arcane Apprentice',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
         backgroundRef: EntityReference(refType: EntityType.background, slug: 'acolyte', displayName: 'Acolyte'),
         progression: CharacterProgression(
@@ -83,7 +83,7 @@ void main() {
 
       const wizard = Character(
         id: EntityId(slug: 'wizard-lvl-2', ruleset: RulesetVersion.v2024),
-        name: 'Elminster Apprentice',
+        name: 'Arcane Apprentice',
         speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
         progression: CharacterProgression(
           classes: [

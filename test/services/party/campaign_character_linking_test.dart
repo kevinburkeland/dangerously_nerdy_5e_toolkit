@@ -69,7 +69,7 @@ void main() {
 
     test('Player links character by importing as a new character on join', () async {
       final session = await partyService.createCampaign(
-        campaignName: 'Curse of Strahd',
+        campaignName: 'Curse of the Vampire Lord',
         playerName: 'DM Kevin',
       );
 
