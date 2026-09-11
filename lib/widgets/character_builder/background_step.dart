@@ -8,7 +8,7 @@ import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 
 /// Step 4: Choose Background Origin widget with reactive 5e RAW Skill Overlap Refund Engine.
-class BackgroundStep extends StatelessWidget {
+class BackgroundStep extends StatefulWidget {
   final CharacterBuilderController controller;
   final String selectedBackground;
   final ValueChanged<String> onBackgroundSelected;
@@ -25,13 +25,31 @@ class BackgroundStep extends StatelessWidget {
   });
 
   @override
+  State<BackgroundStep> createState() => _BackgroundStepState();
+}
+
+class _BackgroundStepState extends State<BackgroundStep> {
+  String _searchQuery = '';
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final is2024 = selectedRuleset == RulesetVersion.v2024;
-    final backgrounds = customBackgrounds ?? SrdBackgroundsLibrary.allBackgrounds;
+    final is2024 = widget.selectedRuleset == RulesetVersion.v2024;
+    final backgrounds = widget.customBackgrounds ?? SrdBackgroundsLibrary.allBackgrounds;
+
+    final filteredBackgrounds = backgrounds.where((bg) {
+      if (_searchQuery.isEmpty) return true;
+      final q = _searchQuery.toLowerCase();
+      final nameMatches = bg.name.toLowerCase().contains(q);
+      final slugMatches = bg.id.slug.toLowerCase().contains(q);
+      final skillsMatch = bg.skillProficiencies.any((s) => s.toLowerCase().contains(q));
+      final toolsMatch = bg.toolProficiencies.any((t) => t.toLowerCase().contains(q));
+      final originFeatMatch = bg.originFeat?.toLowerCase().contains(q) ?? false;
+      return nameMatches || slugMatches || skillsMatch || toolsMatch || originFeatMatch;
+    }).toList();
 
     return ListenableBuilder(
-      listenable: controller,
+      listenable: widget.controller,
       builder: (context, _) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,56 +70,86 @@ class BackgroundStep extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // REACTIVE SKILL OVERLAP REFUND BLOCK
-            SkillRefundAlertSection(controller: controller),
+            // Search Bar
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Search Backgrounds',
+                hintText: 'Filter by background name, skills, tools...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () => setState(() => _searchQuery = ''),
+                      )
+                    : null,
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              onChanged: (val) => setState(() => _searchQuery = val.trim()),
+            ),
+            const SizedBox(height: 12),
 
-            // BACKGROUND LIST
-            ...backgrounds.map((bg) {
-              final isSelected = selectedBackground == bg.id.slug;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.cyan.shade900.withValues(alpha: 0.3) : Colors.black26,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isSelected ? Colors.cyanAccent : Colors.white12,
-                    width: isSelected ? 1.5 : 1.0,
+            // REACTIVE SKILL OVERLAP REFUND BLOCK
+            SkillRefundAlertSection(controller: widget.controller),
+
+            if (filteredBackgrounds.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'No backgrounds found matching "$_searchQuery"',
+                    style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
                   ),
                 ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: ListTile(
-                    leading: Icon(
-                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Colors.cyanAccent : Colors.white54,
+              )
+            else
+              // BACKGROUND LIST
+              ...filteredBackgrounds.map((bg) {
+                final isSelected = widget.selectedBackground == bg.id.slug;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.cyan.shade900.withValues(alpha: 0.3) : Colors.black26,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected ? Colors.cyanAccent : Colors.white12,
+                      width: isSelected ? 1.5 : 1.0,
                     ),
-                    title: Text(bg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      is2024
-                          ? 'Skills: ${bg.skillProficiencies.join(", ")}\nOrigin Feat: ${bg.originFeat ?? "General"}'
-                          : 'Skills: ${bg.skillProficiencies.join(", ")}${bg.toolProficiencies.isNotEmpty ? "\nTools: ${bg.toolProficiencies.join(', ')}" : ""}',
-                      style: const TextStyle(fontSize: 11.5, color: Colors.white70),
-                    ),
-                    trailing: (is2024 && bg.originFeat != null)
-                        ? Tooltip(
-                            message: 'Origin Feat: ${bg.originFeat}',
-                            child: DndGlyph.feat(
-                              category: FeatCategory.origin,
-                              featId: bg.originFeat!,
-                              displayName: bg.originFeat,
-                              size: 28,
-                              isDarkMode: true,
-                            ),
-                          )
-                        : null,
-                    onTap: () {
-                      HapticService.selectionTick(context);
-                      onBackgroundSelected(bg.id.slug);
-                    },
                   ),
-                ),
-              );
-            }),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      leading: Icon(
+                        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                        color: isSelected ? Colors.cyanAccent : Colors.white54,
+                      ),
+                      title: Text(bg.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(
+                        is2024
+                            ? 'Skills: ${bg.skillProficiencies.join(", ")}\nOrigin Feat: ${bg.originFeat ?? "General"}'
+                            : 'Skills: ${bg.skillProficiencies.join(", ")}${bg.toolProficiencies.isNotEmpty ? "\nTools: ${bg.toolProficiencies.join(', ')}" : ""}',
+                        style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                      ),
+                      trailing: (is2024 && bg.originFeat != null)
+                          ? Tooltip(
+                              message: 'Origin Feat: ${bg.originFeat}',
+                              child: DndGlyph.feat(
+                                category: FeatCategory.origin,
+                                featId: bg.originFeat!,
+                                displayName: bg.originFeat,
+                                size: 28,
+                                isDarkMode: true,
+                              ),
+                            )
+                          : null,
+                      onTap: () {
+                        HapticService.selectionTick(context);
+                        widget.onBackgroundSelected(bg.id.slug);
+                      },
+                    ),
+                  ),
+                );
+              }),
           ],
         );
       },

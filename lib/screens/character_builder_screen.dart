@@ -93,6 +93,11 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   final Set<SkillType> _compensatorySkillPicks = {};
   final Set<SkillType> _speciesBonusSkillPicks = {};
 
+  // Guided Builder Step Search Queries
+  String _speciesSearchQuery = '';
+  String _featSearchQuery = '';
+  String _spellSearchQuery = '';
+
   // Language & Tool Proficiency Selection State
   final Set<String> _builderLanguages = {'Common'};
   final Set<String> _builderToolProficiencies = {};
@@ -1449,6 +1454,17 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       return !alreadyTaken.contains(sk) || _speciesBonusSkillPicks.contains(sk);
     }).toList();
 
+    final filteredSpecies = speciesList.where((sp) {
+      if (_speciesSearchQuery.isEmpty) return true;
+      final q = _speciesSearchQuery.toLowerCase();
+      final nameMatches = sp.name.toLowerCase().contains(q);
+      final slugMatches = sp.id.slug.toLowerCase().contains(q);
+      final traitsMatch = sp.traitsMarkdown.toLowerCase().contains(q);
+      final speedMatch = sp.speed.toLowerCase().contains(q);
+      final summaryMatch = sp.abilityScoreSummary?.toLowerCase().contains(q) ?? false;
+      return nameMatches || slugMatches || traitsMatch || speedMatch || summaryMatch;
+    }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1458,8 +1474,38 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         const Text('Select your character lineage from standard SRD species.',
             style: TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
+
+        // Search Bar
+        TextField(
+          decoration: InputDecoration(
+            labelText: 'Search Species / Races',
+            hintText: 'Filter by species name, traits, speed...',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _speciesSearchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => setState(() => _speciesSearchQuery = ''),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) => setState(() => _speciesSearchQuery = val.trim()),
+        ),
+        const SizedBox(height: 12),
         SkillRefundAlertSection(controller: _abilityScoreController),
-        ...speciesList.map((sp) {
+        if (filteredSpecies.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No species found matching "$_speciesSearchQuery"',
+                style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
+              ),
+            ),
+          )
+        else
+        ...filteredSpecies.map((sp) {
           final isSelected = _selectedSpecies == sp.id.slug;
           final spType = _findSpeciesType(sp.id.slug);
           return Container(
@@ -2709,6 +2755,17 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         ? SrdFeatsLibrary.getOriginFeats()
         : SrdFeatsLibrary.getFeatsForRuleset(RulesetVersion.v2014);
 
+    final filteredFeats = availableFeats.where((feat) {
+      if (_featSearchQuery.isEmpty) return true;
+      final q = _featSearchQuery.toLowerCase();
+      final nameMatches = feat.name.toLowerCase().contains(q);
+      final slugMatches = feat.id.slug.toLowerCase().contains(q);
+      final descMatches = feat.descriptionMarkdown.toLowerCase().contains(q);
+      final catMatches = feat.category.toLowerCase().contains(q);
+      final prereqMatches = feat.prerequisite?.toLowerCase().contains(q) ?? false;
+      return nameMatches || slugMatches || descMatches || catMatches || prereqMatches;
+    }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2726,7 +2783,37 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade400),
         ),
         const SizedBox(height: 12),
-        ...availableFeats.map((feat) {
+
+        // Search Bar
+        TextField(
+          decoration: InputDecoration(
+            labelText: 'Search Feats',
+            hintText: 'Filter by feat name, category, prerequisite...',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _featSearchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => setState(() => _featSearchQuery = ''),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) => setState(() => _featSearchQuery = val.trim()),
+        ),
+        const SizedBox(height: 12),
+        if (filteredFeats.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No feats found matching "$_featSearchQuery"',
+                style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
+              ),
+            ),
+          )
+        else
+        ...filteredFeats.map((feat) {
           final isSelected = _selectedFeat == feat.id.slug;
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
@@ -3284,6 +3371,28 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       edition: edition,
     );
 
+    final filteredCantrips = cantrips.where((c) {
+      if (_spellSearchQuery.isEmpty) return true;
+      final q = _spellSearchQuery.toLowerCase();
+      final nameMatches = c.getName(edition).toLowerCase().contains(q);
+      final idMatches = c.id.toLowerCase().contains(q);
+      final schoolMatches = c.school.name.toLowerCase().contains(q);
+      final tagsMatch = c.tags.any((t) => t.toLowerCase().contains(q));
+      final summaryMatch = c.diffSummary?.toLowerCase().contains(q) ?? false;
+      return nameMatches || idMatches || schoolMatches || tagsMatch || summaryMatch;
+    }).toList();
+
+    final filteredLevel1Spells = level1Spells.where((s) {
+      if (_spellSearchQuery.isEmpty) return true;
+      final q = _spellSearchQuery.toLowerCase();
+      final nameMatches = s.getName(edition).toLowerCase().contains(q);
+      final idMatches = s.id.toLowerCase().contains(q);
+      final schoolMatches = s.school.name.toLowerCase().contains(q);
+      final tagsMatch = s.tags.any((t) => t.toLowerCase().contains(q));
+      final summaryMatch = s.diffSummary?.toLowerCase().contains(q) ?? false;
+      return nameMatches || idMatches || schoolMatches || tagsMatch || summaryMatch;
+    }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3365,14 +3474,117 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           ),
         ),
 
-        // Section 1: Cantrips
-        if (maxCantrips > 0 || cantrips.isNotEmpty)
+        // Search Bar
+        TextField(
+          decoration: InputDecoration(
+            labelText: 'Search Cantrips & Spells',
+            hintText: 'Filter by spell name, school, or keywords...',
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _spellSearchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => setState(() => _spellSearchQuery = ''),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (val) => setState(() => _spellSearchQuery = val.trim()),
+        ),
+        const SizedBox(height: 12),
+
+        if (filteredCantrips.isEmpty && filteredLevel1Spells.isEmpty && _spellSearchQuery.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No cantrips or spells found matching "$_spellSearchQuery"',
+                style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
+              ),
+            ),
+          )
+        else ...[
+          // Section 1: Cantrips
+          if (maxCantrips > 0 || filteredCantrips.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade900.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('CANTRIPS (Level 0)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+                      Text(
+                        '${_selectedWizardCantrips.length} / $maxCantrips selected',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _selectedWizardCantrips.length == maxCantrips ? Colors.greenAccent : Colors.amberAccent,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (filteredCantrips.isEmpty)
+                    Text(_spellSearchQuery.isNotEmpty ? 'No cantrips match search.' : 'No class-specific cantrips found.',
+                        style: const TextStyle(fontSize: 12, color: Colors.white54))
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: filteredCantrips.map((c) {
+                        final isSelected = _selectedWizardCantrips.contains(c.id);
+                        return FilterChip(
+                          selected: isSelected,
+                          selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
+                          label: Text(c.getName(edition)),
+                          avatar: DndGlyph.spell(
+                            school: c.school,
+                            level: 0,
+                            size: 16,
+                            isDarkMode: true,
+                          ),
+                          onSelected: (selected) {
+                            HapticService.selectionTick(context);
+                            setState(() {
+                              if (selected) {
+                                if (_selectedWizardCantrips.length < maxCantrips) {
+                                  _selectedWizardCantrips.add(c.id);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Cannot select more than $maxCantrips cantrips for Level 1 ${curClass.name}.'),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                _selectedWizardCantrips.remove(c.id);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                ],
+              ),
+            ),
+
+          const SizedBox(height: 16),
+
+          // Section 2: 1st-Level Spells
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.purple.shade900.withValues(alpha: 0.2),
+              color: Colors.cyan.shade900.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
+              border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3380,111 +3592,40 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('CANTRIPS (Level 0)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purpleAccent)),
+                    Text(spellsSectionTitle, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
                     Text(
-                      '${_selectedWizardCantrips.length} / $maxCantrips selected',
+                      '${_selectedWizardSpells.length} / $maxSpells selected',
                       style: TextStyle(
                         fontSize: 12,
-                        color: _selectedWizardCantrips.length == maxCantrips ? Colors.greenAccent : Colors.amberAccent,
+                        color: _selectedWizardSpells.length == maxSpells ? Colors.greenAccent : Colors.amberAccent,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 4),
+                Text(spellsSubtitle, style: const TextStyle(fontSize: 11, color: Colors.white60, fontStyle: FontStyle.italic)),
                 const SizedBox(height: 8),
-                if (cantrips.isEmpty)
-                  const Text('No class-specific cantrips found.', style: TextStyle(fontSize: 12, color: Colors.white54))
+                if (filteredLevel1Spells.isEmpty)
+                  Text(_spellSearchQuery.isNotEmpty ? 'No 1st-level spells match search.' : 'No class-specific 1st-level spells found.',
+                      style: const TextStyle(fontSize: 12, color: Colors.white54))
                 else
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: cantrips.map((c) {
-                      final isSelected = _selectedWizardCantrips.contains(c.id);
+                    children: filteredLevel1Spells.map((s) {
+                      final isSelected = _selectedWizardSpells.contains(s.id);
                       return FilterChip(
                         selected: isSelected,
-                        selectedColor: Colors.purpleAccent.withValues(alpha: 0.3),
-                        label: Text(c.getName(edition)),
+                        selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                        label: Text(s.getName(edition)),
                         avatar: DndGlyph.spell(
-                          school: c.school,
-                          level: 0,
+                          school: s.school,
+                          level: 1,
                           size: 16,
                           isDarkMode: true,
                         ),
                         onSelected: (selected) {
-                          HapticService.selectionTick(context);
-                          setState(() {
-                            if (selected) {
-                              if (_selectedWizardCantrips.length < maxCantrips) {
-                                _selectedWizardCantrips.add(c.id);
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Cannot select more than $maxCantrips cantrips for Level 1 ${curClass.name}.'),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            } else {
-                              _selectedWizardCantrips.remove(c.id);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-              ],
-            ),
-          ),
-
-        const SizedBox(height: 16),
-
-        // Section 2: 1st-Level Spells
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.cyan.shade900.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(spellsSectionTitle, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
-                  Text(
-                    '${_selectedWizardSpells.length} / $maxSpells selected',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _selectedWizardSpells.length == maxSpells ? Colors.greenAccent : Colors.amberAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(spellsSubtitle, style: const TextStyle(fontSize: 11, color: Colors.white60, fontStyle: FontStyle.italic)),
-              const SizedBox(height: 8),
-              if (level1Spells.isEmpty)
-                const Text('No class-specific 1st-level spells found.', style: TextStyle(fontSize: 12, color: Colors.white54))
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: level1Spells.map((s) {
-                    final isSelected = _selectedWizardSpells.contains(s.id);
-                    return FilterChip(
-                      selected: isSelected,
-                      selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
-                      label: Text(s.getName(edition)),
-                      avatar: DndGlyph.spell(
-                        school: s.school,
-                        level: 1,
-                        size: 16,
-                        isDarkMode: true,
-                      ),
-                      onSelected: (selected) {
                         HapticService.selectionTick(context);
                         setState(() {
                           if (selected) {
@@ -3510,8 +3651,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           ),
         ),
       ],
-    );
-  }
+    ],
+  );
+}
 
   Widget _buildStep7Review(ThemeData theme, Race? sp, CharacterClass? cls, Background? bg) {
     if (sp == null || cls == null || bg == null) {

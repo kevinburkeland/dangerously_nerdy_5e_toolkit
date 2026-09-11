@@ -78,6 +78,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   SkillType? _selectedFeatSkill;
   SkillType? _selectedFeatExpertise;
   String? _selectedFeatOption;
+  String _featSearchQuery = '';
 
   // Step 5: Spells
   final List<String> _newCantrips = [];
@@ -1323,6 +1324,54 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
     );
   }
 
+  void _applyFeatSelection(Feat match) {
+    setState(() {
+      _selectedFeatSlug = match.id.slug;
+      _selectedFeatName = match.name;
+      if (match.hasAbilityScoreIncrease) {
+        if (_selectedFeatAbility == null || !match.selectableAbilities.contains(_selectedFeatAbility)) {
+          _selectedFeatAbility = match.selectableAbilities.first;
+        }
+      } else {
+        _selectedFeatAbility = null;
+      }
+      if (match.hasSkillProficiencyChoice) {
+        final selectable = match.selectableSkills.isNotEmpty
+            ? match.selectableSkills
+            : SkillType.values.toList();
+        if (_selectedFeatSkill == null || !selectable.contains(_selectedFeatSkill)) {
+          _selectedFeatSkill = selectable.first;
+        }
+      } else {
+        _selectedFeatSkill = null;
+      }
+      if (match.hasExpertiseChoice) {
+        final eligible = <SkillType>{
+          ...widget.character.skillProficiencies.entries
+              .where((e) => e.value != SkillProficiencyLevel.none)
+              .map((e) => e.key),
+          if (_selectedFeatSkill != null) _selectedFeatSkill!,
+        };
+        if (eligible.isEmpty) eligible.addAll(SkillType.values);
+        if (_selectedFeatExpertise == null || !eligible.contains(_selectedFeatExpertise)) {
+          _selectedFeatExpertise = _selectedFeatSkill ?? eligible.first;
+        }
+      } else {
+        _selectedFeatExpertise = null;
+      }
+      if (match.hasInvocationChoice) {
+        final eligible = _getEligibleInvocations(match);
+        _selectedFeatOption = eligible.isNotEmpty ? eligible.first.id : null;
+      } else if (match.hasFightingStyleChoice) {
+        _selectedFeatOption = SrdFeatureOptions.fightingStyles.isNotEmpty
+            ? SrdFeatureOptions.fightingStyles.first.id
+            : null;
+      } else {
+        _selectedFeatOption = null;
+      }
+    });
+  }
+
   // --------------------------------------------------------------------------
   // STEP 4: ASI / FEAT
   // --------------------------------------------------------------------------
@@ -1447,103 +1496,118 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
             ],
           ],
         ] else ...[
-          DropdownButtonFormField<String>(
-            isExpanded: true,
-            initialValue: _selectedFeatSlug,
+          // Search Bar
+          TextField(
             decoration: InputDecoration(
-              labelText: 'Select Feat',
+              labelText: 'Search Feats',
+              hintText: 'Filter by feat name, category, prerequisite...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _featSearchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () => setState(() => _featSearchQuery = ''),
+                    )
+                  : null,
               border: const OutlineInputBorder(),
-              prefixIcon: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: DndGlyph.feat(
-                  category: FeatCategory.parse(
-                    _availableFeats.firstWhere((f) => f.id.slug == _selectedFeatSlug, orElse: () => _availableFeats.first).category,
-                  ),
-                  featId: _selectedFeatSlug,
-                  displayName: _selectedFeatName,
-                  size: 24,
-                  isDarkMode: theme.brightness == Brightness.dark,
-                ),
-              ),
+              isDense: true,
             ),
-            items: _availableFeats.map((f) {
-              final prereq = f.prerequisite != null ? ' (${f.prerequisite})' : '';
-              return DropdownMenuItem(
-                value: f.id.slug,
-                child: Row(
-                  children: [
-                    DndGlyph.feat(
-                      category: FeatCategory.parse(f.category),
-                      featId: f.id.slug,
-                      displayName: f.name,
-                      size: 20,
-                      isDarkMode: theme.brightness == Brightness.dark,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${f.name}$prereq',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+            onChanged: (v) => setState(() {
+              _featSearchQuery = v.trim();
+              final matches = _availableFeats.where((f) {
+                if (_featSearchQuery.isEmpty) return true;
+                final q = _featSearchQuery.toLowerCase();
+                return f.name.toLowerCase().contains(q) ||
+                    f.category.toLowerCase().contains(q) ||
+                    (f.prerequisite?.toLowerCase().contains(q) ?? false) ||
+                    f.descriptionMarkdown.toLowerCase().contains(q);
+              }).toList();
+              if (matches.isNotEmpty && !matches.any((f) => f.id.slug == _selectedFeatSlug)) {
+                _applyFeatSelection(matches.first);
+              }
+            }),
+          ),
+          const SizedBox(height: 12),
+          () {
+            final filteredFeats = _availableFeats.where((f) {
+              if (_featSearchQuery.isEmpty) return true;
+              final q = _featSearchQuery.toLowerCase();
+              final nameMatches = f.name.toLowerCase().contains(q);
+              final catMatches = f.category.toLowerCase().contains(q);
+              final prereqMatches = f.prerequisite?.toLowerCase().contains(q) ?? false;
+              final descMatches = f.descriptionMarkdown.toLowerCase().contains(q);
+              return nameMatches || catMatches || prereqMatches || descMatches;
+            }).toList();
+
+            if (filteredFeats.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    'No feats found matching "$_featSearchQuery"',
+                    style: const TextStyle(color: Colors.white54, fontStyle: FontStyle.italic),
+                  ),
                 ),
               );
-            }).toList(),
-            onChanged: (v) {
-              if (v != null) {
-                final match = _availableFeats.firstWhere(
-                  (f) => f.id.slug == v,
-                  orElse: () => _availableFeats.first,
+            }
+
+            final currentSelectionInList = filteredFeats.any((f) => f.id.slug == _selectedFeatSlug);
+            final activeFeatSlug = currentSelectionInList ? _selectedFeatSlug : filteredFeats.first.id.slug;
+
+            return DropdownButtonFormField<String>(
+              key: ValueKey('feat_dropdown_${filteredFeats.length}_$activeFeatSlug'),
+              isExpanded: true,
+              initialValue: activeFeatSlug,
+              decoration: InputDecoration(
+                labelText: _featSearchQuery.isNotEmpty ? 'Select Feat (${filteredFeats.length} matching)' : 'Select Feat',
+                border: const OutlineInputBorder(),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: DndGlyph.feat(
+                    category: FeatCategory.parse(
+                      filteredFeats.firstWhere((f) => f.id.slug == activeFeatSlug, orElse: () => filteredFeats.first).category,
+                    ),
+                    featId: activeFeatSlug,
+                    displayName: _selectedFeatName,
+                    size: 24,
+                    isDarkMode: theme.brightness == Brightness.dark,
+                  ),
+                ),
+              ),
+              items: filteredFeats.map((f) {
+                final prereq = f.prerequisite != null ? ' (${f.prerequisite})' : '';
+                return DropdownMenuItem(
+                  value: f.id.slug,
+                  child: Row(
+                    children: [
+                      DndGlyph.feat(
+                        category: FeatCategory.parse(f.category),
+                        featId: f.id.slug,
+                        displayName: f.name,
+                        size: 20,
+                        isDarkMode: theme.brightness == Brightness.dark,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${f.name}$prereq',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
-                setState(() {
-                  _selectedFeatSlug = v;
-                  _selectedFeatName = match.name;
-                  if (match.hasAbilityScoreIncrease) {
-                    if (_selectedFeatAbility == null || !match.selectableAbilities.contains(_selectedFeatAbility)) {
-                      _selectedFeatAbility = match.selectableAbilities.first;
-                    }
-                  } else {
-                    _selectedFeatAbility = null;
-                  }
-                  if (match.hasSkillProficiencyChoice) {
-                    final selectable = match.selectableSkills.isNotEmpty
-                        ? match.selectableSkills
-                        : SkillType.values.toList();
-                    if (_selectedFeatSkill == null || !selectable.contains(_selectedFeatSkill)) {
-                      _selectedFeatSkill = selectable.first;
-                    }
-                  } else {
-                    _selectedFeatSkill = null;
-                  }
-                  if (match.hasExpertiseChoice) {
-                    final eligible = <SkillType>{
-                      ...widget.character.skillProficiencies.entries
-                          .where((e) => e.value != SkillProficiencyLevel.none)
-                          .map((e) => e.key),
-                      if (_selectedFeatSkill != null) _selectedFeatSkill!,
-                    };
-                    if (eligible.isEmpty) eligible.addAll(SkillType.values);
-                    if (_selectedFeatExpertise == null || !eligible.contains(_selectedFeatExpertise)) {
-                      _selectedFeatExpertise = _selectedFeatSkill ?? eligible.first;
-                    }
-                  } else {
-                    _selectedFeatExpertise = null;
-                  }
-                  if (match.hasInvocationChoice) {
-                    final eligible = _getEligibleInvocations(match);
-                    _selectedFeatOption = eligible.isNotEmpty ? eligible.first.id : null;
-                  } else if (match.hasFightingStyleChoice) {
-                    _selectedFeatOption = SrdFeatureOptions.fightingStyles.isNotEmpty
-                        ? SrdFeatureOptions.fightingStyles.first.id
-                        : null;
-                  } else {
-                    _selectedFeatOption = null;
-                  }
-                });
-              }
-            },
-          ),
+              }).toList(),
+              onChanged: (v) {
+                if (v != null) {
+                  final match = filteredFeats.firstWhere(
+                    (f) => f.id.slug == v,
+                    orElse: () => filteredFeats.first,
+                  );
+                  _applyFeatSelection(match);
+                }
+              },
+            );
+          }(),
           () {
             final feat = _availableFeats.firstWhere(
               (f) => f.id.slug == _selectedFeatSlug,
@@ -2701,10 +2765,16 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
 
         // Search Bar
         TextField(
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Search Available Class Spells',
-            prefixIcon: Icon(Icons.search, size: 20),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _spellSearchQuery.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => setState(() => _spellSearchQuery = ''),
+                  )
+                : null,
+            border: const OutlineInputBorder(),
             isDense: true,
           ),
           onChanged: (v) => setState(() => _spellSearchQuery = v.trim()),
