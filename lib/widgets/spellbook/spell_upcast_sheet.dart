@@ -2,6 +2,50 @@ import 'package:flutter/material.dart';
 import '../../models/domain/character_models.dart';
 import '../../services/haptic_service.dart';
 
+/// Selection payload indicating the spell slot level and whether it expends a Pact Magic slot.
+@immutable
+class SpellCastSelection {
+  final int slotLevel;
+  final bool isPactMagic;
+
+  const SpellCastSelection({
+    required this.slotLevel,
+    this.isPactMagic = false,
+  });
+
+  const SpellCastSelection.regular(this.slotLevel) : isPactMagic = false;
+  const SpellCastSelection.pact(this.slotLevel) : isPactMagic = true;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SpellCastSelection &&
+          other.slotLevel == slotLevel &&
+          other.isPactMagic == isPactMagic) ||
+      (other is int && other == slotLevel);
+
+  @override
+  int get hashCode => slotLevel.hashCode ^ isPactMagic.hashCode;
+
+  @override
+  String toString() => isPactMagic ? 'Pact Magic Lvl $slotLevel' : 'Slot Lvl $slotLevel';
+}
+
+/// Internal option representation for slot selection rows.
+class _SpellUpcastOption {
+  final int level;
+  final bool isPactMagic;
+  final int currentSlots;
+  final int maxSlots;
+
+  const _SpellUpcastOption({
+    required this.level,
+    required this.isPactMagic,
+    required this.currentSlots,
+    required this.maxSlots,
+  });
+}
+
 /// Modal bottom sheet allowing a player to select a spell slot level to cast or upcast a spell.
 ///
 /// Complies with WCAG AA contrast standards and enforces minimum 48x48dp touch targets
@@ -18,15 +62,15 @@ class SpellUpcastSheet extends StatelessWidget {
     required this.resources,
   });
 
-  /// Displays the upcasting sheet, returning the chosen slot level or `null` if dismissed.
-  static Future<int?> show(
+  /// Displays the upcasting sheet, returning the chosen slot selection or `null` if dismissed.
+  static Future<SpellCastSelection?> show(
     BuildContext context, {
     required String spellName,
     required int spellLevel,
     required CharacterResourcePool resources,
   }) {
     HapticService.selectionTick(context);
-    return showModalBottomSheet<int>(
+    return showModalBottomSheet<SpellCastSelection>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -45,14 +89,40 @@ class SpellUpcastSheet extends StatelessWidget {
     final pool = resources.spellSlots;
     final maxSlotsMap = pool.maxSlots;
     final currentSlotsMap = pool.currentSlots;
+    final minLevel = spellLevel < 1 ? 1 : spellLevel;
 
-    // Filter eligible spell slot levels (>= spellLevel) where maxSlots > 0
-    final eligibleLevels = <int>[];
-    for (int lvl = (spellLevel < 1 ? 1 : spellLevel); lvl <= 9; lvl++) {
-      if ((maxSlotsMap[lvl] ?? 0) > 0) {
-        eligibleLevels.add(lvl);
+    // Build eligible regular and Pact Magic slot options
+    final options = <_SpellUpcastOption>[];
+    for (int lvl = minLevel; lvl <= 9; lvl++) {
+      final max = maxSlotsMap[lvl] ?? 0;
+      if (max > 0) {
+        options.add(_SpellUpcastOption(
+          level: lvl,
+          isPactMagic: false,
+          currentSlots: currentSlotsMap[lvl] ?? max,
+          maxSlots: max,
+        ));
       }
     }
+
+    // Add Pact Magic option if character possesses pact slots >= spell level
+    if (pool.pactMagicMax > 0 && pool.pactMagicSlotLevel >= minLevel) {
+      options.add(_SpellUpcastOption(
+        level: pool.pactMagicSlotLevel,
+        isPactMagic: true,
+        currentSlots: pool.pactMagicCurrent,
+        maxSlots: pool.pactMagicMax,
+      ));
+    }
+
+    // Sort options by level, with regular slots preceding Pact Magic if same level
+    options.sort((a, b) {
+      final cmp = a.level.compareTo(b.level);
+      if (cmp != 0) return cmp;
+      if (!a.isPactMagic && b.isPactMagic) return -1;
+      if (a.isPactMagic && !b.isPactMagic) return 1;
+      return 0;
+    });
 
     return Container(
       decoration: BoxDecoration(
@@ -139,7 +209,7 @@ class SpellUpcastSheet extends StatelessWidget {
               const SizedBox(height: 14),
 
               // Slot Rows List
-              if (eligibleLevels.isEmpty) ...[
+              if (options.isEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Center(
@@ -159,9 +229,10 @@ class SpellUpcastSheet extends StatelessWidget {
                   ),
                 ),
               ] else ...[
-                ...eligibleLevels.map((lvl) {
-                  final max = maxSlotsMap[lvl] ?? 0;
-                  final cur = currentSlotsMap[lvl] ?? max;
+                ...options.map((opt) {
+                  final lvl = opt.level;
+                  final max = opt.maxSlots;
+                  final cur = opt.currentSlots;
                   final isAvailable = cur > 0;
                   final isBaseLevel = lvl == spellLevel;
                   final upcastDelta = lvl - spellLevel;
@@ -173,9 +244,13 @@ class SpellUpcastSheet extends StatelessWidget {
                     _ => '${lvl}th',
                   };
 
+                  final levelTitle = opt.isPactMagic
+                      ? '$ordinal Level Slot (Pact)'
+                      : '$ordinal Level Slot';
+
                   final semanticLabel = isAvailable
-                      ? 'Cast at $ordinal Level, $cur slots remaining${upcastDelta > 0 ? " (+$upcastDelta level upcast)" : ""}'
-                      : '$ordinal Level, 0 slots remaining (exhausted)';
+                      ? 'Cast at $levelTitle, $cur slots remaining${upcastDelta > 0 ? " (+$upcastDelta level upcast)" : ""}'
+                      : '$levelTitle, 0 slots remaining (exhausted)';
 
                   return Semantics(
                     button: true,
@@ -190,7 +265,12 @@ class SpellUpcastSheet extends StatelessWidget {
                           onTap: isAvailable
                               ? () {
                                   HapticService.heavyImpact(context);
-                                  Navigator.of(context).pop(lvl);
+                                  Navigator.of(context).pop(
+                                    SpellCastSelection(
+                                      slotLevel: lvl,
+                                      isPactMagic: opt.isPactMagic,
+                                    ),
+                                  );
                                 }
                               : null,
                           child: ConstrainedBox(
@@ -199,16 +279,20 @@ class SpellUpcastSheet extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               decoration: BoxDecoration(
                                 color: isAvailable
-                                    ? (isBaseLevel
-                                        ? Colors.purple.withValues(alpha: 0.12)
-                                        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4))
+                                    ? (opt.isPactMagic
+                                        ? Colors.purple.withValues(alpha: 0.18)
+                                        : (isBaseLevel
+                                            ? Colors.purple.withValues(alpha: 0.12)
+                                            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)))
                                     : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isAvailable
-                                      ? (isBaseLevel
-                                          ? Colors.purpleAccent.withValues(alpha: 0.6)
-                                          : theme.colorScheme.outlineVariant)
+                                      ? (opt.isPactMagic
+                                          ? Colors.purpleAccent.withValues(alpha: 0.8)
+                                          : (isBaseLevel
+                                              ? Colors.purpleAccent.withValues(alpha: 0.6)
+                                              : theme.colorScheme.outlineVariant))
                                       : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                                 ),
                               ),
@@ -221,7 +305,9 @@ class SpellUpcastSheet extends StatelessWidget {
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       color: isAvailable
-                                          ? (isBaseLevel ? Colors.purpleAccent : theme.colorScheme.primary)
+                                          ? (opt.isPactMagic
+                                              ? Colors.purpleAccent
+                                              : (isBaseLevel ? Colors.purpleAccent : theme.colorScheme.primary))
                                           : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -241,17 +327,38 @@ class SpellUpcastSheet extends StatelessWidget {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Row(
+                                        Wrap(
+                                          crossAxisAlignment: WrapCrossAlignment.center,
+                                          spacing: 6,
+                                          runSpacing: 4,
                                           children: [
                                             Text(
-                                              '$ordinal Level Slot',
+                                              levelTitle,
                                               style: theme.textTheme.bodyMedium?.copyWith(
                                                 fontWeight: FontWeight.bold,
-                                                color: isAvailable ? null : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                                color: isAvailable
+                                                    ? (opt.isPactMagic ? Colors.purpleAccent : null)
+                                                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                                               ),
                                             ),
-                                            if (upcastDelta > 0) ...[
-                                              const SizedBox(width: 8),
+                                            if (opt.isPactMagic)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.purpleAccent.withValues(alpha: 0.2),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+                                                ),
+                                                child: const Text(
+                                                  'PACT',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.purpleAccent,
+                                                  ),
+                                                ),
+                                              ),
+                                            if (upcastDelta > 0)
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                 decoration: BoxDecoration(
@@ -267,11 +374,12 @@ class SpellUpcastSheet extends StatelessWidget {
                                                   ),
                                                 ),
                                               ),
-                                            ],
                                           ],
                                         ),
                                         Text(
-                                          '$cur of $max slots remaining',
+                                          opt.isPactMagic
+                                              ? '$cur of $max pact slots remaining • Recharges on Short Rest'
+                                              : '$cur of $max slots remaining',
                                           style: theme.textTheme.bodySmall?.copyWith(
                                             color: isAvailable
                                                 ? theme.colorScheme.onSurfaceVariant
@@ -288,7 +396,9 @@ class SpellUpcastSheet extends StatelessWidget {
                                     Icon(
                                       Icons.arrow_forward_ios,
                                       size: 14,
-                                      color: isBaseLevel ? Colors.purpleAccent : theme.colorScheme.primary,
+                                      color: opt.isPactMagic
+                                          ? Colors.purpleAccent
+                                          : (isBaseLevel ? Colors.purpleAccent : theme.colorScheme.primary),
                                     )
                                   else
                                     const Text(

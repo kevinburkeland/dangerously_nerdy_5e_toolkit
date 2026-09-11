@@ -54,27 +54,82 @@ class InteractiveSpellTile extends StatelessWidget {
     HapticService.heavyImpact(context);
 
     int? castLevel;
+    bool isPactMagic = false;
+
     if (spell.level > 0) {
-      castLevel = await SpellUpcastSheet.show(
-        context,
-        spellName: spell.name,
-        spellLevel: spell.level,
-        resources: controller.character.resources,
-      );
-      if (castLevel == null) {
-        // User dismissed the sheet without selecting a slot
+      final pool = controller.character.resources.spellSlots;
+      final hasRegularSlots = pool.maxSlots.entries.any((e) => e.key >= spell.level && e.value > 0);
+      final hasPactSlots = pool.pactMagicMax > 0 && pool.pactMagicSlotLevel >= spell.level;
+
+      if (!hasRegularSlots && !hasPactSlots) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                pool.pactMagicMax > 0
+                    ? 'Spell level (${spell.level}) exceeds Pact Magic slot level (${pool.pactMagicSlotLevel}).'
+                    : 'No spell slots available for Level ${spell.level}+ spells.',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
         return;
+      }
+
+      // If character ONLY has Pact Magic for this spell (pure Warlock):
+      // Auto upcast to the Warlock's spell level without prompting!
+      if (!hasRegularSlots && hasPactSlots) {
+        if (pool.pactMagicCurrent <= 0) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'No Pact Magic slots remaining for ${spell.name} (recharges on a Short or Long Rest).',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+          return;
+        }
+        castLevel = pool.pactMagicSlotLevel;
+        isPactMagic = true;
+      } else {
+        final selection = await SpellUpcastSheet.show(
+          context,
+          spellName: spell.name,
+          spellLevel: spell.level,
+          resources: controller.character.resources,
+        );
+        if (selection == null) {
+          // User dismissed the sheet without selecting a slot
+          return;
+        }
+        castLevel = selection.slotLevel;
+        isPactMagic = selection.isPactMagic;
       }
     }
 
-    final rollResult = await controller.castSpell(spell, castLevel: castLevel);
+    final rollResult = await controller.castSpell(
+      spell,
+      castLevel: castLevel,
+      isPactMagic: isPactMagic,
+    );
+
+    final upcastTag = isPactMagic
+        ? ' (Pact Magic Lvl $castLevel)'
+        : ((castLevel != null && castLevel > spell.level) ? ' (Cast Lvl $castLevel)' : '');
 
     if (hasSpellAttack && dealsDamage) {
       final atk = controller.rollSpellAttack(spell);
       final critStr = atk.isCrit ? ' (CRIT!)' : (atk.isFumble ? ' (FUMBLE!)' : '');
-      final upcastText = (castLevel != null && castLevel > spell.level) ? ' (Cast Lvl $castLevel)' : '';
       final dmgText = rollResult != null ? ' | Damage ${rollResult.total} (${rollResult.formulaString})' : '';
-      final summary = '${spell.name}$upcastText: Attack ${atk.total}$critStr$dmgText';
+      final summary = '${spell.name}$upcastTag: Attack ${atk.total}$critStr$dmgText';
 
       A11yService.announce(summary);
       if (context.mounted) {
@@ -90,8 +145,7 @@ class InteractiveSpellTile extends StatelessWidget {
     } else if (hasSpellAttack) {
       final atk = controller.rollSpellAttack(spell);
       final critStr = atk.isCrit ? ' (CRIT!)' : (atk.isFumble ? ' (FUMBLE!)' : '');
-      final upcastText = (castLevel != null && castLevel > spell.level) ? ' (Cast Lvl $castLevel)' : '';
-      final summary = '${spell.name}$upcastText: Attack ${atk.total}$critStr (1d20+${controller.stats.spellAttackBonus})';
+      final summary = '${spell.name}$upcastTag: Attack ${atk.total}$critStr (1d20+${controller.stats.spellAttackBonus})';
 
       A11yService.announceRoll(atk);
       if (context.mounted) {
@@ -104,10 +158,9 @@ class InteractiveSpellTile extends StatelessWidget {
         );
       }
     } else if (dealsDamage) {
-      final upcastText = (castLevel != null && castLevel > spell.level) ? ' (Cast Lvl $castLevel)' : '';
       final summary = rollResult != null
-          ? '${spell.name}$upcastText: Damage ${rollResult.total} (${rollResult.formulaString})'
-          : '${spell.name}$upcastText: Cast complete';
+          ? '${spell.name}$upcastTag: Damage ${rollResult.total} (${rollResult.formulaString})'
+          : '${spell.name}$upcastTag: Cast complete';
 
       A11yService.announce(summary);
       if (context.mounted) {
@@ -121,7 +174,12 @@ class InteractiveSpellTile extends StatelessWidget {
       }
     } else {
       // Utility / Buff / Debuff spell execution
-      final summary = 'Cast ${spell.name} (${castLevel != null && castLevel > 0 ? "Level $castLevel" : (spell.level == 0 ? "Cantrip" : "Level ${spell.level}")})';
+      final levelDescriptor = isPactMagic
+          ? 'Pact Magic Level $castLevel'
+          : (castLevel != null && castLevel > 0
+              ? 'Level $castLevel'
+              : (spell.level == 0 ? 'Cantrip' : 'Level ${spell.level}'));
+      final summary = 'Cast ${spell.name} ($levelDescriptor)';
       A11yService.announce(summary);
       if (context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();

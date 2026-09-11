@@ -87,7 +87,7 @@ void main() {
 
   group('SpellUpcastSheet UI & Accessibility Tests', () {
     testWidgets('Renders actionable rows with >= spellLevel, disables depleted slots, min 48dp height', (tester) async {
-      int? selectedSlot;
+      SpellCastSelection? selectedSlot;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -144,11 +144,12 @@ void main() {
       await tester.tap(find.text('4th Level Slot'));
       await tester.pumpAndSettle();
 
-      expect(selectedSlot, equals(4));
+      expect(selectedSlot?.slotLevel, equals(4));
+      expect(selectedSlot?.isPactMagic, isFalse);
     });
 
     testWidgets('Dismissing SpellUpcastSheet returns null gracefully', (tester) async {
-      int? selectedSlot = 999;
+      SpellCastSelection? selectedSlot = const SpellCastSelection(slotLevel: 999);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -315,6 +316,166 @@ void main() {
 
       // Level 1 slot decrements from 4 to 3
       expect(controller.character.resources.spellSlots.currentSlots[1], equals(3));
+    });
+
+    testWidgets('Warlock casting Armor of Agathys auto-upcasts to Pact Magic level without warning or modal', (tester) async {
+      final warlockChar = baseCharacter.copyWith(
+        resources: baseCharacter.resources.copyWith(
+          tempHp: 0,
+          spellSlots: const SpellSlotPool(
+            maxSlots: {},
+            currentSlots: {},
+            pactMagicMax: 2,
+            pactMagicCurrent: 2,
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      final controller = CharacterSheetController(character: warlockChar, persistenceService: fakeRepo);
+
+      const agathys = Spell(
+        id: EntityId(slug: 'armor-of-agathys', ruleset: RulesetVersion.v2024),
+        name: 'Armor of Agathys',
+        level: 1,
+        school: 'abjuration',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600),
+        range: 'Self',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: InteractiveSpellTile(
+              spell: agathys,
+              controller: controller,
+            ),
+          ),
+        ),
+      );
+
+      // Tap Armor of Agathys to cast
+      await tester.tap(find.text('Armor of Agathys'));
+      await tester.pumpAndSettle();
+
+      // Ensure NO error warning about missing level 1 spell slots appears
+      expect(find.textContaining('No spell slots available'), findsNothing);
+      // Ensure bottom sheet did NOT open because there is only one slot level (auto-upcast)
+      expect(find.byType(SpellUpcastSheet), findsNothing);
+
+      // Pact magic slot decrements 2 -> 1
+      expect(controller.character.resources.spellSlots.pactMagicCurrent, equals(1));
+      // Grants 2 * 5 = 10 temp HP (auto-upcast to 2nd level)
+      expect(controller.character.resources.tempHp, equals(10));
+
+      // SnackBar shows auto-upcast to Pact Magic Level 2
+      expect(find.textContaining('Pact Magic Level 2'), findsOneWidget);
+    });
+
+    testWidgets('Depleted Pact Magic slots block casting and display helpful notification', (tester) async {
+      final warlockChar = baseCharacter.copyWith(
+        resources: baseCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {},
+            currentSlots: {},
+            pactMagicMax: 2,
+            pactMagicCurrent: 0, // Depleted!
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      final controller = CharacterSheetController(character: warlockChar, persistenceService: fakeRepo);
+
+      const agathys = Spell(
+        id: EntityId(slug: 'armor-of-agathys', ruleset: RulesetVersion.v2024),
+        name: 'Armor of Agathys',
+        level: 1,
+        school: 'abjuration',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600),
+        range: 'Self',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: InteractiveSpellTile(
+              spell: agathys,
+              controller: controller,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Armor of Agathys'));
+      await tester.pumpAndSettle();
+
+      // Verify notification appears
+      expect(find.textContaining('No Pact Magic slots remaining'), findsOneWidget);
+      expect(controller.character.resources.spellSlots.pactMagicCurrent, equals(0));
+    });
+
+    testWidgets('Multiclass character shows both regular slots and Pact Magic slot in SpellUpcastSheet', (tester) async {
+      final multiclassChar = baseCharacter.copyWith(
+        resources: baseCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 2},
+            currentSlots: {1: 4, 2: 2},
+            pactMagicMax: 2,
+            pactMagicCurrent: 2,
+            pactMagicSlotLevel: 2,
+          ),
+        ),
+      );
+      final controller = CharacterSheetController(character: multiclassChar, persistenceService: fakeRepo);
+
+      const agathys = Spell(
+        id: EntityId(slug: 'armor-of-agathys', ruleset: RulesetVersion.v2024),
+        name: 'Armor of Agathys',
+        level: 1,
+        school: 'abjuration',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.timed, durationSeconds: 3600),
+        range: 'Self',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Gain 5 temp HP per slot level.',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: InteractiveSpellTile(
+              spell: agathys,
+              controller: controller,
+            ),
+          ),
+        ),
+      );
+
+      // Tap to cast -> since both regular slots and pact slots exist, sheet opens
+      await tester.tap(find.text('Armor of Agathys'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpellUpcastSheet), findsOneWidget);
+      expect(find.text('1st Level Slot'), findsOneWidget);
+      expect(find.text('2nd Level Slot'), findsOneWidget);
+      expect(find.text('2nd Level Slot (Pact)'), findsOneWidget);
+      expect(find.text('PACT'), findsOneWidget);
+
+      // Select Pact Magic slot
+      await tester.tap(find.text('2nd Level Slot (Pact)'));
+      await tester.pumpAndSettle();
+
+      // Pact Magic decremented from 2 to 1
+      expect(controller.character.resources.spellSlots.pactMagicCurrent, equals(1));
+      // Regular 2nd level slots left untouched at 2
+      expect(controller.character.resources.spellSlots.currentSlots[2], equals(2));
+      // Regular 1st level slots left untouched at 4
+      expect(controller.character.resources.spellSlots.currentSlots[1], equals(4));
     });
   });
 

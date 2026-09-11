@@ -608,8 +608,18 @@ class CharacterSheetController extends ChangeNotifier {
   }
 
   /// Safely decrements a spell slot of a given level, updating immutable state and scheduling persistence.
-  Future<void> expendSpellSlot(int level) async {
+  /// If [isPactMagic] is true (or if the character has no regular slots at [level] but has Pact Magic at that level),
+  /// the character's Pact Magic slot pool is decremented instead.
+  Future<void> expendSpellSlot(int level, {bool isPactMagic = false}) async {
     final pool = _character.resources.spellSlots;
+    if (isPactMagic ||
+        ((pool.maxSlots[level] ?? 0) == 0 &&
+            pool.pactMagicSlotLevel == level &&
+            pool.pactMagicMax > 0)) {
+      await expendPactSlot();
+      return;
+    }
+
     final curMap = Map<int, int>.from(pool.currentSlots);
     final maxMap = pool.maxSlots;
 
@@ -619,6 +629,20 @@ class CharacterSheetController extends ChangeNotifier {
       _character = _character.copyWith(
         resources: _character.resources.copyWith(
           spellSlots: pool.copyWith(currentSlots: curMap),
+        ),
+      );
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
+  /// Safely decrements a Pact Magic slot, updating immutable state and scheduling persistence.
+  Future<void> expendPactSlot() async {
+    final pool = _character.resources.spellSlots;
+    if (pool.pactMagicCurrent > 0) {
+      _character = _character.copyWith(
+        resources: _character.resources.copyWith(
+          spellSlots: pool.copyWith(pactMagicCurrent: pool.pactMagicCurrent - 1),
         ),
       );
       notifyListeners();
@@ -886,20 +910,75 @@ class CharacterSheetController extends ChangeNotifier {
     return result;
   }
 
-  /// Casts a spell, expending the specified spell slot (if level >= 1),
-  /// scaling damage dice if upcast above base spell level, and dispatching
+  /// Casts a spell, expending the specified spell slot (or Pact Magic slot),
+  /// scaling damage dice or effects if upcast above base spell level, and dispatching
   /// the roll to [DiceRoomService].
-  Future<DiceRollResult?> castSpell(Spell spell, {int? castLevel}) async {
+  Future<DiceRollResult?> castSpell(
+    Spell spell, {
+    int? castLevel,
+    bool isPactMagic = false,
+  }) async {
+    final pool = _character.resources.spellSlots;
+    final effectiveIsPact = isPactMagic ||
+        (castLevel != null &&
+            (pool.maxSlots[castLevel] ?? 0) == 0 &&
+            pool.pactMagicSlotLevel == castLevel &&
+            pool.pactMagicMax > 0);
+
     if (castLevel != null && castLevel > 0) {
-      await expendSpellSlot(castLevel);
+      if (effectiveIsPact) {
+        await expendPactSlot();
+      } else {
+        await expendSpellSlot(castLevel);
+      }
     }
 
-    final effectiveLevel = castLevel ?? spell.level;
+    final effectiveLevel = castLevel ?? (effectiveIsPact ? pool.pactMagicSlotLevel : spell.level);
     final delta = effectiveLevel > spell.level ? (effectiveLevel - spell.level) : 0;
 
     final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
     final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
     final isEldritchBlast = cleanSlug == 'eldritch-blast' || spell.name.toLowerCase() == 'eldritch blast';
+    final isArmorOfAgathys = cleanSlug == 'armor-of-agathys' || spell.name.toLowerCase() == 'armor of agathys';
+
+    // Armor of Agathys: grants 5 temp HP per slot level & 5 cold retaliation damage
+    if (isArmorOfAgathys) {
+      final flatHp = effectiveLevel > 0 ? (effectiveLevel * 5) : 5;
+      if (flatHp > _character.resources.tempHp) {
+        await setTempHp(flatHp);
+      }
+      final roomService = DiceRoomService();
+      final activeRoom = roomService.activeRoomCode ?? 'LOCAL';
+      final playerName = _character.name.isNotEmpty ? _character.name : 'Player';
+      final pactLabel = effectiveIsPact
+          ? ' (Pact Magic Level $effectiveLevel)'
+          : (effectiveLevel > spell.level ? ' (Cast at Level $effectiveLevel)' : '');
+      final agathysResult = DiceRollResult(
+        timestamp: DateTime.now(),
+        diceEntries: const [],
+        groupResults: const [],
+        modifier: flatHp,
+        rollMode: RollMode.normal,
+        individualRolls: const [],
+        total: flatHp,
+        isCrit: false,
+        isFumble: false,
+      );
+      final roomRoll = RoomRoll(
+        id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+        roomCode: activeRoom,
+        playerName: playerName,
+        formulaString: '${spell.name}$pactLabel: $flatHp Temp HP ($flatHp Cold Retaliation)',
+        total: flatHp,
+        individualRolls: const [],
+        details: ['$flatHp Temp HP & $flatHp Cold Damage on melee hit'],
+        timestamp: DateTime.now(),
+        isCrit: false,
+        isFumble: false,
+      );
+      roomService.broadcastRoll(roomRoll);
+      return agathysResult;
+    }
 
     // Parse base formula
     String baseFormula = '1d10';
@@ -1004,7 +1083,9 @@ class CharacterSheetController extends ChangeNotifier {
     final roomService = DiceRoomService();
     final activeRoom = roomService.activeRoomCode ?? 'LOCAL';
     final playerName = _character.name.isNotEmpty ? _character.name : 'Player';
-    final upcastLabel = (effectiveLevel > spell.level) ? ' (Cast at Level $effectiveLevel)' : '';
+    final upcastLabel = effectiveIsPact
+        ? ' (Pact Magic Level $effectiveLevel)'
+        : (effectiveLevel > spell.level ? ' (Cast at Level $effectiveLevel)' : '');
     final roomRoll = RoomRoll(
       id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
       roomCode: activeRoom,

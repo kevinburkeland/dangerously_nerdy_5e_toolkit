@@ -1490,10 +1490,28 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
               if (action == 'cast_slot') {
                 HapticService.heavyImpact(context);
                 final lvl = spellItem?.level ?? 1;
-                widget.controller.toggleSpellSlot(lvl, true);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Cast $spellName (Expended Level $lvl slot)')),
-                );
+                final pool = widget.controller.character.resources.spellSlots;
+                final isPact = pool.pactMagicMax > 0 &&
+                    (pool.maxSlots[lvl] ?? 0) == 0 &&
+                    pool.pactMagicSlotLevel >= lvl;
+
+                if (isPact) {
+                  widget.controller.expendPactSlot();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Cast $spellName (Expended Level ${pool.pactMagicSlotLevel} Pact slot)'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } else {
+                  widget.controller.toggleSpellSlot(lvl, true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Cast $spellName (Expended Level $lvl slot)'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               } else if (action == 'remove') {
                 HapticService.selectionTick(context);
                 widget.controller.removeSpell(spellRef, isCantrip: isCantrip);

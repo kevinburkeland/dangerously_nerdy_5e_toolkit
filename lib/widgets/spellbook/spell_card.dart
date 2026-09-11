@@ -102,23 +102,76 @@ class SpellCard extends StatelessWidget {
     }
 
     final resources = controller?.character.resources ?? const CharacterResourcePool();
-    final chosenSlot = await SpellUpcastSheet.show(
-      context,
-      spellName: spellName,
-      spellLevel: spell.level,
-      resources: resources,
-    );
+    final pool = resources.spellSlots;
+    final hasRegularSlots = pool.maxSlots.entries.any((e) => e.key >= spell.level && e.value > 0);
+    final hasPactSlots = pool.pactMagicMax > 0 && pool.pactMagicSlotLevel >= spell.level;
 
-    if (chosenSlot == null) {
-      // Dismissed without selection
+    if (!hasRegularSlots && !hasPactSlots) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              pool.pactMagicMax > 0
+                  ? 'Spell level (${spell.level}) exceeds Pact Magic slot level (${pool.pactMagicSlotLevel}).'
+                  : 'No spell slots available for Level ${spell.level}+ spells.',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
       return;
+    }
+
+    int chosenSlot;
+    bool isPactMagic = false;
+
+    // If character ONLY has Pact Magic for this spell (pure Warlock):
+    // Auto upcast to the Warlock's spell level without prompting!
+    if (!hasRegularSlots && hasPactSlots) {
+      if (pool.pactMagicCurrent <= 0) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'No Pact Magic slots remaining for $spellName (recharges on a Short or Long Rest).',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+      chosenSlot = pool.pactMagicSlotLevel;
+      isPactMagic = true;
+    } else {
+      final selection = await SpellUpcastSheet.show(
+        context,
+        spellName: spellName,
+        spellLevel: spell.level,
+        resources: resources,
+      );
+
+      if (selection == null) {
+        // Dismissed without selection
+        return;
+      }
+      chosenSlot = selection.slotLevel;
+      isPactMagic = selection.isPactMagic;
     }
 
     if (onCast != null) {
       onCast!(chosenSlot);
     } else if (controller != null) {
       final domainSpell = _buildDomainSpell();
-      await controller!.castSpell(domainSpell, castLevel: chosenSlot);
+      await controller!.castSpell(
+        domainSpell,
+        castLevel: chosenSlot,
+        isPactMagic: isPactMagic,
+      );
     }
   }
 

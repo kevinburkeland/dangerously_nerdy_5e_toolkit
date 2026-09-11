@@ -48,3 +48,12 @@ The toolkit natively supports both the **2014 Rules As Written (SRD 5.1)** and t
   - 2014 mode automatically prunes origin feats and resets background ability bonuses to zero.
   - Feat prerequisites (e.g. Grappler requiring STR or DEX 13+) are evaluated via `CharacterValidationEngine.validateDraft(draft)` and surfaced in `CharacterBuilderController.validationIssues`.
   - Orphaned skill refunds are pruned whenever overlapping skills or backgrounds change.
+
+## 5. Warlock Pact Magic & Spell Upcasting Conventions
+
+- **Pact Magic Slot Purity (RAW 5e):**
+  - All Warlock spell slots share a uniform level (`pactMagicSlotLevel`).
+  - Casting any lower-level spell using Pact Magic automatically upcasts the spell to `pactMagicSlotLevel`.
+  - **Pure Warlock Auto-Upcasting:** Characters with only Pact Magic slots (no regular spell slots $\ge$ spell level) MUST NOT be blocked by missing lower-level slots or prompted with superfluous slot picker modals. The engine auto-upcasts the spell to `pactMagicSlotLevel` and decrements `pactMagicCurrent`.
+  - **Slot-Level Effect Scaling:** Spells with slot-level scaling (e.g. *Armor of Agathys* awarding 5 Temp HP and 5 Cold Retaliation damage per slot level) dynamically scale their effect values to `pactMagicSlotLevel`.
+  - **Multiclass Disambiguation:** Multiclass characters with both standard spell slots and Pact Magic slots present both options in `SpellUpcastSheet`, clearly distinguishing Pact Magic with the `(Pact)` badge, short-rest recharge annotations, and separate pool tracking.
