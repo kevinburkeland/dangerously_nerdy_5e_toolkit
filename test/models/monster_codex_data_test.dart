@@ -303,6 +303,17 @@ void main() {
             reason: 'Tarrasque makes exactly 1 Tail attack in multiattack');
       }
     });
+
+    test('getMonsterByName query for "Dragon" does not return "Dragon Turtle"', () {
+      final match = MonsterCodexLibrary.getMonsterByName('Dragon');
+      // If a match is found via word-boundary fallback, it must be a true dragon, never Dragon Turtle
+      expect(match?.name, isNot(equals('Dragon Turtle')));
+
+      // Exact match for Dragon Turtle still works
+      final dragonTurtle = MonsterCodexLibrary.getMonsterByName('Dragon Turtle');
+      expect(dragonTurtle, isNotNull);
+      expect(dragonTurtle?.name, equals('Dragon Turtle'));
+    });
   });
 }
 

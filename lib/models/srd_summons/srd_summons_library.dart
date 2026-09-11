@@ -153,17 +153,51 @@ class SrdSummonsLibrary {
 
   static MinionStatBlock? findStatBlockByName(String name) {
     final lower = name.trim().toLowerCase();
+    if (lower.isEmpty) return null;
+
+    // 1. Exact equality match takes strict precedence
     for (final preset in allPresets) {
       for (final sb in preset.effectiveStatBlocks) {
-        if (sb.name.toLowerCase() == lower) return sb;
+        if (sb.name.toLowerCase() == lower || sb.id.toLowerCase() == lower) return sb;
       }
     }
     for (final m in MonsterCodexLibrary.homebrewMonsters) {
       if (m.name.toLowerCase() == lower ||
-          m.sourceStatBlock.name.toLowerCase() == lower) {
+          m.id.toLowerCase() == lower ||
+          m.sourceStatBlock.name.toLowerCase() == lower ||
+          m.sourceStatBlock.id.toLowerCase() == lower) {
         return m.sourceStatBlock;
       }
     }
+
+    // 2. Strict word-boundary fallback matching
+    final wordRegex = RegExp(r'\b' + RegExp.escape(lower) + r'\b', caseSensitive: false);
+    for (final preset in allPresets) {
+      for (final sb in preset.effectiveStatBlocks) {
+        final sbLower = sb.name.toLowerCase();
+        if (wordRegex.hasMatch(sbLower)) {
+          if (lower == 'dragon' && (sbLower.contains('turtle') || sbLower == 'dragon turtle')) {
+            continue;
+          }
+          return sb;
+        }
+      }
+    }
+    for (final m in MonsterCodexLibrary.homebrewMonsters) {
+      final mLower = m.name.toLowerCase();
+      final sbLower = m.sourceStatBlock.name.toLowerCase();
+      if (wordRegex.hasMatch(mLower) || wordRegex.hasMatch(sbLower)) {
+        if (lower == 'dragon' &&
+            (mLower.contains('turtle') ||
+                mLower == 'dragon turtle' ||
+                sbLower.contains('turtle') ||
+                sbLower == 'dragon turtle')) {
+          continue;
+        }
+        return m.sourceStatBlock;
+      }
+    }
+
     return null;
   }
 }

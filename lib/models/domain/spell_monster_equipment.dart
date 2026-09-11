@@ -43,7 +43,7 @@ class EvaluationMath {
         'damageType': damageType.name,
         'isAttackRoll': isAttackRoll,
         'requiresSave': requiresSave,
-        if (scalingFormula != null) 'scalingFormula': scalingFormula,
+        'scalingFormula': scalingFormula,
       };
 
   factory EvaluationMath.fromMap(Map<String, dynamic> map) {

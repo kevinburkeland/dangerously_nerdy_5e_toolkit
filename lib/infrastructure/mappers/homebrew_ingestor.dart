@@ -178,7 +178,11 @@ class HomebrewIngestor {
         lower.contains('variable damage') ||
         lower.contains('damage type is variable') ||
         (lower.contains('you choose') && lower.contains('damage')) ||
-        (lower.contains('choose') && lower.contains('damage type'))) {
+        (lower.contains('choose') && lower.contains('damage type')) ||
+        lower.contains('chaotic') ||
+        lower.contains('chaos') ||
+        lower.contains('chromatic orb') ||
+        lower.contains('prismatic spray')) {
       return 'variable';
     }
     return firstMatchedType;
@@ -211,7 +215,7 @@ class HomebrewIngestor {
     final alreadyAllFlagged = damageMath.every((dm) => dm.isAttackRoll || dm.requiresSave);
     if (alreadyAllFlagged) return damageMath;
 
-    // Multi-stage spell detection (e.g., Ice Knife: 1d10 piercing attack, 2d6 cold DEX save)
+    // Multi-stage spell detection (e.g., Frost Shard: 1d10 piercing attack, 2d6 cold DEX save)
     if (damageMath.length >= 2 && hasAttack && hasSave) {
       final attackIdx = lower.contains('spell attack')
           ? lower.indexOf('spell attack')

@@ -247,6 +247,8 @@ class CharacterTelemetryResolver {
     for (final eqSlug in dto.equippedItemSlugs) {
       final clean = eqSlug.trim().toLowerCase();
       final cleanNormalized = clean.replaceAll('-', '_');
+      final armorBase = cleanNormalized.replaceAll(RegExp(r'^armor_|_armor$'), '');
+      final weaponBase = cleanNormalized.replaceAll(RegExp(r'^weapon_|_weapon$'), '');
       String? itemName;
       final magicItem = MagicItemLibrary.findById(clean) ??
           MagicItemLibrary.findById(cleanNormalized) ??
@@ -254,13 +256,19 @@ class CharacterTelemetryResolver {
           MagicItemLibrary.allItems.where((m) {
             final mId = m.id.toLowerCase();
             final mName = m.name.toLowerCase();
+            final cleanMName = mName.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
             return mId == clean ||
                 mId == cleanNormalized ||
                 mName == clean ||
+                cleanMName == clean ||
                 mId == 'armor_$cleanNormalized' ||
+                mId == 'armor_$armorBase' ||
                 mId == 'weapon_$cleanNormalized' ||
+                mId == 'weapon_$weaponBase' ||
                 mName.replaceAll(' ', '-') == clean ||
-                (clean.contains('plate') && mId.contains('plate'));
+                mName.replaceAll(' ', '_') == cleanNormalized ||
+                cleanMName.replaceAll(' ', '-') == clean ||
+                cleanMName.replaceAll(' ', '_') == cleanNormalized;
           }).firstOrNull;
 
       if (magicItem != null) {

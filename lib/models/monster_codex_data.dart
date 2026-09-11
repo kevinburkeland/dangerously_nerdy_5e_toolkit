@@ -392,11 +392,28 @@ class MonsterCodexLibrary {
 
   static MonsterItem? getMonsterByName(String name) {
     final lower = name.trim().toLowerCase();
-    try {
-      return allMonsters.firstWhere((m) => m.name.toLowerCase() == lower);
-    } catch (_) {
-      return null;
+    if (lower.isEmpty) return null;
+
+    // 1. Exact equality match takes strict precedence
+    for (final m in allMonsters) {
+      if (m.name.toLowerCase() == lower || m.id.toLowerCase() == lower) {
+        return m;
+      }
     }
+
+    // 2. Strict word-boundary fallback regex matching
+    final wordRegex = RegExp(r'\b' + RegExp.escape(lower) + r'\b', caseSensitive: false);
+    for (final m in allMonsters) {
+      final mLower = m.name.toLowerCase();
+      if (wordRegex.hasMatch(mLower)) {
+        // Enforce word-boundary anti-collision: prevent generic 'dragon' from matching 'Dragon Turtle'
+        if (lower == 'dragon' && (mLower.contains('turtle') || mLower == 'dragon turtle')) {
+          continue;
+        }
+        return m;
+      }
+    }
+    return null;
   }
 
   static List<MonsterItem> getMonstersByType(String type) {

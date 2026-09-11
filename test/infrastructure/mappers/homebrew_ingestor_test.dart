@@ -428,5 +428,63 @@ void main() {
       expect(coldMap['isAttackRoll'], isFalse);
       expect(coldMap['requiresSave'], isTrue);
     });
+
+    test('re-ingesting homebrew JSON bundle sets Chaotic Blast to variable and retains Frost Shard attack roll in exported JSON', () {
+      final rawBundle = [
+        {
+          'id': 'chaotic-blast',
+          'name': 'Chaotic Blast',
+          'level': 1,
+          'school': 'Evocation',
+          'range': '120 feet',
+          'damageType': 'acid', // Stale raw fallback
+          'descriptionMarkdown':
+              'You hurl an undulating, warbling mass of chaotic energy at one creature in range. Make a ranged spell attack against the target. On a hit, the target takes 2d8 + 1d6 damage. A d8 determines the attack\'s damage type: 1 - acid, 2 - cold, 3 - fire, 4 - force, 5 - lightning, 6 - poison, 7 - psychic, 8 - thunder.',
+          'damageMath': [
+            {'diceFormula': '2d8+1d6', 'damageType': 'acid'},
+          ],
+        },
+        {
+          'id': 'frost-shard',
+          'name': 'Frost Shard',
+          'level': 1,
+          'school': 'Conjuration',
+          'range': '60 feet',
+          'descriptionMarkdown':
+              'You fling a shard of ice at one creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 piercing damage. Hit or miss, the shard then explodes. Each creature within 5 feet of it must succeed on a Dexterity saving throw or take 2d6 cold damage.',
+          'damageMath': [
+            {'diceFormula': '1d10', 'damageType': 'piercing'},
+            {'diceFormula': '2d6', 'damageType': 'cold'},
+          ],
+        },
+      ];
+
+      final ingested = HomebrewIngestor.parseCustomSpells(rawBundle);
+      expect(ingested.length, equals(2));
+
+      // 1. Chaotic Blast verification
+      final chaoticBlast = ingested.firstWhere((s) => s.id == 'chaotic-blast');
+      expect(chaoticBlast.name, equals('Chaotic Blast'));
+      expect(chaoticBlast.damageType, equals('variable'));
+      expect(chaoticBlast.damageMath.first.damageType, equals(DamageType.variable));
+
+      final exportedChaos = chaoticBlast.toMap();
+      expect(exportedChaos['damageType'], equals('variable'));
+
+      // 2. Frost Shard verification
+      final frostShard = ingested.firstWhere((s) => s.id == 'frost-shard');
+      expect(frostShard.name, equals('Frost Shard'));
+      final exportedFrostShard = frostShard.toMap();
+      final exportedMath = (exportedFrostShard['damageMath'] as List).cast<Map<String, dynamic>>();
+
+      final piercingMath = exportedMath.firstWhere((m) => m['diceFormula'] == '1d10');
+      expect(piercingMath['isAttackRoll'], isTrue);
+      expect(piercingMath['damageType'], equals('piercing'));
+      expect(piercingMath.containsKey('scalingFormula'), isTrue);
+
+      final coldMath = exportedMath.firstWhere((m) => m['diceFormula'] == '2d6');
+      expect(coldMath['isAttackRoll'], isFalse);
+      expect(coldMath['requiresSave'], isTrue);
+    });
   });
 }

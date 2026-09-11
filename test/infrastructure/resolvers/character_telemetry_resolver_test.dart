@@ -191,5 +191,25 @@ void main() {
       expect(dead.isDying, isFalse);
       expect(dead.isDead, isTrue);
     });
+
+    test('resolves Breastplate to exact Breastplate entity without inheriting Plate Armor (Full Plate)', () async {
+      final dto = CharacterTelemetryDto(
+        id: 'skirmisher-hero',
+        name: 'Ranger Dave',
+        speciesSlug: 'human',
+        classPointers: const [
+          ClassLevelPointerDto(classSlug: 'ranger', level: 5),
+        ],
+        currentHp: 40,
+        maxHp: 40,
+        equippedItemSlugs: const ['breastplate'],
+      );
+
+      final resolved = await CharacterTelemetryResolver.resolve(dto);
+
+      expect(resolved.equippedItemNames, contains('Breastplate'));
+      expect(resolved.equippedItemNames.any((name) => name.contains('Full Plate') || name == 'Plate Armor'), isFalse);
+      expect(resolved.unresolvedSlugs.contains('breastplate'), isFalse);
+    });
   });
 }

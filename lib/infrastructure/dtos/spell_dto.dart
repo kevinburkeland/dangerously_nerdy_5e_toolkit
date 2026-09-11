@@ -212,20 +212,25 @@ class SpellDto {
     }
 
     // Variable damage type resolution (Chromatic Orb, Chaos Bolt, etc.)
-    String firstMatchedType = json['damageType']?.toString() ??
-        (resolvedDamageMath.isNotEmpty && resolvedDamageMath.first.damageType != DamageType.untyped
-            ? resolvedDamageMath.first.damageType.name
-            : 'untyped');
+    final computedMathType = resolvedDamageMath.isNotEmpty &&
+            resolvedDamageMath.first.damageType != DamageType.untyped
+        ? resolvedDamageMath.first.damageType.name
+        : null;
+
+    final fallbackType = json['damageType']?.toString() ?? 'untyped';
+    final baseType = computedMathType ?? fallbackType;
 
     final resolvedDamageType = HomebrewIngestor.resolveDamageType(
       '$resolvedName $resolvedDescription ${resolvedHigherLevels ?? ''}',
-      firstMatchedType,
+      baseType,
     );
 
     if (resolvedDamageType == 'variable') {
       for (var i = 0; i < resolvedDamageMath.length; i++) {
         final dm = resolvedDamageMath[i];
-        if (dm.damageType == DamageType.acid || dm.damageType == DamageType.untyped) {
+        if (dm.damageType == DamageType.acid ||
+            dm.damageType == DamageType.untyped ||
+            resolvedDamageMath.length == 1) {
           resolvedDamageMath[i] = dm.copyWith(damageType: DamageType.variable);
         }
       }

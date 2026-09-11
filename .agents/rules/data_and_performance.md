@@ -47,3 +47,9 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Range & Spatial Geometry:** Natural language ranges (e.g. `"30-foot line"`, `{"type": "line", "distance": {"amount": 30}}`) must normalize into `rangeDistanceFeet` (int) and `rangeType` (string/enum: `"line"`, `"cone"`, `"radius"`, `"self"`, `"touch"`, `"ranged"`). Touch and self default to 0 feet.
 - **Multi-Stage Delivery Flags:** Multi-stage damage payloads (e.g., Ice Knife) must pre-tag delivery mechanisms on `EvaluationMath` (`isAttackRoll`, `requiresSave`) to avoid runtime NLP during combat resolution.
 
+## 6. Strict Entity Resolution & Anti-Collision Directives
+
+- **Priority Exact Equality:** Telemetry and codex lookup methods (`CharacterTelemetryResolver`, `MonsterCodexLibrary.getMonsterByName`, `SrdSummonsLibrary.findStatBlockByName`) must prioritize exact `==` equality matches first against canonical and homebrew IDs and names.
+- **Prohibition of Loose Substring Matching:** Loose substring checks (e.g. `contains('plate')`) are strictly prohibited because they cause cross-category stat collisions (e.g., Breastplate incorrectly binding to Full Plate). Use strict slug normalization (`armorBase`, `weaponBase`, exact slug equality).
+- **Word-Boundary Regex on Fallbacks:** When fuzzy or partial fallback matching is necessary, enforce word-boundary tokens (`\b`) and disallow binding generic tokens (e.g., `'Dragon'`) to compound boss monsters (e.g., `'Dragon Turtle'`).
+
