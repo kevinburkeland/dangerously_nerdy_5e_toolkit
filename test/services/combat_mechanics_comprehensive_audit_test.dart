@@ -339,7 +339,7 @@ void main() {
         expect(combatant.isUnconscious, false);
         expect(combatant.isIncapacitated, false);
 
-        combatant.conditions.add(ArenaCondition.paralyzed);
+        combatant.conditions = combatant.conditions.add(ArenaCondition.paralyzed);
         expect(combatant.isParalyzed, true);
         expect(combatant.isIncapacitated, true);
 
@@ -461,7 +461,7 @@ void main() {
           acOverride: 10,
           hpOverride: 50,
         );
-        paralyzedDefender.conditions.add(ArenaCondition.paralyzed);
+        paralyzedDefender.conditions = paralyzedDefender.conditions.add(ArenaCondition.paralyzed);
 
         final initialHp = paralyzedDefender.currentHp;
 
@@ -489,7 +489,7 @@ void main() {
           monster: wolfMonster,
           team: ArenaTeam.teamB,
         );
-        proneDefender.conditions.add(ArenaCondition.prone);
+        proneDefender.conditions = proneDefender.conditions.add(ArenaCondition.prone);
 
         final attacker = ArenaCombatant.fromMonster(
           id: 'fighter',
@@ -545,8 +545,8 @@ void main() {
           acOverride: 12,
         );
         shieldCaster.knownSpellIds.add('spell_shield');
-        shieldCaster.maxSpellSlots[1] = 2;
-        shieldCaster.currentSpellSlots[1] = 2;
+        shieldCaster.setMaxSpellSlot(1, 2);
+        shieldCaster.setSpellSlot(1, 2);
 
         final attacker = ArenaCombatant.fromMonster(
           id: 'atk',

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:meta/meta.dart';
+import 'package:mutex/mutex.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
@@ -41,7 +42,8 @@ class RoomSyncOrchestrator {
   Timer? _milestoneTimer;
   Timer? _telemetryTimer;
 
-  bool _isProcessingNetworkPayload = false;
+  final Mutex _syncMutex = Mutex();
+  CampaignProfile? _lastInboundProfile;
   CrdtOrSet<String> _trackedRulesSet = const CrdtOrSet<String>();
   StreamController<RoomConnectionTelemetry> _telemetryController =
       StreamController<RoomConnectionTelemetry>.broadcast();
@@ -65,7 +67,7 @@ class RoomSyncOrchestrator {
         );
 
   /// Visible for testing and debugging sync lock state.
-  bool get isProcessingNetworkPayload => _isProcessingNetworkPayload;
+  bool get isProcessingNetworkPayload => _syncMutex.isLocked;
 
   /// Returns whether synchronization is actively listening to transport and DB streams.
   bool get isSynchronizing => _networkSub != null && _localDbSub != null;
@@ -152,73 +154,72 @@ class RoomSyncOrchestrator {
   Future<void> handleIncomingPayload(String jsonPayload) => _handleIncomingPayload(jsonPayload);
 
   Future<void> _handleIncomingPayload(String jsonPayload) async {
-    _isProcessingNetworkPayload = true;
+    await _syncMutex.protect(() async {
+      try {
+        final decoded = jsonDecode(jsonPayload);
+        if (decoded is! Map<String, dynamic>) return;
 
-    try {
-      final decoded = jsonDecode(jsonPayload);
-      if (decoded is! Map<String, dynamic>) return;
+        final type = decoded['type']?.toString();
 
-      final type = decoded['type']?.toString();
+        if (type == 'room_sync_full') {
+          final payloadData = decoded['payload'];
+          if (payloadData is! Map) return;
 
-      if (type == 'room_sync_full') {
-        final payloadData = decoded['payload'];
-        if (payloadData is! Map) return;
+          final remoteProfileDto = CampaignProfileDto.fromMap(
+            Map<String, dynamic>.from(payloadData),
+          );
+          final remoteProfile = remoteProfileDto.toDomain();
+          final localProfile = campaignRepo.activeProfile;
 
-        final remoteProfileDto = CampaignProfileDto.fromMap(
-          Map<String, dynamic>.from(payloadData),
-        );
-        final remoteProfile = remoteProfileDto.toDomain();
-        final localProfile = campaignRepo.activeProfile;
+          if (localProfile != null && localProfile.id == remoteProfile.id) {
+            // Reconcile pinned rules CRDT set if present
+            if (decoded.containsKey('pinned_rules_crdt') && decoded['pinned_rules_crdt'] is Map) {
+              try {
+                final remoteRulesSet = CrdtOrSetDto.fromMap<String>(
+                  Map<dynamic, dynamic>.from(decoded['pinned_rules_crdt'] as Map),
+                  (raw) => raw.toString(),
+                );
+                _trackedRulesSet = _trackedRulesSet.merge(remoteRulesSet);
+              } catch (_) {}
+            }
 
-        if (localProfile != null && localProfile.id == remoteProfile.id) {
-          // Reconcile pinned rules CRDT set if present
-          if (decoded.containsKey('pinned_rules_crdt') && decoded['pinned_rules_crdt'] is Map) {
+            _lastInboundProfile = remoteProfile;
+            await campaignRepo.saveProfileImmediate(remoteProfile);
+          }
+        } else if (type == 'crdt_or_set_delta') {
+          final payloadData = decoded['payload'];
+          if (payloadData is! Map) return;
+
+          final localProfile = campaignRepo.activeProfile;
+          if (localProfile != null) {
+            final remoteSet = CrdtOrSetDto.fromMap<String>(
+              Map<dynamic, dynamic>.from(payloadData),
+              (raw) => raw.toString(),
+            );
+
+            // Execute CrdtOrSet.merge()
+            _trackedRulesSet = _trackedRulesSet.merge(remoteSet);
+
+            // Reflect merged active values into profile's pinned rules
+            final updatedProfile = localProfile.copyWith(
+              pinnedRuleIds: _trackedRulesSet.activeValues.toSet(),
+            );
+            _lastInboundProfile = updatedProfile;
+            await campaignRepo.saveProfileImmediate(updatedProfile);
+          }
+        } else if (type == 'dice_roll') {
+          final payloadData = decoded['payload'];
+          if (payloadData is Map) {
             try {
-              final remoteRulesSet = CrdtOrSetDto.fromMap<String>(
-                Map<dynamic, dynamic>.from(decoded['pinned_rules_crdt'] as Map),
-                (raw) => raw.toString(),
-              );
-              _trackedRulesSet = _trackedRulesSet.merge(remoteRulesSet);
+              final roll = RoomRoll.fromMap(Map<String, dynamic>.from(payloadData));
+              diceRoomService.ingestRemoteRoll(roll);
             } catch (_) {}
           }
-
-          await campaignRepo.saveProfileImmediate(remoteProfile);
         }
-      } else if (type == 'crdt_or_set_delta') {
-        final payloadData = decoded['payload'];
-        if (payloadData is! Map) return;
-
-        final localProfile = campaignRepo.activeProfile;
-        if (localProfile != null) {
-          final remoteSet = CrdtOrSetDto.fromMap<String>(
-            Map<dynamic, dynamic>.from(payloadData),
-            (raw) => raw.toString(),
-          );
-
-          // Execute CrdtOrSet.merge()
-          _trackedRulesSet = _trackedRulesSet.merge(remoteSet);
-
-          // Reflect merged active values into profile's pinned rules
-          final updatedProfile = localProfile.copyWith(
-            pinnedRuleIds: _trackedRulesSet.activeValues.toSet(),
-          );
-          await campaignRepo.saveProfileImmediate(updatedProfile);
-        }
-      } else if (type == 'dice_roll') {
-        final payloadData = decoded['payload'];
-        if (payloadData is Map) {
-          try {
-            final roll = RoomRoll.fromMap(Map<String, dynamic>.from(payloadData));
-            diceRoomService.ingestRemoteRoll(roll);
-          } catch (_) {}
-        }
+      } catch (_) {
+        // Safely ignore malformed network payloads
       }
-    } catch (_) {
-      // Safely ignore malformed network payloads
-    } finally {
-      // Release lock safely after reactive stream microtasks finish firing
-      scheduleMicrotask(() => _isProcessingNetworkPayload = false);
-    }
+    });
   }
 
   /// Handles local profile changes emitted by the campaign repository.
@@ -227,27 +228,33 @@ class RoomSyncOrchestrator {
       _handleLocalProfileChange(profile);
 
   Future<void> _handleLocalProfileChange(CampaignProfile? profile) async {
-    if (profile == null || _isProcessingNetworkPayload) return;
-
-    final dto = CampaignProfileDto.fromDomain(profile);
-    final payloadMap = <String, dynamic>{
-      'type': 'room_sync_full',
-      'payload': dto.toMap(),
-      'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs,
-    };
-
-    if (_trackedRulesSet.items.isNotEmpty || _trackedRulesSet.tombstones.isNotEmpty) {
-      payloadMap['pinned_rules_crdt'] = CrdtOrSetDto.toMap<String>(
-        _trackedRulesSet,
-        (val) => val,
-      );
+    if (profile == null) return;
+    if (_lastInboundProfile == profile) {
+      _lastInboundProfile = null;
+      return;
     }
 
-    final payload = jsonEncode(payloadMap);
+    await _syncMutex.protect(() async {
+      final dto = CampaignProfileDto.fromDomain(profile);
+      final payloadMap = <String, dynamic>{
+        'type': 'room_sync_full',
+        'payload': dto.toMap(),
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs,
+      };
 
-    try {
-      await transportPort.broadcastPayload(payload);
-    } catch (_) {}
+      if (_trackedRulesSet.items.isNotEmpty || _trackedRulesSet.tombstones.isNotEmpty) {
+        payloadMap['pinned_rules_crdt'] = CrdtOrSetDto.toMap<String>(
+          _trackedRulesSet,
+          (val) => val,
+        );
+      }
+
+      final payload = jsonEncode(payloadMap);
+
+      try {
+        await transportPort.broadcastPayload(payload);
+      } catch (_) {}
+    });
   }
 
   void _startMilestoneFlushTimer() {

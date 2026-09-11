@@ -40,11 +40,11 @@ Located at `lib/application/services/room_state_reconciliation_service.dart`:
   - `HybridLogicalClock.now()`, `tick()`, and `merge()` accept `offsetMs` to guarantee causal ordering immune to client clock spoofing.
 - **Defensive Type Casting & Anti-Corruption:** All CRDT DTOs (`CrdtOrSetDto`, `CrdtLwwRegisterDto`) must enforce strict `Map<String, dynamic>.from(...)` casting on nested maps to avoid runtime `_Map<dynamic, dynamic>` type-erasure exceptions during deserialization.
 
-## 5. Transport Orchestration & Echo Loop Prevention
+## 5. Transport Orchestration, Mutex Concurrency & Echo Loop Prevention
 
 Located at `lib/application/services/room_sync_orchestrator.dart`:
 - **Bidirectional Wiring:** Glues `IP2pTransportPort` with local persistence `ICampaignRepository` (`watchIncomingPayloads()` and `watchActiveProfile()`).
-- **Echo Loop Prevention Mutex:** Setting `_isProcessingNetworkPayload = true` during inbound payload deserialization and persistence prevents local database stream listeners from echoing received state back to the mesh. The lock is safely released in a `finally` block via `scheduleMicrotask(() => _isProcessingNetworkPayload = false)`.
+- **Echo Loop Prevention Mutex:** Uses `final Mutex _syncMutex = Mutex();` and `_lastInboundProfile` deduplication. Inbound payload parsing and saving are protected under `_syncMutex.protect()`. Outbound broadcasts skip synchronization if the emitted profile matches `_lastInboundProfile` or if the mutex is locked (`_syncMutex.isLocked`), eliminating microtask race conditions and recursive echo storms.
 - **Clock-Skew Corrected Outbound Sync:** Outbound broadcasts inject `clockSyncService.currentOffsetMs` into timestamps.
 - **Host Periodic Milestone Pruning:** Host DM nodes periodically execute milestone flushes and prune expired tombstones via `RoomStateReconciliationService.executeMilestonePrune()`.
 - **Connection Telemetry & Accessible Badge:** `RoomSyncOrchestrator.watchTelemetry()` combines transport state transitions and periodic peer heartbeat counts into `RoomConnectionTelemetry` (`isOffline`, `connectionLabel`, `peerCount`). Rendered via `RoomConnectionBadge` (`lib/presentation/widgets/room_connection_badge.dart`) with `Semantics` label expansion for screen readers.

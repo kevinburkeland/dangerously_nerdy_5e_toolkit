@@ -85,6 +85,7 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
       'senderId': _localNodeId,
       'payload': jsonPayload,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'expireAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 1))),
     };
 
     final path = 'rooms/$_roomCode/relay_messages/$messageId';

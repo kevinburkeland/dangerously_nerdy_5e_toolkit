@@ -142,7 +142,7 @@ class ArenaConditionChip extends StatelessWidget {
 /// Compact `+N` badge displayed when conditions exceed 3 active items.
 class ArenaConditionOverflowBadge extends StatelessWidget {
   final int overflowCount;
-  final List<ActiveCondition> allConditions;
+  final Iterable<ActiveCondition> allConditions;
   final bool isDense;
   final VoidCallback? onTap;
 
@@ -210,7 +210,7 @@ class ArenaConditionOverflowBadge extends StatelessWidget {
 
 /// Dynamic condition bar with overflow handling for tokens and roster cards.
 class ArenaConditionChipsBar extends StatelessWidget {
-  final List<ActiveCondition> conditions;
+  final Iterable<ActiveCondition> conditions;
   final bool isDense;
   final bool showLabel;
   final int maxVisible;

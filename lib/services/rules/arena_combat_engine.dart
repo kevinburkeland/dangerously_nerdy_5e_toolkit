@@ -2396,7 +2396,7 @@ class ArenaCombatEngine {
     for (int lvl = minLevel; lvl <= 9; lvl++) {
       final count = combatant.currentSpellSlots[lvl] ?? 0;
       if (count > 0) {
-        combatant.currentSpellSlots[lvl] = count - 1;
+        combatant.setSpellSlot(lvl, count - 1);
         return lvl;
       }
     }
@@ -2407,7 +2407,7 @@ class ArenaCombatEngine {
     for (int lvl = 9; lvl >= minLevel; lvl--) {
       final count = combatant.currentSpellSlots[lvl] ?? 0;
       if (count > 0) {
-        combatant.currentSpellSlots[lvl] = count - 1;
+        combatant.setSpellSlot(lvl, count - 1);
         return lvl;
       }
     }

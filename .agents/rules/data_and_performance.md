@@ -53,3 +53,10 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Prohibition of Loose Substring Matching:** Loose substring checks (e.g. `contains('plate')`) are strictly prohibited because they cause cross-category stat collisions (e.g., Breastplate incorrectly binding to Full Plate). Use strict slug normalization (`armorBase`, `weaponBase`, exact slug equality).
 - **Word-Boundary Regex on Fallbacks:** When fuzzy or partial fallback matching is necessary, enforce word-boundary tokens (`\b`) and disallow binding generic tokens (e.g., `'Dragon'`) to compound boss monsters (e.g., `'Dragon Turtle'`).
 
+## 7. Monte Carlo Simulation Structural Sharing (fast_immutable_collections)
+
+- **Zero-Allocation Cloning:** In simulation loops (`ArenaCombatEngine`, `DprSimulator`) running thousands of iterations (e.g., 500x/1,000x/10,000x runs), mutable Dart collections (`List`, `Set`, `Map`) produce excessive GC pressure and memory spikes when copied (`Set.from()`, `List.from()`).
+- **Immutable Primitives (`ISet`, `IList`, `IMap`):** Entity simulation states (e.g., `ArenaCombatant`) must use `fast_immutable_collections` for collection fields (`immunities`, `resistances`, `vulnerabilities`, `spellSlots`, `activeConditions`).
+- **Instantaneous `.clone()` and `.reset()`:** `.clone()` and `.reset()` pass collections directly by reference without re-allocating memory.
+- **Collection Agnosticism:** UI components displaying these collections (e.g. `ArenaConditionChipsBar`) must accept generic `Iterable<T>` to seamlessly render both standard and immutable collections.
+

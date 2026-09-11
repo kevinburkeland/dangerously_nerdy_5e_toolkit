@@ -139,5 +139,28 @@ void main() {
       expect(reset.conditions.isEmpty, true);
       expect(reset.activeConditions.isEmpty, true);
     });
+
+    test('ArenaCombatant clone and reset 10,000 iterations completes rapidly via structural sharing', () {
+      final wolfMonster = MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase() == 'wolf');
+      final combatant = ArenaCombatant.fromMonster(
+        id: 'perf_wolf',
+        monster: wolfMonster,
+        team: ArenaTeam.teamA,
+      );
+      combatant.applyActiveCondition(
+        const ActiveCondition(condition: ArenaCondition.poisoned, durationRounds: 3),
+      );
+
+      final sw = Stopwatch()..start();
+      for (int i = 0; i < 10000; i++) {
+        final cloned = combatant.clone();
+        expect(cloned.conditions.length, 1);
+        final res = cloned.reset();
+        expect(res.conditions.isEmpty, true);
+      }
+      sw.stop();
+      // 10,000 iterations with structural sharing should execute in under 200ms
+      expect(sw.elapsedMilliseconds, lessThan(1500));
+    });
   });
 }

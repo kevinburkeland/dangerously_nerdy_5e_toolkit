@@ -136,7 +136,7 @@ void main() {
         team: ArenaTeam.teamA,
       );
 
-      expect(combatant.maxSpellSlots, equals(profile.maxSpellSlots));
+      expect(combatant.maxSpellSlots.unlock, equals(profile.maxSpellSlots));
       expect(combatant.spellSaveDc, equals(profile.spellSaveDc));
       expect(combatant.meleeReachInFeet, equals(profile.meleeReachInFeet));
       expect(combatant.canFly(), equals(profile.canFly));

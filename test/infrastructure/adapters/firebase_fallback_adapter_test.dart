@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_fallback_adapter.dart';
 
@@ -19,17 +20,23 @@ void main() {
       await adapter.disconnect();
     });
 
-    test('Initializes and broadcasts payload to relay messages collection', () async {
+    test('Initializes and broadcasts payload to relay messages collection with expireAt TTL', () async {
       await adapter.initializeRoom('RELAY-ROOM', 'node-cloud');
 
+      final before = DateTime.now().add(const Duration(minutes: 59));
       const testPayload = '{"crdt":"update","hp":42}';
       await adapter.broadcastPayload(testPayload);
+      final after = DateTime.now().add(const Duration(minutes: 61));
 
       expect(writtenMessages.length, 1);
       final written = writtenMessages.first;
       expect(written['path'], startsWith('rooms/RELAY-ROOM/relay_messages/'));
       expect(written['data']['senderId'], 'node-cloud');
       expect(written['data']['payload'], testPayload);
+      expect(written['data']['expireAt'], isA<Timestamp>());
+      final expireAtDate = (written['data']['expireAt'] as Timestamp).toDate();
+      expect(expireAtDate.isAfter(before), isTrue);
+      expect(expireAtDate.isBefore(after), isTrue);
     });
 
     test('watchIncomingPayloads emits messages from relay stream', () async {

@@ -348,6 +348,41 @@ void main() {
         );
         expect(defaultRouter.heartbeatTtl, const Duration(seconds: 15));
       });
+
+      test('Architecture Test: UI state stays locked at 1 peer when left idle for 15 seconds with silent ping/pongs', () async {
+        final archRouter = CascadingTransportRouter(
+          localWifiAdapter: mockLocalWifi,
+          webRtcAdapter: mockWebRtc,
+          firebaseFallbackAdapter: mockFirebase,
+          heartbeatTtl: const Duration(seconds: 15),
+        );
+        mockLocalWifi.initializeShouldThrow = true;
+        await archRouter.initializeRoom('ROOM-ARCH-IDLE', 'node-local');
+
+        final initialTime = DateTime(2026, 9, 9, 12, 0, 0);
+        archRouter.recordPeerHeartbeat('peer-party-member', timestamp: initialTime.millisecondsSinceEpoch);
+        expect(archRouter.peerLastSeen.length, 1);
+
+        // Simulate 15 seconds passing with silent adapter heartbeats every 4 seconds
+        for (int sec = 4; sec <= 15; sec += 4) {
+          final checkpoint = initialTime.add(Duration(seconds: sec));
+          mockWebRtc.peerLastSeen = {
+            'peer-party-member': checkpoint.millisecondsSinceEpoch,
+          };
+          await archRouter.checkHeartbeats(checkpoint);
+          // UI state stays locked at 1 peer
+          expect(archRouter.peerLastSeen.length, 1);
+          expect(archRouter.currentState, TransportState.webRtc);
+        }
+
+        // Final evaluation at 15.0 seconds
+        final at15Seconds = initialTime.add(const Duration(seconds: 15));
+        await archRouter.checkHeartbeats(at15Seconds);
+        expect(archRouter.peerLastSeen.length, 1);
+        expect(archRouter.currentState, TransportState.webRtc);
+
+        await archRouter.disconnect();
+      });
     });
 
     test('Clean disconnect tears down all adapters, subscriptions, and clears state', () async {

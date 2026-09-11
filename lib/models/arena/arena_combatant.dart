@@ -1,10 +1,12 @@
 import 'dart:math' as math;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import '../dm_screen_data.dart';
 import '../monster_codex_data.dart';
 import '../domain/character_models.dart';
 import '../srd_summons/minion_stat_block.dart';
 import 'arena_condition.dart';
 import 'monster_combat_profile.dart';
+export 'package:fast_immutable_collections/fast_immutable_collections.dart';
 export 'arena_condition.dart';
 export 'monster_combat_profile.dart';
 
@@ -51,16 +53,16 @@ class ArenaCombatant {
   final bool hasHover;
   int altitudeInFeet;
   int meleeReachInFeet;
-  final Set<ArenaCondition> conditions;
-  final List<ActiveCondition> activeConditions;
+  ISet<ArenaCondition> conditions;
+  IList<ActiveCondition> activeConditions;
 
   // Spellcasting State & Pre-Cached Attributes
-  Map<int, int> currentSpellSlots;
-  final Map<int, int> maxSpellSlots;
+  IMap<int, int> currentSpellSlots;
+  IMap<int, int> maxSpellSlots;
   final List<String> knownSpellIds;
   final int spellSaveDc;
   final int spellAttackBonus;
-  final Map<String, int> savingThrowBonuses;
+  final IMap<String, int> savingThrowBonuses;
   String? activeConcentrationSpellId;
   bool usedReactionThisRound;
   bool castBonusActionSpellThisTurn;
@@ -96,14 +98,14 @@ class ArenaCombatant {
     this.hasHover = false,
     this.altitudeInFeet = 0,
     this.meleeReachInFeet = 5,
-    Set<ArenaCondition>? conditions,
-    List<ActiveCondition>? activeConditions,
-    Map<int, int>? currentSpellSlots,
-    Map<int, int>? maxSpellSlots,
+    dynamic conditions,
+    dynamic activeConditions,
+    dynamic currentSpellSlots,
+    dynamic maxSpellSlots,
     List<String>? knownSpellIds,
     this.spellSaveDc = 10,
     this.spellAttackBonus = 0,
-    Map<String, int>? savingThrowBonuses,
+    dynamic savingThrowBonuses,
     this.activeConcentrationSpellId,
     this.usedReactionThisRound = false,
     this.castBonusActionSpellThisTurn = false,
@@ -118,24 +120,68 @@ class ArenaCombatant {
     this.attacksMade = 0,
     this.hitsLanded = 0,
     this.critsLanded = 0,
-  })  : conditions = conditions != null
-            ? Set<ArenaCondition>.from(conditions)
-            : (activeConditions != null
-                ? activeConditions.map((a) => a.condition).toSet()
-                : {}),
-        activeConditions = activeConditions != null
-            ? List<ActiveCondition>.from(activeConditions)
-            : (conditions != null
-                ? conditions.map((c) => ActiveCondition(condition: c)).toList()
-                : []),
-        maxSpellSlots = maxSpellSlots != null ? Map<int, int>.from(maxSpellSlots) : {},
+  })  : conditions = _parseConditions(conditions, activeConditions),
+        activeConditions = _parseActiveConditions(activeConditions, conditions),
+        maxSpellSlots = _parseIMap<int, int>(maxSpellSlots),
         currentSpellSlots = currentSpellSlots != null
-            ? Map<int, int>.from(currentSpellSlots)
-            : (maxSpellSlots != null ? Map<int, int>.from(maxSpellSlots) : {}),
+            ? _parseIMap<int, int>(currentSpellSlots)
+            : _parseIMap<int, int>(maxSpellSlots),
         knownSpellIds = knownSpellIds != null ? List<String>.from(knownSpellIds) : [],
-        savingThrowBonuses = savingThrowBonuses != null ? Map<String, int>.from(savingThrowBonuses) : const {},
+        savingThrowBonuses = _parseIMap<String, int>(savingThrowBonuses),
         legendaryActionsRemaining = legendaryActionsRemaining ?? maxLegendaryActions,
         legendaryResistancesRemaining = legendaryResistancesRemaining ?? maxLegendaryResistances;
+
+  static ISet<ArenaCondition> _parseConditions(dynamic conditions, dynamic activeConditions) {
+    if (conditions != null) {
+      if (conditions is ISet<ArenaCondition>) return conditions;
+      if (conditions is Iterable<ArenaCondition>) return conditions.toISet();
+      if (conditions is Iterable) return ISet<ArenaCondition>(conditions.cast<ArenaCondition>());
+    }
+    if (activeConditions != null) {
+      if (activeConditions is IList<ActiveCondition>) {
+        return activeConditions.map((a) => a.condition).toISet();
+      }
+      if (activeConditions is Iterable<ActiveCondition>) {
+        return activeConditions.map((a) => a.condition).toISet();
+      }
+    }
+    return const ISetConst({});
+  }
+
+  static IList<ActiveCondition> _parseActiveConditions(dynamic activeConditions, dynamic conditions) {
+    if (activeConditions != null) {
+      if (activeConditions is IList<ActiveCondition>) return activeConditions;
+      if (activeConditions is Iterable<ActiveCondition>) return activeConditions.toIList();
+      if (activeConditions is Iterable) return IList<ActiveCondition>(activeConditions.cast<ActiveCondition>());
+    }
+    if (conditions != null) {
+      if (conditions is ISet<ArenaCondition>) {
+        return conditions.map((c) => ActiveCondition(condition: c)).toIList();
+      }
+      if (conditions is Iterable<ArenaCondition>) {
+        return conditions.map((c) => ActiveCondition(condition: c)).toIList();
+      }
+    }
+    return const IListConst([]);
+  }
+
+  static IMap<K, V> _parseIMap<K, V>(dynamic map) {
+    if (map == null) return IMap<K, V>();
+    if (map is IMap<K, V>) return map;
+    if (map is Map<K, V>) return map.toIMap();
+    if (map is Map) return IMap<K, V>(Map<K, V>.from(map));
+    return IMap<K, V>();
+  }
+
+  /// Updates a spell slot level count immutably via structural sharing.
+  void setSpellSlot(int level, int count) {
+    currentSpellSlots = currentSpellSlots.add(level, count);
+  }
+
+  /// Updates a max spell slot level count immutably via structural sharing.
+  void setMaxSpellSlot(int level, int count) {
+    maxSpellSlots = maxSpellSlots.add(level, count);
+  }
 
   /// Effective AC accounting for active reaction bonuses (e.g. Shield spell +5 AC).
   int get effectiveAc => ac + temporaryAcBonus;
@@ -206,13 +252,13 @@ class ArenaCombatant {
       hasHover: profile.hasHover,
       altitudeInFeet: profile.defaultAltitudeInFeet,
       meleeReachInFeet: profile.meleeReachInFeet,
-      conditions: {},
-      maxSpellSlots: profile.maxSpellSlots,
-      currentSpellSlots: Map<int, int>.from(profile.maxSpellSlots),
+      conditions: const ISetConst({}),
+      maxSpellSlots: profile.maxSpellSlots.toIMap(),
+      currentSpellSlots: profile.maxSpellSlots.toIMap(),
       knownSpellIds: profile.knownSpellIds,
       spellSaveDc: profile.spellSaveDc,
       spellAttackBonus: profile.spellAttackBonus,
-      savingThrowBonuses: profile.savingThrowBonuses,
+      savingThrowBonuses: profile.savingThrowBonuses.toIMap(),
       activeConcentrationSpellId: null,
       usedReactionThisRound: false,
       castBonusActionSpellThisTurn: false,
@@ -232,12 +278,12 @@ class ArenaCombatant {
     int Function(int sides)? diceRoller,
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
-    conditions.add(activeCondition.condition);
+    conditions = conditions.add(activeCondition.condition);
     final idx = activeConditions.indexWhere((a) => a.condition == activeCondition.condition);
     if (idx >= 0) {
-      activeConditions[idx] = activeCondition;
+      activeConditions = activeConditions.put(idx, activeCondition);
     } else {
-      activeConditions.add(activeCondition);
+      activeConditions = activeConditions.add(activeCondition);
     }
     return _handleDisruptiveCondition(
       activeCondition.condition,
@@ -254,7 +300,7 @@ class ArenaCombatant {
     int? durationRounds,
     String? source,
   }) {
-    conditions.add(condition);
+    conditions = conditions.add(condition);
     final idx = activeConditions.indexWhere((a) => a.condition == condition);
     final active = ActiveCondition(
       condition: condition,
@@ -262,9 +308,9 @@ class ArenaCombatant {
       source: source,
     );
     if (idx >= 0) {
-      activeConditions[idx] = active;
+      activeConditions = activeConditions.put(idx, active);
     } else {
-      activeConditions.add(active);
+      activeConditions = activeConditions.add(active);
     }
 
     return _handleDisruptiveCondition(condition, diceRoller, edition);
@@ -292,9 +338,9 @@ class ArenaCombatant {
 
         isAirborne = false;
         altitudeInFeet = 0;
-        conditions.add(ArenaCondition.prone);
+        conditions = conditions.add(ArenaCondition.prone);
         if (!activeConditions.any((a) => a.condition == ArenaCondition.prone)) {
-          activeConditions.add(const ActiveCondition(condition: ArenaCondition.prone));
+          activeConditions = activeConditions.add(const ActiveCondition(condition: ArenaCondition.prone));
         }
         applyDamage(rawFallDamage);
 
@@ -316,8 +362,8 @@ class ArenaCombatant {
   }
 
   void removeCondition(ArenaCondition condition) {
-    conditions.remove(condition);
-    activeConditions.removeWhere((a) => a.condition == condition);
+    conditions = conditions.remove(condition);
+    activeConditions = activeConditions.removeWhere((a) => a.condition == condition);
   }
 
   bool hasCondition(ArenaCondition condition) => conditions.contains(condition);
@@ -350,25 +396,28 @@ class ArenaCombatant {
   /// Decrements condition durations at the end of turn, removing any expired conditions.
   List<ArenaCondition> tickTurnConditions() {
     final expired = <ArenaCondition>[];
-    for (int i = activeConditions.length - 1; i >= 0; i--) {
+    final remaining = <ActiveCondition>[];
+    for (int i = 0; i < activeConditions.length; i++) {
       final active = activeConditions[i];
       if (active.hasFiniteDuration) {
         final updated = active.tickTurn();
         if (updated.isExpired) {
           expired.add(active.condition);
-          activeConditions.removeAt(i);
-          conditions.remove(active.condition);
+          conditions = conditions.remove(active.condition);
         } else {
-          activeConditions[i] = updated;
+          remaining.add(updated);
         }
+      } else {
+        remaining.add(active);
       }
     }
+    activeConditions = remaining.toIList();
     return expired;
   }
 
   void clearConditions() {
-    conditions.clear();
-    activeConditions.clear();
+    conditions = const ISetConst({});
+    activeConditions = const IListConst([]);
   }
 
   /// Clones combatant with fresh max HP, reset spell slots, and reset combat counters.
@@ -390,14 +439,14 @@ class ArenaCombatant {
       hasHover: hasHover,
       altitudeInFeet: canFlyMonster ? 20 : 0,
       meleeReachInFeet: meleeReachInFeet,
-      conditions: {},
-      activeConditions: [],
-      maxSpellSlots: Map<int, int>.from(maxSpellSlots),
-      currentSpellSlots: Map<int, int>.from(maxSpellSlots),
+      conditions: const ISetConst({}),
+      activeConditions: const IListConst([]),
+      maxSpellSlots: maxSpellSlots,
+      currentSpellSlots: maxSpellSlots,
       knownSpellIds: List<String>.from(knownSpellIds),
       spellSaveDc: spellSaveDc,
       spellAttackBonus: spellAttackBonus,
-      savingThrowBonuses: Map<String, int>.from(savingThrowBonuses),
+      savingThrowBonuses: savingThrowBonuses,
       activeConcentrationSpellId: null,
       usedReactionThisRound: false,
       castBonusActionSpellThisTurn: false,
@@ -433,14 +482,14 @@ class ArenaCombatant {
       hasHover: hasHover,
       altitudeInFeet: altitudeInFeet,
       meleeReachInFeet: meleeReachInFeet,
-      conditions: Set<ArenaCondition>.from(conditions),
-      activeConditions: List<ActiveCondition>.from(activeConditions),
-      maxSpellSlots: Map<int, int>.from(maxSpellSlots),
-      currentSpellSlots: Map<int, int>.from(currentSpellSlots),
+      conditions: conditions,
+      activeConditions: activeConditions,
+      maxSpellSlots: maxSpellSlots,
+      currentSpellSlots: currentSpellSlots,
       knownSpellIds: List<String>.from(knownSpellIds),
       spellSaveDc: spellSaveDc,
       spellAttackBonus: spellAttackBonus,
-      savingThrowBonuses: Map<String, int>.from(savingThrowBonuses),
+      savingThrowBonuses: savingThrowBonuses,
       activeConcentrationSpellId: activeConcentrationSpellId,
       usedReactionThisRound: usedReactionThisRound,
       castBonusActionSpellThisTurn: castBonusActionSpellThisTurn,

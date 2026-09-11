@@ -12,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/widgets/spellbook/spell_upcast_shee
 import 'package:dangerously_nerdy_5e_toolkit/widgets/spellbook/spell_card.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/character_sheet/interactive_spell_tile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/character_sheet/abilities_and_traits_tab.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
 
 class _FakeRepo implements ICharacterRepository {
   Character? saved;
@@ -278,6 +279,73 @@ void main() {
       expect(controller.character.resources.spellSlots.currentSlots[4], equals(0));
       // 2nd level slot left untouched at 3
       expect(controller.character.resources.spellSlots.currentSlots[2], equals(3));
+    });
+
+    testWidgets('Select a 3rd-level slot for a 1st-level spell via upcast bottom sheet: decrements 3rd slot, leaves 1st slot untouched, and scales damage dice', (tester) async {
+      final charWith3rdSlots = baseCharacter.copyWith(
+        resources: baseCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 3, 3: 2},
+            currentSlots: {1: 4, 2: 3, 3: 2},
+          ),
+        ),
+      );
+      final controller = CharacterSheetController(character: charWith3rdSlots, persistenceService: fakeRepo);
+
+      const firstLevelSpell = Spell(
+        id: EntityId(slug: 'burning-hands', ruleset: RulesetVersion.v2024),
+        name: 'Burning Hands',
+        level: 1,
+        school: 'evocation',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: 'Self (15-foot cone)',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Each creature in a 15-foot cone takes 3d6 fire damage.',
+        damageMath: [
+          EvaluationMath(
+            diceFormula: '3d6',
+            damageType: DamageType.fire,
+            scalingFormula: '+1d6 per slot above 1st',
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: InteractiveSpellTile(
+              spell: firstLevelSpell,
+              controller: controller,
+            ),
+          ),
+        ),
+      );
+
+      // Tap tile to open upcast sheet
+      await tester.tap(find.text('Burning Hands'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpellUpcastSheet), findsOneWidget);
+      expect(find.text('Cast Burning Hands'), findsOneWidget);
+
+      // Tap 3rd Level Slot
+      await tester.tap(find.text('3rd Level Slot'));
+      await tester.pumpAndSettle();
+
+      // 3rd-level slot decremented from 2 to 1
+      expect(controller.character.resources.spellSlots.currentSlots[3], equals(1));
+      // 1st-level slot untouched at 4
+      expect(controller.character.resources.spellSlots.currentSlots[1], equals(4));
+
+      // Verify DiceRoomService received scaled roll payload (3d6 + 2d6 = 5d6)
+      final roomService = DiceRoomService();
+      final cachedRolls = roomService.getCachedRolls(roomService.activeRoomCode ?? 'LOCAL');
+      expect(cachedRolls.isNotEmpty, isTrue);
+      final latestRoll = cachedRolls.first;
+      expect(latestRoll.formulaString, contains('Burning Hands'));
+      expect(latestRoll.formulaString, contains('5d6'));
+      expect(latestRoll.formulaString, contains('Cast at Level 3'));
     });
 
     testWidgets('SpellCard Cast button invokes upcasting bottom sheet on Level 1+ spell', (tester) async {

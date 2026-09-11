@@ -375,11 +375,11 @@ void main() {
       // Check clone deep-copy
       final clone = lich.clone();
       expect(clone.currentSpellSlots, equals(lich.currentSpellSlots));
-      clone.currentSpellSlots[1] = 0;
+      clone.setSpellSlot(1, 0);
       expect(lich.currentSpellSlots[1], isNot(0));
 
       // Check reset
-      lich.currentSpellSlots[1] = 0;
+      lich.setSpellSlot(1, 0);
       final resetLich = lich.reset();
       expect(resetLich.currentSpellSlots[1], lich.maxSpellSlots[1]);
     });
@@ -393,8 +393,8 @@ void main() {
       );
       // Give defender Shield spell and a 1st level slot
       caster.knownSpellIds.add('spell_shield');
-      caster.maxSpellSlots[1] = 2;
-      caster.currentSpellSlots[1] = 2;
+      caster.setMaxSpellSlot(1, 2);
+      caster.setSpellSlot(1, 2);
 
       final attacker = ArenaCombatant.fromMonster(
         id: 'atk',
@@ -454,8 +454,8 @@ void main() {
         team: ArenaTeam.teamA,
       );
       mage.knownSpellIds.add('spell_fireball');
-      mage.maxSpellSlots[3] = 2;
-      mage.currentSpellSlots[3] = 2;
+      mage.setMaxSpellSlot(3, 2);
+      mage.setSpellSlot(3, 2);
 
       final step = engine.executeTurn(
         stepIndex: 0,
@@ -719,12 +719,12 @@ void main() {
       );
       caster.knownSpellIds.addAll(['spell_fireball', 'spell_blight']);
       // Empty 3rd and 4th level slots, but grant 5th level slots
-      caster.maxSpellSlots[3] = 0;
-      caster.currentSpellSlots[3] = 0;
-      caster.maxSpellSlots[4] = 0;
-      caster.currentSpellSlots[4] = 0;
-      caster.maxSpellSlots[5] = 2;
-      caster.currentSpellSlots[5] = 2;
+      caster.setMaxSpellSlot(3, 0);
+      caster.setSpellSlot(3, 0);
+      caster.setMaxSpellSlot(4, 0);
+      caster.setSpellSlot(4, 0);
+      caster.setMaxSpellSlot(5, 2);
+      caster.setSpellSlot(5, 2);
 
       final gladiatorMonster = MonsterCodexLibrary.getMonsterByName('Gladiator') ??
           MonsterCodexLibrary.allMonsters.firstWhere((m) => m.name.toLowerCase().contains('gladiator'));
@@ -758,10 +758,10 @@ void main() {
         team: ArenaTeam.teamA,
       );
       caster.knownSpellIds.addAll(['spell_globe_of_invulnerability', 'spell_fireball', 'spell_finger_of_death']);
-      caster.maxSpellSlots[7] = 2;
-      caster.currentSpellSlots[7] = 2;
-      caster.maxSpellSlots[3] = 2;
-      caster.currentSpellSlots[3] = 2;
+      caster.setMaxSpellSlot(7, 2);
+      caster.setSpellSlot(7, 2);
+      caster.setMaxSpellSlot(3, 2);
+      caster.setSpellSlot(3, 2);
 
       // Simulate active concentration
       caster.activeConcentrationSpellId = 'spell_globe_of_invulnerability';
@@ -860,8 +860,8 @@ void main() {
         team: ArenaTeam.teamA,
       );
       caster.knownSpellIds.add('spell_disintegrate');
-      caster.maxSpellSlots[6] = 2;
-      caster.currentSpellSlots[6] = 2;
+      caster.setMaxSpellSlot(6, 2);
+      caster.setSpellSlot(6, 2);
 
       // Boss defender with 3 Legendary Resistances
       final bossDefender = ArenaCombatant.fromMonster(
@@ -901,8 +901,8 @@ void main() {
         team: ArenaTeam.teamA,
       );
       caster.knownSpellIds.add('spell_hold_monster');
-      caster.maxSpellSlots[5] = 1;
-      caster.currentSpellSlots[5] = 1;
+      caster.setMaxSpellSlot(5, 1);
+      caster.setSpellSlot(5, 1);
 
       final bossDefender = ArenaCombatant.fromMonster(
         id: 'boss_lich',
