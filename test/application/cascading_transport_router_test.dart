@@ -338,6 +338,15 @@ void main() {
         await router.checkHeartbeats(at12Seconds);
         expect(router.peerLastSeen.containsKey('peer-silent'), isFalse);
       });
+
+      test('Default heartbeat TTL is 15 seconds to prevent premature mobile fallback', () {
+        final defaultRouter = CascadingTransportRouter(
+          localWifiAdapter: mockLocalWifi,
+          webRtcAdapter: mockWebRtc,
+          firebaseFallbackAdapter: mockFirebase,
+        );
+        expect(defaultRouter.heartbeatTtl, const Duration(seconds: 15));
+      });
     });
 
     test('Clean disconnect tears down all adapters, subscriptions, and clears state', () async {

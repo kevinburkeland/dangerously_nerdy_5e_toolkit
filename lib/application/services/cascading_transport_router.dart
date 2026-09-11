@@ -50,7 +50,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     required this.localWifiAdapter,
     required this.webRtcAdapter,
     required this.firebaseFallbackAdapter,
-    this.heartbeatTtl = const Duration(seconds: 6),
+    this.heartbeatTtl = const Duration(seconds: 15),
     this.checkInterval = const Duration(seconds: 1),
     this.peerTimestampProvider,
     this.onPeerPruned,

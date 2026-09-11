@@ -54,6 +54,8 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
           'iceServers': [
             {'urls': 'stun:stun.l.google.com:19302'},
             {'urls': 'stun:stun1.l.google.com:19302'},
+            {'urls': 'stun:stun2.l.google.com:19302'},
+            {'urls': 'stun:stun.cloudflare.com:3478'},
           ],
           'sdpSemantics': 'unified-plan',
         };
@@ -145,7 +147,9 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     switch (message.type) {
       case SignalingType.peerJoin:
         if (peerId != _localNodeId) {
-          await connectToPeer(peerId);
+          if (!_dataChannels.containsKey(peerId) && !_peerConnections.containsKey(peerId)) {
+            await connectToPeer(peerId);
+          }
         }
         if (_signalingAdapter != null) {
           await _signalingAdapter?.deleteSignal(message.id);
@@ -195,6 +199,32 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   }
 
   Future<void> _handleOffer(String peerId, String sdp, String signalId) async {
+    // If we already have an open DataChannel to this peer, ignore duplicate offers
+    if (_dataChannels[peerId]?.state == RTCDataChannelState.RTCDataChannelOpen) {
+      final signaling = _signalingAdapter;
+      if (signaling != null) {
+        await signaling.deleteSignal(signalId);
+      }
+      return;
+    }
+
+    // Glare resolution: both nodes simultaneously initiated offers
+    final existingPc = _peerConnections[peerId];
+    if (existingPc != null) {
+      final isLocalPrecedent = (_localNodeId ?? '').compareTo(peerId) > 0;
+      if (isLocalPrecedent) {
+        // Local node has priority; drop colliding offer and let remote peer answer our offer
+        final signaling = _signalingAdapter;
+        if (signaling != null) {
+          await signaling.deleteSignal(signalId);
+        }
+        return;
+      } else {
+        // Remote node has priority; yield our in-flight connection
+        prunePeer(peerId);
+      }
+    }
+
     final pc = await _connectionFactory.createConnection(_rtcConfiguration);
     _peerConnections[peerId] = pc;
 
@@ -222,7 +252,9 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   Future<void> _handleAnswer(String peerId, String sdp, String signalId) async {
     final pc = _peerConnections[peerId];
     if (pc != null) {
-      await pc.setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
+      try {
+        await pc.setRemoteDescription(RTCSessionDescription(sdp, 'answer'));
+      } catch (_) {}
       final signaling = _signalingAdapter;
       if (signaling != null) {
         // Consume and delete the answer document
@@ -238,12 +270,14 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   ) async {
     final pc = _peerConnections[peerId];
     if (pc != null) {
-      final candidate = RTCIceCandidate(
-        candidateMap['candidate'] as String?,
-        candidateMap['sdpMid'] as String?,
-        candidateMap['sdpMLineIndex'] as int?,
-      );
-      await pc.addCandidate(candidate);
+      try {
+        final candidate = RTCIceCandidate(
+          candidateMap['candidate'] as String?,
+          candidateMap['sdpMid'] as String?,
+          candidateMap['sdpMLineIndex'] as int?,
+        );
+        await pc.addCandidate(candidate);
+      } catch (_) {}
       final signaling = _signalingAdapter;
       if (signaling != null) {
         await signaling.deleteSignal(signalId);
@@ -267,8 +301,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
           state == RTCIceConnectionState.RTCIceConnectionStateCompleted) {
         // Clean up all lingering signaling documents once P2P is established!
         _signalingAdapter?.cleanUpSignalingSession();
-      } else if (state == RTCIceConnectionState.RTCIceConnectionStateDisconnected ||
-          state == RTCIceConnectionState.RTCIceConnectionStateFailed) {
+      } else if (state == RTCIceConnectionState.RTCIceConnectionStateFailed) {
         prunePeer(peerId);
       }
     };
@@ -341,7 +374,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   @override
   Future<void> broadcastPayload(String jsonPayload) async {
     if (_dataChannels.isEmpty) {
-      throw StateError('No active WebRTC DataChannels available to broadcast payload.');
+      // 0 connected peers (solo room or peers still connecting).
+      // This is a normal state in a P2P mesh and must not throw, otherwise
+      // premature failover to cloud relay will occur.
+      return;
     }
 
     final errors = <dynamic>[];

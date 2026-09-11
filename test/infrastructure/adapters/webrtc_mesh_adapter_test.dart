@@ -15,6 +15,9 @@ class FakeRTCDataChannel implements RTCDataChannel {
   bool isClosed = false;
 
   @override
+  RTCDataChannelState? state = RTCDataChannelState.RTCDataChannelConnecting;
+
+  @override
   Future<void> send(RTCDataChannelMessage message) async {
     if (isClosed) throw StateError('Channel closed');
     sentMessages.add(message);
@@ -23,6 +26,7 @@ class FakeRTCDataChannel implements RTCDataChannel {
   @override
   Future<void> close() async {
     isClosed = true;
+    state = RTCDataChannelState.RTCDataChannelClosed;
     onDataChannelState?.call(RTCDataChannelState.RTCDataChannelClosed);
   }
 
@@ -46,6 +50,9 @@ class FakeRTCPeerConnection implements RTCPeerConnection {
   void Function(RTCIceConnectionState state)? onIceConnectionState;
 
   @override
+  void Function(RTCDataChannel channel)? onDataChannel;
+
+  @override
   Future<RTCDataChannel> createDataChannel(String label, RTCDataChannelInit dataChannelDict) async {
     return dataChannel;
   }
@@ -53,6 +60,11 @@ class FakeRTCPeerConnection implements RTCPeerConnection {
   @override
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async {
     return RTCSessionDescription('v=0\r\no=fake-offer-sdp', 'offer');
+  }
+
+  @override
+  Future<RTCSessionDescription> createAnswer([Map<String, dynamic>? constraints]) async {
+    return RTCSessionDescription('v=0\r\no=fake-answer-sdp', 'answer');
   }
 
   @override
@@ -224,5 +236,139 @@ void main() {
 
       await adapterWithFactory.disconnect();
     });
+
+    test('broadcastPayload is a silent no-op when data channels are empty and does not throw', () async {
+      await adapter.initializeRoom('ROOM-EMPTY', 'local-node');
+      expect(adapter.connectedPeers, isEmpty);
+
+      // Must succeed cleanly without throwing StateError so CascadingTransportRouter does not step down
+      await expectLater(
+        adapter.broadcastPayload('{"type":"dice_roll","total":18}'),
+        completes,
+      );
+    });
+
+    test('Transient ICE disconnection does not prune peer; only failed state prunes peer', () async {
+      final connectionFactory = FakeRtcPeerConnectionFactory();
+      final fakePc = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = fakePc;
+
+      final testAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: connectionFactory,
+      );
+
+      await testAdapter.initializeRoom('ROOM-ICE', 'node-local');
+      await testAdapter.connectToPeer('node-remote');
+
+      expect(testAdapter.connectedPeers, contains('node-remote'));
+
+      // Transient disconnected event (packet loss / mobile radio power save)
+      fakePc.onIceConnectionState?.call(RTCIceConnectionState.RTCIceConnectionStateDisconnected);
+      await Future<void>.delayed(Duration.zero);
+
+      // Peer must NOT be pruned on transient disconnection
+      expect(testAdapter.connectedPeers, contains('node-remote'));
+
+      // Permanent failure event
+      fakePc.onIceConnectionState?.call(RTCIceConnectionState.RTCIceConnectionStateFailed);
+      await Future<void>.delayed(Duration.zero);
+
+      // Peer must be pruned on failed state
+      expect(testAdapter.connectedPeers.contains('node-remote'), isFalse);
+
+      await testAdapter.disconnect();
+    });
+
+    test('WebRTC Glare Resolution: Higher node ID retains outbound offer and drops colliding offer', () async {
+      final connectionFactory = FakeRtcPeerConnectionFactory();
+      final fakePc = FakeRTCPeerConnection();
+      connectionFactory.nextConnection = fakePc;
+
+      final adapterNodeZ = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: connectionFactory,
+      );
+
+      // Node Z > Node A
+      await adapterNodeZ.initializeRoom('ROOM-GLARE', 'node-Z');
+      await adapterNodeZ.connectToPeer('node-A');
+
+      // Colliding offer arrives from node-A
+      final collidingOffer = SignalingMessage(
+        id: 'offer-signal-from-a',
+        roomCode: 'ROOM-GLARE',
+        fromNodeId: 'node-A',
+        toNodeId: 'node-Z',
+        type: SignalingType.offer,
+        sdp: 'v=0\r\no=sdp-from-a',
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      signalingAdapter.emitIncomingSignal(collidingOffer);
+      await Future<void>.delayed(Duration.zero);
+
+      // Node Z is higher rank -> drops colliding offer and consumes/deletes signal
+      expect(deletedSignalingDocs, contains('rooms/ROOM-GLARE/signaling/offer-signal-from-a'));
+      // In-flight connection to node-A was NOT closed
+      expect(fakePc.isClosed, isFalse);
+
+      await adapterNodeZ.disconnect();
+    });
+
+    test('WebRTC Glare Resolution: Lower node ID yields in-flight connection and accepts colliding offer', () async {
+      final inFlightPc = FakeRTCPeerConnection();
+      final replacementPc = FakeRTCPeerConnection();
+
+      var connectionCount = 0;
+      final multiFactory = _DynamicFactory((_) {
+        connectionCount++;
+        return connectionCount == 1 ? inFlightPc : replacementPc;
+      });
+
+      final adapterNodeA = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: multiFactory,
+      );
+
+      // Node A < Node Z
+      await adapterNodeA.initializeRoom('ROOM-GLARE-2', 'node-A');
+      await adapterNodeA.connectToPeer('node-Z');
+
+      // Node A has in-flight connection
+      expect(inFlightPc.isClosed, isFalse);
+
+      // Colliding offer arrives from higher-ranked node-Z
+      final collidingOffer = SignalingMessage(
+        id: 'offer-signal-from-z',
+        roomCode: 'ROOM-GLARE-2',
+        fromNodeId: 'node-Z',
+        toNodeId: 'node-A',
+        type: SignalingType.offer,
+        sdp: 'v=0\r\no=sdp-from-z',
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      signalingAdapter.emitIncomingSignal(collidingOffer);
+      await Future<void>.delayed(Duration.zero);
+
+      // Node A yielded its in-flight connection to node-Z
+      expect(inFlightPc.isClosed, isTrue);
+      // Replacement PC accepted remote offer and created answer
+      expect(replacementPc.remoteDescription?.sdp, 'v=0\r\no=sdp-from-z');
+      expect(replacementPc.localDescription?.type, 'answer');
+
+      await adapterNodeA.disconnect();
+    });
   });
+}
+
+class _DynamicFactory implements IRtcPeerConnectionFactory {
+  final RTCPeerConnection Function(Map<String, dynamic> config) _builder;
+  _DynamicFactory(this._builder);
+
+  @override
+  Future<RTCPeerConnection> createConnection(Map<String, dynamic> configuration) async {
+    return _builder(configuration);
+  }
 }
