@@ -8,6 +8,9 @@ import '../../../domain/homebrew/value_objects/ruleset_version.dart';
 import '../../dtos/homebrew_entity_dto.dart';
 import 'http_fetcher.dart';
 
+// Pure Dart compile-time constant for web detection (all JS numbers are double IEEE 754)
+const bool _isWeb = identical(0, 0.0);
+
 /// Concrete adapter fulfilling [IGithubIngestorPort] for GitHub homebrew repositories.
 ///
 /// Handles tree discovery, bounded concurrency downloads (max 4 parallel connections),
@@ -26,7 +29,32 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
 
   @override
   Future<List<String>> discoverJsonManifest(GithubRepoSource source) async {
-    final responseBody = await _client.get(source.apiTreeUri);
+    String responseBody;
+    var effectiveSource = source;
+
+    try {
+      responseBody = await _client.get(source.apiTreeUri);
+    } on HttpFetchException catch (e) {
+      // If default 'main' branch returned 404, automatically attempt fallback to 'master'
+      if (source.branch == 'main' && e.statusCode == 404) {
+        final masterSource = GithubRepoSource(
+          owner: source.owner,
+          repo: source.repo,
+          branch: 'master',
+        );
+        try {
+          responseBody = await _client.get(masterSource.apiTreeUri);
+          effectiveSource = masterSource;
+        } catch (_) {
+          rethrow;
+        }
+      } else {
+        rethrow;
+      }
+    } catch (_) {
+      rethrow;
+    }
+
     final Map<String, dynamic> treeData;
     try {
       treeData = jsonDecode(responseBody) as Map<String, dynamic>;
@@ -44,7 +72,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
       if (item is Map) {
         final path = item['path']?.toString();
         if (path != null && path.toLowerCase().endsWith('.json')) {
-          rawUrls.add(source.rawFileUri(path).toString());
+          rawUrls.add(effectiveSource.rawFileUri(path).toString());
         }
       }
     }
@@ -109,9 +137,10 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
     try {
       rawContent = await _client.get(Uri.parse(url));
     } catch (e) {
+      final reason = e is HttpFetchException ? e.message : 'HTTP download failure: $e';
       return IngestionSkipResult(
         sourceUrl: url,
-        reason: 'HTTP download failure',
+        reason: reason,
         errorDetails: e.toString(),
         ruleset: ruleset,
       );
@@ -134,7 +163,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
     } catch (e) {
       return IngestionSkipResult(
         sourceUrl: url,
-        reason: 'Malformed or invalid JSON schema',
+        reason: 'Malformed or invalid JSON schema: $e',
         errorDetails: e.toString(),
         ruleset: ruleset,
       );
@@ -146,7 +175,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
     RulesetVersion ruleset,
     String url,
   ) async {
-    if (_useIsolate) {
+    if (!_isWeb && _useIsolate) {
       try {
         return await Isolate.run(() {
           final decoded = jsonDecode(jsonString);

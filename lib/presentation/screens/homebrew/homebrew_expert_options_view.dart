@@ -62,6 +62,18 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
     super.dispose();
   }
 
+  String _formatErrorMessage(Object error) {
+    final str = error.toString();
+    if (str.contains('minified:') ||
+        str.contains('ProgressEvent') ||
+        str.contains('Instance of') ||
+        str.contains('Security Error')) {
+      return 'Network / Security Error: Unable to access GitHub repository. '
+          'Please verify the repository exists, is public, and that network connections to api.github.com are allowed.';
+    }
+    return str.startsWith('Exception: ') ? str.substring(11) : str;
+  }
+
   static Future<void> _defaultPersister(HomebrewEntity entity) async {
     // Persist to local persistence layer if applicable
     // Generic compendium entries can be retained through the persistence service
@@ -137,9 +149,10 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
           setState(() {
             _isIngesting = false;
           });
+          final message = _formatErrorMessage(error);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Ingestion failed: $error'),
+              content: Text(message),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );

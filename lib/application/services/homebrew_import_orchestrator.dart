@@ -161,8 +161,12 @@ class HomebrewImportOrchestrator {
         );
         controller.add(telemetry);
       } catch (e, st) {
+        final rawMsg = e.toString();
+        final friendlyMsg = (rawMsg.contains('minified:') || rawMsg.contains('ProgressEvent') || rawMsg.contains('Instance of'))
+            ? 'Network / Security Error: Unable to access GitHub repository. Please verify repository URL and internet connection.'
+            : rawMsg;
         final errList = List<String>.from(telemetry.errors)
-          ..add('Fatal discovery failure: ${e.toString()}');
+          ..add('Fatal discovery failure: $friendlyMsg');
         telemetry = telemetry.copyWith(
           errors: List.unmodifiable(errList),
           isCompleted: true,
