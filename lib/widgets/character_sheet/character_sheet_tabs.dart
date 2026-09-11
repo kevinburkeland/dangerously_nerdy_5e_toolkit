@@ -15,12 +15,12 @@ import '../../services/rules/character_actions_resolver.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import '../party/campaign_dialogs.dart';
-import 'features_traits_section.dart';
+import 'abilities_and_traits_tab.dart';
 import 'interactive_spell_tile.dart';
 import 'languages_tools_section.dart';
 import 'skills_saves_matrix.dart';
 
-/// 4-Tab Content Area: Actions & Combat, Spells & Magic, Skills & Traits, and Inventory & Reliquary.
+/// 5-Tab Content Area: Actions & Combat, Spells & Magic, Skills, Abilities & Traits, and Inventory & Reliquary.
 class CharacterSheetTabs extends StatefulWidget {
   final CharacterSheetController controller;
 
@@ -46,7 +46,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -81,6 +81,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
               Tab(icon: Icon(Icons.sports_martial_arts, size: 18), text: 'Actions'),
               Tab(icon: Icon(Icons.auto_awesome, size: 18), text: 'Spells'),
               Tab(icon: Icon(Icons.format_list_bulleted, size: 18), text: 'Skills'),
+              Tab(icon: Icon(Icons.psychology, size: 18), text: 'Traits'),
               Tab(icon: Icon(Icons.backpack_outlined, size: 18), text: 'Inventory'),
             ],
           ),
@@ -94,6 +95,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                 _buildActionsTab(context),
                 _buildSpellsTab(context),
                 _buildSkillsTab(context),
+                AbilitiesAndTraitsTab(controller: widget.controller),
                 _buildInventoryTab(context),
               ],
             ),
@@ -543,7 +545,7 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
 
 
   // ==========================================
-  // TAB 2: SKILLS & TRAITS
+  // TAB 3: SKILLS
   // ==========================================
   Widget _buildSkillsTab(BuildContext context) {
     return ListView(
@@ -555,10 +557,6 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
 
         // Languages Known & Tool Proficiencies Section
         LanguagesToolsSection(controller: widget.controller),
-        const SizedBox(height: 18),
-
-        // Features, Feats & Lineage Section
-        FeaturesTraitsSection(controller: widget.controller),
       ],
     );
   }

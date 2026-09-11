@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../models/dm_screen_data.dart';
+import '../../models/domain/character_models.dart';
+import '../../models/domain/core_types.dart';
+import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
+import '../../providers/character_sheet_controller.dart';
 import '../common/edition_diff_badge.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
+import 'spell_upcast_sheet.dart';
 
 /// Modular, interactive card presenting an individual SRD spell.
 class SpellCard extends StatelessWidget {
@@ -14,6 +19,8 @@ class SpellCard extends StatelessWidget {
   final VoidCallback onTap;
   final void Function(String formula, String label)? onQuickRoll;
   final VoidCallback? onOpenQuickRoll;
+  final CharacterSheetController? controller;
+  final void Function(int castLevel)? onCast;
 
   const SpellCard({
     super.key,
@@ -24,7 +31,96 @@ class SpellCard extends StatelessWidget {
     required this.onTap,
     this.onQuickRoll,
     this.onOpenQuickRoll,
+    this.controller,
+    this.onCast,
   });
+
+  Spell _buildDomainSpell() {
+    final rules = spell.getRules(edition);
+    return Spell(
+      id: EntityId(
+        slug: spell.id,
+        ruleset: edition == DmRulesEdition.v2024 ? RulesetVersion.v2024 : RulesetVersion.v2014,
+      ),
+      name: spell.getName(edition),
+      level: spell.level,
+      school: (rules.schoolOverride ?? spell.school).name,
+      castingTime: CastingTime(
+        cost: 1,
+        actionType: ActionType.action,
+        triggerCondition: rules.castingTime,
+      ),
+      duration: SpellDuration(
+        type: rules.concentration ? DurationType.special : DurationType.instantaneous,
+        requiresConcentration: rules.concentration,
+        rawText: rules.duration,
+      ),
+      range: rules.range,
+      components: SpellComponents(
+        v: rules.components.contains('V'),
+        s: rules.components.contains('S'),
+        m: rules.components.contains('M'),
+        materialDescription: rules.materialDetails?.description,
+      ),
+      descriptionMarkdown: rules.description.join('\n\n'),
+      higherLevelsMarkdown: rules.higherLevels,
+      damageMath: (rules.rollFormula != null &&
+              rules.rollFormula!.trim().isNotEmpty &&
+              rules.rollFormula!.trim().toLowerCase() != 'none')
+          ? [
+              EvaluationMath(
+                diceFormula: rules.rollFormula!,
+                damageType: DamageType.values.firstWhere(
+                  (d) => d.name.toLowerCase() == (rules.damageOrHealType ?? '').toLowerCase(),
+                  orElse: () => DamageType.untyped,
+                ),
+                scalingFormula: rules.scalingFormula != null
+                    ? '+${rules.scalingFormula!.dicePerSlotLevel}d${rules.scalingFormula!.diceSides}'
+                    : null,
+              )
+            ]
+          : const [],
+      customProperties: {
+        if (rules.rollFormula != null) 'rollFormula': rules.rollFormula,
+        if (rules.scalingFormula != null)
+          'scalingFormula': '+${rules.scalingFormula!.dicePerSlotLevel}d${rules.scalingFormula!.diceSides}',
+      },
+    );
+  }
+
+  Future<void> _handleCast(BuildContext context) async {
+    final spellName = spell.getName(edition);
+    if (spell.level == 0) {
+      // Cantrips roll immediately without prompting bottom sheet
+      if (onCast != null) {
+        onCast!(0);
+      } else if (controller != null) {
+        final domainSpell = _buildDomainSpell();
+        await controller!.castSpell(domainSpell, castLevel: 0);
+      }
+      return;
+    }
+
+    final resources = controller?.character.resources ?? const CharacterResourcePool();
+    final chosenSlot = await SpellUpcastSheet.show(
+      context,
+      spellName: spellName,
+      spellLevel: spell.level,
+      resources: resources,
+    );
+
+    if (chosenSlot == null) {
+      // Dismissed without selection
+      return;
+    }
+
+    if (onCast != null) {
+      onCast!(chosenSlot);
+    } else if (controller != null) {
+      final domainSpell = _buildDomainSpell();
+      await controller!.castSpell(domainSpell, castLevel: chosenSlot);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +334,33 @@ class SpellCard extends StatelessWidget {
                   ),
                 ),
               ),
+
+              // Cast Action Button
+              if (onCast != null || controller != null) ...[
+                Semantics(
+                  button: true,
+                  label: 'Cast ${spell.getName(edition)}',
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                    child: FilledButton.tonal(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => _handleCast(context),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.auto_awesome, size: 12),
+                          SizedBox(width: 4),
+                          Text('Cast', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
 
               // Quick Roll Action Button (if formula exists)
               if (rules.rollFormula != null &&

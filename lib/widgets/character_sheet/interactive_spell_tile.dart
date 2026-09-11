@@ -7,6 +7,7 @@ import '../../services/haptic_service.dart';
 import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
+import '../spellbook/spell_upcast_sheet.dart';
 
 /// Interactive VTT Combat Spell Tile allowing one-tap attack/damage roll execution
 /// and modal bottom sheet reference inspection.
@@ -49,61 +50,88 @@ class InteractiveSpellTile extends StatelessWidget {
     );
   }
 
-  void _executeSpellAction(BuildContext context) {
+  Future<void> _executeSpellAction(BuildContext context) async {
     HapticService.heavyImpact(context);
+
+    int? castLevel;
+    if (spell.level > 0) {
+      castLevel = await SpellUpcastSheet.show(
+        context,
+        spellName: spell.name,
+        spellLevel: spell.level,
+        resources: controller.character.resources,
+      );
+      if (castLevel == null) {
+        // User dismissed the sheet without selecting a slot
+        return;
+      }
+    }
+
+    final rollResult = await controller.castSpell(spell, castLevel: castLevel);
 
     if (hasSpellAttack && dealsDamage) {
       final atk = controller.rollSpellAttack(spell);
-      final dmg = controller.rollSpellDamage(spell);
-
       final critStr = atk.isCrit ? ' (CRIT!)' : (atk.isFumble ? ' (FUMBLE!)' : '');
-      final summary = '${spell.name}: Attack ${atk.total}$critStr | Damage ${dmg.total} (${dmg.formulaString})';
+      final upcastText = (castLevel != null && castLevel > spell.level) ? ' (Cast Lvl $castLevel)' : '';
+      final dmgText = rollResult != null ? ' | Damage ${rollResult.total} (${rollResult.formulaString})' : '';
+      final summary = '${spell.name}$upcastText: Attack ${atk.total}$critStr$dmgText';
 
       A11yService.announce(summary);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(summary, style: const TextStyle(fontWeight: FontWeight.bold)),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 4),
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(summary, style: const TextStyle(fontWeight: FontWeight.bold)),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     } else if (hasSpellAttack) {
       final atk = controller.rollSpellAttack(spell);
       final critStr = atk.isCrit ? ' (CRIT!)' : (atk.isFumble ? ' (FUMBLE!)' : '');
-      final summary = '${spell.name}: Attack ${atk.total}$critStr (1d20+${controller.stats.spellAttackBonus})';
+      final upcastText = (castLevel != null && castLevel > spell.level) ? ' (Cast Lvl $castLevel)' : '';
+      final summary = '${spell.name}$upcastText: Attack ${atk.total}$critStr (1d20+${controller.stats.spellAttackBonus})';
 
       A11yService.announceRoll(atk);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(summary, style: const TextStyle(fontWeight: FontWeight.bold)),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(summary, style: const TextStyle(fontWeight: FontWeight.bold)),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } else if (dealsDamage) {
-      final dmg = controller.rollSpellDamage(spell);
-      final summary = '${spell.name}: Damage ${dmg.total} (${dmg.formulaString})';
+      final upcastText = (castLevel != null && castLevel > spell.level) ? ' (Cast Lvl $castLevel)' : '';
+      final summary = rollResult != null
+          ? '${spell.name}$upcastText: Damage ${rollResult.total} (${rollResult.formulaString})'
+          : '${spell.name}$upcastText: Cast complete';
 
       A11yService.announce(summary);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(summary, style: const TextStyle(fontWeight: FontWeight.bold)),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(summary, style: const TextStyle(fontWeight: FontWeight.bold)),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } else {
       // Utility / Buff / Debuff spell execution
-      final summary = 'Cast ${spell.name} (${spell.level == 0 ? "Cantrip" : "Level ${spell.level}"})';
+      final summary = 'Cast ${spell.name} (${castLevel != null && castLevel > 0 ? "Level $castLevel" : (spell.level == 0 ? "Cantrip" : "Level ${spell.level}")})';
       A11yService.announce(summary);
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(summary),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(summary),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

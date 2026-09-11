@@ -4,6 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_character_repository.dart';
 
 class _FakePersistenceService implements ICharacterRepository {
@@ -476,6 +477,100 @@ void main() {
       // Healing 30 should clamp to 25 (evaluated max HP), not 10
       await dynController.heal(30);
       expect(dynController.character.resources.currentHp, equals(25));
+    });
+
+    test('expendSpellSlot(3) decrements 3rd-level slot from 2 to 1 and triggers persistence', () async {
+      final spellChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {1: 4, 2: 3, 3: 2},
+            currentSlots: {1: 4, 2: 3, 3: 2},
+          ),
+        ),
+      );
+
+      final spellCtrl = CharacterSheetController(
+        character: spellChar,
+        persistenceService: fakePersistence,
+      );
+
+      expect(spellCtrl.character.resources.spellSlots.currentSlots[3], equals(2));
+
+      await spellCtrl.expendSpellSlot(3);
+
+      expect(spellCtrl.character.resources.spellSlots.currentSlots[3], equals(1));
+
+      await spellCtrl.flush();
+      expect(fakePersistence.savedCharacter?.resources.spellSlots.currentSlots[3], equals(1));
+    });
+
+    test('castSpell scales upcast damage dice and decrements the selected higher slot', () async {
+      const spell = Spell(
+        id: EntityId(slug: 'scorching-burst', ruleset: RulesetVersion.v2024),
+        name: 'Scorching Burst',
+        level: 2,
+        school: 'evocation',
+        castingTime: CastingTime(cost: 1, actionType: ActionType.action),
+        duration: SpellDuration(type: DurationType.instantaneous),
+        range: '60 ft',
+        components: SpellComponents(),
+        descriptionMarkdown: 'Deal 2d8 fire damage.',
+        damageMath: [
+          EvaluationMath(
+            diceFormula: '2d8',
+            damageType: DamageType.fire,
+            scalingFormula: '+1d8 per slot above 2nd',
+          ),
+        ],
+      );
+
+      final casterChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          spellSlots: const SpellSlotPool(
+            maxSlots: {2: 3, 4: 2},
+            currentSlots: {2: 3, 4: 2},
+          ),
+        ),
+      );
+
+      final casterCtrl = CharacterSheetController(
+        character: casterChar,
+        persistenceService: fakePersistence,
+      );
+
+      // Cast 2nd level spell using 4th level slot
+      final result = await casterCtrl.castSpell(spell, castLevel: 4);
+      expect(result, isNotNull);
+      // Base 2d8 + (4 - 2)*1d8 = 4d8 total dice
+      expect(result!.diceEntries.first.count, equals(4));
+      expect(result.diceEntries.first.dieType, equals(DieType.d8));
+
+      // 4th level slot decremented 2 -> 1, 2nd level slot untouched at 3
+      expect(casterCtrl.character.resources.spellSlots.currentSlots[4], equals(1));
+      expect(casterCtrl.character.resources.spellSlots.currentSlots[2], equals(3));
+    });
+
+    test('Active feature charge methods safely update, expend, and recover charges', () async {
+      final chargeChar = testCharacter.copyWith(
+        resources: testCharacter.resources.copyWith(
+          customResourcesCurrent: {'action surge': 1},
+          customResourcesMax: {'action surge': 1},
+        ),
+      );
+
+      final chargeCtrl = CharacterSheetController(
+        character: chargeChar,
+        persistenceService: fakePersistence,
+      );
+
+      expect(chargeCtrl.getResourceCharges('Action Surge'), equals(1));
+      expect(chargeCtrl.getResourceMax('Action Surge'), equals(1));
+
+      await chargeCtrl.expendResourceCharge('Action Surge');
+      expect(chargeCtrl.getResourceCharges('Action Surge'), equals(0));
+
+      await chargeCtrl.recoverResourceCharge('Action Surge');
+      expect(chargeCtrl.getResourceCharges('Action Surge'), equals(1));
     });
   });
 }

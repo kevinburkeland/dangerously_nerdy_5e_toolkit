@@ -607,6 +607,25 @@ class CharacterSheetController extends ChangeNotifier {
     ));
   }
 
+  /// Safely decrements a spell slot of a given level, updating immutable state and scheduling persistence.
+  Future<void> expendSpellSlot(int level) async {
+    final pool = _character.resources.spellSlots;
+    final curMap = Map<int, int>.from(pool.currentSlots);
+    final maxMap = pool.maxSlots;
+
+    final currentAvailable = curMap[level] ?? (maxMap[level] ?? 0);
+    if (currentAvailable > 0) {
+      curMap[level] = currentAvailable - 1;
+      _character = _character.copyWith(
+        resources: _character.resources.copyWith(
+          spellSlots: pool.copyWith(currentSlots: curMap),
+        ),
+      );
+      notifyListeners();
+      _schedulePersist();
+    }
+  }
+
   /// Consumes or recovers a spell slot of a given level.
   Future<void> toggleSpellSlot(int level, bool isExpending) async {
     final pool = _character.resources.spellSlots;
@@ -865,6 +884,200 @@ class CharacterSheetController extends ChangeNotifier {
     }
 
     return result;
+  }
+
+  /// Casts a spell, expending the specified spell slot (if level >= 1),
+  /// scaling damage dice if upcast above base spell level, and dispatching
+  /// the roll to [DiceRoomService].
+  Future<DiceRollResult?> castSpell(Spell spell, {int? castLevel}) async {
+    if (castLevel != null && castLevel > 0) {
+      await expendSpellSlot(castLevel);
+    }
+
+    final effectiveLevel = castLevel ?? spell.level;
+    final delta = effectiveLevel > spell.level ? (effectiveLevel - spell.level) : 0;
+
+    final slug = spell.id.slug.toLowerCase().replaceAll('_', '-');
+    final cleanSlug = slug.startsWith('spell-') ? slug.substring(6) : slug;
+    final isEldritchBlast = cleanSlug == 'eldritch-blast' || spell.name.toLowerCase() == 'eldritch blast';
+
+    // Parse base formula
+    String baseFormula = '1d10';
+    if (spell.damageMath.isNotEmpty) {
+      baseFormula = spell.damageMath.first.diceFormula;
+    } else if (spell.customProperties['rollFormula'] != null) {
+      baseFormula = spell.customProperties['rollFormula'].toString();
+    }
+
+    int baseCount = 1;
+    DieType baseDieType = DieType.d10;
+    int baseSides = 10;
+
+    final baseMatch = RegExp(r'^(\d+)d(\d+)').firstMatch(baseFormula.trim());
+    if (baseMatch != null) {
+      baseCount = int.tryParse(baseMatch.group(1)!) ?? 1;
+      final sides = int.tryParse(baseMatch.group(2)!) ?? 10;
+      baseDieType = DieType.values.firstWhere(
+        (d) => d.sides == sides && d != DieType.custom,
+        orElse: () => DieType.custom,
+      );
+      baseSides = sides;
+    }
+
+    // Upcast scaling
+    int additionalCount = 0;
+    DieType additionalDieType = baseDieType;
+    int additionalSides = baseSides;
+
+    if (delta > 0) {
+      String? scalingStr;
+      for (final dm in spell.damageMath) {
+        if (dm.scalingFormula != null && dm.scalingFormula!.trim().isNotEmpty) {
+          scalingStr = dm.scalingFormula;
+          break;
+        }
+      }
+      scalingStr ??= spell.customProperties['scalingFormula']?.toString();
+
+      if (scalingStr != null) {
+        final scaleMatch = RegExp(r'(\d+)d(\d+)').firstMatch(scalingStr);
+        if (scaleMatch != null) {
+          final dicePerLevel = int.tryParse(scaleMatch.group(1)!) ?? 1;
+          final sSides = int.tryParse(scaleMatch.group(2)!) ?? baseSides;
+          additionalCount = delta * dicePerLevel;
+          additionalDieType = DieType.values.firstWhere(
+            (d) => d.sides == sSides && d != DieType.custom,
+            orElse: () => DieType.custom,
+          );
+          additionalSides = sSides;
+        }
+      } else if (spell.higherLevelsMarkdown != null) {
+        final hlMatch = RegExp(r'(\d+)d(\d+)').firstMatch(spell.higherLevelsMarkdown!);
+        if (hlMatch != null) {
+          final dicePerLevel = int.tryParse(hlMatch.group(1)!) ?? 1;
+          final sSides = int.tryParse(hlMatch.group(2)!) ?? baseSides;
+          additionalCount = delta * dicePerLevel;
+          additionalDieType = DieType.values.firstWhere(
+            (d) => d.sides == sSides && d != DieType.custom,
+            orElse: () => DieType.custom,
+          );
+          additionalSides = sSides;
+        }
+      }
+    }
+
+    int modifier = 0;
+    if (isEldritchBlast && (hasAgonizingBlast || hasCapabilityFlag('eldritchBlastChaDamage') || hasCapabilityFlag('agonizing_blast'))) {
+      final chaMod = _character.effectiveAbilityScores.getModifier(AbilityType.charisma);
+      modifier += chaMod;
+    }
+
+    // Assemble pool
+    final List<DiceEntry> entries = [];
+    if (additionalCount > 0 && additionalSides == baseSides) {
+      entries.add(DiceEntry(
+        dieType: baseDieType,
+        count: baseCount + additionalCount,
+        customSides: baseSides,
+      ));
+    } else {
+      entries.add(DiceEntry(
+        dieType: baseDieType,
+        count: baseCount,
+        customSides: baseSides,
+      ));
+      if (additionalCount > 0) {
+        entries.add(DiceEntry(
+          dieType: additionalDieType,
+          count: additionalCount,
+          customSides: additionalSides,
+        ));
+      }
+    }
+
+    final result = DiceRollResult.rollPool(
+      diceEntries: entries,
+      modifier: modifier,
+    );
+
+    // Broadcast roll to DiceRoomService
+    final roomService = DiceRoomService();
+    final activeRoom = roomService.activeRoomCode ?? 'LOCAL';
+    final playerName = _character.name.isNotEmpty ? _character.name : 'Player';
+    final upcastLabel = (effectiveLevel > spell.level) ? ' (Cast at Level $effectiveLevel)' : '';
+    final roomRoll = RoomRoll(
+      id: 'roll-${DateTime.now().millisecondsSinceEpoch}-${secureRandom.nextInt(9999)}',
+      roomCode: activeRoom,
+      playerName: playerName,
+      formulaString: '${spell.name}$upcastLabel: ${result.formulaString}',
+      total: result.total,
+      individualRolls: result.individualRolls,
+      details: [
+        '${result.diceEntries.map((e) => e.formulaString).join(" + ")}(${result.individualRolls.join(", ")})'
+            '${modifier != 0 ? (modifier > 0 ? " + $modifier" : " - ${modifier.abs()}") : ""} = ${result.total}'
+      ],
+      isCrit: result.isCrit,
+      isFumble: result.isFumble,
+      timestamp: DateTime.now(),
+    );
+    roomService.broadcastRoll(roomRoll);
+
+    return result;
+  }
+
+  /// Returns current available charges for a named resource (e.g., 'Action Surge', 'Channel Divinity').
+  int getResourceCharges(String resourceKey, {int defaultMax = 1}) {
+    final pool = _character.resources;
+    final cleanKey = resourceKey.trim().toLowerCase();
+    return pool.customResourcesCurrent[cleanKey] ?? pool.customResourcesMax[cleanKey] ?? defaultMax;
+  }
+
+  /// Returns max charges for a named resource.
+  int getResourceMax(String resourceKey, {int defaultMax = 1}) {
+    final pool = _character.resources;
+    final cleanKey = resourceKey.trim().toLowerCase();
+    return pool.customResourcesMax[cleanKey] ?? defaultMax;
+  }
+
+  /// Updates current (and optionally max) charges for a named custom resource.
+  Future<void> updateResourceCharges(String resourceKey, int current, {int? max}) async {
+    final pool = _character.resources;
+    final cleanKey = resourceKey.trim().toLowerCase();
+    final curMap = Map<String, int>.from(pool.customResourcesCurrent);
+    final maxMap = Map<String, int>.from(pool.customResourcesMax);
+
+    final resolvedMax = max ?? maxMap[cleanKey] ?? (current > 0 ? current : 1);
+    final clampedCurrent = current.clamp(0, resolvedMax);
+
+    curMap[cleanKey] = clampedCurrent;
+    maxMap[cleanKey] = resolvedMax;
+
+    _character = _character.copyWith(
+      resources: pool.copyWith(
+        customResourcesCurrent: curMap,
+        customResourcesMax: maxMap,
+      ),
+    );
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Consumes one charge of a named resource.
+  Future<void> expendResourceCharge(String resourceKey, {int defaultMax = 1}) async {
+    final current = getResourceCharges(resourceKey, defaultMax: defaultMax);
+    final max = getResourceMax(resourceKey, defaultMax: defaultMax);
+    if (current > 0) {
+      await updateResourceCharges(resourceKey, current - 1, max: max);
+    }
+  }
+
+  /// Recovers one charge of a named resource.
+  Future<void> recoverResourceCharge(String resourceKey, {int defaultMax = 1}) async {
+    final current = getResourceCharges(resourceKey, defaultMax: defaultMax);
+    final max = getResourceMax(resourceKey, defaultMax: defaultMax);
+    if (current < max) {
+      await updateResourceCharges(resourceKey, current + 1, max: max);
+    }
   }
 
   /// Returns all indexed campaign memberships linking this character.

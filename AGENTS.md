@@ -40,8 +40,8 @@ dangerously_nerdy_5e_toolkit/
 │   │   └── rules/                      # AcEngineAndInventory, CombatRulesEngine, Dnd5eRulesEngine, etc.
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
-│   └── widgets/                        # Modular UI components, dialogs, charts, and vector glyphs
-├── test/                               # Comprehensive test suite (1,491 passing tests)
+│   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
+├── test/                               # Comprehensive test suite (1,500 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
