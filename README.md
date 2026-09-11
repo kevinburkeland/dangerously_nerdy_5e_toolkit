@@ -373,7 +373,7 @@ dangerously_nerdy_5e_toolkit/
 │   └── widgets/                    # Modular UI components
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with icon font packaging & cache-busting
-├── test/                           # Unit, widget, accessibility, & resilience test suites (1,506 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (1,507 tests)
 │   ├── accessibility/              # A11y & dynamic type scaling tests
 │   ├── application/                # Orchestration & reconciliation service tests
 │   ├── domain/                     # Domain purity & CRDT logic tests
@@ -447,7 +447,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,506 tests with 100% pass rate**):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,507 tests with 100% pass rate**):
 ```bash
 flutter test
 ```
@@ -464,7 +464,7 @@ flutter analyze
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
 - Implementation of multi-tier conflict resolution, CvRDT state replication, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, character progression pipelines, Anti-Corruption Layer (ACL) compendium parsers, and cryptographically secure RNG utilities.
-- Writing comprehensive unit, widget, domain purity, and resilience tests (1,506 automated tests).
+- Writing comprehensive unit, widget, domain purity, and resilience tests (1,507 automated tests).
 - UI styling, 3D dice physics, responsive layout refinements, and documentation.
 
 All AI-generated contributions were thoroughly audited, tested, verified, and refined by human developers to ensure high code quality, security, and accuracy to 5e RAW rules.

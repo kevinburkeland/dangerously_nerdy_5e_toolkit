@@ -84,6 +84,7 @@ Located at `lib/application/services/cascading_transport_router.dart`:
 - **Failover Step-Down & Payload Routing:**
   - Broadcast failures on the active adapter invoke `_stepDownWaterfall()`, cleanly disconnecting the failing adapter and activating the next tier down before retrying transmission.
   - `checkHeartbeats()` continuously monitors peer activity against `heartbeatTtl` (6 seconds); if active peers drop to zero in Tier 1 or Tier 2, the router automatically steps down to Tier 3 cloud relay.
+  - **Adapter Peer Last-Seen Synchronization:** The underlying `WebRtcMeshAdapter` maintains connections via silent internal ping/pong protocol messages that are withheld from the application payload stream. To prevent the router from starving and prematurely evicting peers (causing UI peer count flickering between 0 and 1), `checkHeartbeats()` explicitly polls and synchronizes `_activeAdapter?.peerLastSeen` into the router's `_peerLastSeen` registry before evaluating zombie nodes against the TTL.
 
 ## 9. IP2pTransportPort Unification & Interface Polymorphism
 Located at `lib/domain/ports/i_p2p_transport_port.dart`:

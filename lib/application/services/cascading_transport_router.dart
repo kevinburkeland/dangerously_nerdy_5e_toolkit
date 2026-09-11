@@ -212,6 +212,16 @@ class CascadingTransportRouter implements IP2pTransportPort {
       }
     }
 
+    if (_activeAdapter != null) {
+      final adapterPeers = _activeAdapter!.peerLastSeen;
+      for (final entry in adapterPeers.entries) {
+        final existing = _peerLastSeen[entry.key] ?? 0;
+        if (entry.value > existing) {
+          _peerLastSeen[entry.key] = entry.value;
+        }
+      }
+    }
+
     final zombieNodes = <String>[];
     for (final entry in _peerLastSeen.entries) {
       if (now - entry.value >= ttl) {

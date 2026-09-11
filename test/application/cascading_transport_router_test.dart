@@ -306,6 +306,38 @@ void main() {
 
         await testRouter.disconnect();
       });
+
+      test('Synchronizes peerLastSeen from active adapter preventing premature eviction during silent ping/pongs', () async {
+        mockLocalWifi.initializeShouldThrow = true; // Cascade to WebRTC tier
+        await router.initializeRoom('ROOM-SILENT', 'node-local');
+        expect(router.currentState, TransportState.webRtc);
+
+        final initialTime = DateTime(2026, 9, 9, 12, 0, 0);
+
+        // Record peer heartbeat initially at t = 0s
+        router.recordPeerHeartbeat('peer-silent', timestamp: initialTime.millisecondsSinceEpoch);
+        expect(router.peerLastSeen['peer-silent'], initialTime.millisecondsSinceEpoch);
+
+        // Simulate active WebRtcMeshAdapter updating its internal peerLastSeen at t = 5s via silent ping/pong
+        final at5Seconds = initialTime.add(const Duration(seconds: 5));
+        mockWebRtc.peerLastSeen = {
+          'peer-silent': at5Seconds.millisecondsSinceEpoch,
+        };
+
+        // Advance to t = 7s (past initial 6s TTL from t = 0s)
+        final at7Seconds = initialTime.add(const Duration(seconds: 7));
+        await router.checkHeartbeats(at7Seconds);
+
+        // Verify router synced the timestamp from active adapter and did NOT prune the peer
+        expect(router.peerLastSeen.containsKey('peer-silent'), isTrue);
+        expect(router.peerLastSeen['peer-silent'], at5Seconds.millisecondsSinceEpoch);
+        expect(router.currentState, TransportState.webRtc);
+
+        // Advance to t = 12s (> 6s after the 5s update): peer should now be pruned
+        final at12Seconds = initialTime.add(const Duration(seconds: 12));
+        await router.checkHeartbeats(at12Seconds);
+        expect(router.peerLastSeen.containsKey('peer-silent'), isFalse);
+      });
     });
 
     test('Clean disconnect tears down all adapters, subscriptions, and clears state', () async {
