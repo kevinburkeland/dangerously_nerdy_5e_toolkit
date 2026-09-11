@@ -26,7 +26,11 @@ Located at `lib/domain/crdt/crdt_or_set.dart`:
 - **Tombstone Pruning:**
   - Infinite tombstone growth causes memory leaks and ballooning network payloads.
   - Every `CrdtOrSet` MUST implement a `prune(HybridLogicalClock threshold)` method to purge tombstones older than the specified synchronization horizon.
-- **Querying Active Elements:** `.elements` returns only entries whose addition timestamp is strictly greater than their tombstone deletion timestamp.
+- **Convergence & Obsolete Tombstone Suppression:**
+  - When merging remote tombstones into a local set containing an active item whose insertion timestamp is strictly newer than the incoming tombstone (`localItem.timestamp.isAfter(remoteTs)`), the remote tombstone is obsolete (the item was revived) and MUST NOT be recorded. This preserves algebraic commutativity ($A \sqcup B = B \sqcup A$) and prevents active items from coexisting with stale tombstones under out-of-order delivery.
+- **Value Equality & MapEntry Hash Safety:**
+  - In Dart, `MapEntry` does not override `operator ==` or `hashCode`. To satisfy the contract that equal sets yield equal hash codes, `CrdtOrSet.hashCode` must hash entry tuples using `Object.hash(e.key, e.value)` prior to `Object.hashAllUnordered()`.
+- **Querying Active Elements:** `.activeValues` returns only entries whose addition timestamp is strictly greater than their tombstone deletion timestamp.
 
 ## 4. State Reconciliation & Snapshot Checkpoints
 

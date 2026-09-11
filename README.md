@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1537%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1562%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -62,6 +62,10 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 * **Layered Priority Store Architecture (`LayeredPriorityStore`)**:
   - Three-tier hierarchy: **Canon SRD Base Layer** → **Custom Homebrew Overlay** → **Campaign Room Overrides**.
   - Automatic deduplication against canonical SRD slugs using `SrdEquivalenceIndex`.
+* **Explicit-Ruleset GitHub Repository Ingestor (Expert Options)**:
+  - Direct client-side ingestion of homogeneous single-ruleset GitHub repositories (`https://github.com/:owner/:repo`) with bounded concurrency (max 4 connections).
+  - Strict Anti-Corruption Layer (ACL) schema validation enforcing distinct 2014 SRD 5.1 vs. 2024 SRD 5.2 contracts (forbidding heuristic auto-detection).
+  - Local CRDT ledger commitment (`CrdtOrSet` with `HybridLogicalClock` timestamps) and reactive streaming progress telemetry.
 * **Management & Maintenance**: Homebrew bulk deletion, bundle export, live preview dialogs, and instant compendium refresh.
 
 ---
@@ -373,7 +377,7 @@ dangerously_nerdy_5e_toolkit/
 │   └── widgets/                    # Modular UI components
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with icon font packaging & cache-busting
-├── test/                           # Unit, widget, accessibility, & resilience test suites (1,537 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (1,562 tests)
 │   ├── accessibility/              # A11y & dynamic type scaling tests
 │   ├── application/                # Orchestration & reconciliation service tests
 │   ├── domain/                     # Domain purity & CRDT logic tests

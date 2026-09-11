@@ -60,7 +60,23 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 ## 7. Monte Carlo Simulation Structural Sharing (fast_immutable_collections)
 
 - **Zero-Allocation Cloning:** In simulation loops (`ArenaCombatEngine`, `DprSimulator`) running thousands of iterations (e.g., 500x/1,000x/10,000x runs), mutable Dart collections (`List`, `Set`, `Map`) produce excessive GC pressure and memory spikes when copied (`Set.from()`, `List.from()`).
-- **Immutable Primitives (`ISet`, `IList`, `IMap`):** Entity simulation states (e.g., `ArenaCombatant`) must use `fast_immutable_collections` for collection fields (`immunities`, `resistances`, `vulnerabilities`, `spellSlots`, `activeConditions`).
+- **Defensive State Deep-Copying (Immutable Data Sharing):** State instances in simulation rounds must use immutable data structures (`fast_immutable_collections`) or immutable copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`) to prevent state corruption across iterations.
 - **Instantaneous `.clone()` and `.reset()`:** `.clone()` and `.reset()` pass collections directly by reference without re-allocating memory.
 - **Collection Agnosticism:** UI components displaying these collections (e.g. `ArenaConditionChipsBar`) must accept generic `Iterable<T>` to seamlessly render both standard and immutable collections.
 
+## 8. Explicit-Ruleset Homebrew Ingestion Directives
+
+- **Explicit Ruleset Pre-Selection Mandate:**
+  - Remote repository ingestion (`IGithubIngestorPort`, `GithubIngestorAdapter`) requires explicit user pre-selection of `RulesetVersion.srd2014` or `RulesetVersion.srd2024`.
+  - Heuristic ruleset auto-detection is strictly forbidden to protect CRDT ledger health.
+- **Strict Anti-Corruption Layer (ACL) Schema Validation:**
+  - `HomebrewEntityDto` validates incoming JSON strictly against the target ruleset.
+  - `srd2014`: Must reject 2024 Weapon Masteries, linear 10-step exhaustion models, and Background-bound ASIs / Origin Feats.
+  - `srd2024`: Must reject legacy bonus-action spell restriction clauses and Species/Race-bound ASIs.
+  - Rejected or corrupted entries must return `IngestionSkipResult` containing failure metadata without terminating the batch import stream.
+- **Bounded Concurrency & Isolate Offloading:**
+  - Remote file downloads must use a bounded worker pool limited to maximum **4 concurrent HTTP connections**.
+  - Offload JSON decoding and schema validation to `Isolate.run()` on native platforms and asynchronous microtask batches on Flutter Web.
+- **CRDT Ledger Integration:**
+  - Validated entities are stamped with monotonic `HybridLogicalClock` timestamps and committed to `CrdtOrSet<HomebrewEntity>`.
+  - Outbound telemetry and progress streams must enforce `sync: false` to prevent re-entrant deadlocks.

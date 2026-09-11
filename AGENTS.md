@@ -13,26 +13,28 @@ dangerously_nerdy_5e_toolkit/
 ├── lib/
 │   ├── domain/                         # Pure Dart Core (ZERO Flutter imports)
 │   │   ├── crdt/                       # Distributed state: HybridLogicalClock, CrdtLwwRegister, CrdtOrSet
+│   │   ├── homebrew/                   # Homebrew domain: RulesetVersion, GithubRepoSource, IGithubIngestorPort, HomebrewEntity
 │   │   ├── models/                     # Immutable entities: AnimatedObject, CampaignProfile, WeaponMastery
 │   │   │   └── value_objects/          # Value objects: HitPoints
 │   │   ├── ports/                      # Abstract interfaces: ICampaignRepository, ICharacterRepository, IP2pTransportPort, INetworkTimePort
 │   │   ├── rules/                      # Pure mechanical contracts: RulesetContext, CharacterValidationEngine
 │   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack
 │   ├── application/                    # Use Cases & Orchestration
-│   │   └── services/                   # CascadingTransportRouter, RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator
+│   │   └── services/                   # CascadingTransportRouter, RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator, HomebrewImportOrchestrator
 │   ├── infrastructure/                 # Adapters, DTOs & Concrete I/O
-│   │   ├── adapters/                   # Transport & Time Adapters: LocalWifiTransportAdapter, WebRtcMeshAdapter, FirebaseSignalingAdapter, FirebaseFallbackAdapter, SystemNetworkTimePort
+│   │   ├── adapters/                   # Transport, Remote & Time Adapters: LocalWifiTransportAdapter, WebRtcMeshAdapter, GithubIngestorAdapter, HttpFetchClient
 │   │   ├── di/                         # Service Locator: injection_container.dart (sl)
-│   │   ├── dtos/                       # CharacterDto, SpellDto, CampaignProfileDto, AnimatedObjectDto
+│   │   ├── dtos/                       # CharacterDto, SpellDto, CampaignProfileDto, AnimatedObjectDto, HomebrewEntityDto
 │   │   │   └── crdt/                   # HybridLogicalClockDto, CrdtLwwRegisterDto, CrdtOrSetDto
 │   │   ├── mappers/                    # Anti-Corruption Layer Mappers: HomebrewIngestor
 │   │   ├── repositories/               # LocalCampaignRepository, LocalCharacterRepository
 │   │   └── resolvers/                  # CharacterTelemetryResolver
 │   ├── presentation/
 │   │   ├── core/                       # Accessible core widgets: AccessibleActionTile
+│   │   ├── screens/                    # Sub-screens: homebrew/HomebrewExpertOptionsView
 │   │   └── widgets/                    # Accessible badges & widgets: RoomConnectionBadge
 │   ├── providers/                      # CharacterSheetController, SettingsProvider
-│   ├── screens/                        # Top-level screen layouts (Character Sheet, Arena, DPR, Compendiums)
+│   ├── screens/                        # Top-level screen layouts (Character Sheet, Arena, DPR, Compendiums, Homebrew Studio)
 │   ├── services/                       # Legacy services, ACL parsers, rules engines, persistence
 │   │   ├── acl/                        # 5etools AST transformers & JSON ingestion pipeline
 │   │   ├── persistence/                # Hive / IndexedDB storage & web lifecycle flusher
@@ -41,7 +43,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,537 passing tests)
+├── test/                               # Comprehensive test suite (1,562 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests

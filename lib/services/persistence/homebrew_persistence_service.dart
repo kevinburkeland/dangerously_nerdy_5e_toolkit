@@ -2040,6 +2040,15 @@ class HomebrewPersistenceService {
     }
   }
 
+  /// Public accessor to save a single raw JSON payload for homebrew entities.
+  Future<void> saveCustomRawPayload(
+    String key,
+    String entitySlug,
+    Map<String, dynamic> rawPayload,
+  ) async {
+    await _saveRawPayload(key, entitySlug, rawPayload);
+  }
+
   /// Saves a single raw JSON payload keyed by [entitySlug].
   /// Uses a `Map<slug, rawJson>` stored in database and syncs to SharedPreferences.
   Future<void> _saveRawPayload(

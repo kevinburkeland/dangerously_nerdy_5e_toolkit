@@ -9,6 +9,7 @@ import '../widgets/homebrew/homebrew_bulk_deleter_dialog.dart';
 import '../widgets/homebrew/homebrew_export_dialog.dart';
 import '../widgets/homebrew/homebrew_import_preview_dialog.dart';
 import '../widgets/homebrew/homebrew_refresher_dialog.dart';
+import '../presentation/screens/homebrew/homebrew_expert_options_view.dart';
 import '../widgets/homebrew/monster_builder_dialog.dart';
 import '../widgets/homebrew/spell_builder_dialog.dart';
 
@@ -495,6 +496,31 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
             tooltip: 'Import Homebrew / Compendium JSON',
             icon: const Icon(Icons.file_download_outlined),
             onPressed: _openImportDialog,
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'More Options',
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'expert_github') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const HomebrewExpertOptionsView(),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (ctx) => [
+              const PopupMenuItem(
+                value: 'expert_github',
+                child: Row(
+                  children: [
+                    Icon(Icons.terminal, size: 20),
+                    SizedBox(width: 10),
+                    Text('Expert GitHub Ingestor'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
         bottom: TabBar(

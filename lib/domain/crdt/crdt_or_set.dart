@@ -59,10 +59,17 @@ class CrdtOrSet<T> {
     // Merge tombstones
     remote.tombstones.forEach((id, remoteTs) {
       final localTs = mergedTombstones[id];
+      final localItem = mergedItems[id];
+
+      // If local item is strictly newer than the remote tombstone,
+      // the tombstone is obsolete (the item was revived) and must not be added.
+      if (localItem != null && localItem.timestamp.isAfter(remoteTs)) {
+        return;
+      }
+
       if (localTs == null || remoteTs.isAfter(localTs)) {
         mergedTombstones[id] = remoteTs;
         // If remote tombstone is newer than our item, delete our item
-        final localItem = mergedItems[id];
         if (localItem != null && remoteTs.isAfter(localItem.timestamp)) {
           mergedItems.remove(id);
         }
@@ -106,8 +113,12 @@ class CrdtOrSet<T> {
 
   @override
   int get hashCode => Object.hash(
-        Object.hashAllUnordered(items.entries),
-        Object.hashAllUnordered(tombstones.entries),
+        Object.hashAllUnordered(
+          items.entries.map((e) => Object.hash(e.key, e.value)),
+        ),
+        Object.hashAllUnordered(
+          tombstones.entries.map((e) => Object.hash(e.key, e.value)),
+        ),
       );
 
   static bool _mapsEqual<K, V>(Map<K, V> a, Map<K, V> b) {
