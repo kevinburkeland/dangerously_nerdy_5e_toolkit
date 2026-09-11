@@ -165,5 +165,26 @@ void main() {
       expect(joinId.isNotEmpty, isTrue);
       expect(adapter.trackedDocPaths, contains('rooms/ROOM-JOIN/signaling/$joinId'));
     });
+
+    test('cleanUpPeerSignaling isolates document cleanup per peer and preserves other peers in multi-peer rooms', () async {
+      await adapter.initialize(roomCode: 'MULTI-ROOM', localNodeId: 'node-a');
+
+      final offerB = await adapter.sendOffer(toNodeId: 'node-b', sdp: 'sdp-b');
+      final offerC = await adapter.sendOffer(toNodeId: 'node-c', sdp: 'sdp-c');
+
+      expect(adapter.trackedDocPaths.length, 2);
+      expect(adapter.peerTrackedDocPaths['node-b'], contains('rooms/MULTI-ROOM/signaling/$offerB'));
+      expect(adapter.peerTrackedDocPaths['node-c'], contains('rooms/MULTI-ROOM/signaling/$offerC'));
+
+      // Node B establishes connection -> cleanUpPeerSignaling('node-b')
+      await adapter.cleanUpPeerSignaling('node-b');
+
+      // Only Node B's document deleted
+      expect(deletedPaths, contains('rooms/MULTI-ROOM/signaling/$offerB'));
+      expect(deletedPaths, isNot(contains('rooms/MULTI-ROOM/signaling/$offerC')));
+      expect(adapter.trackedDocPaths, contains('rooms/MULTI-ROOM/signaling/$offerC'));
+      expect(adapter.peerTrackedDocPaths.containsKey('node-b'), isFalse);
+      expect(adapter.peerTrackedDocPaths['node-c'], isNotNull);
+    });
   });
 }

@@ -360,6 +360,53 @@ void main() {
 
       await adapterNodeA.disconnect();
     });
+
+    test('3-node mesh room preserves Node C signaling documents when Node B establishes connection', () async {
+      final fakePcB = FakeRTCPeerConnection();
+      final fakePcC = FakeRTCPeerConnection();
+
+      var connectionCount = 0;
+      final multiFactory = _DynamicFactory((_) {
+        connectionCount++;
+        return connectionCount == 1 ? fakePcB : fakePcC;
+      });
+
+      final multiMeshAdapter = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: multiFactory,
+      );
+
+      await multiMeshAdapter.initializeRoom('ROOM-MULTI-3', 'node-A');
+
+      // Initiate connection to Node B and Node C
+      await multiMeshAdapter.connectToPeer('node-B');
+      await multiMeshAdapter.connectToPeer('node-C');
+
+      // Check that both peer-B and peer-C have tracked documents in signaling
+      expect(signalingAdapter.peerTrackedDocPaths.containsKey('node-B'), isTrue);
+      expect(signalingAdapter.peerTrackedDocPaths.containsKey('node-C'), isTrue);
+      final docCountB = signalingAdapter.peerTrackedDocPaths['node-B']!.length;
+      final docCountC = signalingAdapter.peerTrackedDocPaths['node-C']!.length;
+      expect(docCountB, greaterThan(0));
+      expect(docCountC, greaterThan(0));
+
+      // Node B establishes ICE connection & DataChannel opens
+      fakePcB.onIceConnectionState?.call(RTCIceConnectionState.RTCIceConnectionStateConnected);
+      fakePcB.dataChannel.onDataChannelState?.call(RTCDataChannelState.RTCDataChannelOpen);
+      await Future<void>.delayed(Duration.zero);
+
+      // Node B's signaling documents are purged
+      expect(signalingAdapter.peerTrackedDocPaths.containsKey('node-B'), isFalse);
+      for (final path in deletedSignalingDocs) {
+        expect(path, isNot(contains('node-C')));
+      }
+
+      // Node C's signaling documents are PRESERVED!
+      expect(signalingAdapter.peerTrackedDocPaths.containsKey('node-C'), isTrue);
+      expect(signalingAdapter.peerTrackedDocPaths['node-C']!.length, equals(docCountC));
+
+      await multiMeshAdapter.disconnect();
+    });
   });
 }
 

@@ -299,8 +299,8 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     pc.onIceConnectionState = (state) {
       if (state == RTCIceConnectionState.RTCIceConnectionStateConnected ||
           state == RTCIceConnectionState.RTCIceConnectionStateCompleted) {
-        // Clean up all lingering signaling documents once P2P is established!
-        _signalingAdapter?.cleanUpSignalingSession();
+        // Clean up lingering signaling documents for this peer once P2P is established!
+        _signalingAdapter?.cleanUpPeerSignaling(peerId);
       } else if (state == RTCIceConnectionState.RTCIceConnectionStateFailed) {
         prunePeer(peerId);
       }
@@ -342,8 +342,8 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
         if (!_peersChangedController.isClosed) {
           _peersChangedController.add(connectedPeers);
         }
-        // P2P DataChannel is open! Ephemeral cleanup guarantee
-        _signalingAdapter?.cleanUpSignalingSession();
+        // P2P DataChannel is open! Ephemeral cleanup guarantee for this peer
+        _signalingAdapter?.cleanUpPeerSignaling(peerId);
       } else if (state == RTCDataChannelState.RTCDataChannelClosed) {
         prunePeer(peerId);
       }

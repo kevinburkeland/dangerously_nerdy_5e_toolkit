@@ -16,9 +16,9 @@ class FirebaseSignalingAdapter {
   final StreamController<SignalingMessage> _incomingSignalsController =
       StreamController<SignalingMessage>.broadcast();
 
-  /// Tracks all document paths created or received during signaling
-  /// to ensure total cleanup after P2P handshake completion.
-  final Set<String> _trackedDocPaths = {};
+  /// Tracks all document paths created or received during signaling,
+  /// partitioned by peer ID (or '*' for broadcasts) to isolate cleanup.
+  final Map<String, Set<String>> _peerTrackedDocPaths = {};
   final int slidingTtlMs;
   int? _lastPruningThreshold;
 
@@ -37,7 +37,10 @@ class FirebaseSignalingAdapter {
 
   String? get currentRoomCode => _roomCode;
   String? get localNodeId => _localNodeId;
-  Set<String> get trackedDocPaths => Set.unmodifiable(_trackedDocPaths);
+  Set<String> get trackedDocPaths =>
+      Set.unmodifiable(_peerTrackedDocPaths.values.expand((s) => s).toSet());
+  Map<String, Set<String>> get peerTrackedDocPaths =>
+      Map.unmodifiable(_peerTrackedDocPaths.map((k, v) => MapEntry(k, Set.unmodifiable(v))));
   int? get lastPruningThreshold => _lastPruningThreshold;
 
   /// Initializes signaling for the given room and node ID.
@@ -75,7 +78,9 @@ class FirebaseSignalingAdapter {
                       if (now - message.timestamp > slidingTtlMs) {
                         continue;
                       }
-                      _trackedDocPaths.add(change.doc.reference.path);
+                      _peerTrackedDocPaths
+                          .putIfAbsent(message.fromNodeId, () => <String>{})
+                          .add(change.doc.reference.path);
                       _incomingSignalsController.add(message);
                     }
                   }
@@ -169,7 +174,7 @@ class FirebaseSignalingAdapter {
     );
 
     final path = 'rooms/$_roomCode/signaling/$signalId';
-    _trackedDocPaths.add(path);
+    _peerTrackedDocPaths.putIfAbsent(toNodeId, () => <String>{}).add(path);
 
     if (isFirebaseAvailable) {
       await _effectiveFirestore
@@ -196,7 +201,7 @@ class FirebaseSignalingAdapter {
       return;
     }
     final path = 'rooms/${message.roomCode}/signaling/${message.id}';
-    _trackedDocPaths.add(path);
+    _peerTrackedDocPaths.putIfAbsent(message.fromNodeId, () => <String>{}).add(path);
     _incomingSignalsController.add(message);
   }
 
@@ -207,19 +212,35 @@ class FirebaseSignalingAdapter {
     await _deletePath(path, docId);
   }
 
-  /// Explicitly cleans up and deletes all ephemeral signaling documents
-  /// once P2P connection is established (`p2pEstablished`), leaving ZERO
-  /// persistent signaling residue in Firestore.
-  Future<void> cleanUpSignalingSession() async {
-    final pathsToDelete = Set<String>.from(_trackedDocPaths);
-    for (final path in pathsToDelete) {
+  /// Cleans up and deletes all ephemeral signaling documents associated
+  /// with a specific peer once that peer's P2P handshake completes,
+  /// preserving in-flight signaling documents for other peers.
+  Future<void> cleanUpPeerSignaling(String peerId) async {
+    final pathsToDelete = _peerTrackedDocPaths.remove(peerId);
+    if (pathsToDelete == null || pathsToDelete.isEmpty) return;
+    for (final path in List<String>.from(pathsToDelete)) {
       final docId = path.split('/').last;
       await _deletePath(path, docId);
     }
   }
 
+  /// Explicitly cleans up and deletes all ephemeral signaling documents
+  /// across all peers and wildcard channels, leaving ZERO persistent
+  /// signaling residue in Firestore.
+  Future<void> cleanUpSignalingSession() async {
+    final pathsToDelete = _peerTrackedDocPaths.values.expand((s) => s).toList();
+    for (final path in pathsToDelete) {
+      final docId = path.split('/').last;
+      await _deletePath(path, docId);
+    }
+    _peerTrackedDocPaths.clear();
+  }
+
   Future<void> _deletePath(String path, String docId) async {
-    _trackedDocPaths.remove(path);
+    for (final entry in _peerTrackedDocPaths.entries) {
+      entry.value.remove(path);
+    }
+    _peerTrackedDocPaths.removeWhere((_, set) => set.isEmpty);
 
     if (_onDeleteDocument != null) {
       await _onDeleteDocument!(path);

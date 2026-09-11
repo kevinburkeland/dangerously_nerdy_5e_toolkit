@@ -70,11 +70,23 @@ class HomebrewImportOrchestrator {
     String? nodeId,
     EntityPersister? persister,
     CrdtOrSet<HomebrewEntity>? initialLedger,
+  }) : this._internal(
+          ingestorPort: ingestorPort,
+          nodeId: nodeId ?? 'node_homebrew_${DateTime.now().millisecondsSinceEpoch}',
+          persister: persister,
+          initialLedger: initialLedger,
+        );
+
+  HomebrewImportOrchestrator._internal({
+    required IGithubIngestorPort ingestorPort,
+    required String nodeId,
+    EntityPersister? persister,
+    CrdtOrSet<HomebrewEntity>? initialLedger,
   })  : _ingestorPort = ingestorPort,
-        _nodeId = nodeId ?? 'node_homebrew_${DateTime.now().millisecondsSinceEpoch}',
+        _nodeId = nodeId,
         _persister = persister,
         _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>(),
-        _hlc = HybridLogicalClock.now(nodeId ?? 'node_homebrew');
+        _hlc = HybridLogicalClock.now(nodeId);
 
   /// Node identifier used for stamping CRDT clock ticks.
   String get nodeId => _nodeId;

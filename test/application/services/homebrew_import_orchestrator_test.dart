@@ -103,5 +103,43 @@ void main() {
       expect(persistedEntities.length, equals(1));
       expect(persistedEntities.first.name, equals('Frost Lance'));
     });
+
+    test('instantiated with nodeId: null generates matching dynamic nodeId for orchestrator and HLC stamp', () async {
+      final source = GithubRepoSource.parse('https://github.com/dnd/homebrew_dynamic');
+      final mockClient = MockHttpFetchClient({
+        source.apiTreeUri.toString(): jsonEncode({
+          'tree': [
+            {'path': 'items/dynamic_wand.json', 'type': 'blob'},
+          ]
+        }),
+        source.rawFileUri('items/dynamic_wand.json').toString(): jsonEncode({
+          'name': 'Dynamic Wand',
+          'type': 'equipment',
+        }),
+      });
+
+      final adapter = GithubIngestorAdapter(client: mockClient, useIsolate: false);
+      final orchestrator = HomebrewImportOrchestrator(
+        ingestorPort: adapter,
+      );
+
+      expect(orchestrator.nodeId, startsWith('node_homebrew_'));
+      expect(orchestrator.nodeId, isNot(equals('node_homebrew')));
+
+      final telemetry = await orchestrator.runImport(
+        source: source,
+        ruleset: RulesetVersion.srd2014,
+      ).last;
+
+      expect(telemetry.isCompleted, isTrue);
+      expect(orchestrator.ledger.activeValues.length, equals(1));
+
+      final item = orchestrator.ledger.activeValues.first;
+      final register = orchestrator.ledger.items[item.id];
+      expect(register, isNotNull);
+      // HLC nodeId must precisely match orchestrator.nodeId and not fall back to 'node_homebrew'
+      expect(register!.timestamp.nodeId, equals(orchestrator.nodeId));
+      expect(register.timestamp.nodeId, isNot(equals('node_homebrew')));
+    });
   });
 }

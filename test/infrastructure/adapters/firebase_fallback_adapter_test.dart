@@ -80,5 +80,66 @@ void main() {
       expect(receivedAfterReconnect, ['{"message":"reconnected"}']);
       await sub2.cancel();
     });
+
+    test('tolerates clock skew with 30-second query threshold and deduplicates message IDs', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await adapter.initializeRoom('ROOM-SKEW', 'node-skew');
+
+      expect(adapter.lastQueryThreshold, isNotNull);
+      // Query threshold must be buffered 30 seconds into the past
+      expect(adapter.lastQueryThreshold!, lessThanOrEqualTo(now - 29000));
+      expect(adapter.lastQueryThreshold!, greaterThanOrEqualTo(now - 31000));
+
+      final received = <String>[];
+      final sub = adapter.watchIncomingPayloads().listen(received.add);
+
+      // Emit first message with specific ID
+      adapter.emitIncomingPayload('{"action":"cast_spell","id":1}', messageId: 'msg-duplicate-1');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 1);
+      expect(adapter.processedMessageIds, contains('msg-duplicate-1'));
+
+      // Re-emit with identical message ID (e.g. from skewed Firestore query)
+      adapter.emitIncomingPayload('{"action":"cast_spell","id":1}', messageId: 'msg-duplicate-1');
+      await Future<void>.delayed(Duration.zero);
+
+      // Must be dropped by deduplicator
+      expect(received.length, 1);
+
+      // Emit with distinct message ID
+      adapter.emitIncomingPayload('{"action":"cast_spell","id":2}', messageId: 'msg-unique-2');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 2);
+      expect(adapter.processedMessageIds, contains('msg-unique-2'));
+
+      await sub.cancel();
+    });
+
+    test('enforces maxProcessedMessageIds LRU bound and clears tracking on disconnect', () async {
+      await adapter.initializeRoom('ROOM-LRU', 'node-lru');
+
+      final received = <String>[];
+      final sub = adapter.watchIncomingPayloads().listen(received.add);
+
+      for (int i = 0; i < 505; i++) {
+        adapter.emitIncomingPayload('{"index":$i}', messageId: 'msg-$i');
+      }
+      await Future<void>.delayed(Duration.zero);
+
+      expect(received.length, 505);
+      expect(adapter.processedMessageIds.length, equals(FirebaseFallbackAdapter.maxProcessedMessageIds));
+      // First 5 messages should have been evicted from the LRU cache
+      expect(adapter.processedMessageIds.contains('msg-0'), isFalse);
+      expect(adapter.processedMessageIds.contains('msg-4'), isFalse);
+      expect(adapter.processedMessageIds.contains('msg-504'), isTrue);
+
+      // Disconnect clears tracking
+      await adapter.disconnect();
+      expect(adapter.processedMessageIds, isEmpty);
+
+      await sub.cancel();
+    });
   });
 }

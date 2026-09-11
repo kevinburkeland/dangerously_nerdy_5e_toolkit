@@ -43,7 +43,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,562 passing tests)
+├── test/                               # Comprehensive test suite (1,567 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -66,12 +66,14 @@ dangerously_nerdy_5e_toolkit/
 
 ### 2. Decentralized State & CvRDT Directives
 - **Hybrid Logical Clock (HLC):** Implements `Comparable`. When physical timestamps (`l`) and counters (`c`) collide, use `nodeId` (device ID string) as the deterministic lexicographical tie-breaker. Random tie-breakers are strictly forbidden.
-- **Clock Spoofing Mitigation:** Network time synchronization via `INetworkTimePort` and `ClockSyncService` computes physical clock offsets (`offsetMs`), neutralizing device clock tampering or skew.
+- **HLC Node Identity Uniformity:** Orchestrators and services stamping CRDT registers must ensure local node IDs and internal `HybridLogicalClock` instances share the exact same dynamic identifier (resolving dynamic fallback IDs once before HLC instantiation) to prevent deterministic tie-breaker collision or static constant divergence.
+- **Clock Spoofing & Skew Mitigation:** Network time synchronization via `INetworkTimePort` and `ClockSyncService` computes physical clock offsets (`offsetMs`). Fallback message queries (such as in `FirebaseFallbackAdapter`) buffer queries by 30 seconds into the past to tolerate physical device clock skew, and enforce bounded LRU deduplication caches (max 500 entries) cleared upon disconnection.
 - **Observed-Remove Set (`CrdtOrSet`):** Deletions create tombstones. Always implement `prune(threshold)` to prevent memory leaks from unbounded tombstone accumulation.
 - **Milestone Pruning Decoupling:** Prune tombstones via `RoomStateReconciliationService.executeMilestonePrune` using authoritative server/ledger timestamps, decoupled from unverified local clock estimations.
 - **LWW Register (`CrdtLwwRegister`):** Modifications return a new immutable instance.
 - **Minion Immutability in CRDT Collections:** Minions and summon entities (`AnimatedObjectInstance`) within `CampaignProfile.roomState.activeMinions` are immutable entities. Modifications MUST use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`) and map into a new immutable list. In-place mutating operations are deprecated and strictly prohibited.
 - **Delta Fast-Forward:** Base room state is hydrated from snapshot milestones, with incremental CRDT deltas reconciled on top via `RoomStateReconciliationService`.
+- **Peer-Scoped Ephemeral Signaling Isolation:** WebRTC signaling and mesh adapters must partition tracked signaling documents by peer ID (`_peerTrackedDocPaths`). When an individual peer connection is established or opens its DataChannel, invoke `cleanUpPeerSignaling(peerId)` rather than wiping all room signaling documents (`cleanUpSignalingSession()`), preventing premature deletion of in-flight handshakes in multi-peer rooms.
 - **Echo Loop Prevention Mutex:** `RoomSyncOrchestrator` locks outbound broadcasts (`_isProcessingNetworkPayload = true`) while ingesting and saving incoming network payloads, releasing via `scheduleMicrotask()` to prevent reactive database listeners from echoing inbound changes back to the transport mesh.
 - **Asynchronous Stream Emission (Deadlock Prevention):** Reactive broadcast `StreamController`s in persistence repositories (e.g., `LocalCampaignRepository`) MUST NOT use `sync: true`. Asynchronous microtask queue emission prevents re-entrant deadlocks when inbound network synchronization holds mutexes (such as `_syncMutex`).
 - **Asynchronous Microtask Payload Dispatch & Timer Teardown:** Inbound transport router payloads (`CascadingTransportRouter._handleIncomingPayload`) must be dispatched asynchronously via `scheduleMicrotask()` to prevent synchronous re-entrant `_syncMutex` deadlocks when adapters failover or receive inbound frames during broadcast execution stacks. Room re-initialization in `CascadingTransportRouter` must explicitly cancel and nullify prior heartbeat timers (`_heartbeatTimer`, `_fallbackHeartbeatTimer`) before activating new adapters.
