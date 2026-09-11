@@ -15,7 +15,7 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
   String? _roomCode;
   String? _localNodeId;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
-  final StreamController<String> _incomingPayloadsController =
+  StreamController<String> _incomingPayloadsController =
       StreamController<String>.broadcast();
 
   FirebaseFallbackAdapter({
@@ -41,6 +41,10 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
     _roomCode = roomCode.trim().toUpperCase();
     _localNodeId = localNodeId;
+
+    if (_incomingPayloadsController.isClosed) {
+      _incomingPayloadsController = StreamController<String>.broadcast();
+    }
 
     if (isFirebaseAvailable) {
       final collection = _effectiveFirestore

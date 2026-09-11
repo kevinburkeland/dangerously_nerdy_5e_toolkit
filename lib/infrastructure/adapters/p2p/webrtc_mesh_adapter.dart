@@ -37,9 +37,9 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   final Map<String, RTCDataChannel> _dataChannels = {};
   final Map<String, int> _peerLastActiveTimestamps = {};
 
-  final StreamController<String> _incomingPayloadsController =
+  StreamController<String> _incomingPayloadsController =
       StreamController<String>.broadcast();
-  final StreamController<Set<String>> _peersChangedController =
+  StreamController<Set<String>> _peersChangedController =
       StreamController<Set<String>>.broadcast();
   StreamSubscription<SignalingMessage>? _signalingSubscription;
   Timer? _heartbeatTimer;
@@ -83,6 +83,13 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     _roomCode = roomCode.trim().toUpperCase();
     _localNodeId = localNodeId;
     _isDisposed = false;
+
+    if (_incomingPayloadsController.isClosed) {
+      _incomingPayloadsController = StreamController<String>.broadcast();
+    }
+    if (_peersChangedController.isClosed) {
+      _peersChangedController = StreamController<Set<String>>.broadcast();
+    }
 
     final signaling = _signalingAdapter;
     if (signaling != null) {

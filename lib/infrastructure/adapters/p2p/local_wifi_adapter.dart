@@ -17,7 +17,7 @@ class LocalWifiAdapter implements IP2pTransportPort {
   String? _localNodeId;
   bool _isInitialized = false;
 
-  final StreamController<String> _incomingPayloadsController =
+  StreamController<String> _incomingPayloadsController =
       StreamController<String>.broadcast();
 
   LocalWifiAdapter({
@@ -41,6 +41,10 @@ class LocalWifiAdapter implements IP2pTransportPort {
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
     _roomCode = roomCode.trim().toUpperCase();
     _localNodeId = localNodeId;
+
+    if (_incomingPayloadsController.isClosed) {
+      _incomingPayloadsController = StreamController<String>.broadcast();
+    }
 
     if (onInitialize != null) {
       await onInitialize!(_roomCode!, _localNodeId!);

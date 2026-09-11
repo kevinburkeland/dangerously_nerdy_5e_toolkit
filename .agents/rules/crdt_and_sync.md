@@ -64,9 +64,11 @@ Located at `lib/application/services/room_sync_orchestrator.dart`:
 - **Cascading Heartbeat & Fallback Tracking:**
   - P2P DataChannels exchange periodic heartbeat pings every 2 seconds to update `peerLastSeen` timestamps.
   - When in `TransportState.fallbackRelay`, clients periodically broadcast `relay_heartbeat` pings so cloud-relayed participants maintain accurate peer counts and active room awareness.
-- **Transport Lifecycle Bootstrap:**
+- **Transport Lifecycle Bootstrap & Reconnect Resilience:**
   - `initServiceLocator()` MUST be invoked during application startup in `main.dart` to ensure `CascadingTransportRouter` and `RoomSyncOrchestrator` are registered.
-  - Interactive room screens (`PartyRoomScreen`) automatically attach `RoomSyncOrchestrator.watchTelemetry()` to `RoomConnectionBadge` and cleanly disconnect upon screen disposal.
+  - Interactive room screens (`PartyRoomScreen`) and global room banners (`RoomBannerWidget`) automatically attach `RoomSyncOrchestrator.watchTelemetry()` to `RoomConnectionBadge`.
+  - `DiceRoomService.joinRoom()` and `_restorePersistedSession()` automatically initialize `IP2pTransportPort` and activate `RoomSyncOrchestrator.startSynchronization()`, ensuring that joining a room from the Dice Roller or restored sessions connects the P2P mesh and streams telemetry without requiring a visit to the DM/Party screen.
+  - `CascadingTransportRouter`, `WebRtcMeshAdapter`, `LocalWifiAdapter`, and `FirebaseFallbackAdapter` must ensure stream controllers (`_incomingPayloadsController`, `_payloadController`, `_stateController`) are cleanly reopened if closed during a prior `disconnect()`, preventing `Bad state: Cannot add new events after calling close` errors on reconnect.
 
 ## 8. 4-Tier Cost-Optimized Transport Waterfall & Ephemeral Signaling
 Located at `lib/application/services/cascading_transport_router.dart`:

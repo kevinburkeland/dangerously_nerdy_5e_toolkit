@@ -35,9 +35,9 @@ class CascadingTransportRouter implements IP2pTransportPort {
   String? _roomCode;
   String? _localNodeId;
 
-  final StreamController<String> _payloadController =
+  StreamController<String> _payloadController =
       StreamController<String>.broadcast();
-  final StreamController<TransportState> _stateController =
+  StreamController<TransportState> _stateController =
       StreamController<TransportState>.broadcast();
 
   StreamSubscription<String>? _activeSubscription;
@@ -62,11 +62,33 @@ class CascadingTransportRouter implements IP2pTransportPort {
   @override
   Map<String, int> get peerLastSeen => Map.unmodifiable(_peerLastSeen);
   IP2pTransportPort? get activeAdapter => _activeAdapter;
+  String? get roomCode => _roomCode;
+  String? get localNodeId => _localNodeId;
 
   @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
-    _roomCode = roomCode.trim().toUpperCase();
+    final cleanCode = roomCode.trim().toUpperCase();
+    if (_roomCode == cleanCode &&
+        _activeAdapter != null &&
+        _currentState != TransportState.offline) {
+      return;
+    }
+
+    if (_payloadController.isClosed) {
+      _payloadController = StreamController<String>.broadcast();
+    }
+    if (_stateController.isClosed) {
+      _stateController = StreamController<TransportState>.broadcast();
+    }
+
+    await _activeSubscription?.cancel();
+    _activeSubscription = null;
+    await _activeAdapter?.disconnect();
+    _activeAdapter = null;
+
+    _roomCode = cleanCode;
     _localNodeId = localNodeId;
+    _peerLastSeen.clear();
     _changeState(TransportState.connecting);
 
     // Tier 1: Local Wi-Fi (Zero Cost)

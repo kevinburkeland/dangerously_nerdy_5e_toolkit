@@ -1,14 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../application/services/cascading_transport_router.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
+import '../domain/ports/i_p2p_transport_port.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../presentation/widgets/room_connection_badge.dart';
 import '../services/dice_room_service.dart';
 import '../theme/app_theme.dart';
 import 'dialogs/join_create_room_dialog.dart';
 
-class RoomBannerWidget extends StatelessWidget {
+class RoomBannerWidget extends StatefulWidget {
   final DiceRoomService roomService;
   final String? activeRoomCode;
   final String? playerName;
@@ -30,14 +33,71 @@ class RoomBannerWidget extends StatelessWidget {
     this.initialTelemetry,
   }) : roomService = roomService ?? DiceRoomService();
 
+  @override
+  State<RoomBannerWidget> createState() => _RoomBannerWidgetState();
+}
+
+class _RoomBannerWidgetState extends State<RoomBannerWidget> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAndConnect();
+    widget.roomService.activeSessionNotifier.addListener(_onSessionChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant RoomBannerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.activeRoomCode != widget.activeRoomCode ||
+        oldWidget.playerName != widget.playerName ||
+        oldWidget.roomService != widget.roomService) {
+      oldWidget.roomService.activeSessionNotifier.removeListener(_onSessionChanged);
+      widget.roomService.activeSessionNotifier.addListener(_onSessionChanged);
+      _checkAndConnect();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.roomService.activeSessionNotifier.removeListener(_onSessionChanged);
+    super.dispose();
+  }
+
+  void _onSessionChanged() {
+    _checkAndConnect();
+    if (mounted) setState(() {});
+  }
+
+  void _checkAndConnect() {
+    final effectiveRoom = widget.activeRoomCode ?? widget.roomService.activeRoomCode;
+    final effectiveName = widget.playerName ?? widget.roomService.playerName ?? 'Adventurer';
+    if (effectiveRoom != null && effectiveRoom.isNotEmpty) {
+      if (sl.isRegistered<IP2pTransportPort>()) {
+        final transport = sl<IP2pTransportPort>();
+        if (transport is CascadingTransportRouter) {
+          if (transport.activeAdapter == null || transport.currentState == TransportState.offline) {
+            final localNodeId = '$effectiveName-${effectiveRoom.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+            unawaited(transport.initializeRoom(effectiveRoom, localNodeId));
+          }
+        }
+      }
+      if (sl.isRegistered<RoomSyncOrchestrator>()) {
+        final orchestrator = sl<RoomSyncOrchestrator>();
+        if (!orchestrator.isSynchronizing) {
+          orchestrator.startSynchronization();
+        }
+      }
+    }
+  }
+
   void _showJoinCreateRoomDialog(BuildContext context, String? currentName, String? currentRoom) {
     JoinCreateRoomDialog.show(
       context,
       initialPlayerName: currentName,
       initialRoomCode: currentRoom,
       onJoinRoom: (code, name) {
-        roomService.joinRoom(code, name);
-        onJoinRoom?.call(code, name);
+        widget.roomService.joinRoom(code, name);
+        widget.onJoinRoom?.call(code, name);
       },
     );
   }
@@ -50,18 +110,20 @@ class RoomBannerWidget extends StatelessWidget {
     final tabletop = theme.extension<TabletopColors>() ?? (isDark ? TabletopColors.dark : TabletopColors.light);
 
     return ValueListenableBuilder<RoomSession?>(
-      valueListenable: roomService.activeSessionNotifier,
+      valueListenable: widget.roomService.activeSessionNotifier,
       builder: (context, session, _) {
-        final String? effectiveRoom = activeRoomCode ?? session?.roomCode;
-        final String? effectiveName = playerName ?? session?.playerName;
+        final String? effectiveRoom = widget.activeRoomCode ?? session?.roomCode;
+        final String? effectiveName = widget.playerName ?? session?.playerName;
         final bool isConnected = effectiveRoom != null && effectiveRoom.isNotEmpty;
         final String roomCode = effectiveRoom ?? '';
         final bool isRemembered = session?.isRemembered ?? false;
 
+        final bool isCompact = widget.compact;
+
         return Container(
           padding: EdgeInsets.symmetric(
-            horizontal: compact ? 10 : 14,
-            vertical: compact ? 6 : 9,
+            horizontal: isCompact ? 10 : 14,
+            vertical: isCompact ? 6 : 9,
           ),
           decoration: BoxDecoration(
             color: isConnected
@@ -79,7 +141,7 @@ class RoomBannerWidget extends StatelessWidget {
               Icon(
                 isConnected ? Icons.sensors : Icons.sensors_off,
                 color: isConnected ? primary : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                size: compact ? 18 : 20,
+                size: isCompact ? 18 : 20,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -96,7 +158,7 @@ class RoomBannerWidget extends StatelessWidget {
                             style: TextStyle(
                               color: isConnected ? primary : theme.colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
-                              fontSize: compact ? 13 : 13.5,
+                              fontSize: isCompact ? 13 : 13.5,
                               letterSpacing: 0.3,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -139,7 +201,7 @@ class RoomBannerWidget extends StatelessWidget {
                           : 'Not connected to a live room',
                       style: TextStyle(
                         color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: compact ? 11 : 11.5,
+                        fontSize: isCompact ? 11 : 11.5,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -150,11 +212,11 @@ class RoomBannerWidget extends StatelessWidget {
               if (isConnected) ...[
                 RoomConnectionBadge(
                   compact: true,
-                  telemetryStream: telemetryStream ??
+                  telemetryStream: widget.telemetryStream ??
                       (sl.isRegistered<RoomSyncOrchestrator>()
                           ? sl<RoomSyncOrchestrator>().watchTelemetry()
                           : const Stream.empty()),
-                  initialTelemetry: initialTelemetry ??
+                  initialTelemetry: widget.initialTelemetry ??
                       (sl.isRegistered<RoomSyncOrchestrator>()
                           ? sl<RoomSyncOrchestrator>().currentTelemetry
                           : null),
@@ -183,8 +245,8 @@ class RoomBannerWidget extends StatelessWidget {
                     minimumSize: Size.zero,
                   ),
                   onPressed: () {
-                    roomService.leaveRoom();
-                    onLeaveRoom?.call();
+                    widget.roomService.leaveRoom();
+                    widget.onLeaveRoom?.call();
                   },
                   child: Text(
                     'Leave',
@@ -203,18 +265,18 @@ class RoomBannerWidget extends StatelessWidget {
                     elevation: 0,
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.symmetric(
-                      horizontal: compact ? 8 : 10,
-                      vertical: compact ? 4 : 6,
+                      horizontal: isCompact ? 8 : 10,
+                      vertical: isCompact ? 4 : 6,
                     ),
                     minimumSize: Size.zero,
                   ),
                   onPressed: () => _showJoinCreateRoomDialog(context, effectiveName, effectiveRoom),
-                  icon: Icon(Icons.hub, size: compact ? 13 : 14),
+                  icon: Icon(Icons.hub, size: isCompact ? 13 : 14),
                   label: Text(
                     'Join Room',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: compact ? 11 : 11.5,
+                      fontSize: isCompact ? 11 : 11.5,
                     ),
                   ),
                 ),

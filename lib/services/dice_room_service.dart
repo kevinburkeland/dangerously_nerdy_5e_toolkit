@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../application/services/room_sync_orchestrator.dart';
 import '../domain/ports/i_p2p_transport_port.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../models/room_roll.dart';
@@ -58,21 +59,64 @@ class DiceRoomService {
           savedRoom.isNotEmpty &&
           savedName != null &&
           savedName.isNotEmpty) {
+        final cleanRoom = savedRoom.trim().toUpperCase();
+        final cleanName = savedName.trim();
         // Only set if not already overridden by an in-flight session
         if (activeSessionNotifier.value == null) {
           activeSessionNotifier.value = RoomSession(
-            roomCode: savedRoom.trim().toUpperCase(),
-            playerName: savedName.trim(),
+            roomCode: cleanRoom,
+            playerName: cleanName,
             isRemembered: true,
           );
         }
-        await _loadPersistedRolls(savedRoom.trim().toUpperCase());
+        await _loadPersistedRolls(cleanRoom);
+        unawaited(_connectTransport(cleanRoom, cleanName));
       }
     } catch (e, stackTrace) {
       LoggingService().logNonFatal(
         e,
         stackTrace,
         reason: 'Failed to restore persisted dice room session',
+      );
+    }
+  }
+
+  /// Connects the P2P mesh transport and starts room synchronization if registered in DI
+  Future<void> _connectTransport(String roomCode, String playerName) async {
+    try {
+      if (sl.isRegistered<IP2pTransportPort>()) {
+        final localNodeId = '$playerName-${roomCode.toLowerCase()}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+        await sl<IP2pTransportPort>().initializeRoom(roomCode, localNodeId);
+      }
+      if (sl.isRegistered<RoomSyncOrchestrator>()) {
+        final orchestrator = sl<RoomSyncOrchestrator>();
+        if (!orchestrator.isSynchronizing) {
+          orchestrator.startSynchronization();
+        }
+      }
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to connect transport in DiceRoomService for room $roomCode',
+      );
+    }
+  }
+
+  /// Gracefully tears down P2P transport and synchronization when leaving a room
+  Future<void> _disconnectTransport() async {
+    try {
+      if (sl.isRegistered<RoomSyncOrchestrator>()) {
+        sl<RoomSyncOrchestrator>().stopSynchronization();
+      }
+      if (sl.isRegistered<IP2pTransportPort>()) {
+        await sl<IP2pTransportPort>().disconnect();
+      }
+    } catch (e, stackTrace) {
+      LoggingService().logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Failed to disconnect transport in DiceRoomService',
       );
     }
   }
@@ -91,6 +135,9 @@ class DiceRoomService {
       // Async write to persistent storage
       _persistSession(cleanCode, cleanName, remember);
       _loadPersistedRolls(cleanCode);
+
+      // Connect P2P transport mesh & start room synchronization
+      unawaited(_connectTransport(cleanCode, cleanName));
 
       // Immediately touch/initialize room document in Firestore so campaign features & other players connect instantly
       if (isFirebaseAvailable) {
@@ -163,6 +210,9 @@ class DiceRoomService {
       disposeRoomStream(currentCode);
     }
     activeSessionNotifier.value = null;
+
+    // Disconnect transport & stop synchronization
+    unawaited(_disconnectTransport());
 
     // Clear persisted room storage
     _clearPersistedSession();

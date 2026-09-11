@@ -43,7 +43,7 @@ class RoomSyncOrchestrator {
 
   bool _isProcessingNetworkPayload = false;
   CrdtOrSet<String> _trackedRulesSet = const CrdtOrSet<String>();
-  final StreamController<RoomConnectionTelemetry> _telemetryController =
+  StreamController<RoomConnectionTelemetry> _telemetryController =
       StreamController<RoomConnectionTelemetry>.broadcast();
 
   RoomSyncOrchestrator({
@@ -79,6 +79,10 @@ class RoomSyncOrchestrator {
 
   /// Activates bidirectional synchronization and begins telemetry polling.
   void startSynchronization() {
+    if (isSynchronizing) return;
+    if (_telemetryController.isClosed) {
+      _telemetryController = StreamController<RoomConnectionTelemetry>.broadcast();
+    }
     _networkSub = transportPort.watchIncomingPayloads().listen(_handleIncomingPayload);
     _localDbSub = campaignRepo.watchActiveProfile().listen(_handleLocalProfileChange);
     if (transportPort is CascadingTransportRouter) {
@@ -104,6 +108,9 @@ class RoomSyncOrchestrator {
   /// Reactive stream broadcasting connection telemetry snapshots.
   /// Immediately emits the latest [currentTelemetry] to each new subscriber upon listening.
   Stream<RoomConnectionTelemetry> watchTelemetry() {
+    if (_telemetryController.isClosed) {
+      _telemetryController = StreamController<RoomConnectionTelemetry>.broadcast();
+    }
     late StreamController<RoomConnectionTelemetry> subController;
     StreamSubscription<RoomConnectionTelemetry>? sub;
 
@@ -271,7 +278,7 @@ class RoomSyncOrchestrator {
     await campaignRepo.saveProfileImmediate(activeProfile);
   }
 
-  /// Cancels all subscriptions, timers, and closes the telemetry stream.
+  /// Cancels all subscriptions, timers, and emits offline telemetry.
   void stopSynchronization() {
     _networkSub?.cancel();
     _networkSub = null;
@@ -283,6 +290,12 @@ class RoomSyncOrchestrator {
     _milestoneTimer = null;
     _telemetryTimer?.cancel();
     _telemetryTimer = null;
+    _emitTelemetry();
+  }
+
+  /// Permanently tears down the orchestrator and closes the telemetry controller.
+  void dispose() {
+    stopSynchronization();
     if (!_telemetryController.isClosed) {
       _telemetryController.close();
     }
