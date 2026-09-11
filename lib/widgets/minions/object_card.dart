@@ -45,7 +45,6 @@ class ObjectCard extends StatelessWidget {
       if (onHpDataSet != null) {
         onHpDataSet!(result.currentHp, result.tempHp);
       } else {
-        object.tempHp = result.tempHp;
         onHpChanged(result.currentHp - object.currentHp);
       }
     }

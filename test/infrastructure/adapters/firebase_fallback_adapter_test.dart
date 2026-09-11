@@ -51,5 +51,34 @@ void main() {
       expect(received, ['{"event":"roll","result":20}']);
       await sub.cancel();
     });
+
+    test('disconnect closes incoming payloads stream and re-initialization reopens cleanly', () async {
+      await adapter.initializeRoom('ROOM-1', 'node-1');
+
+      bool isDone = false;
+      final sub = adapter.watchIncomingPayloads().listen(
+        (_) {},
+        onDone: () {
+          isDone = true;
+        },
+      );
+
+      await adapter.disconnect();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(isDone, isTrue, reason: 'Incoming payloads stream should be closed on disconnect');
+      await sub.cancel();
+
+      // Re-initialize and verify clean stream re-opening
+      await adapter.initializeRoom('ROOM-2', 'node-2');
+      final receivedAfterReconnect = <String>[];
+      final sub2 = adapter.watchIncomingPayloads().listen(receivedAfterReconnect.add);
+
+      adapter.emitIncomingPayload('{"message":"reconnected"}');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(receivedAfterReconnect, ['{"message":"reconnected"}']);
+      await sub2.cancel();
+    });
   });
 }

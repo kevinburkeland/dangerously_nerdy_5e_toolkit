@@ -250,6 +250,42 @@ void main() {
       expect(removedProfile.roomState.activeMinions.isEmpty, isTrue);
     });
 
+    test('modifyMinionHp returns a new instance of AnimatedObjectInstance leaving original instance unmodified', () async {
+      final originalMinion = AnimatedObjectInstance(
+        id: 'minion_immutable_test',
+        name: 'Animated Shield',
+        size: ObjectSize.small,
+        currentHp: 20,
+        maxHp: 20,
+        tempHp: 5,
+      );
+      final profile = CampaignProfile.defaultProfile().copyWith(
+        roomState: RoomNodeState(
+          roomId: 'r_immutable',
+          roomCode: 'IMMUTABLE',
+          title: 'Testing Vault',
+          activeMinions: [originalMinion],
+        ),
+      );
+      campaignRepo.currentProfile = profile;
+
+      final updatedProfile = await service.modifyMinionHp(
+        profile: profile,
+        minionId: 'minion_immutable_test',
+        delta: -10,
+      );
+
+      final updatedMinion = updatedProfile.roomState.activeMinions.first;
+      // 5 temp HP absorbed, 5 damage spills over to current HP: 20 - 5 = 15
+      expect(updatedMinion.currentHp, equals(15));
+      expect(updatedMinion.tempHp, equals(0));
+      expect(identical(updatedMinion, originalMinion), isFalse);
+
+      // Verify original minion remains completely unmodified
+      expect(originalMinion.currentHp, equals(20));
+      expect(originalMinion.tempHp, equals(5));
+    });
+
     test('nextTurn and prevTurn cycle active turn and round count', () {
       const p1 = EncounterParticipant(
         participantId: 'p1',

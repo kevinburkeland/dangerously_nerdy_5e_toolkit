@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// Lightweight pointer representing a single class progression level.
 @immutable

@@ -41,9 +41,9 @@ class LocalCampaignRepository implements ICampaignRepository {
   bool _initialized = false;
 
   final StreamController<CampaignProfile?> _activeProfileController =
-      StreamController<CampaignProfile?>.broadcast(sync: true);
+      StreamController<CampaignProfile?>.broadcast();
   final StreamController<List<CampaignProfile>> _allProfilesController =
-      StreamController<List<CampaignProfile>>.broadcast(sync: true);
+      StreamController<List<CampaignProfile>>.broadcast();
 
   LocalCampaignRepository({
     AppDatabaseService? db,

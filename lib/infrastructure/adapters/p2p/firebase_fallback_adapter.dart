@@ -118,5 +118,8 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
     _subscription = null;
     _roomCode = null;
     _localNodeId = null;
+    if (!_incomingPayloadsController.isClosed) {
+      await _incomingPayloadsController.close();
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import '../../utils/dice_formatters.dart';
 import '../../models/srd_summons/srd_summons_library.dart';
 import 'value_objects/hit_points.dart';
@@ -137,11 +138,12 @@ enum MinionMarker {
   }
 }
 
+@immutable
 class AnimatedObjectInstance {
   final String id;
-  String name;
+  final String name;
   final ObjectSize size;
-  HitPoints hitPoints;
+  final HitPoints hitPoints;
   final String damageType;
   final bool isSilvered;
   final int? customAc;
@@ -189,15 +191,19 @@ class AnimatedObjectInstance {
             );
 
   int get currentHp => hitPoints.currentHp;
+
+  @Deprecated('AnimatedObjectInstance is immutable. Use copyWith(currentHp: ...) instead.')
   set currentHp(int value) {
-    hitPoints = hitPoints.copyWith(currentHp: value);
+    // In-place mutation is deprecated and disabled on immutable domain entities.
   }
 
   int get maxHp => hitPoints.maxHp;
 
   int get tempHp => hitPoints.tempHp;
+
+  @Deprecated('AnimatedObjectInstance is immutable. Use copyWith(tempHp: ...) or applyTempHp(...) instead.')
   set tempHp(int value) {
-    hitPoints = hitPoints.setTempHp(value);
+    // In-place mutation is deprecated and disabled on immutable domain entities.
   }
 
   /// Resolves the full 5e SRD MinionStatBlock for this creature instance.
@@ -273,26 +279,35 @@ class AnimatedObjectInstance {
   /// Safe calculation of remaining HP percentage, strictly protected against NaN / division-by-zero.
   double get hpPercent => hitPoints.hpPercent;
 
-  /// Mutating damage application with Temporary HP absorption (5e RAW) via HitPoints Value Object.
+  /// Pure copy-transform damage application with Temporary HP absorption (5e RAW).
+  AnimatedObjectInstance applyDamage(int amount) =>
+      copyWith(hitPoints: hitPoints.takeDamage(amount));
+
+  /// Pure copy-transform healing application capped to Max HP.
+  AnimatedObjectInstance applyHealing(int amount) =>
+      copyWith(hitPoints: hitPoints.heal(amount));
+
+  /// Pure copy-transform Temporary HP application (RAW: non-stacking, highest wins).
+  AnimatedObjectInstance applyTempHp(int amount) =>
+      copyWith(hitPoints: hitPoints.grantTempHp(amount));
+
+  @Deprecated('AnimatedObjectInstance is immutable. Use applyDamage(amount) instead.')
   void takeDamage(int amount) {
-    hitPoints = hitPoints.takeDamage(amount);
+    // In-place mutation is deprecated and disabled on immutable domain entities.
   }
 
-  void applyDamage(int damage) => takeDamage(damage);
-
-  /// Mutating healing application capped to Max HP via HitPoints Value Object.
+  @Deprecated('AnimatedObjectInstance is immutable. Use applyHealing(amount) instead.')
   void heal(int amount) {
-    hitPoints = hitPoints.heal(amount);
+    // In-place mutation is deprecated and disabled on immutable domain entities.
   }
 
+  @Deprecated('AnimatedObjectInstance is immutable. Use applyHealing(amount) instead.')
   void applyHeal(int healAmount) => heal(healAmount);
 
-  /// Mutating Temporary HP application (RAW: non-stacking, highest wins).
+  @Deprecated('AnimatedObjectInstance is immutable. Use applyTempHp(amount) instead.')
   void grantTempHp(int amount) {
-    hitPoints = hitPoints.grantTempHp(amount);
+    // In-place mutation is deprecated and disabled on immutable domain entities.
   }
-
-  void applyTempHp(int temp) => grantTempHp(temp);
 
   AnimatedObjectInstance copyWith({
     String? id,

@@ -78,7 +78,7 @@ void main() {
   });
 
   group('AnimatedObjectInstance Tests', () {
-    test('takeDamage and heal clamp HP correctly', () {
+    test('applyDamage and applyHealing clamp HP correctly via immutable copies', () {
       final obj = AnimatedObjectInstance(
         id: '1',
         name: 'Test Silver Coin',
@@ -90,21 +90,22 @@ void main() {
       expect(obj.isDead, false);
       expect(obj.hpPercent, 1.0);
 
-      obj.takeDamage(5);
-      expect(obj.currentHp, 15);
-      expect(obj.hpPercent, 0.75);
+      final damaged1 = obj.applyDamage(5);
+      expect(damaged1.currentHp, 15);
+      expect(damaged1.hpPercent, 0.75);
+      expect(obj.currentHp, 20);
 
-      obj.takeDamage(20);
-      expect(obj.currentHp, 0);
-      expect(obj.isDead, true);
-      expect(obj.hpPercent, 0.0);
+      final damaged2 = damaged1.applyDamage(20);
+      expect(damaged2.currentHp, 0);
+      expect(damaged2.isDead, true);
+      expect(damaged2.hpPercent, 0.0);
 
-      obj.heal(10);
-      expect(obj.currentHp, 10);
-      expect(obj.isDead, false);
+      final healed1 = damaged2.applyHealing(10);
+      expect(healed1.currentHp, 10);
+      expect(healed1.isDead, false);
 
-      obj.heal(50);
-      expect(obj.currentHp, 20); // Clamped at maxHp
+      final healed2 = healed1.applyHealing(50);
+      expect(healed2.currentHp, 20); // Clamped at maxHp
     });
 
     test('hpPercent protects against divide by zero', () {
@@ -137,7 +138,7 @@ void main() {
       expect(copy.maxHp, 20);
     });
 
-    test('Temp HP absorbs damage before current HP in takeDamage', () {
+    test('Temp HP absorbs damage before current HP in applyDamage', () {
       final obj = AnimatedObjectInstance(
         id: 'temp_1',
         name: 'Warded Wolf',
@@ -151,18 +152,19 @@ void main() {
       expect(obj.currentHp, 20);
 
       // 1. Partial temp HP depletion
-      obj.takeDamage(6);
-      expect(obj.tempHp, 4);
-      expect(obj.currentHp, 20);
+      final step1 = obj.applyDamage(6);
+      expect(step1.tempHp, 4);
+      expect(step1.currentHp, 20);
+      expect(obj.tempHp, 10);
 
       // 2. Full temp HP depletion + spillover to current HP
-      obj.takeDamage(8); // 4 temp HP absorbed, 4 damage to current HP
-      expect(obj.tempHp, 0);
-      expect(obj.currentHp, 16);
+      final step2 = step1.applyDamage(8); // 4 temp HP absorbed, 4 damage to current HP
+      expect(step2.tempHp, 0);
+      expect(step2.currentHp, 16);
 
       // 3. Granting new Temp HP
-      obj.grantTempHp(15);
-      expect(obj.tempHp, 15);
+      final step3 = step2.applyTempHp(15);
+      expect(step3.tempHp, 15);
     });
 
     test('Serialization toMap and fromMap round-trips cleanly with tempHp', () {

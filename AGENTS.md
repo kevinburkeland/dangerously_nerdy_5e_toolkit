@@ -41,7 +41,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,518 passing tests)
+├── test/                               # Comprehensive test suite (1,523 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -58,6 +58,7 @@ dangerously_nerdy_5e_toolkit/
 ### 1. Hexagonal Architecture & Domain Purity
 - **Zero Flutter in Domain:** Files in `lib/domain/` MUST NOT import `package:flutter/...`. Use `package:meta/meta.dart` for annotations like `@immutable`.
 - **Enforced via Automated Test:** `test/domain/domain_purity_test.dart` automatically audits `lib/domain/` on every CI run.
+- **Infrastructure DTO Purity:** Files in `lib/infrastructure/dtos/` MUST NOT import `package:flutter/...`. Use pure `package:meta/meta.dart` for `@immutable` annotations to preserve decoupling from the Flutter engine runtime. Verified by `test/infrastructure/dtos/dto_purity_test.dart`.
 - **Ports & Adapters:** Define abstract interfaces in `lib/domain/ports/`. Implementations live in `lib/infrastructure/repositories/`.
 - **Immutability:** All domain models and value objects must have `const` constructors and `copyWith()` mutators. Never expose mutable lists or maps directly.
 
@@ -67,8 +68,10 @@ dangerously_nerdy_5e_toolkit/
 - **Observed-Remove Set (`CrdtOrSet`):** Deletions create tombstones. Always implement `prune(threshold)` to prevent memory leaks from unbounded tombstone accumulation.
 - **Milestone Pruning Decoupling:** Prune tombstones via `RoomStateReconciliationService.executeMilestonePrune` using authoritative server/ledger timestamps, decoupled from unverified local clock estimations.
 - **LWW Register (`CrdtLwwRegister`):** Modifications return a new immutable instance.
+- **Minion Immutability in CRDT Collections:** Minions and summon entities (`AnimatedObjectInstance`) within `CampaignProfile.roomState.activeMinions` are immutable entities. Modifications MUST use pure copy-transforms (`applyDamage`, `applyHealing`, `applyTempHp`) and map into a new immutable list. In-place mutating operations are deprecated and strictly prohibited.
 - **Delta Fast-Forward:** Base room state is hydrated from snapshot milestones, with incremental CRDT deltas reconciled on top via `RoomStateReconciliationService`.
 - **Echo Loop Prevention Mutex:** `RoomSyncOrchestrator` locks outbound broadcasts (`_isProcessingNetworkPayload = true`) while ingesting and saving incoming network payloads, releasing via `scheduleMicrotask()` to prevent reactive database listeners from echoing inbound changes back to the transport mesh.
+- **Asynchronous Stream Emission (Deadlock Prevention):** Reactive broadcast `StreamController`s in persistence repositories (e.g., `LocalCampaignRepository`) MUST NOT use `sync: true`. Asynchronous microtask queue emission prevents re-entrant deadlocks when inbound network synchronization holds mutexes (such as `_syncMutex`).
 
 ### 3. Dual-Ruleset Awareness (2014 RAW vs 2024 Revised)
 - The engine supports both **2014 (SRD 5.1)** and **2024 (SRD 5.2)** D&D mechanics.

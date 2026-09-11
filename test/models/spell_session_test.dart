@@ -79,7 +79,7 @@ void main() {
       session.addObject(ObjectSize.tiny);
 
       // Kill first object
-      session.activeObjects.first.takeDamage(100);
+      session.updateObject(session.activeObjects.first.id, (m) => m.applyDamage(100));
       expect(session.activeObjects.first.isDead, true);
 
       final summary = session.performBatchAttack(targetAc: 10);

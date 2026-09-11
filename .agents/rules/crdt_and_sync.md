@@ -107,3 +107,9 @@ Located at `lib/domain/ports/i_p2p_transport_port.dart`:
 - **IPartySyncPort Deprecation:**
   - `IPartySyncPort` is deprecated (`@Deprecated('Use RoomSyncOrchestrator and IP2pTransportPort instead.')`).
   - DI container (`injection_container.dart`) registers `IP2pTransportPort -> CascadingTransportRouter`, and consumers inject `RoomSyncOrchestrator` and `IP2pTransportPort`.
+
+## 10. Concurrency, Minion Immutability & Stream Controller Hygiene
+- **Asynchronous Repository Broadcast Streams:** Broadcast `StreamController`s in persistence layers (such as `LocalCampaignRepository._activeProfileController` and `_allProfilesController`) MUST NOT set `sync: true`. Asynchronous microtask delivery decouples reactive stream notifications from internal mutex acquisitions (e.g. `_syncMutex`), preventing re-entrant deadlock and `StateError`.
+- **CRDT Minion Entity Immutability:** Minions and summon instances (`AnimatedObjectInstance`) within `CampaignProfile.roomState.activeMinions` are immutable value entities. Modifying minion vitals MUST use pure copy-transform methods (`applyDamage`, `applyHealing`, `applyTempHp`) and map into a new list. In-place mutating setters and methods are deprecated.
+- **Transport Adapter Resource Hygiene:** Transport adapters implementing `IP2pTransportPort` (e.g., `FirebaseFallbackAdapter`) MUST close their incoming payload stream controllers in `disconnect()` (`if (!_incomingPayloadsController.isClosed) await _incomingPayloadsController.close();`) and cleanly recreate them upon subsequent `initializeRoom(...)` calls, preventing zombie listener memory leaks across room transitions.
+

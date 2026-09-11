@@ -111,12 +111,7 @@ class CombatEncounterService {
   }) async {
     final minions = profile.roomState.activeMinions.map((m) {
       if (m.id != minionId) return m;
-      if (delta < 0) {
-        m.takeDamage(delta.abs());
-      } else {
-        m.heal(delta);
-      }
-      return m;
+      return delta < 0 ? m.applyDamage(delta.abs()) : m.applyHealing(delta);
     }).toList();
 
     final updatedRoom = profile.roomState.copyWith(activeMinions: minions);

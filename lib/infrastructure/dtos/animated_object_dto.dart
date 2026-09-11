@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import '../../domain/models/animated_object.dart';
 
 /// Data Transfer Object for [AnimatedObjectInstance], encapsulating JSON serialization

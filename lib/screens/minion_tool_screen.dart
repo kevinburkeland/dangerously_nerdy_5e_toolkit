@@ -136,11 +136,9 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
     if (amount != null && amount > 0 && mounted) {
       HapticService.heavyImpact(context);
       setState(() {
-        for (final obj in _session.activeObjects) {
-          if (!obj.isDead) {
-            obj.grantTempHp(amount);
-          }
-        }
+        _session.activeObjects = _session.activeObjects.map((obj) {
+          return !obj.isDead ? obj.applyTempHp(amount) : obj;
+        }).toList();
       });
       _persistSession();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -346,18 +344,26 @@ class _MinionToolScreenState extends State<MinionToolScreen> with SingleTickerPr
                       },
                       onHpChanged: (delta) {
                         setState(() {
-                          if (delta < 0) {
-                            obj.takeDamage(-delta);
-                          } else {
-                            obj.heal(delta);
-                          }
+                          _session.updateObject(
+                            obj.id,
+                            (m) => delta < 0
+                                ? m.applyDamage(delta.abs())
+                                : m.applyHealing(delta),
+                          );
                         });
                         _persistSession();
                       },
                       onHpDataSet: (newHp, newTemp) {
                         setState(() {
-                          obj.currentHp = newHp;
-                          obj.tempHp = newTemp;
+                          _session.updateObject(
+                            obj.id,
+                            (m) => m.copyWith(
+                              hitPoints: m.hitPoints.copyWith(
+                                currentHp: newHp,
+                                tempHp: newTemp,
+                              ),
+                            ),
+                          );
                         });
                         _persistSession();
                       },

@@ -218,8 +218,10 @@ class SpellSession {
   }
 
   void renameObject(String id, String name) {
-    final obj = activeObjects.firstWhere((o) => o.id == id);
-    obj.name = name;
+    final index = activeObjects.indexWhere((o) => o.id == id);
+    if (index != -1) {
+      activeObjects[index] = activeObjects[index].copyWith(name: name);
+    }
   }
 
   void clearAll() {
@@ -227,14 +229,21 @@ class SpellSession {
   }
 
   void healAll() {
-    for (var obj in activeObjects) {
-      obj.currentHp = obj.maxHp;
-    }
+    activeObjects = activeObjects
+        .map((obj) => obj.copyWith(currentHp: obj.maxHp))
+        .toList();
   }
 
   void applyGroupDamage(int amount) {
-    for (var obj in activeObjects) {
-      obj.takeDamage(amount);
+    activeObjects = activeObjects
+        .map((obj) => obj.applyDamage(amount))
+        .toList();
+  }
+
+  void updateObject(String id, AnimatedObjectInstance Function(AnimatedObjectInstance) update) {
+    final index = activeObjects.indexWhere((o) => o.id == id);
+    if (index != -1) {
+      activeObjects[index] = update(activeObjects[index]);
     }
   }
 

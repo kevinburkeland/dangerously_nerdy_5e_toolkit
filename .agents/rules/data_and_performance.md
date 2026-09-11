@@ -10,6 +10,10 @@ External JSON (network streams, local Hive databases, 5etools bundles) must NEVE
   - Users frequently import homebrew with custom attributes, extra tags, or future schema additions.
   - Every DTO must retain unrecognized keys in an `unparsedPayload` map (`Map<String, dynamic>`).
   - When re-serializing to JSON (`toJson()`), merge `unparsedPayload` back into the output map to prevent data loss across schema migrations.
+- **Infrastructure DTO Purity:**
+  - Files in `lib/infrastructure/dtos/` must remain completely decoupled from the Flutter engine runtime.
+  - Import `package:meta/meta.dart` for `@immutable` annotations; never import `package:flutter/...`.
+  - Automatically audited by `test/infrastructure/dtos/dto_purity_test.dart`.
 
 ## 2. Tabletop Bounds & Numeric Clamping
 

@@ -50,7 +50,7 @@ void main() {
       final preset = SrdSummonsLibrary.allPresets.first;
 
       final session = service.getOrCreateSession(preset);
-      session.activeObjects.first.takeDamage(5);
+      session.updateObject(session.activeObjects.first.id, (m) => m.applyDamage(5));
       expect(session.activeObjects.first.currentHp < session.activeObjects.first.maxHp, isTrue);
 
       await service.persistAllSessions();
