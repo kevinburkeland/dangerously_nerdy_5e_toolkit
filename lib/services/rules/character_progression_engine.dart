@@ -214,7 +214,7 @@ class CharacterProgressionEngine {
     CharacterClass? characterClass,
   }) {
     if (characterClass != null) {
-      return newClassLevel == characterClass.subclassSelectionLevel;
+      return newClassLevel == characterClass.getSubclassLevel(ruleset);
     }
     if (ruleset == RulesetVersion.v2014) {
       final slug = classSlug.toLowerCase();
@@ -389,19 +389,22 @@ class CharacterProgressionEngine {
         newFeats.add(choice.featRef!);
       }
       choice.abilityIncreases.forEach((ability, bonus) {
+        final currentRaw = character.rawAbilityScores.getScore(ability);
+        final maxAllowed = character.getAbilityScoreMaximum(ability);
+        final effectiveBonus = math.max(0, math.min(bonus, maxAllowed - currentRaw));
         switch (ability) {
           case AbilityType.strength:
-            newBonusScores = newBonusScores.copyWith(strength: newBonusScores.strength + bonus);
+            newBonusScores = newBonusScores.copyWith(strength: newBonusScores.strength + effectiveBonus);
           case AbilityType.dexterity:
-            newBonusScores = newBonusScores.copyWith(dexterity: newBonusScores.dexterity + bonus);
+            newBonusScores = newBonusScores.copyWith(dexterity: newBonusScores.dexterity + effectiveBonus);
           case AbilityType.constitution:
-            newBonusScores = newBonusScores.copyWith(constitution: newBonusScores.constitution + bonus);
+            newBonusScores = newBonusScores.copyWith(constitution: newBonusScores.constitution + effectiveBonus);
           case AbilityType.intelligence:
-            newBonusScores = newBonusScores.copyWith(intelligence: newBonusScores.intelligence + bonus);
+            newBonusScores = newBonusScores.copyWith(intelligence: newBonusScores.intelligence + effectiveBonus);
           case AbilityType.wisdom:
-            newBonusScores = newBonusScores.copyWith(wisdom: newBonusScores.wisdom + bonus);
+            newBonusScores = newBonusScores.copyWith(wisdom: newBonusScores.wisdom + effectiveBonus);
           case AbilityType.charisma:
-            newBonusScores = newBonusScores.copyWith(charisma: newBonusScores.charisma + bonus);
+            newBonusScores = newBonusScores.copyWith(charisma: newBonusScores.charisma + effectiveBonus);
         }
       });
       if (choice.savingThrowGrants.isNotEmpty) {
@@ -462,10 +465,16 @@ class CharacterProgressionEngine {
       updatedSpellsKnown.removeWhere((s) => toRemove.contains(s.slug));
       updatedSpellsPrepared.removeWhere((s) => toRemove.contains(s.slug));
 
-      // Strictly remove replaced spells from allocatedSpells to prevent resurrection via getters
+      final targetSpellsKey = 'class-${request.targetClassSlug}-spells';
+      final targetCantripsKey = 'class-${request.targetClassSlug}-cantrips';
+
+      // Strictly remove replaced spells from the target class's allocation
+      // to preserve other class allocations in multiclass builds
       for (final entry in updatedAllocated.entries.toList()) {
-        final filteredList = entry.value.where((s) => !toRemove.contains(s.slug)).toList();
-        updatedAllocated[entry.key] = filteredList;
+        if (entry.key == targetSpellsKey || entry.key == targetCantripsKey || !entry.key.startsWith('class-')) {
+          final filteredList = entry.value.where((s) => !toRemove.contains(s.slug)).toList();
+          updatedAllocated[entry.key] = filteredList;
+        }
       }
     }
 
@@ -628,10 +637,27 @@ class CharacterProgressionEngine {
       }
     }
 
+    // Hill Dwarf / Dwarven Toughness (+1 HP per level)
+    final isHillDwarf = character.speciesRef.slug.toLowerCase().contains('dwarf') &&
+        (character.rulesEdition == DmRulesEdition.v2024 ||
+            character.speciesRef.slug.toLowerCase().contains('hill'));
+    if (isHillDwarf) {
+      maxHp += character.totalLevel;
+    }
+
+    // Draconic Bloodline Sorcerer (+1 HP per sorcerer level)
+    for (final cls in character.progression.classes) {
+      final isDraconic = cls.subclassRef?.slug.toLowerCase() == 'draconic-sorcery' ||
+          cls.subclassRef?.slug.toLowerCase() == 'draconic_bloodline';
+      if (isDraconic) {
+        maxHp += cls.level;
+      }
+    }
+
     return math.max(1, maxHp);
   }
 
-  /// Computes composite Multiclass and Pact Magic spell slots.
+  /// Computes composite Multiclass and Pact Magic spell slots adhering to 2014/2024 RAW rules.
   static SpellSlotPool computeSpellSlots(
     List<ClassLevelProgression> classes, {
     DmRulesEdition edition = DmRulesEdition.v2014,
@@ -664,47 +690,22 @@ class CharacterProgressionEngine {
 
       // Check for third caster subclasses (Eldritch Knight, Arcane Trickster)
       final subSlug = cls.subclassRef?.slug.toLowerCase() ?? '';
-      if (subSlug.contains('eldritch_knight') || subSlug.contains('arcane_trickster')) {
+      if (subSlug.contains('eldritch_knight') ||
+          subSlug.contains('arcane_trickster') ||
+          subSlug.contains('eldritch-knight') ||
+          subSlug.contains('arcane-trickster')) {
         thirdCasterLevels += cls.level;
       }
     }
 
-    final ecl = MulticlassSlotMatrix.calculateEffectiveCasterLevel(
+    return MulticlassSlotMatrix.calculateSpellSlotsForProgression(
       fullCasterLevels: fullCasterLevels,
       paladinLevels: paladinLevels,
       rangerLevels: rangerLevels,
       artificerLevels: artificerLevels,
       thirdCasterLevels: thirdCasterLevels,
+      warlockLevels: warlockLevels,
       edition: edition,
-    );
-
-    final Map<int, int> maxSlots = {};
-    if (ecl > 0) {
-      final slotList = MulticlassSlotMatrix.getSpellSlots(ecl);
-      for (int i = 0; i < slotList.length; i++) {
-        final slotLevel = i + 1;
-        final count = slotList[i];
-        if (count > 0) {
-          maxSlots[slotLevel] = count;
-        }
-      }
-    }
-
-    // Add Pact Magic slots if Warlock levels exist
-    int pactSlotLevel = 0;
-    int pactCount = 0;
-    if (warlockLevels > 0) {
-      final pactPool = PactMagicPool.fromWarlockLevel(warlockLevels);
-      pactSlotLevel = pactPool.slotLevel;
-      pactCount = pactPool.totalSlots;
-    }
-
-    return SpellSlotPool(
-      currentSlots: Map<int, int>.from(maxSlots),
-      maxSlots: Map<int, int>.from(maxSlots),
-      pactMagicSlotLevel: pactSlotLevel,
-      pactMagicMax: pactCount,
-      pactMagicCurrent: pactCount,
     );
   }
 }

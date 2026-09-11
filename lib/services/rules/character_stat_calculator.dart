@@ -525,20 +525,26 @@ class CharacterStatCalculator {
 
     // Unarmored hierarchy
     if (!hasEquippedArmor) {
-      final classSlugs =
-          character.progression.classes.map((c) => c.classRef.slug.toLowerCase()).toSet();
+      // Determine which unarmored defense feature was gained first (Barbarian vs Monk)
+      String? firstUnarmoredClass;
+      for (final c in character.progression.classes) {
+        final slug = c.classRef.slug.toLowerCase();
+        if (slug == 'barbarian' || slug == 'monk') {
+          firstUnarmoredClass ??= slug;
+        }
+      }
 
       if (phaseB.hasDraconicResilience) {
         baseAc = 13;
         dexContribution = abilityMods[AbilityType.dexterity]!;
         acFormula = '13 (Draconic Resilience) + $dexContribution (DEX)';
-      } else if (classSlugs.contains('barbarian')) {
+      } else if (firstUnarmoredClass == 'barbarian') {
         baseAc = 10;
         final conBonus = abilityMods[AbilityType.constitution]!;
         dexContribution = abilityMods[AbilityType.dexterity]!;
         acFormula = '10 (Unarmored) + $dexContribution (DEX) + $conBonus (CON Barbarian)';
         baseAc += conBonus;
-      } else if (classSlugs.contains('monk') && shieldBonus == 0) {
+      } else if (firstUnarmoredClass == 'monk' && shieldBonus == 0) {
         baseAc = 10;
         final wisBonus = abilityMods[AbilityType.wisdom]!;
         dexContribution = abilityMods[AbilityType.dexterity]!;
@@ -599,6 +605,21 @@ class CharacterStatCalculator {
       if (featRef.slug == 'tough' || featRef.slug == 'toughness') {
         computedMaxHp += character.totalLevel * 2;
         buffNotes.add('Tough Feat: +${character.totalLevel * 2} HP');
+      }
+    }
+
+    // Draconic Bloodline Sorcerer (+1 HP per Sorcerer level)
+    if (phaseB.hasDraconicResilience) {
+      int draconicHpBonus = 0;
+      for (final cls in character.progression.classes) {
+        if (cls.subclassRef?.slug.toLowerCase() == 'draconic-sorcery' ||
+            cls.subclassRef?.slug.toLowerCase() == 'draconic_bloodline') {
+          draconicHpBonus += cls.level;
+        }
+      }
+      if (draconicHpBonus > 0) {
+        computedMaxHp += draconicHpBonus;
+        buffNotes.add('Draconic Resilience: +$draconicHpBonus HP');
       }
     }
 

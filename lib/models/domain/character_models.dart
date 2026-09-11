@@ -1057,6 +1057,29 @@ class Character extends DomainEntity {
   /// Raw ability scores (base scores with permanent bonuses from species/ASI/feats)
   AbilityScores get rawAbilityScores => baseScores.withBonus(bonusScores);
 
+  /// Returns the inherent maximum score allowed for [ability].
+  /// Defaults to standard tabletop 20, but accounts for Level 20 Barbarian capstone (24 for STR/CON)
+  /// and any permanent inherent maximum increases stored in [customProperties] under 'abilityMaximums'.
+  int getAbilityScoreMaximum(AbilityType ability) {
+    int maxCap = 20;
+    // Check Barbarian Level 20 Capstone
+    final isBarbarian20 = progression.classes.any(
+      (c) => c.classRef.slug.toLowerCase() == 'barbarian' && c.level >= 20,
+    );
+    if (isBarbarian20 && (ability == AbilityType.strength || ability == AbilityType.constitution)) {
+      maxCap = math.max(maxCap, 24);
+    }
+    // Check customProperties / permanent inherent tomes
+    if (customProperties['abilityMaximums'] is Map) {
+      final map = customProperties['abilityMaximums'] as Map;
+      final val = (map[ability.name] as num?)?.toInt();
+      if (val != null) {
+        maxCap = math.max(maxCap, val);
+      }
+    }
+    return maxCap.clamp(20, 30);
+  }
+
   /// Effective ability scores (evaluates rawAbilityScores and applies hard overrides from attuned/equipped items or custom properties)
   AbilityScores get effectiveAbilityScores {
     var raw = rawAbilityScores;

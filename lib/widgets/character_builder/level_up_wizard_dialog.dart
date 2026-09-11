@@ -187,7 +187,12 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
   };
 
   List<Feat> get _availableFeats {
-    return SrdFeatsLibrary.getFeatsForRuleset(widget.character.id.ruleset);
+    final allFeats = SrdFeatsLibrary.getFeatsForRuleset(widget.character.id.ruleset);
+    final existingFeatSlugs = widget.character.feats.map((f) => f.slug.toLowerCase()).toSet();
+    return allFeats.where((f) {
+      if (f.id.slug == 'elemental_adept' || f.id.slug == 'elemental-adept') return true;
+      return !existingFeatSlugs.contains(f.id.slug.toLowerCase());
+    }).toList();
   }
 
   @override
@@ -1377,9 +1382,24 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
               isExpanded: true,
               initialValue: _asiSingleAbility,
               decoration: const InputDecoration(labelText: '+2 Ability Score', border: OutlineInputBorder()),
-              items: AbilityType.values.map((a) => DropdownMenuItem(value: a, child: Text('${a.name.toUpperCase()} (+2)'))).toList(),
+              items: AbilityType.values.map((a) {
+                final cur = widget.character.rawAbilityScores.getScore(a);
+                final max = widget.character.getAbilityScoreMaximum(a);
+                return DropdownMenuItem(
+                  value: a,
+                  child: Text('${a.name.toUpperCase()} (Current: $cur, Max: $max)'),
+                );
+              }).toList(),
               onChanged: (v) => setState(() => _asiSingleAbility = v!),
             ),
+            if (widget.character.rawAbilityScores.getScore(_asiSingleAbility) + 2 >
+                widget.character.getAbilityScoreMaximum(_asiSingleAbility)) ...[
+              const SizedBox(height: 6),
+              Text(
+                'Note: ${_asiSingleAbility.name.toUpperCase()} will cap at ${widget.character.getAbilityScoreMaximum(_asiSingleAbility)} (Score is currently ${widget.character.rawAbilityScores.getScore(_asiSingleAbility)}).',
+                style: const TextStyle(fontSize: 12, color: Colors.amberAccent, fontWeight: FontWeight.w500),
+              ),
+            ],
           ] else ...[
             Row(
               children: [
@@ -1388,7 +1408,14 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                     isExpanded: true,
                     initialValue: _asiDualAbility1,
                     decoration: const InputDecoration(labelText: '+1 Score 1', border: OutlineInputBorder()),
-                    items: AbilityType.values.map((a) => DropdownMenuItem(value: a, child: Text(a.name.toUpperCase()))).toList(),
+                    items: AbilityType.values.map((a) {
+                      final cur = widget.character.rawAbilityScores.getScore(a);
+                      final max = widget.character.getAbilityScoreMaximum(a);
+                      return DropdownMenuItem(
+                        value: a,
+                        child: Text('${a.name.toUpperCase()} ($cur/$max)'),
+                      );
+                    }).toList(),
                     onChanged: (v) => setState(() => _asiDualAbility1 = v!),
                   ),
                 ),
@@ -1398,12 +1425,26 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                     isExpanded: true,
                     initialValue: _asiDualAbility2,
                     decoration: const InputDecoration(labelText: '+1 Score 2', border: OutlineInputBorder()),
-                    items: AbilityType.values.map((a) => DropdownMenuItem(value: a, child: Text(a.name.toUpperCase()))).toList(),
+                    items: AbilityType.values.map((a) {
+                      final cur = widget.character.rawAbilityScores.getScore(a);
+                      final max = widget.character.getAbilityScoreMaximum(a);
+                      return DropdownMenuItem(
+                        value: a,
+                        child: Text('${a.name.toUpperCase()} ($cur/$max)'),
+                      );
+                    }).toList(),
                     onChanged: (v) => setState(() => _asiDualAbility2 = v!),
                   ),
                 ),
               ],
             ),
+            if (_asiDualAbility1 == _asiDualAbility2) ...[
+              const SizedBox(height: 6),
+              const Text(
+                'Rules require selecting two different ability scores for +1 / +1 improvement.',
+                style: TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.bold),
+              ),
+            ],
           ],
         ] else ...[
           DropdownButtonFormField<String>(
@@ -1952,7 +1993,16 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       edition: edition,
     );
 
-    final isMagicalSecretsActive = limits.magicalSecretsCount > 0 || limits.allowedMagicalSecretClasses.isNotEmpty;
+    final bool isMagicalSecretsActive;
+    if (edition == DmRulesEdition.v2014) {
+      final isLore = _effectiveSubclassSlug?.toLowerCase().contains('lore') == true;
+      final isLore6 = isLore && _targetClassNewLevel == 6;
+      final isStandardSecrets = _selectedClassSlug.toLowerCase() == 'bard' &&
+          (_targetClassNewLevel == 10 || _targetClassNewLevel == 14 || _targetClassNewLevel == 18);
+      isMagicalSecretsActive = isLore6 || isStandardSecrets;
+    } else {
+      isMagicalSecretsActive = limits.magicalSecretsCount > 0 || limits.allowedMagicalSecretClasses.isNotEmpty;
+    }
     final isMysticArcanumActive = limits.mysticArcanumLevel > 0;
     final alwaysPreparedSpells = SubclassSpellsLibrary.getAlwaysPreparedSpellsForLevel(
       classSlug: _selectedClassSlug,
@@ -2079,7 +2129,9 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
 
     int maxAllowedNewSpells;
     if (isWizard) {
-      maxAllowedNewSpells = limits.maxSpellbookLevelUpScribe; // 2
+      maxAllowedNewSpells = _targetClassNewLevel == 1
+          ? limits.maxSpellbookInitialScribe // 6
+          : limits.maxSpellbookLevelUpScribe; // 2
     } else if (isSpontaneous) {
       final isReplacing = _replacedSpellId != null;
       final curKnownCount = widget.character.spellsKnown.length;
@@ -2093,9 +2145,24 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
       maxAllowedNewSpells = math.max(1, delta + (_replacedSpellId != null ? 1 : 0));
     }
 
-    final replaceableSpells = widget.character.spellsKnown.isNotEmpty
-        ? widget.character.spellsKnown
-        : widget.character.spellsPrepared;
+    final targetClassKey = 'class-$_selectedClassSlug-spells';
+    final classAllocated = widget.character.allocatedSpells[targetClassKey];
+    final List<EntityReference<Spell>> baseReplaceable;
+    if (classAllocated != null && classAllocated.isNotEmpty) {
+      baseReplaceable = classAllocated;
+    } else if (widget.character.spellsKnown.isNotEmpty) {
+      baseReplaceable = widget.character.spellsKnown;
+    } else {
+      baseReplaceable = widget.character.spellsPrepared;
+    }
+    // Exclude Mystic Arcanum or spells above max level tier
+    final replaceableSpells = baseReplaceable.where((s) {
+      final spellItem = SpellbookLibrary.getSpellById(s.slug) ?? SpellbookLibrary.findSpell(s.displayName);
+      if (spellItem != null && _selectedClassSlug.toLowerCase() == 'warlock' && spellItem.level >= 6) {
+        return false;
+      }
+      return true;
+    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3457,7 +3524,12 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
 
   Widget _buildBottomBar(ThemeData theme, LevelUpValidationResult validation) {
     final isLastStep = _currentStep == 5;
-    final canAdvance = validation.isValid;
+    final isAsiInvalid = _currentStep == 3 &&
+        _isAsiEligible &&
+        _isAsiSelected &&
+        !_isAsiPlusTwo &&
+        _asiDualAbility1 == _asiDualAbility2;
+    final canAdvance = validation.isValid && !isAsiInvalid;
 
     return Padding(
       padding: const EdgeInsets.all(16),

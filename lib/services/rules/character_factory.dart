@@ -145,7 +145,10 @@ class CharacterFactory {
     };
 
     // Initial Spell Slots Resource
-    final startingSpellSlots = CharacterProgressionEngine.computeSpellSlots(progression.classes);
+    final startingSpellSlots = CharacterProgressionEngine.computeSpellSlots(
+      progression.classes,
+      edition: draft.rulesEdition,
+    );
 
     final speciesTraits = SkillTraitResolver.getSpeciesTraits(
       speciesSlug: draft.speciesRef!.slug,
@@ -272,7 +275,11 @@ class CharacterFactory {
     };
 
     // Initial Spell Slots Resource
-    final startingSpellSlots = CharacterProgressionEngine.computeSpellSlots(progression.classes);
+    final edition = request.ruleset == RulesetVersion.v2014 ? DmRulesEdition.v2014 : DmRulesEdition.v2024;
+    final startingSpellSlots = CharacterProgressionEngine.computeSpellSlots(
+      progression.classes,
+      edition: edition,
+    );
 
     final speciesTraits = SkillTraitResolver.getSpeciesTraits(
       speciesSlug: request.speciesRef.slug,

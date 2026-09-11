@@ -37,6 +37,98 @@ class MulticlassSlotMatrix {
     20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
   };
 
+  static const Map<int, List<int>> _halfCasterSlots2014 = {
+    1: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    2: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+    3: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    4: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    5: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    6: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    7: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    8: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    9: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    10: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    11: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    12: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    13: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+    14: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+    15: [4, 3, 3, 2, 0, 0, 0, 0, 0],
+    16: [4, 3, 3, 2, 0, 0, 0, 0, 0],
+    17: [4, 3, 3, 3, 1, 0, 0, 0, 0],
+    18: [4, 3, 3, 3, 1, 0, 0, 0, 0],
+    19: [4, 3, 3, 3, 2, 0, 0, 0, 0],
+    20: [4, 3, 3, 3, 2, 0, 0, 0, 0],
+  };
+
+  static const Map<int, List<int>> _halfCasterSlots2024 = {
+    1: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+    2: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+    3: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    4: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    5: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    6: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    7: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    8: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    9: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    10: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    11: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    12: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    13: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+    14: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+    15: [4, 3, 3, 2, 0, 0, 0, 0, 0],
+    16: [4, 3, 3, 2, 0, 0, 0, 0, 0],
+    17: [4, 3, 3, 3, 1, 0, 0, 0, 0],
+    18: [4, 3, 3, 3, 1, 0, 0, 0, 0],
+    19: [4, 3, 3, 3, 2, 0, 0, 0, 0],
+    20: [4, 3, 3, 3, 2, 0, 0, 0, 0],
+  };
+
+  static const Map<int, List<int>> _thirdCasterSlots = {
+    1: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    2: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    3: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+    4: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    5: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    6: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    7: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    8: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    9: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    10: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    11: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    12: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    13: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    14: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    15: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    16: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    17: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    18: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    19: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+    20: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+  };
+
+  static const Map<int, List<int>> _artificerSlots = {
+    1: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+    2: [2, 0, 0, 0, 0, 0, 0, 0, 0],
+    3: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    4: [3, 0, 0, 0, 0, 0, 0, 0, 0],
+    5: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    6: [4, 2, 0, 0, 0, 0, 0, 0, 0],
+    7: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    8: [4, 3, 0, 0, 0, 0, 0, 0, 0],
+    9: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    10: [4, 3, 2, 0, 0, 0, 0, 0, 0],
+    11: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    12: [4, 3, 3, 0, 0, 0, 0, 0, 0],
+    13: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+    14: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+    15: [4, 3, 3, 2, 0, 0, 0, 0, 0],
+    16: [4, 3, 3, 2, 0, 0, 0, 0, 0],
+    17: [4, 3, 3, 3, 1, 0, 0, 0, 0],
+    18: [4, 3, 3, 3, 1, 0, 0, 0, 0],
+    19: [4, 3, 3, 3, 2, 0, 0, 0, 0],
+    20: [4, 3, 3, 3, 2, 0, 0, 0, 0],
+  };
+
   /// Returns the 9-element list of spell slots (1st to 9th level) for a given effective caster level.
   static List<int> getSpellSlots(int effectiveCasterLevel) {
     if (effectiveCasterLevel <= 0) return List.filled(9, 0);
@@ -69,6 +161,71 @@ class MulticlassSlotMatrix {
           (thirdCasterLevels ~/ 3);
       return effective.clamp(0, 20);
     }
+  }
+
+  /// Calculates complete SpellSlotPool adhering to 2014/2024 RAW rules:
+  /// - Single-class half and third casters use their dedicated PHB class tables.
+  /// - Multiclass characters with 2+ spellcasting classes calculate Effective Caster Level (ECL).
+  static SpellSlotPool calculateSpellSlotsForProgression({
+    int fullCasterLevels = 0,
+    int paladinLevels = 0,
+    int rangerLevels = 0,
+    int artificerLevels = 0,
+    int thirdCasterLevels = 0,
+    int warlockLevels = 0,
+    DmRulesEdition edition = DmRulesEdition.v2014,
+  }) {
+    final totalCasterClasses = (fullCasterLevels > 0 ? 1 : 0) +
+        (paladinLevels > 0 ? 1 : 0) +
+        (rangerLevels > 0 ? 1 : 0) +
+        (artificerLevels > 0 ? 1 : 0) +
+        (thirdCasterLevels > 0 ? 1 : 0);
+
+    List<int> rawSlots;
+    if (totalCasterClasses == 1 && fullCasterLevels == 0) {
+      // Single-class half-casters and third-casters use dedicated RAW class progression tables
+      if (paladinLevels > 0) {
+        final table = edition == DmRulesEdition.v2024 ? _halfCasterSlots2024 : _halfCasterSlots2014;
+        rawSlots = table[paladinLevels.clamp(1, 20)] ?? List.filled(9, 0);
+      } else if (rangerLevels > 0) {
+        final table = edition == DmRulesEdition.v2024 ? _halfCasterSlots2024 : _halfCasterSlots2014;
+        rawSlots = table[rangerLevels.clamp(1, 20)] ?? List.filled(9, 0);
+      } else if (artificerLevels > 0) {
+        rawSlots = _artificerSlots[artificerLevels.clamp(1, 20)] ?? List.filled(9, 0);
+      } else if (thirdCasterLevels > 0) {
+        rawSlots = _thirdCasterSlots[thirdCasterLevels.clamp(1, 20)] ?? List.filled(9, 0);
+      } else {
+        rawSlots = List.filled(9, 0);
+      }
+    } else {
+      // Multiclass or pure full-caster uses unified ECL Matrix
+      final effectiveCasterLevel = calculateEffectiveCasterLevel(
+        fullCasterLevels: fullCasterLevels,
+        paladinLevels: paladinLevels,
+        rangerLevels: rangerLevels,
+        artificerLevels: artificerLevels,
+        thirdCasterLevels: thirdCasterLevels,
+        edition: edition,
+      );
+      rawSlots = getSpellSlots(effectiveCasterLevel);
+    }
+
+    final maxSlots = <int, int>{};
+    for (int i = 0; i < rawSlots.length; i++) {
+      if (rawSlots[i] > 0) {
+        maxSlots[i + 1] = rawSlots[i];
+      }
+    }
+
+    final pactPool = PactMagicPool.fromWarlockLevel(warlockLevels);
+
+    return SpellSlotPool(
+      currentSlots: Map<int, int>.from(maxSlots),
+      maxSlots: maxSlots,
+      pactMagicSlotLevel: pactPool.slotLevel,
+      pactMagicMax: pactPool.totalSlots,
+      pactMagicCurrent: pactPool.totalSlots,
+    );
   }
 
   /// Calculates complete SpellSlotPool for a Character adhering to 2014/2024 RAW rules.
@@ -108,58 +265,14 @@ class MulticlassSlotMatrix {
       }
     }
 
-    final totalCasterClasses = (fullCasterLevels > 0 ? 1 : 0) +
-        (paladinLevels > 0 ? 1 : 0) +
-        (rangerLevels > 0 ? 1 : 0) +
-        (artificerLevels > 0 ? 1 : 0) +
-        (thirdCasterLevels > 0 ? 1 : 0);
-
-    int effectiveCasterLevel;
-    if (totalCasterClasses == 1 && fullCasterLevels == 0) {
-      if (paladinLevels > 0) {
-        effectiveCasterLevel = character.rulesEdition == DmRulesEdition.v2024
-            ? (paladinLevels + 1) ~/ 2
-            : paladinLevels ~/ 2;
-      } else if (rangerLevels > 0) {
-        effectiveCasterLevel = character.rulesEdition == DmRulesEdition.v2024
-            ? (rangerLevels + 1) ~/ 2
-            : rangerLevels ~/ 2;
-      } else if (artificerLevels > 0) {
-        effectiveCasterLevel = (artificerLevels + 1) ~/ 2;
-      } else if (thirdCasterLevels > 0) {
-        effectiveCasterLevel = character.rulesEdition == DmRulesEdition.v2024
-            ? (thirdCasterLevels + 2) ~/ 3
-            : thirdCasterLevels ~/ 3;
-      } else {
-        effectiveCasterLevel = 0;
-      }
-    } else {
-      effectiveCasterLevel = calculateEffectiveCasterLevel(
-        fullCasterLevels: fullCasterLevels,
-        paladinLevels: paladinLevels,
-        rangerLevels: rangerLevels,
-        artificerLevels: artificerLevels,
-        thirdCasterLevels: thirdCasterLevels,
-        edition: character.rulesEdition,
-      );
-    }
-
-    final rawSlots = getSpellSlots(effectiveCasterLevel);
-    final maxSlots = <int, int>{};
-    for (int i = 0; i < rawSlots.length; i++) {
-      if (rawSlots[i] > 0) {
-        maxSlots[i + 1] = rawSlots[i];
-      }
-    }
-
-    final pactPool = PactMagicPool.fromWarlockLevel(warlockLevels);
-
-    return SpellSlotPool(
-      currentSlots: Map<int, int>.from(maxSlots),
-      maxSlots: maxSlots,
-      pactMagicSlotLevel: pactPool.slotLevel,
-      pactMagicMax: pactPool.totalSlots,
-      pactMagicCurrent: pactPool.totalSlots,
+    return calculateSpellSlotsForProgression(
+      fullCasterLevels: fullCasterLevels,
+      paladinLevels: paladinLevels,
+      rangerLevels: rangerLevels,
+      artificerLevels: artificerLevels,
+      thirdCasterLevels: thirdCasterLevels,
+      warlockLevels: warlockLevels,
+      edition: character.rulesEdition,
     );
   }
 }

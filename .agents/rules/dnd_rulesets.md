@@ -57,3 +57,36 @@ The toolkit natively supports both the **2014 Rules As Written (SRD 5.1)** and t
   - **Pure Warlock Auto-Upcasting:** Characters with only Pact Magic slots (no regular spell slots $\ge$ spell level) MUST NOT be blocked by missing lower-level slots or prompted with superfluous slot picker modals. The engine auto-upcasts the spell to `pactMagicSlotLevel` and decrements `pactMagicCurrent`.
   - **Slot-Level Effect Scaling:** Spells with slot-level scaling (e.g. *Armor of Agathys* awarding 5 Temp HP and 5 Cold Retaliation damage per slot level) dynamically scale their effect values to `pactMagicSlotLevel`.
   - **Multiclass Disambiguation:** Multiclass characters with both standard spell slots and Pact Magic slots present both options in `SpellUpcastSheet`, clearly distinguishing Pact Magic with the `(Pact)` badge, short-rest recharge annotations, and separate pool tracking.
+
+## 6. Subclass Archetype Milestones (2014 RAW vs 2024 Revised)
+
+- **2014 RAW Subclass Milestones:**
+  - **Level 1:** Cleric (Divine Domain), Sorcerer (Sorcerous Origin), Warlock (Otherworldly Patron).
+  - **Level 2:** Druid (Druid Circle), Wizard (Arcane Tradition).
+  - **Level 3:** Barbarian, Bard, Fighter, Monk, Paladin, Ranger, Rogue, Artificer.
+  - When evaluating subclass milestones, always call `characterClass.getSubclassLevel(ruleset)` rather than reading static default fields.
+- **2024 Revised Standard:**
+  - All classes standardize subclass selection to **Level 3**.
+
+## 7. Spell Slot Allocation: Single-Class vs. Multiclass
+
+- **Single-Class Half & Third Casters:**
+  - Single-class Paladins, Rangers, Artificers, and 1/3-casters (Eldritch Knight, Arcane Trickster) MUST use their dedicated class tables (`_halfCasterSlots2014`, `_halfCasterSlots2024`, `_thirdCasterSlots`, `_artificerSlots`).
+  - Do NOT route single-class half/third casters into the generic multiclass slot table via floor division (`lvl ~/ 2` or `lvl ~/ 3`), which deprives Paladins and Rangers of 2nd-level slots at Level 5 and Eldritch Knights of 3rd 1st-level slots at Level 4.
+- **Multiclass Slot Matrix:**
+  - The Multiclass Spellcaster Table (`calculateEffectiveCasterLevel`) is strictly reserved for characters with 2 or more spellcasting classes.
+- **Initial Wizard Scribe on Multiclass:**
+  - Multiclassing into Wizard at level 1 grants 6 starting 1st-level spells in the spellbook (`maxSpellbookInitialScribe`), not the 2-per-level incremental scribe.
+
+## 8. Ability Scores: Inherent vs Overrides & Dynamic Maximums
+
+- **Inherent Score vs. Temporary Overrides:**
+  - Inherent scores (`rawAbilityScores = baseScores + bonusScores`) are modified by Species, Level-Up ASIs, and permanent magical treatises/tomes.
+  - Item overrides (e.g. *Gauntlets of Ogre Power* = 19, *Belts of Giant Strength* = 21–29) set `effectiveAbilityScores` without mutating inherent scores.
+  - Multiclass prerequisites evaluate inherent scores (`rawAbilityScores`), never item overrides.
+- **Dynamic Inherent Maximums (`Character.getAbilityScoreMaximum`):**
+  - Normal inherent maximum is **20**.
+  - Level 20 Barbarian capstone (*Primal Champion*) raises the inherent maximum for Strength and Constitution to **24**.
+  - Permanent magical treatises/tomes expand inherent maximums via `customProperties['abilityMaximums']` (e.g. `{'strength': 22}`).
+  - When referencing non-SRD tomes or manuals, always use generic SRD-compliant/homebrew names (e.g. "Treatise of Inherent Might").
+  - Inherent ability score increases clamp against `getAbilityScoreMaximum(ability)` (ceiling of 30). Dual +1 ASI increases must be allocated to two distinct ability scores.

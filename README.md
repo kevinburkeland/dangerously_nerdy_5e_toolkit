@@ -373,7 +373,7 @@ dangerously_nerdy_5e_toolkit/
 │   └── widgets/                    # Modular UI components
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with icon font packaging & cache-busting
-├── test/                           # Unit, widget, accessibility, & resilience test suites (1,526 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (1,533 tests)
 │   ├── accessibility/              # A11y & dynamic type scaling tests
 │   ├── application/                # Orchestration & reconciliation service tests
 │   ├── domain/                     # Domain purity & CRDT logic tests
