@@ -93,6 +93,8 @@ Located at `lib/application/services/cascading_transport_router.dart`:
     - Lower rank node (polite peer) yields, prunes its in-flight connection, and answers the incoming offer.
   - **Transient ICE Disconnection Resilience:** In `WebRtcMeshAdapter`, peer connections MUST ONLY be pruned on `RTCIceConnectionState.RTCIceConnectionStateFailed`. Never prune on `RTCIceConnectionState.RTCIceConnectionStateDisconnected`, which represents transient packet loss, radio power save, or temporary routing adjustments.
   - **Multi-Provider STUN Redundancy:** Default RTC configuration must provide diverse STUN servers (`stun:stun.l.google.com:19302`, `stun:stun1.l.google.com:19302`, `stun:stun2.l.google.com:19302`, and `stun:stun.cloudflare.com:3478`) to guarantee local/reflective ICE candidate generation across NAT environments.
+  - **In-Memory Signaling TTL & Index Independence:** In `FirebaseSignalingAdapter`, signaling queries must avoid combining inequality range filters (`timestamp >= threshold`) with `whereIn` equality filters (`toNodeId in [_localNodeId, '*']`), which requires custom Firestore composite indexes. Instead, query strictly on `toNodeId` and evaluate the sliding 60-second TTL window in-memory, ensuring zero-configuration operation on default Firestore rules.
+  - **Signaling Cleanup Sequence Invariant:** In `CascadingTransportRouter._activateAdapter`, invocation of `cleanUpSignalingSession()` to clear stale session residue must occur *before* calling `adapter.initializeRoom(...)`. Executing cleanup after initialization erases the newly dispatched `peerJoin` broadcast document before other nodes can receive it.
 
 ## 9. IP2pTransportPort Unification & Interface Polymorphism
 Located at `lib/domain/ports/i_p2p_transport_port.dart`:
