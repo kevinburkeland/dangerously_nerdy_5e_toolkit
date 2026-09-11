@@ -385,6 +385,55 @@ void main() {
       });
     });
 
+    test('Repeated initializeRoom with differing room codes cancels previous heartbeat timers without accumulating duplicate callbacks', () async {
+      int providerInvocations = 0;
+      final testRouter = CascadingTransportRouter(
+        localWifiAdapter: mockLocalWifi,
+        webRtcAdapter: mockWebRtc,
+        firebaseFallbackAdapter: mockFirebase,
+        checkInterval: const Duration(milliseconds: 20),
+        peerTimestampProvider: () {
+          providerInvocations++;
+          return {};
+        },
+      );
+
+      // Initialize room 1
+      await testRouter.initializeRoom('ROOM-A', 'node-local');
+      // Re-initialize with different room codes
+      await testRouter.initializeRoom('ROOM-B', 'node-local');
+      await testRouter.initializeRoom('ROOM-C', 'node-local');
+
+      providerInvocations = 0;
+      await Future<void>.delayed(const Duration(milliseconds: 70));
+
+      // If previous timers were not cancelled, we would accumulate callbacks (3x invocations ~9-12).
+      // With proper timer cancellation and nullification, only 1 active cycle exists (~3 invocations).
+      expect(providerInvocations, inInclusiveRange(2, 4));
+
+      await testRouter.disconnect();
+    });
+
+    test('Payload events emitted to watchIncomingPayloads() arrive asynchronously on the microtask queue', () async {
+      await router.initializeRoom('ROOM-ASYNC-PAYLOAD', 'node-local');
+
+      final received = <String>[];
+      final sub = router.watchIncomingPayloads().listen(received.add);
+
+      mockLocalWifi.emitPayload('{"msg": "async_delivery"}');
+
+      // Synchronously right after emit, the microtask has NOT executed yet
+      expect(received, isEmpty, reason: 'Payload must not arrive synchronously in the same call frame');
+
+      // Drain event queue and microtasks
+      await pumpEventQueue();
+
+      expect(received, equals(['{"msg": "async_delivery"}']), reason: 'Payload must arrive after microtask execution');
+
+      await sub.cancel();
+      await router.disconnect();
+    });
+
     test('Clean disconnect tears down all adapters, subscriptions, and clears state', () async {
       await router.initializeRoom('ROOM-TEARDOWN', 'node-local');
       await router.disconnect();

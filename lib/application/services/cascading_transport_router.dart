@@ -74,6 +74,11 @@ class CascadingTransportRouter implements IP2pTransportPort {
       return;
     }
 
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
+    _fallbackHeartbeatTimer?.cancel();
+    _fallbackHeartbeatTimer = null;
+
     if (_payloadController.isClosed) {
       _payloadController = StreamController<String>.broadcast();
     }
@@ -158,7 +163,11 @@ class CascadingTransportRouter implements IP2pTransportPort {
         }
       }
     } catch (_) {}
-    _payloadController.add(payload);
+    scheduleMicrotask(() {
+      if (!_payloadController.isClosed) {
+        _payloadController.add(payload);
+      }
+    });
   }
 
   /// Manually records a heartbeat from a peer node (or updates timestamp).

@@ -23,6 +23,7 @@ class MockTransportPort implements IP2pTransportPort {
   bool broadcastShouldThrow = false;
   bool initializeShouldThrow = false;
   bool isDisconnected = false;
+  void Function(String payload)? onBroadcast;
 
   @override
   TransportState currentState = TransportState.connecting;
@@ -36,6 +37,7 @@ class MockTransportPort implements IP2pTransportPort {
       throw StateError('Simulated transport broadcast failure');
     }
     broadcastedPayloads.add(jsonPayload);
+    onBroadcast?.call(jsonPayload);
   }
 
   @override
@@ -435,6 +437,65 @@ void main() {
       expect(telemetry.state, equals(TransportState.localWifi));
       expect(telemetry.peerCount, equals(2));
       expect(telemetry.isOffline, isFalse);
+    });
+
+    test('Deadlock Prevention Test: broadcast failure steps down to fallbackRelay while fallback adapter emits inbound packet without deadlock', () async {
+      mockRepo.emitOnSaveImmediate = false;
+      orchestrator.startSynchronization();
+
+      expect(router.currentState, equals(TransportState.webRtc));
+
+      // Force WebRTC adapter broadcast to fail, triggering waterfall failover to fallbackRelay
+      mockWebRtc.broadcastShouldThrow = true;
+
+      // Inbound payload to be emitted by the fallback adapter when broadcast is retried on it
+      final remoteProfile = initialProfile.copyWith(
+        name: 'Curse of the Frost - Reconciled In Fallback',
+      );
+      final remoteDto = CampaignProfileDto.fromDomain(remoteProfile);
+      final inboundJson = jsonEncode({
+        'type': 'room_sync_full',
+        'payload': remoteDto.toMap(),
+        'timestamp': 1700000005000,
+      });
+
+      // When fallback adapter receives the retry broadcastPayload, emit an inbound packet in the same tick
+      mockFallback.onBroadcast = (payload) {
+        mockFallback.emitIncoming(inboundJson);
+      };
+
+      // Trigger a local profile update that broadcasts
+      final localProfileUpdate = initialProfile.copyWith(
+        name: 'Curse of the Frost - Local Outbound',
+      );
+
+      // Await local profile broadcast handling - must complete cleanly without deadlocking on _syncMutex
+      await orchestrator.handleLocalProfileChange(localProfileUpdate).timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => throw TimeoutException(
+          'Deadlock detected during broadcast failover with concurrent inbound payload',
+        ),
+      );
+
+      // Drain event queue so microtask-dispatched incoming payload is processed
+      await pumpEventQueue();
+
+      // Assert router transitioned to fallbackRelay
+      expect(router.currentState, equals(TransportState.fallbackRelay));
+
+      // Assert fallback adapter received the broadcasted outbound payload
+      expect(mockFallback.broadcastedPayloads, isNotEmpty);
+
+      // Assert inbound payload from fallback was reconciled into the repository
+      expect(
+        mockRepo.savedImmediateProfiles.any(
+          (p) => p.name == 'Curse of the Frost - Reconciled In Fallback',
+        ),
+        isTrue,
+      );
+
+      // Assert mutex was fully released
+      expect(orchestrator.isProcessingNetworkPayload, isFalse);
     });
 
     test('Default telemetryInterval is 2 seconds', () {

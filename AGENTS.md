@@ -41,7 +41,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,523 passing tests)
+├── test/                               # Comprehensive test suite (1,526 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -72,6 +72,7 @@ dangerously_nerdy_5e_toolkit/
 - **Delta Fast-Forward:** Base room state is hydrated from snapshot milestones, with incremental CRDT deltas reconciled on top via `RoomStateReconciliationService`.
 - **Echo Loop Prevention Mutex:** `RoomSyncOrchestrator` locks outbound broadcasts (`_isProcessingNetworkPayload = true`) while ingesting and saving incoming network payloads, releasing via `scheduleMicrotask()` to prevent reactive database listeners from echoing inbound changes back to the transport mesh.
 - **Asynchronous Stream Emission (Deadlock Prevention):** Reactive broadcast `StreamController`s in persistence repositories (e.g., `LocalCampaignRepository`) MUST NOT use `sync: true`. Asynchronous microtask queue emission prevents re-entrant deadlocks when inbound network synchronization holds mutexes (such as `_syncMutex`).
+- **Asynchronous Microtask Payload Dispatch & Timer Teardown:** Inbound transport router payloads (`CascadingTransportRouter._handleIncomingPayload`) must be dispatched asynchronously via `scheduleMicrotask()` to prevent synchronous re-entrant `_syncMutex` deadlocks when adapters failover or receive inbound frames during broadcast execution stacks. Room re-initialization in `CascadingTransportRouter` must explicitly cancel and nullify prior heartbeat timers (`_heartbeatTimer`, `_fallbackHeartbeatTimer`) before activating new adapters.
 
 ### 3. Dual-Ruleset Awareness (2014 RAW vs 2024 Revised)
 - The engine supports both **2014 (SRD 5.1)** and **2024 (SRD 5.2)** D&D mechanics.

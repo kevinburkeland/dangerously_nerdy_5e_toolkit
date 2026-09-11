@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 import '../../../domain/crdt/crdt_lww_register.dart';
 import '../../../domain/crdt/crdt_or_set.dart';
 import '../../../domain/crdt/hybrid_logical_clock.dart';
+import '../../../services/logging_service.dart';
 import 'crdt_lww_register_dto.dart';
 import 'hybrid_logical_clock_dto.dart';
 
@@ -47,8 +48,12 @@ class CrdtOrSetDto {
             if (reg != null) {
               items[key.toString()] = reg;
             }
-          } catch (_) {
-            // Skip corrupted item
+          } catch (e, st) {
+            LoggingService().logNonFatal(
+              e,
+              st,
+              reason: 'Failed to deserialize CRDT OR-Set item: key=$key',
+            );
           }
         }
       });
