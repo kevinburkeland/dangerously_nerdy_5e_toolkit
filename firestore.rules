@@ -5,9 +5,13 @@ service cloud.firestore {
 
     // --- HELPER FUNCTIONS ---
 
-    // Validates 5e currency dictionary structure and non-negative values
+    function isAppCheckVerified() {
+      return request.app != null;
+    }
+
     function isValidCoinMap(data) {
-      return data.keys().hasOnly(['pp', 'gp', 'ep', 'sp', 'cp'])
+      return data is map
+        && data.keys().hasOnly(['pp', 'gp', 'ep', 'sp', 'cp'])
         && (!('pp' in data) || (data.pp is int && data.pp >= 0 && data.pp <= 10000000))
         && (!('gp' in data) || (data.gp is int && data.gp >= 0 && data.gp <= 10000000))
         && (!('ep' in data) || (data.ep is int && data.ep >= 0 && data.ep <= 10000000))
@@ -15,24 +19,27 @@ service cloud.firestore {
         && (!('cp' in data) || (data.cp is int && data.cp >= 0 && data.cp <= 10000000));
     }
 
-    // Validates player name length (allows custom character slugs and titles)
     function isValidName(name) {
       return name is string && name.size() >= 1 && name.size() <= 80;
     }
 
-    // Validates room code format (alphanumeric, 4 to 12 chars)
     function isValidRoomCode(code) {
-      return code is string && code.size() >= 4 && code.size() <= 12;
+      return code is string && code.matches('^[A-Z0-9_-]{4,12}$');
+    }
+
+    function isRecentTimestamp(ts) {
+      return ts is number 
+        && ts >= (request.time.toMillis() - 60000)
+        && ts <= (request.time.toMillis() + 15000);
     }
 
     // --- ROOM DOCUMENT RULES ---
     match /rooms/{roomCode} {
-      // PREVENT SCRAPING: Allow fetching individual rooms by code, but ban global list queries
-      allow get: if true;
+      allow get: if isAppCheckVerified();
       allow list: if false;
 
-      // Creation: Validates field constraints, lengths, and optional SHA-256 hash
-      allow create: if (request.resource.data.roomCode == roomCode || request.resource.data.code == roomCode)
+      allow create: if isAppCheckVerified()
+                    && (request.resource.data.roomCode == roomCode || request.resource.data.code == roomCode)
                     && isValidRoomCode(roomCode)
                     && request.resource.data.campaignName is string
                     && request.resource.data.campaignName.size() >= 1
@@ -41,73 +48,69 @@ service cloud.firestore {
                        (request.resource.data.hostKeyHash is string && 
                         (request.resource.data.hostKeyHash.size() == 0 || request.resource.data.hostKeyHash.size() == 64)));
 
-      // Updates: Prevent modifying roomCode or hostKeyHash; enforce bounds on rosters & purses
-      allow update: if (request.resource.data.roomCode == resource.data.roomCode || request.resource.data.code == resource.data.code)
-                    // Prevent modifying or injecting hostKeyHash if already set or unset
+      allow update: if isAppCheckVerified()
+                    && (request.resource.data.roomCode == resource.data.roomCode || request.resource.data.code == resource.data.code)
                     && (!('hostKeyHash' in resource.data) 
                         ? !('hostKeyHash' in request.resource.data) 
                         : request.resource.data.hostKeyHash == resource.data.hostKeyHash)
-                    // Enforce party purse bounds
                     && (!('partyPurse' in request.resource.data) || isValidCoinMap(request.resource.data.partyPurse))
-                    // Cap member purses (max 20 players)
                     && (!('memberPurses' in request.resource.data) 
                         || (request.resource.data.memberPurses is map && request.resource.data.memberPurses.size() <= 20))
-                    // Cap roster size to prevent DoS (max 30 characters)
                     && (!('characterRoster' in request.resource.data) 
                         || (request.resource.data.characterRoster is list && request.resource.data.characterRoster.size() <= 30))
-                    // Cap party telemetry map if present (max 30 telemetry entries)
                     && (!('partyTelemetry' in request.resource.data) 
                         || (request.resource.data.partyTelemetry is map && request.resource.data.partyTelemetry.size() <= 30));
 
       allow delete: if false;
 
       // --- SUBCOLLECTION: WEBRTC EPHEMERAL SIGNALING ---
-      // Used strictly for transient WebRTC handshake data.
       match /signaling/{signalId} {
-        // Read access required for mesh participants to receive offers/answers
-        allow get, list: if true;
+        allow get, list: if isAppCheckVerified();
         
-        allow create: if request.resource.data.roomCode == roomCode
+        allow create: if isAppCheckVerified()
+                      && request.resource.data.keys().hasOnly(['id', 'roomCode', 'fromNodeId', 'toNodeId', 'type', 'sdp', 'candidate', 'timestamp'])
+                      && request.resource.data.roomCode == roomCode
                       && request.resource.data.fromNodeId is string
                       && request.resource.data.fromNodeId.size() > 0
+                      && request.resource.data.fromNodeId.size() <= 64
                       && request.resource.data.toNodeId is string
+                      && request.resource.data.toNodeId.size() > 0
+                      && request.resource.data.toNodeId.size() <= 64
                       && request.resource.data.type in ['offer', 'answer', 'candidate', 'peerJoin', 'peerLeave']
-                      // sdp and candidate are optional depending on the type, but if present must be strings/maps
-                      && (!('sdp' in request.resource.data) || request.resource.data.sdp is string)
+                      && (!('sdp' in request.resource.data) || (request.resource.data.sdp is string && request.resource.data.sdp.size() <= 32768))
                       && (!('candidate' in request.resource.data) || request.resource.data.candidate is map)
-                      && request.resource.data.timestamp is number;
+                      && isRecentTimestamp(request.resource.data.timestamp);
 
-        // CRITICAL: Must allow delete for the zero-persistence cleanup lifecycle
-        // once the P2P connection is established.
-        allow delete: if true;
-        
+        // Prevent arbitrary deletion of un-consumed messages by unrelated third parties
+        allow delete: if isAppCheckVerified();
         allow update: if false;
       }
 
       // --- SUBCOLLECTION: CRDT FALLBACK RELAY ---
-      // Used when P2P NAT traversal fails. Routes JSON CRDT payloads.
       match /relay_messages/{messageId} {
-        // Read access required for fallback participants
-        allow get, list: if true;
+        allow get, list: if isAppCheckVerified();
         
-        allow create: if request.resource.data.senderId is string
+        allow create: if isAppCheckVerified()
+                      && request.resource.data.keys().hasOnly(['id', 'senderId', 'payload', 'timestamp', 'expireAt'])
+                      && request.resource.data.id == messageId
+                      && request.resource.data.senderId is string
                       && request.resource.data.senderId.size() > 0
+                      && request.resource.data.senderId.size() <= 64
                       && request.resource.data.payload is string
-                      // HARD LIMIT: Prevent malicious actors from dumping massive payloads (Cap at ~60KB)
                       && request.resource.data.payload.size() < 60000 
-                      && request.resource.data.timestamp is number;
+                      && isRecentTimestamp(request.resource.data.timestamp)
+                      && request.resource.data.expireAt is timestamp
+                      && request.resource.data.expireAt > request.time;
         
-        // Append-only ledger. Do not allow clients to tamper with or delete history.
-        // NOTE: Setup a 24-hour TTL policy in Google Cloud Console for this collection group.
         allow update, delete: if false; 
       }
 
       // --- SUBCOLLECTION: LOOT VAULT ---
       match /loot/{lootId} {
-        allow get: if true;
-        allow list: if true;
+        allow get, list: if isAppCheckVerified();
 
-        allow create: if request.resource.data.id == lootId
+        allow create: if isAppCheckVerified()
+                      && request.resource.data.id == lootId
                       && isValidName(request.resource.data.name)
                       && request.resource.data.gpValue is number
                       && request.resource.data.gpValue >= 0
@@ -115,38 +118,39 @@ service cloud.firestore {
                       && (!('count' in request.resource.data) || (request.resource.data.count is int && request.resource.data.count >= 1 && request.resource.data.count <= 10000))
                       && (!('claimedByPlayer' in request.resource.data) || request.resource.data.claimedByPlayer == null || isValidName(request.resource.data.claimedByPlayer));
 
-        // Updates: Cannot change item ID; bounds check on price & claim states
-        allow update: if request.resource.data.id == resource.data.id
+        allow update: if isAppCheckVerified()
+                      && request.resource.data.id == resource.data.id
                       && isValidName(request.resource.data.name)
                       && request.resource.data.gpValue is number
                       && request.resource.data.gpValue >= 0
                       && request.resource.data.gpValue <= 100000000
+                      && (!('count' in request.resource.data) || (request.resource.data.count is int && request.resource.data.count >= 1 && request.resource.data.count <= 10000))
                       && (!('claimedByPlayer' in request.resource.data) || request.resource.data.claimedByPlayer == null || isValidName(request.resource.data.claimedByPlayer));
 
-        allow delete: if false; // Must use soft-delete flag (isArchived)
+        allow delete: if false;
       }
 
       // --- SUBCOLLECTION: AUDIT EVENTS ---
       match /events/{eventId} {
-        allow get: if true;
-        allow list: if true;
+        allow get, list: if isAppCheckVerified();
 
-        allow create: if request.resource.data.roomCode == roomCode
+        allow create: if isAppCheckVerified()
+                      && request.resource.data.roomCode == roomCode
                       && request.resource.data.type is string
                       && request.resource.data.type.size() <= 30
                       && isValidName(request.resource.data.playerName)
                       && request.resource.data.details is string
                       && request.resource.data.details.size() <= 250;
 
-        allow update, delete: if false; // Append-only audit log
+        allow update, delete: if false;
       }
 
       // --- SUBCOLLECTION: SHARED DICE ROLLS ---
       match /rolls/{rollId} {
-        allow get: if true;
-        allow list: if true;
+        allow get, list: if isAppCheckVerified();
 
-        allow create: if request.resource.data.roomCode == roomCode
+        allow create: if isAppCheckVerified()
+                      && request.resource.data.roomCode == roomCode
                       && isValidName(request.resource.data.playerName)
                       && request.resource.data.total is int
                       && request.resource.data.total >= -100
@@ -155,7 +159,7 @@ service cloud.firestore {
                       && (!('details' in request.resource.data) || request.resource.data.details == null || (request.resource.data.details is list && request.resource.data.details.size() <= 100))
                       && (!('droppedRolls' in request.resource.data) || request.resource.data.droppedRolls == null || request.resource.data.droppedRolls is list);
 
-        allow update, delete: if false; // Immutable rolls
+        allow update, delete: if false;
       }
     }
   }
