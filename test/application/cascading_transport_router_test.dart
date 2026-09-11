@@ -181,9 +181,10 @@ void main() {
         await sigRouter.initializeRoom('ROOM-SIG', 'local-node');
         expect(sigRouter.currentState, TransportState.webRtc);
 
-        // Verify cleanUpSignalingSession() was triggered and wiped all handshake docs
+        // Verify cleanUpSignalingSession() was triggered and wiped prior handshake docs
         expect(deletedDocPaths, contains('rooms/ROOM-SIG/signaling/$offerId'));
-        expect(signalingAdapter.trackedDocPaths, isEmpty);
+        expect(signalingAdapter.trackedDocPaths, isNot(contains('rooms/ROOM-SIG/signaling/$offerId')));
+        expect(signalingAdapter.trackedDocPaths.isNotEmpty, isTrue);
 
         await sigRouter.disconnect();
       });

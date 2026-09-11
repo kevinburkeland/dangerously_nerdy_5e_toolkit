@@ -58,25 +58,34 @@ class FirebaseSignalingAdapter {
           .doc(_roomCode)
           .collection('signaling');
 
-      // Listen for signals targeted at this node or broadcast within sliding TTL window
+      // Listen for signals targeted at this node or broadcast wildcard.
+      // Filter sliding TTL in memory to eliminate composite index requirement in Firestore.
       _firestoreSubscription = collection
-          .where('timestamp', isGreaterThanOrEqualTo: pruningThreshold)
           .where('toNodeId', whereIn: [_localNodeId, '*'])
           .snapshots()
-          .listen((snapshot) {
-            for (final change in snapshot.docChanges) {
-              if (change.type == DocumentChangeType.added) {
-                final data = change.doc.data();
-                if (data != null) {
-                  final message = SignalingMessage.fromMap(data, docId: change.doc.id);
-                  if (message.fromNodeId != _localNodeId) {
-                    _trackedDocPaths.add(change.doc.reference.path);
-                    _incomingSignalsController.add(message);
+          .listen(
+            (snapshot) {
+              final now = DateTime.now().millisecondsSinceEpoch;
+              for (final change in snapshot.docChanges) {
+                if (change.type == DocumentChangeType.added) {
+                  final data = change.doc.data();
+                  if (data != null) {
+                    final message = SignalingMessage.fromMap(data, docId: change.doc.id);
+                    if (message.fromNodeId != _localNodeId) {
+                      if (now - message.timestamp > slidingTtlMs) {
+                        continue;
+                      }
+                      _trackedDocPaths.add(change.doc.reference.path);
+                      _incomingSignalsController.add(message);
+                    }
                   }
                 }
               }
-            }
-          });
+            },
+            onError: (error) {
+              // Silently handle stream error
+            },
+          );
 
       // Broadcast join presence for late-joiner detection
       try {

@@ -117,6 +117,11 @@ class CascadingTransportRouter implements IP2pTransportPort {
     IP2pTransportPort adapter,
     TransportState targetState,
   ) async {
+    // Ephemeral signaling guarantee: clean up any stale signaling docs from prior sessions
+    if (targetState == TransportState.webRtc && adapter is WebRtcMeshAdapter) {
+      await adapter.signalingAdapter?.cleanUpSignalingSession();
+    }
+
     await adapter.initializeRoom(_roomCode!, _localNodeId!);
 
     await _activeSubscription?.cancel();
@@ -125,11 +130,6 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
     _activeSubscription =
         _activeAdapter!.watchIncomingPayloads().listen(_handleIncomingPayload);
-
-    // Ephemeral signaling guarantee: aggressively wipe handshake docs upon WebRTC connection
-    if (targetState == TransportState.webRtc && adapter is WebRtcMeshAdapter) {
-      await adapter.signalingAdapter?.cleanUpSignalingSession();
-    }
 
     if (targetState == TransportState.fallbackRelay) {
       _startFallbackHeartbeats();
