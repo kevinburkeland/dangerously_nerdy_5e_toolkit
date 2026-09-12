@@ -66,7 +66,7 @@ class RoomSyncOrchestrator {
         diceRoomService = diceRoomService ?? DiceRoomService(),
         heartbeatTtl = heartbeatTtl ??
             (transportPort is CascadingTransportRouter
-                ? (transportPort as CascadingTransportRouter).heartbeatTtl
+                ? transportPort.heartbeatTtl
                 : (router?.heartbeatTtl ?? const Duration(seconds: 15))),
         assert(
           transportPort != null || router != null,

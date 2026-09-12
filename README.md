@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1567%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1577%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -108,6 +108,8 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - Peer-to-peer and cloud synchronization powered by Convergent Replicated Data Types (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`).
   - Strict lexicographical tie-breaking by device `nodeId` guarantees deterministic convergence across offline partitions.
   - Delta fast-forwarding and milestone snapshots via `RoomStateReconciliationService` with automatic tombstone pruning to prevent memory leaks.
+  - **Timestamp-Gated Reconciliation & Echo Prevention**: Incoming full snapshots (`room_sync_full`) are gated against the last processed timestamp to prevent stale packet overwrites, while domain entity value equality (`CampaignProfile`, `PartyPurse`) eliminates recursive echo loops between reactive persistence streams and transport broadcasts.
+  - **Unconditional Tombstone Invariants & Buffered Pruning**: Removals generate immediate tombstones to neutralize out-of-order adds, while host milestone pruning buffers lookback horizons by $2 \times$ heartbeat TTL to accommodate transient peer reconnections.
 * **4-Tier Cost-Optimized Transport Waterfall (`CascadingTransportRouter`)**:
   - **Tier 1 (Local Wi-Fi / LAN)**: Zero-latency, zero-cloud-cost direct local network communication.
   - **Tier 2 (WebRTC P2P Mesh)**: Zero-cost DataChannels with ephemeral Firebase signaling; 60-second sliding TTL query filtering and late-joiner re-signaling (`peerJoin`), coupled with aggressive document wipe upon P2P establishment, leave zero handshake residue in Firestore.
@@ -377,7 +379,7 @@ dangerously_nerdy_5e_toolkit/
 │   └── widgets/                    # Modular UI components
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with icon font packaging & cache-busting
-├── test/                           # Unit, widget, accessibility, & resilience test suites (1,567 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (1,577 tests)
 │   ├── accessibility/              # A11y & dynamic type scaling tests
 │   ├── application/                # Orchestration & reconciliation service tests
 │   ├── domain/                     # Domain purity & CRDT logic tests
@@ -451,7 +453,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,567 tests with 100% pass rate**):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,577 tests with 100% pass rate**):
 ```bash
 flutter test
 ```
@@ -468,7 +470,7 @@ flutter analyze
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
 - Implementation of multi-tier conflict resolution, CvRDT state replication, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, character progression pipelines, Anti-Corruption Layer (ACL) compendium parsers, and cryptographically secure RNG utilities.
-- Writing comprehensive unit, widget, domain purity, and resilience tests (1,567 automated tests).
+- Writing comprehensive unit, widget, domain purity, and resilience tests (1,577 automated tests).
 - UI styling, 3D dice physics, responsive layout refinements, and documentation.
 
 All AI-generated contributions were thoroughly audited, tested, verified, and refined by human developers to ensure high code quality, security, and accuracy to 5e RAW rules.

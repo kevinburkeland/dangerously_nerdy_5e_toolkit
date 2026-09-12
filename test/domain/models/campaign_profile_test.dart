@@ -7,7 +7,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 void main() {
   group('CampaignProfile Deep Equality Tests', () {
     final baseDate = DateTime.utc(2024, 1, 1);
-    final room = RoomNodeState(
+    const room = RoomNodeState(
       roomId: 'room-1',
       roomCode: 'CR-101',
       title: 'Dungeon Room',
