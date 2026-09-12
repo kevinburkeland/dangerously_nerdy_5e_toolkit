@@ -18,7 +18,7 @@ void main() {
       resolver = ReferenceResolver(repository);
     });
 
-    test('Single-class progression (Fighter 1 -> 2 -> 3 Battle Master -> 4 ASI)', () {
+    test('Single-class progression (Fighter 1 -> 2 -> 3 Champion -> 4 ASI)', () {
       var fighter = const Character(
         id: EntityId(slug: 'warrior', ruleset: RulesetVersion.v2024),
         name: 'Warrior',
@@ -50,6 +50,7 @@ void main() {
         ),
         resources: CharacterResourcePool(
           currentHp: 12, // 10 + 2 CON
+          tempHp: 0,
           currentHitDice: {'d10': 1},
         ),
       );
@@ -73,7 +74,7 @@ void main() {
       // Level 1: 10 + 2 = 12. Level 2: 6 + 2 = 8 -> Total 20
       expect(stats.maxHp, equals(20));
 
-      // Level 3 (Battle Master Subclass)
+      // Level 3 (Champion Subclass)
       fighter = CharacterProgressionEngine.applyLevelUp(
         fighter,
         const LevelUpRequest(
@@ -81,15 +82,15 @@ void main() {
           hpChoice: HpProgressionChoice.average(),
           subclassRef: EntityReference(
             refType: EntityType.subclass,
-            slug: 'battle_master',
-            displayName: 'Battle Master',
+            slug: 'champion',
+            displayName: 'Champion',
           ),
         ),
         resolver: resolver,
       );
 
       expect(fighter.totalLevel, equals(3));
-      expect(fighter.progression.classes.first.subclassRef?.slug, equals('battle_master'));
+      expect(fighter.progression.classes.first.subclassRef?.slug, equals('champion'));
       stats = CharacterStatCalculator.compute(fighter, resolver);
       // Level 3: +8 HP -> Total 28
       expect(stats.maxHp, equals(28));

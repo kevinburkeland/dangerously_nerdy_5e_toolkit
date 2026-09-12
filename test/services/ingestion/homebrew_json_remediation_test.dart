@@ -102,17 +102,17 @@ void main() {
       final parser = CompendiumFeatParser();
 
       // Static single ability feat
-      final resilientCon = parser.parseFeat({
-        'name': 'Resilient (Constitution)',
+      final tenaciousCon = parser.parseFeat({
+        'name': 'Tenacious (Constitution)',
         'ability': [
           {'con': 1}
         ],
         'entries': ['Increase your Constitution score by 1.'],
       });
-      expect(resilientCon.customProperties['statIncreaseAbility'], equals('constitution'));
-      expect(resilientCon.statIncreaseAmount, equals(1));
-      expect(resilientCon.selectableAbilities, equals([AbilityType.constitution]));
-      expect(resilientCon.grants.any((g) => g.type == GrantType.abilityScoreBoost && g.payload['ability'] == 'constitution' && g.payload['amount'] == 1), isTrue);
+      expect(tenaciousCon.customProperties['statIncreaseAbility'], equals('constitution'));
+      expect(tenaciousCon.statIncreaseAmount, equals(1));
+      expect(tenaciousCon.selectableAbilities, equals([AbilityType.constitution]));
+      expect(tenaciousCon.grants.any((g) => g.type == GrantType.abilityScoreBoost && g.payload['ability'] == 'constitution' && g.payload['amount'] == 1), isTrue);
 
       // Choose pool ability feat (Actor: Cha +1)
       final actor = parser.parseFeat({

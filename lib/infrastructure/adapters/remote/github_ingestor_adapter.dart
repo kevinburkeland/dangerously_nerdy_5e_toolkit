@@ -13,10 +13,14 @@ const bool _isWeb = identical(0, 0.0);
 
 /// Concrete adapter fulfilling [IGithubIngestorPort] for GitHub homebrew repositories.
 ///
-/// Handles tree discovery, bounded concurrency downloads (max 4 parallel connections),
+/// Handles tree discovery, bounded concurrency downloads (max 6 parallel connections),
 /// platform-specific isolate/microtask offloading, and ACL schema enforcement.
 class GithubIngestorAdapter implements IGithubIngestorPort {
-  static const int maxConcurrentDownloads = 4;
+  static const int maxConcurrentDownloads = 6;
+
+  /// Payloads smaller than this threshold (64 KB) are parsed directly on the event loop
+  /// to avoid Isolate spawn, memory copy, and port transfer overhead.
+  static const int isolateThresholdBytes = 64 * 1024;
 
   final HttpFetchClient _client;
   final bool _useIsolate;
@@ -72,6 +76,16 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
       if (item is Map) {
         final path = item['path']?.toString();
         if (path != null && path.toLowerCase().endsWith('.json')) {
+          final lower = path.toLowerCase();
+          // Filter out obvious package and build tooling manifests
+          if (lower.endsWith('package.json') ||
+              lower.endsWith('package-lock.json') ||
+              lower.endsWith('tsconfig.json') ||
+              lower.endsWith('.eslintrc.json') ||
+              lower.contains('.github/') ||
+              lower.contains('/.git/')) {
+            continue;
+          }
           rawUrls.add(effectiveSource.rawFileUri(path).toString());
         }
       }
@@ -117,9 +131,11 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
         if (currentIndex >= total) break;
 
         final url = urls[currentIndex];
-        final result = await _fetchAndParse(url, ruleset);
+        final results = await _fetchAndParse(url, ruleset);
         if (!controller.isClosed) {
-          controller.add(result);
+          for (final result in results) {
+            controller.add(result);
+          }
         }
       }
     }
@@ -129,7 +145,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
     await Future.wait(workers);
   }
 
-  Future<IngestionResult> _fetchAndParse(
+  Future<List<IngestionResult>> _fetchAndParse(
     String url,
     RulesetVersion ruleset,
   ) async {
@@ -138,55 +154,39 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
       rawContent = await _client.get(Uri.parse(url));
     } catch (e) {
       final reason = e is HttpFetchException ? e.message : 'HTTP download failure: $e';
-      return IngestionSkipResult(
-        sourceUrl: url,
-        reason: reason,
-        errorDetails: e.toString(),
-        ruleset: ruleset,
-      );
+      return [
+        IngestionSkipResult(
+          sourceUrl: url,
+          reason: reason,
+          errorDetails: e.toString(),
+          ruleset: ruleset,
+        )
+      ];
     }
 
     try {
-      final dto = await _executeParsing(rawContent, ruleset, url);
-      return IngestionSuccessResult(
-        entity: dto.toDomain(),
-        sourceUrl: url,
-        ruleset: ruleset,
-      );
-    } on HomebrewValidationException catch (e) {
-      return IngestionSkipResult(
-        sourceUrl: url,
-        reason: e.message,
-        errorDetails: e.toString(),
-        ruleset: ruleset,
-      );
+      return await _executeParsing(rawContent, ruleset, url);
     } catch (e) {
-      return IngestionSkipResult(
-        sourceUrl: url,
-        reason: 'Malformed or invalid JSON schema: $e',
-        errorDetails: e.toString(),
-        ruleset: ruleset,
-      );
+      return [
+        IngestionSkipResult(
+          sourceUrl: url,
+          reason: 'Malformed or invalid JSON schema: $e',
+          errorDetails: e.toString(),
+          ruleset: ruleset,
+        )
+      ];
     }
   }
 
-  Future<HomebrewEntityDto> _executeParsing(
+  Future<List<IngestionResult>> _executeParsing(
     String jsonString,
     RulesetVersion ruleset,
     String url,
   ) async {
-    if (!_isWeb && _useIsolate) {
+    if (!_isWeb && _useIsolate && jsonString.length >= isolateThresholdBytes) {
       try {
-        return await Isolate.run(() {
-          final decoded = jsonDecode(jsonString);
-          if (decoded is! Map<String, dynamic> && decoded is! Map) {
-            throw const FormatException('Payload root must be a JSON object.');
-          }
-          final map = Map<String, dynamic>.from(decoded as Map);
-          return HomebrewEntityDto.fromJson(map, ruleset: ruleset, sourcePath: url);
-        });
+        return await Isolate.run(() => _unpackAndParsePayload(jsonString, ruleset, url));
       } on UnsupportedError {
-        // Fallback when isolates are not supported (e.g. Flutter Web)
         return _parseInMicrotask(jsonString, ruleset, url);
       }
     } else {
@@ -194,25 +194,180 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
     }
   }
 
-  Future<HomebrewEntityDto> _parseInMicrotask(
+  Future<List<IngestionResult>> _parseInMicrotask(
     String jsonString,
     RulesetVersion ruleset,
     String url,
   ) async {
-    final completer = Completer<HomebrewEntityDto>();
+    final completer = Completer<List<IngestionResult>>();
     scheduleMicrotask(() {
       try {
-        final decoded = jsonDecode(jsonString);
-        if (decoded is! Map<String, dynamic> && decoded is! Map) {
-          throw const FormatException('Payload root must be a JSON object.');
-        }
-        final map = Map<String, dynamic>.from(decoded as Map);
-        final dto = HomebrewEntityDto.fromJson(map, ruleset: ruleset, sourcePath: url);
-        completer.complete(dto);
+        final results = _unpackAndParsePayload(jsonString, ruleset, url);
+        completer.complete(results);
       } catch (e, st) {
         completer.completeError(e, st);
       }
     });
     return completer.future;
+  }
+
+  static List<IngestionResult> _unpackAndParsePayload(
+    String jsonString,
+    RulesetVersion ruleset,
+    String url,
+  ) {
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(jsonString);
+    } catch (e) {
+      return [
+        IngestionSkipResult(
+          sourceUrl: url,
+          reason: 'Malformed JSON syntax: $e',
+          errorDetails: e.toString(),
+          ruleset: ruleset,
+        )
+      ];
+    }
+
+    // 1. Root is a JSON Array of entities
+    if (decoded is List) {
+      final results = <IngestionResult>[];
+      for (var i = 0; i < decoded.length; i++) {
+        final item = decoded[i];
+        if (item is Map) {
+          final entityMap = Map<String, dynamic>.from(item);
+          final entityName = (entityMap['name'] ?? entityMap['title'] ?? 'item_$i').toString();
+          final itemUrl = '$url#item_${i}_$entityName';
+          results.add(_parseEntityMap(entityMap, ruleset, itemUrl));
+        }
+      }
+      if (results.isEmpty) {
+        return [
+          IngestionSkipResult(
+            sourceUrl: url,
+            reason: 'JSON array contains no entity objects',
+            ruleset: ruleset,
+          )
+        ];
+      }
+      return results;
+    }
+
+    // 2. Root is a JSON Map (Bundle or Single Entity)
+    if (decoded is Map) {
+      final map = Map<String, dynamic>.from(decoded);
+
+      const bundleKeys = [
+        'monster',
+        'spell',
+        'item',
+        'baseitem',
+        'magicvariant',
+        'class',
+        'subclass',
+        'race',
+        'subrace',
+        'feat',
+        'background',
+        'action',
+        'condition',
+        'disease',
+        'status',
+        'cult',
+        'boon',
+        'deity',
+        'hazard',
+        'object',
+        'trap',
+        'vehicle',
+        'vehicleUpgrade',
+        'table',
+        'reward',
+        'charoption',
+      ];
+
+      final foundBundleKeys = bundleKeys
+          .where((k) => map[k] is List && (map[k] as List).isNotEmpty)
+          .toList();
+
+      if (foundBundleKeys.isNotEmpty) {
+        final results = <IngestionResult>[];
+        for (final key in foundBundleKeys) {
+          final list = map[key] as List;
+          for (var i = 0; i < list.length; i++) {
+            final item = list[i];
+            if (item is Map) {
+              final entityMap = Map<String, dynamic>.from(item);
+              if (!entityMap.containsKey('entityType')) {
+                entityMap['entityType'] = key;
+              }
+              final entityName = (entityMap['name'] ?? entityMap['title'] ?? 'item_$i').toString();
+              final itemUrl = '$url#$key/$entityName';
+              results.add(_parseEntityMap(entityMap, ruleset, itemUrl));
+            }
+          }
+        }
+        return results;
+      }
+
+      // Single entity check
+      final rawName = (map['name'] ?? map['title'] ?? map['label'] ?? map['header'])
+          ?.toString()
+          .trim();
+      if (rawName != null && rawName.isNotEmpty) {
+        return [_parseEntityMap(map, ruleset, url)];
+      }
+
+      // No entity arrays and no entity name -> repository metadata
+      return [
+        IngestionSkipResult(
+          sourceUrl: url,
+          reason: 'Repository metadata or index file (no tabletop entities found)',
+          ruleset: ruleset,
+        )
+      ];
+    }
+
+    return [
+      IngestionSkipResult(
+        sourceUrl: url,
+        reason: 'Root payload must be a JSON object or array',
+        ruleset: ruleset,
+      )
+    ];
+  }
+
+  static IngestionResult _parseEntityMap(
+    Map<String, dynamic> entityMap,
+    RulesetVersion ruleset,
+    String itemUrl,
+  ) {
+    try {
+      final dto = HomebrewEntityDto.fromJson(
+        entityMap,
+        ruleset: ruleset,
+        sourcePath: itemUrl,
+      );
+      return IngestionSuccessResult(
+        entity: dto.toDomain(),
+        sourceUrl: itemUrl,
+        ruleset: ruleset,
+      );
+    } on HomebrewValidationException catch (e) {
+      return IngestionSkipResult(
+        sourceUrl: itemUrl,
+        reason: e.message,
+        errorDetails: e.toString(),
+        ruleset: ruleset,
+      );
+    } catch (e) {
+      return IngestionSkipResult(
+        sourceUrl: itemUrl,
+        reason: 'Malformed or invalid entity schema: $e',
+        errorDetails: e.toString(),
+        ruleset: ruleset,
+      );
+    }
   }
 }

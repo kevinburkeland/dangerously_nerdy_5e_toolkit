@@ -72,8 +72,8 @@ void main() {
       const homebrewChar = ResolvedCharacterDisplay(
         id: 'hb-1',
         name: 'Kallista Bloodhunter',
-        speciesSlug: 'illithid-kin',
-        speciesName: 'Illithid Kin',
+        speciesSlug: 'voidling',
+        speciesName: 'Voidling',
         backgroundName: 'Astral Drifter',
         classSummary: 'Blood Hunter 7',
         classes: [],
@@ -92,7 +92,7 @@ void main() {
         featNames: [],
         equippedItemNames: [],
         hasUnresolvedPointers: true,
-        unresolvedSlugs: ['illithid-kin', 'blood-hunter'],
+        unresolvedSlugs: ['voidling', 'blood-hunter'],
         rulesEdition: 'v2024',
         timestamp: 0,
       );

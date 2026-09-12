@@ -609,19 +609,21 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
 
   Widget _buildSubclassSpellsChips(BuildContext context, Subclass sub, Color accentColor) {
     final theme = Theme.of(context);
+    final isDivineSoul = widget.characterClass.id.slug.toLowerCase() == 'sorcerer' &&
+        (sub.id.slug.contains('divine') || sub.name.toLowerCase().contains('divine'));
+
     final bonusSpellNames = <String>{};
+    final directGrantNames = <String>{};
+
     for (final g in sub.grants) {
       if (g.type == GrantType.bonusSpell) {
         final name = g.payload['displayName']?.toString() ?? g.label ?? g.payload['slug']?.toString();
         if (name != null && name.isNotEmpty) {
-          bonusSpellNames.add(name);
+          final cap = name.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+          bonusSpellNames.add(cap);
+          directGrantNames.add(cap);
         }
       }
-    }
-    final libExpanded = SubclassSpellsLibrary.getExpandedSpells(widget.characterClass.id.slug, sub.id.slug);
-    for (final exp in libExpanded) {
-      final cap = exp.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
-      bonusSpellNames.add(cap);
     }
 
     final addSpells = sub.customProperties['additionalSpells'] ?? sub.customProperties['subclassSpells'];
@@ -630,14 +632,23 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
       for (final n in names) {
         final cap = n.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
         bonusSpellNames.add(cap);
+        directGrantNames.add(cap);
       }
     }
 
-    if (bonusSpellNames.isEmpty) {
+    if (!isDivineSoul) {
+      final libExpanded = SubclassSpellsLibrary.getExpandedSpells(widget.characterClass.id.slug, sub.id.slug);
+      for (final exp in libExpanded) {
+        final cap = exp.split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+        bonusSpellNames.add(cap);
+      }
+    }
+
+    if (bonusSpellNames.isEmpty && !isDivineSoul) {
       return const SizedBox.shrink();
     }
 
-    final sortedSpells = bonusSpellNames.toList()..sort();
+    final sortedSpells = (isDivineSoul && directGrantNames.isNotEmpty ? directGrantNames : bonusSpellNames).toList()..sort();
 
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 4),
@@ -657,7 +668,7 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
                 Icon(Icons.auto_awesome, size: 13, color: accentColor),
                 const SizedBox(width: 5),
                 Text(
-                  'SUBCLASS / BONUS SPELLS',
+                  isDivineSoul ? 'DIVINE MAGIC (FULL CLERIC SPELL LIST)' : 'SUBCLASS / BONUS SPELLS',
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
@@ -667,6 +678,29 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
                 ),
               ],
             ),
+            if (isDivineSoul) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Grants access to the entire Cleric spell list (cantrips through 9th-level) in addition to Sorcerer spells.',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (sortedSpells.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'AFFINITY SPELLS:',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                    color: accentColor.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ],
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,

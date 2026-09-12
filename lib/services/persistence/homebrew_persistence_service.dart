@@ -22,8 +22,11 @@ import '../acl/compendium_race_parser.dart';
 import '../acl/compendium_spell_parser.dart';
 import '../acl/homebrew_merge_resolver.dart';
 import '../acl/srd_equivalence_index.dart';
+import '../importers/community_compendium_adapters.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
+import '../../domain/homebrew/models/homebrew_entity.dart';
+import '../../domain/homebrew/value_objects/ruleset_version.dart' as domain_rules;
 import 'app_database_service.dart';
 
 /// Service managing persistent storage and repository hydration for user-created homebrew and campaign overrides.
@@ -342,13 +345,19 @@ class HomebrewPersistenceService {
                     : '${s.duration.durationSeconds} seconds')));
 
     final extractedClasses = <SpellClass>[];
-    final rawClasses = s.customProperties['classes'];
+    final rawClasses = s.customProperties['classes'] ??
+        (s.customProperties['customProperties'] is Map
+            ? (s.customProperties['customProperties'] as Map)['classes']
+            : null);
     final candidates = <dynamic>[];
     if (rawClasses is List) {
       candidates.addAll(rawClasses);
     } else if (rawClasses is Map) {
       if (rawClasses['fromClassList'] is List) {
         candidates.addAll(rawClasses['fromClassList'] as List);
+      }
+      if (rawClasses['fromClassListVariant'] is List) {
+        candidates.addAll(rawClasses['fromClassListVariant'] as List);
       }
       if (rawClasses['fromSubclass'] is List) {
         for (final sub in (rawClasses['fromSubclass'] as List)) {
@@ -375,6 +384,43 @@ class HomebrewPersistenceService {
       }
     }
 
+    // Fallback: If classes list is empty, consult SRD and known expansion spell indexes
+    if (extractedClasses.isEmpty) {
+      final fallbackNames = CompendiumSpellParser().extractClassesForSpell(s.id.slug, s.name, s.id.ruleset);
+      for (final fn in fallbackNames) {
+        final match = SpellClass.values.where((sc) => sc.name.toLowerCase() == fn.toLowerCase() || sc.label.toLowerCase() == fn.toLowerCase()).firstOrNull;
+        if (match != null && !extractedClasses.contains(match)) {
+          extractedClasses.add(match);
+        }
+      }
+    }
+
+    // Determine ritual status
+    final isRitual = s.customProperties['meta']?['ritual'] == true ||
+        s.customProperties['ritual'] == true;
+
+    // Determine saving throw
+    String? savingThrow;
+    final rawSt = s.customProperties['savingThrow'];
+    if (rawSt is List && rawSt.isNotEmpty) {
+      savingThrow = rawSt.map((e) => e.toString().trim()).join(', ');
+    } else if (rawSt is String && rawSt.isNotEmpty) {
+      savingThrow = rawSt.trim();
+    }
+
+    // Extract tags
+    final tags = <String>[];
+    if (s.customProperties['areaTags'] is List) {
+      for (final t in (s.customProperties['areaTags'] as List)) {
+        tags.add(t.toString());
+      }
+    }
+    if (s.customProperties['miscTags'] is List) {
+      for (final t in (s.customProperties['miscTags'] as List)) {
+        tags.add(t.toString());
+      }
+    }
+
     final editionDetails = SpellEditionDetails(
       castingTime: s.castingTime.cost > 0
           ? '${s.castingTime.cost} ${s.castingTime.actionType.name}'
@@ -383,6 +429,8 @@ class HomebrewPersistenceService {
       components: compList.join(', '),
       duration: durationText,
       concentration: s.duration.requiresConcentration,
+      ritual: isRitual,
+      savingThrow: savingThrow,
       description: [s.descriptionMarkdown],
       higherLevels: s.higherLevelsMarkdown,
       classes: extractedClasses,
@@ -397,6 +445,7 @@ class HomebrewPersistenceService {
       school: school,
       rules2014: editionDetails,
       rules2024: editionDetails,
+      tags: tags,
     );
   }
 
@@ -2221,6 +2270,128 @@ class HomebrewPersistenceService {
       LoggingService().logNonFatal(e, st, reason: 'Re-parse category $entityType failed');
       return 0;
     }
+  }
+
+  RulesetVersion _mapDomainRulesetToCore(domain_rules.RulesetVersion ruleset) {
+    return switch (ruleset) {
+      domain_rules.RulesetVersion.srd2014 => RulesetVersion.v2014,
+      domain_rules.RulesetVersion.srd2024 => RulesetVersion.v2024,
+    };
+  }
+
+  /// Persists a batch of [HomebrewEntity] items parsed from remote repositories
+  /// into canonical storage collections and optionally synchronizes runtime libraries.
+  Future<void> saveHomebrewEntitiesBatch(
+    List<HomebrewEntity> entities, {
+    bool syncLibraries = true,
+  }) async {
+    if (entities.isEmpty) return;
+
+    final spells = <Spell>[];
+    final monsters = <Monster>[];
+    final items = <EquipmentItem>[];
+    final classes = <CharacterClass>[];
+    final subclasses = <Subclass>[];
+    final races = <Race>[];
+    final feats = <Feat>[];
+    final backgrounds = <Background>[];
+    final others = <HomebrewCompendiumEntry>[];
+
+    final adapters = CommunityCompendiumAdapters();
+
+    const creatureTypes = {
+      'monster',
+      'creature',
+      'npc',
+      'bestiary',
+      'aberration',
+      'beast',
+      'celestial',
+      'construct',
+      'dragon',
+      'elemental',
+      'fey',
+      'fiend',
+      'giant',
+      'humanoid',
+      'monstrosity',
+      'ooze',
+      'plant',
+      'undead',
+    };
+
+    for (final entity in entities) {
+      final payload = Map<String, dynamic>.from(entity.rawPayload);
+      final coreRuleset = _mapDomainRulesetToCore(entity.ruleset);
+      final typeLower = entity.entityType.toLowerCase().trim();
+
+      final isMonster = creatureTypes.contains(typeLower) ||
+          typeLower.startsWith('{type:') ||
+          payload.containsKey('cr') ||
+          payload.containsKey('challengeRating') ||
+          payload.containsKey('hitDice');
+
+      try {
+        if (isMonster) {
+          monsters.add(adapters.parseMonster(payload, forceRuleset: coreRuleset));
+        } else {
+          switch (typeLower) {
+            case 'spell':
+              spells.add(adapters.parseSpell(payload, forceRuleset: coreRuleset));
+            case 'equipment' || 'item' || 'magicitem' || 'weapon' || 'armor':
+              items.add(adapters.parseItem(payload, forceRuleset: coreRuleset));
+            case 'class':
+              classes.add(adapters.parseClass(payload, forceRuleset: coreRuleset));
+            case 'subclass':
+              subclasses.add(adapters.parseSubclass(payload, forceRuleset: coreRuleset));
+            case 'race' || 'species':
+              races.add(adapters.parseRace(payload, forceRuleset: coreRuleset));
+            case 'feat':
+              feats.add(adapters.parseFeat(payload, forceRuleset: coreRuleset));
+            case 'background':
+              backgrounds.add(adapters.parseBackground(payload, forceRuleset: coreRuleset));
+            default:
+              others.add(HomebrewCompendiumEntry(
+                id: EntityId(slug: entity.id, ruleset: coreRuleset),
+                name: entity.name,
+                category: entity.entityType,
+                descriptionMarkdown: payload['entries']?.toString() ?? '',
+                customProperties: payload,
+              ));
+          }
+        }
+      } catch (_) {
+        others.add(HomebrewCompendiumEntry(
+          id: EntityId(slug: entity.id, ruleset: coreRuleset),
+          name: entity.name,
+          category: entity.entityType,
+          descriptionMarkdown: payload['entries']?.toString() ?? '',
+          customProperties: payload,
+        ));
+      }
+    }
+
+    if (spells.isNotEmpty) await saveCustomSpellsBatch(spells);
+    if (monsters.isNotEmpty) await saveCustomMonstersBatch(monsters);
+    if (items.isNotEmpty) await saveCustomItemsBatch(items);
+    if (classes.isNotEmpty) await saveCustomClassesBatch(classes);
+    if (subclasses.isNotEmpty) await saveCustomSubclassesBatch(subclasses);
+    if (races.isNotEmpty) await saveCustomRacesBatch(races);
+    if (feats.isNotEmpty) await saveCustomFeatsBatch(feats);
+    if (backgrounds.isNotEmpty) await saveCustomBackgroundsBatch(backgrounds);
+    if (others.isNotEmpty) await saveCustomOtherEntriesBatch(others);
+
+    if (syncLibraries) {
+      await syncToLibraries();
+    }
+  }
+
+  /// Persists a single [HomebrewEntity] into canonical storage and optionally synchronizes libraries.
+  Future<void> saveHomebrewEntity(
+    HomebrewEntity entity, {
+    bool syncLibraries = true,
+  }) async {
+    await saveHomebrewEntitiesBatch([entity], syncLibraries: syncLibraries);
   }
 }
 

@@ -10,19 +10,19 @@ import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_stat_calcu
 
 void main() {
   group('FeatAsiExtension Tests', () {
-    test('Resilient feat has all 6 abilities, requires choice, and grants saving throw', () {
-      const resilient = Feat(
-        id: EntityId(slug: 'resilient', ruleset: RulesetVersion.v2024),
-        name: 'Resilient',
+    test('Tenacious feat has all 6 abilities, requires choice, and grants saving throw', () {
+      const tenacious = Feat(
+        id: EntityId(slug: 'tenacious', ruleset: RulesetVersion.v2024),
+        name: 'Tenacious',
         descriptionMarkdown: '',
       );
-      expect(resilient.hasAbilityScoreIncrease, isTrue);
-      expect(resilient.requiresAbilityChoice, isTrue);
-      expect(resilient.selectableAbilities.length, equals(6));
-      expect(resilient.selectableAbilities, containsAll(AbilityType.values));
-      expect(resilient.statIncreaseAmount, equals(1));
-      expect(resilient.grantsSavingThrowProficiency, isTrue);
-      expect(resilient.choiceRiderDescription, contains('saving throw'));
+      expect(tenacious.hasAbilityScoreIncrease, isTrue);
+      expect(tenacious.requiresAbilityChoice, isTrue);
+      expect(tenacious.selectableAbilities.length, equals(6));
+      expect(tenacious.selectableAbilities, containsAll(AbilityType.values));
+      expect(tenacious.statIncreaseAmount, equals(1));
+      expect(tenacious.grantsSavingThrowProficiency, isTrue);
+      expect(tenacious.choiceRiderDescription, contains('saving throw'));
     });
 
     test('Athlete feat allows STR or DEX choice and does not grant saving throw', () {
@@ -252,7 +252,7 @@ void main() {
       );
     }
 
-    test('Level 4: Taking Resilient (Constitution) increases CON, grants save, and retroactively updates HP', () {
+    test('Level 4: Taking Tenacious (Constitution) increases CON, grants save, and retroactively updates HP', () {
       final rogue = createBaseRogueLevel3();
       expect(rogue.savingThrowProficiencies, isNot(contains(AbilityType.constitution)));
 
@@ -262,8 +262,8 @@ void main() {
         asiOrFeat: AsiOrFeatChoice.feat(
           EntityReference(
             refType: EntityType.feat,
-            slug: 'resilient',
-            displayName: 'Resilient',
+            slug: 'tenacious',
+            displayName: 'Tenacious',
           ),
           abilityIncreases: {AbilityType.constitution: 1},
           savingThrowGrants: {AbilityType.constitution},

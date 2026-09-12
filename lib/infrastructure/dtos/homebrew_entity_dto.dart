@@ -47,10 +47,15 @@ class HomebrewEntityDto {
     required RulesetVersion ruleset,
     String? sourcePath,
   }) {
-    // 1. Mandatory Name Validation
-    final rawName = json['name']?.toString().trim();
+    // 1. Mandatory Name Validation with fallback fields (title, label, header)
+    final rawName = (json['name'] ?? json['title'] ?? json['label'] ?? json['header'])
+        ?.toString()
+        .trim();
     if (rawName == null || rawName.isEmpty) {
-      throw HomebrewValidationException('Entity is missing a valid "name" attribute.', path: sourcePath);
+      throw HomebrewValidationException(
+        'Entity is missing a valid "name" attribute.',
+        path: sourcePath,
+      );
     }
 
     // 2. Explicit Ruleset Mismatch Detection
@@ -200,29 +205,80 @@ class HomebrewEntityDto {
   }
 
   static String _detectEntityType(Map<String, dynamic> json) {
-    final explicit = json['entityType']?.toString().toLowerCase() ??
-        json['type']?.toString().toLowerCase();
+    // 1. Signature keys that uniquely identify monsters
+    if (json.containsKey('cr') ||
+        json.containsKey('challengeRating') ||
+        json.containsKey('hitDice')) {
+      return 'monster';
+    }
 
-    if (explicit != null && explicit.isNotEmpty) {
-      return switch (explicit) {
+    // 2. Explicit entityType attribute
+    final explicitEntityType = json['entityType']?.toString().toLowerCase();
+    if (explicitEntityType != null && explicitEntityType.isNotEmpty) {
+      return switch (explicitEntityType) {
         'spell' => 'spell',
-        'monster' || 'creature' || 'npc' => 'monster',
+        'monster' || 'creature' || 'npc' || 'bestiary' => 'monster',
         'item' || 'equipment' || 'magicitem' || 'weapon' || 'armor' => 'equipment',
         'class' || 'classdefinition' => 'class',
         'subclass' => 'subclass',
         'race' || 'species' => 'race',
         'feat' => 'feat',
         'background' => 'background',
-        _ => explicit,
+        _ => explicitEntityType,
       };
     }
 
-    // Heuristic inference based on signature schema keys
-    if (json.containsKey('school') || json.containsKey('level') && json.containsKey('time')) {
-      return 'spell';
+    // 3. Inspect type attribute (which in 5e/5etools can be creature type or item type code)
+    final explicitType = json['type'];
+    String? typeStr;
+    if (explicitType is String) {
+      typeStr = explicitType.toLowerCase().trim();
+    } else if (explicitType is Map) {
+      typeStr = explicitType['type']?.toString().toLowerCase().trim();
     }
-    if (json.containsKey('cr') || json.containsKey('hitDice') || json.containsKey('challengeRating')) {
-      return 'monster';
+
+    if (typeStr != null && typeStr.isNotEmpty) {
+      // 5e standard creature types
+      const creatureTypes = {
+        'aberration',
+        'beast',
+        'celestial',
+        'construct',
+        'dragon',
+        'elemental',
+        'fey',
+        'fiend',
+        'giant',
+        'humanoid',
+        'monstrosity',
+        'ooze',
+        'plant',
+        'undead',
+      };
+
+      if (creatureTypes.contains(typeStr) ||
+          typeStr == 'monster' ||
+          typeStr == 'creature' ||
+          typeStr == 'npc' ||
+          typeStr == 'bestiary') {
+        return 'monster';
+      }
+
+      if (typeStr == 'spell') return 'spell';
+      if (typeStr == 'item' || typeStr == 'equipment' || typeStr == 'magicitem' ||
+          typeStr == 'weapon' || typeStr == 'armor') {
+        return 'equipment';
+      }
+      if (typeStr == 'class') return 'class';
+      if (typeStr == 'subclass') return 'subclass';
+      if (typeStr == 'race' || typeStr == 'species') return 'race';
+      if (typeStr == 'feat') return 'feat';
+      if (typeStr == 'background') return 'background';
+    }
+
+    // 4. Heuristic inference based on signature schema keys
+    if (json.containsKey('school') || (json.containsKey('level') && json.containsKey('time'))) {
+      return 'spell';
     }
     if (json.containsKey('rarity') || json.containsKey('itemType') || json.containsKey('weaponCategory')) {
       return 'equipment';
@@ -243,7 +299,7 @@ class HomebrewEntityDto {
       return 'background';
     }
 
-    return 'custom';
+    return typeStr ?? 'custom';
   }
 
   static Map<String, dynamic> _normalizeAndClamp(Map<String, dynamic> json, String entityType) {

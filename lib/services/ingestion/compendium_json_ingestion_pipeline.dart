@@ -406,9 +406,11 @@ class CompendiumJsonIngestionPipeline {
           if (!updated.customProperties.containsKey('classes') ||
               (updated.customProperties['classes'] is List && (updated.customProperties['classes'] as List).isEmpty)) {
             final parsedClasses = spellParser.parseSpell({
+              'id': {'slug': updated.id.slug, 'ruleset': updated.id.ruleset.name},
               'name': updated.name,
               'source': updated.id.ruleset.name,
               'classes': updated.customProperties['classes'],
+              'customProperties': updated.customProperties,
             }).customProperties['classes'];
             if (parsedClasses != null) {
               final cp = Map<String, dynamic>.from(updated.customProperties);

@@ -141,5 +141,87 @@ void main() {
       expect(register!.timestamp.nodeId, equals(orchestrator.nodeId));
       expect(register.timestamp.nodeId, isNot(equals('node_homebrew')));
     });
+
+    test('batchPersister receives flushed batches of entities upon stream completion', () async {
+      final mockClient = MockHttpFetchClient({
+        source.apiTreeUri.toString(): jsonEncode({
+          'tree': [
+            {'path': 'bestiary.json', 'type': 'blob'},
+          ]
+        }),
+        source.rawFileUri('bestiary.json').toString(): jsonEncode({
+          'monster': [
+            {'name': 'Monster 1', 'cr': '1'},
+            {'name': 'Monster 2', 'cr': '2'},
+            {'name': 'Monster 3', 'cr': '3'},
+          ],
+        }),
+      });
+
+      final adapter = GithubIngestorAdapter(client: mockClient, useIsolate: false);
+      final persistedBatches = <List<HomebrewEntity>>[];
+
+      final orchestrator = HomebrewImportOrchestrator(
+        ingestorPort: adapter,
+        batchPersister: (batch) async {
+          persistedBatches.add(batch);
+        },
+      );
+
+      final telemetry = await orchestrator.runImport(
+        source: source,
+        ruleset: RulesetVersion.srd2014,
+      ).last;
+
+      expect(telemetry.isCompleted, isTrue);
+      expect(telemetry.filesImported, equals(3));
+      expect(persistedBatches.length, equals(1));
+      expect(persistedBatches.first.length, equals(3));
+      final names = persistedBatches.first.map((e) => e.name).toList();
+      expect(names, containsAll(['Monster 1', 'Monster 2', 'Monster 3']));
+    });
+
+    test('batchPersister flushes multiple batches when entities exceed batchSize', () async {
+      final mockClient = MockHttpFetchClient({
+        source.apiTreeUri.toString(): jsonEncode({
+          'tree': [
+            {'path': 'bestiary.json', 'type': 'blob'},
+          ]
+        }),
+        source.rawFileUri('bestiary.json').toString(): jsonEncode({
+          'monster': [
+            {'name': 'Monster 1', 'cr': '1'},
+            {'name': 'Monster 2', 'cr': '2'},
+            {'name': 'Monster 3', 'cr': '3'},
+            {'name': 'Monster 4', 'cr': '4'},
+            {'name': 'Monster 5', 'cr': '5'},
+          ],
+        }),
+      });
+
+      final adapter = GithubIngestorAdapter(client: mockClient, useIsolate: false);
+      final persistedBatches = <List<HomebrewEntity>>[];
+
+      final orchestrator = HomebrewImportOrchestrator(
+        ingestorPort: adapter,
+        batchSize: 2,
+        batchPersister: (batch) async {
+          persistedBatches.add(batch);
+        },
+      );
+
+      final telemetry = await orchestrator.runImport(
+        source: source,
+        ruleset: RulesetVersion.srd2014,
+      ).last;
+
+      expect(telemetry.isCompleted, isTrue);
+      expect(telemetry.filesImported, equals(5));
+      // 5 entities with batchSize: 2 should produce 3 batches (2, 2, 1)
+      expect(persistedBatches.length, equals(3));
+      expect(persistedBatches[0].length, equals(2));
+      expect(persistedBatches[1].length, equals(2));
+      expect(persistedBatches[2].length, equals(1));
+    });
   });
 }

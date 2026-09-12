@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../application/services/homebrew_import_orchestrator.dart';
-import '../../../domain/homebrew/models/homebrew_entity.dart';
 import '../../../domain/homebrew/ports/i_github_ingestor_port.dart';
 import '../../../domain/homebrew/value_objects/github_repo_source.dart';
 import '../../../domain/homebrew/value_objects/ruleset_version.dart';
@@ -48,7 +47,10 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
     final port = widget.customIngestorPort ?? GithubIngestorAdapter();
     _orchestrator = HomebrewImportOrchestrator(
       ingestorPort: port,
-      persister: widget.customPersister ?? _defaultPersister,
+      persister: widget.customPersister,
+      batchPersister: widget.customPersister != null
+          ? null
+          : (batch) => HomebrewPersistenceService().saveHomebrewEntitiesBatch(batch, syncLibraries: false),
     );
 
     _urlController.addListener(_validateUrlLive);
@@ -72,21 +74,6 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
           'Please verify the repository exists, is public, and that network connections to api.github.com are allowed.';
     }
     return str.startsWith('Exception: ') ? str.substring(11) : str;
-  }
-
-  static Future<void> _defaultPersister(HomebrewEntity entity) async {
-    // Persist to local persistence layer if applicable
-    // Generic compendium entries can be retained through the persistence service
-    final persistence = HomebrewPersistenceService();
-    try {
-      await persistence.saveCustomRawPayload(
-        'dn_homebrew_github_${entity.ruleset.name}',
-        entity.id,
-        entity.rawPayload,
-      );
-    } catch (_) {
-      // Non-fatal persistence logging
-    }
   }
 
   void _validateUrlLive() {
@@ -140,6 +127,17 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
             _telemetry = telemetry;
             if (telemetry.isCompleted) {
               _isIngesting = false;
+              HomebrewPersistenceService().syncToLibraries();
+              if (telemetry.filesImported > 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Successfully imported and synchronized ${telemetry.filesImported} custom entities into toolkit libraries.',
+                    ),
+                    backgroundColor: Colors.green.shade700,
+                  ),
+                );
+              }
             }
           });
         }
@@ -163,6 +161,7 @@ class _HomebrewExpertOptionsViewState extends State<HomebrewExpertOptionsView> {
           setState(() {
             _isIngesting = false;
           });
+          HomebrewPersistenceService().syncToLibraries();
         }
       },
     );

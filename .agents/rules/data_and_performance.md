@@ -74,9 +74,41 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - `srd2014`: Must reject 2024 Weapon Masteries, linear 10-step exhaustion models, and Background-bound ASIs / Origin Feats.
   - `srd2024`: Must reject legacy bonus-action spell restriction clauses and Species/Race-bound ASIs.
   - Rejected or corrupted entries must return `IngestionSkipResult` containing failure metadata without terminating the batch import stream.
-- **Bounded Concurrency & Isolate Offloading:**
-  - Remote file downloads must use a bounded worker pool limited to maximum **4 concurrent HTTP connections**.
-  - Offload JSON decoding and schema validation to `Isolate.run()` on native platforms and asynchronous microtask batches on Flutter Web.
-- **CRDT Ledger Integration:**
+- **Repository Manifest Filtering & Bundle Unpacking:**
+  - Remote git repositories contain metadata and build artifacts (`package.json`, `tsconfig.json`, `.github/`). Manifest discovery must filter out non-content tooling configs.
+  - 5etools and community JSON files are bundles whose root maps contain entity collections (`"monster": [...]`, `"spell": [...]`, `"item": [...]`) or root JSON arrays (`[{...}]`), lacking a top-level `name` attribute. Ingestors must unpack each individual entity rather than treating the file root map as a single entity.
+  - Files containing only metadata (such as `_meta` blocks) without valid tabletop entities must cleanly yield `IngestionSkipResult` rather than throwing missing `name` attribute validation errors.
+  - Support fallback entity name properties (`title`, `label`, `header`) when canonical `name` is omitted.
+- **Batch Ingestion Persistence & Deferred Library Sync:**
+  - Ingested entities must be persisted in batches (default 50 entities per batch + final flush on completion) via `HomebrewPersistenceService.saveHomebrewEntitiesBatch(..., syncLibraries: false)` to eliminate redundant disk scans.
+  - Upon batch completion, trigger `HomebrewPersistenceService.syncToLibraries()` once to hydrate all runtime codices (`MonsterCodexLibrary`, `SpellbookLibrary`, `ItemCodexLibrary`, etc.).
+- **Bounded Concurrency & Isolate Threshold:**
+  - Remote file downloads use a bounded worker pool limited to maximum **6 concurrent HTTP connections**.
+  - Offload JSON decoding and schema validation to `Isolate.run()` on native platforms only when payload size $\ge$ 64 KB (`isolateThresholdBytes`). Payloads smaller than 64 KB are decoded directly on the event loop to avoid isolate spawn overhead.
+  - Telemetry updates emitted by `HomebrewImportOrchestrator` are throttled to at most 10Hz (100ms interval) to prevent UI thread frame drops.
+- CRDT Ledger Integration:
   - Validated entities are stamped with monotonic `HybridLogicalClock` timestamps and committed to `CrdtOrSet<HomebrewEntity>`.
   - Outbound telemetry and progress streams must enforce `sync: false` to prevent re-entrant deadlocks.
+
+## 9. Subclass Expanded Spell & Query Filter Resolution Directives
+
+- **Compendium Filter Expression Parsing:**
+  - 5eTools and community homebrew formats encode subclass expanded spell options using `additionalSpells` containing query filter expressions under `'all'` or `'choose'` keys (e.g., `{"all": "level=0|class=Cleric"}`).
+  - `SubclassSpellsLibrary` extracts filter strings via `extractFilterStrings()` and evaluates them against registered spells via `resolveFilterSpells()`, matching by `level`, `class`, `school`, and `ritual` clauses.
+- **Canonical Full-List Grants (Divine Soul Sorcerers):**
+  - Divine Soul Sorcerers (5e RAW Divine Magic) learn spells from both the Sorcerer and Cleric spell lists (cantrips through 9th level).
+  - `SubclassSpellsLibrary.isExpandedSpell()` and `getExpandedSpells()` provide canonical fast-paths (`classSlug == 'sorcerer' && cleanSub.contains('divine')`) returning `true` for Cleric spells with O(1) enum lookups, avoiding runtime regex loops.
+- **UI Presentation for Expansive Lists (>25 Spells):**
+  - In subclass detail cards (`ClassDetailDialog._buildSubclassSpellsChips`), expansive subclass grants (>25 spells) must render a concise summary banner ("DIVINE MAGIC: FULL CLERIC SPELL LIST") alongside distinct affinity/bonus spells, rather than overwhelming the card with 100+ wrapped chips, while fully populating the class's master spell list table.
+
+## 10. Homebrew Spell Class Preservation & Collision Synchronization Directives
+
+- **Nested `customProperties` Elimination:**
+  - When deserializing homebrew spells via `CompendiumSpellParser.parseSpell` or `Spell.fromMap`, explicitly unpack nested `customProperties` maps (`cp['customProperties']`) and exclude `'customProperties'` from auxiliary capture in `_standardSpellKeys` to prevent recursive nesting during re-serialization.
+- **Robust Class Extraction across Formats:**
+  - `CompendiumSpellParser` and `HomebrewPersistenceService.spellToSpellItem` must inspect root `classes`, nested `customProperties.classes`, and auxiliary `customProperties['classes']`.
+  - When `classes` is a Map, parse `fromClassList`, `fromClassListVariant` (optional class features), and `fromSubclass` (`sub['class']`).
+  - When `classes` is a List or String, strip any `SpellClass.` prefix and match against canonical `SpellClass` enum labels and names.
+  - If a spell lacks classes after ingestion, fall back to canonical SRD or known expansion tables (`extractClassesForSpell`) to dynamically revitalize class associations.
+- **Import Collision Selection Synchronization:**
+  - In `HomebrewMergeResolver.applyResolutionToAllCollisions` and `HomebrewImportPreviewDialog`, changing collision resolution to `overwrite` or `duplicateRename` must automatically synchronize `isSelected = true`, and toggling `isSelected = true` on a collision item must elevate resolution from `keepLocal` to `overwrite` to prevent silent omissions during batch imports.

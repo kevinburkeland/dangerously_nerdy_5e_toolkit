@@ -1082,7 +1082,7 @@ extension FeatAsiExtension on Feat {
       'telepathic' => const [AbilityType.intelligence, AbilityType.wisdom, AbilityType.charisma],
       'skill-expert' => AbilityType.values,
       'elven-accuracy' => const [AbilityType.dexterity, AbilityType.intelligence, AbilityType.wisdom, AbilityType.charisma],
-      'resilient' => AbilityType.values,
+      'resilient' || 'tenacious' => AbilityType.values,
       'athlete' => const [AbilityType.strength, AbilityType.dexterity],
       'observant' => const [AbilityType.intelligence, AbilityType.wisdom],
       'actor' => const [AbilityType.charisma],
@@ -1177,10 +1177,11 @@ extension FeatAsiExtension on Feat {
     return selectableAbilities.isNotEmpty ? 1 : 0;
   }
 
-  /// Whether this feat grants saving throw proficiency in the chosen ability (e.g. Resilient).
+  /// Whether this feat grants saving throw proficiency in the chosen ability (e.g. Tenacious).
   bool get grantsSavingThrowProficiency {
     if (customProperties['grantsSavingThrowProficiency'] == true) return true;
-    return id.slug.toLowerCase() == 'resilient';
+    final slug = id.slug.toLowerCase();
+    return slug == 'resilient' || slug == 'tenacious';
   }
 
   /// Human-readable explanation of any choice rider attached to this feat.

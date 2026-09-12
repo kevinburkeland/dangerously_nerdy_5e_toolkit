@@ -653,7 +653,15 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
             children: [
               Checkbox(
                 value: item.isSelected,
-                onChanged: (val) => setState(() => item.isSelected = val ?? false),
+                onChanged: (val) {
+                  final checked = val ?? false;
+                  setState(() {
+                    item.isSelected = checked;
+                    if (checked && item.resolution == CollisionResolution.keepLocal) {
+                      item.resolution = CollisionResolution.overwrite;
+                    }
+                  });
+                },
                 activeColor: Colors.tealAccent,
                 checkColor: Colors.black,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -708,6 +716,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                   final chosen = set.first;
                   setState(() {
                     item.resolution = chosen;
+                    item.isSelected = chosen != CollisionResolution.keepLocal;
                     if (_applyToRemainingCollisions && _analysisResult != null) {
                       _analysisResult!.applyResolutionToAllCollisions(chosen);
                     }

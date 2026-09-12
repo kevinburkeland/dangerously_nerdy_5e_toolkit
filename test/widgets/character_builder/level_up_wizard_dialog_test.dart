@@ -135,7 +135,7 @@ void main() {
       expect(upgradedResult!.resources.currentHp, equals(20)); // 12 base + 8 (6 avg + 2 con)
     });
 
-    testWidgets('Level 4: Choosing Feat Resilient prompts for ability chips and applies save proficiency', (tester) async {
+    testWidgets('Level 4: Choosing Feat Tenacious prompts for ability chips and applies save proficiency', (tester) async {
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -183,9 +183,9 @@ void main() {
         ),
       );
 
-      const resilientFeat = Feat(
-        id: EntityId(slug: 'resilient', ruleset: RulesetVersion.v2024),
-        name: 'Resilient',
+      const tenaciousFeat = Feat(
+        id: EntityId(slug: 'tenacious', ruleset: RulesetVersion.v2024),
+        name: 'Tenacious',
         category: 'General',
         descriptionMarkdown:
             '**Ability Increase.** Choose one ability score: increase it by 1.\n\n'
@@ -203,8 +203,8 @@ void main() {
           'grantsSavingThrowProficiency': true,
         },
       );
-      SrdFeatsLibrary.addCustomFeat(resilientFeat);
-      addTearDown(() => SrdFeatsLibrary.removeCustomFeat('resilient'));
+      SrdFeatsLibrary.addCustomFeat(tenaciousFeat);
+      addTearDown(() => SrdFeatsLibrary.removeCustomFeat('tenacious'));
 
       await tester.tap(find.text('Open Wizard'));
       await tester.pumpAndSettle();
@@ -228,8 +228,8 @@ void main() {
       await tester.tap(featDropdown);
       await tester.pumpAndSettle();
 
-      // Select "Resilient"
-      await tester.tap(find.text('Resilient').last);
+      // Select "Tenacious"
+      await tester.tap(find.text('Tenacious').last);
       await tester.pumpAndSettle();
 
       // Verify choice chips for abilities are rendered
@@ -262,7 +262,7 @@ void main() {
       expect(upgradedResult!.totalLevel, equals(4));
       expect(upgradedResult!.bonusScores.constitution, equals(1));
       expect(upgradedResult!.savingThrowProficiencies, contains(AbilityType.constitution));
-      expect(upgradedResult!.feats.any((f) => f.slug == 'resilient'), isTrue);
+      expect(upgradedResult!.feats.any((f) => f.slug == 'tenacious'), isTrue);
     });
   });
 }

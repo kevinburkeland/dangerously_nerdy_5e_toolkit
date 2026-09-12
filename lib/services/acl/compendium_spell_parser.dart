@@ -161,19 +161,30 @@ class CompendiumSpellParser {
 
     // Capture all auxiliary & unmapped fields in customProperties to guarantee 0% data loss
     final customProperties = <String, dynamic>{};
+    if (raw['customProperties'] is Map) {
+      customProperties.addAll(Map<String, dynamic>.from(raw['customProperties'] as Map));
+      if (customProperties['customProperties'] is Map) {
+        final inner = Map<String, dynamic>.from(customProperties['customProperties'] as Map);
+        customProperties.remove('customProperties');
+        customProperties.addAll(inner);
+      }
+    }
     raw.forEach((key, value) {
       if (!_standardSpellKeys.contains(key)) {
         customProperties[key] = value;
       }
     });
 
-    // Preserve raw classes if present as Map (ensuring 0% data loss); if omitted or empty, attempt SRD / expansion index inheritance
-    final rawClasses = raw['classes'] ?? customProperties['classes'];
+    // Resolve classes from root 'classes', nested 'customProperties.classes', or existing customProperties
+    final rawClasses = raw['classes'] ??
+        (raw['customProperties'] is Map ? (raw['customProperties'] as Map)['classes'] : null) ??
+        customProperties['classes'];
     if (rawClasses is Map && rawClasses.isNotEmpty) {
       customProperties['classes'] = rawClasses;
       final hasClassList = (rawClasses['fromClassList'] is List && (rawClasses['fromClassList'] as List).isNotEmpty);
+      final hasClassVariant = (rawClasses['fromClassListVariant'] is List && (rawClasses['fromClassListVariant'] as List).isNotEmpty);
       final hasSubclass = (rawClasses['fromSubclass'] is List && (rawClasses['fromSubclass'] as List).isNotEmpty);
-      if (!hasClassList && !hasSubclass) {
+      if (!hasClassList && !hasClassVariant && !hasSubclass) {
         final parsed = _extractClasses(rawClasses, slug, name, ruleset);
         if (parsed.isNotEmpty) {
           rawClasses['fromClassList'] = parsed.map((c) => {'name': c, 'source': 'PHB'}).toList();
@@ -222,6 +233,7 @@ class CompendiumSpellParser {
   }
 
   static const Set<String> _standardSpellKeys = {
+    'id',
     'name',
     'source',
     'level',
@@ -230,16 +242,25 @@ class CompendiumSpellParser {
     'castingTime',
     'duration',
     'range',
+    'rangeDistanceFeet',
+    'rangeType',
+    'damageType',
     'components',
     'component',
     'entries',
     'desc',
     'description',
+    'descriptionMarkdown',
     'text',
     'entriesHigherLevel',
     'higherLevel',
     'higherLevels',
+    'higherLevelsMarkdown',
     'damageInflict',
+    'damageMath',
+    'relatedEntityRefs',
+    'classes',
+    'customProperties',
   };
 
   CastingTime _parseCastingTime(dynamic timeData) {
@@ -513,36 +534,71 @@ class CompendiumSpellParser {
         .replaceAll(RegExp(r'^-+|-+$'), '');
   }
 
+  /// Public helper to extract or inherit classes for a spell by slug and name.
+  List<String> extractClassesForSpell(String slug, String name, RulesetVersion ruleset) {
+    return _extractClasses(null, slug, name, ruleset);
+  }
+
   List<String> _extractClasses(dynamic rawClasses, String slug, String name, RulesetVersion ruleset) {
     final classes = <String>[];
+
+    void addClass(String cName) {
+      final rawStr = cName.replaceFirst('SpellClass.', '').trim();
+      final clean = rawStr.split('|').first.trim();
+      if (clean.isEmpty) return;
+      final match = SpellClass.values.where(
+        (sc) => sc.name.toLowerCase() == clean.toLowerCase() || sc.label.toLowerCase() == clean.toLowerCase(),
+      ).firstOrNull;
+      final resolved = match != null ? match.label : clean;
+      if (!classes.contains(resolved)) {
+        classes.add(resolved);
+      }
+    }
 
     if (rawClasses is Map) {
       final fromClassList = rawClasses['fromClassList'];
       if (fromClassList is List) {
         for (final item in fromClassList) {
           if (item is Map && item['name'] != null) {
-            final cName = item['name'].toString().trim();
-            if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
-          } else if (item is String) {
-            final cName = item.split('|').first.trim();
-            if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+            addClass(item['name'].toString());
+          } else if (item != null) {
+            addClass(item.toString());
+          }
+        }
+      }
+      final fromClassListVariant = rawClasses['fromClassListVariant'];
+      if (fromClassListVariant is List) {
+        for (final item in fromClassListVariant) {
+          if (item is Map && item['name'] != null) {
+            addClass(item['name'].toString());
+          } else if (item != null) {
+            addClass(item.toString());
+          }
+        }
+      }
+      final fromSubclass = rawClasses['fromSubclass'];
+      if (fromSubclass is List) {
+        for (final item in fromSubclass) {
+          if (item is Map) {
+            final cls = item['class'];
+            final cName = (cls is Map ? cls['name'] : cls)?.toString();
+            if (cName != null) {
+              addClass(cName);
+            }
           }
         }
       }
     } else if (rawClasses is List) {
       for (final item in rawClasses) {
         if (item is Map && item['name'] != null) {
-          final cName = item['name'].toString().trim();
-          if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+          addClass(item['name'].toString());
         } else if (item != null) {
-          final cName = item.toString().split('|').first.trim();
-          if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+          addClass(item.toString());
         }
       }
     } else if (rawClasses is String && rawClasses.isNotEmpty) {
       for (final part in rawClasses.split(',')) {
-        final cName = part.split('|').first.trim();
-        if (cName.isNotEmpty && !classes.contains(cName)) classes.add(cName);
+        addClass(part);
       }
     }
 

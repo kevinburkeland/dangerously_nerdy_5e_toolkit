@@ -48,19 +48,32 @@ class HomebrewImportTelemetry {
     );
   }
 
-  double get progressRatio =>
-      filesDiscovered > 0 ? (filesImported + filesSkipped) / filesDiscovered : 0.0;
+  double get progressRatio {
+    if (filesDiscovered <= 0) return 0.0;
+    if (isCompleted) return 1.0;
+    final total = filesImported + filesSkipped;
+    final ratio = total / filesDiscovered;
+    return ratio > 0.95 ? 0.95 : ratio;
+  }
 }
 
 /// Type definition for entity persistence callbacks.
 typedef EntityPersister = Future<void> Function(HomebrewEntity entity);
 
+/// Type definition for batch entity persistence callbacks.
+typedef EntityBatchPersister = Future<void> Function(List<HomebrewEntity> entities);
+
 /// Application service orchestrating discovery, streaming ACL ingestion,
 /// and CRDT ledger state reconciliation for GitHub homebrew repositories.
 class HomebrewImportOrchestrator {
+  static const int defaultBatchSize = 50;
+  static const int telemetryThrottleIntervalMs = 100;
+
   final IGithubIngestorPort _ingestorPort;
   final String _nodeId;
   final EntityPersister? _persister;
+  final EntityBatchPersister? _batchPersister;
+  final int _batchSize;
 
   CrdtOrSet<HomebrewEntity> _ledger = const CrdtOrSet<HomebrewEntity>();
   HybridLogicalClock _hlc;
@@ -69,11 +82,15 @@ class HomebrewImportOrchestrator {
     required IGithubIngestorPort ingestorPort,
     String? nodeId,
     EntityPersister? persister,
+    EntityBatchPersister? batchPersister,
+    int batchSize = defaultBatchSize,
     CrdtOrSet<HomebrewEntity>? initialLedger,
   }) : this._internal(
           ingestorPort: ingestorPort,
           nodeId: nodeId ?? 'node_homebrew_${DateTime.now().millisecondsSinceEpoch}',
           persister: persister,
+          batchPersister: batchPersister,
+          batchSize: batchSize,
           initialLedger: initialLedger,
         );
 
@@ -81,10 +98,14 @@ class HomebrewImportOrchestrator {
     required IGithubIngestorPort ingestorPort,
     required String nodeId,
     EntityPersister? persister,
+    EntityBatchPersister? batchPersister,
+    int batchSize = defaultBatchSize,
     CrdtOrSet<HomebrewEntity>? initialLedger,
   })  : _ingestorPort = ingestorPort,
         _nodeId = nodeId,
         _persister = persister,
+        _batchPersister = batchPersister,
+        _batchSize = batchSize,
         _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>(),
         _hlc = HybridLogicalClock.now(nodeId);
 
@@ -130,8 +151,10 @@ class HomebrewImportOrchestrator {
         );
 
         final accumulatedErrors = <String>[];
+        final pendingBatch = <HomebrewEntity>[];
         var importedCount = 0;
         var skippedCount = 0;
+        var lastTelemetryEmission = DateTime.fromMillisecondsSinceEpoch(0);
 
         await for (final result in stream) {
           final fileName = result.sourceUrl.split('/').last;
@@ -149,6 +172,16 @@ class HomebrewImportOrchestrator {
               }
             }
 
+            if (_batchPersister != null) {
+              pendingBatch.add(entity);
+              if (pendingBatch.length >= _batchSize) {
+                try {
+                  await _batchPersister!(List.unmodifiable(pendingBatch));
+                } catch (_) {}
+                pendingBatch.clear();
+              }
+            }
+
             importedCount++;
           } else if (result is IngestionSkipResult) {
             skippedCount++;
@@ -156,18 +189,33 @@ class HomebrewImportOrchestrator {
             accumulatedErrors.add(errText);
           }
 
-          telemetry = telemetry.copyWith(
-            filesImported: importedCount,
-            filesSkipped: skippedCount,
-            errors: List.unmodifiable(accumulatedErrors),
-            currentFileName: fileName,
-            crdtLedger: _ledger,
-          );
-          controller.add(telemetry);
+          final now = DateTime.now();
+          if (now.difference(lastTelemetryEmission).inMilliseconds >= telemetryThrottleIntervalMs) {
+            lastTelemetryEmission = now;
+            telemetry = telemetry.copyWith(
+              filesImported: importedCount,
+              filesSkipped: skippedCount,
+              errors: List.unmodifiable(accumulatedErrors),
+              currentFileName: fileName,
+              crdtLedger: _ledger,
+            );
+            controller.add(telemetry);
+          }
+        }
+
+        // Flush remaining buffered batch
+        if (pendingBatch.isNotEmpty && _batchPersister != null) {
+          try {
+            await _batchPersister!(List.unmodifiable(pendingBatch));
+          } catch (_) {}
+          pendingBatch.clear();
         }
 
         // Step 3: Complete ingestion cycle
         telemetry = telemetry.copyWith(
+          filesImported: importedCount,
+          filesSkipped: skippedCount,
+          errors: List.unmodifiable(accumulatedErrors),
           isCompleted: true,
           crdtLedger: _ledger,
         );

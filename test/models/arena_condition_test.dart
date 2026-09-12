@@ -152,13 +152,15 @@ void main() {
       );
 
       final sw = Stopwatch()..start();
+      late ArenaCombatant lastCloned;
+      late ArenaCombatant lastReset;
       for (int i = 0; i < 10000; i++) {
-        final cloned = combatant.clone();
-        expect(cloned.conditions.length, 1);
-        final res = cloned.reset();
-        expect(res.conditions.isEmpty, true);
+        lastCloned = combatant.clone();
+        lastReset = lastCloned.reset();
       }
       sw.stop();
+      expect(lastCloned.conditions.length, 1);
+      expect(lastReset.conditions.isEmpty, true);
       // 10,000 iterations with structural sharing should execute in under 200ms
       expect(sw.elapsedMilliseconds, lessThan(1500));
     });

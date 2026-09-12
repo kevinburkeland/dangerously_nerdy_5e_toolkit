@@ -263,6 +263,15 @@ class Spell extends DomainEntity {
       };
 
   factory Spell.fromMap(Map<String, dynamic> map) {
+    final cp = Map<String, dynamic>.from(map['customProperties'] as Map? ?? {});
+    if (cp.containsKey('customProperties') && cp['customProperties'] is Map) {
+      final nested = Map<String, dynamic>.from(cp['customProperties'] as Map);
+      cp.remove('customProperties');
+      cp.addAll(nested);
+    }
+    if (map.containsKey('classes') && !cp.containsKey('classes')) {
+      cp['classes'] = map['classes'];
+    }
     return Spell(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
@@ -288,8 +297,7 @@ class Spell extends DomainEntity {
           .whereType<Map>()
           .map((r) => EntityReference.fromMap(Map<String, dynamic>.from(r)))
           .toList(),
-      customProperties:
-          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+      customProperties: cp,
     );
   }
 

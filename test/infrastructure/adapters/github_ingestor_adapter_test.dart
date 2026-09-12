@@ -174,5 +174,115 @@ void main() {
       expect(results.any((r) => r is IngestionSkipResult), isTrue);
       expect(results.any((r) => r is IngestionSuccessResult), isTrue);
     });
+
+    test('Unpacks 5etools bundle file containing monster and spell collections into individual entities', () async {
+      const url = 'https://raw.githubusercontent.com/dnd/core/main/bestiary-and-spells.json';
+      final bundlePayload = jsonEncode({
+        '_meta': {
+          'sources': [{'json': 'HomebrewCore', 'abbreviation': 'HC'}],
+        },
+        'monster': [
+          {
+            'name': 'Void Stalker',
+            'type': 'aberration',
+            'cr': '5',
+            'hp': 85,
+            'ac': 15,
+          },
+          {
+            'name': 'Astral Drake',
+            'type': {'type': 'dragon', 'tags': ['titan']},
+            'cr': '8',
+            'hp': 130,
+            'ac': 17,
+          },
+        ],
+        'spell': [
+          {
+            'name': 'Nether Wave',
+            'level': 3,
+            'school': 'evocation',
+            'time': '1 action',
+          },
+        ],
+      });
+
+      final client = MockHttpFetchClient({url: bundlePayload});
+      final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
+      final results = await adapter
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014)
+          .toList();
+
+      expect(results.length, equals(3));
+      expect(results.every((r) => r is IngestionSuccessResult), isTrue);
+
+      final successResults = results.whereType<IngestionSuccessResult>().toList();
+      final names = successResults.map((s) => s.entity.name).toList();
+      expect(names, containsAll(['Void Stalker', 'Astral Drake', 'Nether Wave']));
+      expect(successResults.firstWhere((s) => s.entity.name == 'Void Stalker').entity.entityType, equals('monster'));
+      expect(successResults.firstWhere((s) => s.entity.name == 'Astral Drake').entity.entityType, equals('monster'));
+      expect(successResults.firstWhere((s) => s.entity.name == 'Nether Wave').entity.entityType, equals('spell'));
+    });
+
+    test('Unpacks root JSON array of entities', () async {
+      const url = 'https://raw.githubusercontent.com/dnd/core/main/monsters_list.json';
+      final arrayPayload = jsonEncode([
+        {'name': 'Cave Troll', 'cr': '6', 'hp': 90},
+        {'name': 'Moss Elemental', 'cr': '4', 'hp': 60},
+      ]);
+
+      final client = MockHttpFetchClient({url: arrayPayload});
+      final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
+      final results = await adapter
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014)
+          .toList();
+
+      expect(results.length, equals(2));
+      expect(results.every((r) => r is IngestionSuccessResult), isTrue);
+      final names = results.whereType<IngestionSuccessResult>().map((s) => s.entity.name).toList();
+      expect(names, containsAll(['Cave Troll', 'Moss Elemental']));
+    });
+
+    test('Cleanly skips repository metadata or index file without throwing name attribute error', () async {
+      const url = 'https://raw.githubusercontent.com/dnd/core/main/_meta.json';
+      final metaPayload = jsonEncode({
+        '_meta': {
+          'sources': [{'json': 'OnlyMeta', 'full': 'Only Metadata'}],
+          'dateAdded': 1600000000,
+        },
+      });
+
+      final client = MockHttpFetchClient({url: metaPayload});
+      final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
+      final results = await adapter
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014)
+          .toList();
+
+      expect(results.length, equals(1));
+      expect(results.first, isA<IngestionSkipResult>());
+      final skip = results.first as IngestionSkipResult;
+      expect(skip.reason, contains('metadata or index file'));
+      expect(skip.reason.contains('missing a valid "name" attribute'), isFalse);
+    });
+
+    test('Accepts entity with title fallback when name key is absent', () async {
+      const url = 'https://raw.githubusercontent.com/dnd/core/main/item.json';
+      final itemPayload = jsonEncode({
+        'title': 'Amulet of the Deep',
+        'type': 'equipment',
+        'rarity': 'rare',
+      });
+
+      final client = MockHttpFetchClient({url: itemPayload});
+      final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
+      final results = await adapter
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014)
+          .toList();
+
+      expect(results.length, equals(1));
+      expect(results.first, isA<IngestionSuccessResult>());
+      final success = results.first as IngestionSuccessResult;
+      expect(success.entity.name, equals('Amulet of the Deep'));
+    });
   });
 }

@@ -5,6 +5,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/models/homebrew_entity.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/value_objects/ruleset_version.dart' as domain_rules;
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
@@ -251,6 +254,129 @@ void main() {
       expect(loadedFeats.any((f) => f.slug == 'grappler'), isFalse);
       final astral = loadedFeats.firstWhere((f) => f.slug == 'astral-touched');
       expect(astral.descriptionMarkdown, contains('1d6'));
+    });
+
+    test('saveHomebrewEntitiesBatch saves monsters and spells and synchronizes runtime libraries', () async {
+      const monsterEntity = HomebrewEntity(
+        id: 'abyssal-stalker',
+        name: 'Abyssal Stalker',
+        entityType: 'monster',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Abyssal Stalker',
+          'cr': '4',
+          'hp': 75,
+          'ac': 14,
+          'speed': '30 ft.',
+          'str': 16,
+          'dex': 14,
+          'con': 14,
+          'int': 8,
+          'wis': 12,
+          'cha': 6,
+        },
+      );
+
+      const spellEntity = HomebrewEntity(
+        id: 'abyssal-chains',
+        name: 'Abyssal Chains',
+        entityType: 'spell',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Abyssal Chains',
+          'level': 2,
+          'school': 'evocation',
+          'time': [
+            {'number': 1, 'unit': 'action'}
+          ],
+          'range': {
+            'type': 'point',
+            'distance': {'type': 'feet', 'amount': 60}
+          },
+        },
+      );
+
+      await persistence.saveHomebrewEntitiesBatch([monsterEntity, spellEntity]);
+
+      final monsters = await persistence.loadCustomMonsters();
+      expect(monsters.any((m) => m.name == 'Abyssal Stalker'), isTrue);
+
+      final spells = await persistence.loadCustomSpells();
+      expect(spells.any((s) => s.name == 'Abyssal Chains'), isTrue);
+
+      // Verify synchronized into runtime libraries
+      expect(MonsterCodexLibrary.allMonsters.any((m) => m.name == 'Abyssal Stalker'), isTrue);
+      expect(SpellbookLibrary.allSpells.any((s) => s.name == 'Abyssal Chains'), isTrue);
+    });
+
+    test('saveHomebrewEntitiesBatch with syncLibraries: false writes to disk without updating runtime library until syncToLibraries is called', () async {
+      const spellEntity = HomebrewEntity(
+        id: 'cave-curse',
+        name: 'Cave Curse',
+        entityType: 'spell',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Cave Curse',
+          'level': 1,
+          'school': 'necromancy',
+          'time': [
+            {'number': 1, 'unit': 'action'}
+          ],
+        },
+      );
+
+      await persistence.saveHomebrewEntitiesBatch([spellEntity], syncLibraries: false);
+
+      // Verify persisted to storage
+      final spells = await persistence.loadCustomSpells();
+      expect(spells.any((s) => s.name == 'Cave Curse'), isTrue);
+
+      // Runtime library should NOT yet contain it
+      expect(SpellbookLibrary.allSpells.any((s) => s.name == 'Cave Curse'), isFalse);
+
+      // Explicit sync hydrates runtime library
+      await persistence.syncToLibraries();
+      expect(SpellbookLibrary.allSpells.any((s) => s.name == 'Cave Curse'), isTrue);
+    });
+
+    test('saveHomebrewEntitiesBatch classifies monsters with creature types or CR as monsters, not other entries', () async {
+      const humanoidMonster = HomebrewEntity(
+        id: 'bandit-captain',
+        name: 'Bandit Captain',
+        entityType: 'humanoid',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Bandit Captain',
+          'type': 'humanoid',
+          'cr': '2',
+          'hp': 65,
+          'ac': 15,
+        },
+      );
+
+      const nestedTypeMonster = HomebrewEntity(
+        id: 'ancient-lich',
+        name: 'Ancient Lich',
+        entityType: '{type: undead, tags: [wizard]}',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Ancient Lich',
+          'type': {'type': 'undead', 'tags': ['wizard']},
+          'cr': '21',
+          'hp': 135,
+          'ac': 17,
+        },
+      );
+
+      await persistence.saveHomebrewEntitiesBatch([humanoidMonster, nestedTypeMonster]);
+
+      final monsters = await persistence.loadCustomMonsters();
+      expect(monsters.any((m) => m.name == 'Bandit Captain'), isTrue);
+      expect(monsters.any((m) => m.name == 'Ancient Lich'), isTrue);
+
+      final others = await persistence.loadCustomOtherEntries();
+      expect(others.any((o) => o.name == 'Bandit Captain'), isFalse);
+      expect(others.any((o) => o.name == 'Ancient Lich'), isFalse);
     });
   });
 }

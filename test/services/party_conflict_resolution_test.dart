@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_loot_item.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
@@ -12,6 +13,7 @@ void main() {
   late DiceRoomService diceService;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     // ignore: invalid_use_of_visible_for_testing_member
     registry = CampaignRegistryService.newInstance();
     // ignore: invalid_use_of_visible_for_testing_member

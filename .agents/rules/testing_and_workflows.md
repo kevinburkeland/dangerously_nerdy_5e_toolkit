@@ -70,3 +70,9 @@ Before completing any task or feature delivery, the agent must perform the follo
 2. **Prevent Regression of Fixes:** If a subtle framework quirk, platform-specific issue (Flutter Web, PWA service worker, Hive caching), or user correction was encountered during the run, codify the preventive guideline directly into `.agents/rules/<topic>.md` or [AGENTS.md](file:///AGENTS.md).
 3. **Directory Map Maintenance:** If new domain entities, application services, or widgets were added, ensure they are reflected in the Fast Codebase Navigation Index in [AGENTS.md](file:///AGENTS.md) and `.agents/rules/codebase_map.md`.
 
+## 5. Test Suite Reliability & Purity Directives
+
+- **SharedPreferences Mock Initialization:** Tests interacting with services that utilize persistent storage (`PartyRoomService`, `DiceRoomService`, `CampaignRegistryService`, `LocalCampaignRepository`) must explicitly invoke `SharedPreferences.setMockInitialValues({})` in `setUp()` to prevent unhandled `MissingPluginException` channel errors.
+- **Zero Matcher Allocations in Hot Loops:** Never execute `expect()` inside high-iteration benchmark loops (e.g., 10,000 iterations). Matcher inspection and stack frame tracking add massive overhead that causes test flakiness under system load. Accumulate state and assert once outside the loop.
+- **Strict SRD & Legal Terminology in Tests:** Test names, descriptions, groups, and mock fixtures must strictly use SRD 5.1/5.2 or original generic homebrew names (e.g., `Tenacious`, `Champion`, `Voidling`). Prohibited WotC Product Identity and proprietary expansion terms (e.g., `Resilient` feat, `Divine Soul`, `Battle Master`, `Illithid`, `The Undying`) must never appear in test titles or descriptions.
+

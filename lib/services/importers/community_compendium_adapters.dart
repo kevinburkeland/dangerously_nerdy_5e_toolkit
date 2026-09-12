@@ -200,8 +200,13 @@ class CommunityCompendiumAdapters {
     final slug = _slugify(name);
 
     // Size
-    final sizeArr = json['size'] as List? ?? ['M'];
-    final sizeCode = sizeArr.isNotEmpty ? sizeArr.first.toString().toUpperCase() : 'M';
+    String sizeCode = 'M';
+    final sizeVal = json['size'];
+    if (sizeVal is List && sizeVal.isNotEmpty) {
+      sizeCode = sizeVal.first.toString().toUpperCase();
+    } else if (sizeVal is String && sizeVal.isNotEmpty) {
+      sizeCode = sizeVal.substring(0, 1).toUpperCase();
+    }
     final size = switch (sizeCode) {
       'T' => 'Tiny',
       'S' => 'Small',
@@ -240,6 +245,8 @@ class CommunityCompendiumAdapters {
       } else if (first is Map) {
         ac = (first['ac'] as num?)?.toInt() ?? 10;
       }
+    } else if (acObj is Map) {
+      ac = (acObj['ac'] as num?)?.toInt() ?? 10;
     } else if (acObj is num) {
       ac = acObj.toInt();
     }
@@ -267,8 +274,10 @@ class CommunityCompendiumAdapters {
     }
 
     // Action & Trait AST parsing
-    final actionEntries = json['action'] as List? ?? [];
-    final traitEntries = json['trait'] as List? ?? [];
+    final rawAction = json['action'] ?? json['actions'];
+    final actionEntries = rawAction is List ? rawAction : (rawAction != null ? [rawAction] : const []);
+    final rawTrait = json['trait'] ?? json['traits'];
+    final traitEntries = rawTrait is List ? rawTrait : (rawTrait != null ? [rawTrait] : const []);
     final combined = <dynamic>[];
     if (traitEntries.isNotEmpty) {
       combined.add({'type': 'section', 'name': 'Traits', 'entries': traitEntries});

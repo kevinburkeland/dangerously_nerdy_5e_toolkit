@@ -7,15 +7,15 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/character_builder_screen.da
 
 void main() {
   group('CharacterBuilderScreen Feat ASI & Rider Choice Widget Tests', () {
-    testWidgets('2014 Variant Human bonus feat allows choosing Resilient, selecting CON chip, and viewing rider', (tester) async {
+    testWidgets('2014 Variant Human bonus feat allows choosing Tenacious, selecting CON chip, and viewing rider', (tester) async {
       tester.view.physicalSize = const Size(1280, 1100);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      const resilient = Feat(
-        id: EntityId(slug: 'resilient', ruleset: RulesetVersion.v2014),
-        name: 'Resilient',
+      const tenacious = Feat(
+        id: EntityId(slug: 'tenacious', ruleset: RulesetVersion.v2014),
+        name: 'Tenacious',
         category: 'General',
         descriptionMarkdown:
             '**Stat & Save Mastery.** Choose one ability score: increase the chosen score by 1, and you gain proficiency in saving throws using that chosen ability score.',
@@ -33,8 +33,8 @@ void main() {
           'riderDescription': 'Gain saving throw proficiency in the chosen ability.',
         },
       );
-      SrdFeatsLibrary.addCustomFeat(resilient);
-      addTearDown(() => SrdFeatsLibrary.removeCustomFeat('resilient'));
+      SrdFeatsLibrary.addCustomFeat(tenacious);
+      addTearDown(() => SrdFeatsLibrary.removeCustomFeat('tenacious'));
 
       await tester.pumpWidget(
         const MaterialApp(
@@ -120,13 +120,13 @@ void main() {
       // Step 7: Variant Human Bonus Feat
       expect(find.textContaining('Bonus Feat'), findsOneWidget);
 
-      // Scroll to find Resilient feat card
-      final resilientFinder = find.widgetWithText(ListTile, 'Resilient');
-      await tester.scrollUntilVisible(resilientFinder, 200, scrollable: find.byType(Scrollable).first);
+      // Scroll to find Tenacious feat card
+      final tenaciousFinder = find.widgetWithText(ListTile, 'Tenacious');
+      await tester.scrollUntilVisible(tenaciousFinder, 200, scrollable: find.byType(Scrollable).first);
       await tester.pumpAndSettle();
 
-      // Select Resilient
-      await tester.tap(resilientFinder);
+      // Select Tenacious
+      await tester.tap(tenaciousFinder);
       await tester.pumpAndSettle();
 
       // Verify choice chips for abilities are rendered
@@ -160,7 +160,7 @@ void main() {
 
       // Review & Finalize
       expect(find.textContaining('Review & Finalize'), findsOneWidget);
-      final reviewFinder = find.textContaining('Resilient (+1 CON, CON Save Prof)');
+      final reviewFinder = find.textContaining('Tenacious (+1 CON, CON Save Prof)');
       while (reviewFinder.evaluate().isEmpty) {
         await tester.drag(find.byType(ListView), const Offset(0, -300));
         await tester.pumpAndSettle();

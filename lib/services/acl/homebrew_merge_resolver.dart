@@ -98,6 +98,7 @@ class ImportAnalysisResult {
     for (final item in allItems) {
       if (item.disposition == ImportDisposition.collision) {
         item.resolution = resolution;
+        item.isSelected = resolution != CollisionResolution.keepLocal;
       }
     }
   }
