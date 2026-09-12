@@ -259,6 +259,7 @@ class Spell extends DomainEntity {
         'higherLevelsMarkdown': higherLevelsMarkdown,
         'damageMath': damageMath.map((d) => d.toMap()).toList(),
         'relatedEntityRefs': relatedEntityRefs.map((r) => r.toMap()).toList(),
+        if (customProperties.containsKey('classes')) 'classes': customProperties['classes'],
         'customProperties': customProperties,
       };
 
@@ -272,6 +273,35 @@ class Spell extends DomainEntity {
     if (map.containsKey('classes') && !cp.containsKey('classes')) {
       cp['classes'] = map['classes'];
     }
+    final rawRange = map['range']?.toString() ?? 'Self';
+    int distFeet = (map['rangeDistanceFeet'] as num?)?.toInt() ?? 0;
+    String rType = map['rangeType']?.toString() ?? 'ranged';
+    if (distFeet <= 0 && rawRange.isNotEmpty) {
+      final lower = rawRange.toLowerCase();
+      if (lower.contains('touch')) {
+        rType = 'touch';
+        distFeet = 0;
+      } else if (lower.contains('self')) {
+        rType = 'self';
+        distFeet = 0;
+      } else {
+        if (lower.contains('line')) {
+          rType = 'line';
+        } else if (lower.contains('cone')) {
+          rType = 'cone';
+        } else if (lower.contains('radius') || lower.contains('sphere')) {
+          rType = 'radius';
+        }
+        final digitMatch = RegExp(r'\d+').firstMatch(rawRange);
+        if (digitMatch != null) {
+          distFeet = int.tryParse(digitMatch.group(0) ?? '0') ?? 0;
+          if (distFeet > 0 && lower.contains('mile')) {
+            distFeet *= 5280;
+          }
+        }
+      }
+    }
+
     return Spell(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
@@ -281,9 +311,9 @@ class Spell extends DomainEntity {
           Map<String, dynamic>.from(map['castingTime'] as Map? ?? {})),
       duration: SpellDuration.fromMap(
           Map<String, dynamic>.from(map['duration'] as Map? ?? {})),
-      range: map['range']?.toString() ?? 'Self',
-      rangeDistanceFeet: (map['rangeDistanceFeet'] as num?)?.toInt() ?? 0,
-      rangeType: map['rangeType']?.toString() ?? 'ranged',
+      range: rawRange,
+      rangeDistanceFeet: distFeet,
+      rangeType: rType,
       damageType: map['damageType']?.toString(),
       components: SpellComponents.fromMap(
           Map<String, dynamic>.from(map['components'] as Map? ?? {})),

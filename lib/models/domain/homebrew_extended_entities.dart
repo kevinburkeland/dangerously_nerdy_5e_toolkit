@@ -957,16 +957,29 @@ class Feat extends DomainEntity {
       }
     }
 
+    var grants = (map['grants'] as List? ?? [])
+        .whereType<Map>()
+        .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
+        .toList();
+
+    if (grants.isEmpty) {
+      final addSpells = customProperties['additionalSpells'] ??
+          customProperties['spells'] ??
+          map['additionalSpells'] ??
+          map['spells'];
+      if (addSpells != null) {
+        final slug = map['id'] is Map ? (map['id']['slug']?.toString() ?? '') : '';
+        grants = FeatureGrant.extractBonusSpells(addSpells, 'feat', slug);
+      }
+    }
+
     return Feat(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
       prerequisite: map['prerequisite']?.toString(),
       category: map['category']?.toString() ?? 'General',
       descriptionMarkdown: map['descriptionMarkdown']?.toString() ?? '',
-      grants: (map['grants'] as List? ?? [])
-          .whereType<Map>()
-          .map((g) => FeatureGrant.fromMap(Map<String, dynamic>.from(g)))
-          .toList(),
+      grants: grants,
       customProperties: customProperties,
     );
   }

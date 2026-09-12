@@ -43,7 +43,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,598 passing tests)
+├── test/                               # Comprehensive test suite (1,605 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests

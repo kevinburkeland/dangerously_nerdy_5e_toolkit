@@ -9,6 +9,9 @@ import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_feat_parser
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_generic_entry_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_item_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_race_parser.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/characters/subclass_spells_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_spell_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
 
@@ -491,6 +494,308 @@ void main() {
       expect(item.customProperties['rechargeAmount'], equals('1d20'));
       expect(item.descriptionMarkdown, contains('Silver Horn of Valhalla'));
       expect(item.descriptionMarkdown, isNot(contains('{@item')));
+    });
+
+    test('13. Spell Parser and Ingestion revitalize distance and geometry when rangeDistanceFeet is 0 but text has range', () {
+      final parser = CompendiumSpellParser();
+
+      // Case A: 5etools object range with point and 150 feet
+      final astralRay = parser.parseSpell({
+        'name': 'Astral Ray',
+        'level': 2,
+        'school': 'V',
+        'range': {
+          'type': 'point',
+          'distance': {'type': 'feet', 'amount': 150}
+        },
+        'entries': ['You fire a ray of astral power.'],
+      });
+      expect(astralRay.rangeDistanceFeet, equals(150));
+      expect(astralRay.rangeType, equals('ranged'));
+
+      // Case B: Geometry range - line 100 feet
+      final voidLance = parser.parseSpell({
+        'name': 'Void Lance',
+        'level': 3,
+        'school': 'V',
+        'range': {
+          'type': 'line',
+          'distance': {'type': 'feet', 'amount': 100}
+        },
+        'entries': ['A beam of void energy 100 feet long and 5 feet wide shoots forth.'],
+      });
+      expect(voidLance.rangeDistanceFeet, equals(100));
+      expect(voidLance.rangeType, equals('line'));
+
+      // Case C: Pipeline revitalization of a bundle with string range
+      final pipeline = CompendiumJsonIngestionPipeline();
+      final bundleJson = {
+        'spells': [
+          {
+            'name': 'Gravity Pulse',
+            'level': 1,
+            'school': 'V',
+            'range': '30 feet',
+            'rangeDistanceFeet': 0,
+            'entries': ['A wave of gravitational force ripples outward 30 feet.'],
+          }
+        ]
+      };
+      final result = pipeline.ingestJsonMap(bundleJson);
+      final pulse = result.spells.first;
+      expect(pulse.rangeDistanceFeet, equals(30));
+    });
+
+    test('14. Feat Parser extracts nested daily/ritual bonus spells, skill choices, and tool proficiencies', () {
+      final parser = CompendiumFeatParser();
+
+      final featJson = {
+        'name': 'Arcane Tinkerer',
+        'additionalSpells': [
+          {
+            'innate': {
+              '1': {
+                'daily': {
+                  '1e': ['detect magic'],
+                },
+                '_': ['light'],
+              },
+            },
+          },
+        ],
+        'skillProficiencies': [
+          {
+            'choose': {
+              'from': ['arcana', 'investigation', 'history'],
+              'count': 1,
+            }
+          }
+        ],
+        'toolProficiencies': [
+          {
+            'tinkers tools': true,
+          }
+        ]
+      };
+
+      final feat = parser.parseFeat(featJson);
+      expect(feat.name, equals('Arcane Tinkerer'));
+
+      // Bonus spells extracted recursively
+      final bonusSpells = feat.grants.where((g) => g.type == GrantType.bonusSpell).toList();
+      final spellNames = bonusSpells.map((g) => g.payload['slug']).toList();
+      expect(spellNames, contains('detect-magic'));
+      expect(spellNames, contains('light'));
+
+      // Skill choice extracted
+      final skillChoices = feat.grants.where((g) => g.type == GrantType.bonusSkillChoice).toList();
+      expect(skillChoices, isNotEmpty);
+      expect(skillChoices.first.payload['pool'], containsAll(['arcana', 'investigation', 'history']));
+      expect(skillChoices.first.payload['count'], equals(1));
+
+      // Tool proficiency extracted
+      final toolProf = feat.grants.where((g) => g.type == GrantType.proficiency).toList();
+      expect(toolProf.any((g) => (g.payload['proficiency']?.toString() ?? '').toLowerCase().contains('tinkers tools')), isTrue);
+    });
+
+    test('15. Background Parser and Ingestion pipeline inherit skills, tools, and origin feat from base when empty lists are provided', () {
+      final parser = CompendiumBackgroundParser();
+
+      // Ingesting a background that copies Acolyte with empty arrays
+      final childBg = parser.parseBackground({
+        'name': 'Temple Pilgrim',
+        '_copy': {'name': 'Acolyte', 'source': 'PHB'},
+        'skillProficiencies': [],
+        'toolProficiencies': [],
+        'languageProficiencies': [],
+        'originFeat': null,
+      });
+
+      // Should have inherited from Acolyte base
+      expect(childBg.skillProficiencies, containsAll(['Insight', 'Religion']));
+      expect(childBg.toolProficiencies, contains('Calligrapher\'s Supplies'));
+      expect(childBg.languages, contains('Celestial'));
+      expect(childBg.originFeat, equals('Magic Initiate (Cleric)'));
+
+      // Pipeline verification ensures revitalized bundle preserves inherited properties
+      final pipeline = CompendiumJsonIngestionPipeline();
+      final bundleJson = {
+        'backgrounds': [
+          {
+            'name': 'Shrine Keeper',
+            '_copy': {'name': 'Acolyte', 'source': 'PHB'},
+            'skillProficiencies': [],
+            'toolProficiencies': [],
+          }
+        ]
+      };
+      final result = pipeline.ingestJsonMap(bundleJson);
+      final shrineKeeper = result.backgrounds.first;
+      expect(shrineKeeper.skillProficiencies, containsAll(['Insight', 'Religion']));
+      expect(shrineKeeper.toolProficiencies, contains('Calligrapher\'s Supplies'));
+    });
+
+    test('16. SubclassSpellsLibrary resolveFilterSpells matches source=EGW and Dunamancy spell tags', () {
+      const chronoSpell = SpellItem(
+        id: 'temporal-shunt',
+        name: 'Temporal Shunt',
+        level: 5,
+        school: SpellSchool.transmutation,
+        rules2014: SpellEditionDetails(
+          castingTime: '1 reaction',
+          range: '120 feet',
+          components: 'V, S',
+          duration: '1 round',
+          description: ['You target the triggering creature and shunt it through time.'],
+          classes: [SpellClass.wizard],
+        ),
+        rules2024: SpellEditionDetails(
+          castingTime: '1 reaction',
+          range: '120 feet',
+          components: 'V, S',
+          duration: '1 round',
+          description: ['You target the triggering creature and shunt it through time.'],
+          classes: [SpellClass.wizard],
+        ),
+        tags: ['dft', 'source:egw'],
+      );
+
+      const normalSpell = SpellItem(
+        id: 'custom-spark',
+        name: 'Custom Spark',
+        level: 1,
+        school: SpellSchool.evocation,
+        rules2014: SpellEditionDetails(
+          castingTime: '1 action',
+          range: '30 feet',
+          components: 'V, S',
+          duration: 'Instantaneous',
+          description: ['A burst of sparks.'],
+          classes: [SpellClass.wizard],
+        ),
+        rules2024: SpellEditionDetails(
+          castingTime: '1 action',
+          range: '30 feet',
+          components: 'V, S',
+          duration: 'Instantaneous',
+          description: ['A burst of sparks.'],
+          classes: [SpellClass.wizard],
+        ),
+        tags: ['phb'],
+      );
+
+      SpellbookLibrary.setHomebrewSpells([chronoSpell, normalSpell]);
+      addTearDown(() => SpellbookLibrary.setHomebrewSpells([]));
+
+      final matched = SubclassSpellsLibrary.resolveFilterSpells('source=EGW');
+
+      expect(matched.map((s) => s.id), contains('temporal-shunt'));
+      expect(matched.map((s) => s.id), isNot(contains('custom-spark')));
+    });
+
+    test('17. Feat Parser and Feat.fromMap extract bonus spells from nested choose/from structures and auto-heal empty grants', () {
+      final parser = CompendiumFeatParser();
+
+      // Feat with nested choose from list
+      final featJson = {
+        'name': 'Arcane Apprentice',
+        'additionalSpells': [
+          {
+            'innate': {
+              '1': {
+                'daily': {
+                  '1e': [
+                    {
+                      'choose': {
+                        'from': ['shield', 'mage armor', 'feather fall'],
+                        'count': 1,
+                      }
+                    }
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      };
+
+      final parsed = parser.parseFeat(featJson);
+      final bonusSpells = parsed.grants.where((g) => g.type == GrantType.bonusSpell).toList();
+      final slugs = bonusSpells.map((g) => g.payload['slug']).toList();
+      expect(slugs, contains('shield'));
+      expect(slugs, contains('mage-armor'));
+      expect(slugs, contains('feather-fall'));
+
+      // Deserialization with Feat.fromMap auto-heals when grants list was empty in pack JSON
+      final serializedMap = {
+        'id': {'slug': 'arcane-apprentice', 'ruleset': 'homebrew'},
+        'name': 'Arcane Apprentice',
+        'grants': [],
+        'customProperties': {
+          'additionalSpells': featJson['additionalSpells'],
+        },
+      };
+
+      final fromMapFeat = Feat.fromMap(serializedMap);
+      expect(fromMapFeat.grants, isNotEmpty);
+      expect(fromMapFeat.grants.map((g) => g.payload['slug']), contains('shield'));
+    });
+
+    test('18. Spell.toMap losslessly preserves classes and revitalized rangeDistanceFeet for round-trip exports', () {
+      final spellMap = {
+        'name': 'Cosmic Flare',
+        'level': 4,
+        'school': 'V',
+        'range': '150 feet',
+        'rangeDistanceFeet': 0,
+        'customProperties': {
+          'classes': ['Sorcerer', 'Wizard'],
+        },
+      };
+
+      final spell = Spell.fromMap(spellMap);
+      expect(spell.rangeDistanceFeet, equals(150));
+
+      final exported = spell.toMap();
+      expect(exported['classes'], containsAll(['Sorcerer', 'Wizard']));
+      expect(exported['rangeDistanceFeet'], equals(150));
+    });
+
+    test('19. Background Parser resolves in-bundle background copies and applies SRD 5.1 customization fallback when base is external', () {
+      final parser = CompendiumBackgroundParser();
+
+      // Case A: Resolving base background from in-bundle lookup
+      final customBase = parser.parseBackground({
+        'name': 'Guild Artisan Base',
+        'skillProficiencies': ['Insight', 'Persuasion'],
+        'toolProficiencies': ['Smith\'s Tools'],
+      });
+
+      final childWithInBundleBase = parser.parseBackground(
+        {
+          'name': 'City Smith Variant',
+          '_copy': {'name': 'Guild Artisan Base'},
+          'skillProficiencies': [],
+          'toolProficiencies': [],
+        },
+        localLookup: {'guild-artisan-base': customBase},
+      );
+
+      expect(childWithInBundleBase.skillProficiencies, containsAll(['Insight', 'Persuasion']));
+      expect(childWithInBundleBase.toolProficiencies, contains('Smith\'s Tools'));
+
+      // Case B: Copying un-imported base applies SRD 5.1 "Customizing a Background" rule (Choose 2 skills)
+      final childWithExternalBase = parser.parseBackground({
+        'name': 'Wanderer Variant',
+        '_copy': {'name': 'External Unimported Base'},
+        'skillProficiencies': [],
+        'toolProficiencies': [],
+      });
+
+      expect(childWithExternalBase.skillProficiencies, contains('Choose 2'));
+      final skillChoice = childWithExternalBase.grants.where((g) => g.type == GrantType.bonusSkillChoice).toList();
+      expect(skillChoice, isNotEmpty);
+      expect(skillChoice.first.payload['count'], equals(2));
     });
   });
 }

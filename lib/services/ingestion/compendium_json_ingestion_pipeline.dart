@@ -13,6 +13,7 @@ import '../acl/compendium_race_parser.dart';
 import '../acl/compendium_spell_parser.dart';
 import '../acl/entry_tag_transformer.dart';
 import '../fluff/entity_fluff_service.dart';
+import '../../infrastructure/mappers/homebrew_ingestor.dart';
 
 /// Diagnostic summary of a JSON compendium ingestion operation.
 class IngestionBatchResult {
@@ -415,7 +416,16 @@ class CompendiumJsonIngestionPipeline {
             if (parsedClasses != null) {
               final cp = Map<String, dynamic>.from(updated.customProperties);
               cp['classes'] = parsedClasses;
-              return updated.copyWith(customProperties: cp);
+              updated = updated.copyWith(customProperties: cp);
+            }
+          }
+
+          if (updated.rangeDistanceFeet <= 0 && updated.range.isNotEmpty) {
+            final norm = HomebrewIngestor.normalizeRange(updated.range, updated.descriptionMarkdown);
+            final dist = norm['rangeDistanceFeet'] as int? ?? 0;
+            final rType = norm['rangeType'] as String? ?? updated.rangeType;
+            if (dist > 0 || rType != updated.rangeType) {
+              updated = updated.copyWith(rangeDistanceFeet: dist, rangeType: rType);
             }
           }
           return updated;
@@ -477,23 +487,40 @@ class CompendiumJsonIngestionPipeline {
           final reparsed = featParser.parseFeat(raw, forceRuleset: forceRuleset ?? f.id.ruleset);
           return reparsed.copyWith(
             descriptionMarkdown: f.descriptionMarkdown.isNotEmpty ? f.descriptionMarkdown : reparsed.descriptionMarkdown,
+            grants: reparsed.grants.isNotEmpty ? reparsed.grants : f.grants,
           );
         }).toList();
+
+        final localBgLookup = <String, Background>{};
+        for (final b in bundle.backgrounds) {
+          localBgLookup[b.name.toLowerCase().trim()] = b;
+          localBgLookup[b.id.slug] = b;
+        }
 
         final revitalizedBackgrounds = bundle.backgrounds.map((b) {
           final raw = <String, dynamic>{
             ...b.customProperties,
             'name': b.name,
-            'skillProficiencies': b.skillProficiencies,
-            'toolProficiencies': b.toolProficiencies,
-            'languageProficiencies': b.languages,
-            'feat': b.originFeat,
-            'ability': b.abilityScoreSummary,
+            if (b.skillProficiencies.isNotEmpty) 'skillProficiencies': b.skillProficiencies,
+            if (b.toolProficiencies.isNotEmpty) 'toolProficiencies': b.toolProficiencies,
+            if (b.languages.isNotEmpty) 'languageProficiencies': b.languages,
+            if (b.originFeat != null && b.originFeat!.isNotEmpty) 'feat': b.originFeat,
+            if (b.abilityScoreSummary != null && b.abilityScoreSummary!.isNotEmpty) 'ability': b.abilityScoreSummary,
             if (b.descriptionMarkdown.isNotEmpty) 'entries': [b.descriptionMarkdown],
           };
-          final reparsed = backgroundParser.parseBackground(raw, forceRuleset: forceRuleset ?? b.id.ruleset);
+          final reparsed = backgroundParser.parseBackground(
+            raw,
+            forceRuleset: forceRuleset ?? b.id.ruleset,
+            localLookup: localBgLookup,
+          );
           return reparsed.copyWith(
             descriptionMarkdown: b.descriptionMarkdown.isNotEmpty ? b.descriptionMarkdown : reparsed.descriptionMarkdown,
+            skillProficiencies: reparsed.skillProficiencies.isNotEmpty ? reparsed.skillProficiencies : b.skillProficiencies,
+            toolProficiencies: reparsed.toolProficiencies.isNotEmpty ? reparsed.toolProficiencies : b.toolProficiencies,
+            languages: reparsed.languages.isNotEmpty ? reparsed.languages : b.languages,
+            originFeat: reparsed.originFeat ?? b.originFeat,
+            abilityScoreSummary: reparsed.abilityScoreSummary ?? b.abilityScoreSummary,
+            grants: reparsed.grants.isNotEmpty ? reparsed.grants : b.grants,
           );
         }).toList();
 
@@ -797,7 +824,17 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['feat', 'feats'], (raw) => feats.add(featParser.parseFeat(raw, forceRuleset: forceRuleset)), 'Feat');
 
     // Backgrounds
-    ingestKeys(['background', 'backgrounds'], (raw) => backgrounds.add(backgroundParser.parseBackground(raw, forceRuleset: forceRuleset)), 'Background');
+    final localBgLookup = <String, Background>{};
+    ingestKeys(['background', 'backgrounds'], (raw) {
+      final bg = backgroundParser.parseBackground(
+        raw,
+        forceRuleset: forceRuleset,
+        localLookup: localBgLookup,
+      );
+      backgrounds.add(bg);
+      localBgLookup[bg.name.toLowerCase().trim()] = bg;
+      localBgLookup[bg.id.slug] = bg;
+    }, 'Background');
 
     // Eldritch Invocations & Pact Boons
     ingestKeys([

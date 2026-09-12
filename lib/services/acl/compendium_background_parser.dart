@@ -12,25 +12,49 @@ class CompendiumBackgroundParser {
       : transformer = transformer ?? EntryTagTransformer();
 
   /// Transforms a raw community compendium or homebrew background JSON map into a strongly-typed [Background].
-  Background parseBackground(Map<String, dynamic> raw, {RulesetVersion? forceRuleset}) {
+  Background parseBackground(
+    Map<String, dynamic> raw, {
+    RulesetVersion? forceRuleset,
+    Map<String, Background>? localLookup,
+  }) {
     final name = raw['name']?.toString().trim() ?? 'Unnamed Background';
     final slug = _slugify(name);
     final source = raw['source']?.toString().toUpperCase() ?? 'PHB';
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
-    // Resolve base background from _copy if present
-    final base = _resolveBaseBackground(raw);
+    // Resolve base background from _copy if present (checking localLookup and registered library)
+    final base = _resolveBaseBackground(raw, localLookup);
 
     // Origin Feat
-    final originFeat = _parseOriginFeat(raw['originFeat'] ?? raw['feat'] ?? raw['feats'] ?? base?.originFeat);
+    final originFeat = _parseOriginFeat(
+      _isNonEmpty(raw['originFeat']) ??
+          _isNonEmpty(raw['feat']) ??
+          _isNonEmpty(raw['feats']) ??
+          base?.originFeat,
+    );
 
     // Ability Score Summary (2024 rules)
-    final abilitySummary = _parseAbilitySummary(raw['ability'] ?? base?.abilityScoreSummary);
+    final abilitySummary = _parseAbilitySummary(
+      _isNonEmpty(raw['ability']) ?? base?.abilityScoreSummary,
+    );
 
     // Proficiencies
-    final skillProficiencies = _parseProficiencies(raw['skillProficiencies'] ?? base?.skillProficiencies);
-    final toolProficiencies = _parseProficiencies(raw['toolProficiencies'] ?? base?.toolProficiencies);
-    final languages = _parseProficiencies(raw['languageProficiencies'] ?? base?.languages);
+    var skillProficiencies = _parseProficiencies(
+      _isNonEmpty(raw['skillProficiencies']) ?? base?.skillProficiencies,
+    );
+    // SRD 5.1 Customizing a Background rule: if empty and inherits from un-imported base, grant 2 flexible choices
+    if (skillProficiencies.isEmpty && raw['_copy'] != null) {
+      skillProficiencies = ['Choose 2'];
+    }
+
+    final toolProficiencies = _parseProficiencies(
+      _isNonEmpty(raw['toolProficiencies']) ?? base?.toolProficiencies,
+    );
+    final languages = _parseProficiencies(
+      _isNonEmpty(raw['languageProficiencies']) ??
+          _isNonEmpty(raw['languages']) ??
+          base?.languages,
+    );
 
     // Markdown description entries (support entries, desc, description, text, or _copy._mod)
     final modEntries = raw['_copy'] is Map ? _extractModEntries((raw['_copy'] as Map)['_mod']) : null;
@@ -93,16 +117,27 @@ class CompendiumBackgroundParser {
     'text',
   };
 
-  Background? _resolveBaseBackground(Map<String, dynamic> raw) {
+  Background? _resolveBaseBackground(Map<String, dynamic> raw, [Map<String, Background>? localLookup]) {
     if (raw['_copy'] is! Map) return null;
     final copyName = (raw['_copy'] as Map)['name']?.toString().toLowerCase().trim() ?? '';
     if (copyName.isEmpty) return null;
+    final copySlug = _slugify(copyName);
+    if (localLookup != null) {
+      if (localLookup.containsKey(copyName)) return localLookup[copyName];
+      if (localLookup.containsKey(copySlug)) return localLookup[copySlug];
+      for (final entry in localLookup.entries) {
+        final k = entry.key.toLowerCase();
+        if (k == copyName || k == copySlug || entry.value.name.toLowerCase() == copyName) {
+          return entry.value;
+        }
+      }
+    }
     return SrdBackgroundsLibrary.allBackgrounds.where((b) {
       final bName = b.name.toLowerCase();
       return bName == copyName ||
           bName.contains(copyName) ||
           copyName.contains(bName) ||
-          b.id.slug == _slugify(copyName);
+          b.id.slug == copySlug;
     }).firstOrNull;
   }
 
@@ -203,6 +238,7 @@ class CompendiumBackgroundParser {
     Map<String, dynamic> raw,
   ) {
     final grants = <FeatureGrant>[];
+    bool hasSkillChoice = false;
     for (final s in skills) {
       final clean = s.toLowerCase().trim();
       if (clean.isNotEmpty && !clean.startsWith('choose')) {
@@ -211,7 +247,17 @@ class CompendiumBackgroundParser {
           grantId: 'bg-$slug-skill-$clean',
           label: '$s Proficiency',
         ));
+      } else if (clean.startsWith('choose')) {
+        hasSkillChoice = true;
       }
+    }
+    if (hasSkillChoice || (skills.isEmpty && raw['_copy'] != null)) {
+      grants.add(FeatureGrant.skillChoice(
+        grantId: 'bg-$slug-skill-choice',
+        count: 2,
+        pool: const [],
+        label: 'Background Skill Proficiency Choice (Choose 2)',
+      ));
     }
     for (final t in tools) {
       final clean = t.trim();
@@ -279,5 +325,13 @@ class CompendiumBackgroundParser {
       return RulesetVersion.v2014;
     }
     return RulesetVersion.homebrew;
+  }
+
+  dynamic _isNonEmpty(dynamic val) {
+    if (val == null) return null;
+    if (val is List && val.isEmpty) return null;
+    if (val is Map && val.isEmpty) return null;
+    if (val is String && val.trim().isEmpty) return null;
+    return val;
   }
 }

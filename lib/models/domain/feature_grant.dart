@@ -314,9 +314,23 @@ class FeatureGrant {
           processSpellItem(subItem);
         }
       } else if (item is Map) {
+        if (item.containsKey('choose')) {
+          final ch = item['choose'];
+          if (ch is Map && ch['from'] != null) {
+            processSpellItem(ch['from']);
+          } else if (ch is String && ch.isNotEmpty) {
+            final clean = ch.split('|').first.replaceAll('#c', '').trim();
+            if (!clean.contains('=')) {
+              processSpellItem(clean);
+            }
+          }
+        }
+        if (item.containsKey('from')) {
+          processSpellItem(item['from']);
+        }
         for (final entry in item.entries) {
           final k = entry.key.toString().toLowerCase();
-          if (k == 'choose' || k == 'count' || k == 'all') continue;
+          if (k == 'choose' || k == 'count' || k == 'all' || k == 'from') continue;
           processSpellItem(entry.value);
         }
       }

@@ -256,9 +256,14 @@ class SubclassSpellsLibrary {
       }
 
       if (targetSources != null) {
+        final sources = targetSources;
         final lowerId = spell.id.toLowerCase();
-        final matchesSource = spell.tags.any((t) => targetSources!.contains(t.toLowerCase())) ||
-            targetSources.any((src) => lowerId.contains(src));
+        final matchesSource = spell.tags.any((t) {
+              final lt = t.toLowerCase();
+              return sources.contains(lt) ||
+                  (sources.contains('egw') && (lt == 'dft' || lt == 'sgt' || lt == 'sct' || lt == 'dunamancy'));
+            }) ||
+            sources.any((src) => lowerId.contains(src));
         if (!matchesSource) return false;
       }
 

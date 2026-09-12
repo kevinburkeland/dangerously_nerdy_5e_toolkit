@@ -194,32 +194,56 @@ class CompendiumFeatParser {
       ));
     }
 
-    // Additional Spells
-    final addSpells = raw['additionalSpells'] ?? custom['additionalSpells'];
-    if (addSpells is List) {
-      for (final spGroup in addSpells) {
-        if (spGroup is Map) {
-          final innate = spGroup['innate'] ?? spGroup['known'];
-          if (innate is Map) {
-            innate.forEach((lvl, spList) {
-              if (spList is List) {
-                for (final sp in spList) {
-                  final spName = sp.toString().split('|').first.replaceAll('#c', '').trim();
-                  final spSlug = spName.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), '-').replaceAll(RegExp(r"^-+|-+$"), '');
-                  if (spSlug.isNotEmpty) {
-                    grants.add(FeatureGrant.bonusSpell(
-                      grantId: 'feat-$slug-spell-$spSlug',
-                      slug: spSlug,
-                      displayName: spName,
-                      label: spName,
-                    ));
-                  }
-                }
-              }
-            });
+    // Additional Spells & Inherent Spells
+    final addSpells = raw['additionalSpells'] ??
+        custom['additionalSpells'] ??
+        raw['spells'] ??
+        custom['spells'];
+
+    void extractSpellsFromNode(dynamic node) {
+      if (node == null) return;
+      if (node is String) {
+        final spName = node.split('|').first.replaceAll('#c', '').trim();
+        if (spName.isNotEmpty && !spName.startsWith('{')) {
+          final spSlug = _slugify(spName);
+          if (spSlug.isNotEmpty && !grants.any((g) => g.grantId == 'feat-$slug-spell-$spSlug')) {
+            grants.add(FeatureGrant.bonusSpell(
+              grantId: 'feat-$slug-spell-$spSlug',
+              slug: spSlug,
+              displayName: spName,
+              label: spName,
+            ));
           }
         }
+      } else if (node is List) {
+        for (final item in node) {
+          extractSpellsFromNode(item);
+        }
+      } else if (node is Map) {
+        if (node.containsKey('choose')) {
+          final ch = node['choose'];
+          if (ch is Map && ch['from'] != null) {
+            extractSpellsFromNode(ch['from']);
+          } else if (ch is String && ch.isNotEmpty) {
+            final clean = ch.split('|').first.replaceAll('#c', '').trim();
+            if (!clean.contains('=')) {
+              extractSpellsFromNode(clean);
+            }
+          }
+        }
+        if (node.containsKey('from')) {
+          extractSpellsFromNode(node['from']);
+        }
+        for (final entry in node.entries) {
+          final k = entry.key.toString().toLowerCase();
+          if (k == 'choose' || k == 'count' || k == 'all' || k == 'from') continue;
+          extractSpellsFromNode(entry.value);
+        }
       }
+    }
+
+    if (addSpells != null) {
+      extractSpellsFromNode(addSpells);
     }
 
     // Skill Proficiencies
@@ -230,7 +254,55 @@ class CompendiumFeatParser {
           grants.add(FeatureGrant.skillProficiency(
             s.toLowerCase().trim(),
             grantId: 'feat-$slug-skill-${s.toLowerCase().trim()}',
-            label: '$s Proficiency',
+            label: '${_capitalize(s.trim())} Proficiency',
+          ));
+        } else if (s is Map && s['choose'] is Map) {
+          final chooseMap = s['choose'] as Map;
+          final fromList = chooseMap['from'] as List? ?? [];
+          final count = (chooseMap['count'] as num?)?.toInt() ?? 1;
+          grants.add(FeatureGrant.skillChoice(
+            grantId: 'feat-$slug-skill-choice',
+            count: count,
+            pool: fromList.map((f) => f.toString().toLowerCase().trim()).toList(),
+            label: 'Skill Proficiency Choice ($count)',
+          ));
+        }
+      }
+    }
+
+    // Tool Proficiencies
+    final tools = raw['toolProficiencies'] ?? custom['toolProficiencies'];
+    if (tools is List) {
+      for (final t in tools) {
+        if (t is String && t.isNotEmpty) {
+          grants.add(FeatureGrant.weaponArmorProficiency(
+            t.trim(),
+            grantId: 'feat-$slug-tool-${_slugify(t)}',
+            label: '$t Proficiency',
+          ));
+        } else if (t is Map) {
+          t.forEach((toolName, enabled) {
+            if (enabled == true || enabled == 1) {
+              grants.add(FeatureGrant.weaponArmorProficiency(
+                toolName.toString().trim(),
+                grantId: 'feat-$slug-tool-${_slugify(toolName.toString())}',
+                label: '${toolName.toString().trim()} Proficiency',
+              ));
+            }
+          });
+        }
+      }
+    }
+
+    // Weapon Proficiencies
+    final weapons = raw['weaponProficiencies'] ?? custom['weaponProficiencies'];
+    if (weapons is List) {
+      for (final w in weapons) {
+        if (w is String && w.isNotEmpty) {
+          grants.add(FeatureGrant.weaponArmorProficiency(
+            w.trim(),
+            grantId: 'feat-$slug-weapon-${_slugify(w)}',
+            label: '$w Proficiency',
           ));
         }
       }

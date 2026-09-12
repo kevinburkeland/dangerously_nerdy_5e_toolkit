@@ -420,6 +420,28 @@ class HomebrewPersistenceService {
         tags.add(t.toString());
       }
     }
+    if (s.customProperties['source'] != null) {
+      tags.add(s.customProperties['source'].toString());
+    }
+    if (s.customProperties['otherSources'] is List) {
+      for (final item in (s.customProperties['otherSources'] as List)) {
+        if (item is Map && item['source'] != null) {
+          tags.add(item['source'].toString());
+        } else if (item != null) {
+          tags.add(item.toString());
+        }
+      }
+    }
+    if (s.customProperties['referenceSources'] is List) {
+      for (final item in (s.customProperties['referenceSources'] as List)) {
+        tags.add(item.toString());
+      }
+    }
+    final lowerTags = tags.map((t) => t.toLowerCase()).toSet();
+    if (lowerTags.contains('dft') || lowerTags.contains('sgt') || lowerTags.contains('sct')) {
+      if (!lowerTags.contains('dunamancy')) tags.add('dunamancy');
+      if (!lowerTags.contains('egw')) tags.add('egw');
+    }
 
     final editionDetails = SpellEditionDetails(
       castingTime: s.castingTime.cost > 0

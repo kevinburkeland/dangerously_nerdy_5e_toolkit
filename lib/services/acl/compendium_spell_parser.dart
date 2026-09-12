@@ -150,11 +150,14 @@ class CompendiumSpellParser {
       '${transformed.markdown} ${higherLevelsMarkdown ?? ''}',
     );
 
-    final rangeNorm = HomebrewIngestor.normalizeRange(raw['range'] ?? rangeStr);
-    final rangeDistanceFeet = (raw['rangeDistanceFeet'] as num?)?.toInt() ??
-        (rangeNorm['rangeDistanceFeet'] as int? ?? 0);
-    final rangeType = raw['rangeType']?.toString() ??
-        (rangeNorm['rangeType'] as String? ?? 'ranged');
+    final rangeNorm = HomebrewIngestor.normalizeRange(raw['range'] ?? rangeStr, '${transformed.markdown} ${higherLevelsMarkdown ?? ''}');
+    final normDist = rangeNorm['rangeDistanceFeet'] as int? ?? 0;
+    final rangeDistanceFeet = normDist > 0
+        ? normDist
+        : ((raw['rangeDistanceFeet'] as num?)?.toInt() ?? 0);
+    final rangeType = (rangeNorm['rangeType'] != null && rangeNorm['rangeType'] != 'ranged')
+        ? rangeNorm['rangeType'] as String
+        : (raw['rangeType']?.toString() ?? (rangeNorm['rangeType'] as String? ?? 'ranged'));
     final resolvedDamageType = isVariable
         ? 'variable'
         : (damageMath.isNotEmpty ? damageMath.first.damageType.name : 'untyped');

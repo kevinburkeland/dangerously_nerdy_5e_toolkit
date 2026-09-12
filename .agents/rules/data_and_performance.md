@@ -112,3 +112,29 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - If a spell lacks classes after ingestion, fall back to canonical SRD or known expansion tables (`extractClassesForSpell`) to dynamically revitalize class associations.
 - **Import Collision Selection Synchronization:**
   - In `HomebrewMergeResolver.applyResolutionToAllCollisions` and `HomebrewImportPreviewDialog`, changing collision resolution to `overwrite` or `duplicateRename` must automatically synchronize `isSelected = true`, and toggling `isSelected = true` on a collision item must elevate resolution from `keepLocal` to `overwrite` to prevent silent omissions during batch imports.
+
+## 11. Community Bundle Ingestion Remediation Directives
+
+- **Spell Spatial Range Revitalization:**
+  - Community compendiums frequently serialize `range` as natural text (`"150 feet"`, `"30 feet"`) or structured maps (`{"type": "point", "distance": {"type": "feet", "amount": 150}}`) while leaving `rangeDistanceFeet: 0`.
+  - `HomebrewIngestor.normalizeRange` and `Spell.fromMap` must evaluate distance and type whenever `rangeDistanceFeet <= 0`.
+  - Deserialization must extract geometric shapes (`line`, `cone`, `radius`, `sphere`) from description markdown when the raw range type is ambiguous.
+- **Deep Feat Grant Extraction:**
+  - Feats with `additionalSpells` or `spells` encode spell pools inside nested sub-maps (such as `innate` / `known` -> `daily`, `ritual`, `will`, `_`).
+  - Parsers must recursively extract all spell identifiers across nested dictionary tiers, creating atomic `FeatureGrant.bonusSpell` entries.
+  - Skill choices (`skillProficiencies` with `choose`) and tool proficiencies (`toolProficiencies`) must be converted to `FeatureGrant.bonusSkillChoice` and `FeatureGrant.weaponArmorProficiency` rather than dropped.
+- **Background `_copy` Fallback Non-Empty Guarding:**
+  - Background entries in community packs often inherit from base backgrounds (e.g. `_copy: {"name": "Acolyte"}`) while providing empty collections (`skillProficiencies: []`, `toolProficiencies: []`, `languageProficiencies: []`, `originFeat: null`).
+  - `CompendiumBackgroundParser` and `CompendiumJsonIngestionPipeline` must guard lookups with `_isNonEmpty` checks, ensuring that empty collections on child entries do not shadow or overwrite non-empty proficiencies, tools, languages, and origin feats on the parent base.
+- **Subclass Expansion & Dunamancy Filter Expansion:**
+  - Subclasses containing source queries (e.g., `{"all": "source=EGW"}`) must resolve against tagged spells.
+  - `SubclassSpellsLibrary.resolveFilterSpells` expands `source=EGW` and `dunamancy` to match spells tagged with `dft`, `sgt`, `sct`, `dunamancy`, or `source:egw`.
+  - `HomebrewPersistenceService.spellToSpellItem` automatically enriches tags with source identifiers and dunamancy school tags to ensure dynamic subclass filters match seamlessly.
+- **SRD Background Purity & In-Bundle Resolution:**
+  - `SrdBackgroundsLibrary._baseBackgrounds` strictly contains `acolyte` (the sole background published in SRD 5.1 & 5.2 under CC-BY-4.0). Hardcoding non-SRD backgrounds into base libraries is strictly forbidden.
+  - `_resolveBaseBackground` checks in-bundle / local compendium lookups (`localLookup`) and registered custom backgrounds.
+  - When copying an external un-imported background leaving `skillProficiencies: []`, apply the canonical SRD 5.1 "Customizing a Background" rule (*SRD 5.1 p. 60: "choose any two skills"*), granting a flexible 2-skill choice (`FeatureGrant.skillChoice`) so the background remains playable during character creation.
+- **Round-Trip Lossless Serialization (`Spell.toMap` & `Feat.fromMap`):**
+  - `Spell.toMap()` explicitly serializes top-level `'classes'` from `customProperties['classes']` and numeric `rangeDistanceFeet` so exported bundles retain root attributes without degradation across re-downloads.
+  - `Feat.fromMap()` auto-heals empty `grants` from `additionalSpells` or `spells` upon bundle deserialization.
+  - `CompendiumJsonIngestionPipeline._revitalizeBundle` preserves `grants: reparsed.grants.isNotEmpty ? reparsed.grants : f.grants` when revitalizing feats.
