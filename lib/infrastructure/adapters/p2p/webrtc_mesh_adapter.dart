@@ -374,10 +374,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   @override
   Future<void> broadcastPayload(String jsonPayload) async {
     if (_dataChannels.isEmpty) {
-      // 0 connected peers (solo room or peers still connecting).
-      // This is a normal state in a P2P mesh and must not throw, otherwise
-      // premature failover to cloud relay will occur.
-      return;
+      throw StateError('No active WebRTC data channels available.');
     }
 
     final errors = <dynamic>[];

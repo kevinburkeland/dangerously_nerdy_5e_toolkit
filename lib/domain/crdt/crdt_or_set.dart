@@ -37,14 +37,24 @@ class CrdtOrSet<T> {
   }
 
   /// Removes an item with the given [id] at [timestamp], recording a tombstone.
-  /// Only succeeds if the timestamp is newer than the item's insertion timestamp.
+  /// Unconditionally records the tombstone if [timestamp] is strictly newer than
+  /// any existing tombstone for [id], regardless of whether the item currently exists in items.
   CrdtOrSet<T> remove(String id, HybridLogicalClock timestamp) {
     final newItems = Map<String, CrdtLwwRegister<T>>.from(items);
     final newTombstones = Map<String, HybridLogicalClock>.from(tombstones);
 
     final currentItem = newItems[id];
-    if (currentItem != null && timestamp.isAfter(currentItem.timestamp)) {
-      newItems.remove(id);
+    if (currentItem != null) {
+      if (timestamp.isAfter(currentItem.timestamp)) {
+        newItems.remove(id);
+      } else {
+        // Item was added/revived strictly after this removal timestamp.
+        return CrdtOrSet(items: newItems, tombstones: newTombstones);
+      }
+    }
+
+    final existingTombstone = newTombstones[id];
+    if (existingTombstone == null || timestamp.isAfter(existingTombstone)) {
       newTombstones[id] = timestamp;
     }
 

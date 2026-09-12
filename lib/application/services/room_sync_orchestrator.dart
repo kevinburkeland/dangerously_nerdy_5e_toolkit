@@ -30,6 +30,7 @@ class RoomSyncOrchestrator {
   final String hostNodeId;
   final Duration telemetryInterval;
   final Duration milestoneInterval;
+  final Duration heartbeatTtl;
 
   CascadingTransportRouter? get router =>
       transportPort is CascadingTransportRouter
@@ -44,6 +45,7 @@ class RoomSyncOrchestrator {
 
   final Mutex _syncMutex = Mutex();
   CampaignProfile? _lastInboundProfile;
+  int _lastProfileSyncTimestamp = 0;
   CrdtOrSet<String> _trackedRulesSet = const CrdtOrSet<String>();
   StreamController<RoomConnectionTelemetry> _telemetryController =
       StreamController<RoomConnectionTelemetry>.broadcast();
@@ -59,12 +61,20 @@ class RoomSyncOrchestrator {
     this.hostNodeId = 'dm-host-prime',
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
+    Duration? heartbeatTtl,
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
+        heartbeatTtl = heartbeatTtl ??
+            (transportPort is CascadingTransportRouter
+                ? (transportPort as CascadingTransportRouter).heartbeatTtl
+                : (router?.heartbeatTtl ?? const Duration(seconds: 15))),
         assert(
           transportPort != null || router != null,
           'Must provide either transportPort or router',
         );
+
+  /// Last processed timestamp for room_sync_full payloads.
+  int get lastProfileSyncTimestamp => _lastProfileSyncTimestamp;
 
   /// Visible for testing and debugging sync lock state.
   bool get isProcessingNetworkPayload => _syncMutex.isLocked;
@@ -165,6 +175,14 @@ class RoomSyncOrchestrator {
           final payloadData = decoded['payload'];
           if (payloadData is! Map) return;
 
+          final inboundTimestamp = (decoded['timestamp'] is num)
+              ? (decoded['timestamp'] as num).toInt()
+              : (int.tryParse(decoded['timestamp']?.toString() ?? '') ?? 0);
+
+          if (inboundTimestamp <= _lastProfileSyncTimestamp) {
+            return;
+          }
+
           final remoteProfileDto = CampaignProfileDto.fromMap(
             Map<String, dynamic>.from(payloadData),
           );
@@ -183,6 +201,7 @@ class RoomSyncOrchestrator {
               } catch (_) {}
             }
 
+            _lastProfileSyncTimestamp = inboundTimestamp;
             _lastInboundProfile = remoteProfile;
             await campaignRepo.saveProfileImmediate(remoteProfile);
           }
@@ -270,7 +289,9 @@ class RoomSyncOrchestrator {
     if (activeProfile == null) return;
 
     final authoritativeTimestamp =
-        DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs;
+        DateTime.now().toUtc().millisecondsSinceEpoch +
+        clockSyncService.currentOffsetMs -
+        (heartbeatTtl.inMilliseconds * 2);
 
     // Prune tracked CRDT tombstones older than the milestone snapshot
     if (_trackedRulesSet.tombstones.isNotEmpty) {
@@ -297,6 +318,8 @@ class RoomSyncOrchestrator {
     _milestoneTimer = null;
     _telemetryTimer?.cancel();
     _telemetryTimer = null;
+    _lastProfileSyncTimestamp = 0;
+    _lastInboundProfile = null;
     _emitTelemetry();
   }
 

@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/character_models.dart';
@@ -24,6 +25,9 @@ class CampaignProfile {
   /// Transient, non-serialized field holding characters extracted during deserialization migration.
   final List<Character> _migratedCharacters;
   List<Character> get migratedCharacters => _migratedCharacters;
+
+  static const _listEquality = ListEquality<String>();
+  static const _setEquality = SetEquality<String>();
 
   const CampaignProfile({
     required this.id,
@@ -125,8 +129,24 @@ class CampaignProfile {
       identical(this, other) ||
       other is CampaignProfile &&
           runtimeType == other.runtimeType &&
-          id == other.id;
+          id == other.id &&
+          name == other.name &&
+          edition == other.edition &&
+          roomState == other.roomState &&
+          _listEquality.equals(partyCharacterIds, other.partyCharacterIds) &&
+          _setEquality.equals(pinnedRuleIds, other.pinnedRuleIds) &&
+          notesMarkdown == other.notesMarkdown &&
+          partyPurse == other.partyPurse;
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hash(
+        id,
+        name,
+        edition,
+        roomState,
+        _listEquality.hash(partyCharacterIds),
+        _setEquality.hash(pinnedRuleIds),
+        notesMarkdown,
+        partyPurse,
+      );
 }

@@ -237,14 +237,14 @@ void main() {
       await adapterWithFactory.disconnect();
     });
 
-    test('broadcastPayload is a silent no-op when data channels are empty and does not throw', () async {
+    test('broadcastPayload throws StateError when data channels are empty to signal failover cascade', () async {
       await adapter.initializeRoom('ROOM-EMPTY', 'local-node');
       expect(adapter.connectedPeers, isEmpty);
 
-      // Must succeed cleanly without throwing StateError so CascadingTransportRouter does not step down
+      // Must throw StateError so CascadingTransportRouter steps down to cloud relay
       await expectLater(
         adapter.broadcastPayload('{"type":"dice_roll","total":18}'),
-        completes,
+        throwsA(isA<StateError>()),
       );
     });
 

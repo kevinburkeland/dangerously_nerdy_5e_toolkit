@@ -508,5 +508,93 @@ void main() {
 
       expect(defaultOrchestrator.telemetryInterval, equals(const Duration(seconds: 2)));
     });
+
+    test('Timestamp-Gated Profile Reconciliation: stale or equal timestamp does not overwrite local state', () async {
+      orchestrator.startSynchronization();
+
+      // Process initial inbound profile at t = 2000
+      final profileT2000 = initialProfile.copyWith(name: 'Authoritative Title at 2000');
+      final inboundT2000 = jsonEncode({
+        'type': 'room_sync_full',
+        'payload': CampaignProfileDto.fromDomain(profileT2000).toMap(),
+        'timestamp': 2000,
+      });
+      await orchestrator.handleIncomingPayload(inboundT2000);
+
+      expect(mockRepo.savedImmediateProfiles.length, equals(1));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 2000'));
+      expect(orchestrator.lastProfileSyncTimestamp, equals(2000));
+
+      // Attempt to apply a delayed/stale packet from t = 1500
+      final staleProfile = initialProfile.copyWith(name: 'Stale Delayed Packet at 1500');
+      final inboundStale = jsonEncode({
+        'type': 'room_sync_full',
+        'payload': CampaignProfileDto.fromDomain(staleProfile).toMap(),
+        'timestamp': 1500,
+      });
+      await orchestrator.handleIncomingPayload(inboundStale);
+
+      // Must NOT be saved; repo count remains 1 and title unchanged
+      expect(mockRepo.savedImmediateProfiles.length, equals(1));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 2000'));
+      expect(orchestrator.lastProfileSyncTimestamp, equals(2000));
+
+      // Attempt to apply packet with equal timestamp t = 2000
+      final equalProfile = initialProfile.copyWith(name: 'Equal Timestamp Packet at 2000');
+      final inboundEqual = jsonEncode({
+        'type': 'room_sync_full',
+        'payload': CampaignProfileDto.fromDomain(equalProfile).toMap(),
+        'timestamp': 2000,
+      });
+      await orchestrator.handleIncomingPayload(inboundEqual);
+      expect(mockRepo.savedImmediateProfiles.length, equals(1));
+
+      // Apply strictly newer packet at t = 3000
+      final newerProfile = initialProfile.copyWith(name: 'Newer Packet at 3000');
+      final inboundNewer = jsonEncode({
+        'type': 'room_sync_full',
+        'payload': CampaignProfileDto.fromDomain(newerProfile).toMap(),
+        'timestamp': 3000,
+      });
+      await orchestrator.handleIncomingPayload(inboundNewer);
+
+      expect(mockRepo.savedImmediateProfiles.length, equals(2));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Newer Packet at 3000'));
+      expect(orchestrator.lastProfileSyncTimestamp, equals(3000));
+    });
+
+    test('Buffered Milestone Pruning Horizon: subtracts 2x heartbeat TTL from authoritative timestamp', () async {
+      final hostOrchestrator = RoomSyncOrchestrator(
+        router: router,
+        campaignRepo: mockRepo,
+        reconciliationService: reconciliationService,
+        clockSyncService: clockSyncService,
+        isHost: true,
+        hostNodeId: 'dm-host-1',
+        heartbeatTtl: const Duration(seconds: 10), // lookback = 20,000 ms
+      );
+
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs;
+      // 2 * 10s TTL = 20,000 ms lookback window:
+      // veryOldTs: 50,000ms in the past (older than lookback window) -> pruned
+      // recentTombstoneWithinLookback: 5,000ms in the past (within lookback window) -> PRESERVED
+      final veryOldTs = HybridLogicalClock(physicalTime: now - 50000, logicalCounter: 0, nodeId: 'dm-host-1');
+      final recentTombstoneWithinLookback = HybridLogicalClock(physicalTime: now - 5000, logicalCounter: 0, nodeId: 'dm-host-1');
+
+      var setWithTombstones = CrdtOrSet<String>(
+        tombstones: {
+          'rule-ancient': veryOldTs,
+          'rule-recent-disconnect': recentTombstoneWithinLookback,
+        },
+      );
+      hostOrchestrator.trackedRulesSet = setWithTombstones;
+
+      await hostOrchestrator.executeHostMilestoneFlush();
+
+      // Ancient tombstone older than lookback horizon is pruned
+      expect(hostOrchestrator.trackedRulesSet.tombstones.containsKey('rule-ancient'), isFalse);
+      // Recent tombstone within the 2x TTL window is PRESERVED for transient reconnects
+      expect(hostOrchestrator.trackedRulesSet.tombstones.containsKey('rule-recent-disconnect'), isTrue);
+    });
   });
 }

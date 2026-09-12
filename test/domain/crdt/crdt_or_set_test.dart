@@ -133,5 +133,23 @@ void main() {
       expect(merged.activeValues, containsAll(['Fighter', 'Wizard']));
       expect(merged.items.length, equals(2));
     });
+
+    test('remove() on non-existent item unconditionally records tombstone preventing out-of-order add', () {
+      const tRemove = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
+      const tAddEarlier = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeB');
+
+      // Empty set receives a removal for 'ghost-item'
+      const emptySet = CrdtOrSet<String>();
+      expect(emptySet.items.containsKey('ghost-item'), isFalse);
+
+      final setWithTombstone = emptySet.remove('ghost-item', tRemove);
+      expect(setWithTombstone.activeValues, isEmpty);
+      expect(setWithTombstone.tombstones['ghost-item'], equals(tRemove));
+
+      // An out-of-order addition created earlier arrives later
+      final rejectedAddSet = setWithTombstone.add('ghost-item', 'Ghost Monster', tAddEarlier);
+      expect(rejectedAddSet.activeValues, isEmpty);
+      expect(rejectedAddSet.tombstones['ghost-item'], equals(tRemove));
+    });
   });
 }

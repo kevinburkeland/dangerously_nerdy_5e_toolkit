@@ -232,6 +232,20 @@ class PartyPurse {
   String toJson() => jsonEncode(toMap());
   factory PartyPurse.fromJson(String source) =>
       PartyPurse.fromMap(jsonDecode(source) as Map<String, dynamic>);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PartyPurse &&
+          runtimeType == other.runtimeType &&
+          cp == other.cp &&
+          sp == other.sp &&
+          ep == other.ep &&
+          gp == other.gp &&
+          pp == other.pp;
+
+  @override
+  int get hashCode => Object.hash(cp, sp, ep, gp, pp);
 }
 
 class PartyPurseSplit {
