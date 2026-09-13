@@ -284,5 +284,41 @@ void main() {
       final success = results.first as IngestionSuccessResult;
       expect(success.entity.name, equals('Amulet of the Deep'));
     });
+
+    test('Successfully ingests community compendium fluff bundles from remote files', () async {
+      const url = 'https://raw.githubusercontent.com/dnd/core/main/data/fluff-bestiary-mm.json';
+      final fluffPayload = jsonEncode({
+        'monsterFluff': [
+          {
+            'name': 'Aboleth',
+            'source': 'MM',
+            'entries': ['Before the coming of the gods, aboleths lurked in primordial oceans.'],
+            'images': [
+              {
+                'type': 'image',
+                'href': {'type': 'internal', 'path': 'bestiary/MM/Aboleth.webp'}
+              }
+            ]
+          },
+          {
+            'name': 'Adult Red Dragon',
+            'source': 'MM',
+            'entries': ['Most covetous of all dragons.'],
+          }
+        ]
+      });
+
+      final client = MockHttpFetchClient({url: fluffPayload});
+      final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
+      final results = await adapter
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014)
+          .toList();
+
+      expect(results.length, equals(2));
+      expect(results.every((r) => r is IngestionSuccessResult), isTrue);
+      final success0 = results[0] as IngestionSuccessResult;
+      expect(success0.entity.name, equals('Aboleth'));
+      expect(success0.entity.entityType, equals('monsterfluff'));
+    });
   });
 }

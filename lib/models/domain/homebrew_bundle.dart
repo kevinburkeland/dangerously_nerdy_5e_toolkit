@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../services/fluff/entity_fluff_service.dart';
 import 'core_types.dart';
 import 'homebrew_extended_entities.dart';
 import 'spell_monster_equipment.dart';
@@ -22,6 +23,7 @@ class HomebrewBundle {
   final List<Feat> feats;
   final List<Background> backgrounds;
   final List<HomebrewCompendiumEntry> otherEntries;
+  final List<EntityFluff> fluff;
 
   const HomebrewBundle({
     this.schemaVersion = 1,
@@ -40,6 +42,7 @@ class HomebrewBundle {
     this.feats = const [],
     this.backgrounds = const [],
     this.otherEntries = const [],
+    this.fluff = const [],
   });
 
   const HomebrewBundle.empty()
@@ -58,7 +61,8 @@ class HomebrewBundle {
         subraces = const [],
         feats = const [],
         backgrounds = const [],
-        otherEntries = const [];
+        otherEntries = const [],
+        fluff = const [];
 
   int get totalCount =>
       spells.length +
@@ -70,7 +74,8 @@ class HomebrewBundle {
       subraces.length +
       feats.length +
       backgrounds.length +
-      otherEntries.length;
+      otherEntries.length +
+      fluff.length;
 
   bool get isEmpty => totalCount == 0;
   bool get isNotEmpty => totalCount > 0;
@@ -93,6 +98,7 @@ class HomebrewBundle {
         if (backgrounds.isNotEmpty) 'backgrounds': backgrounds.map((b) => b.toMap()).toList(),
         if (otherEntries.isNotEmpty)
           'otherEntries': otherEntries.map((o) => o.toMap()).toList(),
+        if (fluff.isNotEmpty) 'fluff': fluff.map((f) => f.toMap()).toList(),
       };
 
   factory HomebrewBundle.fromMap(Map<String, dynamic> map) {
@@ -197,6 +203,11 @@ class HomebrewBundle {
         .map((m) => HomebrewCompendiumEntry.fromMap(Map<String, dynamic>.from(m)))
         .toList();
 
+    final fluff = (map['fluff'] as List? ?? [])
+        .whereType<Map>()
+        .map((m) => EntityFluff.fromMap(Map<String, dynamic>.from(m)))
+        .toList();
+
     return HomebrewBundle(
       schemaVersion: (map['schemaVersion'] as num?)?.toInt() ?? 1,
       appVersion: map['appVersion']?.toString() ?? '1.0.0',
@@ -214,6 +225,7 @@ class HomebrewBundle {
       feats: feats,
       backgrounds: backgrounds,
       otherEntries: otherEntries,
+      fluff: fluff,
     );
   }
 
@@ -234,6 +246,7 @@ class HomebrewBundle {
     List<Feat>? feats,
     List<Background>? backgrounds,
     List<HomebrewCompendiumEntry>? otherEntries,
+    List<EntityFluff>? fluff,
   }) {
     return HomebrewBundle(
       schemaVersion: schemaVersion ?? this.schemaVersion,
@@ -252,6 +265,7 @@ class HomebrewBundle {
       feats: feats ?? this.feats,
       backgrounds: backgrounds ?? this.backgrounds,
       otherEntries: otherEntries ?? this.otherEntries,
+      fluff: fluff ?? this.fluff,
     );
   }
 }

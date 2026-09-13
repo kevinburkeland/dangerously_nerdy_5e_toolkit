@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1651%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1668%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -54,6 +54,10 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - **AST & EntryNodeTransformer**: Decodes nested community JSON structures, entries, lists, tables, and tag syntax (e.g. `{@spell ...}`, `{@item ...}`, `{@dice ...}`, `{@creature ...}`, `{@condition ...}`, `{@damage ...}`).
   - **Automated Monster Extraction**: Parses abbreviated sizes, alignments, multiattack routines, damage types, and spellcasting blocks into fully playable statblocks.
   - **Subclass Feature Stitching**: Dynamically stitches subclass feature progressions into canonical or homebrew parent classes.
+  - **Universal Lore & Fluff Engine (`EntityFluffService`)**:
+    - Full community compendium fluff format support across monsters, spells, items, classes, subclasses, races/species, feats, backgrounds, conditions, rewards, objects, vehicles, and traps.
+    - Two-pass deferred `_copy` inheritance resolving base lore descriptions and artwork paths for entity variants without data loss.
+    - Isolate boundary bridging ensuring background compute parses (`_parseJsonInIsolate`) propagate directly into persistent storage and runtime codices.
 * **High-Performance Background Parsing**:
   - Offloads heavy JSON bundle parsing to a Dart background isolate to maintain a butter-smooth 60/120fps UI during multi-megabyte bundle imports.
   - Real-time modal progress reporting showing exact entry processing status.
@@ -470,7 +474,7 @@ flutter analyze
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
 - Implementation of multi-tier conflict resolution, CvRDT state replication, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, character progression pipelines, Anti-Corruption Layer (ACL) compendium parsers, and cryptographically secure RNG utilities.
-- Writing comprehensive unit, widget, domain purity, and resilience tests (1,661 automated tests).
+- Writing comprehensive unit, widget, domain purity, and resilience tests (1,668 automated tests).
 - UI styling, 3D dice physics, responsive layout refinements, and documentation.
 
 All AI-generated contributions were thoroughly audited, tested, verified, and refined by human developers to ensure high code quality, security, and accuracy to 5e RAW rules.

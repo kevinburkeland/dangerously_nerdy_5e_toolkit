@@ -285,10 +285,33 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
         'table',
         'reward',
         'charoption',
+        'monsterfluff',
+        'spellfluff',
+        'itemfluff',
+        'racefluff',
+        'classfluff',
+        'subclassfluff',
+        'featfluff',
+        'backgroundfluff',
+        'optionalfeaturefluff',
+        'conditionfluff',
+        'rewardfluff',
+        'objectfluff',
+        'vehiclefluff',
+        'trapfluff',
+        'languagefluff',
+        'recipefluff',
+        'charoptionfluff',
+        'racefluffmeta',
+        'fluff',
       ];
 
-      final foundBundleKeys = bundleKeys
-          .where((k) => map[k] is List && (map[k] as List).isNotEmpty)
+      final foundBundleKeys = map.keys
+          .where((k) {
+            final lower = k.toLowerCase().trim();
+            final isKnownBundle = bundleKeys.contains(lower) || lower.endsWith('fluff');
+            return isKnownBundle && map[k] is List && (map[k] as List).isNotEmpty;
+          })
           .toList();
 
       if (foundBundleKeys.isNotEmpty) {

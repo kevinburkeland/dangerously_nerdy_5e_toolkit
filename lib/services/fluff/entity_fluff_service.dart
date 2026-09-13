@@ -94,8 +94,30 @@ class EntityFluffService extends ChangeNotifier {
 
   /// Retrieves lore/fluff for a specific entity
   EntityFluff? getFluff(String entityType, String slug) {
-    return _fluffRegistry[_buildKey(entityType, slug)];
+    final direct = _fluffRegistry[_buildKey(entityType, slug)];
+    if (direct != null) return direct;
+
+    // Fallback: check generic category
+    if (entityType.toLowerCase() != 'generic') {
+      final generic = _fluffRegistry[_buildKey('generic', slug)];
+      if (generic != null) return generic;
+    }
+
+    // Fallback: search by slug across all registered categories
+    final cleanSlug = slug.toLowerCase().trim();
+    for (final entry in _fluffRegistry.entries) {
+      if (entry.value.slug == cleanSlug) {
+        return entry.value;
+      }
+    }
+    return null;
   }
+
+  /// Returns all currently registered fluff entries
+  List<EntityFluff> getAllFluff() => _fluffRegistry.values.toList();
+
+  /// Total count of registered lore/fluff entries
+  int get fluffCount => _fluffRegistry.length;
 
   /// Sets or merges lore/fluff for a specific entity
   void setFluff(

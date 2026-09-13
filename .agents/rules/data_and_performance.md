@@ -190,7 +190,20 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - When importing bundles or restoring snapshots, `HomebrewBundle.fromMap`, `AppBackupService.importFullBackupJson`, and `DmBackupService.restoreFullSystemSnapshot` must reconcile standalone `subraces` with parent `races`, and synthesize parent shells for orphan subraces referencing base SRD species (such as Human, Elf, Dwarf), guaranteeing zero entity loss.
   - Sibling serialization ensures both flat array lookups (`customSubraces`) and parent-child hierarchy (`race.subraces`) remain in sync across all backup and export formats.
 
+## 12. Universal Fluff & Lore Ingestion Pipeline & Isolate Bridging
 
-
-
-
+- **Dynamic Fluff Bundle Key Detection:**
+  - Ingestion manifests and JSON bundle parsers (`CompendiumJsonIngestionPipeline.hasBundleKeys`, `GithubIngestorAdapter.foundBundleKeys`) dynamically accept any key where `lower.endsWith('fluff') && map[k] is List` along with specific compendium keys (`monsterfluff`, `spellfluff`, `itemfluff`, `racefluff`, `classfluff`, `subclassfluff`, `featfluff`, `backgroundfluff`, `optionalfeaturefluff`, `conditionfluff`, `trapfluff`, etc.).
+  - Remote file discovery in `GithubIngestorAdapter` must not treat fluff bundles as repository tooling or metadata artifacts.
+- **Authentic Single Fluff Map Detection:**
+  - Standalone fluff files often contain pure lore maps (`name`, `entries`, `images`, `_copy`) without artificial `_fluff` or `fluffType` marker keys.
+  - `isSingleFluff` inspects keys: if the object possesses name/title and lore structures (`entries`, `entry`, `images`, `_copy`, `lore`) while completely lacking mechanical statblock identifiers (`cr`, `school`, `hd`, `rarity`, `classFeatures`, `subclassFeatures`, `speed`, `size`), it is accurately classified as fluff.
+  - Entity types are inferred from context (`className` -> subclass, image paths -> monster, or codex lookup fallbacks).
+- **Two-Pass Deferred `_copy` Resolution:**
+  - Ingestors must not discard fluff entries utilizing community compendium `_copy` mechanics (e.g. referencing a base creature or spell).
+  - Fluff ingestion parses self-contained entries first, followed by a second pass that copies `loreMarkdown` and `images` from target base entities.
+- **Isolate Port Fluff Bridging:**
+  - Background isolate parsing (`compute(_parseJsonInIsolate, ...)`) cannot mutate in-memory singleton state (`EntityFluffService`) across isolate memory boundaries.
+  - `IngestionBatchResult` must carry `final List<EntityFluff> fluff;` across the isolate port, allowing the main UI thread to call `EntityFluffService().batchRegisterFluff(ingestion.fluff)` upon receiving the computed batch.
+- **Universal Bundle & Backup Persistence:**
+  - `HomebrewBundle` and persistence services serialize registered lore via `HomebrewBundle.fluff`, maintaining parity across import/export, cloud backups, and local storage.

@@ -2949,6 +2949,22 @@ class HomebrewPersistenceService {
       final coreRuleset = _mapDomainRulesetToCore(entity.ruleset);
       final typeLower = entity.entityType.toLowerCase().trim();
 
+      final isFluff = typeLower.endsWith('fluff') ||
+          typeLower == 'fluff' ||
+          ((typeLower == 'custom' || typeLower == 'generic') &&
+              (payload.containsKey('_fluff') || payload.containsKey('flufftype')));
+
+      if (isFluff) {
+        final rawType = typeLower.endsWith('fluff') && typeLower != 'fluff'
+            ? typeLower.substring(0, typeLower.length - 5)
+            : 'generic';
+        final pipeline = CompendiumJsonIngestionPipeline();
+        pipeline.ingestJsonMap({
+          '${rawType}Fluff': [payload],
+        });
+        continue;
+      }
+
       final isMonster = creatureTypes.contains(typeLower) ||
           typeLower.startsWith('{type:') ||
           payload.containsKey('cr') ||

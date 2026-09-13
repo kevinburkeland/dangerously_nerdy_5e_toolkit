@@ -4,6 +4,7 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/homebrew_other_category.dart';
 import '../../services/acl/homebrew_merge_resolver.dart';
+import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
 import '../../services/io/compendium_file_picker_service.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
@@ -98,6 +99,11 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
           });
         }
         return;
+      }
+
+      // Register parsed lore/fluff across the isolate boundary onto the main thread
+      if (ingestion.fluff.isNotEmpty) {
+        EntityFluffService().batchRegisterFluff(ingestion.fluff);
       }
 
       setState(() => _analyzePhase = 'Checking for conflicts\u2026');
