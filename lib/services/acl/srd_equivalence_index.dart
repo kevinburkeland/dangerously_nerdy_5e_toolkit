@@ -35,6 +35,9 @@ class SrdEquivalenceIndex {
 
   bool _built = false;
 
+  /// Returns true if the index has already been built.
+  bool get isBuilt => _built;
+
   // ---------------------------------------------------------------------------
   // Public API
   // ---------------------------------------------------------------------------

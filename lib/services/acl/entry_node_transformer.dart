@@ -297,8 +297,10 @@ class EntryNodeTransformer {
       buffer.writeln('| ${colLabels.join(' | ')} |');
       buffer.writeln('| ${colLabels.map((_) => '---').join(' | ')} |');
     } else if (rows.isNotEmpty && rows.first is List) {
-      // Auto-generate separator based on row width
+      // Auto-generate header and separator based on row width
       final firstRow = rows.first as List;
+      final headers = List.generate(firstRow.length, (i) => 'Col ${i + 1}').join(' | ');
+      buffer.writeln('| $headers |');
       final sep = List.filled(firstRow.length, '---').join(' | ');
       buffer.writeln('| $sep |');
     }

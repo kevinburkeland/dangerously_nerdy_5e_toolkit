@@ -3,6 +3,7 @@ import '../../models/dm_screen_data.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
 import '../common/diff_highlight_banner.dart';
+import '../common/formatted_markdown_text.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
 
 /// Interactive modal comparing 2014 RAW rules vs 2024 Revised rules side-by-side.
@@ -215,23 +216,81 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
             ],
           ),
           Divider(height: 16, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2)),
-          ...rules.map((r) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('• ', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
-                    Expanded(
-                      child: Text(
-                        r,
-                        style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.85), fontSize: 13, height: 1.35),
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+          ..._buildRuleWidgets(context, rules, accentColor),
         ],
       ),
     );
+  }
+
+  List<Widget> _buildRuleWidgets(BuildContext context, List<String> rules, Color accentColor) {
+    final theme = Theme.of(context);
+    final widgets = <Widget>[];
+    int i = 0;
+    while (i < rules.length) {
+      final rule = rules[i].trim();
+      if (rule.startsWith('|')) {
+        final tableLines = <String>[];
+        while (i < rules.length && rules[i].trim().startsWith('|')) {
+          tableLines.add(rules[i].trim());
+          i++;
+        }
+        final tableMarkdown = tableLines.join('\n');
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: FormattedMarkdownText(
+              tableMarkdown,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                fontSize: 12.5,
+                height: 1.35,
+              ),
+              boldColor: accentColor,
+            ),
+          ),
+        );
+      } else if (rule.startsWith('#')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4, top: 4),
+            child: FormattedMarkdownText(
+              rule,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              boldColor: accentColor,
+            ),
+          ),
+        );
+        i++;
+      } else {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('• ', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: FormattedMarkdownText(
+                    rule,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                    boldColor: accentColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+        i++;
+      }
+    }
+    return widgets;
   }
 }

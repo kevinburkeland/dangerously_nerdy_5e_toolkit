@@ -152,6 +152,7 @@ class HomebrewImportOrchestrator {
 
         final accumulatedErrors = <String>[];
         final pendingBatch = <HomebrewEntity>[];
+        final pendingLedgerEntries = <({String id, HomebrewEntity item, HybridLogicalClock timestamp})>[];
         var importedCount = 0;
         var skippedCount = 0;
         var lastTelemetryEmission = DateTime.fromMillisecondsSinceEpoch(0);
@@ -162,7 +163,7 @@ class HomebrewImportOrchestrator {
           if (result is IngestionSuccessResult) {
             final entity = result.entity;
             _hlc = _hlc.tick();
-            _ledger = _ledger.add(entity.id, entity, _hlc);
+            pendingLedgerEntries.add((id: entity.id, item: entity, timestamp: _hlc));
 
             if (_persister != null) {
               try {
@@ -192,6 +193,10 @@ class HomebrewImportOrchestrator {
           final now = DateTime.now();
           if (now.difference(lastTelemetryEmission).inMilliseconds >= telemetryThrottleIntervalMs) {
             lastTelemetryEmission = now;
+            if (pendingLedgerEntries.isNotEmpty) {
+              _ledger = _ledger.addBatch(pendingLedgerEntries);
+              pendingLedgerEntries.clear();
+            }
             telemetry = telemetry.copyWith(
               filesImported: importedCount,
               filesSkipped: skippedCount,
@@ -203,7 +208,11 @@ class HomebrewImportOrchestrator {
           }
         }
 
-        // Flush remaining buffered batch
+        // Flush remaining buffered batch and ledger entries
+        if (pendingLedgerEntries.isNotEmpty) {
+          _ledger = _ledger.addBatch(pendingLedgerEntries);
+          pendingLedgerEntries.clear();
+        }
         if (pendingBatch.isNotEmpty && _batchPersister != null) {
           try {
             await _batchPersister!(List.unmodifiable(pendingBatch));

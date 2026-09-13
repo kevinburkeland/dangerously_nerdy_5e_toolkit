@@ -86,5 +86,73 @@ In battle, you enter a rage using `Bonus Action`.
 
       expect(find.byType(SizedBox), findsOneWidget);
     });
+
+    testWidgets('renders markdown tables as native Table widgets with headers and rows', (tester) async {
+      const tableSample = '''
+| d4 | Result |
+|---|---|
+| 1 | Potion of Healing |
+| 2 | Scroll of Shield |
+''';
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: FormattedMarkdownText(tableSample),
+          ),
+        ),
+      );
+
+      expect(find.byType(Table), findsOneWidget);
+      expect(find.textContaining('d4', findRichText: true), findsOneWidget);
+      expect(find.textContaining('Potion of Healing', findRichText: true), findsOneWidget);
+      expect(find.textContaining('Scroll of Shield', findRichText: true), findsOneWidget);
+    });
+
+    testWidgets('renders markdown tables embedded in text without double blank lines', (tester) async {
+      const embeddedSample = '''
+Roll on the table below:
+| d6 | Boon |
+|---|---|
+| 1 | +1 to STR |
+| 2 | +1 to DEX |
+Effects last 1 hour.
+''';
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: FormattedMarkdownText(embeddedSample),
+          ),
+        ),
+      );
+
+      expect(find.byType(Table), findsOneWidget);
+      expect(find.textContaining('Roll on the table below:', findRichText: true), findsOneWidget);
+      expect(find.textContaining('Boon', findRichText: true), findsOneWidget);
+      expect(find.textContaining('+1 to STR', findRichText: true), findsOneWidget);
+      expect(find.textContaining('Effects last 1 hour.', findRichText: true), findsOneWidget);
+    });
+
+    testWidgets('handles escaped pipes and uneven columns without throwing', (tester) async {
+      const escapedSample = '''
+| Roll | Description | Notes |
+|:---|:---:|---:|
+| 1 | Option A \\| Option B | Extra |
+| 2 | Uneven row with fewer cells |
+''';
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: FormattedMarkdownText(escapedSample),
+          ),
+        ),
+      );
+
+      expect(find.byType(Table), findsOneWidget);
+      expect(find.textContaining('Option A | Option B', findRichText: true), findsOneWidget);
+      expect(find.textContaining('Uneven row with fewer cells', findRichText: true), findsOneWidget);
+    });
   });
 }

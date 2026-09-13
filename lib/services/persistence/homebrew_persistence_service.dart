@@ -3191,7 +3191,7 @@ class HomebrewPersistenceService {
     final raceParser = CompendiumRaceParser();
     final genericParser = CompendiumGenericEntryParser();
     final srdIndex = SrdEquivalenceIndex();
-    if (excludeSrdCanon) srdIndex.build();
+    if (excludeSrdCanon && !srdIndex.isBuilt) srdIndex.build();
 
     const creatureTypes = {
       'monster',

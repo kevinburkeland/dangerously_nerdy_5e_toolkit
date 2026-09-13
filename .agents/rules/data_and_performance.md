@@ -250,3 +250,27 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Natural Language Swimming & Amphibious Recognition:**
   - The ACL parser recognizes phrases such as `"breathe air and water"`, `"breathe water"`, and `"breathes underwater"` as conferring `canSwim: true`, ensuring amphibious and aquatic creatures possess accurate mobility flags even when raw speed blocks omit an explicit swimming speed.
 
+## 16. CvRDT Ledger Batching & High-Volume Compendium Ingestion Performance
+
+- **Eliminating $O(N^2)$ Map Re-allocations with `CrdtOrSet.addBatch`:**
+  - When importing large compendium packs or remote manifests containing tens of thousands of entities, iteratively adding items via single-item `.add()` calls creates an immutable copy of the ledger map on each addition. For 15,000 items, this resulted in ~112 million entity copies, severely degrading import throughput.
+  - Ingestors and streaming synchronizers (`HomebrewImportOrchestrator`) must collect ledger entries into micro-batches (`pendingLedgerEntries`) and invoke `CrdtOrSet.addBatch`, cloning the map only once per batch and processing all entries in a single pass while respecting individual tombstones.
+- **Import Dialog UI Virtualization & Throttled Progress:**
+  - In `HomebrewImportPreviewDialog`, compendium categories must be pre-bucketed during analysis into `_bucketedOtherEntries` rather than running classification regexes (`HomebrewOtherCategory.classify`) tens of thousands of times per build frame.
+  - `ExpansionTile.initiallyExpanded` must only default to `true` for small lists (`items.length <= 50`). Large collections must start collapsed to avoid instantiating thousands of unvirtualized widget subtrees simultaneously.
+  - Progress callbacks (`onProgress`) during bundle writes must be throttled to fire at most once every 50 saved entities or 80ms, eliminating UI thread locking caused by thousands of synchronous `setState` calls.
+- **Index Rebuild Guarding:**
+  - `SrdEquivalenceIndex.build()` checks `isBuilt` before execution. Batch persistence routines (`saveHomebrewEntitiesBatch`) must check `if (excludeSrdCanon && !srdIndex.isBuilt) srdIndex.build()` to prevent rebuilding the full SRD canonical equivalence tree on every chunk of 50 entities.
+
+## 17. Markdown Table Normalization, Escaped Pipe Isolation, & Detail Dialog Parity
+
+- **Table Isolation from Surrounding Paragraphs:**
+  - Markdown descriptions often contain tables immediately following headings or introductory text without double linebreaks (`\n\n`).
+  - `FormattedMarkdownText` preprocesses text with `_isolateMarkdownTables` to detect table blocks (header line, delimiter line matching `_tableSepRegex`, and data rows) and insert paragraph breaks before and after, preventing tables from being swallowed into text or heading spans.
+- **Escaped Pipe Protection & Column Count Normalization:**
+  - Table cells frequently contain escaped pipes (`\|`) for dice ranges or alternate options. Splitting on unescaped pipes causes cell misalignment and uneven row column counts.
+  - `_splitTableRow` temporarily replaces `\|` before splitting and restores `|` in parsed cell text.
+  - All table rows are normalized to `maxCols` (padding shorter rows with empty cells) before passing to Flutter's `Table` widget, completely eliminating fatal framework assertions (`'Every TableRow in a Table must have the same number of children'`).
+- **Detail & Comparison Dialog Tabular Parity:**
+  - Modal detail views displaying multi-edition rules (`DmRuleComparisonDialog._buildRuleWidgets`) must group consecutive lines starting with `|` into markdown tables and render them via `FormattedMarkdownText` with zebra-striping and horizontal scrolling, rather than naively mapping every row to a plain bullet point (`• | d10 | Encounter |`).
+

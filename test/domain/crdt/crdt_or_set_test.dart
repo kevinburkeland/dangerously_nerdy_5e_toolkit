@@ -151,5 +151,29 @@ void main() {
       expect(rejectedAddSet.activeValues, isEmpty);
       expect(rejectedAddSet.tombstones['ghost-item'], equals(tRemove));
     });
+
+    test('addBatch() atomically adds multiple items while respecting tombstones', () {
+      const t1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
+      const t2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
+      const t3 = HybridLogicalClock(physicalTime: 3000, logicalCounter: 0, nodeId: 'nodeA');
+
+      const initial = CrdtOrSet<String>(
+        tombstones: {'deleted-item': t2},
+      );
+
+      final batch = [
+        (id: 'item-1', item: 'Fighter', timestamp: t1),
+        (id: 'item-2', item: 'Wizard', timestamp: t3),
+        (id: 'deleted-item', item: 'Ghost', timestamp: t1), // Rejected (t1 < t2)
+        (id: 'revived-item', item: 'Lich', timestamp: t3),
+      ];
+
+      final result = initial.addBatch(batch);
+
+      expect(result.activeValues, containsAll(['Fighter', 'Wizard', 'Lich']));
+      expect(result.activeValues.contains('Ghost'), isFalse);
+      expect(result.tombstones.containsKey('deleted-item'), isTrue);
+      expect(result.items.length, equals(3));
+    });
   });
 }

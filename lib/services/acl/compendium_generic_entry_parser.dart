@@ -78,7 +78,7 @@ class CompendiumGenericEntryParser {
       category = 'Skill';
     } else if (rawCat.contains('deck') || rawCat.contains('card')) {
       category = 'Deck';
-    } else if (rawCat.contains('monsterfeature') || rawCat.contains('monster feature') || rawCat.contains('trait') || defaultCategory == 'Monster Feature') {
+    } else if (rawCat.contains('monsterfeature') || rawCat.contains('monster feature') || rawCat.contains('monster trait') || rawCat == 'trait' || rawCat == 'traits' || defaultCategory == 'Monster Feature') {
       category = 'Monster Feature';
     } else if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['category'].toString());

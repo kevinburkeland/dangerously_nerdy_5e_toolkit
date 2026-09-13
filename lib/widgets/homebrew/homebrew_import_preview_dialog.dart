@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/homebrew_other_category.dart';
 import '../../services/acl/homebrew_merge_resolver.dart';
 import '../../services/fluff/entity_fluff_service.dart';
@@ -38,6 +39,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
 
   RulesetVersion? _selectedRuleset;
   ImportAnalysisResult? _analysisResult;
+  Map<HomebrewOtherCategory, List<ImportAnalysisItem<HomebrewCompendiumEntry>>>? _bucketedOtherEntries;
   LoadedCompendiumFile? _loadedFile;
 
   // Analysis phase
@@ -133,9 +135,20 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
         localOtherEntries: others,
       );
 
+      final bucketed = <HomebrewOtherCategory, List<ImportAnalysisItem<HomebrewCompendiumEntry>>>{};
+      for (final e in analysis.otherEntries) {
+        final subcat = HomebrewOtherCategory.classify(
+          category: e.incomingEntity.category,
+          name: e.incomingEntity.name,
+          customProperties: e.incomingEntity.customProperties,
+        );
+        bucketed.putIfAbsent(subcat, () => []).add(e);
+      }
+
       if (mounted) {
         setState(() {
           _analysisResult = analysis;
+          _bucketedOtherEntries = bucketed;
           _isAnalyzing = false;
         });
       }
@@ -173,11 +186,17 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
       _importPhase = 'Preparing\u2026';
     });
 
+    int lastReported = 0;
+    final stopwatch = Stopwatch()..start();
     try {
       await _persistence.importResolvedBundle(
         analysis,
         onProgress: (saved, total, phase) {
-          if (mounted) {
+          if (!mounted) return;
+          final elapsed = stopwatch.elapsedMilliseconds;
+          if (saved == total || saved - lastReported >= 50 || elapsed >= 80) {
+            lastReported = saved;
+            stopwatch.reset();
             setState(() {
               _importProgress = saved;
               _importTotal = total;
@@ -517,22 +536,11 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                   _buildCategorySection('Feats', analysis.feats),
                 if (analysis.backgrounds.isNotEmpty)
                   _buildCategorySection('Backgrounds', analysis.backgrounds),
-                for (final subcat in HomebrewOtherCategory.values) ...[
-                  Builder(
-                    builder: (_) {
-                      final matching = analysis.otherEntries.where((e) {
-                        return HomebrewOtherCategory.classify(
-                              category: e.incomingEntity.category,
-                              name: e.incomingEntity.name,
-                              customProperties: e.incomingEntity.customProperties,
-                            ) ==
-                            subcat;
-                      }).toList();
-                      if (matching.isEmpty) return const SizedBox.shrink();
-                      return _buildCategorySection(subcat.label, matching);
-                    },
-                  ),
-                ],
+                if (_bucketedOtherEntries != null)
+                  for (final entry in _bucketedOtherEntries!.entries) ...[
+                    if (entry.value.isNotEmpty)
+                      _buildCategorySection(entry.key.label, entry.value),
+                  ],
               ],
             ),
           ),
@@ -565,7 +573,7 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
     final allSelected = items.every((i) => i.isSelected);
 
     return ExpansionTile(
-      initiallyExpanded: true,
+      initiallyExpanded: items.length <= 50,
       title: Text(
         '$title (${items.where((i) => i.isSelected).length}/${items.length})',
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),

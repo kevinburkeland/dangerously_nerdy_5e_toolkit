@@ -355,5 +355,61 @@ void main() {
       expect(find.text('Open in Table Roller'), findsNothing);
       expect(find.byType(Table), findsOneWidget);
     });
+
+    testWidgets('DmRuleComparisonDialog renders markdown tables with native Table widgets and no bullet prefixes', (tester) async {
+      const comparisonTableItem = DmReferenceItem(
+        id: 'exhaustion-comparison-table',
+        title: 'Exhaustion Effects',
+        category: DmCategory.conditions,
+        summary: 'Exhaustion rules comparison',
+        tags: ['Condition', 'Exhaustion'],
+        isChangedIn2024: true,
+        diffSummary: 'Exhaustion was revised from 6 discrete tiers to a linear -2 penalty per level (max 10).',
+        rules2014: [
+          '| Level | Effect |',
+          '| :--- | :--- |',
+          '| 1 | Disadvantage on ability checks |',
+          '| 2 | Speed halved |',
+        ],
+        rules2024: [
+          '| Level | Effect |',
+          '| :--- | :--- |',
+          '| 1-10 | -2 to D20 Tests per level |',
+          '| 10 | Death |',
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  DmRuleComparisonDialog.show(
+                    ctx,
+                    item: comparisonTableItem,
+                    isPinned: false,
+                    onTogglePin: () {},
+                  );
+                },
+                child: const Text('Open Comparison'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Open the comparison dialog
+      await tester.tap(find.text('Open Comparison'));
+      await tester.pumpAndSettle();
+
+      // Expect 2 Table widgets rendered (one for 2014 edition box, one for 2024 edition box)
+      expect(find.byType(Table), findsNWidgets(2));
+      expect(find.textContaining('Disadvantage on ability checks', findRichText: true), findsOneWidget);
+      expect(find.textContaining('-2 to D20 Tests per level', findRichText: true), findsOneWidget);
+
+      // Verify no raw pipe bullets like "• | Level |" exist
+      expect(find.textContaining('• |'), findsNothing);
+    });
   });
 }

@@ -46,6 +46,7 @@ class FormattedMarkdownText extends StatelessWidget {
       return const SizedBox.shrink();
     }
     rawText = CompendiumJsonIngestionPipeline.cleanRawTags(rawText);
+    rawText = _isolateMarkdownTables(rawText);
 
     final paragraphs = rawText.split(RegExp(r'\n\s*\n'));
     final blockWidgets = <Widget>[];
@@ -342,23 +343,77 @@ class FormattedMarkdownText extends StatelessWidget {
     return spans;
   }
 
+  static final RegExp _tableSepRegex = RegExp(r'^\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)+\|?$');
+
+  static String _isolateMarkdownTables(String text) {
+    final lines = text.split('\n');
+    final buffer = StringBuffer();
+    bool inTable = false;
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final trimmed = line.trim();
+      final isPipeLine = trimmed.contains('|');
+
+      if (isPipeLine && !inTable) {
+        // Check if this line or any of the next 2 lines has a table separator
+        bool hasSep = _tableSepRegex.hasMatch(trimmed);
+        if (!hasSep) {
+          for (int j = i + 1; j < lines.length && j <= i + 2; j++) {
+            if (_tableSepRegex.hasMatch(lines[j].trim())) {
+              hasSep = true;
+              break;
+            }
+          }
+        }
+        if (hasSep) {
+          inTable = true;
+          buffer.write('\n\n');
+        }
+      } else if (!isPipeLine && inTable) {
+        inTable = false;
+        buffer.write('\n\n');
+      }
+
+      buffer.writeln(line);
+    }
+    return buffer.toString();
+  }
+
   bool _isMarkdownTable(String text) {
     final lines = text.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
     if (lines.length < 2) return false;
-    return lines.first.startsWith('|') &&
-        lines.first.endsWith('|') &&
-        lines.any((l) => RegExp(r'^\|(?:\s*:?-+:?\s*\|)+$').hasMatch(l));
+    return lines.any((l) => _tableSepRegex.hasMatch(l)) &&
+        lines.where((l) => l.contains('|')).length >= 2;
+  }
+
+  List<String> _splitTableRow(String line) {
+    var stripped = line.trim();
+    if (stripped.startsWith('|')) stripped = stripped.substring(1);
+    if (stripped.endsWith('|')) stripped = stripped.substring(0, stripped.length - 1);
+    // Protect escaped pipes \|
+    final protected = stripped.replaceAll(r'\|', '\u0000');
+    final cells = protected.split('|').map((c) => c.replaceAll('\u0000', '|').trim()).toList();
+    return cells;
   }
 
   Widget _buildMarkdownTable(String text, TextStyle baseStyle) {
     final rawLines = text.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
-    final tableLines = rawLines.where((l) => !RegExp(r'^\|(?:\s*:?-+:?\s*\|)+$').hasMatch(l)).toList();
+    final tableLines = rawLines.where((l) => !_tableSepRegex.hasMatch(l)).toList();
     if (tableLines.isEmpty) return const SizedBox.shrink();
 
-    final rows = tableLines.map((line) {
-      final stripped = line.startsWith('|') ? line.substring(1) : line;
-      final endStripped = stripped.endsWith('|') ? stripped.substring(0, stripped.length - 1) : stripped;
-      return endStripped.split('|').map((c) => c.trim()).toList();
+    final parsedRows = tableLines.map((line) => _splitTableRow(line)).toList();
+    int maxCols = 0;
+    for (final row in parsedRows) {
+      if (row.length > maxCols) maxCols = row.length;
+    }
+    if (maxCols == 0) return const SizedBox.shrink();
+
+    final normalizedRows = parsedRows.map((row) {
+      if (row.length < maxCols) {
+        return [...row, ...List.filled(maxCols - row.length, '')];
+      }
+      return row;
     }).toList();
 
     return SingleChildScrollView(
@@ -372,17 +427,21 @@ class FormattedMarkdownText extends StatelessWidget {
         ),
         child: Table(
           defaultColumnWidth: const IntrinsicColumnWidth(),
-          children: rows.asMap().entries.map((entry) {
+          children: normalizedRows.asMap().entries.map((entry) {
             final rowIndex = entry.key;
             final cells = entry.value;
             final isHeader = rowIndex == 0;
             return TableRow(
               decoration: BoxDecoration(
-                color: isHeader ? Colors.white.withValues(alpha: 0.06) : Colors.transparent,
+                color: isHeader
+                    ? (boldColor ?? Colors.amberAccent).withValues(alpha: 0.1)
+                    : (rowIndex % 2 == 1
+                        ? Colors.white.withValues(alpha: 0.02)
+                        : Colors.transparent),
               ),
               children: cells.map((cell) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   child: Text.rich(
                     TextSpan(
                       children: _parseInlineMarkdown(

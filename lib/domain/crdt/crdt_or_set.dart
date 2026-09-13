@@ -24,13 +24,22 @@ class CrdtOrSet<T> {
   /// Adds or updates an item with the given [id] and [timestamp].
   /// If a tombstone exists for [id] that is newer than [timestamp], the addition is rejected.
   CrdtOrSet<T> add(String id, T item, HybridLogicalClock timestamp) {
+    return addBatch([ (id: id, item: item, timestamp: timestamp) ]);
+  }
+
+  /// Adds or updates multiple items in a single batch operation to avoid O(N^2) map copies.
+  CrdtOrSet<T> addBatch(Iterable<({String id, T item, HybridLogicalClock timestamp})> entries) {
+    if (entries.isEmpty) return this;
     final newItems = Map<String, CrdtLwwRegister<T>>.from(items);
     final newTombstones = Map<String, HybridLogicalClock>.from(tombstones);
 
-    // Only add if we don't have a newer or equal tombstone for this item
-    if (!newTombstones.containsKey(id) || timestamp.isAfter(newTombstones[id]!)) {
-      newItems[id] = CrdtLwwRegister(value: item, timestamp: timestamp);
-      newTombstones.remove(id);
+    for (final entry in entries) {
+      final id = entry.id;
+      final ts = entry.timestamp;
+      if (!newTombstones.containsKey(id) || ts.isAfter(newTombstones[id]!)) {
+        newItems[id] = CrdtLwwRegister(value: entry.item, timestamp: ts);
+        newTombstones.remove(id);
+      }
     }
 
     return CrdtOrSet(items: newItems, tombstones: newTombstones);
