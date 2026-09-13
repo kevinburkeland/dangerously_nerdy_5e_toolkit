@@ -344,6 +344,7 @@ class HomebrewEntityDto {
   static String _slugify(String name) {
     return name
         .toLowerCase()
+        .replaceAll(RegExp(r"['’]"), '')
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
   }

@@ -52,9 +52,13 @@ class SrdEquivalenceIndex {
 
     final normSlug = slug.toLowerCase().trim();
     final normName = _slugify(name);
+    // Unify hyphenated possessives (e.g. 'melf-s-acid-arrow' -> 'melfs-acid-arrow')
+    final unifiedSlug = normSlug.replaceAll(RegExp(r'-s(-|$)'), r's$1');
 
-    // 1. Direct slug or normalized name match
-    if (slugSet.contains(normSlug) || slugSet.contains(normName)) {
+    // 1. Direct slug, unified slug, or normalized name match
+    if (slugSet.contains(normSlug) ||
+        slugSet.contains(unifiedSlug) ||
+        slugSet.contains(normName)) {
       return SrdMatchResult.exactSrdMatch;
     }
 
@@ -63,12 +67,26 @@ class SrdEquivalenceIndex {
       return SrdMatchResult.exactSrdMatch;
     }
 
-    // 3. Stripped source suffix match (e.g., "fireball-phb", "fireball-srd", "goblin-mm", "fighter-2024")
+    // 3. Subclass class-prefix stripping (e.g., 'rogue-thief' -> 'thief')
+    if (type == EntityType.subclass) {
+      final withoutClass = normSlug.replaceFirst(RegExp(r'^[a-z]+-'), '');
+      if (slugSet.contains(withoutClass) || nameSet.contains(withoutClass)) {
+        return SrdMatchResult.exactSrdMatch;
+      }
+    }
+
+    // 4. Stripped source suffix match (e.g., "fireball-phb", "fireball-srd", "goblin-mm", "fighter-2024")
     final stripped = normSlug.replaceAll(
       RegExp(r'[-_](phb|dmg|mm|xge|tce|srd|srd52|srd51|2014|2024|v2014|v2024|xphb)$'),
       '',
     );
-    if (slugSet.contains(stripped) || nameSet.contains(stripped)) {
+    final strippedUnified = unifiedSlug.replaceAll(
+      RegExp(r'[-_](phb|dmg|mm|xge|tce|srd|srd52|srd51|2014|2024|v2014|v2024|xphb)$'),
+      '',
+    );
+    if (slugSet.contains(stripped) ||
+        slugSet.contains(strippedUnified) ||
+        nameSet.contains(stripped)) {
       return SrdMatchResult.exactSrdMatch;
     }
 
@@ -83,7 +101,8 @@ class SrdEquivalenceIndex {
     }
     final slugSet = _slugsByType[type] ?? const {};
     final normSlug = slug.toLowerCase().trim();
-    if (slugSet.contains(normSlug)) return true;
+    final unifiedSlug = normSlug.replaceAll(RegExp(r'-s(-|$)'), r's$1');
+    if (slugSet.contains(normSlug) || slugSet.contains(unifiedSlug)) return true;
     final stripped = normSlug.replaceAll(
       RegExp(r'[-_](phb|dmg|mm|xge|tce|srd|srd52|srd51|2014|2024|v2014|v2024|xphb)$'),
       '',
@@ -96,13 +115,17 @@ class SrdEquivalenceIndex {
     _slugsByType.clear();
     _namesByType.clear();
 
-    // 1. Spells (SpellbookLibrary — all canonical SRD spells)
+    // 1. Spells (SpellbookLibrary — all canonical SRD spells only)
     final spellSlugs = <String>{};
     final spellNames = <String>{};
-    for (final s in SpellbookLibrary.allSpells) {
-      spellSlugs.add(s.id.toLowerCase().trim());
-      spellSlugs.add(_slugify(s.name));
-      spellNames.add(_slugify(s.name));
+    for (final s in SpellbookLibrary.srdSpells) {
+      final sSlug = s.id.toLowerCase().trim();
+      final normName = _slugify(s.name);
+      spellSlugs.add(sSlug);
+      spellSlugs.add(sSlug.replaceAll(RegExp(r'[-_]'), ''));
+      spellSlugs.add(sSlug.replaceAll('spell_', '').replaceAll('_', '-'));
+      spellSlugs.add(normName);
+      spellNames.add(normName);
     }
     _index(EntityType.spell, spellSlugs, spellNames);
 
@@ -110,9 +133,13 @@ class SrdEquivalenceIndex {
     final monsterSlugs = <String>{};
     final monsterNames = <String>{};
     for (final m in MonsterCodexLibrary.allMonsters.where((m) => !m.isHomebrew)) {
-      monsterSlugs.add(m.id.toLowerCase().trim());
-      monsterSlugs.add(_slugify(m.name));
-      monsterNames.add(_slugify(m.name));
+      final mSlug = m.id.toLowerCase().trim();
+      final normName = _slugify(m.name);
+      monsterSlugs.add(mSlug);
+      monsterSlugs.add(mSlug.replaceAll(RegExp(r'[-_]'), ''));
+      monsterSlugs.add(normName);
+      monsterNames.add(normName);
+      if (m.name2014 != null) monsterNames.add(_slugify(m.name2014!));
     }
     _index(EntityType.monster, monsterSlugs, monsterNames);
 
@@ -120,10 +147,12 @@ class SrdEquivalenceIndex {
     final itemSlugs = <String>{};
     final itemNames = <String>{};
     for (final item in MagicItemLibrary.allItems) {
-      itemSlugs.add(item.id.toLowerCase().trim());
-      itemSlugs.add(item.id.replaceAll('_', '-').toLowerCase().trim());
-      itemSlugs.add(_slugify(item.name));
-      itemNames.add(_slugify(item.name));
+      final iSlug = item.id.toLowerCase().trim();
+      final normName = _slugify(item.name);
+      itemSlugs.add(iSlug);
+      itemSlugs.add(iSlug.replaceAll('_', '-'));
+      itemSlugs.add(normName);
+      itemNames.add(normName);
       if (item.name2014 != null) itemNames.add(_slugify(item.name2014!));
       if (item.name2024 != null) itemNames.add(_slugify(item.name2024!));
     }
@@ -134,8 +163,8 @@ class SrdEquivalenceIndex {
     }
     _index(EntityType.equipment, itemSlugs, itemNames);
 
-    // 4. Classes (SrdClassesLibrary — base SRD only)
-    final baseClasses = SrdClassesLibrary.allClasses.where((c) => c.id.ruleset != RulesetVersion.homebrew);
+    // 4. Classes (SrdClassesLibrary.baseClasses — base SRD only, unpolluted by custom classes)
+    final baseClasses = SrdClassesLibrary.baseClasses;
     final classSlugs = <String>{};
     final classNames = <String>{};
     for (final c in baseClasses) {
@@ -145,21 +174,28 @@ class SrdEquivalenceIndex {
     }
     _index(EntityType.classDefinition, classSlugs, classNames);
 
-    // 5. Subclasses (SrdClassesLibrary)
-    final baseSubclasses = baseClasses.expand((c) => c.subclasses);
+    // 5. Subclasses (SrdClassesLibrary baseClasses)
     final subSlugs = <String>{};
     final subNames = <String>{};
-    for (final s in baseSubclasses) {
-      subSlugs.add(s.id.slug.toLowerCase().trim());
-      subSlugs.add(_slugify(s.name));
-      subSlugs.add(_slugify(s.shortName));
-      subNames.add(_slugify(s.name));
-      subNames.add(_slugify(s.shortName));
+    for (final c in baseClasses) {
+      final cSlug = c.id.slug.toLowerCase().trim();
+      for (final s in c.subclasses) {
+        final sSlug = s.id.slug.toLowerCase().trim();
+        final sName = _slugify(s.name);
+        final sShort = _slugify(s.shortName);
+        subSlugs.add(sSlug);
+        subSlugs.add('$cSlug-$sSlug');
+        subSlugs.add(sName);
+        subSlugs.add('$cSlug-$sName');
+        subSlugs.add(sShort);
+        subNames.add(sName);
+        subNames.add(sShort);
+      }
     }
     _index(EntityType.subclass, subSlugs, subNames);
 
-    // 6. Species & Races (SrdSpeciesLibrary)
-    final baseSpecies = SrdSpeciesLibrary.allSpecies.where((r) => r.id.ruleset != RulesetVersion.homebrew);
+    // 6. Species & Races (SrdSpeciesLibrary.baseSpecies)
+    final baseSpecies = SrdSpeciesLibrary.baseSpecies;
     final raceSlugs = <String>{};
     final raceNames = <String>{};
     for (final r in baseSpecies) {
@@ -174,8 +210,8 @@ class SrdEquivalenceIndex {
     }
     _index(EntityType.species, raceSlugs, raceNames);
 
-    // 7. Feats (SrdFeatsLibrary)
-    final baseFeats = SrdFeatsLibrary.allFeats.where((f) => f.id.ruleset != RulesetVersion.homebrew);
+    // 7. Feats (SrdFeatsLibrary.baseFeats)
+    final baseFeats = SrdFeatsLibrary.baseFeats;
     final featSlugs = <String>{};
     final featNames = <String>{};
     for (final f in baseFeats) {
@@ -185,8 +221,8 @@ class SrdEquivalenceIndex {
     }
     _index(EntityType.feat, featSlugs, featNames);
 
-    // 8. Backgrounds (SrdBackgroundsLibrary)
-    final baseBgs = SrdBackgroundsLibrary.allBackgrounds.where((b) => b.id.ruleset != RulesetVersion.homebrew);
+    // 8. Backgrounds (SrdBackgroundsLibrary.baseBackgrounds)
+    final baseBgs = SrdBackgroundsLibrary.baseBackgrounds;
     final bgSlugs = <String>{};
     final bgNames = <String>{};
     for (final b in baseBgs) {
@@ -196,16 +232,27 @@ class SrdEquivalenceIndex {
     }
     _index(EntityType.background, bgSlugs, bgNames);
 
-    // 9. Canonical Eldritch Invocations & Optional Features (SrdFeatureOptions)
-    final invSlugs = <String>{};
-    final invNames = <String>{};
+    // 9. Canonical Eldritch Invocations, Actions & Conditions (SrdFeatureOptions & Core Rules)
+    final customSlugs = <String>{};
+    final customNames = <String>{};
     for (final inv in SrdFeatureOptions.warlockInvocationsAndBoons) {
-      invSlugs.add(inv.id.toLowerCase().trim());
-      invSlugs.add(inv.id.replaceAll('_', '-').toLowerCase().trim());
-      invSlugs.add(_slugify(inv.name));
-      invNames.add(_slugify(inv.name));
+      customSlugs.add(inv.id.toLowerCase().trim());
+      customSlugs.add(inv.id.replaceAll('_', '-').toLowerCase().trim());
+      customSlugs.add(_slugify(inv.name));
+      customNames.add(_slugify(inv.name));
     }
-    _index(EntityType.custom, invSlugs, invNames);
+    const coreRules = [
+      'attack', 'dash', 'disengage', 'dodge', 'help', 'hide', 'ready', 'search',
+      'cast-a-spell', 'use-an-object', 'activate-an-item', 'climb-onto-a-bigger-creature',
+      'blinded', 'charmed', 'deafened', 'frightened', 'grappled', 'incapacitated',
+      'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained',
+      'stunned', 'unconscious', 'exhaustion',
+    ];
+    for (final cr in coreRules) {
+      customSlugs.add(cr);
+      customNames.add(cr);
+    }
+    _index(EntityType.custom, customSlugs, customNames);
 
     _built = true;
   }

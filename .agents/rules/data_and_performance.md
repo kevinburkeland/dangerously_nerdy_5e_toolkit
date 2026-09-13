@@ -138,3 +138,24 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - `Spell.toMap()` explicitly serializes top-level `'classes'` from `customProperties['classes']` and numeric `rangeDistanceFeet` so exported bundles retain root attributes without degradation across re-downloads.
   - `Feat.fromMap()` auto-heals empty `grants` from `additionalSpells` or `spells` upon bundle deserialization.
   - `CompendiumJsonIngestionPipeline._revitalizeBundle` preserves `grants: reparsed.grants.isNotEmpty ? reparsed.grants : f.grants` when revitalizing feats.
+
+## 9. Homebrew Compendium Ingestion, SRD Deduplication & Category Routing
+
+- **SRD Index Isolation from Homebrew Pollution:**
+  - `SrdEquivalenceIndex.build()` MUST ONLY query base canonical SRD collections (`SpellbookLibrary.srdSpells`, `SrdClassesLibrary.baseClasses`, `SrdSpeciesLibrary.baseSpecies`, `SrdFeatsLibrary.baseFeats`, `SrdBackgroundsLibrary.baseBackgrounds`, and `MonsterCodexLibrary.allMonsters.where(!m.isHomebrew)`).
+  - Never query `.all*` getters that combine SRD and `_custom*` entities; doing so causes active homebrew to be indexed as SRD canon and subsequently purged during re-parsing.
+- **Slug Normalization & Prefix Tolerance:**
+  - Slug generation must consistently strip apostrophes (e.g., `_slugify("Melf's Acid Arrow")` -> `melfs-acid-arrow`).
+  - Deduplication matching (`SrdEquivalenceIndex.checkEntity`) must unify hyphenated possessives (`-s-` -> `s-`) and strip class prefixes from subclasses (`rogue-thief` -> `thief`).
+- **Batch Deduplication by Default:**
+  - `HomebrewPersistenceService.saveHomebrewEntitiesBatch` enforces `excludeSrdCanon: true` by default to prevent third-party JSON dumps from saving hundreds of duplicate base SRD entries into user homebrew storage.
+- **Compendium Category Routing:**
+  - `baseitem` and `magicvariant` must route into `items` (`saveCustomItemsBatch`).
+  - `subrace` must route into `races` (`saveCustomRacesBatch`) and attach to parent race definitions.
+  - `table` entries must be rendered into markdown tables using `colLabels` and rows.
+  - `deity` entries must format structured metadata headers (Pantheon, Alignment, Domains, Symbol).
+- **Reparse Dual-Store Synchronization:**
+  - `reparseAllHomebrew` must persist updated and pruned collections to both Hive (`_db.put`) and SharedPreferences (`prefs.setStringList`), ensuring that `exportHomebrewBundle` immediately exports clean, deduplicated data.
+- **Strict Avoidance of Non-SRD WotC Product Identity:**
+  - All test fixtures, mock data, and documentation must strictly use generic SRD content or invented homebrew names (e.g., "Chronoblast", "Astral Knight", "Sand Corsair Captain").
+

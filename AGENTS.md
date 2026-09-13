@@ -43,7 +43,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,605 passing tests)
+├── test/                               # Comprehensive test suite (1,616 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -99,6 +99,7 @@ dangerously_nerdy_5e_toolkit/
 - **Strict Bounds Clamping:** All numeric stats must be clamped (HP `0..999`, Level `1..20`, Ability Scores `1..30`, Currency `>= 0`).
 - **Deserialization Priority:** Computationally normalized or resolved fields (e.g., spatial range and variable damage math) must strictly take precedence over raw fallback JSON keys during DTO deserialization.
 - **Strict Entity Resolution & Anti-Collision:** Resolvers and codex lookups must prioritize exact `==` equality matches first. Substring fuzzy matching (e.g. `.contains('plate')`) is strictly prohibited to prevent collision regressions (such as Breastplate inheriting Full Plate AC 18). Fallbacks must enforce word-boundary regex (`\b`) and disallow binding generic tokens (e.g. `'Dragon'`) to distinct compound boss monsters (`'Dragon Turtle'`).
+- **Compendium Deduplication & Clean Ingestion:** `SrdEquivalenceIndex` indexes base SRD libraries (`SpellbookLibrary.srdSpells`, `SrdClassesLibrary.baseClasses`, etc.) unpolluted by custom homebrew. Batch imports drop canonical SRD duplicates (`excludeSrdCanon: true`), route `baseitem`/`magicvariant` to items and `subrace` to races, format markdown tables and deities, and persist re-parsed data to both Hive and SharedPreferences.
 
 ### 5. Performance & Pre-Computation
 - **Zero Runtime Regex in Hot Loops:** Never execute `RegExp` inside combat rounds, Monte Carlo loops, or DPR calculations. Parse traits into precomputed numeric profiles during ingestion.

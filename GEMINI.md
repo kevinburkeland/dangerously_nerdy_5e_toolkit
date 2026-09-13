@@ -18,6 +18,7 @@ For full codebase documentation, directory maps, and engineering directives, see
 4. **DTO Safety:** Map JSON to DTOs in `lib/infrastructure/dtos/` with numeric bounds clamping and `unparsedPayload` retention.
 5. **Asynchronous Stream Emission:** Broadcast StreamControllers in repositories MUST NOT use `sync: true` to prevent re-entrant deadlocks during mutex lock acquisition.
 6. **A11y:** 48x48dp touch targets minimum, expand abbreviations in `Semantics` labels, support `TextScaler.linear(2.0)`.
-7. **No Product Identity:** Strictly SRD 5.1 & 5.2 open content (CC-BY-4.0).
-8. **Continuous Documentation & Living Rules Protocol:** Before completing any run, sync [README.md](file:///README.md) (features, tests, architecture) and audit/codify newly learned patterns or corrections into [AGENTS.md](file:///AGENTS.md), [GEMINI.md](file:///GEMINI.md), and [.agents/rules/](file:///.agents/rules/).
+7. **No Product Identity:** Strictly SRD 5.1 & 5.2 open content (CC-BY-4.0). Tests and code must use generic or invented homebrew names.
+8. **Compendium Deduplication:** SrdEquivalenceIndex uses base SRD collections (`srdSpells`, `baseClasses`, etc.) unpolluted by homebrew; batch imports filter SRD canon by default (`excludeSrdCanon: true`); re-parse updates both Hive and SharedPreferences.
+9. **Continuous Documentation & Living Rules Protocol:** Before completing any run, sync [README.md](file:///README.md) (features, tests, architecture) and audit/codify newly learned patterns or corrections into [AGENTS.md](file:///AGENTS.md), [GEMINI.md](file:///GEMINI.md), and [.agents/rules/](file:///.agents/rules/).
 

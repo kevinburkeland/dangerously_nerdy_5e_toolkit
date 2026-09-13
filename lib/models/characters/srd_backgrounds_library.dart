@@ -25,6 +25,9 @@ class SrdBackgroundsLibrary {
     acolyte,
   ];
 
+  /// Base Core SRD Backgrounds unpolluted by custom backgrounds
+  static List<Background> get baseBackgrounds => _baseBackgrounds;
+
   static List<Background> _customBackgrounds = [];
 
   /// Dynamic list of all available backgrounds (Base SRD + Custom Homebrew)

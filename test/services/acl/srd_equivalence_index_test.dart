@@ -104,5 +104,90 @@ void main() {
       expect(index.isCanonSrd('custom-rogue', EntityType.classDefinition), isFalse);
       expect(index.isCanonSrd('custom-rogue', EntityType.classDefinition, name: 'Rogue'), isTrue);
     });
+
+    test('tolerates apostrophe-stripped and hyphenated slug formats for SRD spells', () {
+      // SRD spell with apostrophe
+      expect(
+        index.checkEntity(
+          slug: 'melf-s-acid-arrow',
+          name: "Acid Arrow",
+          type: EntityType.spell,
+        ),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(
+          slug: 'melfs-acid-arrow',
+          name: "Acid Arrow",
+          type: EntityType.spell,
+        ),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      // Invented homebrew spell
+      expect(
+        index.checkEntity(
+          slug: 'chronoblast',
+          name: 'Chronoblast',
+          type: EntityType.spell,
+        ),
+        equals(SrdMatchResult.notSrd),
+      );
+    });
+
+    test('recognizes canonical subclasses with or without class prefixes', () {
+      expect(
+        index.checkEntity(
+          slug: 'rogue-thief',
+          name: 'Thief',
+          type: EntityType.subclass,
+        ),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(
+          slug: 'thief',
+          name: 'Thief',
+          type: EntityType.subclass,
+        ),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      // Invented homebrew subclass
+      expect(
+        index.checkEntity(
+          slug: 'rogue-shadow-dancer',
+          name: 'Shadow Dancer',
+          type: EntityType.subclass,
+        ),
+        equals(SrdMatchResult.notSrd),
+      );
+    });
+
+    test('recognizes canonical actions and conditions under custom entity type', () {
+      expect(
+        index.checkEntity(
+          slug: 'action-dodge',
+          name: 'Dodge',
+          type: EntityType.custom,
+        ),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      expect(
+        index.checkEntity(
+          slug: 'condition-blinded',
+          name: 'Blinded',
+          type: EntityType.custom,
+        ),
+        equals(SrdMatchResult.exactSrdMatch),
+      );
+      // Invented homebrew condition
+      expect(
+        index.checkEntity(
+          slug: 'condition-void-warped',
+          name: 'Void Warped',
+          type: EntityType.custom,
+        ),
+        equals(SrdMatchResult.notSrd),
+      );
+    });
   });
 }

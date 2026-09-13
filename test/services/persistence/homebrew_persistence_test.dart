@@ -341,12 +341,12 @@ void main() {
 
     test('saveHomebrewEntitiesBatch classifies monsters with creature types or CR as monsters, not other entries', () async {
       const humanoidMonster = HomebrewEntity(
-        id: 'bandit-captain',
-        name: 'Bandit Captain',
+        id: 'sand-corsair-captain',
+        name: 'Sand Corsair Captain',
         entityType: 'humanoid',
         ruleset: domain_rules.RulesetVersion.srd2014,
         rawPayload: {
-          'name': 'Bandit Captain',
+          'name': 'Sand Corsair Captain',
           'type': 'humanoid',
           'cr': '2',
           'hp': 65,
@@ -371,11 +371,11 @@ void main() {
       await persistence.saveHomebrewEntitiesBatch([humanoidMonster, nestedTypeMonster]);
 
       final monsters = await persistence.loadCustomMonsters();
-      expect(monsters.any((m) => m.name == 'Bandit Captain'), isTrue);
+      expect(monsters.any((m) => m.name == 'Sand Corsair Captain'), isTrue);
       expect(monsters.any((m) => m.name == 'Ancient Lich'), isTrue);
 
       final others = await persistence.loadCustomOtherEntries();
-      expect(others.any((o) => o.name == 'Bandit Captain'), isFalse);
+      expect(others.any((o) => o.name == 'Sand Corsair Captain'), isFalse);
       expect(others.any((o) => o.name == 'Ancient Lich'), isFalse);
     });
   });

@@ -23,25 +23,86 @@ class CompendiumGenericEntryParser {
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
     final nameLower = name.toLowerCase();
+    final rawCat = (raw['category'] ?? raw['type'] ?? defaultCategory).toString().toLowerCase();
     String category = defaultCategory;
     if (nameLower.startsWith('pact of the') || nameLower.contains('pact boon')) {
       category = 'Pact Boon';
-    } else if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
-      category = _cleanCategoryString(raw['category'].toString());
     } else if (raw['featureType'] != null) {
       category = _decodeFeatureType(raw['featureType']);
+    } else if (rawCat.contains('table')) {
+      category = 'Table';
+    } else if (rawCat.contains('deity') || raw.containsKey('pantheon')) {
+      category = 'Deity';
+    } else if (rawCat.contains('vehicle')) {
+      category = 'Vehicle';
+    } else if (rawCat.contains('trap')) {
+      category = 'Trap';
+    } else if (rawCat.contains('hazard')) {
+      category = 'Hazard';
+    } else if (rawCat.contains('reward') || rawCat.contains('boon') || rawCat.contains('cult')) {
+      category = 'Reward';
+    } else if (rawCat.contains('condition') || rawCat.contains('status')) {
+      category = 'Condition';
+    } else if (rawCat.contains('disease')) {
+      category = 'Disease';
+    } else if (rawCat.contains('action')) {
+      category = 'Action';
+    } else if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
+      category = _cleanCategoryString(raw['category'].toString());
     } else if (raw['type'] != null && raw['type'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['type'].toString());
     }
 
-    if (nameLower.startsWith('pact of the') || nameLower.contains('pact boon')) {
-      category = 'Pact Boon';
-    }
-
     final parsedEntries = transformer.transformEntries(
-      raw['entries'] ?? raw['rows'] ?? raw['table'] ?? raw['entry'],
+      raw['entries'] ?? raw['entry'],
       defaultRuleset: ruleset,
     );
+
+    String desc = parsedEntries.markdown;
+
+    // Render rollable table markdown if raw table data is present
+    if (desc.isEmpty && raw['rows'] is List) {
+      final rows = raw['rows'] as List;
+      final colLabels = raw['colLabels'] is List ? (raw['colLabels'] as List) : [];
+      if (rows.isNotEmpty) {
+        final buffer = StringBuffer();
+        if (colLabels.isNotEmpty) {
+          buffer.writeln('| ${colLabels.map((c) => c.toString()).join(' | ')} |');
+          buffer.writeln('| ${colLabels.map((_) => ':---').join(' | ')} |');
+        } else {
+          final colCount = (rows.first is List) ? (rows.first as List).length : 1;
+          buffer.writeln('| ${List.generate(colCount, (i) => 'Col ${i + 1}').join(' | ')} |');
+          buffer.writeln('| ${List.generate(colCount, (_) => ':---').join(' | ')} |');
+        }
+        for (final r in rows) {
+          if (r is List) {
+            buffer.writeln('| ${r.map((c) => c.toString()).join(' | ')} |');
+          } else {
+            buffer.writeln('| ${r.toString()} |');
+          }
+        }
+        desc = buffer.toString().trim();
+      }
+    }
+
+    // Render deity metadata header
+    if (category == 'Deity' || raw.containsKey('pantheon')) {
+      category = 'Deity';
+      final parts = <String>[];
+      if (raw['pantheon'] != null) parts.add('**Pantheon:** ${raw['pantheon']}');
+      if (raw['alignment'] != null) {
+        final align = raw['alignment'] is List ? (raw['alignment'] as List).join('') : raw['alignment'].toString();
+        parts.add('**Alignment:** $align');
+      }
+      if (raw['domains'] != null) {
+        final doms = raw['domains'] is List ? (raw['domains'] as List).join(', ') : raw['domains'].toString();
+        parts.add('**Domains:** $doms');
+      }
+      if (raw['symbol'] != null) parts.add('**Symbol:** ${raw['symbol']}');
+      if (parts.isNotEmpty) {
+        desc = desc.isNotEmpty ? '${parts.join(' | ')}\n\n$desc' : parts.join(' | ');
+      }
+    }
 
     // Capture auxiliary fields for 0% data loss
     final customProperties = <String, dynamic>{};
@@ -55,7 +116,7 @@ class CompendiumGenericEntryParser {
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       category: category,
-      descriptionMarkdown: parsedEntries.markdown,
+      descriptionMarkdown: desc,
       customProperties: customProperties,
     );
   }

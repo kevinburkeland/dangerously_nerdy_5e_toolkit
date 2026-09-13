@@ -2214,11 +2214,26 @@ class HomebrewPersistenceService {
     void Function(String slug)? onSrdRemoved,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final storedRaw = prefs.getString(rawKey);
-      final rawMap = storedRaw != null && storedRaw.isNotEmpty
-          ? Map<String, dynamic>.from(json.decode(storedRaw) as Map)
-          : <String, dynamic>{};
+      Map<String, dynamic> rawMap = {};
+      if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+        final dbVal = _db.get(AppDatabaseService.boxHomebrewRaw, rawKey);
+        if (dbVal is Map) {
+          rawMap = Map<String, dynamic>.from(dbVal);
+        } else if (dbVal is String && dbVal.isNotEmpty) {
+          try {
+            rawMap = Map<String, dynamic>.from(json.decode(dbVal) as Map);
+          } catch (_) {}
+        }
+      }
+      if (rawMap.isEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final storedRaw = prefs.getString(rawKey);
+        if (storedRaw != null && storedRaw.isNotEmpty) {
+          try {
+            rawMap = Map<String, dynamic>.from(json.decode(storedRaw) as Map);
+          } catch (_) {}
+        }
+      }
 
       final reparsed = <T>[];
       final slugsToPrune = <String>{};
@@ -2250,11 +2265,17 @@ class HomebrewPersistenceService {
         for (final slug in slugsToPrune) {
           rawMap.remove(slug);
         }
-        await prefs.setString(rawKey, json.encode(rawMap));
+        if (_db.isBoxOpen(AppDatabaseService.boxHomebrewRaw)) {
+          await _db.put(AppDatabaseService.boxHomebrewRaw, rawKey, rawMap);
+        }
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(rawKey, json.encode(rawMap));
+        } catch (_) {}
       }
 
       // 3. Check legacy parsed store for any SRD duplicates not in rawMap
-      final existingParsed = prefs.getStringList(parsedKey) ?? [];
+      final existingParsed = await _loadStringList(parsedKey);
       final allSlugsHandled = <String>{
         ...reparsed.map((e) => e.id.slug),
         ...slugsToPrune,
@@ -2279,18 +2300,44 @@ class HomebrewPersistenceService {
               continue;
             }
             // Keep non-SRD legacy entity
-            final legacyEntity = fromRaw(decoded);
-            reparsed.add(legacyEntity);
+            try {
+              final legacyEntity = fromRaw(decoded);
+              reparsed.add(legacyEntity);
+            } catch (_) {
+              final fallback = _restoreLegacyEntity<T>(decoded, entityType);
+              if (fallback != null) {
+                reparsed.add(fallback);
+              }
+            }
             allSlugsHandled.add(slug);
           }
         } catch (_) {}
       }
 
-      await prefs.setStringList(parsedKey, reparsed.map(toJson).toList());
+      await _saveStringList(parsedKey, reparsed.map(toJson).toList());
       return reparsed.length;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Re-parse category $entityType failed');
       return 0;
+    }
+  }
+
+  T? _restoreLegacyEntity<T extends DomainEntity>(Map<String, dynamic> map, EntityType type) {
+    try {
+      return switch (type) {
+        EntityType.spell => Spell.fromMap(map) as T,
+        EntityType.monster => Monster.fromMap(map) as T,
+        EntityType.equipment => EquipmentItem.fromMap(map) as T,
+        EntityType.classDefinition => CharacterClass.fromMap(map) as T,
+        EntityType.subclass => Subclass.fromMap(map) as T,
+        EntityType.species => Race.fromMap(map) as T,
+        EntityType.feat => Feat.fromMap(map) as T,
+        EntityType.background => Background.fromMap(map) as T,
+        EntityType.custom => HomebrewCompendiumEntry.fromMap(map) as T,
+        _ => null,
+      };
+    } catch (_) {
+      return null;
     }
   }
 
@@ -2306,6 +2353,7 @@ class HomebrewPersistenceService {
   Future<void> saveHomebrewEntitiesBatch(
     List<HomebrewEntity> entities, {
     bool syncLibraries = true,
+    bool excludeSrdCanon = true,
   }) async {
     if (entities.isEmpty) return;
 
@@ -2319,7 +2367,21 @@ class HomebrewPersistenceService {
     final backgrounds = <Background>[];
     final others = <HomebrewCompendiumEntry>[];
 
+    final spellPayloads = <Map<String, dynamic>>[];
+    final monsterPayloads = <Map<String, dynamic>>[];
+    final itemPayloads = <Map<String, dynamic>>[];
+    final classPayloads = <Map<String, dynamic>>[];
+    final subclassPayloads = <Map<String, dynamic>>[];
+    final racePayloads = <Map<String, dynamic>>[];
+    final featPayloads = <Map<String, dynamic>>[];
+    final backgroundPayloads = <Map<String, dynamic>>[];
+    final otherPayloads = <Map<String, dynamic>>[];
+
     final adapters = CommunityCompendiumAdapters();
+    final raceParser = CompendiumRaceParser();
+    final genericParser = CompendiumGenericEntryParser();
+    final srdIndex = SrdEquivalenceIndex();
+    if (excludeSrdCanon) srdIndex.build();
 
     const creatureTypes = {
       'monster',
@@ -2355,53 +2417,177 @@ class HomebrewPersistenceService {
 
       try {
         if (isMonster) {
+          if (excludeSrdCanon &&
+              srdIndex.checkEntity(
+                    slug: entity.id,
+                    name: entity.name,
+                    type: EntityType.monster,
+                  ) !=
+                  SrdMatchResult.notSrd) {
+            continue;
+          }
           monsters.add(adapters.parseMonster(payload, forceRuleset: coreRuleset));
+          monsterPayloads.add(payload);
         } else {
           switch (typeLower) {
             case 'spell':
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.spell,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
               spells.add(adapters.parseSpell(payload, forceRuleset: coreRuleset));
-            case 'equipment' || 'item' || 'magicitem' || 'weapon' || 'armor':
+              spellPayloads.add(payload);
+            case 'equipment' || 'item' || 'magicitem' || 'weapon' || 'armor' || 'baseitem' || 'magicvariant':
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.equipment,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
               items.add(adapters.parseItem(payload, forceRuleset: coreRuleset));
+              itemPayloads.add(payload);
             case 'class':
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.classDefinition,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
               classes.add(adapters.parseClass(payload, forceRuleset: coreRuleset));
+              classPayloads.add(payload);
             case 'subclass':
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.subclass,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
               subclasses.add(adapters.parseSubclass(payload, forceRuleset: coreRuleset));
+              subclassPayloads.add(payload);
             case 'race' || 'species':
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.species,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
               races.add(adapters.parseRace(payload, forceRuleset: coreRuleset));
+              racePayloads.add(payload);
+            case 'subrace':
+              final sub = raceParser.parseSubrace(payload, forceRuleset: coreRuleset);
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: sub.id.slug,
+                        name: sub.name,
+                        type: EntityType.species,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
+              if (sub.raceSlug.isNotEmpty) {
+                final match = races.where((r) => r.id.slug == sub.raceSlug).firstOrNull;
+                if (match != null) {
+                  final idx = races.indexOf(match);
+                  races[idx] = match.copyWith(subraces: [...match.subraces, sub]);
+                } else {
+                  races.add(Race(
+                    id: EntityId(slug: sub.raceSlug, ruleset: coreRuleset),
+                    name: sub.raceSlug.replaceAll('-', ' '),
+                    traitsMarkdown: '',
+                    subraces: [sub],
+                  ));
+                  racePayloads.add(payload);
+                }
+              }
             case 'feat':
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.feat,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
               feats.add(adapters.parseFeat(payload, forceRuleset: coreRuleset));
+              featPayloads.add(payload);
             case 'background':
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.background,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
               backgrounds.add(adapters.parseBackground(payload, forceRuleset: coreRuleset));
+              backgroundPayloads.add(payload);
             default:
-              others.add(HomebrewCompendiumEntry(
-                id: EntityId(slug: entity.id, ruleset: coreRuleset),
-                name: entity.name,
-                category: entity.entityType,
-                descriptionMarkdown: payload['entries']?.toString() ?? '',
-                customProperties: payload,
-              ));
+              if (excludeSrdCanon &&
+                  srdIndex.checkEntity(
+                        slug: entity.id,
+                        name: entity.name,
+                        type: EntityType.custom,
+                      ) !=
+                      SrdMatchResult.notSrd) {
+                break;
+              }
+              final entry = genericParser.parseGenericEntry(
+                payload,
+                defaultCategory: entity.entityType,
+                forceRuleset: coreRuleset,
+              );
+              others.add(entry);
+              otherPayloads.add(payload);
           }
         }
       } catch (_) {
-        others.add(HomebrewCompendiumEntry(
-          id: EntityId(slug: entity.id, ruleset: coreRuleset),
-          name: entity.name,
-          category: entity.entityType,
-          descriptionMarkdown: payload['entries']?.toString() ?? '',
-          customProperties: payload,
-        ));
+        if (excludeSrdCanon &&
+            srdIndex.checkEntity(
+                  slug: entity.id,
+                  name: entity.name,
+                  type: EntityType.custom,
+                ) !=
+                SrdMatchResult.notSrd) {
+          continue;
+        }
+        final entry = genericParser.parseGenericEntry(
+          payload,
+          defaultCategory: entity.entityType,
+          forceRuleset: coreRuleset,
+        );
+        others.add(entry);
+        otherPayloads.add(payload);
       }
     }
 
-    if (spells.isNotEmpty) await saveCustomSpellsBatch(spells);
-    if (monsters.isNotEmpty) await saveCustomMonstersBatch(monsters);
-    if (items.isNotEmpty) await saveCustomItemsBatch(items);
-    if (classes.isNotEmpty) await saveCustomClassesBatch(classes);
-    if (subclasses.isNotEmpty) await saveCustomSubclassesBatch(subclasses);
-    if (races.isNotEmpty) await saveCustomRacesBatch(races);
-    if (feats.isNotEmpty) await saveCustomFeatsBatch(feats);
-    if (backgrounds.isNotEmpty) await saveCustomBackgroundsBatch(backgrounds);
-    if (others.isNotEmpty) await saveCustomOtherEntriesBatch(others);
+    if (spells.isNotEmpty) await saveCustomSpellsBatch(spells, rawPayloads: spellPayloads);
+    if (monsters.isNotEmpty) await saveCustomMonstersBatch(monsters, rawPayloads: monsterPayloads);
+    if (items.isNotEmpty) await saveCustomItemsBatch(items, rawPayloads: itemPayloads);
+    if (classes.isNotEmpty) await saveCustomClassesBatch(classes, rawPayloads: classPayloads);
+    if (subclasses.isNotEmpty) await saveCustomSubclassesBatch(subclasses, rawPayloads: subclassPayloads);
+    if (races.isNotEmpty) await saveCustomRacesBatch(races, rawPayloads: racePayloads);
+    if (feats.isNotEmpty) await saveCustomFeatsBatch(feats, rawPayloads: featPayloads);
+    if (backgrounds.isNotEmpty) await saveCustomBackgroundsBatch(backgrounds, rawPayloads: backgroundPayloads);
+    if (others.isNotEmpty) await saveCustomOtherEntriesBatch(others, rawPayloads: otherPayloads);
 
     if (syncLibraries) {
       await syncToLibraries();

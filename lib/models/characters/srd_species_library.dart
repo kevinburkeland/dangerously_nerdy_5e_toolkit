@@ -252,6 +252,9 @@ class SrdSpeciesLibrary {
     tiefling,
   ];
 
+  /// Base Core SRD Species unpolluted by custom species
+  static List<Race> get baseSpecies => _baseSpecies;
+
   static List<Race> _customSpecies = [];
   static List<Subrace> _customSubraces = [];
 

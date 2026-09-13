@@ -1137,6 +1137,9 @@ class SrdClassesLibrary {
     wizard,
   ];
 
+  /// Base Core 12 SRD Classes unpolluted by custom classes
+  static List<CharacterClass> get baseClasses => _baseClasses;
+
   static List<CharacterClass> _customClasses = [];
   static List<Subclass> _customSubclasses = [];
 

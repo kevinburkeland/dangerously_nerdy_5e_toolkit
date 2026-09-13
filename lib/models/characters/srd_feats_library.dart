@@ -29,6 +29,9 @@ class SrdFeatsLibrary {
     grappler,
   ];
 
+  /// Base Core SRD Feats unpolluted by custom feats
+  static List<Feat> get baseFeats => _baseFeats;
+
   static List<Feat> _customFeats = [];
 
   /// Dynamic list of all available feats (Base SRD + Custom Homebrew)
