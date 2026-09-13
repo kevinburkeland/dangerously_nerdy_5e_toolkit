@@ -639,10 +639,10 @@ class CompendiumJsonIngestionPipeline {
         'cult', 'cults', 'boon', 'boons', 'charoption', 'charoptions',
         'psionic', 'psionics', 'language', 'languages', 'languagescript', 'languagescripts',
         'sense', 'senses', 'skill', 'skills', 'deck', 'decks', 'card', 'cards',
-        'recipe', 'recipes', 'monsterfeature', 'monsterfeatures',
+        'monsterfeature', 'monsterfeatures',
         'monsterfluff', 'spellfluff', 'itemfluff', 'racefluff', 'classfluff', 'subclassfluff',
         'featfluff', 'backgroundfluff', 'optionalfeaturefluff', 'conditionfluff', 'rewardfluff',
-        'objectfluff', 'vehiclefluff', 'trapfluff', 'languagefluff', 'recipefluff', 'charoptionfluff',
+        'objectfluff', 'vehiclefluff', 'trapfluff', 'languagefluff', 'charoptionfluff',
         'racefluffmeta', 'fluff',
       }.contains(k) || k.endsWith('fluff');
       return isKnown && map[k] is List;
@@ -985,7 +985,6 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['sense', 'senses'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Sense')), 'Sense');
     ingestKeys(['skill', 'skills'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Skill')), 'Skill');
     ingestKeys(['deck', 'decks', 'card', 'cards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Deck')), 'Deck');
-    ingestKeys(['recipe', 'recipes'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Recipe')), 'Recipe');
     ingestKeys(['monsterfeature', 'monsterfeatures'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Monster Feature')), 'Monster Feature');
     ingestKeys(['otherentry', 'otherentries', 'genericentry', 'genericentries'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset)), 'Generic Entry');
 
@@ -1043,7 +1042,6 @@ class CompendiumJsonIngestionPipeline {
     ingestFluffKeys(['vehiclefluff'], 'vehicle');
     ingestFluffKeys(['trapfluff'], 'trap');
     ingestFluffKeys(['languagefluff'], 'language');
-    ingestFluffKeys(['recipefluff'], 'recipe');
     ingestFluffKeys(['fluff'], 'generic');
 
     // Dynamically ingest any remaining fluff lists

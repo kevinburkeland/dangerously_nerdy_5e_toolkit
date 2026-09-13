@@ -58,87 +58,68 @@ class MonsterCombatProfile {
   }
 
   /// Parses a [MinionStatBlock] ONCE during ingestion/load into a reusable [MonsterCombatProfile].
-  /// Zero runtime regex is executed if [sb] contains explicit pre-calculated metrics.
+  /// Explicit/incoming fields are validated against our internal Anti-Corruption Layer (ACL) parser,
+  /// strictly favoring our internal parser if there is a discrepancy.
   factory MonsterCombatProfile.fromStatBlock(
     MinionStatBlock sb, {
     double challengeRating = 0.0,
   }) {
-    // If stat block already has explicit pre-calculated fields, project directly with zero regex
-    if (sb.explicitSpellSlots != null || sb.explicitSavingThrows != null) {
-      final pb = _computeProficiencyBonus(challengeRating);
-      final castingMod = math.max(sb.intMod, math.max(sb.wisMod, sb.chaMod));
-
-      final saveMap = <String, int>{};
-      if (sb.explicitSavingThrows != null) {
-        for (final entry in sb.explicitSavingThrows!.entries) {
-          saveMap[entry.key.shortName.toLowerCase()] = entry.value;
-        }
-      } else {
-        saveMap['str'] = sb.strMod;
-        saveMap['dex'] = sb.dexMod;
-        saveMap['con'] = sb.conMod;
-        saveMap['int'] = sb.intMod;
-        saveMap['wis'] = sb.wisMod;
-        saveMap['cha'] = sb.chaMod;
-      }
-
-      final canFly = sb.canFly ?? (sb.speed.toLowerCase().contains('fly') && !sb.speed.toLowerCase().contains('fly 0'));
-
-      return MonsterCombatProfile(
-        maxSpellSlots: sb.explicitSpellSlots ?? const {},
-        knownSpellIds: const [],
-        spellSaveDc: sb.spellSaveDc ?? (8 + pb + castingMod),
-        spellAttackBonus: sb.spellAttackBonus ?? (pb + castingMod),
-        meleeReachInFeet: sb.explicitMeleeReachFt ?? 5,
-        canFly: canFly,
-        hasHover: sb.hasHover ?? false,
-        defaultAltitudeInFeet: canFly ? 20 : 0,
-        savingThrowBonuses: saveMap,
-        maxLegendaryActions: sb.legendaryActions.isNotEmpty ? 3 : 0,
-        maxLegendaryResistances: sb.hasLegendaryResistance ? 3 : 0,
-        canSwim: sb.speed.toLowerCase().contains('swim'),
-        canBurrow: sb.speed.toLowerCase().contains('burrow'),
-        canClimb: sb.speed.toLowerCase().contains('climb'),
-      );
-    }
-
-    // Otherwise, delegate boundary parsing to the Anti-Corruption Layer (ACL)
+    // 1. Always evaluate boundary parsing via our Anti-Corruption Layer (ACL)
     final parsed = StatBlockAclParser.parseStatBlockBoundary(
       sb,
       challengeRating: challengeRating,
     );
 
+    // 2. Build saving throws from internal ACL parser, falling back to explicit only if unparsed
     final saveMap = <String, int>{};
     for (final entry in parsed.savingThrows.entries) {
       saveMap[entry.key.shortName.toLowerCase()] = entry.value;
     }
+    if (sb.explicitSavingThrows != null) {
+      for (final entry in sb.explicitSavingThrows!.entries) {
+        final key = entry.key.shortName.toLowerCase();
+        saveMap.putIfAbsent(key, () => entry.value);
+      }
+    }
+
+    // 3. Resolve mobility, reach, traits, and combat metrics favoring internal parser (ACL)
+    final maxReach = math.max(sb.explicitMeleeReachFt ?? 5, parsed.maxReachFt);
+    final canFly = parsed.canFly || (sb.canFly ?? false);
+    final hasHover = parsed.hasHover || (sb.hasHover ?? false);
+    final canSwim = parsed.canSwim || sb.speed.toLowerCase().contains('swim');
+    final canBurrow = parsed.canBurrow || sb.speed.toLowerCase().contains('burrow');
+    final canClimb = parsed.canClimb || sb.speed.toLowerCase().contains('climb');
+    final maxLegendaryActions = math.max(sb.legendaryActions.isNotEmpty ? 3 : 0, parsed.maxLegendaryActions);
+    final maxLegendaryResistances = math.max(sb.hasLegendaryResistance ? 3 : 0, parsed.maxLegendaryResistances);
+
+    final spellSaveDc = parsed.spellSaveDc != 10
+        ? parsed.spellSaveDc
+        : (sb.spellSaveDc ?? parsed.spellSaveDc);
+    final spellAttackBonus = parsed.spellAttackBonus != 0
+        ? parsed.spellAttackBonus
+        : (sb.spellAttackBonus ?? parsed.spellAttackBonus);
+    final slots = parsed.spellSlots.isNotEmpty
+        ? parsed.spellSlots
+        : (sb.explicitSpellSlots ?? const {});
 
     return MonsterCombatProfile(
-      maxSpellSlots: parsed.spellSlots,
+      maxSpellSlots: slots,
       knownSpellIds: parsed.knownSpellIds,
-      spellSaveDc: parsed.spellSaveDc,
-      spellAttackBonus: parsed.spellAttackBonus,
-      meleeReachInFeet: parsed.maxReachFt,
-      canFly: parsed.canFly,
-      hasHover: parsed.hasHover,
-      defaultAltitudeInFeet: parsed.canFly ? 20 : 0,
+      spellSaveDc: spellSaveDc,
+      spellAttackBonus: spellAttackBonus,
+      meleeReachInFeet: maxReach,
+      canFly: canFly,
+      hasHover: hasHover,
+      defaultAltitudeInFeet: canFly ? 20 : 0,
       savingThrowBonuses: saveMap,
-      maxLegendaryActions: parsed.maxLegendaryActions,
-      maxLegendaryResistances: parsed.maxLegendaryResistances,
-      canSwim: parsed.canSwim,
-      canBurrow: parsed.canBurrow,
-      canClimb: parsed.canClimb,
+      maxLegendaryActions: maxLegendaryActions,
+      maxLegendaryResistances: maxLegendaryResistances,
+      canSwim: canSwim,
+      canBurrow: canBurrow,
+      canClimb: canClimb,
       hasEvasion: parsed.hasEvasion,
       hasFlyby: parsed.hasFlyby,
       hasNimbleEscape: parsed.hasNimbleEscape,
     );
-  }
-
-  static int _computeProficiencyBonus(double cr) {
-    if (cr >= 17) return 6;
-    if (cr >= 13) return 5;
-    if (cr >= 9) return 4;
-    if (cr >= 5) return 3;
-    return 2;
   }
 }

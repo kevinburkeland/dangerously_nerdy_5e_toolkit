@@ -227,10 +227,26 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - Compendium tables are dynamically categorized into `HomebrewOtherCategory.tables` (Rollable Tables) vs `HomebrewOtherCategory.dataTables` (Data & Reference Tables) using `isRollingTable`.
   - `isRollingTable` inspects `colLabels` for dice patterns (`d\d+`, `d%`, `roll`, `die`, `dice`, `result`), `rows` for numeric roll range bounds (`01-20`, `1-4`), and explicit dice configuration attributes (`dice`, `roll`, `diceType`).
   - Tables with non-numeric descriptive headers and text rows (such as Material Hardness & AC or Carrying Capacities) are designated as data tables.
-- **Sanitized Remote Manifest Discovery:**
-  - `GithubIngestorAdapter.discoverJsonManifest` filters out non-entity tooling files (`foundry-*.json`, `index.json`, `fluff-index.json`, `sources.json`, `books.json`, `adventures.json`, book/adventure narrative chapters, and generator indices).
-  - Unpacking expands bundle keys for all secondary tabletop categories (`optionalfeature`, `psionic`, `language`, `sense`, `skill`, `deck`, `recipe`, `tablegroup`, `monsterfeature`).
+- **Sanitized Remote Manifest Discovery & Non-Tabletop Exclusion:**
+  - `GithubIngestorAdapter.discoverJsonManifest` filters out non-entity tooling files (`foundry-*.json`, `index.json`, `fluff-index.json`, `sources.json`, `books.json`, `adventures.json`, book/adventure narrative chapters, generator indices, and non-tabletop assets like `recipes.json` / crochet patterns).
+  - Unpacking expands bundle keys for secondary tabletop categories (`optionalfeature`, `psionic`, `language`, `sense`, `skill`, `deck`, `tablegroup`, `monsterfeature`). Non-tabletop recipe/crochet patterns are strictly ignored.
 - **Tabular UI Rendering & RenderFlex Overflow Protection:**
   - Markdown table rows (`| ... |`) in `DmRuleCard` are parsed into native Flutter `Table` widgets via `FormattedMarkdownText` with header formatting, alternating surface shading, and horizontal scrolling.
   - Roll buttons and `Rollable` badges appear exclusively on dice-driven rolling tables.
   - To prevent horizontal `RenderFlex` overflow on small mobile displays (320-352px) or under 2.0x dynamic type scaling, card badges (`Rollable`, `Data Table`, `Homebrew`, `EditionDiffBadge`) are placed in a responsive `Wrap` inside an `Expanded` column.
+
+## 15. Monster Feature ACL Discrepancy Resolution & Internal Parser Precedence
+
+- **Evaluation at Ingestion & Deserialization Boundaries:**
+  - Monster features, traits, actions, and combat properties are evaluated against `StatBlockAclParser.parseMonsterFeature` and `StatBlockAclParser.parseStatBlockBoundary`.
+  - When hydrating `MonsterCombatProfile.fromStatBlock` or creating generic compendium entries (`CompendiumGenericEntryParser`), the engine compares raw incoming declarations with the internal ACL parser's extracted values.
+- **Strict Discrepancy Precedence:**
+  - Any conflict between raw external declarations and the internal ACL parser MUST strictly favor the internal ACL parser:
+    - Mobility capabilities (`canFly`, `canSwim`, `canClimb`, `canBurrow`, `hasHover`)
+    - Combat traits (`hasEvasion`, `hasFlyby`, `hasNimbleEscape`, `hasPackTactics`)
+    - Attack reach (melee reach feet, ranged distance feet)
+    - Saving throw proficiencies and spellcasting attributes (spell save DC, spell attack bonus, spell slots)
+    - Action effect riders (`CombatEffectRider` AST)
+- **Natural Language Swimming & Amphibious Recognition:**
+  - The ACL parser recognizes phrases such as `"breathe air and water"`, `"breathe water"`, and `"breathes underwater"` as conferring `canSwim: true`, ensuring amphibious and aquatic creatures possess accurate mobility flags even when raw speed blocks omit an explicit swimming speed.
+

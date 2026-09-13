@@ -344,6 +344,8 @@ void main() {
           {'path': 'data/book/book-phb.json', 'type': 'blob'},
           {'path': 'data/adventure/adventure-cos.json', 'type': 'blob'},
           {'path': 'data/books.json', 'type': 'blob'},
+          // Non-tabletop craft / crochet recipes (must be skipped)
+          {'path': 'data/recipes.json', 'type': 'blob'},
         ],
       });
 
@@ -365,6 +367,7 @@ void main() {
       expect(manifest.any((u) => u.contains('sources.json')), isFalse);
       expect(manifest.any((u) => u.contains('book-phb')), isFalse);
       expect(manifest.any((u) => u.contains('adventure-cos')), isFalse);
+      expect(manifest.any((u) => u.contains('recipes')), isFalse);
     });
 
     test('Unpacks optionalfeatures, psionics, languages, and decks into individual entities', () async {

@@ -106,7 +106,10 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
               lower.contains('/book/book-') ||
               lower.contains('/adventure/adventure-') ||
               lower.endsWith('books.json') ||
-              lower.endsWith('adventures.json')) {
+              lower.endsWith('adventures.json') ||
+              lower.endsWith('recipes.json') ||
+              lower.endsWith('recipe.json') ||
+              lower.contains('recipe')) {
             continue;
           }
           rawUrls.add(effectiveSource.rawFileUri(path).toString());
@@ -360,8 +363,6 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
         'rules',
         'monsterfeature',
         'monsterfeatures',
-        'recipe',
-        'recipes',
         'name',
         'names',
         // Fluff keys
@@ -380,7 +381,6 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
         'vehiclefluff',
         'trapfluff',
         'languagefluff',
-        'recipefluff',
         'charoptionfluff',
         'racefluffmeta',
         'fluff',

@@ -1,5 +1,7 @@
+import '../../domain/simulation/combat_rider.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../ingestion/stat_block_acl_parser.dart';
 import 'entry_tag_transformer.dart';
 
 /// Anti-Corruption Layer (ACL) dedicated transformer for Community Compendium and Homebrew Optional Features, Rewards, Tables, Hazards, and Conditions.
@@ -76,8 +78,8 @@ class CompendiumGenericEntryParser {
       category = 'Skill';
     } else if (rawCat.contains('deck') || rawCat.contains('card')) {
       category = 'Deck';
-    } else if (rawCat.contains('recipe')) {
-      category = 'Recipe';
+    } else if (rawCat.contains('monsterfeature') || rawCat.contains('monster feature') || rawCat.contains('trait') || defaultCategory == 'Monster Feature') {
+      category = 'Monster Feature';
     } else if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['category'].toString());
     } else if (raw['entityType'] != null && raw['entityType'].toString().isNotEmpty) {
@@ -154,6 +156,66 @@ class CompendiumGenericEntryParser {
         customProperties[key] = value;
       }
     });
+
+    // Check monster features against internal parser (ACL), strictly favoring internal parser on discrepancy
+    if (category == 'Monster Feature' || defaultCategory == 'Monster Feature') {
+      final aclFeature = StatBlockAclParser.parseMonsterFeature(name, desc);
+      if (aclFeature.riders.isNotEmpty) {
+        customProperties['riders'] = aclFeature.riders.map((r) => switch (r) {
+          ConditionRider c => {
+            'type': 'condition',
+            'condition': c.condition.name,
+            'requiresSave': c.requiresSave,
+            if (c.saveDc != null) 'saveDc': c.saveDc,
+            if (c.saveAbility != null) 'saveAbility': c.saveAbility!.shortName,
+          },
+          AttributeDrainRider a => {
+            'type': 'attributeDrain',
+            'targetAbility': a.targetAbility.shortName,
+            'diceCount': a.diceCount,
+            'diceSides': a.diceSides,
+            'flatBonus': a.flatBonus,
+            'deathAtZero': a.deathAtZero,
+          },
+          MaxHpReductionRider m => {
+            'type': 'maxHpReduction',
+            'reductionEqualsDamage': m.reductionEqualsDamage,
+            'flatReduction': m.flatReduction,
+            'deathAtZero': m.deathAtZero,
+          },
+          ForcedMovementRider f => {
+            'type': 'forcedMovement',
+            'pullDistanceFeet': f.pullDistanceFeet,
+            'toMeleeReach': f.toMeleeReach,
+          },
+          HealingSupressionRider h => {
+            'type': 'healingSuppression',
+            'durationSeconds': h.duration.inSeconds,
+            'cureViaRemoveCurse': h.cureViaRemoveCurse,
+          },
+          PeriodicDamageRider p => {
+            'type': 'periodicDamage',
+            'diceCount': p.diceCount,
+            'diceSides': p.diceSides,
+            'flatBonus': p.flatBonus,
+            'damageType': p.damageType,
+            'onTurnStart': p.onTurnStart,
+          },
+        }).toList();
+      }
+      if (aclFeature.canFly) customProperties['canFly'] = true;
+      if (aclFeature.hasHover) customProperties['hasHover'] = true;
+      if (aclFeature.canSwim) customProperties['canSwim'] = true;
+      if (aclFeature.canBurrow) customProperties['canBurrow'] = true;
+      if (aclFeature.canClimb) customProperties['canClimb'] = true;
+      if (aclFeature.hasEvasion) customProperties['hasEvasion'] = true;
+      if (aclFeature.hasFlyby) customProperties['hasFlyby'] = true;
+      if (aclFeature.hasNimbleEscape) customProperties['hasNimbleEscape'] = true;
+      if (aclFeature.hasPackTactics) customProperties['hasPackTactics'] = true;
+      if (aclFeature.maxReachFt > 5) customProperties['maxReachFt'] = aclFeature.maxReachFt;
+      if (aclFeature.spellSaveDc != null) customProperties['spellSaveDc'] = aclFeature.spellSaveDc;
+      if (aclFeature.spellAttackBonus != null) customProperties['spellAttackBonus'] = aclFeature.spellAttackBonus;
+    }
 
     if (customProperties['rows'] is List) {
       customProperties['rows'] = (customProperties['rows'] as List).map((row) {

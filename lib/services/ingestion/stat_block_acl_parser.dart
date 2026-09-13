@@ -171,7 +171,12 @@ class StatBlockAclParser {
 
     final canFly = speedLower.contains('fly') && !speedLower.contains('fly 0');
     final hasHover = speedLower.contains('hover') || traitsText.contains('hover');
-    final canSwim = speedLower.contains('swim') || traitsText.contains('amphibious') || traitsText.contains('water breathing');
+    final canSwim = speedLower.contains('swim') ||
+        traitsText.contains('amphibious') ||
+        traitsText.contains('water breathing') ||
+        traitsText.contains('breathe air and water') ||
+        traitsText.contains('breathe water') ||
+        traitsText.contains('breathes underwater');
     final canBurrow = speedLower.contains('burrow');
     final canClimb = speedLower.contains('climb');
     final hasEvasion = traitsText.contains('evasion') || actionsText.contains('evasion');
@@ -433,5 +438,77 @@ class StatBlockAclParser {
     }
 
     return riders;
+  }
+
+  /// Parses an unstructured monster feature or trait text, returning pre-calculated
+  /// mechanical metrics, action riders, and mobility tags.
+  static ({
+    List<CombatEffectRider> riders,
+    bool canFly,
+    bool hasHover,
+    bool canSwim,
+    bool canBurrow,
+    bool canClimb,
+    bool hasEvasion,
+    bool hasFlyby,
+    bool hasNimbleEscape,
+    bool hasPackTactics,
+    int maxReachFt,
+    int? spellSaveDc,
+    int? spellAttackBonus,
+  }) parseMonsterFeature(String name, String description) {
+    final text = '$name $description'.toLowerCase();
+    final riders = extractRiders(description);
+
+    final canFly = text.contains('fly') && !text.contains('fly 0');
+    final hasHover = text.contains('hover');
+    final canSwim = text.contains('swim') ||
+        text.contains('amphibious') ||
+        text.contains('water breathing') ||
+        text.contains('breathe air and water') ||
+        text.contains('breathe water') ||
+        text.contains('breathes underwater');
+    final canBurrow = text.contains('burrow');
+    final canClimb = text.contains('climb');
+    final hasEvasion = text.contains('evasion');
+    final hasFlyby = text.contains('flyby');
+    final hasNimbleEscape = text.contains('nimble escape');
+    final hasPackTactics = text.contains('pack tactics');
+
+    int maxReach = 5;
+    final match = _reachPattern.firstMatch(description);
+    if (match != null) {
+      final r = int.tryParse(match.group(1) ?? '') ?? 5;
+      if (r > maxReach) maxReach = r;
+    }
+
+    int? dc;
+    final dcMatch = _spellSaveDcPattern.firstMatch(text);
+    if (dcMatch != null) {
+      dc = int.tryParse(dcMatch.group(1) ?? '');
+    }
+
+    int? attackBonus;
+    final atkMatch = _spellAttackPattern.firstMatch(text);
+    if (atkMatch != null) {
+      final clean = atkMatch.group(1)!.replaceAll('+', '').replaceAll(' ', '');
+      attackBonus = int.tryParse(clean);
+    }
+
+    return (
+      riders: riders,
+      canFly: canFly,
+      hasHover: hasHover,
+      canSwim: canSwim,
+      canBurrow: canBurrow,
+      canClimb: canClimb,
+      hasEvasion: hasEvasion,
+      hasFlyby: hasFlyby,
+      hasNimbleEscape: hasNimbleEscape,
+      hasPackTactics: hasPackTactics,
+      maxReachFt: maxReach,
+      spellSaveDc: dc,
+      spellAttackBonus: attackBonus,
+    );
   }
 }
