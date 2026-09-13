@@ -7,7 +7,7 @@ import 'srd_magic_tables.dart';
 class SrdTablesLibrary {
   SrdTablesLibrary._();
 
-  static final List<RollableTable> allTables = [
+  static final List<RollableTable> _baseTables = [
     // --- Loot & Magic Item Tables ---
     SrdLootTables.magicItemTableA,
     SrdLootTables.magicItemTableB,
@@ -41,6 +41,22 @@ class SrdTablesLibrary {
     SrdDmTables.npcTalents,
     SrdDmTables.npcMannerisms,
   ];
+
+  static List<RollableTable> _customTables = [];
+
+  /// Registers custom homebrew rollable tables into the repository.
+  static void setCustomTables(List<RollableTable> tables) {
+    _customTables = List.unmodifiable(tables);
+  }
+
+  /// Returns base SRD tables.
+  static List<RollableTable> get srdTables => _baseTables;
+
+  /// Returns all tables, including custom homebrew tables.
+  static List<RollableTable> get allTables => [
+        ..._baseTables,
+        ..._customTables,
+      ];
 
   /// Finds a table by its unique identifier.
   static RollableTable? getTableById(String id) {

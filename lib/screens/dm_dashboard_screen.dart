@@ -1987,7 +1987,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     final theme = Theme.of(context);
     final profile = _activeProfile!;
     final pinned = profile.pinnedRuleIds;
-    const allItems = DmScreenLibrary.allItems;
+    final allItems = DmScreenLibrary.allItems;
     final pinnedItems = allItems.where((i) => pinned.contains(i.id)).toList();
 
     return Card(

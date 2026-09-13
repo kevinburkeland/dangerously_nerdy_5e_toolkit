@@ -92,7 +92,7 @@ void main() {
     });
 
     test('DM Reference Screen items contain no WotC Product Identity terms', () {
-      const items = DmScreenLibrary.allItems;
+      final items = DmScreenLibrary.allItems;
       expect(items, isNotEmpty);
 
       for (final item in items) {

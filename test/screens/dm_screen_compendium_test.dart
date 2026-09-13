@@ -22,7 +22,7 @@ void main() {
 
   group('Rules Compendium Dataset & Search Engine Tests', () {
     test('comprehensive rules corpus indexes all SRD categories and required rules', () {
-      const items = DmScreenLibrary.allItems;
+      final items = DmScreenLibrary.allItems;
       expect(items.length, greaterThanOrEqualTo(35));
 
       // Category coverage
@@ -114,7 +114,7 @@ void main() {
     });
 
     test('tokenized multi-word search and search operators (tag:, category:, edition:) work accurately', () {
-      const items = DmScreenLibrary.allItems;
+      final items = DmScreenLibrary.allItems;
 
       // Operator tag:
       final actionMatches = items.where((i) => i.matches('tag:standard_action')).toList();

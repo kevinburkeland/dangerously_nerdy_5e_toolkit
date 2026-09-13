@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/domain/core_types.dart';
+import '../../models/domain/homebrew_other_category.dart';
 import '../../services/haptic_service.dart';
 import '../../services/persistence/homebrew_persistence_service.dart';
 import '../dialogs/app_dialog_frame.dart';
@@ -16,7 +17,10 @@ class HomebrewBulkDeleterDialog extends StatefulWidget {
 class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
   final _persistence = HomebrewPersistenceService();
   final Set<EntityType> _selectedCategories = {};
+  final Set<HomebrewOtherCategory> _selectedOtherCategories = {};
+
   Map<EntityType, int> _categoryCounts = {};
+  Map<HomebrewOtherCategory, int> _otherCategoryCounts = {};
   bool _isLoading = true;
   bool _isDeleting = false;
 
@@ -35,7 +39,7 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
     final races = await _persistence.loadCustomRaces();
     final feats = await _persistence.loadCustomFeats();
     final backgrounds = await _persistence.loadCustomBackgrounds();
-    final others = await _persistence.loadCustomOtherEntries();
+    final otherCounts = await _persistence.loadOtherCategoryCounts();
 
     if (mounted) {
       setState(() {
@@ -48,8 +52,8 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
           EntityType.species: races.length,
           EntityType.feat: feats.length,
           EntityType.background: backgrounds.length,
-          EntityType.custom: others.length,
         };
+        _otherCategoryCounts = otherCounts;
         _isLoading = false;
       });
     }
@@ -60,17 +64,23 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
     for (final cat in _selectedCategories) {
       sum += _categoryCounts[cat] ?? 0;
     }
+    for (final sub in _selectedOtherCategories) {
+      sum += _otherCategoryCounts[sub] ?? 0;
+    }
     return sum;
   }
 
   int get _totalAllItems {
-    return _categoryCounts.values.fold(0, (a, b) => a + b);
+    final coreTotal = _categoryCounts.values.fold(0, (a, b) => a + b);
+    final otherTotal = _otherCategoryCounts.values.fold(0, (a, b) => a + b);
+    return coreTotal + otherTotal;
   }
 
   void _selectAll() {
     HapticService.selectionTick(context);
     setState(() {
       _selectedCategories.addAll(_categoryCounts.keys.where((k) => (_categoryCounts[k] ?? 0) > 0));
+      _selectedOtherCategories.addAll(_otherCategoryCounts.keys.where((k) => (_otherCategoryCounts[k] ?? 0) > 0));
     });
   }
 
@@ -78,14 +88,15 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
     HapticService.selectionTick(context);
     setState(() {
       _selectedCategories.clear();
+      _selectedOtherCategories.clear();
     });
   }
 
   Future<void> _confirmAndDeleteSelected() async {
-    if (_selectedCategories.isEmpty || _totalSelectedItems == 0) return;
+    if ((_selectedCategories.isEmpty && _selectedOtherCategories.isEmpty) || _totalSelectedItems == 0) return;
 
     final count = _totalSelectedItems;
-    final catCount = _selectedCategories.length;
+    final catCount = _selectedCategories.length + _selectedOtherCategories.length;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -121,6 +132,9 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
         for (final cat in _selectedCategories) {
           await _persistence.clearHomebrewCategory(cat);
         }
+        if (_selectedOtherCategories.isNotEmpty) {
+          await _persistence.clearOtherEntriesByCategories(_selectedOtherCategories);
+        }
         if (mounted) {
           Navigator.of(context).pop(count);
         }
@@ -150,7 +164,7 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
           ],
         ),
         content: Text(
-          'WARNING: This will permanently wipe ALL $count custom spells, monsters, items, classes, species, feats, backgrounds, and rules from your toolkit. '
+          'WARNING: This will permanently wipe ALL $count custom spells, monsters, items, classes, species, feats, backgrounds, deities, tables, vehicles, and rules from your toolkit. '
           'Saved character sheets and dice presets will remain untouched.\n\nAre you sure?',
         ),
         actions: [
@@ -188,12 +202,13 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final otherTotal = _otherCategoryCounts.values.fold(0, (a, b) => a + b);
 
     return AppDialogFrame(
       icon: Icons.delete_sweep_outlined,
       iconColor: Colors.redAccent,
       title: 'Bulk Homebrew Deleter',
-      maxWidth: 480,
+      maxWidth: 520,
       content: _isLoading
           ? const Center(
               child: Padding(
@@ -238,7 +253,19 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
                       ),
                     ],
                   ),
-                  const Divider(height: 12),
+                  const Divider(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    child: Text(
+                      'Core Compendium & Character Content',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
                   _buildCategoryTile(
                     type: EntityType.spell,
                     title: 'Spells & Cantrips',
@@ -295,13 +322,119 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
                     iconColor: Colors.amberAccent,
                     theme: theme,
                   ),
-                  _buildCategoryTile(
-                    type: EntityType.custom,
-                    title: 'Rules & Tables',
-                    icon: Icons.table_chart,
-                    iconColor: Colors.cyanAccent,
-                    theme: theme,
-                  ),
+                  if (otherTotal > 0) ...[
+                    const Divider(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Codex, Worldbuilding & Rules ($otherTotal)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                            ),
+                            onPressed: () {
+                              final allOtherSelected = _selectedOtherCategories.length == _otherCategoryCounts.length;
+                              setState(() {
+                                if (allOtherSelected) {
+                                  _selectedOtherCategories.clear();
+                                } else {
+                                  _selectedOtherCategories.addAll(_otherCategoryCounts.keys.where((k) => (_otherCategoryCounts[k] ?? 0) > 0));
+                                }
+                              });
+                            },
+                            child: Text(
+                              _selectedOtherCategories.length == _otherCategoryCounts.length
+                                  ? 'Deselect All Codex'
+                                  : 'Select All Codex',
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.tables,
+                      title: 'Rollable Tables',
+                      icon: Icons.table_chart,
+                      iconColor: Colors.cyanAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.deities,
+                      title: 'Deities & Pantheons',
+                      icon: Icons.wb_sunny,
+                      iconColor: Colors.amberAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.vehicles,
+                      title: 'Vehicles & Vessels',
+                      icon: Icons.directions_boat,
+                      iconColor: Colors.tealAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.trapsAndHazards,
+                      title: 'Traps & Hazards',
+                      icon: Icons.warning_amber,
+                      iconColor: Colors.redAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.invocationsAndPacts,
+                      title: 'Invocations & Pact Boons',
+                      icon: Icons.auto_awesome,
+                      iconColor: Colors.purpleAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.infusions,
+                      title: 'Infusions',
+                      icon: Icons.build_circle,
+                      iconColor: Colors.indigoAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.charmsAndRewards,
+                      title: 'Charms & Rewards',
+                      icon: Icons.card_giftcard,
+                      iconColor: Colors.greenAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.conditionsAndDiseases,
+                      title: 'Conditions & Diseases',
+                      icon: Icons.coronavirus,
+                      iconColor: Colors.pinkAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.characterOptions,
+                      title: 'Character Options',
+                      icon: Icons.psychology,
+                      iconColor: Colors.lightBlueAccent,
+                      theme: theme,
+                    ),
+                    _buildOtherSubcategoryTile(
+                      subcat: HomebrewOtherCategory.rulesAndReference,
+                      title: 'Rules & Reference',
+                      icon: Icons.menu_book,
+                      iconColor: Colors.blueGrey,
+                      theme: theme,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -322,12 +455,14 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
           ),
         FilledButton.icon(
           style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-          onPressed: (_selectedCategories.isEmpty || _totalSelectedItems == 0 || _isDeleting)
+          onPressed: ((_selectedCategories.isEmpty && _selectedOtherCategories.isEmpty) ||
+                  _totalSelectedItems == 0 ||
+                  _isDeleting)
               ? null
               : _confirmAndDeleteSelected,
           icon: const Icon(Icons.delete, size: 18),
           label: Text(
-            _selectedCategories.isEmpty
+            _totalSelectedItems == 0
                 ? 'Delete Selected'
                 : 'Delete Selected ($_totalSelectedItems)',
           ),
@@ -378,6 +513,55 @@ class _HomebrewBulkDeleterDialogState extends State<HomebrewBulkDeleterDialog> {
                   _selectedCategories.add(type);
                 } else {
                   _selectedCategories.remove(type);
+                }
+              });
+            }
+          : null,
+    );
+  }
+
+  Widget _buildOtherSubcategoryTile({
+    required HomebrewOtherCategory subcat,
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required ThemeData theme,
+  }) {
+    final count = _otherCategoryCounts[subcat] ?? 0;
+    final isSelected = _selectedOtherCategories.contains(subcat);
+    final hasItems = count > 0;
+
+    return CheckboxListTile(
+      value: isSelected,
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      enabled: hasItems,
+      secondary: CircleAvatar(
+        radius: 16,
+        backgroundColor: iconColor.withValues(alpha: 0.2),
+        child: Icon(icon, size: 16, color: iconColor),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: hasItems ? null : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      subtitle: Text(
+        '$count ${count == 1 ? "item" : "items"} in storage',
+        style: TextStyle(
+          fontSize: 11,
+          color: hasItems ? theme.colorScheme.onSurfaceVariant : Colors.grey,
+        ),
+      ),
+      onChanged: hasItems
+          ? (val) {
+              setState(() {
+                if (val == true) {
+                  _selectedOtherCategories.add(subcat);
+                } else {
+                  _selectedOtherCategories.remove(subcat);
                 }
               });
             }

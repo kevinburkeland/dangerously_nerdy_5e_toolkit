@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/screens/homebrew_studio_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/homebrew/homebrew_bulk_deleter_dialog.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -287,6 +289,114 @@ void main() {
       // Verify Spell Alpha was deleted and Spell Beta remains
       expect(find.text('Spell Alpha'), findsNothing);
       expect(find.text('Spell Beta'), findsOneWidget);
+    });
+
+    testWidgets('Codex & Rules tab renders category chips and filters other entries', (tester) async {
+      final persistence = HomebrewPersistenceService();
+      await persistence.saveCustomOtherEntriesBatch([
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'deity-solas', ruleset: RulesetVersion.homebrew),
+          name: 'Solas the Dawnbringer',
+          category: 'Deity',
+          descriptionMarkdown: 'Solar deity',
+          customProperties: {'pantheon': 'Solar Covenant'},
+        ),
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'table-loot', ruleset: RulesetVersion.homebrew),
+          name: 'Critical Loot Table',
+          category: 'Table',
+          descriptionMarkdown: 'Loot table',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomebrewStudioScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Scroll TabBar until Codex & Rules tab is visible, then tap it
+      await tester.scrollUntilVisible(
+        find.text('Codex & Rules (2)'),
+        100.0,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Codex & Rules (2)'));
+      await tester.pumpAndSettle();
+
+      // Check that both entries and chips are displayed
+      expect(find.text('Solas the Dawnbringer'), findsOneWidget);
+      expect(find.text('Critical Loot Table'), findsOneWidget);
+      expect(find.text('All (2)'), findsOneWidget);
+      expect(find.text('Deities & Pantheons (1)'), findsOneWidget);
+      expect(find.text('Rollable Tables (1)'), findsOneWidget);
+
+      // Tap Deities & Pantheons chip to filter
+      await tester.tap(find.text('Deities & Pantheons (1)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Solas the Dawnbringer'), findsOneWidget);
+      expect(find.text('Critical Loot Table'), findsNothing);
+    });
+
+    testWidgets('HomebrewBulkDeleterDialog supports granular subcategory deletion', (tester) async {
+      final persistence = HomebrewPersistenceService();
+      await persistence.saveCustomOtherEntriesBatch([
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'deity-solas', ruleset: RulesetVersion.homebrew),
+          name: 'Solas the Dawnbringer',
+          category: 'Deity',
+          descriptionMarkdown: 'Solar deity',
+        ),
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'table-loot', ruleset: RulesetVersion.homebrew),
+          name: 'Critical Loot Table',
+          category: 'Table',
+          descriptionMarkdown: 'Loot table',
+        ),
+      ]);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: HomebrewBulkDeleterDialog(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Scroll inside dialog until Deities & Pantheons is visible
+      await tester.scrollUntilVisible(
+        find.text('Deities & Pantheons'),
+        100.0,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      // Check that both categories appear in the dialog
+      expect(find.text('Deities & Pantheons'), findsOneWidget);
+      expect(find.text('Rollable Tables'), findsOneWidget);
+
+      // Select Deities & Pantheons checkbox
+      await tester.tap(find.text('Deities & Pantheons'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete Selected (1)'), findsOneWidget);
+
+      // Tap Delete Selected (1)
+      await tester.tap(find.text('Delete Selected (1)'));
+      await tester.pumpAndSettle();
+
+      // Confirm dialog appears
+      expect(find.text('Confirm Deletion'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete 1 Items'));
+      await tester.pumpAndSettle();
+
+      // Verify that Deities was deleted and Tables remains
+      final others = await persistence.loadCustomOtherEntries();
+      expect(others.length, equals(1));
+      expect(others.first.name, equals('Critical Loot Table'));
     });
   });
 }

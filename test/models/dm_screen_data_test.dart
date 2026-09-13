@@ -4,7 +4,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 void main() {
   group('DmScreenLibrary — Structural Integrity', () {
     test('allItems is non-empty and contains all 6 DmCategory values', () {
-      const items = DmScreenLibrary.allItems;
+      final items = DmScreenLibrary.allItems;
       expect(items.isNotEmpty, isTrue);
       // Guard against list.clear mutation
       expect(items.length, greaterThanOrEqualTo(50));
@@ -19,7 +19,7 @@ void main() {
     });
 
     test('no duplicate item ids', () {
-      const items = DmScreenLibrary.allItems;
+      final items = DmScreenLibrary.allItems;
       final ids = items.map((i) => i.id).toList();
       expect(ids.length, equals(ids.toSet().length),
           reason: 'Duplicate id in DmScreenLibrary.allItems');
@@ -174,7 +174,7 @@ void main() {
     });
 
     test('matches returns true when query matches summary', () {
-      const items = DmScreenLibrary.allItems;
+      final items = DmScreenLibrary.allItems;
       final stealthMatches = items.where((i) => i.matches('stealth')).toList();
       expect(stealthMatches.any((i) => i.id == 'action_hide'), isTrue);
     });

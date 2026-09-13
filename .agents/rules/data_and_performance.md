@@ -154,8 +154,12 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - `subrace` must route into `races` (`saveCustomRacesBatch`) and attach to parent race definitions.
   - `table` entries must be rendered into markdown tables using `colLabels` and rows.
   - `deity` entries must format structured metadata headers (Pantheon, Alignment, Domains, Symbol).
-- **Reparse Dual-Store Synchronization:**
-  - `reparseAllHomebrew` must persist updated and pruned collections to both Hive (`_db.put`) and SharedPreferences (`prefs.setStringList`), ensuring that `exportHomebrewBundle` immediately exports clean, deduplicated data.
+- **Codex & Rules Cross-Tool Runtime Propagation:**
+  - `HomebrewPersistenceService._hydrateCustomOtherSubsystems` automatically projects generic compendium entries (`HomebrewOtherCategory`) across the entire toolkit:
+    - `HomebrewOtherCategory.tables` map via `compendiumEntryToRollableTable` to `SrdTablesLibrary.setCustomTables` with dynamic dice formula detection, rendering under the `TableCategory.custom` ("Homebrew & Codex") chip in `TableIndexScreen`.
+    - `trapsAndHazards`, `conditionsAndDiseases`, `deities`, `vehicles`, `charmsAndRewards`, and `rulesAndReference` map via `compendiumEntryToDmReferenceItem` to `DmScreenLibrary.setCustomItems`, rendering in `RulesCompendiumScreen` and `DmDashboardScreen`.
+    - `characterOptions` (maneuvers, metamagic, boons) map to `SrdFeatureOptions.setCustomCharacterOptions`, resolving through `SrdFeatureOptions.allOptions` in `CharacterActionsResolver` and Character Sheet ability traits.
+    - Hydration runs automatically on startup (`initLibraries`), single/batch saves, single/batch deletes, and granular category prunes (`clearOtherEntriesByCategories`).
 - **Strict Avoidance of Non-SRD WotC Product Identity:**
   - All test fixtures, mock data, and documentation must strictly use generic SRD content or invented homebrew names (e.g., "Chronoblast", "Astral Knight", "Sand Corsair Captain").
 

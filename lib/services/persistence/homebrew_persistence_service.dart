@@ -4,14 +4,18 @@ import '../../models/characters/srd_backgrounds_library.dart';
 import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
+import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_bundle.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
+import '../../models/domain/homebrew_other_category.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/monster_codex_data.dart';
 import '../../models/spellbook_data.dart';
+import '../../models/tables/rollable_table.dart';
+import '../../models/tables/srd_tables_library.dart';
 import '../acl/compendium_background_parser.dart';
 import '../acl/compendium_class_parser.dart';
 import '../acl/compendium_feat_parser.dart';
@@ -264,6 +268,211 @@ class HomebrewPersistenceService {
     SrdBackgroundsLibrary.setCustomBackgrounds(backgrounds);
 
     final others = await loadCustomOtherEntries();
+    _hydrateCustomOtherSubsystems(others);
+  }
+
+  /// Converts a generic [HomebrewCompendiumEntry] to a rollable [RollableTable].
+  static RollableTable compendiumEntryToRollableTable(HomebrewCompendiumEntry entry) {
+    final raw = entry.customProperties;
+    final entries = <TableEntry>[];
+
+    final rawRows = raw['rows'] is List ? (raw['rows'] as List) : null;
+    final colLabels = raw['colLabels'] is List ? (raw['colLabels'] as List) : null;
+
+    String? inferredDice;
+    if (colLabels != null && colLabels.isNotEmpty) {
+      final firstCol = colLabels.first.toString().trim().toLowerCase();
+      if (RegExp(r'^\d*d\d+$').hasMatch(firstCol)) {
+        inferredDice = firstCol.startsWith('d') ? '1$firstCol' : firstCol;
+      }
+    }
+
+    if (rawRows != null && rawRows.isNotEmpty) {
+      int currentRollIndex = 1;
+      for (final r in rawRows) {
+        if (r is List && r.isNotEmpty) {
+          final rangeCol = r[0];
+          int min = currentRollIndex;
+          int max = currentRollIndex;
+          String label = '';
+
+          if (rangeCol is List && rangeCol.isNotEmpty) {
+            min = int.tryParse(rangeCol[0].toString()) ?? currentRollIndex;
+            max = rangeCol.length > 1 ? (int.tryParse(rangeCol[1].toString()) ?? min) : min;
+            label = r.length > 1 ? r.sublist(1).join(' - ') : rangeCol.join(' - ');
+          } else if (rangeCol is int) {
+            min = rangeCol;
+            max = rangeCol;
+            label = r.length > 1 ? r.sublist(1).join(' - ') : '$rangeCol';
+          } else if (rangeCol is String) {
+            final trimmed = rangeCol.trim();
+            final match = RegExp(r'^(\d+)(?:[-–—](\d+))?$').firstMatch(trimmed);
+            if (match != null) {
+              min = int.tryParse(match.group(1)!) ?? currentRollIndex;
+              max = match.group(2) != null ? (int.tryParse(match.group(2)!) ?? min) : min;
+              label = r.length > 1 ? r.sublist(1).join(' - ') : trimmed;
+            } else {
+              label = r.join(' - ');
+            }
+          } else {
+            label = r.join(' - ');
+          }
+
+          entries.add(TableEntry(
+            minRoll: min,
+            maxRoll: max,
+            label: label,
+          ));
+          currentRollIndex = max + 1;
+        } else if (r != null) {
+          entries.add(TableEntry(
+            minRoll: currentRollIndex,
+            maxRoll: currentRollIndex,
+            label: r.toString(),
+          ));
+          currentRollIndex++;
+        }
+      }
+    }
+
+    // Fallback: parse markdown table rows from descriptionMarkdown if entries is empty
+    if (entries.isEmpty && entry.descriptionMarkdown.isNotEmpty) {
+      final lines = entry.descriptionMarkdown.split('\n');
+      int rowIdx = 1;
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue;
+        final cells = trimmed
+            .split('|')
+            .map((c) => c.trim())
+            .where((c) => c.isNotEmpty)
+            .toList();
+        if (cells.isEmpty) continue;
+        if (cells.any((c) => c.contains('---'))) continue;
+        if (rowIdx == 1 && (cells[0].toLowerCase().contains('roll') || cells[0].toLowerCase().startsWith('d'))) {
+          if (inferredDice == null && RegExp(r'^\d*d\d+$').hasMatch(cells[0].toLowerCase())) {
+            inferredDice = cells[0].toLowerCase().startsWith('d') ? '1${cells[0].toLowerCase()}' : cells[0].toLowerCase();
+          }
+          continue;
+        }
+
+        final firstCell = cells[0];
+        final match = RegExp(r'^(\d+)(?:[-–—](\d+))?$').firstMatch(firstCell);
+        if (match != null) {
+          final min = int.tryParse(match.group(1)!) ?? rowIdx;
+          final max = match.group(2) != null ? (int.tryParse(match.group(2)!) ?? min) : min;
+          final label = cells.length > 1 ? cells.sublist(1).join(' - ') : firstCell;
+          entries.add(TableEntry(minRoll: min, maxRoll: max, label: label));
+          rowIdx = max + 1;
+        } else {
+          entries.add(TableEntry(minRoll: rowIdx, maxRoll: rowIdx, label: cells.join(' - ')));
+          rowIdx++;
+        }
+      }
+    }
+
+    if (entries.isEmpty) {
+      entries.add(TableEntry(minRoll: 1, maxRoll: 1, label: entry.name, description: entry.descriptionMarkdown));
+    }
+
+    int maxRoll = 1;
+    for (final e in entries) {
+      if (e.maxRoll > maxRoll) maxRoll = e.maxRoll;
+    }
+    int sides = maxRoll;
+    if (inferredDice != null) {
+      final m = RegExp(r'd(\d+)').firstMatch(inferredDice);
+      if (m != null) sides = int.tryParse(m.group(1)!) ?? maxRoll;
+    }
+    if (sides < 1) sides = 1;
+    final formula = inferredDice ?? '1d$sides';
+
+    return RollableTable(
+      id: entry.id.slug,
+      name: entry.name,
+      category: TableCategory.custom,
+      diceFormula: formula,
+      diceSides: sides,
+      diceCount: 1,
+      description: entry.descriptionMarkdown.isNotEmpty ? entry.descriptionMarkdown : 'Homebrew rollable table.',
+      entries: entries,
+    );
+  }
+
+  /// Converts a generic [HomebrewCompendiumEntry] to a [DmReferenceItem].
+  static DmReferenceItem compendiumEntryToDmReferenceItem(HomebrewCompendiumEntry entry) {
+    final cat = HomebrewOtherCategory.classify(
+      category: entry.category,
+      name: entry.name,
+      customProperties: entry.customProperties,
+    );
+
+    DmCategory dmCat;
+    String subCategory;
+
+    switch (cat) {
+      case HomebrewOtherCategory.trapsAndHazards:
+        dmCat = DmCategory.environment;
+        subCategory = entry.category.toLowerCase().contains('trap') ? 'Traps' : 'Hazards';
+      case HomebrewOtherCategory.conditionsAndDiseases:
+        dmCat = DmCategory.conditions;
+        subCategory = entry.category.toLowerCase().contains('disease') ? 'Diseases' : 'Conditions';
+      case HomebrewOtherCategory.deities:
+        dmCat = DmCategory.exploration;
+        subCategory = 'Pantheon & Deities';
+      case HomebrewOtherCategory.vehicles:
+        dmCat = DmCategory.exploration;
+        subCategory = 'Vehicles & Travel';
+      case HomebrewOtherCategory.charmsAndRewards:
+        dmCat = DmCategory.magicAndResting;
+        subCategory = 'Charms & Rewards';
+      case HomebrewOtherCategory.characterOptions:
+      case HomebrewOtherCategory.invocationsAndPacts:
+      case HomebrewOtherCategory.infusions:
+        dmCat = DmCategory.actions;
+        subCategory = entry.category;
+      case HomebrewOtherCategory.tables:
+        dmCat = DmCategory.tables;
+        subCategory = 'Codex Tables';
+      case HomebrewOtherCategory.rulesAndReference:
+        final catLower = entry.category.toLowerCase();
+        if (catLower.contains('action') || catLower.contains('combat')) {
+          dmCat = DmCategory.actions;
+          subCategory = 'Combat Actions';
+        } else {
+          dmCat = DmCategory.exploration;
+          subCategory = 'Rules & Variants';
+        }
+    }
+
+    final rawLines = entry.descriptionMarkdown
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+
+    final summary = rawLines.isNotEmpty ? rawLines.first : entry.name;
+    final rules = rawLines.isNotEmpty ? rawLines : [entry.name];
+
+    return DmReferenceItem(
+      id: entry.id.slug,
+      title: entry.name,
+      category: dmCat,
+      subCategory: subCategory,
+      summary: summary,
+      rules2014: rules,
+      rules2024: rules,
+      tags: ['Homebrew', entry.category, subCategory],
+      isChangedIn2024: false,
+      extraData: entry.customProperties,
+    );
+  }
+
+  /// Synchronizes runtime registries for generic compendium items:
+  /// - Feature Options (Invocations, Pacts, Infusions, Character Options)
+  /// - Rollable Tables (TableIndexScreen / SrdTablesLibrary)
+  /// - DM Reference Items (RulesCompendiumScreen / DmScreenLibrary)
+  static void _hydrateCustomOtherSubsystems(List<HomebrewCompendiumEntry> others) {
     final customPactBoons = others
         .where((e) {
           final cat = e.category.toLowerCase();
@@ -320,6 +529,54 @@ class HomebrewPersistenceService {
             ))
         .toList();
     SrdFeatureOptions.setCustomInfusions(customInfusions);
+
+    final customCharOptions = others
+        .where((e) {
+          final classified = HomebrewOtherCategory.classify(
+            category: e.category,
+            name: e.name,
+            customProperties: e.customProperties,
+          );
+          return classified == HomebrewOtherCategory.characterOptions;
+        })
+        .map((e) => FeatureOption(
+              id: e.id.slug,
+              name: e.name,
+              descriptionMarkdown: e.descriptionMarkdown,
+              customProperties: e.customProperties,
+            ))
+        .toList();
+    SrdFeatureOptions.setCustomCharacterOptions(customCharOptions);
+
+    final customTables = others
+        .where((e) =>
+            HomebrewOtherCategory.classify(
+              category: e.category,
+              name: e.name,
+              customProperties: e.customProperties,
+            ) ==
+            HomebrewOtherCategory.tables)
+        .map(compendiumEntryToRollableTable)
+        .toList();
+    SrdTablesLibrary.setCustomTables(customTables);
+
+    final customRefItems = others
+        .where((e) {
+          final classified = HomebrewOtherCategory.classify(
+            category: e.category,
+            name: e.name,
+            customProperties: e.customProperties,
+          );
+          return classified == HomebrewOtherCategory.trapsAndHazards ||
+              classified == HomebrewOtherCategory.conditionsAndDiseases ||
+              classified == HomebrewOtherCategory.deities ||
+              classified == HomebrewOtherCategory.vehicles ||
+              classified == HomebrewOtherCategory.charmsAndRewards ||
+              classified == HomebrewOtherCategory.rulesAndReference;
+        })
+        .map(compendiumEntryToDmReferenceItem)
+        .toList();
+    DmScreenLibrary.setCustomItems(customRefItems);
   }
 
   /// Converts a [Spell] domain entity to a [SpellItem] for [SpellbookLibrary].
@@ -1086,13 +1343,7 @@ class HomebrewPersistenceService {
     if (rawPayload != null) {
       await _saveRawPayload(_keyHomebrewOtherRaw, entry.id.slug, rawPayload);
     }
-    if (entry.category.toLowerCase().contains('invocation')) {
-      SrdFeatureOptions.addCustomInvocation(FeatureOption(
-        id: entry.id.slug,
-        name: entry.name,
-        descriptionMarkdown: entry.descriptionMarkdown,
-      ));
-    }
+    _hydrateCustomOtherSubsystems(entries);
   }
 
   /// Batch saves multiple generic compendium entries to persistent storage.
@@ -1116,13 +1367,6 @@ class HomebrewPersistenceService {
         slugIndex[key] = entries.length;
         entries.add(entry);
       }
-      if (entry.category.toLowerCase().contains('invocation')) {
-        SrdFeatureOptions.addCustomInvocation(FeatureOption(
-          id: entry.id.slug,
-          name: entry.name,
-          descriptionMarkdown: entry.descriptionMarkdown,
-        ));
-      }
     }
     await _saveStringList(
       _keyHomebrewOther,
@@ -1135,6 +1379,7 @@ class HomebrewPersistenceService {
       }
       await _saveRawPayloadsBatch(_keyHomebrewOtherRaw, payloadMap);
     }
+    _hydrateCustomOtherSubsystems(entries);
   }
 
   /// Deletes a generic compendium entry by slug.
@@ -1146,7 +1391,80 @@ class HomebrewPersistenceService {
       entries.map((e) => json.encode(e.toMap())).toList(),
     );
     await _deleteRawPayload(_keyHomebrewOtherRaw, slug);
-    SrdFeatureOptions.removeCustomInvocation(slug);
+    _hydrateCustomOtherSubsystems(entries);
+  }
+
+  /// Returns a map of counts for each granular [HomebrewOtherCategory] stored
+  /// in the generic compendium collection.
+  Future<Map<HomebrewOtherCategory, int>> loadOtherCategoryCounts() async {
+    final entries = await loadCustomOtherEntries();
+    final counts = <HomebrewOtherCategory, int>{
+      for (final cat in HomebrewOtherCategory.values) cat: 0,
+    };
+    for (final e in entries) {
+      final cat = HomebrewOtherCategory.classify(
+        category: e.category,
+        name: e.name,
+        customProperties: e.customProperties,
+      );
+      counts[cat] = (counts[cat] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  /// Prunes specified [HomebrewOtherCategory] subcategories from persistent storage
+  /// while preserving all other custom entries and their raw payloads.
+  ///
+  /// Returns the number of entities removed.
+  Future<int> clearOtherEntriesByCategories(Set<HomebrewOtherCategory> categories) async {
+    if (categories.isEmpty) return 0;
+    final allOthers = await loadCustomOtherEntries();
+    if (allOthers.isEmpty) return 0;
+
+    final remaining = <HomebrewCompendiumEntry>[];
+    final removedSlugs = <String>{};
+
+    for (final entry in allOthers) {
+      final cat = HomebrewOtherCategory.classify(
+        category: entry.category,
+        name: entry.name,
+        customProperties: entry.customProperties,
+      );
+      if (categories.contains(cat)) {
+        removedSlugs.add(entry.id.slug);
+      } else {
+        remaining.add(entry);
+      }
+    }
+
+    if (removedSlugs.isEmpty) return 0;
+
+    // Save updated parsed list
+    final prefs = await SharedPreferences.getInstance();
+    final remainingJson = remaining.map((e) => json.encode(e.toMap())).toList();
+    await _db.put(AppDatabaseService.boxHomebrew, _keyHomebrewOther, remainingJson);
+    await prefs.setStringList(_keyHomebrewOther, remainingJson);
+
+    // Prune removed slugs from raw payloads
+    for (final slug in removedSlugs) {
+      await _deleteRawPayload(_keyHomebrewOtherRaw, slug, prefs);
+    }
+
+    // Clean up runtime feature options if invocations or infusions were removed
+    if (categories.contains(HomebrewOtherCategory.invocationsAndPacts)) {
+      for (final slug in removedSlugs) {
+        SrdFeatureOptions.removeCustomInvocation(slug);
+      }
+    }
+    if (categories.contains(HomebrewOtherCategory.infusions)) {
+      for (final slug in removedSlugs) {
+        SrdFeatureOptions.removeCustomInfusion(slug);
+      }
+    }
+
+    _hydrateCustomOtherSubsystems(remaining);
+
+    return removedSlugs.length;
   }
 
   /// Batch deletes multiple custom entities by [slugs] for the given [EntityType].
@@ -1823,6 +2141,7 @@ class HomebrewPersistenceService {
     SrdClassesLibrary.setCustomClasses([]);
     SrdClassesLibrary.setCustomSubclasses([]);
     SrdBackgroundsLibrary.setCustomBackgrounds([]);
+    _hydrateCustomOtherSubsystems([]);
     SrdEquivalenceIndex().invalidate();
   }
 
@@ -1887,6 +2206,7 @@ class HomebrewPersistenceService {
         await prefs.remove(_keyHomebrewOther);
         await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewOtherRaw);
         await prefs.remove(_keyHomebrewOtherRaw);
+        _hydrateCustomOtherSubsystems([]);
       default:
         break;
     }

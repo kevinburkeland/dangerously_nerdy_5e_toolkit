@@ -181,7 +181,23 @@ class DmScreenLibrary {
   static List<DmReferenceItem> get coverRules =>
       allItems.where((i) => i.tags.contains('cover_rule')).toList();
 
-  static const List<DmReferenceItem> allItems = [
+  static List<DmReferenceItem> _customItems = [];
+
+  /// Registers custom homebrew reference items into the DM Reference library.
+  static void setCustomItems(List<DmReferenceItem> items) {
+    _customItems = List.unmodifiable(items);
+  }
+
+  /// Returns canonical SRD reference items.
+  static List<DmReferenceItem> get srdItems => _baseItems;
+
+  /// Returns all reference items, including active homebrew items.
+  static List<DmReferenceItem> get allItems => [
+        ..._baseItems,
+        ..._customItems,
+      ];
+
+  static const List<DmReferenceItem> _baseItems = [
     // ==========================================
     // ACTIONS & COMBAT (STANDARD ACTIONS)
     // ==========================================

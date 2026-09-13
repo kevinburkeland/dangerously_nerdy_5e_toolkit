@@ -2,6 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/models/homebrew_entity.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/value_objects/ruleset_version.dart' as domain_rules;
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_other_category.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
@@ -420,6 +423,167 @@ void main() {
       expect(others.first.category, equals('Deity'));
       expect(others.first.descriptionMarkdown, contains('Solar Covenant'));
       expect(others.first.descriptionMarkdown, contains('Light, Life'));
+    });
+
+    test('HomebrewOtherCategory.classify accurately maps diverse compendium categories', () {
+      // Tables
+      expect(
+        HomebrewOtherCategory.classify(category: 'Table', name: 'Critical Hit Table'),
+        equals(HomebrewOtherCategory.tables),
+      );
+      expect(
+        HomebrewOtherCategory.classify(category: 'Generic', name: 'Random Loot', customProperties: {'rows': []}),
+        equals(HomebrewOtherCategory.tables),
+      );
+
+      // Deities (ensuring d-ei-ty does not classify as invocation!)
+      expect(
+        HomebrewOtherCategory.classify(category: 'Deity', name: 'Solas the Dawnbringer'),
+        equals(HomebrewOtherCategory.deities),
+      );
+      expect(
+        HomebrewOtherCategory.classify(category: 'Divine', name: 'Aurelia', customProperties: {'pantheon': 'Solar'}),
+        equals(HomebrewOtherCategory.deities),
+      );
+
+      // Vehicles
+      expect(
+        HomebrewOtherCategory.classify(category: 'Vehicle', name: 'Sand Crawler'),
+        equals(HomebrewOtherCategory.vehicles),
+      );
+      expect(
+        HomebrewOtherCategory.classify(category: 'Equipment', name: 'Sky Skiff', customProperties: {'vehicleType': 'Air'}),
+        equals(HomebrewOtherCategory.vehicles),
+      );
+
+      // Traps & Hazards
+      expect(
+        HomebrewOtherCategory.classify(category: 'Trap', name: 'Pit of Spikes'),
+        equals(HomebrewOtherCategory.trapsAndHazards),
+      );
+      expect(
+        HomebrewOtherCategory.classify(category: 'Hazard', name: 'Acidic Mist'),
+        equals(HomebrewOtherCategory.trapsAndHazards),
+      );
+
+      // Invocations & Pact Boons
+      expect(
+        HomebrewOtherCategory.classify(category: 'Eldritch Invocation', name: 'Gaze of the Abyss'),
+        equals(HomebrewOtherCategory.invocationsAndPacts),
+      );
+      expect(
+        HomebrewOtherCategory.classify(category: 'Pact Boon', name: 'Pact of the Star'),
+        equals(HomebrewOtherCategory.invocationsAndPacts),
+      );
+      expect(
+        HomebrewOtherCategory.classify(category: 'ei', name: 'Whispering Shadows'),
+        equals(HomebrewOtherCategory.invocationsAndPacts),
+      );
+
+      // Infusions
+      expect(
+        HomebrewOtherCategory.classify(category: 'Infusion', name: 'Replicating Dynamo'),
+        equals(HomebrewOtherCategory.infusions),
+      );
+
+      // Charms & Rewards
+      expect(
+        HomebrewOtherCategory.classify(category: 'Charm', name: 'Charm of the North Star'),
+        equals(HomebrewOtherCategory.charmsAndRewards),
+      );
+      expect(
+        HomebrewOtherCategory.classify(category: 'Reward', name: 'Boon of the Storm'),
+        equals(HomebrewOtherCategory.charmsAndRewards),
+      );
+
+      // Conditions & Diseases
+      expect(
+        HomebrewOtherCategory.classify(category: 'Disease', name: 'Sewer Plague Variant'),
+        equals(HomebrewOtherCategory.conditionsAndDiseases),
+      );
+
+      // Character Options
+      expect(
+        HomebrewOtherCategory.classify(category: 'Character Option', name: 'Arcane Maneuver'),
+        equals(HomebrewOtherCategory.characterOptions),
+      );
+
+      // Rules & Reference
+      expect(
+        HomebrewOtherCategory.classify(category: 'Rule', name: 'Underwater Combat Variant'),
+        equals(HomebrewOtherCategory.rulesAndReference),
+      );
+    });
+
+    test('loadOtherCategoryCounts and clearOtherEntriesByCategories perform selective subcategory deletion', () async {
+      final entries = [
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'table-loot-a', ruleset: RulesetVersion.homebrew),
+          name: 'Table Loot A',
+          category: 'Table',
+          descriptionMarkdown: 'Table A',
+        ),
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'table-loot-b', ruleset: RulesetVersion.homebrew),
+          name: 'Table Loot B',
+          category: 'Table',
+          descriptionMarkdown: 'Table B',
+        ),
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'solas-dawnbringer', ruleset: RulesetVersion.homebrew),
+          name: 'Solas the Dawnbringer',
+          category: 'Deity',
+          descriptionMarkdown: 'A solar deity',
+          customProperties: {'pantheon': 'Solar Covenant'},
+        ),
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'sand-crawler', ruleset: RulesetVersion.homebrew),
+          name: 'Sand Crawler',
+          category: 'Vehicle',
+          descriptionMarkdown: 'Desert vessel',
+          customProperties: {'vehicleType': 'Land'},
+        ),
+        const HomebrewCompendiumEntry(
+          id: EntityId(slug: 'pit-of-spikes', ruleset: RulesetVersion.homebrew),
+          name: 'Pit of Spikes',
+          category: 'Trap',
+          descriptionMarkdown: 'Concealed pit trap',
+          customProperties: {'trapType': 'Mechanical'},
+        ),
+      ];
+
+      await persistence.saveCustomOtherEntriesBatch(entries);
+
+      // Verify category counts
+      final counts = await persistence.loadOtherCategoryCounts();
+      expect(counts[HomebrewOtherCategory.tables], equals(2));
+      expect(counts[HomebrewOtherCategory.deities], equals(1));
+      expect(counts[HomebrewOtherCategory.vehicles], equals(1));
+      expect(counts[HomebrewOtherCategory.trapsAndHazards], equals(1));
+      expect(counts[HomebrewOtherCategory.invocationsAndPacts], equals(0));
+
+      // Selectively delete only Deities and Vehicles
+      final deletedCount = await persistence.clearOtherEntriesByCategories({
+        HomebrewOtherCategory.deities,
+        HomebrewOtherCategory.vehicles,
+      });
+
+      expect(deletedCount, equals(2));
+
+      // Re-query remaining entries
+      final remaining = await persistence.loadCustomOtherEntries();
+      expect(remaining.length, equals(3));
+      expect(remaining.any((r) => r.name == 'Solas the Dawnbringer'), isFalse);
+      expect(remaining.any((r) => r.name == 'Sand Crawler'), isFalse);
+      expect(remaining.any((r) => r.name == 'Table Loot A'), isTrue);
+      expect(remaining.any((r) => r.name == 'Table Loot B'), isTrue);
+      expect(remaining.any((r) => r.name == 'Pit of Spikes'), isTrue);
+
+      final updatedCounts = await persistence.loadOtherCategoryCounts();
+      expect(updatedCounts[HomebrewOtherCategory.tables], equals(2));
+      expect(updatedCounts[HomebrewOtherCategory.deities], equals(0));
+      expect(updatedCounts[HomebrewOtherCategory.vehicles], equals(0));
+      expect(updatedCounts[HomebrewOtherCategory.trapsAndHazards], equals(1));
     });
   });
 }

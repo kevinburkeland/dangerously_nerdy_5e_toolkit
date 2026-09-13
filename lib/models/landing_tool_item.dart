@@ -358,6 +358,25 @@ class LandingToolRegistry {
             'pack',
             'create',
             'nerd',
+            'tables',
+            'table',
+            'deity',
+            'deities',
+            'vehicle',
+            'vehicles',
+            'trap',
+            'traps',
+            'hazard',
+            'hazards',
+            'disease',
+            'diseases',
+            'charm',
+            'charms',
+            'invocation',
+            'invocations',
+            'infusion',
+            'infusions',
+            'codex',
           ],
           onLaunch: (context) {
             Navigator.push(
@@ -397,7 +416,16 @@ class LandingToolRegistry {
             'rest',
             'concentration',
             'travel',
-            'revised'
+            'revised',
+            'traps',
+            'hazards',
+            'diseases',
+            'deities',
+            'pantheon',
+            'vehicles',
+            'charms',
+            'homebrew',
+            'codex',
           ],
           onLaunch: (context) {
             Navigator.push(
@@ -673,7 +701,10 @@ class LandingToolRegistry {
             'generator',
             'gold',
             'appraisal',
-            'srd'
+            'srd',
+            'homebrew tables',
+            'custom tables',
+            'codex',
           ],
           onLaunch: (context) {
             Navigator.push(

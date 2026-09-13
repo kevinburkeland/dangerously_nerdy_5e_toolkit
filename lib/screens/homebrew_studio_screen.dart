@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/homebrew_extended_entities.dart';
+import '../models/domain/homebrew_other_category.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../services/haptic_service.dart';
 import '../services/persistence/homebrew_persistence_service.dart';
@@ -41,6 +42,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
   List<Feat> _feats = [];
   List<Background> _backgrounds = [];
   List<HomebrewCompendiumEntry> _otherEntries = [];
+  HomebrewOtherCategory? _selectedOtherFilter;
   bool _isLoading = true;
 
   // Multi-select batch deletion mode
@@ -534,7 +536,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
             Tab(icon: const Icon(Icons.person), text: 'Races (${_races.length})'),
             Tab(icon: const Icon(Icons.stars), text: 'Feats (${_feats.length})'),
             Tab(icon: const Icon(Icons.menu_book), text: 'Backgrounds (${_backgrounds.length})'),
-            Tab(icon: const Icon(Icons.table_chart), text: 'Invocations & Rules (${_otherEntries.length})'),
+            Tab(icon: const Icon(Icons.category_outlined), text: 'Codex & Rules (${_otherEntries.length})'),
           ],
         ),
       ),
@@ -1356,83 +1358,199 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
     );
   }
 
+  (IconData, Color) _getCategoryVisuals(HomebrewOtherCategory cat) {
+    switch (cat) {
+      case HomebrewOtherCategory.tables:
+        return (Icons.table_chart, Colors.cyanAccent);
+      case HomebrewOtherCategory.deities:
+        return (Icons.wb_sunny, Colors.amberAccent);
+      case HomebrewOtherCategory.vehicles:
+        return (Icons.directions_boat, Colors.tealAccent);
+      case HomebrewOtherCategory.trapsAndHazards:
+        return (Icons.warning_amber, Colors.redAccent);
+      case HomebrewOtherCategory.invocationsAndPacts:
+        return (Icons.auto_awesome, Colors.purpleAccent);
+      case HomebrewOtherCategory.infusions:
+        return (Icons.build_circle, Colors.indigoAccent);
+      case HomebrewOtherCategory.charmsAndRewards:
+        return (Icons.card_giftcard, Colors.greenAccent);
+      case HomebrewOtherCategory.conditionsAndDiseases:
+        return (Icons.coronavirus, Colors.pinkAccent);
+      case HomebrewOtherCategory.characterOptions:
+        return (Icons.psychology, Colors.lightBlueAccent);
+      case HomebrewOtherCategory.rulesAndReference:
+        return (Icons.menu_book, Colors.blueGrey);
+    }
+  }
+
   Widget _buildOtherEntriesTab(ThemeData theme) {
     if (_otherEntries.isEmpty) {
       return _buildEmptyState(
         theme,
-        icon: Icons.table_chart_outlined,
-        title: 'No Custom Invocations or Rules',
-        subtitle: 'Import custom Eldritch Invocations, optional features, tables, or rules via the JSON Importer.',
+        icon: Icons.category_outlined,
+        title: 'No Custom Codex or Rule Entries',
+        subtitle: 'Import custom Deities, Tables, Vehicles, Traps, Invocations, or rules via the JSON Importer.',
         onAction: _openImportDialog,
       );
     }
 
-    final slugs = _otherEntries.map((o) => o.id.slug).toList();
+    // Calculate category counts
+    final categoryCounts = <HomebrewOtherCategory, int>{};
+    for (final e in _otherEntries) {
+      final cat = HomebrewOtherCategory.classify(
+        category: e.category,
+        name: e.name,
+        customProperties: e.customProperties,
+      );
+      categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
+    }
+
+    // Filter entries by selected category chip
+    final filtered = _selectedOtherFilter == null
+        ? _otherEntries
+        : _otherEntries.where((e) {
+            final cat = HomebrewOtherCategory.classify(
+              category: e.category,
+              name: e.name,
+              customProperties: e.customProperties,
+            );
+            return cat == _selectedOtherFilter;
+          }).toList();
+
+    final slugs = filtered.map((o) => o.id.slug).toList();
 
     return Column(
       children: [
-        _buildTabToolbar(totalCount: _otherEntries.length, allSlugs: slugs, theme: theme),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: _otherEntries.length,
-            itemBuilder: (ctx, idx) {
-              final entry = _otherEntries[idx];
-              final isSelected = _selectedSlugs.contains(entry.id.slug);
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: isSelected
-                    ? RoundedRectangleBorder(
-                        side: BorderSide(color: theme.colorScheme.primary, width: 2),
-                        borderRadius: BorderRadius.circular(12),
-                      )
-                    : null,
-                child: ListTile(
-                  onTap: _isSelectionMode
-                      ? () {
-                          setState(() {
-                            if (isSelected) {
-                              _selectedSlugs.remove(entry.id.slug);
-                            } else {
-                              _selectedSlugs.add(entry.id.slug);
-                            }
-                          });
-                        }
-                      : () => _showDetailModal(
-                          title: entry.name,
-                          category: entry.category,
-                          contentMarkdown: entry.descriptionMarkdown,
-                        ),
-                  leading: _isSelectionMode
-                      ? Checkbox(
-                          value: isSelected,
-                          onChanged: (val) {
-                            setState(() {
-                              if (val == true) {
-                                _selectedSlugs.add(entry.id.slug);
-                              } else {
-                                _selectedSlugs.remove(entry.id.slug);
-                              }
-                            });
-                          },
-                        )
-                      : CircleAvatar(
-                          backgroundColor: Colors.cyan.withValues(alpha: 0.2),
-                          child: const Icon(Icons.table_chart, color: Colors.cyanAccent),
-                        ),
-                  title: Text(entry.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Category: ${entry.category}'),
-                  trailing: _isSelectionMode
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                          onPressed: () => _deleteOtherEntry(entry.id.slug),
-                        ),
-                ),
-              );
-            },
+        // Category Filter Chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              FilterChip(
+                label: Text('All (${_otherEntries.length})'),
+                selected: _selectedOtherFilter == null,
+                onSelected: (_) {
+                  setState(() => _selectedOtherFilter = null);
+                },
+              ),
+              const SizedBox(width: 8),
+              ...HomebrewOtherCategory.values
+                  .where((c) => (categoryCounts[c] ?? 0) > 0)
+                  .map((c) {
+                final isSel = _selectedOtherFilter == c;
+                final (icon, color) = _getCategoryVisuals(c);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    avatar: Icon(icon, size: 16, color: isSel ? null : color),
+                    label: Text('${c.label} (${categoryCounts[c]})'),
+                    selected: isSel,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedOtherFilter = selected ? c : null;
+                      });
+                    },
+                  ),
+                );
+              }),
+            ],
           ),
+        ),
+        _buildTabToolbar(totalCount: filtered.length, allSlugs: slugs, theme: theme),
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Text(
+                    'No entries found in this category.',
+                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filtered.length,
+                  itemBuilder: (ctx, idx) {
+                    final entry = filtered[idx];
+                    final isSelected = _selectedSlugs.contains(entry.id.slug);
+                    final cat = HomebrewOtherCategory.classify(
+                      category: entry.category,
+                      name: entry.name,
+                      customProperties: entry.customProperties,
+                    );
+                    final (catIcon, catColor) = _getCategoryVisuals(cat);
+
+                    // Formulate rich subtitle
+                    String sub = 'Category: ${entry.category}';
+                    if (cat == HomebrewOtherCategory.deities) {
+                      final pantheon = entry.customProperties['pantheon']?.toString();
+                      if (pantheon != null && pantheon.isNotEmpty) {
+                        sub += ' • $pantheon';
+                      }
+                    } else if (cat == HomebrewOtherCategory.vehicles) {
+                      final vType = entry.customProperties['vehicleType']?.toString();
+                      if (vType != null && vType.isNotEmpty) {
+                        sub += ' • $vType';
+                      }
+                    } else if (cat == HomebrewOtherCategory.trapsAndHazards) {
+                      final tType = (entry.customProperties['trapType'] ?? entry.customProperties['hazardType'])?.toString();
+                      if (tType != null && tType.isNotEmpty) {
+                        sub += ' • $tType';
+                      }
+                    }
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: isSelected
+                          ? RoundedRectangleBorder(
+                              side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                              borderRadius: BorderRadius.circular(12),
+                            )
+                          : null,
+                      child: ListTile(
+                        onTap: _isSelectionMode
+                            ? () {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedSlugs.remove(entry.id.slug);
+                                  } else {
+                                    _selectedSlugs.add(entry.id.slug);
+                                  }
+                                });
+                              }
+                            : () => _showDetailModal(
+                                title: entry.name,
+                                category: entry.category,
+                                contentMarkdown: entry.descriptionMarkdown,
+                              ),
+                        leading: _isSelectionMode
+                            ? Checkbox(
+                                value: isSelected,
+                                onChanged: (val) {
+                                  setState(() {
+                                    if (val == true) {
+                                      _selectedSlugs.add(entry.id.slug);
+                                    } else {
+                                      _selectedSlugs.remove(entry.id.slug);
+                                    }
+                                  });
+                                },
+                              )
+                            : CircleAvatar(
+                                backgroundColor: catColor.withValues(alpha: 0.2),
+                                child: Icon(catIcon, color: catColor),
+                              ),
+                        title: Text(entry.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(sub),
+                        trailing: _isSelectionMode
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                onPressed: () => _deleteOtherEntry(entry.id.slug),
+                              ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );

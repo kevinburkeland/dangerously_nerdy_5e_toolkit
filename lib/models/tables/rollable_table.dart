@@ -7,7 +7,8 @@ enum TableCategory {
   magic('Magic & Chaos', Icons.auto_awesome, Color(0xFFC084FC)),
   dmGameplay('DM & Hazards', Icons.shield_outlined, Color(0xFFEF4444)),
   characterLore('NPC & Story', Icons.psychology_outlined, Color(0xFF38BDF8)),
-  trinkets('Trinkets & Curios', Icons.stars_outlined, Color(0xFF10B981));
+  trinkets('Trinkets & Curios', Icons.stars_outlined, Color(0xFF10B981)),
+  custom('Homebrew & Codex', Icons.category_outlined, Color(0xFF06B6D4));
 
   final String label;
   final IconData icon;

@@ -356,7 +356,11 @@ class SrdFeatureOptions {
         ..._customInfusions,
       ];
 
-  /// All feature options across all classes, custom invocations, pact boons, and infusions
+  static List<FeatureOption> _customCharacterOptions = [];
+
+  static List<FeatureOption> get customCharacterOptions => _customCharacterOptions;
+
+  /// All feature options across all classes, custom invocations, pact boons, infusions, and character options
   static List<FeatureOption> get allOptions => [
         ...fightingStyles,
         ...clericDivineOrders,
@@ -364,6 +368,7 @@ class SrdFeatureOptions {
         ...warlockPactBoons,
         ...warlockInvocations,
         ...artificerInfusions,
+        ..._customCharacterOptions,
       ];
 
   /// Sets the list of custom homebrew Pact Boons
@@ -379,6 +384,11 @@ class SrdFeatureOptions {
   /// Sets the list of custom homebrew Artificer Infusions
   static void setCustomInfusions(List<FeatureOption> custom) {
     _customInfusions = List<FeatureOption>.from(custom);
+  }
+
+  /// Sets the list of custom homebrew Character Options (metamagic, maneuvers, boons)
+  static void setCustomCharacterOptions(List<FeatureOption> custom) {
+    _customCharacterOptions = List<FeatureOption>.from(custom);
   }
 
   /// Adds or replaces a custom homebrew invocation
@@ -401,6 +411,17 @@ class SrdFeatureOptions {
   /// Removes a custom homebrew infusion by id
   static void removeCustomInfusion(String id) {
     _customInfusions.removeWhere((o) => o.id == id);
+  }
+
+  /// Adds or replaces a custom character option
+  static void addCustomCharacterOption(FeatureOption opt) {
+    _customCharacterOptions.removeWhere((o) => o.id == opt.id);
+    _customCharacterOptions.add(opt);
+  }
+
+  /// Removes a custom character option by id
+  static void removeCustomCharacterOption(String id) {
+    _customCharacterOptions.removeWhere((o) => o.id == id);
   }
 }
 

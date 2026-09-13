@@ -113,7 +113,7 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
         ? (_localEditionOverride ?? widget.initialEdition!)
         : (settingsProvider?.settings.rulesEdition ?? DmRulesEdition.v2024);
     final pinnedIds = _getPinnedIds(context);
-    const allItems = DmScreenLibrary.allItems;
+    final allItems = DmScreenLibrary.allItems;
 
     final filteredItems = allItems.where((item) {
       if (_showOnlyPinned && !pinnedIds.contains(item.id)) {

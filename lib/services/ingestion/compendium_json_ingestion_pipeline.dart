@@ -881,9 +881,16 @@ class CompendiumJsonIngestionPipeline {
     }, 'Optional Feature');
 
     ingestKeys(['table', 'tables'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Table')), 'Table');
-    ingestKeys(['reward', 'rewards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Reward')), 'Reward');
-    ingestKeys(['condition', 'conditions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Condition')), 'Condition');
+    ingestKeys(['deity', 'deities'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Deity')), 'Deity');
+    ingestKeys(['vehicle', 'vehicles', 'vehicleupgrade', 'vehicleupgrades'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Vehicle')), 'Vehicle');
+    ingestKeys(['trap', 'traps'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Trap')), 'Trap');
     ingestKeys(['hazard', 'hazards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Hazard')), 'Hazard');
+    ingestKeys(['reward', 'rewards', 'boon', 'boons', 'cult', 'cults'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Reward')), 'Reward');
+    ingestKeys(['charm', 'charms'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Charm')), 'Charm');
+    ingestKeys(['condition', 'conditions', 'status', 'statuses'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Condition')), 'Condition');
+    ingestKeys(['disease', 'diseases'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Disease')), 'Disease');
+    ingestKeys(['charoption', 'charoptions', 'characteroption', 'characteroptions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Character Option')), 'Character Option');
+    ingestKeys(['action', 'actions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Action')), 'Action');
     ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Rule')), 'Rule');
     ingestKeys(['otherentry', 'otherentries', 'genericentry', 'genericentries'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset)), 'Generic Entry');
 
