@@ -1,7 +1,9 @@
 import 'dart:math' as math;
+import '../../models/arena/arena_condition.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../models/spellbook_data.dart';
+import '../../domain/simulation/combat_rider.dart';
 
 /// Anti-Corruption Layer (ACL) Boundary Parser.
 /// Quarantines all unstructured text scraping, regex heuristics, and legacy JSON
@@ -23,6 +25,42 @@ class StatBlockAclParser {
     AbilityType.wisdom: RegExp(r'\b(?:wis|wisdom)\s*([+-]?\s*\d+)', caseSensitive: false),
     AbilityType.charisma: RegExp(r'\b(?:cha|charisma)\s*([+-]?\s*\d+)', caseSensitive: false),
   };
+
+  // --- Combat Action Rider Pre-Compiled Matchers ---
+  static final _grappleRestrainedPattern = RegExp(
+    r"target is grappled(?:\s*\(escape DC\s*(\d+)\))?.*?(?:restrained until this grapple ends|until this grapple ends.*?\brestrained\b)",
+    caseSensitive: false,
+    dotAll: true,
+  );
+  static final _grapplePattern = RegExp(
+    r"target is grappled(?:\s*\(escape DC\s*(\d+)\))?",
+    caseSensitive: false,
+  );
+  static final _restrainedPattern = RegExp(
+    r"\btarget is restrained\b|\brestrained until\b",
+    caseSensitive: false,
+  );
+  static final _attributeDrainPattern = RegExp(
+    r"target's\s*(Strength|Constitution|Dexterity|Intelligence|Wisdom|Charisma)\s*score is reduced by\s*(\d+d\d+|\d+)(?:.*?(target dies if this reduces its.*?to 0))?",
+    caseSensitive: false,
+    dotAll: true,
+  );
+  static final _maxHpReductionPattern = RegExp(
+    r"target's hit point maximum is reduced by (?:an amount equal to the (?:necrotic )?damage|(\d+d\d+|\d+))",
+    caseSensitive: false,
+  );
+  static final _reelingPattern = RegExp(
+    r'pulled up to (\d+)\s*feet straight toward',
+    caseSensitive: false,
+  );
+  static final _healingSuppressionPattern = RegExp(
+    r"target can't regain hit points(?: until ([^.]+))?",
+    caseSensitive: false,
+  );
+  static final _periodicDamagePattern = RegExp(
+    r'takes (?:(\d+)\s*\()?(\d+)d(\d+)(?:\s*\+\s*(\d+))?\)?\s*(\w+)?\s*damage at the (start|end) of (?:each of )?its turns?',
+    caseSensitive: false,
+  );
 
   /// Parses an unstructured/third-party [MinionStatBlock] at the ingestion boundary
   /// to pre-calculate all combat metrics into explicit typed primitives.
@@ -261,5 +299,139 @@ class StatBlockAclParser {
       AbilityType.wisdom => sb.wisMod,
       AbilityType.charisma => sb.chaMod,
     };
+  }
+
+  /// Extracts up to 6 stacked [CombatEffectRider]s from raw action descriptions
+  /// at the ingestion boundary using pre-compiled regex tokens.
+  static List<CombatEffectRider> extractRiders(String text) {
+    if (text.isEmpty) return const [];
+    final riders = <CombatEffectRider>[];
+
+    // 1. Grappled / Restrained Condition Riders
+    final grMatch = _grappleRestrainedPattern.firstMatch(text);
+    if (grMatch != null) {
+      final dc = int.tryParse(grMatch.group(1) ?? '');
+      riders.add(ConditionRider(
+        condition: ArenaCondition.grappled,
+        requiresSave: false,
+        saveDc: dc,
+      ));
+      riders.add(const ConditionRider(
+        condition: ArenaCondition.restrained,
+        requiresSave: false,
+      ));
+    } else {
+      final gMatch = _grapplePattern.firstMatch(text);
+      if (gMatch != null) {
+        final dc = int.tryParse(gMatch.group(1) ?? '');
+        riders.add(ConditionRider(
+          condition: ArenaCondition.grappled,
+          requiresSave: false,
+          saveDc: dc,
+        ));
+      }
+      final rMatch = _restrainedPattern.firstMatch(text);
+      if (rMatch != null) {
+        riders.add(const ConditionRider(
+          condition: ArenaCondition.restrained,
+          requiresSave: false,
+        ));
+      }
+    }
+
+    // 2. Forced Movement / Reeling Rider
+    final reelMatch = _reelingPattern.firstMatch(text);
+    if (reelMatch != null) {
+      final dist = int.tryParse(reelMatch.group(1) ?? '') ?? 0;
+      if (dist > 0) {
+        riders.add(ForcedMovementRider(
+          pullDistanceFeet: dist,
+          toMeleeReach: text.toLowerCase().contains('reach') ||
+              text.toLowerCase().contains('straight toward'),
+        ));
+      }
+    }
+
+    // 3. Attribute Drain Rider
+    final drainMatch = _attributeDrainPattern.firstMatch(text);
+    if (drainMatch != null) {
+      final abilityStr = drainMatch.group(1)!;
+      final ability = AbilityType.fromLooseString(abilityStr);
+      final amountStr = drainMatch.group(2)!;
+      final deathAtZero = drainMatch.group(3) != null ||
+          text.toLowerCase().contains('target dies if this reduces') ||
+          text.toLowerCase().contains('dies if this reduces its');
+
+      int diceCount = 0;
+      int diceSides = 0;
+      int flatBonus = 0;
+      if (amountStr.contains('d')) {
+        final parts = amountStr.split('d');
+        diceCount = int.tryParse(parts[0]) ?? 1;
+        diceSides = int.tryParse(parts[1]) ?? 4;
+      } else {
+        flatBonus = int.tryParse(amountStr) ?? 0;
+      }
+
+      riders.add(AttributeDrainRider(
+        targetAbility: ability,
+        diceCount: diceCount,
+        diceSides: diceSides,
+        flatBonus: flatBonus,
+        deathAtZero: deathAtZero,
+      ));
+    }
+
+    // 4. Max HP Reduction Rider
+    final maxHpMatch = _maxHpReductionPattern.firstMatch(text);
+    if (maxHpMatch != null) {
+      final textLower = text.toLowerCase();
+      final deathAtZero = textLower.contains('to 0') || textLower.contains('dies');
+      final reductionGroup = maxHpMatch.group(1);
+      if (reductionGroup != null && reductionGroup.isNotEmpty) {
+        final flatVal = int.tryParse(reductionGroup);
+        riders.add(MaxHpReductionRider(
+          reductionEqualsDamage: false,
+          flatReduction: flatVal,
+          deathAtZero: deathAtZero,
+        ));
+      } else {
+        riders.add(MaxHpReductionRider(
+          reductionEqualsDamage: true,
+          deathAtZero: deathAtZero,
+        ));
+      }
+    }
+
+    // 5. Healing Suppression Rider
+    final healMatch = _healingSuppressionPattern.firstMatch(text);
+    if (healMatch != null) {
+      final textLower = text.toLowerCase();
+      riders.add(HealingSupressionRider(
+        duration: const Duration(hours: 24),
+        cureViaRemoveCurse:
+            textLower.contains('curse') || textLower.contains('remove curse'),
+      ));
+    }
+
+    // 6. Periodic / Ongoing Damage Rider
+    final dotMatch = _periodicDamagePattern.firstMatch(text);
+    if (dotMatch != null) {
+      final dCount = int.tryParse(dotMatch.group(2) ?? '') ?? 0;
+      final dSides = int.tryParse(dotMatch.group(3) ?? '') ?? 0;
+      final flat = int.tryParse(dotMatch.group(4) ?? '') ?? 0;
+      final dmgType = dotMatch.group(5) ?? 'untyped';
+      final isStart = (dotMatch.group(6) ?? '').toLowerCase() == 'start';
+
+      riders.add(PeriodicDamageRider(
+        diceCount: dCount,
+        diceSides: dSides,
+        flatBonus: flat,
+        damageType: dmgType,
+        onTurnStart: isStart,
+      ));
+    }
+
+    return riders;
   }
 }

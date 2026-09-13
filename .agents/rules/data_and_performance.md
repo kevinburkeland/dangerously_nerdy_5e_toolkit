@@ -29,6 +29,9 @@ Never trust raw numeric values from JSON or user input:
 - **Zero Runtime Regex in Hot Loops:**
   - DO NOT execute regular expressions (`RegExp`) inside combat loops, Monte Carlo simulations (500x/1,000x runs), or DPR binomial calculations.
   - String traits and action syntax (e.g., multiattack text, attack dice strings) must be pre-parsed and cached as numeric value objects or structs during ingestion/initialization.
+- **Combat Action Rider AST & ACL Extraction:**
+  - Action descriptions are parsed at the ACL boundary (`StatBlockAclParser.extractRiders`) using pre-compiled regex into strongly-typed `CombatEffectRider` ASTs (`ConditionRider`, `AttributeDrainRider`, `MaxHpReductionRider`, `ForcedMovementRider`, `HealingSupressionRider`, `PeriodicDamageRider`).
+  - During combat simulation (`ArenaCombatant.applyAttackHit`), composite riders execute with zero runtime regex, clamping `effectiveMaxHp` and dynamically scaling down attribute-dependent attack and saving throw modifiers.
 - **Background Isolates for Large Imports:**
   - When ingesting multi-megabyte 5etools or homebrew compendiums, offload parsing to background isolates (`compute()` or dedicated isolates) to maintain 60/120fps UI responsiveness.
 - **Search Pre-computation:**

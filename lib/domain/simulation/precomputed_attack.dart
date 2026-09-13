@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'combat_rider.dart';
+export 'combat_rider.dart';
 
 class DamageDieGroup {
   final int count;
@@ -24,13 +26,20 @@ class PrecomputedAttack {
   final int attackBonus;
   final int flatBonus;
   final List<DamageDieGroup> damageGroups;
+  final List<CombatEffectRider> riders;
 
   const PrecomputedAttack({
     required this.attackId,
     required this.attackBonus,
     required this.flatBonus,
     required this.damageGroups,
-  });
+    this.riders = const [],
+  }) : assert(
+          identical(riders, const <CombatEffectRider>[]) ||
+              identical(riders, const []) ||
+              riders.length <= 8,
+          'riders.length must be <= 8 to prevent heap overhead',
+        );
 
   int rollDamage(Random rng, {bool isCrit = false}) {
     var sum = flatBonus;

@@ -6,9 +6,12 @@ import '../domain/character_models.dart';
 import '../srd_summons/minion_stat_block.dart';
 import 'arena_condition.dart';
 import 'monster_combat_profile.dart';
+import '../../services/rules/dnd_5e_rules_engine.dart';
+import '../../domain/simulation/precomputed_attack.dart';
 export 'package:fast_immutable_collections/fast_immutable_collections.dart';
 export 'arena_condition.dart';
 export 'monster_combat_profile.dart';
+export '../../domain/simulation/combat_rider.dart';
 
 /// Which team the combatant belongs to in the Arena.
 enum ArenaTeam {
@@ -82,6 +85,11 @@ class ArenaCombatant {
   int hitsLanded;
   int critsLanded;
 
+  // Attribute Drain & Max HP Reduction State
+  IMap<String, int> drainedAbilityScores;
+  int maxHpReduction;
+  bool isHealingSuppressed;
+
   ArenaCombatant({
     required this.id,
     required this.monster,
@@ -120,6 +128,9 @@ class ArenaCombatant {
     this.attacksMade = 0,
     this.hitsLanded = 0,
     this.critsLanded = 0,
+    dynamic drainedAbilityScores,
+    this.maxHpReduction = 0,
+    this.isHealingSuppressed = false,
   })  : conditions = _parseConditions(conditions, activeConditions),
         activeConditions = _parseActiveConditions(activeConditions, conditions),
         maxSpellSlots = _parseIMap<int, int>(maxSpellSlots),
@@ -128,6 +139,7 @@ class ArenaCombatant {
             : _parseIMap<int, int>(maxSpellSlots),
         knownSpellIds = knownSpellIds != null ? List<String>.from(knownSpellIds) : [],
         savingThrowBonuses = _parseIMap<String, int>(savingThrowBonuses),
+        drainedAbilityScores = _parseIMap<String, int>(drainedAbilityScores),
         legendaryActionsRemaining = legendaryActionsRemaining ?? maxLegendaryActions,
         legendaryResistancesRemaining = legendaryResistancesRemaining ?? maxLegendaryResistances;
 
@@ -268,9 +280,13 @@ class ArenaCombatant {
     );
   }
 
-  bool get isAlive => currentHp > 0;
-  bool get isDefeated => currentHp <= 0;
-  double get hpPercent => maxHp > 0 ? (currentHp / maxHp).clamp(0.0, 1.0) : 0.0;
+  int get effectiveMaxHp => (maxHp - maxHpReduction).clamp(0, maxHp);
+  bool get isAlive =>
+      currentHp > 0 &&
+      effectiveMaxHp > 0 &&
+      (drainedAbilityScores['str'] == null || getAbilityScore(AbilityType.strength) > 0);
+  bool get isDefeated => !isAlive;
+  double get hpPercent => effectiveMaxHp > 0 ? (currentHp / effectiveMaxHp).clamp(0.0, 1.0) : 0.0;
 
   /// Applies an [ActiveCondition] with optional duration and source effect tracking.
   ({int fallDamage, bool fell, String? log}) applyActiveCondition(
@@ -461,6 +477,9 @@ class ArenaCombatant {
       attacksMade: 0,
       hitsLanded: 0,
       critsLanded: 0,
+      drainedAbilityScores: const IMapConst({}),
+      maxHpReduction: 0,
+      isHealingSuppressed: false,
     );
   }
 
@@ -504,6 +523,9 @@ class ArenaCombatant {
       attacksMade: attacksMade,
       hitsLanded: hitsLanded,
       critsLanded: critsLanded,
+      drainedAbilityScores: drainedAbilityScores,
+      maxHpReduction: maxHpReduction,
+      isHealingSuppressed: isHealingSuppressed,
     );
   }
 
@@ -542,9 +564,17 @@ class ArenaCombatant {
         tempHp = 0;
       }
     }
-    currentHp = (currentHp - remaining).clamp(0, maxHp);
+    currentHp = (currentHp - remaining).clamp(0, effectiveMaxHp);
     totalDamageTaken += damage;
     return damage;
+  }
+
+  /// Applies healing up to [effectiveMaxHp] unless healing is suppressed.
+  int applyHealing(int amount) {
+    if (amount <= 0 || isDefeated || isHealingSuppressed) return 0;
+    final prevHp = currentHp;
+    currentHp = (currentHp + amount).clamp(0, effectiveMaxHp);
+    return currentHp - prevHp;
   }
 
   /// Stat block accessor helper
@@ -582,20 +612,155 @@ class ArenaCombatant {
     return monster.getCombatProfile(edition).hasNimbleEscape;
   }
 
+  /// Returns effective ability score accounting for any attribute drains.
+  int getAbilityScore(AbilityType ability, [DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final base = switch (ability) {
+      AbilityType.strength => sb.strScore,
+      AbilityType.dexterity => sb.dexScore,
+      AbilityType.constitution => sb.conScore,
+      AbilityType.intelligence => sb.intScore,
+      AbilityType.wisdom => sb.wisScore,
+      AbilityType.charisma => sb.chaScore,
+    };
+    final drain = drainedAbilityScores[ability.shortName.toLowerCase()] ?? 0;
+    return base - drain;
+  }
+
+  /// Returns effective ability modifier accounting for any attribute drains.
+  int getAbilityModifier(AbilityType ability, [DmRulesEdition edition = DmRulesEdition.v2024]) {
+    return getAbilityScore(ability, edition).dndModifier;
+  }
+
+  /// Calculates effective melee attack bonus scaled by strength drain.
+  int getMeleeAttackBonus([DmRulesEdition edition = DmRulesEdition.v2024]) {
+    final sb = getStatBlock(edition);
+    final baseMod = sb.strMod;
+    final currentMod = getAbilityModifier(AbilityType.strength, edition);
+    final modDelta = currentMod - baseMod;
+    return sb.attackBonus + modDelta;
+  }
+
+  int get meleeAttackBonus => getMeleeAttackBonus();
+
+  /// Applies attribute drain to the specified ability.
+  /// If [deathAtZero] is true and effective score drops <= 0, triggers immediate death.
+  void applyAttributeDrain(AbilityType ability, int drain, {bool deathAtZero = true}) {
+    if (drain <= 0) return;
+    final key = ability.shortName.toLowerCase();
+    final currentDrain = drainedAbilityScores[key] ?? 0;
+    drainedAbilityScores = drainedAbilityScores.add(key, currentDrain + drain);
+
+    if (deathAtZero && getAbilityScore(ability) <= 0) {
+      currentHp = 0;
+    }
+  }
+
+  /// Reduces maximum hit points.
+  /// If [deathAtZero] is true and effectiveMaxHp drops <= 0, triggers immediate death.
+  void applyMaxHpReduction(int reduction, {bool deathAtZero = true}) {
+    if (reduction <= 0) return;
+    maxHpReduction += reduction;
+    if (currentHp > effectiveMaxHp) {
+      currentHp = effectiveMaxHp;
+    }
+    if (deathAtZero && effectiveMaxHp <= 0) {
+      currentHp = 0;
+    }
+  }
+
+  /// Executes a single [CombatEffectRider] against this combatant.
+  void applyRider(
+    CombatEffectRider rider, {
+    math.Random? rng,
+    int damageDealt = 0,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  }) {
+    final random = rng ?? math.Random();
+    switch (rider) {
+      case ConditionRider(:final condition, :final requiresSave, :final saveDc, :final saveAbility):
+        if (requiresSave && saveDc != null && saveAbility != null) {
+          final saveBonus = getAbilitySavingThrowBonus(saveAbility, edition);
+          final roll = random.nextInt(20) + 1 + saveBonus;
+          if (roll < saveDc) {
+            applyActiveCondition(ActiveCondition(condition: condition), edition: edition);
+          }
+        } else {
+          applyActiveCondition(ActiveCondition(condition: condition), edition: edition);
+        }
+      case AttributeDrainRider(
+          :final targetAbility,
+          :final diceCount,
+          :final diceSides,
+          :final flatBonus,
+          :final deathAtZero
+        ):
+        var drain = flatBonus;
+        for (var i = 0; i < diceCount; i++) {
+          drain += random.nextInt(diceSides) + 1;
+        }
+        applyAttributeDrain(targetAbility, drain, deathAtZero: deathAtZero);
+      case MaxHpReductionRider(
+          :final reductionEqualsDamage,
+          :final flatReduction,
+          :final deathAtZero
+        ):
+        final reduction = reductionEqualsDamage ? damageDealt : (flatReduction ?? 0);
+        applyMaxHpReduction(reduction, deathAtZero: deathAtZero);
+      case ForcedMovementRider(:final pullDistanceFeet, :final toMeleeReach):
+        if (isAirborne && altitudeInFeet > 0) {
+          if (toMeleeReach && altitudeInFeet <= pullDistanceFeet) {
+            altitudeInFeet = 0;
+            isAirborne = false;
+          } else {
+            altitudeInFeet = math.max(0, altitudeInFeet - pullDistanceFeet);
+          }
+        }
+      case HealingSupressionRider():
+        isHealingSuppressed = true;
+      case PeriodicDamageRider():
+        break;
+    }
+  }
+
+  /// Applies a [PrecomputedAttack] hit to this combatant, including damage and all riders.
+  int applyAttackHit(
+    PrecomputedAttack attack, {
+    math.Random? rng,
+    bool isCrit = false,
+    DmRulesEdition edition = DmRulesEdition.v2024,
+  }) {
+    final random = rng ?? math.Random();
+    final damage = attack.rollDamage(random, isCrit: isCrit);
+    applyDamage(damage);
+
+    for (final rider in attack.riders) {
+      applyRider(rider, rng: random, damageDealt: damage, edition: edition);
+    }
+    return damage;
+  }
+
   /// Calculates saving throw modifier for a given [AbilityType].
-  /// Uses pre-calculated bonuses with zero runtime regex evaluations.
+  /// Uses pre-calculated bonuses and dynamically scales with attribute drain.
   int getAbilitySavingThrowBonus(AbilityType ability, [DmRulesEdition edition = DmRulesEdition.v2024]) {
     final key = ability.shortName.toLowerCase();
-    final cached = savingThrowBonuses[key];
-    if (cached != null) return cached;
-    return monster.getCombatProfile(edition).savingThrowBonuses[key] ?? switch (ability) {
-      AbilityType.strength => getStatBlock(edition).strMod,
-      AbilityType.dexterity => getStatBlock(edition).dexMod,
-      AbilityType.constitution => getStatBlock(edition).conMod,
-      AbilityType.intelligence => getStatBlock(edition).intMod,
-      AbilityType.wisdom => getStatBlock(edition).wisMod,
-      AbilityType.charisma => getStatBlock(edition).chaMod,
+    final sb = getStatBlock(edition);
+    final baseMod = switch (ability) {
+      AbilityType.strength => sb.strMod,
+      AbilityType.dexterity => sb.dexMod,
+      AbilityType.constitution => sb.conMod,
+      AbilityType.intelligence => sb.intMod,
+      AbilityType.wisdom => sb.wisMod,
+      AbilityType.charisma => sb.chaMod,
     };
+    final currentMod = getAbilityModifier(ability, edition);
+    final modDelta = currentMod - baseMod;
+
+    final cached = savingThrowBonuses[key];
+    if (cached != null) return cached + modDelta;
+    final profileBonus = monster.getCombatProfile(edition).savingThrowBonuses[key];
+    if (profileBonus != null) return profileBonus + modDelta;
+    return baseMod + modDelta;
   }
 
   /// Calculates saving throw modifier for a given ability (e.g. 'dex', 'str', 'con', 'wis', 'int', 'cha').

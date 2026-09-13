@@ -18,7 +18,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   │   └── value_objects/          # Value objects: HitPoints
 │   │   ├── ports/                      # Abstract interfaces: ICampaignRepository, ICharacterRepository, IP2pTransportPort, INetworkTimePort
 │   │   ├── rules/                      # Pure mechanical contracts: RulesetContext, CharacterValidationEngine
-│   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack
+│   │   └── simulation/                 # Simulation contracts: DprSimulator, PrecomputedAttack, CombatEffectRider
 │   ├── application/                    # Use Cases & Orchestration
 │   │   └── services/                   # CascadingTransportRouter, RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator, HomebrewImportOrchestrator
 │   ├── infrastructure/                 # Adapters, DTOs & Concrete I/O
@@ -43,7 +43,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,651 passing tests)
+├── test/                               # Comprehensive test suite (1,656 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -106,6 +106,7 @@ dangerously_nerdy_5e_toolkit/
 
 ### 5. Performance & Pre-Computation
 - **Zero Runtime Regex in Hot Loops:** Never execute `RegExp` inside combat rounds, Monte Carlo loops, or DPR calculations. Parse traits into precomputed numeric profiles during ingestion.
+- **Combat Action Rider AST & ACL Extraction:** Action descriptions are parsed at the ACL ingestion boundary (`StatBlockAclParser.extractRiders`) using pre-compiled regex into strongly-typed `CombatEffectRider` ASTs. During combat simulation (`ArenaCombatant.applyAttackHit`), attacks execute composite riders (`ConditionRider`, `AttributeDrainRider`, `MaxHpReductionRider`, `ForcedMovementRider`, `HealingSupressionRider`, `PeriodicDamageRider`) with zero runtime regex, clamping `effectiveMaxHp` and dynamically scaling down attack and saving throw modifiers.
 - **Background Isolates:** Multi-megabyte JSON compendium bundles must be processed in background isolates.
 
 ### 6. Accessibility (a11y) & UI Standards
