@@ -43,7 +43,7 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,637 passing tests)
+├── test/                               # Comprehensive test suite (1,642 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
 │   ├── infrastructure/                 # DTO serialization & repository tests
@@ -100,6 +100,7 @@ dangerously_nerdy_5e_toolkit/
 - **Deserialization Priority:** Computationally normalized or resolved fields (e.g., spatial range and variable damage math) must strictly take precedence over raw fallback JSON keys during DTO deserialization.
 - **Strict Entity Resolution & Anti-Collision:** Resolvers and codex lookups must prioritize exact `==` equality matches first. Substring fuzzy matching (e.g. `.contains('plate')`) is strictly prohibited to prevent collision regressions (such as Breastplate inheriting Full Plate AC 18). Fallbacks must enforce word-boundary regex (`\b`) and disallow binding generic tokens (e.g. `'Dragon'`) to distinct compound boss monsters (`'Dragon Turtle'`).
 - **Compendium Deduplication & Clean Ingestion:** `SrdEquivalenceIndex` indexes base SRD libraries (`SpellbookLibrary.srdSpells`, `SrdClassesLibrary.baseClasses`, etc.) unpolluted by custom homebrew. Batch imports drop canonical SRD duplicates (`excludeSrdCanon: true`), route `baseitem`/`magicvariant` to items and `subrace` to races, format markdown tables and deities, and persist re-parsed data to both Hive and SharedPreferences.
+- **Innermost Tag Resolution & Table Box Formatting:** `EntryNodeTransformer` and `CompendiumJsonIngestionPipeline.cleanRawTags` resolve innermost tags first using `[^{}]+` within a bounded loop (`passes < 10`) to cleanly process nested callout notes (`{@note ... {@spell contagion}}`). Table cells and column headers in `customProperties.rows` and `colLabels` are automatically cleaned to prevent raw unrendered tags (`{@creature ...}`, `{@item ...}`) in rollable table cards and markdown tables. Envelopes containing arrays of tables (such as `names.json`) must be expanded into individual child tables and guarded against stringifying into giant multi-thousand-character corrupted rules.
 
 ### 5. Performance & Pre-Computation
 - **Zero Runtime Regex in Hot Loops:** Never execute `RegExp` inside combat rounds, Monte Carlo loops, or DPR calculations. Parse traits into precomputed numeric profiles during ingestion.

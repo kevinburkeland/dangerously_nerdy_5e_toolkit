@@ -27,6 +27,7 @@ import '../acl/compendium_spell_parser.dart';
 import '../acl/homebrew_merge_resolver.dart';
 import '../acl/srd_equivalence_index.dart';
 import '../importers/community_compendium_adapters.dart';
+import '../ingestion/compendium_json_ingestion_pipeline.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
 import '../../domain/homebrew/models/homebrew_entity.dart';
@@ -276,6 +277,13 @@ class HomebrewPersistenceService {
     final raw = entry.customProperties;
     final entries = <TableEntry>[];
 
+    String cleanTableLabel(String text) {
+      return CompendiumJsonIngestionPipeline.cleanRawTags(text)
+          .replaceAllMapped(RegExp(r'\[([^\]]+)\]\([^\)]+\)'), (m) => m.group(1) ?? '')
+          .replaceAll(RegExp(r'\*\*|`'), '')
+          .trim();
+    }
+
     final rawRows = raw['rows'] is List ? (raw['rows'] as List) : null;
     final colLabels = raw['colLabels'] is List ? (raw['colLabels'] as List) : null;
 
@@ -321,14 +329,14 @@ class HomebrewPersistenceService {
           entries.add(TableEntry(
             minRoll: min,
             maxRoll: max,
-            label: label,
+            label: cleanTableLabel(label),
           ));
           currentRollIndex = max + 1;
         } else if (r != null) {
           entries.add(TableEntry(
             minRoll: currentRollIndex,
             maxRoll: currentRollIndex,
-            label: r.toString(),
+            label: cleanTableLabel(r.toString()),
           ));
           currentRollIndex++;
         }
@@ -362,17 +370,22 @@ class HomebrewPersistenceService {
           final min = int.tryParse(match.group(1)!) ?? rowIdx;
           final max = match.group(2) != null ? (int.tryParse(match.group(2)!) ?? min) : min;
           final label = cells.length > 1 ? cells.sublist(1).join(' - ') : firstCell;
-          entries.add(TableEntry(minRoll: min, maxRoll: max, label: label));
+          entries.add(TableEntry(minRoll: min, maxRoll: max, label: cleanTableLabel(label)));
           rowIdx = max + 1;
         } else {
-          entries.add(TableEntry(minRoll: rowIdx, maxRoll: rowIdx, label: cells.join(' - ')));
+          entries.add(TableEntry(minRoll: rowIdx, maxRoll: rowIdx, label: cleanTableLabel(cells.join(' - '))));
           rowIdx++;
         }
       }
     }
 
     if (entries.isEmpty) {
-      entries.add(TableEntry(minRoll: 1, maxRoll: 1, label: entry.name, description: entry.descriptionMarkdown));
+      entries.add(TableEntry(
+        minRoll: 1,
+        maxRoll: 1,
+        label: cleanTableLabel(entry.name),
+        description: entry.descriptionMarkdown.isNotEmpty ? CompendiumJsonIngestionPipeline.cleanRawTags(entry.descriptionMarkdown) : null,
+      ));
     }
 
     int maxRoll = 1;
@@ -389,12 +402,12 @@ class HomebrewPersistenceService {
 
     return RollableTable(
       id: entry.id.slug,
-      name: entry.name,
+      name: CompendiumJsonIngestionPipeline.cleanRawTags(entry.name),
       category: TableCategory.custom,
       diceFormula: formula,
       diceSides: sides,
       diceCount: 1,
-      description: entry.descriptionMarkdown.isNotEmpty ? entry.descriptionMarkdown : 'Homebrew rollable table.',
+      description: entry.descriptionMarkdown.isNotEmpty ? CompendiumJsonIngestionPipeline.cleanRawTags(entry.descriptionMarkdown) : 'Homebrew rollable table.',
       entries: entries,
     );
   }
@@ -445,7 +458,7 @@ class HomebrewPersistenceService {
         }
     }
 
-    final rawLines = entry.descriptionMarkdown
+    final rawLines = CompendiumJsonIngestionPipeline.cleanRawTags(entry.descriptionMarkdown)
         .split('\n')
         .map((l) => l.trim())
         .where((l) => l.isNotEmpty)
@@ -456,7 +469,7 @@ class HomebrewPersistenceService {
 
     return DmReferenceItem(
       id: entry.id.slug,
-      title: entry.name,
+      title: CompendiumJsonIngestionPipeline.cleanRawTags(entry.name),
       category: dmCat,
       subCategory: subCategory,
       summary: summary,
@@ -1324,6 +1337,7 @@ class HomebrewPersistenceService {
       return rawList
           .map((jsonStr) => HomebrewCompendiumEntry.fromMap(
               Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
+          .where((e) => !e.name.startsWith('[{') && e.name.length <= 500 && e.id.slug.length <= 200)
           .toList();
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew custom entries');
@@ -1333,6 +1347,7 @@ class HomebrewPersistenceService {
 
   /// Saves a generic compendium entry to persistent storage.
   Future<void> saveCustomOtherEntry(HomebrewCompendiumEntry entry, {Map<String, dynamic>? rawPayload}) async {
+    if (entry.name.startsWith('[{') || entry.name.length > 500 || entry.id.slug.length > 200) return;
     final entries = await loadCustomOtherEntries();
     final idx = entries.indexWhere((e) => e.id.slug == entry.id.slug);
     if (idx != -1) {
@@ -1355,14 +1370,15 @@ class HomebrewPersistenceService {
     List<HomebrewCompendiumEntry> newEntries, {
     List<Map<String, dynamic>>? rawPayloads,
   }) async {
-    if (newEntries.isEmpty) return;
+    final validNew = newEntries.where((e) => !e.name.startsWith('[{') && e.name.length <= 500 && e.id.slug.length <= 200).toList();
+    if (validNew.isEmpty) return;
     final entries = await loadCustomOtherEntries();
     final slugIndex = <String, int>{
       for (int i = 0; i < entries.length; i++)
         '${entries[i].id.slug}_${entries[i].id.ruleset.name}': i,
     };
-    for (int i = 0; i < newEntries.length; i++) {
-      final entry = newEntries[i];
+    for (int i = 0; i < validNew.length; i++) {
+      final entry = validNew[i];
       final key = '${entry.id.slug}_${entry.id.ruleset.name}';
       final idx = slugIndex[key];
       if (idx != null) {

@@ -26,7 +26,7 @@ class ParsedEntryResult {
 /// All inline tags (`{@spell …}`, `{@dice …}`, `{@item …}`, etc.) are
 /// stripped to clean Markdown / strongly-typed objects.
 class EntryNodeTransformer {
-  static final RegExp _tagRegex = RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^}]+))?\}');
+  static final RegExp _tagRegex = RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^{}]+))?\}');
 
   // ---------------------------------------------------------------------------
   // Public entry point
@@ -115,6 +115,7 @@ class EntryNodeTransformer {
       // Inset (rules sidebar / callout) — all lines prefixed with "> ".
       // -----------------------------------------------------------------------
       case 'inset':
+      case 'insetReadaloud':
         if (name != null && name.isNotEmpty) {
           final processedName = _processTags(name, math, refs, defaultRuleset);
           buffer.writeln('> **$processedName**');
@@ -320,8 +321,12 @@ class EntryNodeTransformer {
     List<EntityReference<DomainEntity>> refs,
     RulesetVersion defaultRuleset,
   ) {
+    if (cell == null) return '';
     if (cell is String) return _processTags(cell, math, refs, defaultRuleset);
     if (cell is num) return cell.toString();
+    if (cell is List) {
+      return cell.map((c) => _resolveCellText(c, math, refs, defaultRuleset)).join('');
+    }
     if (cell is Map) {
       final cellMap = Map<String, dynamic>.from(cell);
       // AST roll cell: {type: "cell", roll: {min: 1, max: 100}}
@@ -333,10 +338,15 @@ class EntryNodeTransformer {
         if (min != null) return '$min';
       }
       // Text cell
-      final entry = cellMap['entry']?.toString() ?? cellMap['entries']?.toString() ?? '';
-      return _processTags(entry, math, refs, defaultRuleset);
+      final entry = cellMap['entry'] ?? cellMap['entries'] ?? '';
+      if (entry is String) {
+        return _processTags(entry, math, refs, defaultRuleset);
+      } else if (entry != '') {
+        return _captureNode(entry, 0, math, refs, defaultRuleset);
+      }
+      return '';
     }
-    return cell.toString();
+    return _processTags(cell.toString(), math, refs, defaultRuleset);
   }
 
   // ---------------------------------------------------------------------------
@@ -402,266 +412,285 @@ class EntryNodeTransformer {
     List<EntityReference<DomainEntity>> refsList,
     RulesetVersion defaultRuleset,
   ) {
-    return input.replaceAllMapped(_tagRegex, (match) {
-      final tag = match.group(1)?.toLowerCase();
-      final content = match.group(2) ?? '';
-      final parts = content.split('|');
-      final primary = parts[0].trim();
+    String current = input;
+    int passes = 0;
+    while (_tagRegex.hasMatch(current) && passes < 10) {
+      final prev = current;
+      current = current.replaceAllMapped(_tagRegex, (match) {
+        final tag = match.group(1)?.toLowerCase();
+        final content = match.group(2) ?? '';
+        final parts = content.split('|');
+        final primary = parts[0].trim();
 
-      switch (tag) {
-        // Dice / damage
-        case 'dice':
-        case 'd20':
-          return '**`$primary`**';
-
-        case 'damage':
-          var dmgType = _extractDamageType(parts);
-          if (dmgType == DamageType.untyped && match.end < input.length) {
-            final trailing = input.substring(match.end);
-            final mTrailing = RegExp(
-              r'^\s*\)?\s*(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\s+damage',
-              caseSensitive: false,
-            ).firstMatch(trailing);
-            if (mTrailing != null) {
-              final typeStr = mTrailing.group(1)!.toLowerCase();
-              dmgType = DamageType.values.firstWhere(
-                (d) => d.name == typeStr,
-                orElse: () => DamageType.untyped,
-              );
-            }
-          }
-          mathList.add(EvaluationMath(
-            diceFormula: primary,
-            damageType: dmgType,
-          ));
-          if (dmgType == DamageType.untyped) {
+        switch (tag) {
+          // Dice / damage
+          case 'dice':
+          case 'd20':
             return '**`$primary`**';
-          }
-          final hasTrailingDamageText = match.end < input.length &&
-              RegExp(
-                r'^\s*\)?\s*' + dmgType.name + r'\s+damage',
+
+          case 'damage':
+            var dmgType = _extractDamageType(parts);
+            if (dmgType == DamageType.untyped && match.end < current.length) {
+              final trailing = current.substring(match.end);
+              final mTrailing = RegExp(
+                r'^\s*\)?\s*(acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder)\s+damage',
                 caseSensitive: false,
-              ).hasMatch(input.substring(match.end));
-          if (hasTrailingDamageText) {
-            return '**`$primary`**';
-          }
-          return '**`$primary ${dmgType.name}`**';
-
-        case 'h':
-          return '*Hit:* ';
-
-        case 'hom':
-          return '*Hit or Miss:* ';
-
-        case 'hityourspellattack':
-          return '**`+your spell attack modifier`**';
-
-        case 'chance':
-          return parts.length > 1 && parts[1].trim().isNotEmpty ? parts[1].trim() : '$primary%';
-
-        case 'actsave':
-          return '$primary saving throw';
-
-        case 'actsavefail':
-          return 'failed save';
-
-        case 'hit':
-          final pfx = primary.startsWith('+') || primary.startsWith('-') ? '' : '+';
-          return '**`$pfx$primary`**';
-
-        case 'atk':
-          final cleanAtk = primary.toLowerCase().replaceAll(' ', '');
-          switch (cleanAtk) {
-            case 'mw':
-              return '*Melee Weapon Attack:*';
-            case 'rw':
-              return '*Ranged Weapon Attack:*';
-            case 'ms':
-              return '*Melee Spell Attack:*';
-            case 'rs':
-              return '*Ranged Spell Attack:*';
-            case 'mw,rw':
-            case 'rw,mw':
-              return '*Melee or Ranged Weapon Attack:*';
-            case 'ms,rs':
-            case 'rs,ms':
-              return '*Melee or Ranged Spell Attack:*';
-            default:
-              if (RegExp(r'^[+-]?\d+$').hasMatch(cleanAtk)) {
-                final pfx = cleanAtk.startsWith('+') || cleanAtk.startsWith('-') ? '' : '+';
-                return '**`$pfx$cleanAtk`**';
+              ).firstMatch(trailing);
+              if (mTrailing != null) {
+                final typeStr = mTrailing.group(1)!.toLowerCase();
+                dmgType = DamageType.values.firstWhere(
+                  (d) => d.name == typeStr,
+                  orElse: () => DamageType.untyped,
+                );
               }
-              return '*$primary:*';
-          }
+            }
+            mathList.add(EvaluationMath(
+              diceFormula: primary,
+              damageType: dmgType,
+            ));
+            if (dmgType == DamageType.untyped) {
+              return '**`$primary`**';
+            }
+            final hasTrailingDamageText = match.end < current.length &&
+                RegExp(
+                  r'^\s*\)?\s*' + dmgType.name + r'\s+damage',
+                  caseSensitive: false,
+                ).hasMatch(current.substring(match.end));
+            if (hasTrailingDamageText) {
+              return '**`$primary`**';
+            }
+            return '**`$primary ${dmgType.name}`**';
 
-        case 'recharge':
-          return primary.isEmpty ? '*(Recharge 6)*' : '*(Recharge $primary–6)*';
+          case 'scaledamage':
+          case 'scaledice':
+            final baseDice = parts.length > 1 ? parts[1].trim() : primary;
+            final scalingDice = parts.length > 2 ? parts[2].trim() : primary;
+            mathList.add(EvaluationMath(
+              diceFormula: baseDice,
+              damageType: _extractDamageType(parts),
+              scalingFormula: scalingDice,
+            ));
+            return '**`$baseDice`** *(scales: $scalingDice)*';
 
-        case 'scaledamage':
-        case 'scaledice':
-          final baseDice = parts.length > 1 ? parts[1].trim() : primary;
-          final scalingDice = parts.length > 2 ? parts[2].trim() : primary;
-          mathList.add(EvaluationMath(
-            diceFormula: baseDice,
-            damageType: _extractDamageType(parts),
-            scalingFormula: scalingDice,
-          ));
-          return '**`$baseDice`** *(scales: $scalingDice)*';
+          case 'chance':
+            return parts.length > 1 && parts[1].trim().isNotEmpty ? parts[1].trim() : '$primary%';
 
-        // Entity references
-        case 'spell':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          final ruleset = _mapSourceToRuleset(
-            parts.length > 1 ? parts[1] : null,
-            defaultRuleset,
-          );
-          refsList.add(EntityReference<Spell>(
-            refType: EntityType.spell,
-            slug: slug,
-            displayName: displayName,
-            rulesetPreferred: ruleset,
-          ));
-          return '[$displayName](ref://spell/$slug)';
+          case 'actsave':
+            return '$primary saving throw';
 
-        case 'item':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          refsList.add(EntityReference<EquipmentItem>(
-            refType: EntityType.equipment,
-            slug: slug,
-            displayName: displayName,
-          ));
-          return '[$displayName](ref://equipment/$slug)';
+          case 'actsavefail':
+            return 'failed save';
 
-        case 'creature':
-        case 'monster':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          refsList.add(EntityReference<Monster>(
-            refType: EntityType.monster,
-            slug: slug,
-            displayName: displayName,
-          ));
-          return '[$displayName](ref://monster/$slug)';
+          case 'hit':
+            final pfx = primary.startsWith('+') || primary.startsWith('-') ? '' : '+';
+            return '**`$pfx$primary`**';
 
-        case 'class':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          refsList.add(EntityReference<CharacterClass>(
-            refType: EntityType.classDefinition,
-            slug: slug,
-            displayName: displayName,
-          ));
-          return '[$displayName](ref://class/$slug)';
+          case 'atk':
+            final cleanAtk = primary.toLowerCase().replaceAll(' ', '');
+            switch (cleanAtk) {
+              case 'mw':
+                return '*Melee Weapon Attack:*';
+              case 'rw':
+                return '*Ranged Weapon Attack:*';
+              case 'ms':
+                return '*Melee Spell Attack:*';
+              case 'rs':
+                return '*Ranged Spell Attack:*';
+              case 'mw,rw':
+              case 'rw,mw':
+                return '*Melee or Ranged Weapon Attack:*';
+              case 'ms,rs':
+              case 'rs,ms':
+                return '*Melee or Ranged Spell Attack:*';
+              default:
+                if (RegExp(r'^[+-]?\d+$').hasMatch(cleanAtk)) {
+                  final pfx = cleanAtk.startsWith('+') || cleanAtk.startsWith('-') ? '' : '+';
+                  return '**`$pfx$cleanAtk`**';
+                }
+                return '*$primary:*';
+            }
 
-        case 'subclass':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          refsList.add(EntityReference<Subclass>(
-            refType: EntityType.subclass,
-            slug: slug,
-            displayName: displayName,
-          ));
-          return '[$displayName](ref://subclass/$slug)';
+          case 'recharge':
+            return primary.isEmpty ? '*(Recharge 6)*' : '*(Recharge $primary–6)*';
 
-        case 'race':
-        case 'species':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          refsList.add(EntityReference<Race>(
-            refType: EntityType.species,
-            slug: slug,
-            displayName: displayName,
-          ));
-          return '[$displayName](ref://species/$slug)';
+          // Entity references
+          case 'spell':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            final ruleset = _mapSourceToRuleset(
+              parts.length > 1 ? parts[1] : null,
+              defaultRuleset,
+            );
+            refsList.add(EntityReference<Spell>(
+              refType: EntityType.spell,
+              slug: slug,
+              displayName: displayName,
+              rulesetPreferred: ruleset,
+            ));
+            return '[$displayName](ref://spell/$slug)';
 
-        case 'feat':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          refsList.add(EntityReference<Feat>(
-            refType: EntityType.feat,
-            slug: slug,
-            displayName: displayName,
-          ));
-          return '[$displayName](ref://feat/$slug)';
+          case 'item':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            refsList.add(EntityReference<EquipmentItem>(
+              refType: EntityType.equipment,
+              slug: slug,
+              displayName: displayName,
+            ));
+            return '[$displayName](ref://equipment/$slug)';
 
-        case 'background':
-          final slug = _slugify(primary);
-          final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-          refsList.add(EntityReference<Background>(
-            refType: EntityType.background,
-            slug: slug,
-            displayName: displayName,
-          ));
-          return '[$displayName](ref://background/$slug)';
+          case 'creature':
+          case 'monster':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            refsList.add(EntityReference<Monster>(
+              refType: EntityType.monster,
+              slug: slug,
+              displayName: displayName,
+            ));
+            return '[$displayName](ref://monster/$slug)';
 
-        // Feature references — strip pipe syntax, bold the feature name
-        case 'classfeature':
-        case 'subclassfeature':
-          // Format: "Feature Name|Class|Source|Level"
-          return '**${parts[0].trim()}**';
+          case 'class':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            refsList.add(EntityReference<CharacterClass>(
+              refType: EntityType.classDefinition,
+              slug: slug,
+              displayName: displayName,
+            ));
+            return '[$displayName](ref://class/$slug)';
 
-        case 'optfeature':
-          return '**$primary**';
+          case 'subclass':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            refsList.add(EntityReference<Subclass>(
+              refType: EntityType.subclass,
+              slug: slug,
+              displayName: displayName,
+            ));
+            return '[$displayName](ref://subclass/$slug)';
 
-        // Conditions / status
-        case 'condition':
-        case 'status':
-          return '**$primary**';
+          case 'race':
+          case 'species':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            refsList.add(EntityReference<Race>(
+              refType: EntityType.species,
+              slug: slug,
+              displayName: displayName,
+            ));
+            return '[$displayName](ref://species/$slug)';
 
-        // Numeric / DC
-        case 'dc':
-          return 'DC $primary';
+          case 'feat':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            refsList.add(EntityReference<Feat>(
+              refType: EntityType.feat,
+              slug: slug,
+              displayName: displayName,
+            ));
+            return '[$displayName](ref://feat/$slug)';
 
-        // Skill references
-        case 'skill':
-        case 'sense':
-        case 'action':
-        case 'hazard':
-        case 'reward':
-        case 'table':
-          return '**$primary**';
+          case 'background':
+            final slug = _slugify(primary);
+            final displayName = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+            refsList.add(EntityReference<Background>(
+              refType: EntityType.background,
+              slug: slug,
+              displayName: displayName,
+            ));
+            return '[$displayName](ref://background/$slug)';
 
-        // Inline formatting
-        case 'b':
-        case 'bold':
-          return '**$primary**';
+          // Feature references — strip pipe syntax, bold the feature name
+          case 'classfeature':
+          case 'subclassfeature':
+            // Format: "Feature Name|Class|Source|Level"
+            return '**${parts[0].trim()}**';
 
-        case 'i':
-        case 'italic':
-          return '*$primary*';
+          case 'optfeature':
+            return '**$primary**';
 
-        case 'strike':
-        case 's':
-          return '~~$primary~~';
+          // Conditions / status
+          case 'condition':
+          case 'status':
+            return '**$primary**';
 
-        case 'code':
-          return '`$primary`';
+          // Numeric / DC
+          case 'dc':
+            return 'DC $primary';
 
-        case 'note':
-          return '> **Note:** $primary';
+          // Skill references
+          case 'skill':
+          case 'sense':
+          case 'action':
+          case 'hazard':
+          case 'reward':
+          case 'table':
+            return '**$primary**';
 
-        case 'book':
-        case 'variantrule':
-          return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+          // Inline formatting
+          case 'b':
+          case 'bold':
+            return '**$primary**';
 
-        case 'quickref':
-        case 'filter':
-        case 'link':
-        case 'area':
-        case 'deck':
-        case 'card':
-        case 'deity':
-        case 'vehicle':
-        case 'object':
-        case 'trap':
-          return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+          case 'i':
+          case 'italic':
+            return '*$primary*';
 
-        default:
-          return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-      }
-    });
+          case 'strike':
+          case 's':
+            return '~~$primary~~';
+
+          case 'code':
+            return '`$primary`';
+
+          case 'note':
+            return '> **Note:** $primary';
+
+          case 'footnote':
+          case 'color':
+          case 'comic':
+            return primary;
+
+          case 'h':
+            return '*Hit:* ';
+
+          case 'hom':
+            return '*Hit or Miss:* ';
+
+          case 'hityourspellattack':
+            return '**`+your spell attack modifier`**';
+
+          case 'language':
+            return '**$primary**';
+
+          case 'adventure':
+            return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+
+          case 'book':
+          case 'variantrule':
+            return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+
+          case 'quickref':
+          case 'filter':
+          case 'link':
+          case 'area':
+          case 'deck':
+          case 'card':
+          case 'deity':
+          case 'vehicle':
+          case 'object':
+          case 'trap':
+            return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+
+          default:
+            return parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+        }
+      });
+      if (current == prev) break;
+      passes++;
+    }
+    return current;
   }
 
   // ---------------------------------------------------------------------------

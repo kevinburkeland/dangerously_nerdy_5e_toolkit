@@ -524,16 +524,36 @@ class CompendiumJsonIngestionPipeline {
           );
         }).toList();
 
-        final revitalizedOtherEntries = bundle.otherEntries.map((o) {
+        final revitalizedOtherEntries = bundle.otherEntries.where((o) {
+          if (o.name.startsWith('[{') || o.name.length > 500 || o.id.slug.length > 200) {
+            return false;
+          }
+          return true;
+        }).map((o) {
+          final customProps = Map<String, dynamic>.from(o.customProperties);
+          if (customProps['rows'] is List) {
+            customProps['rows'] = (customProps['rows'] as List).map((row) {
+              if (row is List) {
+                return row.map((cell) => cell is String ? cleanRawTags(cell) : cell).toList();
+              }
+              return row;
+            }).toList();
+          }
+          if (customProps['colLabels'] is List) {
+            customProps['colLabels'] = (customProps['colLabels'] as List).map((col) {
+              return col is String ? cleanRawTags(col) : col;
+            }).toList();
+          }
           final raw = <String, dynamic>{
-            ...o.customProperties,
+            ...customProps,
             'name': o.name,
             'category': o.category,
-            if (o.descriptionMarkdown.isNotEmpty) 'entries': [o.descriptionMarkdown],
+            if (o.descriptionMarkdown.isNotEmpty) 'entries': [cleanRawTags(o.descriptionMarkdown)],
           };
           final reparsed = genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset ?? o.id.ruleset, defaultCategory: o.category);
           return reparsed.copyWith(
-            descriptionMarkdown: o.descriptionMarkdown.isNotEmpty ? o.descriptionMarkdown : reparsed.descriptionMarkdown,
+            descriptionMarkdown: cleanRawTags(o.descriptionMarkdown.isNotEmpty ? o.descriptionMarkdown : reparsed.descriptionMarkdown),
+            customProperties: customProps,
           );
         }).toList();
 
@@ -598,7 +618,7 @@ class CompendiumJsonIngestionPipeline {
       'subrace', 'subraces', 'feat', 'feats', 'background', 'backgrounds',
       'invocation', 'invocations', 'eldritchinvocation', 'eldritchinvocations',
       'infusion', 'infusions', 'artificerinfusion', 'artificerinfusions',
-      'optionalfeature', 'optionalfeatures', 'table', 'tables', 'reward', 'rewards',
+      'optionalfeature', 'optionalfeatures', 'table', 'tables', 'name', 'names', 'reward', 'rewards',
       'condition', 'conditions', 'hazard', 'hazards', 'variantrule', 'variantrules', 'rule', 'rules',
       'monsterfluff', 'spellfluff', 'itemfluff', 'racefluff', 'classfluff', 'featfluff', 'backgroundfluff', 'fluff',
     }.contains(k) && map[k] is List);
@@ -881,6 +901,23 @@ class CompendiumJsonIngestionPipeline {
     }, 'Optional Feature');
 
     ingestKeys(['table', 'tables'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Table')), 'Table');
+    ingestKeys(['name', 'names'], (raw) {
+      final parentName = raw['name']?.toString() ?? 'Names';
+      if (raw['tables'] is List) {
+        for (final table in raw['tables'] as List) {
+          if (table is Map) {
+            final tableMap = Map<String, dynamic>.from(table);
+            final opt = tableMap['option']?.toString();
+            final caption = tableMap['caption']?.toString();
+            tableMap['name'] = caption ?? (opt != null ? '$parentName Names – $opt' : '$parentName Names');
+            tableMap['source'] = tableMap['source'] ?? raw['source'];
+            otherEntries.add(genericParser.parseGenericEntry(tableMap, forceRuleset: forceRuleset, defaultCategory: 'Table'));
+          }
+        }
+      } else if (raw['entries'] != null || raw['rows'] != null) {
+        otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Table'));
+      }
+    }, 'Name Table');
     ingestKeys(['deity', 'deities'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Deity')), 'Deity');
     ingestKeys(['vehicle', 'vehicles', 'vehicleupgrade', 'vehicleupgrades'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Vehicle')), 'Vehicle');
     ingestKeys(['trap', 'traps'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Trap')), 'Trap');
@@ -1187,8 +1224,24 @@ class CompendiumJsonIngestionPipeline {
 
     // 9. Generic Fallback (tables, rules, etc.)
     if (lowerKeys.contains('name')) {
+      final rawName = map['name'];
+      final rawCaption = map['caption'];
+      if (rawName is! String && rawCaption is! String) {
+        return const IngestionBatchResult(
+          errors: ['Invalid entity name: name must be a string.'],
+        );
+      }
+      final nameStr = (rawName as String? ?? rawCaption as String).trim();
+      if (nameStr.startsWith('[{') || nameStr.length > 500) {
+        return const IngestionBatchResult(
+          errors: ['Malformed entity name.'],
+        );
+      }
       try {
         final entry = genericParser.parseGenericEntry(map, forceRuleset: forceRuleset, defaultCategory: 'Custom');
+        if (entry.name.length > 500 || entry.id.slug.length > 200 || entry.name.startsWith('[{')) {
+          return const IngestionBatchResult();
+        }
         return IngestionBatchResult(otherEntries: [entry]);
       } catch (e) {
         return IngestionBatchResult(errors: ['Failed to parse custom compendium entry: $e']);
@@ -1239,59 +1292,106 @@ class CompendiumJsonIngestionPipeline {
   }
 
   static String cleanRawTags(String input) {
-    if (!input.contains('{@')) return input;
-    return input.replaceAllMapped(RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^}]+))?\}'), (match) {
-      final tag = match.group(1)?.toLowerCase();
-      final content = match.group(2) ?? '';
-      final parts = content.split('|');
-      final primary = parts[0].trim();
-      final display = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
+    if (!input.contains('{@') && !input.contains('{=')) return input;
+    final tagRegex = RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^{}]+))?\}');
+    var current = input.replaceAllMapped(RegExp(r'\{=([a-zA-Z0-9_-]+)\}'), (m) => m.group(1) ?? '');
+    int passes = 0;
+    while (tagRegex.hasMatch(current) && passes < 10) {
+      final prev = current;
+      current = current.replaceAllMapped(tagRegex, (match) {
+        final tag = match.group(1)?.toLowerCase();
+        final content = match.group(2) ?? '';
+        final parts = content.split('|');
+        final primary = parts[0].trim();
+        final display = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
 
-      switch (tag) {
-        case 'dice':
-        case 'd20':
-          return '**`$primary`**';
-        case 'damage':
-          return '**`$primary`**';
-        case 'h':
-          return '*Hit:* ';
-        case 'dc':
-          return 'DC $primary';
-        case 'b':
-        case 'bold':
-          return '**$primary**';
-        case 'i':
-        case 'italic':
-          return '*$primary*';
-        case 'code':
-          return '`$primary`';
-        case 'note':
-          return '> **Note:** $primary';
-        case 'book':
-        case 'variantrule':
-        case 'spell':
-        case 'item':
-        case 'creature':
-        case 'monster':
-        case 'class':
-        case 'subclass':
-        case 'race':
-        case 'species':
-        case 'feat':
-        case 'background':
-        case 'classfeature':
-        case 'subclassfeature':
-        case 'condition':
-        case 'status':
-        case 'skill':
-        case 'sense':
-        case 'action':
-        case 'table':
-          return display;
-        default:
-          return display;
-      }
-    });
+        switch (tag) {
+          case 'dice':
+          case 'd20':
+          case 'damage':
+          case 'chance':
+            return '**`$primary`**';
+          case 'h':
+          case 'hit':
+            return '*Hit:* ';
+          case 'hityourspellattack':
+            return 'your spell attack modifier';
+          case 'dc':
+            return 'DC $primary';
+          case 'b':
+          case 'bold':
+            return '**$primary**';
+          case 'i':
+          case 'italic':
+            return '*$primary*';
+          case 'code':
+            return '`$primary`';
+          case 'recharge':
+            return primary.isEmpty ? '*(Recharge 6)*' : '*(Recharge $primary–6)*';
+          case 'atk':
+          case 'm':
+            final p = primary.toLowerCase();
+            if (p.contains('mw')) return '*Melee Weapon Attack:*';
+            if (p.contains('rw')) return '*Ranged Weapon Attack:*';
+            if (p.contains('ms')) return '*Melee Spell Attack:*';
+            if (p.contains('rs')) return '*Ranged Spell Attack:*';
+            if (p.contains('m,r') || p.contains('r,m')) return '*Melee or Ranged Attack:*';
+            return '*Melee Weapon Attack:*';
+          case 'skillcheck':
+            return parts.length > 1 ? '${parts[0].trim()} (${parts[1].trim()})' : primary;
+          case 'note':
+            return '> **Note:** $primary';
+          case 'footnote':
+            return ' ($primary)';
+          case 'color':
+          case 'comic':
+            return parts.length > 1 && parts[1].trim().isNotEmpty ? parts[1].trim() : primary;
+          case 'hom':
+            return '*Hit or Miss:* ';
+          case '5etools':
+          case 'book':
+          case 'variantrule':
+          case 'spell':
+          case 'item':
+          case 'creature':
+          case 'monster':
+          case 'class':
+          case 'subclass':
+          case 'race':
+          case 'species':
+          case 'feat':
+          case 'background':
+          case 'classfeature':
+          case 'subclassfeature':
+          case 'condition':
+          case 'status':
+          case 'skill':
+          case 'sense':
+          case 'action':
+          case 'table':
+          case 'language':
+          case 'adventure':
+          case 'area':
+          case 'deck':
+          case 'deity':
+          case 'disease':
+          case 'filter':
+          case 'hazard':
+          case 'link':
+          case 'object':
+          case 'quickref':
+          case 'reward':
+          case 'trap':
+          case 'vehicle':
+            return display;
+          default:
+            return display;
+        }
+      });
+      if (current == prev) break;
+      passes++;
+    }
+    return current;
   }
 
   String _slugify(String name) {

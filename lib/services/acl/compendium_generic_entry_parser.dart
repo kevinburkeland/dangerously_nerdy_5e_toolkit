@@ -15,9 +15,16 @@ class CompendiumGenericEntryParser {
     String defaultCategory = 'Custom',
     RulesetVersion? forceRuleset,
   }) {
-    final name = raw['name']?.toString().trim() ??
-        raw['caption']?.toString().trim() ??
-        'Unnamed Entry';
+    final rawName = raw['name'];
+    final rawCaption = raw['caption'];
+    String name;
+    if (rawName is String && rawName.trim().isNotEmpty) {
+      name = rawName.trim();
+    } else if (rawCaption is String && rawCaption.trim().isNotEmpty) {
+      name = rawCaption.trim();
+    } else {
+      name = 'Unnamed Entry';
+    }
     final slug = _slugify(name);
     final source = raw['source']?.toString().toUpperCase() ?? 'HOMEBREW';
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
@@ -81,8 +88,12 @@ class CompendiumGenericEntryParser {
       if (rows.isNotEmpty) {
         final buffer = StringBuffer();
         if (colLabels.isNotEmpty) {
-          buffer.writeln('| ${colLabels.map((c) => c.toString()).join(' | ')} |');
-          buffer.writeln('| ${colLabels.map((_) => ':---').join(' | ')} |');
+          final processedCols = colLabels.map((c) {
+            final text = transformer.transformEntries(c is Map ? (c['entry'] ?? c['entries'] ?? c.toString()) : c.toString(), defaultRuleset: ruleset).markdown;
+            return text.replaceAll('\n', ' ').replaceAll('|', '\\|');
+          }).toList();
+          buffer.writeln('| ${processedCols.join(' | ')} |');
+          buffer.writeln('| ${processedCols.map((_) => ':---').join(' | ')} |');
         } else {
           final colCount = (rows.first is List) ? (rows.first as List).length : 1;
           buffer.writeln('| ${List.generate(colCount, (i) => 'Col ${i + 1}').join(' | ')} |');
@@ -90,9 +101,15 @@ class CompendiumGenericEntryParser {
         }
         for (final r in rows) {
           if (r is List) {
-            buffer.writeln('| ${r.map((c) => c.toString()).join(' | ')} |');
+            final processedRow = r.map((c) {
+              final cellContent = c is Map ? (c['entry'] ?? c['entries'] ?? c['roll'] ?? c.toString()) : c.toString();
+              final cellText = transformer.transformEntries(cellContent, defaultRuleset: ruleset).markdown;
+              return cellText.replaceAll('\n', ' ').replaceAll('|', '\\|');
+            }).join(' | ');
+            buffer.writeln('| $processedRow |');
           } else {
-            buffer.writeln('| ${r.toString()} |');
+            final cellText = transformer.transformEntries(r.toString(), defaultRuleset: ruleset).markdown.replaceAll('\n', ' ').replaceAll('|', '\\|');
+            buffer.writeln('| $cellText |');
           }
         }
         desc = buffer.toString().trim();
@@ -125,6 +142,28 @@ class CompendiumGenericEntryParser {
         customProperties[key] = value;
       }
     });
+
+    if (customProperties['rows'] is List) {
+      customProperties['rows'] = (customProperties['rows'] as List).map((row) {
+        if (row is List) {
+          return row.map((cell) {
+            if (cell is String) {
+              return transformer.transformEntries(cell, defaultRuleset: ruleset).markdown.replaceAll('\n', ' ').trim();
+            }
+            return cell;
+          }).toList();
+        }
+        return row;
+      }).toList();
+    }
+    if (customProperties['colLabels'] is List) {
+      customProperties['colLabels'] = (customProperties['colLabels'] as List).map((col) {
+        if (col is String) {
+          return transformer.transformEntries(col, defaultRuleset: ruleset).markdown.replaceAll('\n', ' ').trim();
+        }
+        return col;
+      }).toList();
+    }
 
     return HomebrewCompendiumEntry(
       id: EntityId(slug: slug, ruleset: ruleset),
