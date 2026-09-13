@@ -1,8 +1,11 @@
+import '../../domain/homebrew/value_objects/ruleset_version.dart' as domain_rules;
 import '../../models/domain/core_types.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../services/logging_service.dart';
 import '../dtos/animated_object_dto.dart';
 import '../dtos/character_dto.dart';
+import '../dtos/homebrew_entity_dto.dart';
 import '../dtos/spell_dto.dart';
 
 /// Anti-Corruption Layer (ACL) ingestor for external and homebrew JSON bundles.
@@ -318,5 +321,203 @@ class HomebrewIngestor {
     }
 
     return validObjects;
+  }
+
+  /// Ingests a raw list of homebrew race / species JSON objects into validated [Race] instances.
+  static List<Race> parseCustomRaces(
+    List<dynamic> rawList, {
+    domain_rules.RulesetVersion ruleset = domain_rules.RulesetVersion.srd2014,
+  }) {
+    final validRaces = <Race>[];
+
+    for (final item in rawList) {
+      if (item is! Map) continue;
+      final map = item is Map<String, dynamic> ? item : Map<String, dynamic>.from(item);
+
+      try {
+        final race = parseRace(map, ruleset: ruleset);
+        if (race.id.slug.isNotEmpty && race.name.isNotEmpty) {
+          validRaces.add(race);
+        }
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to ingest homebrew race ${map['name']}. Skipping.',
+        );
+      }
+    }
+
+    return validRaces;
+  }
+
+  /// Parses a single raw homebrew race/species map into a strongly-typed [Race].
+  static Race parseRace(
+    Map<String, dynamic> raw, {
+    domain_rules.RulesetVersion ruleset = domain_rules.RulesetVersion.srd2014,
+  }) {
+    final dto = HomebrewEntityDto.fromJson(raw, ruleset: ruleset);
+    return mapRaceFromDto(dto);
+  }
+
+  /// Maps a validated [HomebrewEntityDto] into a domain [Race] entity,
+  /// reading normalized abilities and flexible abilities to assign species bonuses accurately.
+  static Race mapRaceFromDto(HomebrewEntityDto dto) {
+    final raw = dto.rawPayload;
+    final normalized = dto.normalizedData;
+
+    final fixedBonuses = <String, int>{};
+    final rawAbilities = normalized['abilities'] ?? raw['abilities'];
+    if (rawAbilities is Map) {
+      rawAbilities.forEach((k, v) {
+        if (v is num) {
+          final keyLower = k.toString().toLowerCase().trim();
+          fixedBonuses[keyLower] = v.toInt();
+          final canonical = switch (keyLower) {
+            'str' => 'strength',
+            'dex' => 'dexterity',
+            'con' => 'constitution',
+            'int' => 'intelligence',
+            'wis' => 'wisdom',
+            'cha' => 'charisma',
+            _ => null,
+          };
+          if (canonical != null) {
+            fixedBonuses[canonical] = v.toInt();
+          }
+        }
+      });
+    }
+
+    int? flexCount;
+    int? flexBonus;
+    final flexData = normalized['flexibleAbilities'] ?? raw['flexibleAbilities'];
+    if (flexData is Map) {
+      if (flexData['count'] is num) {
+        flexCount = (flexData['count'] as num).toInt();
+      }
+      if (flexData['amount'] is num) {
+        flexBonus = (flexData['amount'] as num).toInt();
+      }
+    }
+
+    // Size
+    String size = 'Medium';
+    final sizeVal = normalized['size'] ?? raw['size'];
+    if (sizeVal is List && sizeVal.isNotEmpty) {
+      size = sizeVal.first.toString();
+    } else if (sizeVal is String && sizeVal.isNotEmpty) {
+      size = sizeVal;
+    }
+
+    // Speed
+    String speed = '30 ft.';
+    final speedVal = normalized['speed'] ?? raw['speed'];
+    if (speedVal is num) {
+      speed = '$speedVal ft.';
+    } else if (speedVal is Map) {
+      final walk = speedVal['walk'] ?? speedVal['speed'];
+      if (walk != null) speed = '$walk ft.';
+    } else if (speedVal is String && speedVal.isNotEmpty) {
+      speed = speedVal.contains('ft') ? speedVal : '$speedVal ft.';
+    }
+
+    // Subraces
+    final subraces = <Subrace>[];
+    final rawSubList = raw['subraces'] ?? raw['subrace'];
+    if (rawSubList is List) {
+      for (final rawSub in rawSubList) {
+        if (rawSub is Map) {
+          final subMap = Map<String, dynamic>.from(rawSub);
+          final subName = subMap['name']?.toString().trim() ?? '';
+          if (subName.isNotEmpty) {
+            final subTraits = subMap['entries'] ?? subMap['traits'] ?? subMap['desc'] ?? '';
+            final subTraitsMarkdown = subTraits is List
+                ? subTraits.map((e) => e is Map ? (e['name'] != null ? '### ${e['name']}\n${e['entries'] ?? ''}' : e.toString()) : e.toString()).join('\n\n')
+                : subTraits.toString();
+            subraces.add(Subrace(
+              id: EntityId(
+                slug: subMap['id']?.toString() ??
+                    subMap['slug']?.toString() ??
+                    subName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
+                ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+                    ? RulesetVersion.v2024
+                    : RulesetVersion.v2014,
+              ),
+              name: subName,
+              raceSlug: dto.id,
+              traitsMarkdown: subTraitsMarkdown,
+              customProperties: subMap,
+            ));
+          }
+        }
+      }
+    }
+
+    // Traits Markdown
+    String traitsMarkdown = '';
+    final rawEntries = raw['entries'] ?? raw['traits'] ?? raw['trait'] ?? raw['desc'] ?? raw['description'];
+    if (rawEntries is List) {
+      traitsMarkdown = rawEntries.map((e) {
+        if (e is Map) {
+          final entryName = e['name']?.toString() ?? '';
+          final entryText = e['entries'] ?? e['text'] ?? '';
+          return entryName.isNotEmpty ? '### $entryName\n$entryText' : entryText.toString();
+        }
+        return e.toString();
+      }).join('\n\n');
+    } else if (rawEntries is String) {
+      traitsMarkdown = rawEntries;
+    }
+
+    final customProps = Map<String, dynamic>.from(dto.unparsedPayload);
+    customProps.addAll(dto.rawPayload);
+    if (fixedBonuses.isNotEmpty) {
+      customProps['abilityBonuses'] = fixedBonuses;
+    }
+    if (flexCount != null && flexCount > 0) {
+      customProps['flexibleAbilityCount'] = flexCount;
+      customProps['flexibleAbilityBonus'] = flexBonus ?? 1;
+    }
+    if (flexData != null) {
+      customProps['flexibleAbilities'] = flexData;
+    }
+
+    // Ability Score Summary
+    final summaryParts = <String>[];
+    const shortAbilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    for (final ab in shortAbilities) {
+      if (fixedBonuses.containsKey(ab)) {
+        summaryParts.add('${ab.toUpperCase()} +${fixedBonuses[ab]}');
+      }
+    }
+    if (flexCount != null && flexCount > 0) {
+      final bonusVal = flexBonus ?? 1;
+      final bonusStr = '+$bonusVal';
+      final fromList = flexData is Map && flexData['from'] is List
+          ? (flexData['from'] as List).map((e) => e.toString().toUpperCase()).join('/')
+          : 'any';
+      summaryParts.add('$bonusStr to $flexCount ($fromList)');
+    }
+    final abilitySummary = summaryParts.isNotEmpty ? summaryParts.join(', ') : null;
+
+    return Race(
+      id: EntityId(
+        slug: dto.id,
+        ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+            ? RulesetVersion.v2024
+            : RulesetVersion.v2014,
+      ),
+      name: dto.name,
+      size: size,
+      speed: speed,
+      abilityScoreSummary: abilitySummary,
+      traitsMarkdown: traitsMarkdown,
+      subraces: subraces,
+      flexibleAbilityCount: flexCount,
+      flexibleAbilityBonus: flexBonus,
+      fixedAbilityBonuses: fixedBonuses.isNotEmpty ? fixedBonuses : null,
+      customProperties: customProps,
+    );
   }
 }

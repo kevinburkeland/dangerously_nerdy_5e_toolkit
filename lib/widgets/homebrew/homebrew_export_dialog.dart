@@ -63,6 +63,9 @@ class _HomebrewExportDialogState extends State<HomebrewExportDialog> {
     final backgrounds = await _persistence.loadCustomBackgrounds();
     final others = await _persistence.loadCustomOtherEntries();
 
+    final totalSpecies =
+        races.fold<int>(0, (sum, r) => sum + 1 + r.subraces.length);
+
     if (mounted) {
       setState(() {
         _categoryCounts = {
@@ -71,7 +74,7 @@ class _HomebrewExportDialogState extends State<HomebrewExportDialog> {
           EntityType.equipment: items.length,
           EntityType.classDefinition: classes.length,
           EntityType.subclass: subclasses.length,
-          EntityType.species: races.length,
+          EntityType.species: totalSpecies,
           EntityType.feat: feats.length,
           EntityType.background: backgrounds.length,
           EntityType.custom: others.length,

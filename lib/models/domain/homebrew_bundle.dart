@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'core_types.dart';
 import 'homebrew_extended_entities.dart';
 import 'spell_monster_equipment.dart';
 
@@ -17,6 +18,7 @@ class HomebrewBundle {
   final List<CharacterClass> classes;
   final List<Subclass> subclasses;
   final List<Race> races;
+  final List<Subrace> subraces;
   final List<Feat> feats;
   final List<Background> backgrounds;
   final List<HomebrewCompendiumEntry> otherEntries;
@@ -34,6 +36,7 @@ class HomebrewBundle {
     this.classes = const [],
     this.subclasses = const [],
     this.races = const [],
+    this.subraces = const [],
     this.feats = const [],
     this.backgrounds = const [],
     this.otherEntries = const [],
@@ -52,6 +55,7 @@ class HomebrewBundle {
         classes = const [],
         subclasses = const [],
         races = const [],
+        subraces = const [],
         feats = const [],
         backgrounds = const [],
         otherEntries = const [];
@@ -63,6 +67,7 @@ class HomebrewBundle {
       classes.length +
       subclasses.length +
       races.length +
+      subraces.length +
       feats.length +
       backgrounds.length +
       otherEntries.length;
@@ -83,6 +88,7 @@ class HomebrewBundle {
         if (classes.isNotEmpty) 'classes': classes.map((c) => c.toMap()).toList(),
         if (subclasses.isNotEmpty) 'subclasses': subclasses.map((s) => s.toMap()).toList(),
         if (races.isNotEmpty) 'races': races.map((r) => r.toMap()).toList(),
+        if (subraces.isNotEmpty) 'subraces': subraces.map((s) => s.toMap()).toList(),
         if (feats.isNotEmpty) 'feats': feats.map((f) => f.toMap()).toList(),
         if (backgrounds.isNotEmpty) 'backgrounds': backgrounds.map((b) => b.toMap()).toList(),
         if (otherEntries.isNotEmpty)
@@ -127,6 +133,55 @@ class HomebrewBundle {
         .map((m) => Race.fromMap(Map<String, dynamic>.from(m)))
         .toList();
 
+    final subraces = (map['subraces'] as List? ?? [])
+        .whereType<Map>()
+        .map((m) => Subrace.fromMap(Map<String, dynamic>.from(m)))
+        .toList();
+
+    if (subraces.isNotEmpty) {
+      final knownSlugs = races.map((r) => r.id.slug.toLowerCase()).toSet();
+      for (int i = 0; i < races.length; i++) {
+        final race = races[i];
+        final existingSubSlugs =
+            race.subraces.map((s) => s.id.slug.toLowerCase()).toSet();
+        final matchingSubs = subraces.where(
+          (s) =>
+              s.raceSlug.toLowerCase() == race.id.slug.toLowerCase() &&
+              !existingSubSlugs.contains(s.id.slug.toLowerCase()),
+        );
+        if (matchingSubs.isNotEmpty) {
+          races[i] =
+              race.copyWith(subraces: [...race.subraces, ...matchingSubs]);
+        }
+      }
+      final orphanSubsByRace = <String, List<Subrace>>{};
+      for (final sub in subraces) {
+        final slug = sub.raceSlug.toLowerCase();
+        if (!knownSlugs.contains(slug)) {
+          orphanSubsByRace.putIfAbsent(slug, () => []).add(sub);
+        }
+      }
+      for (final entry in orphanSubsByRace.entries) {
+        final raceName = entry.value.first.customProperties['raceName']
+                ?.toString() ??
+            entry.value.first.customProperties['race']?.toString() ??
+            entry.key
+                .split('-')
+                .map((w) =>
+                    w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+                .join(' ');
+        races.add(
+          Race(
+            id: EntityId(slug: entry.key, ruleset: entry.value.first.id.ruleset),
+            name: raceName.isNotEmpty ? raceName : 'Base Race',
+            traitsMarkdown: '',
+            subraces: entry.value,
+            customProperties: const {'isShellForSubrace': true},
+          ),
+        );
+      }
+    }
+
     final feats = (map['feats'] as List? ?? [])
         .whereType<Map>()
         .map((m) => Feat.fromMap(Map<String, dynamic>.from(m)))
@@ -155,6 +210,7 @@ class HomebrewBundle {
       classes: classes,
       subclasses: subclasses,
       races: races,
+      subraces: subraces,
       feats: feats,
       backgrounds: backgrounds,
       otherEntries: otherEntries,
@@ -174,6 +230,7 @@ class HomebrewBundle {
     List<CharacterClass>? classes,
     List<Subclass>? subclasses,
     List<Race>? races,
+    List<Subrace>? subraces,
     List<Feat>? feats,
     List<Background>? backgrounds,
     List<HomebrewCompendiumEntry>? otherEntries,
@@ -191,6 +248,7 @@ class HomebrewBundle {
       classes: classes ?? this.classes,
       subclasses: subclasses ?? this.subclasses,
       races: races ?? this.races,
+      subraces: subraces ?? this.subraces,
       feats: feats ?? this.feats,
       backgrounds: backgrounds ?? this.backgrounds,
       otherEntries: otherEntries ?? this.otherEntries,

@@ -1637,6 +1637,11 @@ class HomebrewPersistenceService {
     final includeBackgrounds = categories == null || categories.contains(EntityType.background);
     final includeOther = categories == null || categories.contains(EntityType.custom);
 
+    final races = includeRaces ? await loadCustomRaces() : const <Race>[];
+    final subraces = <Subrace>[
+      for (final r in races) ...r.subraces,
+    ];
+
     return HomebrewBundle(
       appVersion: '1.0.0',
       exportedAt: DateTime.now(),
@@ -1648,11 +1653,64 @@ class HomebrewPersistenceService {
       items: includeItems ? await loadCustomItems() : const [],
       classes: includeClasses ? await loadCustomClasses() : const [],
       subclasses: includeSubclasses ? await loadCustomSubclasses() : const [],
-      races: includeRaces ? await loadCustomRaces() : const [],
+      races: races,
+      subraces: subraces,
       feats: includeFeats ? await loadCustomFeats() : const [],
       backgrounds: includeBackgrounds ? await loadCustomBackgrounds() : const [],
       otherEntries: includeOther ? await loadCustomOtherEntries() : const [],
     );
+  }
+
+  /// Exports saved homebrew entities across all active registries into a comprehensive
+  /// dictionary with sibling arrays (`races`, `subraces`, `classes`, `subclasses`, `backgrounds`, `feats`, `items`, `spells`, `monsters`).
+  Future<Map<String, dynamic>> exportBundle({
+    String? bundleName,
+    String? author,
+    String? description,
+    Set<EntityType>? categories,
+  }) async {
+    final includeSpells = categories == null || categories.contains(EntityType.spell);
+    final includeMonsters = categories == null || categories.contains(EntityType.monster);
+    final includeItems = categories == null || categories.contains(EntityType.equipment);
+    final includeClasses = categories == null || categories.contains(EntityType.classDefinition);
+    final includeSubclasses = categories == null || categories.contains(EntityType.subclass);
+    final includeRaces = categories == null || categories.contains(EntityType.species);
+    final includeFeats = categories == null || categories.contains(EntityType.feat);
+    final includeBackgrounds = categories == null || categories.contains(EntityType.background);
+    final includeOther = categories == null || categories.contains(EntityType.custom);
+
+    final spells = includeSpells ? await loadCustomSpells() : const <Spell>[];
+    final monsters = includeMonsters ? await loadCustomMonsters() : const <Monster>[];
+    final items = includeItems ? await loadCustomItems() : const <EquipmentItem>[];
+    final classes = includeClasses ? await loadCustomClasses() : const <CharacterClass>[];
+    final subclasses = includeSubclasses ? await loadCustomSubclasses() : const <Subclass>[];
+    final races = includeRaces ? await loadCustomRaces() : const <Race>[];
+    final subraces = <Subrace>[
+      for (final r in races) ...r.subraces,
+    ];
+    final feats = includeFeats ? await loadCustomFeats() : const <Feat>[];
+    final backgrounds = includeBackgrounds ? await loadCustomBackgrounds() : const <Background>[];
+    final otherEntries = includeOther ? await loadCustomOtherEntries() : const <HomebrewCompendiumEntry>[];
+
+    return {
+      'schemaVersion': 1,
+      'appVersion': '1.0.0',
+      'exportedAt': DateTime.now().toIso8601String(),
+      if (bundleName != null) 'bundleName': bundleName,
+      if (author != null) 'author': author,
+      if (description != null) 'description': description,
+      'spells': spells.map((s) => s.toMap()).toList(),
+      'monsters': monsters.map((m) => m.toMap()).toList(),
+      'items': items.map((i) => i.toMap()).toList(),
+      'classes': classes.map((c) => c.toMap()).toList(),
+      'subclasses': subclasses.map((s) => s.toMap()).toList(),
+      'races': races.map((r) => r.toMap()).toList(),
+      'subraces': subraces.map((s) => s.toMap()).toList(),
+      'backgrounds': backgrounds.map((b) => b.toMap()).toList(),
+      'feats': feats.map((f) => f.toMap()).toList(),
+      if (otherEntries.isNotEmpty)
+        'otherEntries': otherEntries.map((o) => o.toMap()).toList(),
+    };
   }
 
   /// Imports an analyzed and resolved [ImportAnalysisResult], writing entities to storage

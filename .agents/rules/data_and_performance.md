@@ -169,4 +169,25 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Strict Avoidance of Non-SRD WotC Product Identity:**
   - All test fixtures, mock data, and documentation must strictly use generic SRD content or invented homebrew names (e.g., "Chronoblast", "Astral Knight", "Sand Corsair Captain").
 
+## 10. Complete Homebrew Bundle Export & Nested Species Ability Extraction
+
+- **Comprehensive Bundle Exporter:**
+  - `HomebrewPersistenceService.exportBundle` and `exportHomebrewBundle` serialize all active homebrew registries (`races`, `subraces`, `classes`, `subclasses`, `backgrounds`, `feats`, `items`, `spells`, `monsters`, `otherEntries`).
+  - Subraces are extracted from `races.expand((r) => r.subraces)` and serialized as a sibling array (`subraces`) in the root export map and within `HomebrewBundle.subraces`.
+- **Nested Species Ability Parsing (Dragonmark Support):**
+  - Subraces and species entries containing `raceName` or `subrace` keys must be classified as `'race'` by `HomebrewEntityDto._detectEntityType`.
+  - `_extractSpeciesAbilities` in `HomebrewEntityDto` extracts both fixed stat boosts (root-level `str..cha`, nested maps, and array items) into `normalizedData['abilities']` and flexible choice blocks (`choose: { from: [...], count: ..., amount: ... }`) into `normalizedData['flexibleAbilities']`.
+  - `HomebrewIngestor.mapRaceFromDto` maps `abilities` to `Race.fixedAbilityBonuses` and `flexibleAbilities` to `Race.flexibleAbilityCount`, `flexibleAbilityBonus`, and preserves the complete choice pool under `customProperties['flexibleAbilities']` without data loss.
+
+## 11. System-Wide Backup Parity & Subrace Reconciliation
+
+- **System-Wide Backup Parity:**
+  - `AppBackupService`, `DmBackupService`, and `HomebrewPersistenceService` must maintain 100% coverage across all potential homebrew categories: `customSpells`, `customMonsters`, `customItems`, `customClasses`, `customSubclasses`, `customRaces`, `customSubraces`, `customFeats`, `customBackgrounds`, and `customOtherEntries`.
+- **Subrace Reconciling & Shell Generation:**
+  - When importing bundles or restoring snapshots, `HomebrewBundle.fromMap`, `AppBackupService.importFullBackupJson`, and `DmBackupService.restoreFullSystemSnapshot` must reconcile standalone `subraces` with parent `races`, and synthesize parent shells for orphan subraces referencing base SRD species (such as Human, Elf, Dwarf), guaranteeing zero entity loss.
+  - Sibling serialization ensures both flat array lookups (`customSubraces`) and parent-child hierarchy (`race.subraces`) remain in sync across all backup and export formats.
+
+
+
+
 

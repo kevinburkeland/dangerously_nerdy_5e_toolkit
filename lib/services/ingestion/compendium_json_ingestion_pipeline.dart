@@ -75,6 +75,9 @@ class IngestionBatchResult {
       classes: classes,
       subclasses: subclasses,
       races: races,
+      subraces: [
+        for (final r in races) ...r.subraces,
+      ],
       feats: feats,
       backgrounds: backgrounds,
       otherEntries: otherEntries,

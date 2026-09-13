@@ -1,7 +1,9 @@
 import 'dart:convert';
 import '../../models/campaign_profile.dart';
 import '../../models/custom_preset.dart';
+import '../../models/domain/core_types.dart';
 import '../../models/domain/dm_backup_models.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/dpr/dpr_serialization.dart';
 import '../../utils/campaign_file_downloader.dart';
@@ -131,6 +133,15 @@ class DmBackupService {
     final customSpells = await HomebrewPersistenceService().loadCustomSpells();
     final customMonsters = await HomebrewPersistenceService().loadCustomMonsters();
     final customItems = await HomebrewPersistenceService().loadCustomItems();
+    final customClasses = await HomebrewPersistenceService().loadCustomClasses();
+    final customSubclasses = await HomebrewPersistenceService().loadCustomSubclasses();
+    final customRaces = await HomebrewPersistenceService().loadCustomRaces();
+    final customSubraces = <Subrace>[
+      for (final r in customRaces) ...r.subraces,
+    ];
+    final customFeats = await HomebrewPersistenceService().loadCustomFeats();
+    final customBackgrounds = await HomebrewPersistenceService().loadCustomBackgrounds();
+    final customOthers = await HomebrewPersistenceService().loadCustomOtherEntries();
 
     final payload = {
       'schemaVersion': currentSchemaVersion,
@@ -143,6 +154,13 @@ class DmBackupService {
       'customSpells': customSpells.map((s) => s.toMap()).toList(),
       'customMonsters': customMonsters.map((m) => m.toMap()).toList(),
       'customItems': customItems.map((i) => i.toMap()).toList(),
+      'customClasses': customClasses.map((c) => c.toMap()).toList(),
+      'customSubclasses': customSubclasses.map((s) => s.toMap()).toList(),
+      'customRaces': customRaces.map((r) => r.toMap()).toList(),
+      'customSubraces': customSubraces.map((s) => s.toMap()).toList(),
+      'customFeats': customFeats.map((f) => f.toMap()).toList(),
+      'customBackgrounds': customBackgrounds.map((b) => b.toMap()).toList(),
+      'customOtherEntries': customOthers.map((o) => o.toMap()).toList(),
     };
 
     return const JsonEncoder.withIndent('  ').convert(payload);
@@ -257,26 +275,124 @@ class DmBackupService {
       final homebrewService = HomebrewPersistenceService();
       if (decoded['customSpells'] is List) {
         final spells = (decoded['customSpells'] as List)
-            .whereType<Map<String, dynamic>>()
-            .map((m) => Spell.fromMap(m))
+            .whereType<Map>()
+            .map((m) => Spell.fromMap(Map<String, dynamic>.from(m)))
             .toList();
         await homebrewService.saveCustomSpellsBatch(spells);
       }
 
       if (decoded['customMonsters'] is List) {
         final monsters = (decoded['customMonsters'] as List)
-            .whereType<Map<String, dynamic>>()
-            .map((m) => Monster.fromMap(m))
+            .whereType<Map>()
+            .map((m) => Monster.fromMap(Map<String, dynamic>.from(m)))
             .toList();
         await homebrewService.saveCustomMonstersBatch(monsters);
       }
 
       if (decoded['customItems'] is List) {
         final items = (decoded['customItems'] as List)
-            .whereType<Map<String, dynamic>>()
-            .map((m) => EquipmentItem.fromMap(m))
+            .whereType<Map>()
+            .map((m) => EquipmentItem.fromMap(Map<String, dynamic>.from(m)))
             .toList();
         await homebrewService.saveCustomItemsBatch(items);
+      }
+
+      if (decoded['customClasses'] is List) {
+        final classes = (decoded['customClasses'] as List)
+            .whereType<Map>()
+            .map((m) => CharacterClass.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+        await homebrewService.saveCustomClassesBatch(classes);
+      }
+
+      if (decoded['customSubclasses'] is List) {
+        final subclasses = (decoded['customSubclasses'] as List)
+            .whereType<Map>()
+            .map((m) => Subclass.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+        await homebrewService.saveCustomSubclassesBatch(subclasses);
+      }
+
+      if (decoded['customRaces'] is List) {
+        final races = (decoded['customRaces'] as List)
+            .whereType<Map>()
+            .map((m) => Race.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+
+        if (decoded['customSubraces'] is List) {
+          final subraces = (decoded['customSubraces'] as List)
+              .whereType<Map>()
+              .map((m) => Subrace.fromMap(Map<String, dynamic>.from(m)))
+              .toList();
+          if (subraces.isNotEmpty) {
+            final knownSlugs = races.map((r) => r.id.slug.toLowerCase()).toSet();
+            for (int i = 0; i < races.length; i++) {
+              final race = races[i];
+              final existingSubSlugs =
+                  race.subraces.map((s) => s.id.slug.toLowerCase()).toSet();
+              final matchingSubs = subraces.where(
+                (s) =>
+                    s.raceSlug.toLowerCase() == race.id.slug.toLowerCase() &&
+                    !existingSubSlugs.contains(s.id.slug.toLowerCase()),
+              );
+              if (matchingSubs.isNotEmpty) {
+                races[i] =
+                    race.copyWith(subraces: [...race.subraces, ...matchingSubs]);
+              }
+            }
+            final orphanSubsByRace = <String, List<Subrace>>{};
+            for (final sub in subraces) {
+              final slug = sub.raceSlug.toLowerCase();
+              if (!knownSlugs.contains(slug)) {
+                orphanSubsByRace.putIfAbsent(slug, () => []).add(sub);
+              }
+            }
+            for (final entry in orphanSubsByRace.entries) {
+              final raceName = entry.value.first.customProperties['raceName']
+                      ?.toString() ??
+                  entry.value.first.customProperties['race']?.toString() ??
+                  entry.key
+                      .split('-')
+                      .map((w) =>
+                          w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+                      .join(' ');
+              races.add(
+                Race(
+                  id: EntityId(slug: entry.key, ruleset: entry.value.first.id.ruleset),
+                  name: raceName.isNotEmpty ? raceName : 'Base Race',
+                  traitsMarkdown: '',
+                  subraces: entry.value,
+                  customProperties: const {'isShellForSubrace': true},
+                ),
+              );
+            }
+          }
+        }
+        await homebrewService.saveCustomRacesBatch(races);
+      }
+
+      if (decoded['customFeats'] is List) {
+        final feats = (decoded['customFeats'] as List)
+            .whereType<Map>()
+            .map((m) => Feat.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+        await homebrewService.saveCustomFeatsBatch(feats);
+      }
+
+      if (decoded['customBackgrounds'] is List) {
+        final backgrounds = (decoded['customBackgrounds'] as List)
+            .whereType<Map>()
+            .map((m) => Background.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+        await homebrewService.saveCustomBackgroundsBatch(backgrounds);
+      }
+
+      if (decoded['customOtherEntries'] is List) {
+        final otherEntries = (decoded['customOtherEntries'] as List)
+            .whereType<Map>()
+            .map((m) => HomebrewCompendiumEntry.fromMap(Map<String, dynamic>.from(m)))
+            .toList();
+        await homebrewService.saveCustomOtherEntriesBatch(otherEntries);
       }
 
       await homebrewService.syncToLibraries();

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/app_settings.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/spell_monster_equipment.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_backup_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
@@ -20,7 +21,7 @@ void main() {
       homebrewService = HomebrewPersistenceService();
     });
 
-    test('exports full backup containing homebrew spells, monsters, and items', () async {
+    test('exports full backup containing homebrew spells, monsters, items, and races with subraces', () async {
       // 1. Save sample homebrew entities
       const spell = Spell(
         id: EntityId(slug: 'hellfire-blast', ruleset: RulesetVersion.homebrew),
@@ -60,6 +61,20 @@ void main() {
       );
       await homebrewService.saveCustomItem(item);
 
+      const subrace = Subrace(
+        id: EntityId(slug: 'volcanic-dwarf', ruleset: RulesetVersion.homebrew),
+        name: 'Volcanic Dwarf',
+        raceSlug: 'dwarf-variant',
+        traitsMarkdown: 'Fire resistance.',
+      );
+      final race = Race(
+        id: const EntityId(slug: 'dwarf-variant', ruleset: RulesetVersion.homebrew),
+        name: 'Dwarf Variant',
+        traitsMarkdown: 'Stout.',
+        subraces: const [subrace],
+      );
+      await homebrewService.saveCustomRace(race);
+
       // 2. Export full backup
       final backupJson = await backupService.exportFullBackupJson(const AppSettings());
       expect(backupJson, isNotEmpty);
@@ -69,9 +84,13 @@ void main() {
       expect((decoded['customSpells'] as List).length, equals(1));
       expect((decoded['customMonsters'] as List).length, equals(1));
       expect((decoded['customItems'] as List).length, equals(1));
+      expect((decoded['customRaces'] as List).length, equals(1));
+      expect((decoded['customSubraces'] as List).length, equals(1));
       expect(decoded['customSpells'][0]['name'], equals('Hellfire Blast'));
       expect(decoded['customMonsters'][0]['name'], equals('Hell Hound Alpha'));
       expect(decoded['customItems'][0]['name'], equals('Flame Tongue Greatsword'));
+      expect(decoded['customRaces'][0]['name'], equals('Dwarf Variant'));
+      expect(decoded['customSubraces'][0]['name'], equals('Volcanic Dwarf'));
     });
 
     test('imports full backup restoring all homebrew entities to storage', () async {
@@ -127,6 +146,27 @@ void main() {
             'customProperties': {},
           }
         ],
+        'customRaces': [
+          {
+            'id': {'slug': 'starborn', 'ruleset': 'homebrew'},
+            'name': 'Starborn',
+            'size': 'Medium',
+            'speed': '30 ft.',
+            'traitsMarkdown': 'Cosmic heritage.',
+            'subraces': [],
+            'grants': [],
+            'customProperties': {},
+          }
+        ],
+        'customSubraces': [
+          {
+            'id': {'slug': 'solar-lineage', 'ruleset': 'homebrew'},
+            'name': 'Solar Lineage',
+            'raceSlug': 'starborn',
+            'traitsMarkdown': 'Radiant touch.',
+            'customProperties': {},
+          }
+        ],
       };
 
       final result = await backupService.importFullBackupJson(json.encode(sampleBackup));
@@ -135,15 +175,19 @@ void main() {
       expect(result.restoredHomebrewSpellsCount, equals(1));
       expect(result.restoredHomebrewMonstersCount, equals(1));
       expect(result.restoredHomebrewItemsCount, equals(1));
+      expect(result.restoredHomebrewRacesCount, equals(1));
 
       // Verify entities are now readable from HomebrewPersistenceService
       final spells = await homebrewService.loadCustomSpells();
       final monsters = await homebrewService.loadCustomMonsters();
       final items = await homebrewService.loadCustomItems();
+      final races = await homebrewService.loadCustomRaces();
 
       expect(spells.first.name, equals('Astral Smite'));
       expect(monsters.first.name, equals('Astral Dreadnought Spawn'));
       expect(items.first.name, equals('Astral Shard'));
+      expect(races.first.name, equals('Starborn'));
+      expect(races.first.subraces.first.name, equals('Solar Lineage'));
     });
   });
 }

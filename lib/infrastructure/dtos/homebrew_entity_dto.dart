@@ -98,6 +98,7 @@ class HomebrewEntityDto {
       'rarity', 'itemType', 'weaponMastery', 'mastery', 'masteryProperties',
       'traits', 'actions', 'bonusActions', 'reactions', 'spells',
       'originFeat', 'asi', 'ability', 'abilityScoreIncrease',
+      'raceName', 'subrace', 'subraces', 'flexibleAbilities',
     };
 
     final unparsed = <String, dynamic>{};
@@ -221,7 +222,7 @@ class HomebrewEntityDto {
         'item' || 'equipment' || 'magicitem' || 'weapon' || 'armor' => 'equipment',
         'class' || 'classdefinition' => 'class',
         'subclass' => 'subclass',
-        'race' || 'species' => 'race',
+        'race' || 'species' || 'subrace' => 'race',
         'feat' => 'feat',
         'background' => 'background',
         _ => explicitEntityType,
@@ -271,7 +272,7 @@ class HomebrewEntityDto {
       }
       if (typeStr == 'class') return 'class';
       if (typeStr == 'subclass') return 'subclass';
-      if (typeStr == 'race' || typeStr == 'species') return 'race';
+      if (typeStr == 'race' || typeStr == 'species' || typeStr == 'subrace') return 'race';
       if (typeStr == 'feat') return 'feat';
       if (typeStr == 'background') return 'background';
     }
@@ -289,7 +290,9 @@ class HomebrewEntityDto {
     if (json.containsKey('classFeatures') || json.containsKey('subclassFeatures')) {
       return 'subclass';
     }
-    if (json.containsKey('speed') && (json.containsKey('size') || json.containsKey('subraces'))) {
+    if (json.containsKey('raceName') ||
+        json.containsKey('subrace') ||
+        (json.containsKey('speed') && (json.containsKey('size') || json.containsKey('subraces')))) {
       return 'race';
     }
     if (json.containsKey('prerequisite') || json.containsKey('originFeat')) {
@@ -338,7 +341,107 @@ class HomebrewEntityDto {
       }
     }
 
+    // Species / Race Ability Extractions (Fixed and Flexible Choice Pools)
+    if (entityType == 'race') {
+      final speciesAbilities = _extractSpeciesAbilities(json);
+      if (speciesAbilities.fixed.isNotEmpty) {
+        normalized['abilities'] = speciesAbilities.fixed;
+      }
+      if (speciesAbilities.flexible != null) {
+        normalized['flexibleAbilities'] = speciesAbilities.flexible;
+      }
+    }
+
     return normalized;
+  }
+
+  /// Extracts species ability modifiers, parsing root-level stat keys,
+  /// 5etools nested ability arrays, fixed stat bonuses, and choice blocks.
+  static ({Map<String, int> fixed, Map<String, dynamic>? flexible}) _extractSpeciesAbilities(
+    Map<String, dynamic> json,
+  ) {
+    final fixed = <String, int>{};
+    final choices = <Map<String, dynamic>>[];
+    int totalCount = 0;
+    int maxAmount = 1;
+    final Set<String> pooledFrom = {};
+
+    const abilityKeys = {'str', 'dex', 'con', 'int', 'wis', 'cha'};
+
+    // 1. Root-level ability score keys
+    for (final key in abilityKeys) {
+      if (json.containsKey(key)) {
+        final val = json[key];
+        if (val is num) {
+          fixed[key] = val.toInt();
+        }
+      }
+    }
+
+    // Also support root-level 'abilities' map if pre-populated
+    if (json.containsKey('abilities') && json['abilities'] is Map) {
+      (json['abilities'] as Map).forEach((k, v) {
+        final keyStr = k.toString().toLowerCase().trim();
+        if (abilityKeys.contains(keyStr) && v is num) {
+          fixed[keyStr] = v.toInt();
+        }
+      });
+    }
+
+    // 2. Parse json['ability'] (list or nested map)
+    final abilityData = json['ability'];
+
+    void processAbilityMap(Map<dynamic, dynamic> map) {
+      map.forEach((k, v) {
+        final keyStr = k.toString().toLowerCase().trim();
+        if (abilityKeys.contains(keyStr) && v is num) {
+          fixed[keyStr] = v.toInt();
+        } else if (keyStr == 'choose' && v is Map) {
+          final count = (v['count'] as num?)?.toInt() ?? 1;
+          final amount = (v['amount'] as num?)?.toInt() ?? 1;
+          final fromRaw = v['from'];
+          final fromList = <String>[];
+          if (fromRaw is List) {
+            for (final f in fromRaw) {
+              if (f != null) fromList.add(f.toString().toLowerCase().trim());
+            }
+          }
+          totalCount += count;
+          if (amount > maxAmount) maxAmount = amount;
+          pooledFrom.addAll(fromList);
+
+          choices.add({
+            'count': count,
+            'amount': amount,
+            if (fromList.isNotEmpty) 'from': fromList,
+          });
+        }
+      });
+    }
+
+    if (abilityData is List) {
+      for (final item in abilityData) {
+        if (item is Map) {
+          processAbilityMap(item);
+        }
+      }
+    } else if (abilityData is Map) {
+      processAbilityMap(abilityData);
+    }
+
+    Map<String, dynamic>? flexible;
+    if (totalCount > 0 || choices.isNotEmpty) {
+      flexible = {
+        'count': totalCount,
+        'amount': maxAmount,
+        'from': pooledFrom.toList(),
+        'choices': choices,
+      };
+    } else if (json.containsKey('flexibleAbilities') && json['flexibleAbilities'] is Map) {
+      flexible = Map<String, dynamic>.from(json['flexibleAbilities'] as Map);
+    }
+
+    return (fixed: fixed, flexible: flexible);
   }
 
   static String _slugify(String name) {

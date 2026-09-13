@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/app_settings.dart';
 import '../../models/custom_preset.dart';
+import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/dpr/dpr_serialization.dart';
@@ -25,6 +26,7 @@ class AppBackupPayload {
   final List<Map<String, dynamic>> customClasses;
   final List<Map<String, dynamic>> customSubclasses;
   final List<Map<String, dynamic>> customRaces;
+  final List<Map<String, dynamic>> customSubraces;
   final List<Map<String, dynamic>> customFeats;
   final List<Map<String, dynamic>> customBackgrounds;
   final List<Map<String, dynamic>> customOtherEntries;
@@ -43,6 +45,7 @@ class AppBackupPayload {
     this.customClasses = const [],
     this.customSubclasses = const [],
     this.customRaces = const [],
+    this.customSubraces = const [],
     this.customFeats = const [],
     this.customBackgrounds = const [],
     this.customOtherEntries = const [],
@@ -62,6 +65,7 @@ class AppBackupPayload {
         'customClasses': customClasses,
         'customSubclasses': customSubclasses,
         'customRaces': customRaces,
+        'customSubraces': customSubraces,
         'customFeats': customFeats,
         'customBackgrounds': customBackgrounds,
         'customOtherEntries': customOtherEntries,
@@ -103,6 +107,10 @@ class AppBackupPayload {
           .map((e) => Map<String, dynamic>.from(e))
           .toList(),
       customRaces: (map['customRaces'] as List? ?? [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      customSubraces: (map['customSubraces'] as List? ?? [])
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
           .toList(),
@@ -222,6 +230,7 @@ class AppBackupService {
       customClasses: customClasses.map((c) => c.toMap()).toList(),
       customSubclasses: customSubclasses.map((s) => s.toMap()).toList(),
       customRaces: customRaces.map((r) => r.toMap()).toList(),
+      customSubraces: customRaces.expand((r) => r.subraces).map((s) => s.toMap()).toList(),
       customFeats: customFeats.map((f) => f.toMap()).toList(),
       customBackgrounds: customBackgrounds.map((b) => b.toMap()).toList(),
       customOtherEntries: customOthers.map((o) => o.toMap()).toList(),
@@ -317,9 +326,64 @@ class AppBackupService {
       }
 
       int racesRestored = 0;
+      final parsedRaces = <Race>[];
       for (final rawRace in backup.customRaces) {
         try {
-          final race = Race.fromMap(rawRace);
+          parsedRaces.add(Race.fromMap(rawRace));
+        } catch (_) {}
+      }
+      if (backup.customSubraces.isNotEmpty) {
+        final parsedSubraces = <Subrace>[];
+        for (final rawSub in backup.customSubraces) {
+          try {
+            parsedSubraces.add(Subrace.fromMap(rawSub));
+          } catch (_) {}
+        }
+        for (int i = 0; i < parsedRaces.length; i++) {
+          final race = parsedRaces[i];
+          final existingSubSlugs =
+              race.subraces.map((s) => s.id.slug.toLowerCase()).toSet();
+          final matchingSubs = parsedSubraces.where(
+            (s) =>
+                s.raceSlug.toLowerCase() == race.id.slug.toLowerCase() &&
+                !existingSubSlugs.contains(s.id.slug.toLowerCase()),
+          );
+          if (matchingSubs.isNotEmpty) {
+            parsedRaces[i] =
+                race.copyWith(subraces: [...race.subraces, ...matchingSubs]);
+          }
+        }
+        final knownSlugs = parsedRaces.map((r) => r.id.slug.toLowerCase()).toSet();
+        final orphanSubsByRace = <String, List<Subrace>>{};
+        for (final sub in parsedSubraces) {
+          final slug = sub.raceSlug.toLowerCase();
+          if (!knownSlugs.contains(slug)) {
+            orphanSubsByRace.putIfAbsent(slug, () => []).add(sub);
+          }
+        }
+        for (final entry in orphanSubsByRace.entries) {
+          final raceName = entry.value.first.customProperties['raceName']
+                  ?.toString() ??
+              entry.value.first.customProperties['race']?.toString() ??
+              entry.key
+                  .split('-')
+                  .map((w) =>
+                      w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+                  .join(' ');
+          parsedRaces.add(
+            Race(
+              id: EntityId(slug: entry.key, ruleset: entry.value.first.id.ruleset),
+              name: raceName.isNotEmpty ? raceName : 'Base Race',
+              traitsMarkdown: '',
+              subraces: entry.value,
+              customProperties: const {'isShellForSubrace': true},
+            ),
+          );
+        }
+      }
+
+      for (final race in parsedRaces) {
+        try {
           await HomebrewPersistenceService().saveCustomRace(race);
           racesRestored++;
         } catch (_) {}
