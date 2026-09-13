@@ -89,5 +89,47 @@ void main() {
       expect(entry.customProperties['page'], equals(42));
       expect(entry.customProperties['customTags'], contains('pre-cataclysm'));
     });
+
+    test('infers categories from entityType, customProperties, or structural markers', () {
+      final tableJson = {
+        'caption': 'Wilderness Encounters',
+        'entityType': 'table',
+        'colLabels': ['d4', 'Result'],
+        'rows': [
+          ['1', 'Quiet breeze'],
+          ['2', 'Crumbling monument'],
+        ],
+      };
+      expect(parser.parseGenericEntry(tableJson).category, equals('Table'));
+
+      final vehicleUpgradeJson = {
+        'name': 'Reinforced Iron Plating',
+        'entityType': 'vehicleUpgrade',
+        'upgradeType': 'hull',
+        'entries': ['Increases the vehicle AC by +2.'],
+      };
+      expect(parser.parseGenericEntry(vehicleUpgradeJson).category, equals('Vehicle'));
+
+      final infusionJson = {
+        'name': 'Radiant Weapon Prism',
+        'entityType': 'infusion',
+        'entries': ['Infuses a simple or martial weapon with radiant energy.'],
+      };
+      expect(parser.parseGenericEntry(infusionJson).category, equals('Infusion'));
+
+      final charOptionJson = {
+        'name': 'Planar Acrobatics',
+        'entityType': 'charoption',
+        'entries': ['You can leap between planes with nimble grace.'],
+      };
+      expect(parser.parseGenericEntry(charOptionJson).category, equals('Character Option'));
+
+      final charmJson = {
+        'name': 'Charm of the Astral Wind',
+        'category': 'Charm',
+        'entries': ['Grants flight for 10 minutes.'],
+      };
+      expect(parser.parseGenericEntry(charmJson).category, equals('Charm'));
+    });
   });
 }

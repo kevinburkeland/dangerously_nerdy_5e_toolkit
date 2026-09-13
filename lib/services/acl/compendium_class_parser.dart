@@ -143,7 +143,6 @@ class CompendiumClassParser {
         raw['subclassName']?.toString().trim() ??
         raw['title']?.toString().trim() ??
         'Unnamed Subclass';
-    final slug = _slugify(name);
     final source = raw['source']?.toString().toUpperCase() ??
         raw['subclassSource']?.toString().toUpperCase() ??
         raw['classSource']?.toString().toUpperCase() ??
@@ -164,6 +163,11 @@ class CompendiumClassParser {
     } else if (defaultClassSlug != null && defaultClassSlug.isNotEmpty) {
       classSlug = _slugify(defaultClassSlug);
     }
+
+    final nameSlug = _slugify(name);
+    final slug = classSlug.isNotEmpty && !nameSlug.startsWith('$classSlug-')
+        ? '$classSlug-$nameSlug'
+        : nameSlug;
 
     final shortName = raw['shortName']?.toString() ??
         raw['subclassShortName']?.toString() ??

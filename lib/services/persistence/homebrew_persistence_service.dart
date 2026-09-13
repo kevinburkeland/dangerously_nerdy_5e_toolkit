@@ -776,10 +776,20 @@ class HomebrewPersistenceService {
     }
   }
 
-  /// Deletes a custom subclass by slug.
+  /// Deletes a custom subclass by slug and runtime library.
   Future<void> deleteCustomSubclass(String slug) async {
     final subs = await loadCustomSubclasses();
-    subs.removeWhere((s) => s.id.slug == slug);
+    final toRemove = subs
+        .where((s) =>
+            s.id.slug == slug ||
+            s.id.slug.endsWith('-$slug') ||
+            (s.classSlug.isNotEmpty && s.id.slug == '${s.classSlug}-$slug'))
+        .toList();
+    for (final s in toRemove) {
+      subs.remove(s);
+      await _deleteRawPayload(_keyHomebrewSubclassesRaw, s.id.slug);
+      SrdClassesLibrary.removeCustomSubclass(s.id.slug);
+    }
     await _saveStringList(
       _keyHomebrewSubclasses,
       subs.map((s) => json.encode(s.toMap())).toList(),
@@ -839,7 +849,15 @@ class HomebrewPersistenceService {
       final key = '${r.id.slug}_${r.id.ruleset.name}';
       final idx = slugIndex[key];
       if (idx != null) {
-        races[idx] = r;
+        final existing = races[idx];
+        final subMap = <String, Subrace>{
+          for (final s in existing.subraces) s.id.slug: s,
+          for (final s in r.subraces) s.id.slug: s,
+        };
+        races[idx] = r.copyWith(
+          traitsMarkdown: r.traitsMarkdown.isNotEmpty ? r.traitsMarkdown : existing.traitsMarkdown,
+          subraces: subMap.values.toList(),
+        );
       } else {
         slugIndex[key] = races.length;
         races.add(r);
@@ -2237,6 +2255,7 @@ class HomebrewPersistenceService {
 
       final reparsed = <T>[];
       final slugsToPrune = <String>{};
+      final seenSlugs = <String>{};
 
       // 1. Re-parse from raw JSON payloads where available
       for (final entry in rawMap.entries) {
@@ -2254,6 +2273,10 @@ class HomebrewPersistenceService {
             onSrdRemoved?.call(entity.id.slug);
             continue;
           }
+          if (seenSlugs.contains(entity.id.slug)) {
+            continue;
+          }
+          seenSlugs.add(entity.id.slug);
           reparsed.add(entity);
         } catch (e, st) {
           LoggingService().logNonFatal(e, st, reason: 'Re-parse failed for ${entry.key}');
@@ -2277,9 +2300,17 @@ class HomebrewPersistenceService {
       // 3. Check legacy parsed store for any SRD duplicates not in rawMap
       final existingParsed = await _loadStringList(parsedKey);
       final allSlugsHandled = <String>{
-        ...reparsed.map((e) => e.id.slug),
+        ...seenSlugs,
         ...slugsToPrune,
       };
+      if (entityType == EntityType.subclass) {
+        for (final s in seenSlugs) {
+          if (s.contains('-')) {
+            // "artificer-alchemist" -> also mark "alchemist" as handled
+            allSlugsHandled.add(s.split('-').skip(1).join('-'));
+          }
+        }
+      }
 
       for (final jsonStr in existingParsed) {
         try {
@@ -2288,7 +2319,7 @@ class HomebrewPersistenceService {
           final slug = idObj is Map ? (idObj['slug']?.toString() ?? '') : (decoded['slug']?.toString() ?? '');
           final name = decoded['name']?.toString() ?? '';
 
-          if (slug.isNotEmpty && !allSlugsHandled.contains(slug)) {
+          if (slug.isNotEmpty && !allSlugsHandled.contains(slug) && !seenSlugs.contains(slug)) {
             final srdResult = srdIndex.checkEntity(
               slug: slug,
               name: name,
@@ -2300,14 +2331,16 @@ class HomebrewPersistenceService {
               continue;
             }
             // Keep non-SRD legacy entity
+            T? legacyEntity;
             try {
-              final legacyEntity = fromRaw(decoded);
-              reparsed.add(legacyEntity);
+              legacyEntity = fromRaw(decoded);
             } catch (_) {
-              final fallback = _restoreLegacyEntity<T>(decoded, entityType);
-              if (fallback != null) {
-                reparsed.add(fallback);
-              }
+              legacyEntity = _restoreLegacyEntity<T>(decoded, entityType);
+            }
+            if (legacyEntity != null && !seenSlugs.contains(legacyEntity.id.slug)) {
+              seenSlugs.add(legacyEntity.id.slug);
+              allSlugsHandled.add(slug);
+              reparsed.add(legacyEntity);
             }
             allSlugsHandled.add(slug);
           }
@@ -2506,6 +2539,14 @@ class HomebrewPersistenceService {
                 if (match != null) {
                   final idx = races.indexOf(match);
                   races[idx] = match.copyWith(subraces: [...match.subraces, sub]);
+                  if (idx < racePayloads.length) {
+                    final existingSubs = List<dynamic>.from(racePayloads[idx]['subraces'] as List? ?? []);
+                    existingSubs.add(payload);
+                    racePayloads[idx] = {
+                      ...racePayloads[idx],
+                      'subraces': existingSubs,
+                    };
+                  }
                 } else {
                   races.add(Race(
                     id: EntityId(slug: sub.raceSlug, ruleset: coreRuleset),
@@ -2513,7 +2554,12 @@ class HomebrewPersistenceService {
                     traitsMarkdown: '',
                     subraces: [sub],
                   ));
-                  racePayloads.add(payload);
+                  racePayloads.add({
+                    'name': sub.raceSlug.replaceAll('-', ' '),
+                    'slug': sub.raceSlug,
+                    'entityType': 'race',
+                    'subraces': [payload],
+                  });
                 }
               }
             case 'feat':

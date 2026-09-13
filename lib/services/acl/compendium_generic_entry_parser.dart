@@ -23,32 +23,46 @@ class CompendiumGenericEntryParser {
     final ruleset = forceRuleset ?? _mapSourceToRuleset(source);
 
     final nameLower = name.toLowerCase();
-    final rawCat = (raw['category'] ?? raw['type'] ?? defaultCategory).toString().toLowerCase();
+    final rawCat = (raw['category'] ??
+            raw['entityType'] ??
+            (raw['customProperties'] is Map ? (raw['customProperties'] as Map)['entityType'] : null) ??
+            raw['type'] ??
+            defaultCategory)
+        .toString()
+        .toLowerCase();
     String category = defaultCategory;
     if (nameLower.startsWith('pact of the') || nameLower.contains('pact boon')) {
       category = 'Pact Boon';
     } else if (raw['featureType'] != null) {
       category = _decodeFeatureType(raw['featureType']);
-    } else if (rawCat.contains('table')) {
+    } else if (rawCat.contains('table') || raw['rows'] != null || raw['colLabels'] != null) {
       category = 'Table';
     } else if (rawCat.contains('deity') || raw.containsKey('pantheon')) {
       category = 'Deity';
-    } else if (rawCat.contains('vehicle')) {
+    } else if (rawCat.contains('vehicle') || raw.containsKey('upgradeType') || raw.containsKey('vehicleType')) {
       category = 'Vehicle';
-    } else if (rawCat.contains('trap')) {
+    } else if (rawCat.contains('trap') || raw.containsKey('trapType')) {
       category = 'Trap';
-    } else if (rawCat.contains('hazard')) {
+    } else if (rawCat.contains('hazard') || raw.containsKey('hazardType')) {
       category = 'Hazard';
     } else if (rawCat.contains('reward') || rawCat.contains('boon') || rawCat.contains('cult')) {
       category = 'Reward';
+    } else if (rawCat.contains('charm')) {
+      category = 'Charm';
     } else if (rawCat.contains('condition') || rawCat.contains('status')) {
       category = 'Condition';
     } else if (rawCat.contains('disease')) {
       category = 'Disease';
     } else if (rawCat.contains('action')) {
       category = 'Action';
+    } else if (rawCat.contains('infusion')) {
+      category = 'Infusion';
+    } else if (rawCat.contains('charoption') || rawCat.contains('optionalfeature')) {
+      category = 'Character Option';
     } else if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['category'].toString());
+    } else if (raw['entityType'] != null && raw['entityType'].toString().isNotEmpty) {
+      category = _cleanCategoryString(raw['entityType'].toString());
     } else if (raw['type'] != null && raw['type'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['type'].toString());
     }

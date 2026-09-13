@@ -1203,9 +1203,12 @@ class SrdClassesLibrary {
     _customClasses.removeWhere((c) => c.id.slug == slug);
   }
 
-  /// Removes a custom subclass by slug
+  /// Removes a custom subclass by slug (tolerates class prefixes like fighter-echo-knight or echo-knight)
   static void removeCustomSubclass(String slug) {
-    _customSubclasses.removeWhere((s) => s.id.slug == slug);
+    _customSubclasses.removeWhere((s) =>
+        s.id.slug == slug ||
+        s.id.slug.endsWith('-$slug') ||
+        (s.classSlug.isNotEmpty && s.id.slug == '${s.classSlug}-$slug'));
   }
 
   static CharacterClass? findBySlug(String slug, {RulesetVersion? ruleset}) {

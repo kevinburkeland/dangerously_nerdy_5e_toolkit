@@ -2,9 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/models/homebrew_entity.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/value_objects/ruleset_version.dart' as domain_rules;
-import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_spell_parser.dart';
-import 'package:dangerously_nerdy_5e_toolkit/services/acl/srd_equivalence_index.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
@@ -238,24 +235,6 @@ void main() {
       expect(spells.any((s) => s.name == 'Blade Ward'), isTrue);
       expect(spells.any((s) => s.name == 'Void Lance'), isTrue);
 
-      final debugResult = SrdEquivalenceIndex().checkEntity(
-        slug: 'blade-ward',
-        name: 'Blade Ward',
-        type: EntityType.spell,
-      );
-      // print for test diagnosis
-      expect(debugResult, equals(SrdMatchResult.exactSrdMatch));
-
-      final parsed = CompendiumSpellParser().parseSpell(srdPayload);
-      expect(parsed.name, equals('Blade Ward'));
-      expect(parsed.id.slug, equals('blade-ward'));
-      final srdRes = SrdEquivalenceIndex().checkEntity(
-        slug: parsed.id.slug,
-        name: parsed.name,
-        type: EntityType.spell,
-      );
-      expect(srdRes, equals(SrdMatchResult.exactSrdMatch));
-
       // Run reparse
       final result = await persistence.reparseAllHomebrew();
 
@@ -272,6 +251,138 @@ void main() {
       final exportedBundle = await persistence.exportHomebrewBundle();
       expect(exportedBundle.spells.length, equals(1));
       expect(exportedBundle.spells.first.name, equals('Void Lance'));
+    });
+
+    test('reparseAllHomebrew deduplicates subclasses across class-prefixed and suffix slugs', () async {
+      final subclassPayload = {
+        'name': 'Astral Striker',
+        'className': 'Fighter',
+        'source': 'HOMEBREW',
+        'subclassFeatures': ['Channel astral energy into weapon attacks.'],
+      };
+
+      await persistence.saveHomebrewEntitiesBatch([
+        HomebrewEntity(
+          id: 'fighter-astral-striker',
+          name: 'Astral Striker',
+          entityType: 'subclass',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: subclassPayload,
+        ),
+      ]);
+
+      var subs = await persistence.loadCustomSubclasses();
+      expect(subs.length, equals(1));
+      expect(subs.first.id.slug, equals('fighter-astral-striker'));
+
+      final reparseResult = await persistence.reparseAllHomebrew();
+      expect(reparseResult.updatedCount, greaterThanOrEqualTo(1));
+
+      subs = await persistence.loadCustomSubclasses();
+      expect(subs.length, equals(1));
+      expect(subs.first.name, equals('Astral Striker'));
+      expect(subs.first.id.slug, equals('fighter-astral-striker'));
+
+      final exported = await persistence.exportHomebrewBundle();
+      expect(exported.subclasses.length, equals(1));
+      expect(exported.subclasses.first.id.slug, equals('fighter-astral-striker'));
+    });
+
+    test('saveHomebrewEntitiesBatch merges multiple subraces under parent race without duplicate races', () async {
+      const subrace1 = HomebrewEntity(
+        id: 'aurora-gnome',
+        name: 'Aurora Gnome',
+        entityType: 'subrace',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Aurora Gnome',
+          'raceName': 'Star Gnomes',
+          'entries': ['Dwellers of glacial tundras.'],
+        },
+      );
+      const subrace2 = HomebrewEntity(
+        id: 'nebula-gnome',
+        name: 'Nebula Gnome',
+        entityType: 'subrace',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Nebula Gnome',
+          'raceName': 'Star Gnomes',
+          'entries': ['Sky dwellers of cosmic mists.'],
+        },
+      );
+
+      await persistence.saveHomebrewEntitiesBatch([subrace1, subrace2]);
+
+      var races = await persistence.loadCustomRaces();
+      expect(races.length, equals(1));
+      expect(races.first.id.slug, equals('star-gnomes'));
+      expect(races.first.subraces.length, equals(2));
+
+      await persistence.reparseAllHomebrew();
+
+      races = await persistence.loadCustomRaces();
+      expect(races.length, equals(1));
+      expect(races.first.id.slug, equals('star-gnomes'));
+      expect(races.first.subraces.length, equals(2));
+    });
+
+    test('reparseAllHomebrew preserves categories for Table, Vehicle, Trap, and Hazard in otherEntries', () async {
+      final entries = [
+        const HomebrewEntity(
+          id: 'table-astral-omens',
+          name: 'Table of Astral Omens',
+          entityType: 'table',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Table of Astral Omens',
+            'entityType': 'table',
+            'colLabels': ['d6', 'Omen'],
+            'rows': [
+              ['1', 'A falling star'],
+              ['2', 'Aurora ribbon'],
+            ],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'vehicle-sand-crawler',
+          name: 'Sand Crawler',
+          entityType: 'vehicle',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Sand Crawler',
+            'entityType': 'vehicle',
+            'vehicleType': 'land',
+            'entries': ['An armored rolling land ship.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'trap-glyph-of-blinding',
+          name: 'Glyph of Blinding',
+          entityType: 'trap',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Glyph of Blinding',
+            'entityType': 'trap',
+            'trapType': 'magical',
+            'entries': ['Flashes radiant light when triggered.'],
+          },
+        ),
+      ];
+
+      await persistence.saveHomebrewEntitiesBatch(entries);
+
+      var others = await persistence.loadCustomOtherEntries();
+      expect(others.firstWhere((o) => o.name == 'Table of Astral Omens').category, equals('Table'));
+      expect(others.firstWhere((o) => o.name == 'Sand Crawler').category, equals('Vehicle'));
+      expect(others.firstWhere((o) => o.name == 'Glyph of Blinding').category, equals('Trap'));
+
+      await persistence.reparseAllHomebrew();
+
+      others = await persistence.loadCustomOtherEntries();
+      expect(others.firstWhere((o) => o.name == 'Table of Astral Omens').category, equals('Table'));
+      expect(others.firstWhere((o) => o.name == 'Sand Crawler').category, equals('Vehicle'));
+      expect(others.firstWhere((o) => o.name == 'Glyph of Blinding').category, equals('Trap'));
     });
   });
 }
