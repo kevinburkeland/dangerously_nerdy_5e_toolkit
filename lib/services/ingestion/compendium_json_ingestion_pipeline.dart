@@ -934,7 +934,7 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Rule')), 'Rule');
     ingestKeys(['otherentry', 'otherentries', 'genericentry', 'genericentries'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset)), 'Generic Entry');
 
-    // Fluff & Lore Ingestion (5etools bestiary / spell / item / race / class / feat fluff)
+    // Fluff & Lore Ingestion (community compendium bestiary / spell / item / race / class / feat fluff)
     int attachedFluffCount = 0;
 
     void ingestFluffKeys(List<String> candidateKeys, String defaultEntityType) {
@@ -1366,7 +1366,6 @@ class CompendiumJsonIngestionPipeline {
           case 'color':
           case 'comic':
             return parts.length > 1 && parts[1].trim().isNotEmpty ? parts[1].trim() : primary;
-          case '5etools':
           case 'book':
           case 'variantrule':
           case 'spell':

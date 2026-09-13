@@ -297,7 +297,7 @@ class FeatureGrant {
         label: label,
       );
 
-  /// Exhaustively extracts clean spell names from 5eTools/compendium additionalSpells / subclassSpells structures.
+  /// Exhaustively extracts clean spell names from compendium additionalSpells / subclassSpells structures.
   static Set<String> extractSpellNames(dynamic addSpellsData) {
     if (addSpellsData == null) return const {};
     final names = <String>{};
@@ -368,7 +368,7 @@ class FeatureGrant {
     return names;
   }
 
-  /// Exhaustively extracts [FeatureGrant.bonusSpell] grants from 5eTools/compendium additionalSpells data.
+  /// Exhaustively extracts [FeatureGrant.bonusSpell] grants from compendium additionalSpells data.
   static List<FeatureGrant> extractBonusSpells(dynamic addSpellsData, String ownerPrefix, String ownerSlug) {
     final names = extractSpellNames(addSpellsData);
     final grants = <FeatureGrant>[];

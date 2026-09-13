@@ -79,7 +79,7 @@ void main() {
       expect(bondOfTalisman.prerequisite.requiredPact, equals('talisman'));
     });
 
-    test('Correctly extracts prerequisites from 5etools structured JSON customProperties', () {
+    test('Correctly extracts prerequisites from compendium structured JSON customProperties', () {
       const jsonEntry = FeatureOption(
         id: 'bond-of-the-talisman',
         name: 'Bond of the Talisman',

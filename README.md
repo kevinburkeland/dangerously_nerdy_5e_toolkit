@@ -13,7 +13,7 @@
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
 
-Key capabilities include an interactive **Character Generator & Live Sheet** with automated equipment resolution and action economy, a **Homebrew Studio & 5etools Community Compendium Importer** with an AST Anti-Corruption Layer (ACL), an integrated **DM Dashboard & Command Console**, a **Shared Party Vault & Campaign Hub** with cryptographic host authority and multi-tier conflict resolution, a **Core Polyhedral Dice Roller** with 3D physics and **Real-Time Multiplayer Dice Rooms**, a dual-rulebook **5e Spellbook Companion**, comprehensive compendiums (**Classes, Feats, Species & Lineages, Magic Items & Loot, Monsters, Rules, and Table Index**), an interactive **Monster Fighting Arena** with Monte Carlo simulations, advanced **DPR Calculators & Bezier Graph Visualizers**, simultaneous **Batch Attack Rolling** for summons and magic items, a **Techno-Rune Glyph Studio**, and cryptographically secure RNG.
+Key capabilities include an interactive **Character Generator & Live Sheet** with automated equipment resolution and action economy, a **Homebrew Studio & Community Compendium Importer** with an AST Anti-Corruption Layer (ACL), an integrated **DM Dashboard & Command Console**, a **Shared Party Vault & Campaign Hub** with cryptographic host authority and multi-tier conflict resolution, a **Core Polyhedral Dice Roller** with 3D physics and **Real-Time Multiplayer Dice Rooms**, a dual-rulebook **5e Spellbook Companion**, comprehensive compendiums (**Classes, Feats, Species & Lineages, Magic Items & Loot, Monsters, Rules, and Table Index**), an interactive **Monster Fighting Arena** with Monte Carlo simulations, advanced **DPR Calculators & Bezier Graph Visualizers**, simultaneous **Batch Attack Rolling** for summons and magic items, a **Techno-Rune Glyph Studio**, and cryptographically secure RNG.
 
 ---
 
@@ -47,7 +47,7 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 
 ---
 
-### 🧪 2. Homebrew Studio & 5etools / Community Compendium Importer
+### 🧪 2. Homebrew Studio & Community Compendium Importer
 * **Custom Homebrew Builders**: Interactive in-app creation dialogs for custom Spells, Monsters, and Equipment/Magic Items.
 * **Comprehensive Anti-Corruption Layer (ACL)**:
   - **Polymorphic Ingestion Engine**: Seamlessly parse, normalize, and quarantine data across Spells, Monsters, Magic Items, Classes, Subclasses, Races/Species, Feats, Backgrounds, and Tables.
@@ -333,7 +333,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── dpr_calculator_screen.dart # DPR calculator, multi-curve graph, & character builder
 │   │   ├── feats_compendium_screen.dart # Feats, Origin Feats, & Epic Boons compendium
 │   │   ├── glyph_showcase_screen.dart # Techno-Rune Glyph Studio, Codex & Style Guide
-│   │   ├── homebrew_studio_screen.dart # Homebrew builders & 5etools bundle importer
+│   │   ├── homebrew_studio_screen.dart # Homebrew builders & community bundle importer
 │   │   ├── item_compendium_screen.dart # Magic item compendium & rarity filters
 │   │   ├── landing_screen.dart     # Categorized dashboard with dedicated tool cards
 │   │   ├── minion_tool_screen.dart # Parametric dedicated minion tool screen
@@ -345,7 +345,7 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── spellbook_screen.dart   # 5e Spellbook companion & rules reference screen
 │   │   └── table_index_screen.dart # Rollable table index & loot oracle
 │   ├── services/                   # Legacy domain services, ACL parsers, & rules engines
-│   │   ├── acl/                    # 5etools / Community Anti-Corruption Layer parsers
+│   │   ├── acl/                    # Community Anti-Corruption Layer parsers
 │   │   ├── fluff/                  # Creature and item lore & description services
 │   │   ├── importers/              # Community compendium import adapters & tag parsers
 │   │   ├── ingestion/              # Conformance, validation & JSON remediation services

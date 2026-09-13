@@ -2,7 +2,7 @@
 
 ## 1. DTO Isolation & Anti-Corruption Layer (ACL)
 
-External JSON (network streams, local Hive databases, 5etools bundles) must NEVER be cast directly into Domain entities.
+External JSON (network streams, local Hive databases, compendium bundles) must NEVER be cast directly into Domain entities.
 
 - **DTO Mapping:** Parse incoming JSON into Data Transfer Objects (`lib/infrastructure/dtos/`) first, then convert to Domain models via `.toDomain()`.
 - **Fault-Tolerant Defaults:** If a field is missing, null, or has an unexpected type, DTOs must provide safe tabletop fallback defaults instead of crashing.
@@ -33,7 +33,7 @@ Never trust raw numeric values from JSON or user input:
   - Action descriptions are parsed at the ACL boundary (`StatBlockAclParser.extractRiders`) using pre-compiled regex into strongly-typed `CombatEffectRider` ASTs (`ConditionRider`, `AttributeDrainRider`, `MaxHpReductionRider`, `ForcedMovementRider`, `HealingSupressionRider`, `PeriodicDamageRider`).
   - During combat simulation (`ArenaCombatant.applyAttackHit`), composite riders execute with zero runtime regex, clamping `effectiveMaxHp` and dynamically scaling down attribute-dependent attack and saving throw modifiers.
 - **Background Isolates for Large Imports:**
-  - When ingesting multi-megabyte 5etools or homebrew compendiums, offload parsing to background isolates (`compute()` or dedicated isolates) to maintain 60/120fps UI responsiveness.
+  - When ingesting multi-megabyte community or homebrew compendiums, offload parsing to background isolates (`compute()` or dedicated isolates) to maintain 60/120fps UI responsiveness.
 - **Search Pre-computation:**
   - Spellbook and compendium searches must use tokenized search indices rather than filtering full text collections on every keystroke.
 
@@ -79,7 +79,7 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - Rejected or corrupted entries must return `IngestionSkipResult` containing failure metadata without terminating the batch import stream.
 - **Repository Manifest Filtering & Bundle Unpacking:**
   - Remote git repositories contain metadata and build artifacts (`package.json`, `tsconfig.json`, `.github/`). Manifest discovery must filter out non-content tooling configs.
-  - 5etools and community JSON files are bundles whose root maps contain entity collections (`"monster": [...]`, `"spell": [...]`, `"item": [...]`) or root JSON arrays (`[{...}]`), lacking a top-level `name` attribute. Ingestors must unpack each individual entity rather than treating the file root map as a single entity.
+  - Community JSON files are bundles whose root maps contain entity collections (`"monster": [...]`, `"spell": [...]`, `"item": [...]`) or root JSON arrays (`[{...}]`), lacking a top-level `name` attribute. Ingestors must unpack each individual entity rather than treating the file root map as a single entity.
   - Files containing only metadata (such as `_meta` blocks) without valid tabletop entities must cleanly yield `IngestionSkipResult` rather than throwing missing `name` attribute validation errors.
   - Support fallback entity name properties (`title`, `label`, `header`) when canonical `name` is omitted.
 - **Batch Ingestion Persistence & Deferred Library Sync:**
@@ -96,7 +96,7 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 ## 9. Subclass Expanded Spell & Query Filter Resolution Directives
 
 - **Compendium Filter Expression Parsing:**
-  - 5eTools and community homebrew formats encode subclass expanded spell options using `additionalSpells` containing query filter expressions under `'all'` or `'choose'` keys (e.g., `{"all": "level=0|class=Cleric"}`).
+  - Community compendium and homebrew formats encode subclass expanded spell options using `additionalSpells` containing query filter expressions under `'all'` or `'choose'` keys (e.g., `{"all": "level=0|class=Cleric"}`).
   - `SubclassSpellsLibrary` extracts filter strings via `extractFilterStrings()` and evaluates them against registered spells via `resolveFilterSpells()`, matching by `level`, `class`, `school`, and `ritual` clauses.
 - **Canonical Full-List Grants (Divine Soul Sorcerers):**
   - Divine Soul Sorcerers (5e RAW Divine Magic) learn spells from both the Sorcerer and Cleric spell lists (cantrips through 9th level).

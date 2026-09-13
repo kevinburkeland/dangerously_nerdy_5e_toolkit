@@ -12,7 +12,7 @@ void main() {
       parser = CompendiumSpellParser();
     });
 
-    test('extracts class list from 5etools fromClassList structure', () {
+    test('extracts class list from compendium fromClassList structure', () {
       final raw = {
         'name': 'Glacial Spikes',
         'source': 'HOMEBREW',

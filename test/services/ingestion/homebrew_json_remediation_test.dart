@@ -101,7 +101,7 @@ void main() {
       expect(subrace.raceSlug, isNotEmpty);
     });
 
-    test('3. Feat Parser parses 5eTools ability mapping for FeatAsiExtension and extracts grants', () {
+    test('3. Feat Parser parses compendium ability mapping for FeatAsiExtension and extracts grants', () {
       final parser = CompendiumFeatParser();
 
       // Static single ability feat
@@ -499,7 +499,7 @@ void main() {
     test('13. Spell Parser and Ingestion revitalize distance and geometry when rangeDistanceFeet is 0 but text has range', () {
       final parser = CompendiumSpellParser();
 
-      // Case A: 5etools object range with point and 150 feet
+      // Case A: Compendium object range with point and 150 feet
       final astralRay = parser.parseSpell({
         'name': 'Astral Ray',
         'level': 2,

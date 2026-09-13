@@ -158,7 +158,7 @@ class SubclassSpellsLibrary {
     return filters;
   }
 
-  /// Evaluates a 5eTools-style filter expression (e.g. `level=0|class=Cleric`, `school=I;N`)
+  /// Evaluates a compendium-style filter expression (e.g. `level=0|class=Cleric`, `school=I;N`)
   /// against registered spells in [SpellbookLibrary.allSpells].
   static List<SpellItem> resolveFilterSpells(String filterString, [DmRulesEdition? edition]) {
     final clauses = filterString.split('|');

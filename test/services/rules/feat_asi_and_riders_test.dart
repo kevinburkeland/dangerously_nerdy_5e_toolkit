@@ -95,7 +95,7 @@ void main() {
       expect(customFeat.choiceRiderDescription, contains('saving throw'));
     });
 
-    test('Chef feat deserialized from 5etools/homebrew JSON format parses CON or WIS choices', () {
+    test('Chef feat deserialized from homebrew JSON format parses CON or WIS choices', () {
       final rawChef = {
         'id': {'slug': 'chef', 'ruleset': 'v2014'},
         'name': 'Chef',

@@ -88,7 +88,7 @@ void main() {
 
       await homebrewService.saveCustomSpell(
         customSpell,
-        rawPayload: {'source': '5eTools', 'name': 'Hellish Rebuke Plus'},
+        rawPayload: {'source': 'CommunityHomebrew', 'name': 'Hellish Rebuke Plus'},
       );
 
       final loadedSpells = await homebrewService.loadCustomSpells();
@@ -97,7 +97,7 @@ void main() {
 
       final rawPayloads = await homebrewService.loadRawPayloads(EntityType.spell);
       expect(rawPayloads.length, equals(1));
-      expect(rawPayloads.first['source'], equals('5eTools'));
+      expect(rawPayloads.first['source'], equals('CommunityHomebrew'));
 
       await homebrewService.deleteCustomSpell('hellish-rebuke-plus');
       final afterDelete = await homebrewService.loadCustomSpells();

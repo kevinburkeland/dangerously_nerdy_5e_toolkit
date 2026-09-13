@@ -13,7 +13,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
-  group('5etools ACL Hardening & Boot Sequence Verification', () {
+  group('Compendium ACL Hardening & Boot Sequence Verification', () {
     test('1. Homebrew cantrip correctly routes to cantrips list on Character', () {
       // Create a homebrew cantrip
       const homebrewCantrip = Spell(
@@ -89,9 +89,9 @@ void main() {
       expect(character.spellsKnown.map((s) => s.slug), isNot(contains('mystic-spark')));
     });
 
-    test('2. Ingesting 5etools Fighter correctly stitches classFeature pointers (Second Wind)', () {
+    test('2. Ingesting compendium Fighter correctly stitches classFeature pointers (Second Wind)', () {
       final pipeline = CompendiumJsonIngestionPipeline();
-      const raw5eToolsFighterPayload = '''
+      const rawCompendiumFighterPayload = '''
       {
         "class": [
           {
@@ -137,7 +137,7 @@ void main() {
       }
       ''';
 
-      final result = pipeline.ingestJsonString(raw5eToolsFighterPayload);
+      final result = pipeline.ingestJsonString(rawCompendiumFighterPayload);
       expect(result.hasErrors, isFalse);
       expect(result.classes.length, 1);
 

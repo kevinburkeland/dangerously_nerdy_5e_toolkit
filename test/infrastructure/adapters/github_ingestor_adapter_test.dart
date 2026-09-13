@@ -175,7 +175,7 @@ void main() {
       expect(results.any((r) => r is IngestionSuccessResult), isTrue);
     });
 
-    test('Unpacks 5etools bundle file containing monster and spell collections into individual entities', () async {
+    test('Unpacks compendium bundle file containing monster and spell collections into individual entities', () async {
       const url = 'https://raw.githubusercontent.com/dnd/core/main/bestiary-and-spells.json';
       final bundlePayload = jsonEncode({
         '_meta': {

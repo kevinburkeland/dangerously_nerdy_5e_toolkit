@@ -109,7 +109,7 @@ void main() {
       );
     });
 
-    test('6. Dynamic Homebrew Subclass with 5eTools expanded filters resolves correctly', () {
+    test('6. Dynamic Homebrew Subclass with compendium expanded filters resolves correctly', () {
       final customRadiantSubclass = Subclass(
         id: const EntityId(slug: 'radiant-soul-origin', ruleset: RulesetVersion.homebrew),
         name: 'Radiant Soul',

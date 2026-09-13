@@ -229,7 +229,7 @@ class HomebrewEntityDto {
       };
     }
 
-    // 3. Inspect type attribute (which in 5e/5etools can be creature type or item type code)
+    // 3. Inspect type attribute (which in standard compendiums can be creature type or item type code)
     final explicitType = json['type'];
     String? typeStr;
     if (explicitType is String) {
@@ -356,7 +356,7 @@ class HomebrewEntityDto {
   }
 
   /// Extracts species ability modifiers, parsing root-level stat keys,
-  /// 5etools nested ability arrays, fixed stat bonuses, and choice blocks.
+  /// compendium nested ability arrays, fixed stat bonuses, and choice blocks.
   static ({Map<String, int> fixed, Map<String, dynamic>? flexible}) _extractSpeciesAbilities(
     Map<String, dynamic> json,
   ) {
