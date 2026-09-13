@@ -427,13 +427,14 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          FormattedMarkdownText(
             rules.description,
             style: TextStyle(
               fontSize: 13.5,
               height: 1.45,
               color: isDark ? Colors.white70 : Colors.black87,
             ),
+            boldColor: theme.colorScheme.primary,
           ),
 
           // Action Trait Rings
@@ -736,13 +737,14 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
           if (editionRules.masteryProperties != null)
             _buildDetailRow('Weapon Mastery', editionRules.masteryProperties!),
           const SizedBox(height: 6),
-          Text(
+          FormattedMarkdownText(
             editionRules.description,
             style: TextStyle(
               fontSize: 12.5,
               height: 1.4,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
             ),
+            boldColor: color,
           ),
         ],
       ),

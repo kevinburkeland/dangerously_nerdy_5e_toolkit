@@ -708,10 +708,19 @@ class HomebrewPersistenceService {
     final costStr = rawJson?['value']?.toString() ?? item.customProperties['cost']?.toString();
     final attunementReq = item.requiresAttunement ? (rawJson?['reqAttune']?.toString() ?? 'Requires Attunement') : null;
 
+    final descLines = item.descriptionMarkdown
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty && !l.startsWith('#') && !l.startsWith('|'))
+        .toList();
+    final firstContentLine = descLines.isNotEmpty
+        ? descLines.first
+        : (item.descriptionMarkdown.isNotEmpty
+            ? item.descriptionMarkdown.split('\n').first
+            : item.name);
+
     final editionDetails = ItemEditionDetails(
-      summary: item.descriptionMarkdown.isNotEmpty
-          ? item.descriptionMarkdown.split('\n').first
-          : item.name,
+      summary: firstContentLine,
       description: item.descriptionMarkdown,
     );
 

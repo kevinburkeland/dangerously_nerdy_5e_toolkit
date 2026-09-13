@@ -4,6 +4,7 @@ import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/settings_provider.dart';
 import '../common/edition_diff_badge.dart';
+import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 import '../interactive/pressable_card.dart';
@@ -76,11 +77,6 @@ class FeatCard extends StatelessWidget {
     final cardBorderColor = isPinned
         ? pinColor.withValues(alpha: 0.85)
         : accentColor.withValues(alpha: 0.35);
-
-    // Clean plain text preview of description
-    final cleanDesc = feat.descriptionMarkdown
-        .replaceAll(RegExp(r'\*\*|\*|#+'), '')
-        .trim();
 
     return PressableCard(
       onTap: onTap,
@@ -176,8 +172,8 @@ class FeatCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Description Snippet
-          Text(
-            cleanDesc,
+          FormattedMarkdownText(
+            feat.descriptionMarkdown,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -185,6 +181,7 @@ class FeatCard extends StatelessWidget {
               fontSize: 12,
               height: 1.35,
             ),
+            boldColor: accentColor,
           ),
           const SizedBox(height: 6),
 

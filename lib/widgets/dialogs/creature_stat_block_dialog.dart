@@ -312,28 +312,14 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                         for (final trait in sb.traits) ...[
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: '${trait.name}. ',
-                                    style: const TextStyle(
-                                      color: Color(0xFFFFD54F),
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FontStyle.italic,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: trait.description,
-                                    style: const TextStyle(
-                                      color: Color(0xE6FFFFFF),
-                                      fontSize: 13,
-                                      height: 1.35,
-                                    ),
-                                  ),
-                                ],
+                            child: FormattedMarkdownText(
+                              '***${trait.name}.*** ${trait.description}',
+                              style: const TextStyle(
+                                color: Color(0xE6FFFFFF),
+                                fontSize: 13,
+                                height: 1.35,
                               ),
+                              boldColor: const Color(0xFFFFD54F),
                             ),
                           ),
                         ],
@@ -358,33 +344,14 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                         for (final action in sb.actions) ...[
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '${action.name}. ',
-                                        style: const TextStyle(
-                                          color: Color(0xFFFFD54F),
-                                          fontWeight: FontWeight.bold,
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: action.description,
-                                        style: const TextStyle(
-                                          color: Color(0xE6FFFFFF),
-                                          fontSize: 13,
-                                          height: 1.35,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            child: FormattedMarkdownText(
+                              '***${action.name}.*** ${action.description}',
+                              style: const TextStyle(
+                                color: Color(0xE6FFFFFF),
+                                fontSize: 13,
+                                height: 1.35,
+                              ),
+                              boldColor: const Color(0xFFFFD54F),
                             ),
                           ),
                         ],
@@ -409,33 +376,14 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                         for (final reaction in sb.reactions) ...[
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '${reaction.name}. ',
-                                        style: const TextStyle(
-                                          color: Color(0xFFFFD54F),
-                                          fontWeight: FontWeight.bold,
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: reaction.description,
-                                        style: const TextStyle(
-                                          color: Color(0xE6FFFFFF),
-                                          fontSize: 13,
-                                          height: 1.35,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            child: FormattedMarkdownText(
+                              '***${reaction.name}.*** ${reaction.description}',
+                              style: const TextStyle(
+                                color: Color(0xE6FFFFFF),
+                                fontSize: 13,
+                                height: 1.35,
+                              ),
+                              boldColor: const Color(0xFFFFD54F),
                             ),
                           ),
                         ],
@@ -469,34 +417,15 @@ class _CreatureStatBlockDialogState extends State<CreatureStatBlockDialog> {
                         const SizedBox(height: 8),
                         for (final legAction in sb.legendaryActions) ...[
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '${legAction.name}. ',
-                                        style: const TextStyle(
-                                          color: Color(0xFFFFD54F),
-                                          fontWeight: FontWeight.bold,
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: legAction.description,
-                                        style: const TextStyle(
-                                          color: Color(0xE6FFFFFF),
-                                          fontSize: 13,
-                                          height: 1.35,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: FormattedMarkdownText(
+                              '***${legAction.name}.*** ${legAction.description}',
+                              style: const TextStyle(
+                                color: Color(0xE6FFFFFF),
+                                fontSize: 13,
+                                height: 1.35,
+                              ),
+                              boldColor: const Color(0xFFFFD54F),
                             ),
                           ),
                         ],

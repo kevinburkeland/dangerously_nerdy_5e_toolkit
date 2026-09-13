@@ -461,7 +461,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,687 tests with 100% pass rate**):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,690 tests with 100% pass rate**):
 ```bash
 flutter test
 ```
@@ -478,7 +478,7 @@ flutter analyze
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
 - Implementation of multi-tier conflict resolution, CvRDT state replication, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, character progression pipelines, Anti-Corruption Layer (ACL) compendium parsers, and cryptographically secure RNG utilities.
-- Writing comprehensive unit, widget, domain purity, and resilience tests (1,687 automated tests).
+- Writing comprehensive unit, widget, domain purity, and resilience tests (1,690 automated tests).
 - UI styling, 3D dice physics, responsive layout refinements, and documentation.
 
 All AI-generated contributions were thoroughly audited, tested, verified, and refined by human developers to ensure high code quality, security, and accuracy to 5e RAW rules.

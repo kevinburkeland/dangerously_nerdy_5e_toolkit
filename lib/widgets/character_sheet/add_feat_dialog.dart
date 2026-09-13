@@ -781,7 +781,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
                       ),
-                      child: Text(
+                      child: FormattedMarkdownText(
                         selectedOpt.descriptionMarkdown,
                         style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
                         maxLines: 4,
@@ -847,7 +847,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
                       ),
-                      child: Text(
+                      child: FormattedMarkdownText(
                         selectedOpt.descriptionMarkdown,
                         style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
                         maxLines: 4,

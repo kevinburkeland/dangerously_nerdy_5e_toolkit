@@ -447,13 +447,14 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
           // Description Paragraphs
           ...rules.description.map((p) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
+                child: FormattedMarkdownText(
                   p,
                   style: TextStyle(
                       color:
                           theme.colorScheme.onSurface.withValues(alpha: 0.85),
                       fontSize: 13,
                       height: 1.38),
+                  boldColor: accentColor,
                 ),
               )),
 
@@ -467,13 +468,14 @@ class _SpellComparisonDialogState extends State<SpellComparisonDialog> {
                   fontSize: 12),
             ),
             const SizedBox(height: 3),
-            Text(
+            FormattedMarkdownText(
               rules.higherLevels!,
               style: TextStyle(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                   height: 1.3),
+              boldColor: accentColor,
             ),
           ],
         ],

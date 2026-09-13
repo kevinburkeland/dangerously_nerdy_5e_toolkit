@@ -154,5 +154,25 @@ Effects last 1 hour.
       expect(find.textContaining('Option A | Option B', findRichText: true), findsOneWidget);
       expect(find.textContaining('Uneven row with fewer cells', findRichText: true), findsOneWidget);
     });
+
+    testWidgets('respects maxLines and overflow on Text.rich preview', (tester) async {
+      const sample = '**Bold Title.** Long description paragraph that needs truncation in card previews.';
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: FormattedMarkdownText(
+              sample,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      );
+
+      final textWidget = tester.widget<Text>(find.byType(Text));
+      expect(textWidget.maxLines, equals(2));
+      expect(textWidget.overflow, equals(TextOverflow.ellipsis));
+    });
   });
 }

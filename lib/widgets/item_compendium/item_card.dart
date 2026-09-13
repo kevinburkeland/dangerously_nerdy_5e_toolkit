@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/magic_items/magic_item_data.dart';
 import '../common/edition_diff_badge.dart';
+import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
 
@@ -159,16 +160,19 @@ class ItemCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Summary description preview
-          Text(
-            rules.summary,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          // Summary / description preview with markdown rendering
+          FormattedMarkdownText(
+            (rules.description.contains('|') || rules.summary.isEmpty)
+                ? rules.description
+                : rules.summary,
+            maxLines: rules.description.contains('|') ? null : 3,
+            overflow: rules.description.contains('|') ? null : TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12.5,
               height: 1.35,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
             ),
+            boldColor: rarityColor,
           ),
 
           // Action Trait Rings Preview

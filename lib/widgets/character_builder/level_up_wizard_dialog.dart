@@ -19,6 +19,7 @@ import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../theme/app_theme.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../spellbook/spell_comparison_dialog.dart';
+import '../common/formatted_markdown_text.dart';
 
 /// Interactive, 6-step multi-step modal wizard for 5e Character Level Advancement.
 class LevelUpWizardDialog extends StatefulWidget {
@@ -1843,7 +1844,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.3)),
                             ),
-                            child: Text(
+                            child: FormattedMarkdownText(
                               selectedOpt.descriptionMarkdown,
                               style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
                               maxLines: 4,
@@ -1906,7 +1907,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: Colors.orangeAccent.withValues(alpha: 0.3)),
                             ),
-                            child: Text(
+                            child: FormattedMarkdownText(
                               selectedOpt.descriptionMarkdown,
                               style: TextStyle(fontSize: 11, color: Colors.grey.shade300, fontStyle: FontStyle.italic),
                               maxLines: 4,
@@ -1927,7 +1928,7 @@ class _LevelUpWizardDialogState extends State<LevelUpWizardDialog> with SingleTi
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.white12),
                   ),
-                  child: Text(
+                  child: FormattedMarkdownText(
                     feat.descriptionMarkdown,
                     style: const TextStyle(fontSize: 12, color: Colors.white70),
                   ),

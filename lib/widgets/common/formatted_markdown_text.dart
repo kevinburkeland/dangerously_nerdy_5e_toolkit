@@ -21,6 +21,8 @@ class FormattedMarkdownText extends StatelessWidget {
   final Color? defaultColor;
   final double paragraphSpacing;
   final TextAlign textAlign;
+  final int? maxLines;
+  final TextOverflow? overflow;
 
   const FormattedMarkdownText(
     this.markdown, {
@@ -31,6 +33,8 @@ class FormattedMarkdownText extends StatelessWidget {
     this.defaultColor,
     this.paragraphSpacing = 6.0,
     this.textAlign = TextAlign.start,
+    this.maxLines,
+    this.overflow,
   });
 
   @override
@@ -40,6 +44,7 @@ class FormattedMarkdownText extends StatelessWidget {
       color: defaultColor ?? style?.color ?? Colors.white70,
       height: style?.height ?? 1.4,
     );
+    final effectiveOverflow = overflow ?? (maxLines != null ? TextOverflow.ellipsis : null);
 
     var rawText = markdown.trim();
     if (rawText.isEmpty) {
@@ -75,6 +80,8 @@ class FormattedMarkdownText extends StatelessWidget {
               ),
             ),
             textAlign: textAlign,
+            maxLines: maxLines,
+            overflow: effectiveOverflow,
           ),
         );
       } else if (para.startsWith('#### ')) {
@@ -91,6 +98,8 @@ class FormattedMarkdownText extends StatelessWidget {
               ),
             ),
             textAlign: textAlign,
+            maxLines: maxLines,
+            overflow: effectiveOverflow,
           ),
         );
       } else if (para.startsWith('### ')) {
@@ -107,6 +116,8 @@ class FormattedMarkdownText extends StatelessWidget {
               ),
             ),
             textAlign: textAlign,
+            maxLines: maxLines,
+            overflow: effectiveOverflow,
           ),
         );
       } else if (para.startsWith('## ')) {
@@ -123,6 +134,8 @@ class FormattedMarkdownText extends StatelessWidget {
               ),
             ),
             textAlign: textAlign,
+            maxLines: maxLines,
+            overflow: effectiveOverflow,
           ),
         );
       } else if (para.startsWith('# ')) {
@@ -139,6 +152,8 @@ class FormattedMarkdownText extends StatelessWidget {
               ),
             ),
             textAlign: textAlign,
+            maxLines: maxLines,
+            overflow: effectiveOverflow,
           ),
         );
       } else if (para.startsWith('> ')) {
@@ -155,6 +170,8 @@ class FormattedMarkdownText extends StatelessWidget {
             child: Text.rich(
               TextSpan(children: _parseInlineMarkdown(quoteText, effectiveStyle.copyWith(fontStyle: FontStyle.italic))),
               textAlign: textAlign,
+              maxLines: maxLines,
+              overflow: effectiveOverflow,
             ),
           ),
         );
@@ -177,6 +194,8 @@ class FormattedMarkdownText extends StatelessWidget {
                   child: Text.rich(
                     TextSpan(children: _parseInlineMarkdown(trimmedLine, effectiveStyle)),
                     textAlign: textAlign,
+                    maxLines: maxLines,
+                    overflow: effectiveOverflow,
                   ),
                 ),
               );
@@ -196,10 +215,20 @@ class FormattedMarkdownText extends StatelessWidget {
             Text.rich(
               TextSpan(children: _parseInlineMarkdown(para, effectiveStyle)),
               textAlign: textAlign,
+              maxLines: maxLines,
+              overflow: effectiveOverflow,
             ),
           );
         }
       }
+    }
+
+    if (blockWidgets.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    if (maxLines != null && blockWidgets.length > 1) {
+      return blockWidgets.first;
     }
 
     if (blockWidgets.length == 1) {
@@ -253,6 +282,8 @@ class FormattedMarkdownText extends StatelessWidget {
             child: Text.rich(
               TextSpan(children: _parseInlineMarkdown(contentText, baseStyle)),
               textAlign: textAlign,
+              maxLines: maxLines,
+              overflow: overflow ?? (maxLines != null ? TextOverflow.ellipsis : null),
             ),
           ),
         ],

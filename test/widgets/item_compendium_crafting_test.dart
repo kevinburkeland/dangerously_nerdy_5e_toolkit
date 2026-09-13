@@ -5,6 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_libra
 import 'package:dangerously_nerdy_5e_toolkit/providers/settings_provider.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/item_compendium/item_card.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/item_compendium/item_detail_dialog.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/common/formatted_markdown_text.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -161,6 +162,83 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('1 sp'), findsOneWidget);
+    });
+
+    testWidgets('ItemCard renders markdown formatted text and tables via FormattedMarkdownText', (tester) async {
+      const details = ItemEditionDetails(
+        summary: '**Wand of Wonders.** A mysterious wand.',
+        description: '| d6 | Effect |\n|---|---|\n| 1 | Cast Fireball |\n| 2 | Cast Invisibility |',
+      );
+      const customItem = MagicItem(
+        id: 'homebrew_item_wand',
+        name: 'Wand of Wonders',
+        category: ItemCategory.wand,
+        rarity: ItemRarity.rare,
+        rules2014: details,
+        rules2024: details,
+      );
+
+      await tester.pumpWidget(
+        buildTestDialog(
+          child: ItemCard(
+            item: customItem,
+            isPinned: false,
+            onTogglePin: () {},
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FormattedMarkdownText), findsOneWidget);
+      expect(find.byType(Table), findsOneWidget);
+      expect(find.text('Cast Fireball'), findsOneWidget);
+    });
+
+    testWidgets('ItemDetailDialog renders markdown table in rules tab', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const details = ItemEditionDetails(
+        summary: 'A mysterious wand.',
+        description: '### Arcane Matrix\n| d6 | Effect |\n|---|---|\n| 1 | Cast Fireball |\n| 2 | Cast Invisibility |',
+      );
+      const customItem = MagicItem(
+        id: 'homebrew_item_wand',
+        name: 'Wand of Wonders',
+        category: ItemCategory.wand,
+        rarity: ItemRarity.rare,
+        rules2014: details,
+        rules2024: details,
+      );
+
+      await tester.pumpWidget(
+        buildTestDialog(
+          child: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () {
+                ItemDetailDialog.show(
+                  context,
+                  item: customItem,
+                  isPinned: false,
+                  onTogglePin: () {},
+                );
+              },
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FormattedMarkdownText), findsWidgets);
+      expect(find.byType(Table), findsWidgets);
+      expect(find.text('Cast Fireball'), findsOneWidget);
     });
   });
 }

@@ -6,6 +6,7 @@ import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../common/edition_diff_badge.dart';
+import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../interactive/pressable_card.dart';
 import 'spell_upcast_sheet.dart';
@@ -359,7 +360,7 @@ class SpellCard extends StatelessWidget {
           ],
 
           // Description snippet
-          Text(
+          FormattedMarkdownText(
             rules.description.first,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -368,6 +369,7 @@ class SpellCard extends StatelessWidget {
               fontSize: 12,
               height: 1.35,
             ),
+            boldColor: schoolColor,
           ),
           const SizedBox(height: 10),
 

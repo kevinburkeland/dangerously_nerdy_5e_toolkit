@@ -274,3 +274,15 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Detail & Comparison Dialog Tabular Parity:**
   - Modal detail views displaying multi-edition rules (`DmRuleComparisonDialog._buildRuleWidgets`) must group consecutive lines starting with `|` into markdown tables and render them via `FormattedMarkdownText` with zebra-striping and horizontal scrolling, rather than naively mapping every row to a plain bullet point (`• | d10 | Encounter |`).
 
+## 18. Universal Compendium & Codex Markdown Formatting (`FormattedMarkdownText`)
+
+- **Eliminating Raw Markdown Formatting Tokens in UI Cards & Detail Views:**
+  - When rendering compendium entities (Magic Items, Spells, Feats, Creatures, Rules, Homebrew Entries), avoid plain `Text` widgets for description fields or summaries that contain markdown tokens (`**`, `*`, `###`, `|`).
+  - Cards and detail sheets (`ItemCard`, `ItemDetailDialog`, `SpellCard`, `SpellComparisonDialog`, `CreatureStatBlockDialog`, `FeatCard`, `HomebrewStudioScreen` entry preview dialog, `CharacterBuilderScreen`, and `AddFeatDialog`) must route description text through `FormattedMarkdownText`.
+- **Card-Surface Truncation & Preview Configuration:**
+  - On compact card surfaces, pass `maxLines` (e.g. `2` or `3`) and `overflow: TextOverflow.ellipsis` to `FormattedMarkdownText`.
+  - When markdown descriptions contain tables or multi-block structures, `FormattedMarkdownText` prioritizes the first block element when truncated and safely isolates markdown tables without throwing runtime rendering errors.
+- **Fallback Summary Generation Parity:**
+  - In entity converters (e.g., `equipmentItemToMagicItem` in `HomebrewPersistenceService`), `summary` fallback generation filters out leading `#` heading lines and `|` table lines to pick the first substantive narrative line, while keeping the full markdown payload in `description` intact.
+
+

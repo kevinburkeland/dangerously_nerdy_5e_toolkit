@@ -13,6 +13,7 @@ import '../widgets/homebrew/homebrew_refresher_dialog.dart';
 import '../presentation/screens/homebrew/homebrew_expert_options_view.dart';
 import '../widgets/homebrew/monster_builder_dialog.dart';
 import '../widgets/homebrew/spell_builder_dialog.dart';
+import '../widgets/common/formatted_markdown_text.dart';
 
 /// Comprehensive Homebrew Studio screen allowing users to create, edit, import, re-parse, and manage
 /// custom spells, monsters, magic items, classes, subclasses, races, feats, backgrounds, and rules.
@@ -478,7 +479,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
                         ),
                       const Divider(),
                     ],
-                    Text(
+                    FormattedMarkdownText(
                       contentMarkdown.isNotEmpty ? contentMarkdown : 'No additional descriptions provided.',
                       style: const TextStyle(fontSize: 14, height: 1.4),
                     ),
