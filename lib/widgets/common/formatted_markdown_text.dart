@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/ingestion/compendium_json_ingestion_pipeline.dart';
 
 /// A lightweight, robust, native Flutter widget for rendering markdown-formatted
 /// text commonly found in D&D 5e traits, features, feats, and lore descriptions.
@@ -44,36 +45,7 @@ class FormattedMarkdownText extends StatelessWidget {
     if (rawText.isEmpty) {
       return const SizedBox.shrink();
     }
-    if (rawText.contains('{@')) {
-      rawText = rawText.replaceAllMapped(RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^}]+))?\}'), (match) {
-        final tag = match.group(1)?.toLowerCase();
-        final content = match.group(2) ?? '';
-        final parts = content.split('|');
-        final primary = parts[0].trim();
-        final display = parts.length > 2 && parts[2].trim().isNotEmpty ? parts[2].trim() : primary;
-        switch (tag) {
-          case 'dice':
-          case 'd20':
-          case 'damage':
-          case 'b':
-          case 'bold':
-            return '**$primary**';
-          case 'i':
-          case 'italic':
-            return '*$primary*';
-          case 'code':
-            return '`$primary`';
-          case 'h':
-            return '*Hit:* ';
-          case 'dc':
-            return 'DC $primary';
-          case 'note':
-            return '> **Note:** $primary';
-          default:
-            return display;
-        }
-      });
-    }
+    rawText = CompendiumJsonIngestionPipeline.cleanRawTags(rawText);
 
     final paragraphs = rawText.split(RegExp(r'\n\s*\n'));
     final blockWidgets = <Widget>[];
@@ -87,7 +59,40 @@ class FormattedMarkdownText extends StatelessWidget {
       }
 
       // Check for headings
-      if (para.startsWith('### ')) {
+      if (para.startsWith('###### ') || para.startsWith('##### ')) {
+        final prefixLen = para.startsWith('###### ') ? 7 : 6;
+        blockWidgets.add(
+          Text.rich(
+            TextSpan(
+              children: _parseInlineMarkdown(
+                para.substring(prefixLen),
+                effectiveStyle.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: effectiveStyle.fontSize ?? 12.0,
+                  color: boldColor ?? Colors.amberAccent,
+                ),
+              ),
+            ),
+            textAlign: textAlign,
+          ),
+        );
+      } else if (para.startsWith('#### ')) {
+        blockWidgets.add(
+          Text.rich(
+            TextSpan(
+              children: _parseInlineMarkdown(
+                para.substring(5),
+                effectiveStyle.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: (effectiveStyle.fontSize ?? 12.0) + 1.0,
+                  color: boldColor ?? Colors.amberAccent,
+                ),
+              ),
+            ),
+            textAlign: textAlign,
+          ),
+        );
+      } else if (para.startsWith('### ')) {
         blockWidgets.add(
           Text.rich(
             TextSpan(
@@ -95,7 +100,7 @@ class FormattedMarkdownText extends StatelessWidget {
                 para.substring(4),
                 effectiveStyle.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: (effectiveStyle.fontSize ?? 12.0) + 1.5,
+                  fontSize: (effectiveStyle.fontSize ?? 12.0) + 2.0,
                   color: boldColor ?? Colors.amberAccent,
                 ),
               ),
@@ -111,7 +116,7 @@ class FormattedMarkdownText extends StatelessWidget {
                 para.substring(3),
                 effectiveStyle.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: (effectiveStyle.fontSize ?? 12.0) + 3.0,
+                  fontSize: (effectiveStyle.fontSize ?? 12.0) + 3.5,
                   color: boldColor ?? Colors.amberAccent,
                 ),
               ),
@@ -135,6 +140,25 @@ class FormattedMarkdownText extends StatelessWidget {
             textAlign: textAlign,
           ),
         );
+      } else if (para.startsWith('> ')) {
+        // Blockquote / Note
+        final quoteText = para.split('\n').map((l) => l.startsWith('> ') ? l.substring(2) : l).join('\n');
+        blockWidgets.add(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.04),
+              border: const Border(left: BorderSide(color: Colors.amberAccent, width: 3)),
+              borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
+            ),
+            child: Text.rich(
+              TextSpan(children: _parseInlineMarkdown(quoteText, effectiveStyle.copyWith(fontStyle: FontStyle.italic))),
+              textAlign: textAlign,
+            ),
+          ),
+        );
+      } else if (_isMarkdownTable(para)) {
+        blockWidgets.add(_buildMarkdownTable(para, effectiveStyle));
       } else {
         // Check for line-by-line items (bullets or line breaks inside paragraph)
         final lines = para.split('\n');
@@ -316,5 +340,66 @@ class FormattedMarkdownText extends StatelessWidget {
     }
 
     return spans;
+  }
+
+  bool _isMarkdownTable(String text) {
+    final lines = text.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    if (lines.length < 2) return false;
+    return lines.first.startsWith('|') &&
+        lines.first.endsWith('|') &&
+        lines.any((l) => RegExp(r'^\|(?:\s*:?-+:?\s*\|)+$').hasMatch(l));
+  }
+
+  Widget _buildMarkdownTable(String text, TextStyle baseStyle) {
+    final rawLines = text.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final tableLines = rawLines.where((l) => !RegExp(r'^\|(?:\s*:?-+:?\s*\|)+$').hasMatch(l)).toList();
+    if (tableLines.isEmpty) return const SizedBox.shrink();
+
+    final rows = tableLines.map((line) {
+      final stripped = line.startsWith('|') ? line.substring(1) : line;
+      final endStripped = stripped.endsWith('|') ? stripped.substring(0, stripped.length - 1) : stripped;
+      return endStripped.split('|').map((c) => c.trim()).toList();
+    }).toList();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Table(
+          defaultColumnWidth: const IntrinsicColumnWidth(),
+          children: rows.asMap().entries.map((entry) {
+            final rowIndex = entry.key;
+            final cells = entry.value;
+            final isHeader = rowIndex == 0;
+            return TableRow(
+              decoration: BoxDecoration(
+                color: isHeader ? Colors.white.withValues(alpha: 0.06) : Colors.transparent,
+              ),
+              children: cells.map((cell) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Text.rich(
+                    TextSpan(
+                      children: _parseInlineMarkdown(
+                        cell,
+                        baseStyle.copyWith(
+                          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+                          color: isHeader ? (boldColor ?? Colors.amberAccent) : baseStyle.color,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          }).toList(),
+        ),
+      ),
+    );
   }
 }

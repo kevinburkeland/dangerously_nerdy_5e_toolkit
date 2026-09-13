@@ -20,6 +20,7 @@ class CharacterDraft {
   }
 
   EntityReference<DomainEntity>? speciesRef;
+  EntityReference<DomainEntity>? subraceRef;
   EntityReference<DomainEntity>? backgroundRef;
   EntityReference<DomainEntity>? startingClassRef;
   String? startingClassHitDie;
@@ -47,6 +48,7 @@ class CharacterDraft {
     this.characterName,
     DmRulesEdition rulesEdition = DmRulesEdition.v2024,
     this.speciesRef,
+    this.subraceRef,
     this.backgroundRef,
     this.startingClassRef,
     this.startingClassHitDie,
@@ -98,6 +100,7 @@ class CharacterDraft {
     String? characterName,
     DmRulesEdition? rulesEdition,
     EntityReference<DomainEntity>? speciesRef,
+    EntityReference<DomainEntity>? subraceRef,
     EntityReference<DomainEntity>? backgroundRef,
     EntityReference<DomainEntity>? startingClassRef,
     String? startingClassHitDie,
@@ -123,6 +126,7 @@ class CharacterDraft {
       characterName: characterName ?? this.characterName,
       rulesEdition: rulesEdition ?? this.rulesEdition,
       speciesRef: speciesRef ?? this.speciesRef,
+      subraceRef: subraceRef ?? this.subraceRef,
       backgroundRef: backgroundRef ?? this.backgroundRef,
       startingClassRef: startingClassRef ?? this.startingClassRef,
       startingClassHitDie: startingClassHitDie ?? this.startingClassHitDie,

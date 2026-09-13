@@ -258,6 +258,9 @@ class SrdSpeciesLibrary {
   static List<Race> _customSpecies = [];
   static List<Subrace> _customSubraces = [];
 
+  /// Standalone custom/homebrew subraces
+  static List<Subrace> get customSubraces => List.unmodifiable(_customSubraces);
+
   /// Dynamic list of all available species (Base SRD + Custom Homebrew) with custom subraces attached
   static List<Race> get allSpecies {
     return [..._baseSpecies, ..._customSpecies].map((r) {

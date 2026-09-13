@@ -13,6 +13,7 @@ import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/homebrew_other_category.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/monster_codex_data.dart';
+import '../../models/magic_items/magic_item_library.dart';
 import '../../models/spellbook_data.dart';
 import '../../models/tables/rollable_table.dart';
 import '../../models/tables/srd_tables_library.dart';
@@ -204,6 +205,10 @@ class HomebrewPersistenceService {
 
     final monsters = await loadCustomMonsters();
     MonsterCodexLibrary.setHomebrewMonsters(monsters);
+
+    final items = await loadCustomItems();
+    final magicItems = items.map(equipmentItemToMagicItem).toList();
+    MagicItemLibrary.setHomebrewItems(magicItems);
 
     final races = await loadCustomRaces();
     SrdSpeciesLibrary.setCustomSpecies(races);
@@ -594,6 +599,81 @@ class HomebrewPersistenceService {
         .map(compendiumEntryToDmReferenceItem)
         .toList();
     DmScreenLibrary.setCustomItems(customRefItems);
+  }
+
+  /// Converts an [EquipmentItem] domain entity to a [MagicItem] for [MagicItemLibrary].
+  static MagicItem equipmentItemToMagicItem(EquipmentItem item) {
+    final typeStr = item.itemType.toLowerCase();
+    final ItemCategory category;
+    if (typeStr.contains('weapon')) {
+      category = ItemCategory.weapon;
+    } else if (typeStr.contains('armor') || typeStr.contains('shield')) {
+      category = ItemCategory.armor;
+    } else if (typeStr.contains('potion') || typeStr.contains('elixir') || typeStr.contains('oil')) {
+      category = ItemCategory.potion;
+    } else if (typeStr.contains('ring')) {
+      category = ItemCategory.ring;
+    } else if (typeStr.contains('rod')) {
+      category = ItemCategory.rod;
+    } else if (typeStr.contains('scroll')) {
+      category = ItemCategory.scroll;
+    } else if (typeStr.contains('staff') || typeStr.contains('stave')) {
+      category = ItemCategory.staff;
+    } else if (typeStr.contains('wand')) {
+      category = ItemCategory.wand;
+    } else if (typeStr.contains('gem')) {
+      category = ItemCategory.gemstone;
+    } else if (typeStr.contains('art')) {
+      category = ItemCategory.artObject;
+    } else if (typeStr.contains('trinket')) {
+      category = ItemCategory.trinket;
+    } else if (typeStr.contains('gear') || typeStr.contains('tool') || typeStr.contains('adventuring')) {
+      category = ItemCategory.adventuringGear;
+    } else {
+      category = ItemCategory.wondrousItem;
+    }
+
+    final rarityStr = item.rarity.toLowerCase();
+    final ItemRarity rarity;
+    if (rarityStr.contains('artifact')) {
+      rarity = ItemRarity.artifact;
+    } else if (rarityStr.contains('legendary')) {
+      rarity = ItemRarity.legendary;
+    } else if (rarityStr.contains('very rare') || rarityStr.contains('very_rare')) {
+      rarity = ItemRarity.veryRare;
+    } else if (rarityStr.contains('rare')) {
+      rarity = ItemRarity.rare;
+    } else if (rarityStr.contains('uncommon')) {
+      rarity = ItemRarity.uncommon;
+    } else if (rarityStr.contains('common')) {
+      rarity = ItemRarity.common;
+    } else {
+      rarity = ItemRarity.nonmagical;
+    }
+
+    final rawJson = item.customProperties['rawJson'] as Map?;
+    final costStr = rawJson?['value']?.toString() ?? item.customProperties['cost']?.toString();
+    final attunementReq = item.requiresAttunement ? (rawJson?['reqAttune']?.toString() ?? 'Requires Attunement') : null;
+
+    final editionDetails = ItemEditionDetails(
+      summary: item.descriptionMarkdown.isNotEmpty
+          ? item.descriptionMarkdown.split('\n').first
+          : item.name,
+      description: item.descriptionMarkdown,
+    );
+
+    return MagicItem(
+      id: item.id.slug.isNotEmpty ? item.id.slug : item.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
+      name: item.name,
+      category: category,
+      rarity: rarity,
+      cost: costStr,
+      requiresAttunement: item.requiresAttunement,
+      attunementRequirement: attunementReq,
+      rules2014: editionDetails,
+      rules2024: editionDetails,
+      tags: [item.itemType, item.rarity, if (item.requiresAttunement) 'attunement'],
+    );
   }
 
   /// Converts a [Spell] domain entity to a [SpellItem] for [SpellbookLibrary].
@@ -1638,9 +1718,12 @@ class HomebrewPersistenceService {
     final includeOther = categories == null || categories.contains(EntityType.custom);
 
     final races = includeRaces ? await loadCustomRaces() : const <Race>[];
-    final subraces = <Subrace>[
-      for (final r in races) ...r.subraces,
-    ];
+    final subracesMap = <String, Subrace>{
+      for (final s in SrdSpeciesLibrary.customSubraces) s.id.slug: s,
+      for (final r in races)
+        for (final s in r.subraces) s.id.slug: s,
+    };
+    final subraces = subracesMap.values.toList();
 
     return HomebrewBundle(
       appVersion: '1.0.0',
@@ -1685,9 +1768,12 @@ class HomebrewPersistenceService {
     final classes = includeClasses ? await loadCustomClasses() : const <CharacterClass>[];
     final subclasses = includeSubclasses ? await loadCustomSubclasses() : const <Subclass>[];
     final races = includeRaces ? await loadCustomRaces() : const <Race>[];
-    final subraces = <Subrace>[
-      for (final r in races) ...r.subraces,
-    ];
+    final exportSubracesMap = <String, Subrace>{
+      for (final s in SrdSpeciesLibrary.customSubraces) s.id.slug: s,
+      for (final r in races)
+        for (final s in r.subraces) s.id.slug: s,
+    };
+    final subraces = exportSubracesMap.values.toList();
     final feats = includeFeats ? await loadCustomFeats() : const <Feat>[];
     final backgrounds = includeBackgrounds ? await loadCustomBackgrounds() : const <Background>[];
     final otherEntries = includeOther ? await loadCustomOtherEntries() : const <HomebrewCompendiumEntry>[];

@@ -77,6 +77,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   RulesetVersion _selectedRuleset = RulesetVersion.v2024;
   final TextEditingController _nameController = TextEditingController();
   String? _selectedSpecies;
+  String? _selectedSubrace;
   String? _selectedClass;
   String? _selectedBackground;
   String? _selectedFeat;
@@ -1299,7 +1300,9 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 case 'basics':
                   canAdvance = true;
                 case 'species':
-                  canAdvance = _abilityScoreController.hasValidSpecies && _abilityScoreController.refundedSkillChoices == 0;
+                  final curSp = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
+                  final subraceValid = curSp == null || curSp.subraces.isEmpty || _selectedSubrace != null;
+                  canAdvance = _abilityScoreController.hasValidSpecies && _abilityScoreController.refundedSkillChoices == 0 && subraceValid;
                 case 'class':
                   canAdvance = _abilityScoreController.hasValidClass;
                 case 'subclass':
@@ -1462,7 +1465,10 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       final traitsMatch = sp.traitsMarkdown.toLowerCase().contains(q);
       final speedMatch = sp.speed.toLowerCase().contains(q);
       final summaryMatch = sp.abilityScoreSummary?.toLowerCase().contains(q) ?? false;
-      return nameMatches || slugMatches || traitsMatch || speedMatch || summaryMatch;
+      final subraceMatches = sp.subraces.any((sub) =>
+          sub.name.toLowerCase().contains(q) ||
+          sub.traitsMarkdown.toLowerCase().contains(q));
+      return nameMatches || slugMatches || traitsMatch || speedMatch || summaryMatch || subraceMatches;
     }).toList();
 
     return Column(
@@ -1471,7 +1477,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Text('Step 2: Choose Species / Race',
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.cyanAccent)),
         const SizedBox(height: 6),
-        const Text('Select your character lineage from standard SRD species.',
+        const Text('Select your character lineage from standard SRD and imported homebrew species.',
             style: TextStyle(fontSize: 12, color: Colors.white70)),
         const SizedBox(height: 12),
 
@@ -1479,7 +1485,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         TextField(
           decoration: InputDecoration(
             labelText: 'Search Species / Races',
-            hintText: 'Filter by species name, traits, speed...',
+            hintText: 'Filter by species name, subrace, traits, speed...',
             prefixIcon: const Icon(Icons.search, size: 20),
             suffixIcon: _speciesSearchQuery.isNotEmpty
                 ? IconButton(
@@ -1520,71 +1526,168 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             ),
             child: Material(
               color: Colors.transparent,
-              child: ListTile(
-                leading: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Colors.cyanAccent : Colors.white54,
-                    ),
-                    const SizedBox(width: 8),
-                    RepaintBoundary(
-                      child: SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: DndGlyph.species(
-                            speciesType: spType,
-                            size: 32,
-                            isDarkMode: true,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                          color: isSelected ? Colors.cyanAccent : Colors.white54,
+                        ),
+                        const SizedBox(width: 8),
+                        RepaintBoundary(
+                          child: SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: DndGlyph.species(
+                                speciesType: spType,
+                                size: 32,
+                                isDarkMode: true,
+                              ),
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                    title: Text(sp.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('Speed: ${sp.getSpeedForEdition(_rulesEdition)} • Size: ${sp.size}\n${sp.abilityScoreSummary ?? ""}',
+                        style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
+                    onTap: () {
+                      HapticService.selectionTick(context);
+                      setState(() {
+                        final prevSpecies = _selectedSpecies;
+                        _selectedSpecies = sp.id.slug;
+                        Subrace? autoSubrace;
+                        if (_speciesSearchQuery.isNotEmpty) {
+                          final q = _speciesSearchQuery.toLowerCase();
+                          autoSubrace = sp.subraces.where((sub) => sub.name.toLowerCase().contains(q)).firstOrNull;
+                        }
+                        _selectedSubrace = autoSubrace?.id.slug ?? (sp.subraces.isNotEmpty ? sp.subraces.first.id.slug : null);
+                        _abilityScoreController.setSpecies(
+                          EntityReference(
+                            refType: EntityType.species,
+                            slug: sp.id.slug,
+                            displayName: sp.name,
+                          ),
+                        );
+                        if (_selectedSubrace != null) {
+                          final chosenSub = sp.subraces.firstWhere((s) => s.id.slug == _selectedSubrace);
+                          _abilityScoreController.setSubrace(
+                            EntityReference(
+                              refType: EntityType.species,
+                              slug: chosenSub.id.slug,
+                              displayName: chosenSub.name,
+                            ),
+                          );
+                        }
+                        if (prevSpecies != sp.id.slug) {
+                          _speciesBonusSkillPicks.clear();
+                          final is2014 = _selectedRuleset == RulesetVersion.v2014;
+                          final flexCount = is2014 ? sp.flexibleAbilityChoiceCount : 0;
+                          if (flexCount == 0) {
+                            _variantHumanBonuses.clear();
+                          } else {
+                            final fixed = sp.fixedAbilityBonuses2014;
+                            final validAbilities = AbilityType.values.where((a) => !fixed.containsKey(a.name.toLowerCase())).toList();
+                            _variantHumanBonuses.retainAll(validAbilities);
+                            while (_variantHumanBonuses.length > flexCount) {
+                              _variantHumanBonuses.remove(_variantHumanBonuses.last);
+                            }
+                            while (_variantHumanBonuses.length < flexCount && validAbilities.isNotEmpty) {
+                              final next = validAbilities.firstWhere((a) => !_variantHumanBonuses.contains(a), orElse: () => validAbilities.first);
+                              _variantHumanBonuses.add(next);
+                            }
+                          }
+                        }
+                        final is2024 = _selectedRuleset == RulesetVersion.v2024;
+                        final hasFeatStep = is2024 || sp.grantsBonusFeat;
+                        final maxStepIndex = hasFeatStep ? 7 : 6;
+                        if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
+                      });
+                    },
+                  ),
+                  if (isSelected && sp.subraces.isNotEmpty) ...[
+                    const Divider(height: 1, color: Colors.cyanAccent),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.account_tree_outlined, size: 16, color: Colors.cyanAccent),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Choose Subspecies / Lineage (${sp.subraces.length} available):',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.cyanAccent),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ...sp.subraces.map((sub) {
+                            final isSubSelected = _selectedSubrace == sub.id.slug;
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              child: Material(
+                                color: isSubSelected ? Colors.cyan.shade900.withValues(alpha: 0.5) : Colors.black12,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                  side: BorderSide(
+                                    color: isSubSelected ? Colors.cyanAccent : Colors.white10,
+                                    width: isSubSelected ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: ListTile(
+                                  dense: true,
+                                  visualDensity: VisualDensity.compact,
+                                  leading: Icon(
+                                    isSubSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                                    size: 18,
+                                    color: isSubSelected ? Colors.cyanAccent : Colors.white38,
+                                  ),
+                                title: Text(
+                                  sub.name,
+                                  style: TextStyle(
+                                    fontWeight: isSubSelected ? FontWeight.bold : FontWeight.w600,
+                                    fontSize: 13,
+                                    color: isSubSelected ? Colors.white : Colors.white70,
+                                  ),
+                                ),
+                                subtitle: sub.traitsMarkdown.isNotEmpty
+                                    ? Text(
+                                        sub.traitsMarkdown.replaceAll(RegExp(r'\*\*|`'), ''),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 11, color: Colors.white60),
+                                      )
+                                    : null,
+                                onTap: () {
+                                  HapticService.selectionTick(context);
+                                  setState(() {
+                                    _selectedSubrace = sub.id.slug;
+                                    _abilityScoreController.setSubrace(
+                                      EntityReference(
+                                        refType: EntityType.species,
+                                        slug: sub.id.slug,
+                                        displayName: sub.name,
+                                      ),
+                                    );
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        }),
+                        ],
                       ),
                     ),
                   ],
-                ),
-                title: Text(sp.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('Speed: ${sp.getSpeedForEdition(_rulesEdition)} • Size: ${sp.size}\n${sp.abilityScoreSummary ?? ""}',
-                    style: const TextStyle(fontSize: 11.5, color: Colors.white70)),
-                onTap: () {
-                  HapticService.selectionTick(context);
-                  setState(() {
-                    final prevSpecies = _selectedSpecies;
-                    _selectedSpecies = sp.id.slug;
-                    _abilityScoreController.setSpecies(
-                      EntityReference(
-                        refType: EntityType.species,
-                        slug: sp.id.slug,
-                        displayName: sp.name,
-                      ),
-                    );
-                    if (prevSpecies != sp.id.slug) {
-                      _speciesBonusSkillPicks.clear();
-                      final is2014 = _selectedRuleset == RulesetVersion.v2014;
-                      final flexCount = is2014 ? sp.flexibleAbilityChoiceCount : 0;
-                      if (flexCount == 0) {
-                        _variantHumanBonuses.clear();
-                      } else {
-                        final fixed = sp.fixedAbilityBonuses2014;
-                        final validAbilities = AbilityType.values.where((a) => !fixed.containsKey(a.name.toLowerCase())).toList();
-                        _variantHumanBonuses.retainAll(validAbilities);
-                        while (_variantHumanBonuses.length > flexCount) {
-                          _variantHumanBonuses.remove(_variantHumanBonuses.last);
-                        }
-                        while (_variantHumanBonuses.length < flexCount && validAbilities.isNotEmpty) {
-                          final next = validAbilities.firstWhere((a) => !_variantHumanBonuses.contains(a), orElse: () => validAbilities.first);
-                          _variantHumanBonuses.add(next);
-                        }
-                      }
-                    }
-                    final is2024 = _selectedRuleset == RulesetVersion.v2024;
-                    final hasFeatStep = is2024 || sp.grantsBonusFeat;
-                    final maxStepIndex = hasFeatStep ? 7 : 6;
-                    if (_wizardStep > maxStepIndex) _wizardStep = maxStepIndex;
-                  });
-                },
+                ],
               ),
             ),
           );
@@ -4248,6 +4351,19 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       slug: curSpecies.id.slug,
       displayName: curSpecies.name,
     );
+    if (curSpecies.subraces.isNotEmpty && _selectedSubrace != null) {
+      final chosenSub = curSpecies.subraces.firstWhere(
+        (s) => s.id.slug == _selectedSubrace,
+        orElse: () => curSpecies.subraces.first,
+      );
+      draft.subraceRef = EntityReference(
+        refType: EntityType.species,
+        slug: chosenSub.id.slug,
+        displayName: chosenSub.name,
+      );
+    } else {
+      draft.subraceRef = null;
+    }
     draft.backgroundRef = EntityReference(
       refType: EntityType.background,
       slug: curBackground.id.slug,
@@ -4495,7 +4611,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                             children: [
                               Icon(Icons.inventory_2, color: Colors.cyanAccent),
                               SizedBox(width: 8),
-                              Text('SRD Equipment & Magic Items',
+                              Text('Equipment & Magic Items',
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                             ],
                           ),
@@ -4508,7 +4624,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                       const SizedBox(height: 8),
                       TextField(
                         decoration: InputDecoration(
-                          hintText: 'Search SRD weapons, armor, potions, gear...',
+                          hintText: 'Search SRD & homebrew weapons, armor, potions, gear...',
                           prefixIcon: const Icon(Icons.search, color: Colors.cyanAccent),
                           filled: true,
                           fillColor: const Color(0xFF1E293B),

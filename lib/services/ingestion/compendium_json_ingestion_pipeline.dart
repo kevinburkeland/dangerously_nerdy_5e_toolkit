@@ -1090,7 +1090,14 @@ class CompendiumJsonIngestionPipeline {
     );
   }
 
-  IngestionBatchResult _ingestSingleEntityMap(Map<String, dynamic> map, {RulesetVersion? forceRuleset}) {
+  IngestionBatchResult _ingestSingleEntityMap(Map<String, dynamic> rawInputMap, {RulesetVersion? forceRuleset}) {
+    var map = rawInputMap;
+    if (rawInputMap['customProperties'] is Map && (rawInputMap['customProperties'] as Map)['rawJson'] is Map) {
+      map = {
+        ...((rawInputMap['customProperties'] as Map)['rawJson'] as Map).cast<String, dynamic>(),
+        ...rawInputMap,
+      };
+    }
     final lowerKeys = map.keys.map((k) => k.toLowerCase()).toSet();
 
     // 0. Fluff / Lore Single Entry (has _fluff, monsterFluff, spellFluff, etc. or pure lore map)
@@ -1313,10 +1320,20 @@ class CompendiumJsonIngestionPipeline {
           case 'd20':
           case 'damage':
           case 'chance':
+          case 'scaledice':
+          case 'scaledamage':
             return '**`$primary`**';
-          case 'h':
           case 'hit':
+            return primary.startsWith('+') || primary.startsWith('-') ? primary : '+$primary';
+          case 'h':
             return '*Hit:* ';
+          case 'hom':
+            return '*Hit or Miss:* ';
+          case 'actsave':
+          case 'actsavefail':
+            return primary;
+          case 'link':
+            return parts.length > 1 ? '[${parts[0].trim()}](${parts[1].trim()})' : primary;
           case 'hityourspellattack':
             return 'your spell attack modifier';
           case 'dc':
@@ -1349,8 +1366,6 @@ class CompendiumJsonIngestionPipeline {
           case 'color':
           case 'comic':
             return parts.length > 1 && parts[1].trim().isNotEmpty ? parts[1].trim() : primary;
-          case 'hom':
-            return '*Hit or Miss:* ';
           case '5etools':
           case 'book':
           case 'variantrule':
@@ -1380,7 +1395,6 @@ class CompendiumJsonIngestionPipeline {
           case 'disease':
           case 'filter':
           case 'hazard':
-          case 'link':
           case 'object':
           case 'quickref':
           case 'reward':

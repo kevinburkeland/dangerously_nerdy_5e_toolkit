@@ -219,6 +219,42 @@ class CharacterSheetController extends ChangeNotifier {
     return toggleAttunement(instanceId, !targetItem.isAttuned);
   }
 
+  /// Adds an item instance to the character's inventory.
+  Future<void> addItem(InventoryItemInstance item) async {
+    final updated = List<InventoryItemInstance>.from(_character.inventory)..add(item);
+    _character = _character.copyWith(inventory: updated);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Removes an item instance from the character's inventory by its instanceId.
+  Future<void> removeItem(String instanceId) async {
+    final updated = _character.inventory.where((i) => i.instanceId != instanceId).toList();
+    _character = _character.copyWith(inventory: updated);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
+  /// Updates quantity of an inventory item instance.
+  Future<void> updateItemQuantity(String instanceId, int quantity) async {
+    if (quantity <= 0) {
+      await removeItem(instanceId);
+      return;
+    }
+    final updated = _character.inventory.map((item) {
+      if (item.instanceId == instanceId) {
+        return item.copyWith(quantity: quantity);
+      }
+      return item;
+    }).toList();
+    _character = _character.copyWith(inventory: updated);
+    _recalculateStats();
+    notifyListeners();
+    _schedulePersist();
+  }
+
   /// Applies damage to the character.
   /// Damage strictly depletes temporary HP before reducing current HP, clamping at 0.
   Future<void> takeDamage(int amount) async {

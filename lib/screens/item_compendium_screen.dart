@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/magic_items/magic_item_library.dart';
 import '../providers/settings_provider.dart';
 import '../services/haptic_service.dart';
+import '../services/persistence/homebrew_persistence_service.dart';
 import '../widgets/common/compendium_search_header.dart';
 import '../widgets/common/empty_state_card.dart';
 import '../widgets/common/responsive_card_grid.dart';
@@ -57,6 +58,14 @@ class _ItemCompendiumScreenState extends State<ItemCompendiumScreen> {
     super.initState();
     if (widget.initialEdition != null) {
       _localEditionOverride = widget.initialEdition;
+    }
+    _syncHomebrew();
+  }
+
+  Future<void> _syncHomebrew() async {
+    await HomebrewPersistenceService().syncToLibraries();
+    if (mounted) {
+      setState(() {});
     }
   }
 

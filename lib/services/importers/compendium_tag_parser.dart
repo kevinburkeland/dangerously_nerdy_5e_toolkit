@@ -17,7 +17,7 @@ class ParsedTextResult {
 
 /// Robust parser for community compendium JSON tags, entries AST, and source detection.
 class CompendiumTagParser {
-  static final RegExp tagPattern = RegExp(r'\{@([a-zA-Z0-9_-]+)\s+([^}]+)\}');
+  static final RegExp tagPattern = RegExp(r'\{@([a-zA-Z0-9_-]+)(?:\s+([^}]+))?\}');
 
   /// Detects whether a given source tag originates from 2014, 2024, or third-party/homebrew.
   RulesetVersion detectRuleset(
@@ -140,10 +140,28 @@ class CompendiumTagParser {
     return input.replaceAllMapped(tagPattern, (match) {
       final tag = match.group(1)?.toLowerCase() ?? '';
       final payload = match.group(2) ?? '';
-      final parts = payload.split('|');
+      final parts = payload.isNotEmpty ? payload.split('|') : <String>[];
       final primary = parts.isNotEmpty ? parts[0].trim() : '';
 
       switch (tag) {
+        case 'h':
+          return '*Hit:* ';
+
+        case 'hom':
+          return '*Hit or Miss:* ';
+
+        case 'recharge':
+          return primary.isNotEmpty ? '(Recharge $primary)' : '(Recharge 5–6)';
+
+        case 'hityourspellattack':
+          return 'your spell attack modifier';
+
+        case 'dc':
+          return 'DC $primary';
+
+        case 'link':
+          return parts.length > 1 ? '[${parts[0].trim()}](${parts[1].trim()})' : primary;
+
         case 'damage':
           final parsedMath = extractDamageMath(payload);
           if (parsedMath != null && math != null) {
@@ -153,9 +171,12 @@ class CompendiumTagParser {
 
         case 'dice':
         case 'hit':
+          return primary.startsWith('+') || primary.startsWith('-') ? primary : '+$primary';
         case 'd20':
         case 'scaledice':
         case 'scaledamage':
+        case 'actsave':
+        case 'actsavefail':
           return primary;
 
         case 'spell':

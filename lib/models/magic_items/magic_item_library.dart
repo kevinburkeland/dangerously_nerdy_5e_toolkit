@@ -18,7 +18,7 @@ class MagicItemLibrary {
   MagicItemLibrary._();
 
   /// Complete list of all SRD 5.1 & 5.2 Magic Items and Equipment in the toolkit.
-  static final List<MagicItem> allItems = [
+  static final List<MagicItem> _baseItems = [
     ...SrdMagicWeapons.items,
     ...SrdArmorAndShields.items,
     ...SrdPotionsAndOils.items,
@@ -31,6 +31,30 @@ class MagicItemLibrary {
     ...SrdAdventuringGear.items,
     ...SrdLootItems.items,
   ];
+
+  static List<MagicItem> _homebrewItems = [];
+
+  /// Base SRD 5.1 & 5.2 Magic Items unpolluted by homebrew items.
+  static List<MagicItem> get baseItems => _baseItems;
+
+  /// Combined list of all SRD and Homebrew Magic Items and Equipment in the toolkit.
+  static List<MagicItem> get allItems => [..._baseItems, ..._homebrewItems];
+
+  /// Sets the list of custom/homebrew items in the library.
+  static void setHomebrewItems(List<MagicItem> items) {
+    _homebrewItems = List<MagicItem>.from(items);
+  }
+
+  /// Adds or replaces a custom homebrew item in the library.
+  static void addHomebrewItem(MagicItem item) {
+    _homebrewItems.removeWhere((i) => i.id == item.id);
+    _homebrewItems.add(item);
+  }
+
+  /// Removes a custom homebrew item by id.
+  static void removeHomebrewItem(String id) {
+    _homebrewItems.removeWhere((i) => i.id == id);
+  }
 
   /// Find an item by its unique identifier.
   static MagicItem? findById(String id) {

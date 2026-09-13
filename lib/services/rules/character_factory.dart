@@ -152,7 +152,7 @@ class CharacterFactory {
 
     final speciesTraits = SkillTraitResolver.getSpeciesTraits(
       speciesSlug: draft.speciesRef!.slug,
-      subraceSlug: null,
+      subraceSlug: draft.subraceRef?.slug,
       edition: draft.rulesEdition,
     );
 
@@ -186,6 +186,10 @@ class CharacterFactory {
       maxAttunementSlots: 3,
       baseSpeedFeet: speciesTraits.baseSpeedFeet,
       rulesEdition: draft.rulesEdition,
+      customProperties: {
+        if (draft.subraceRef != null) 'subrace': draft.subraceRef!.toMap(),
+        if (draft.subraceRef != null) 'subspecies': draft.subraceRef!.displayName,
+      },
     );
 
     return character;

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/dm_screen_data.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/action_economy_models.dart';
@@ -7,11 +6,13 @@ import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_purse.dart';
+import '../../models/magic_items/magic_item_library.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../screens/party_room_screen.dart';
 import '../../services/party/campaign_registry_service.dart';
 import '../../services/rules/character_actions_resolver.dart';
+import '../../services/rules/inventory_transaction_service.dart';
 import '../../theme/app_theme.dart';
 import '../../services/haptic_service.dart';
 import '../party/campaign_dialogs.dart';
@@ -809,12 +810,23 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
         ],
 
         // Items List
-        Text(
-          'INVENTORY ITEMS (${character.inventory.length})',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'INVENTORY ITEMS (${character.inventory.length})',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+            FilledButton.tonalIcon(
+              style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+              onPressed: () => _showAddItemSheet(context),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add Item'),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
 
@@ -1059,10 +1071,171 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                   style: const TextStyle(fontSize: 11),
                 ),
               ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
+                tooltip: 'Remove from Inventory',
+                onPressed: () {
+                  HapticService.selectionTick(context);
+                  widget.controller.removeItem(item.instanceId);
+                },
+              ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  void _showAddItemSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        String searchQuery = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final allItems = MagicItemLibrary.allItems;
+            final filtered = searchQuery.trim().isEmpty
+                ? allItems.take(50).toList()
+                : allItems
+                    .where((item) =>
+                        item.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                        item.category.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                        item.tags.any((t) => t.toLowerCase().contains(searchQuery.toLowerCase())))
+                    .toList();
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.8,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (context, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.inventory_2, color: Colors.amber),
+                              SizedBox(width: 8),
+                              Text(
+                                'Add Item to Inventory',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white70),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search SRD & homebrew weapons, armor, potions, gear...',
+                          prefixIcon: const Icon(Icons.search, color: Colors.amber),
+                          filled: true,
+                          fillColor: const Color(0xFF1E293B),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onChanged: (val) {
+                          setModalState(() => searchQuery = val);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? const Center(
+                                child: Text('No items found.', style: TextStyle(color: Colors.white54)),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                itemCount: filtered.length,
+                                itemBuilder: (context, index) {
+                                  final item = filtered[index];
+                                  return Card(
+                                    color: const Color(0xFF1E293B),
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    child: ListTile(
+                                      title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                      subtitle: Text(
+                                        '${item.category.name.toUpperCase()} • ${item.rarity.name}${item.cost != null ? " • ${item.cost}" : ""}\n${item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary}',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 11.5, color: Colors.white70),
+                                      ),
+                                      trailing: ElevatedButton.icon(
+                                        icon: const Icon(Icons.add, size: 16),
+                                        label: const Text('Add'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.amber.shade800,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () {
+                                          final resolvedSlot = InventoryTransactionService.resolveDefaultSlot(
+                                            InventoryItemInstance(
+                                              instanceId: 'temp',
+                                              itemRef: EntityReference(
+                                                refType: EntityType.equipment,
+                                                slug: item.id.replaceAll('_', '-'),
+                                                displayName: item.name,
+                                              ),
+                                              customProperties: {
+                                                'category': item.category.name,
+                                                'tags': item.tags,
+                                              },
+                                            ),
+                                          );
+                                          final newInstance = InventoryItemInstance(
+                                            instanceId: 'item-${item.id}-${DateTime.now().millisecondsSinceEpoch}',
+                                            itemRef: EntityReference(
+                                              refType: EntityType.equipment,
+                                              slug: item.id.replaceAll('_', '-'),
+                                              displayName: item.name,
+                                            ),
+                                            quantity: 1,
+                                            requiresAttunement: item.requiresAttunement,
+                                            equippedSlot: resolvedSlot,
+                                            customProperties: {
+                                              'category': item.category.name,
+                                              'rarity': item.rarity.name,
+                                              'tags': item.tags,
+                                            },
+                                          );
+                                          widget.controller.addItem(newInstance);
+                                          Navigator.pop(context);
+                                          ScaffoldMessenger.of(this.context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Added ${item.name} to inventory'),
+                                              duration: const Duration(seconds: 2),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 

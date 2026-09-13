@@ -252,8 +252,15 @@ class CharacterBuilderController extends ChangeNotifier {
 
   void setSpecies(EntityReference<DomainEntity>? speciesRef) {
     _draft.speciesRef = speciesRef;
+    _draft.subraceRef = null;
     _selectedSpeciesSlug = speciesRef?.slug;
     _recalculateSkillOverlaps();
+    _reconcileDraftInvariants();
+    notifyListeners();
+  }
+
+  void setSubrace(EntityReference<DomainEntity>? subraceRef) {
+    _draft.subraceRef = subraceRef;
     _reconcileDraftInvariants();
     notifyListeners();
   }

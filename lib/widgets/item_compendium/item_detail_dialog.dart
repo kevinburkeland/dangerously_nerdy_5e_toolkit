@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../infrastructure/repositories/local_character_repository.dart';
+import '../../models/domain/character_models.dart';
+import '../../models/domain/core_types.dart';
+import '../../models/domain/entity_reference.dart';
 import '../../models/magic_items/magic_item_data.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/fluff/entity_fluff_service.dart';
 import '../../services/haptic_service.dart';
+import '../../services/rules/inventory_transaction_service.dart';
 import '../common/diff_highlight_banner.dart';
 import '../common/formatted_markdown_text.dart';
 import '../dm_reference/rules_edition_toggle.dart';
@@ -203,6 +208,11 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.person_add_alt_1_outlined, size: 22),
+                  tooltip: 'Add to Character Sheet',
+                  onPressed: () => _showAddToCharacterSheetDialog(context),
                 ),
                 IconButton(
                   icon: Icon(
@@ -878,6 +888,134 @@ class _ItemDetailDialogState extends State<ItemDetailDialog>
               contentPadding: const EdgeInsets.all(12),
             ),
             onChanged: (val) => _fluffService.setUserNotes('item', slug, val),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showAddToCharacterSheetDialog(BuildContext context) async {
+    HapticService.selectionTick(context);
+    final repo = LocalCharacterRepository();
+    final characters = await repo.loadCharacters();
+
+    if (!context.mounted) return;
+
+    if (characters.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No character sheets found. Create a character first.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.person_add_alt_1, color: Colors.cyanAccent),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Add to Character',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select character sheet to receive "${widget.item.name}":',
+                style: const TextStyle(fontSize: 13, color: Colors.white70),
+              ),
+              const SizedBox(height: 12),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: characters.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (ctx, index) {
+                    final char = characters[index];
+                    final classSummary = char.progression.classes.map((c) => '${c.classRef.displayName} ${c.level}').join(' / ');
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      leading: const CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.cyan,
+                        child: Icon(Icons.person, size: 18, color: Colors.black),
+                      ),
+                      title: Text(char.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(
+                        classSummary.isNotEmpty ? classSummary : 'Level 1 Adventurer',
+                        style: const TextStyle(fontSize: 11, color: Colors.white60),
+                      ),
+                      trailing: const Icon(Icons.chevron_right, size: 18),
+                      onTap: () async {
+                        final resolvedSlot = InventoryTransactionService.resolveDefaultSlot(
+                          InventoryItemInstance(
+                            instanceId: 'temp',
+                            itemRef: EntityReference(
+                              refType: EntityType.equipment,
+                              slug: widget.item.id.replaceAll('_', '-'),
+                              displayName: widget.item.name,
+                            ),
+                            customProperties: {
+                              'category': widget.item.category.name,
+                              'tags': widget.item.tags,
+                            },
+                          ),
+                        );
+                        final newInstance = InventoryItemInstance(
+                          instanceId: 'item-${widget.item.id}-${DateTime.now().millisecondsSinceEpoch}',
+                          itemRef: EntityReference(
+                            refType: EntityType.equipment,
+                            slug: widget.item.id.replaceAll('_', '-'),
+                            displayName: widget.item.name,
+                          ),
+                          quantity: 1,
+                          requiresAttunement: widget.item.requiresAttunement,
+                          equippedSlot: resolvedSlot,
+                          customProperties: {
+                            'category': widget.item.category.name,
+                            'rarity': widget.item.rarity.name,
+                            'tags': widget.item.tags,
+                          },
+                        );
+
+                        final updatedChar = char.copyWith(
+                          inventory: [...char.inventory, newInstance],
+                        );
+                        await repo.saveCharacter(updatedChar);
+
+                        if (dialogCtx.mounted) Navigator.of(dialogCtx).pop();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Added ${widget.item.name} to ${char.name}\'s inventory!'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Cancel'),
           ),
         ],
       ),

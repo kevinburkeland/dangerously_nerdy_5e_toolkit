@@ -146,7 +146,7 @@ class SrdEquivalenceIndex {
     // 3. Equipment & Magic Items (MagicItemLibrary + SrdEquipmentLibrary)
     final itemSlugs = <String>{};
     final itemNames = <String>{};
-    for (final item in MagicItemLibrary.allItems) {
+    for (final item in MagicItemLibrary.baseItems) {
       final iSlug = item.id.toLowerCase().trim();
       final normName = _slugify(item.name);
       itemSlugs.add(iSlug);
