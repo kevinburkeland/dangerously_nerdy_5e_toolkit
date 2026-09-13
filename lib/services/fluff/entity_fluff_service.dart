@@ -257,4 +257,12 @@ class EntityFluffService extends ChangeNotifier {
       await prefs.setString(_kUserNotesStorageKey, json.encode(_userNotesRegistry));
     });
   }
+
+  /// Clears all registered fluff and user notes (for testing and data reset)
+  void clear() {
+    _fluffRegistry.clear();
+    _userNotesRegistry.clear();
+    _isHydrated = false;
+    notifyListeners();
+  }
 }

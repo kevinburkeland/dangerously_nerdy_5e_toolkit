@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/fluff/entity_fluff_service
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
+import 'package:dangerously_nerdy_5e_toolkit/utils/crypto_utils.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,9 @@ void main() {
 
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      EntityFluffService().clear();
+      SrdSpeciesLibrary.setCustomSpecies([]);
+      SrdSpeciesLibrary.setCustomSubraces([]);
       persistence = HomebrewPersistenceService();
     });
 
@@ -450,5 +454,205 @@ void main() {
       final itemsAfterReparse = await persistence.loadCustomItems();
       expect(itemsAfterReparse.any((i) => i.name == 'Chrono Dagger'), isTrue);
     });
+
+    test('reparse is idempotent: repeated reparse cycles produce identical entity hashes and payload parity', () async {
+      // 1. Seed a comprehensive predefined import across all categories
+      final predefinedEntities = [
+        const HomebrewEntity(
+          id: 'void-blast',
+          name: 'Void Blast',
+          entityType: 'spell',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Void Blast',
+            'level': 2,
+            'school': 'V',
+            'time': [
+              {'number': 1, 'unit': 'action'}
+            ],
+            'range': {
+              'type': 'point',
+              'distance': {'type': 'feet', 'amount': 60}
+            },
+            'duration': [
+              {'type': 'instant'}
+            ],
+            'entries': ['A ray of concentrated gravity strikes the target.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'void-stalker',
+          name: 'Void Stalker',
+          entityType: 'monster',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Void Stalker',
+            'size': 'M',
+            'type': 'aberration',
+            'cr': '5',
+            'hp': {'average': 85},
+            'ac': [16],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'starlight-blade',
+          name: 'Starlight Blade',
+          entityType: 'item',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Starlight Blade',
+            'type': 'M',
+            'rarity': 'very rare',
+            'entries': ['A rapier forged from fallen star metal.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'void-weaver',
+          name: 'Void Weaver',
+          entityType: 'class',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Void Weaver',
+            'hd': {'number': 1, 'faces': 8},
+            'proficiency': ['int', 'wis'],
+            'classFeatures': [],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'void-weaver-astral-path',
+          name: 'Astral Path',
+          entityType: 'subclass',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Astral Path',
+            'className': 'Void Weaver',
+            'subclassFeatures': ['Traverse the astral planar currents.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'astral-born',
+          name: 'Astral Born',
+          entityType: 'race',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Astral Born',
+            'entries': ['Beings manifested from astral essence.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'mark-of-the-astral',
+          name: 'Mark of the Astral',
+          entityType: 'subrace',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Mark of the Astral',
+            'raceName': 'human',
+            'entries': ['Humans bearing the celestial mark of the astral sphere.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'void-touched',
+          name: 'Void Touched',
+          entityType: 'feat',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Void Touched',
+            'entries': ['You have stared into the void and gained resistance to psychic damage.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'void-hermit',
+          name: 'Void Hermit',
+          entityType: 'background',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Void Hermit',
+            'entries': ['You spent years meditating at the edge of planar rifts.'],
+          },
+        ),
+        const HomebrewEntity(
+          id: 'table-void-omens',
+          name: 'Table of Void Omens',
+          entityType: 'table',
+          ruleset: domain_rules.RulesetVersion.srd2014,
+          rawPayload: {
+            'name': 'Table of Void Omens',
+            'colLabels': ['d4', 'Omen'],
+            'rows': [
+              ['1', 'Rifts whisper'],
+              ['2', 'Shadows lengthen'],
+            ],
+          },
+        ),
+      ];
+
+      await persistence.saveHomebrewEntitiesBatch(predefinedEntities, syncLibraries: true);
+
+      // Save fluff
+      const fluff = EntityFluff(
+        entityType: 'monster',
+        slug: 'void-stalker',
+        loreMarkdown: 'Stalkers of the deep astral rifts.',
+      );
+      await persistence.saveCustomFluffBatch([fluff]);
+      await persistence.syncToLibraries();
+
+      // Cycle 1: Run reparseAllHomebrew
+      final result1 = await persistence.reparseAllHomebrew();
+      expect(result1.srdRemovedCount, equals(0));
+      expect(result1.updatedCount, greaterThan(0));
+
+      final export1 = await persistence.exportBundle();
+
+      // Calculate deterministic SHA-256 hash of export content (excluding dynamic timestamp/appVersion)
+      String computeContentHash(Map<String, dynamic> bundleMap) {
+        final categories = [
+          'spells',
+          'monsters',
+          'items',
+          'classes',
+          'subclasses',
+          'races',
+          'subraces',
+          'feats',
+          'backgrounds',
+          'otherEntries',
+          'fluff'
+        ];
+        final buffer = StringBuffer();
+        for (final cat in categories) {
+          final list = List<dynamic>.from(bundleMap[cat] as List? ?? []);
+          final stringified = list.map((e) => json.encode(e)).toList()..sort();
+          buffer.write('$cat:${stringified.join('|')};');
+        }
+        return CryptoUtils.sha256Hex(buffer.toString());
+      }
+
+      final hash1 = computeContentHash(export1);
+
+      // Cycle 2: Run reparseAllHomebrew AGAIN
+      final result2 = await persistence.reparseAllHomebrew();
+      expect(result2.srdRemovedCount, equals(0));
+
+      final export2 = await persistence.exportBundle();
+      final hash2 = computeContentHash(export2);
+
+      // Cryptographic hash matching assertion: Cycle 1 hash MUST be identical to Cycle 2 hash
+      expect(hash1, equals(hash2));
+
+      // Category retention assertions
+      expect((export2['spells'] as List).length, equals(1));
+      expect((export2['monsters'] as List).length, equals(1));
+      expect((export2['items'] as List).length, equals(1));
+      expect((export2['classes'] as List).length, equals(1));
+      expect((export2['subclasses'] as List).length, equals(1));
+      expect((export2['races'] as List).length, equals(1));
+      expect((export2['subraces'] as List).length, equals(1));
+      expect((export2['feats'] as List).length, equals(1));
+      expect((export2['backgrounds'] as List).length, equals(1));
+      expect((export2['otherEntries'] as List).length, equals(1));
+      expect((export2['fluff'] as List).length, equals(1));
+    });
   });
 }
+
