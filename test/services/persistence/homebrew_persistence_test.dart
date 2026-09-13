@@ -8,6 +8,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/spellbook_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/models/homebrew_entity.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/value_objects/ruleset_version.dart' as domain_rules;
+import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_species_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/magic_items/magic_item_library.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/fluff/entity_fluff_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/app_database_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/repository/layered_priority_repository.dart';
@@ -377,6 +380,75 @@ void main() {
       final others = await persistence.loadCustomOtherEntries();
       expect(others.any((o) => o.name == 'Sand Corsair Captain'), isFalse);
       expect(others.any((o) => o.name == 'Ancient Lich'), isFalse);
+    });
+
+    test('saves, loads, and exports custom subraces and fluff', () async {
+      const subrace = Subrace(
+        id: EntityId(slug: 'astral-elf-variant', ruleset: RulesetVersion.homebrew),
+        name: 'Astral Elf (Variant)',
+        raceSlug: 'elf',
+        traitsMarkdown: 'Astral magic and teleportation.',
+      );
+
+      await persistence.saveCustomSubrace(subrace);
+
+      final loadedSubs = await persistence.loadCustomSubraces();
+      expect(loadedSubs.any((s) => s.id.slug == 'astral-elf-variant'), isTrue);
+      expect(SrdSpeciesLibrary.customSubraces.any((s) => s.id.slug == 'astral-elf-variant'), isTrue);
+
+      // Save fluff
+      const fluff = EntityFluff(
+        entityType: 'monster',
+        slug: 'abyssal-stalker',
+        loreMarkdown: 'Creatures born from the fathomless deep.',
+      );
+
+      await persistence.saveCustomFluffBatch([fluff]);
+
+      final loadedFluff = await persistence.loadCustomFluff();
+      expect(loadedFluff.any((f) => f.slug == 'abyssal-stalker'), isTrue);
+
+      // Test exportHomebrewBundle includes both subraces and fluff
+      final bundle = await persistence.exportHomebrewBundle();
+      expect(bundle.subraces.any((s) => s.id.slug == 'astral-elf-variant'), isTrue);
+      expect(bundle.fluff.any((f) => f.slug == 'abyssal-stalker'), isTrue);
+
+      // Test exportBundle map includes both subraces and fluff
+      final bundleMap = await persistence.exportBundle();
+      final subList = bundleMap['subraces'] as List;
+      final fluffList = bundleMap['fluff'] as List;
+      expect(subList.any((s) => s['id']['slug'] == 'astral-elf-variant'), isTrue);
+      expect(fluffList.any((f) => f['slug'] == 'abyssal-stalker'), isTrue);
+    });
+
+    test('reparseAllHomebrew preserves custom items even when synced to MagicItemLibrary', () async {
+      const customItem = EquipmentItem(
+        id: EntityId(slug: 'chrono-dagger', ruleset: RulesetVersion.homebrew),
+        name: 'Chrono Dagger',
+        itemType: 'weapon',
+        rarity: 'rare',
+        requiresAttunement: false,
+        descriptionMarkdown: 'Dagger that manipulates time.',
+      );
+
+      await persistence.saveCustomItem(customItem, rawPayload: {
+        'name': 'Chrono Dagger',
+        'type': 'weapon',
+        'rarity': 'rare',
+        'description': 'Dagger that manipulates time.',
+      });
+
+      // Synchronize to libraries
+      await persistence.syncToLibraries();
+      expect(MagicItemLibrary.allItems.any((i) => i.name == 'Chrono Dagger'), isTrue);
+
+      // Reparse all homebrew
+      final result = await persistence.reparseAllHomebrew();
+      expect(result.srdRemovedCount, equals(0));
+
+      // Items must NOT be eaten or purged
+      final itemsAfterReparse = await persistence.loadCustomItems();
+      expect(itemsAfterReparse.any((i) => i.name == 'Chrono Dagger'), isTrue);
     });
   });
 }

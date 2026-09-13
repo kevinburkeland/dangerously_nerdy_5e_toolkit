@@ -29,6 +29,7 @@ import '../acl/homebrew_merge_resolver.dart';
 import '../acl/srd_equivalence_index.dart';
 import '../importers/community_compendium_adapters.dart';
 import '../ingestion/compendium_json_ingestion_pipeline.dart';
+import '../fluff/entity_fluff_service.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
 import '../../domain/homebrew/models/homebrew_entity.dart';
@@ -43,9 +44,11 @@ class HomebrewPersistenceService {
   static const String _keyHomebrewClasses = 'dn_homebrew_classes_v1';
   static const String _keyHomebrewSubclasses = 'dn_homebrew_subclasses_v1';
   static const String _keyHomebrewRaces = 'dn_homebrew_races_v1';
+  static const String _keyHomebrewSubraces = 'dn_homebrew_subraces_v1';
   static const String _keyHomebrewFeats = 'dn_homebrew_feats_v1';
   static const String _keyHomebrewBackgrounds = 'dn_homebrew_backgrounds_v1';
   static const String _keyHomebrewOther = 'dn_homebrew_other_v1';
+  static const String _keyHomebrewFluff = 'dn_homebrew_fluff_v1';
   static const String _keyCampaignOverrides = 'dn_campaign_overrides_v1';
 
   // Raw payload keys — store original source JSON for lossless re-parsing
@@ -55,9 +58,11 @@ class HomebrewPersistenceService {
   static const String _keyHomebrewClassesRaw    = 'dn_homebrew_classes_raw_v1';
   static const String _keyHomebrewSubclassesRaw = 'dn_homebrew_subclasses_raw_v1';
   static const String _keyHomebrewRacesRaw      = 'dn_homebrew_races_raw_v1';
+  static const String _keyHomebrewSubracesRaw   = 'dn_homebrew_subraces_raw_v1';
   static const String _keyHomebrewFeatsRaw      = 'dn_homebrew_feats_raw_v1';
   static const String _keyHomebrewBackgroundsRaw = 'dn_homebrew_backgrounds_raw_v1';
   static const String _keyHomebrewOtherRaw      = 'dn_homebrew_other_raw_v1';
+  static const String _keyHomebrewFluffRaw      = 'dn_homebrew_fluff_raw_v1';
 
   static final HomebrewPersistenceService _instance =
       HomebrewPersistenceService._internal();
@@ -107,10 +112,15 @@ class HomebrewPersistenceService {
   Future<List<Spell>> loadCustomSpells() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewSpells);
-      return rawList
-          .map((jsonStr) =>
-              Spell.fromMap(Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final items = <Spell>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(Spell.fromMap(Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted spell skipped in loadCustomSpells');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew spells');
       return [];
@@ -187,10 +197,15 @@ class HomebrewPersistenceService {
   Future<List<Monster>> loadCustomMonsters() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewMonsters);
-      return rawList
-          .map((jsonStr) =>
-              Monster.fromMap(Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final items = <Monster>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(Monster.fromMap(Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted monster skipped in loadCustomMonsters');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew monsters');
       return [];
@@ -216,6 +231,12 @@ class HomebrewPersistenceService {
     final customSubraces = <Subrace>[];
     for (final r in races) {
       customSubraces.addAll(r.subraces);
+    }
+    final standaloneSubs = await loadCustomSubraces();
+    for (final s in standaloneSubs) {
+      if (!customSubraces.any((sub) => sub.id.slug == s.id.slug)) {
+        customSubraces.add(s);
+      }
     }
     SrdSpeciesLibrary.setCustomSubraces(customSubraces);
 
@@ -275,6 +296,11 @@ class HomebrewPersistenceService {
 
     final others = await loadCustomOtherEntries();
     _hydrateCustomOtherSubsystems(others);
+
+    final customFluff = await loadCustomFluff();
+    if (customFluff.isNotEmpty) {
+      EntityFluffService().batchRegisterFluff(customFluff);
+    }
   }
 
   /// Converts a generic [HomebrewCompendiumEntry] to a rollable [RollableTable].
@@ -899,10 +925,16 @@ class HomebrewPersistenceService {
   Future<List<EquipmentItem>> loadCustomItems() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewItems);
-      return rawList
-          .map((jsonStr) => EquipmentItem.fromMap(
-              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final items = <EquipmentItem>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(EquipmentItem.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted item skipped in loadCustomItems');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew items');
       return [];
@@ -979,10 +1011,16 @@ class HomebrewPersistenceService {
   Future<List<CharacterClass>> loadCustomClasses() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewClasses);
-      return rawList
-          .map((jsonStr) => CharacterClass.fromMap(
-              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final classes = <CharacterClass>[];
+      for (final jsonStr in rawList) {
+        try {
+          classes.add(CharacterClass.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted class skipped in loadCustomClasses');
+        }
+      }
+      return classes;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew classes');
       return [];
@@ -1062,10 +1100,16 @@ class HomebrewPersistenceService {
   Future<List<Subclass>> loadCustomSubclasses() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewSubclasses);
-      return rawList
-          .map((jsonStr) => Subclass.fromMap(
-              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final items = <Subclass>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(Subclass.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted subclass skipped in loadCustomSubclasses');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew subclasses');
       return [];
@@ -1157,10 +1201,16 @@ class HomebrewPersistenceService {
   Future<List<Race>> loadCustomRaces() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewRaces);
-      return rawList
-          .map((jsonStr) => Race.fromMap(
-              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final items = <Race>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(Race.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted race skipped in loadCustomRaces');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew races');
       return [];
@@ -1244,14 +1294,109 @@ class HomebrewPersistenceService {
     SrdSpeciesLibrary.removeCustomSpecies(slug);
   }
 
+  /// Loads all custom standalone subraces from persistent storage.
+  Future<List<Subrace>> loadCustomSubraces() async {
+    try {
+      final rawList = await _loadStringList(_keyHomebrewSubraces);
+      final items = <Subrace>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(Subrace.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted subrace skipped in loadCustomSubraces');
+        }
+      }
+      return items;
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew subraces');
+      return [];
+    }
+  }
+
+  /// Saves a custom subrace to persistent storage and runtime library.
+  Future<void> saveCustomSubrace(Subrace subrace, {Map<String, dynamic>? rawPayload}) async {
+    final subs = await loadCustomSubraces();
+    final idx = subs.indexWhere(
+      (s) => s.id.slug == subrace.id.slug && s.id.ruleset == subrace.id.ruleset,
+    );
+    if (idx != -1) {
+      subs[idx] = subrace;
+    } else {
+      subs.add(subrace);
+    }
+    await _saveStringList(
+      _keyHomebrewSubraces,
+      subs.map((s) => json.encode(s.toMap())).toList(),
+    );
+    if (rawPayload != null) {
+      await _saveRawPayload(_keyHomebrewSubracesRaw, subrace.id.slug, rawPayload);
+    }
+    SrdSpeciesLibrary.addCustomSubrace(subrace);
+  }
+
+  /// Batch saves multiple custom subraces to persistent storage and runtime library.
+  Future<void> saveCustomSubracesBatch(
+    List<Subrace> newSubraces, {
+    List<Map<String, dynamic>>? rawPayloads,
+  }) async {
+    if (newSubraces.isEmpty) return;
+    final subs = await loadCustomSubraces();
+    final slugIndex = <String, int>{
+      for (int i = 0; i < subs.length; i++)
+        '${subs[i].id.slug}_${subs[i].id.ruleset.name}': i,
+    };
+    for (int i = 0; i < newSubraces.length; i++) {
+      final s = newSubraces[i];
+      final key = '${s.id.slug}_${s.id.ruleset.name}';
+      final idx = slugIndex[key];
+      if (idx != null) {
+        subs[idx] = s;
+      } else {
+        slugIndex[key] = subs.length;
+        subs.add(s);
+      }
+      SrdSpeciesLibrary.addCustomSubrace(s);
+    }
+    await _saveStringList(
+      _keyHomebrewSubraces,
+      subs.map((s) => json.encode(s.toMap())).toList(),
+    );
+    if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
+      for (int i = 0; i < newSubraces.length && i < rawPayloads.length; i++) {
+        payloadMap[newSubraces[i].id.slug] = rawPayloads[i];
+      }
+      await _saveRawPayloadsBatch(_keyHomebrewSubracesRaw, payloadMap);
+    }
+  }
+
+  /// Deletes a custom subrace by slug and runtime library.
+  Future<void> deleteCustomSubrace(String slug) async {
+    final subs = await loadCustomSubraces();
+    subs.removeWhere((s) => s.id.slug == slug);
+    await _saveStringList(
+      _keyHomebrewSubraces,
+      subs.map((s) => json.encode(s.toMap())).toList(),
+    );
+    await _deleteRawPayload(_keyHomebrewSubracesRaw, slug);
+    SrdSpeciesLibrary.removeCustomSubrace(slug);
+  }
+
   /// Loads all custom feats from persistent storage.
   Future<List<Feat>> loadCustomFeats() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewFeats);
-      return rawList
-          .map((jsonStr) => Feat.fromMap(
-              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final items = <Feat>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(Feat.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted feat skipped in loadCustomFeats');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew feats');
       return [];
@@ -1331,10 +1476,16 @@ class HomebrewPersistenceService {
   Future<List<Background>> loadCustomBackgrounds() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewBackgrounds);
-      return rawList
-          .map((jsonStr) => Background.fromMap(
-              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .toList();
+      final items = <Background>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(Background.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted background skipped in loadCustomBackgrounds');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew backgrounds');
       return [];
@@ -1414,11 +1565,19 @@ class HomebrewPersistenceService {
   Future<List<HomebrewCompendiumEntry>> loadCustomOtherEntries() async {
     try {
       final rawList = await _loadStringList(_keyHomebrewOther);
-      return rawList
-          .map((jsonStr) => HomebrewCompendiumEntry.fromMap(
-              Map<String, dynamic>.from(json.decode(jsonStr) as Map)))
-          .where((e) => !e.name.startsWith('[{') && e.name.length <= 500 && e.id.slug.length <= 200)
-          .toList();
+      final items = <HomebrewCompendiumEntry>[];
+      for (final jsonStr in rawList) {
+        try {
+          final entry = HomebrewCompendiumEntry.fromMap(
+              Map<String, dynamic>.from(json.decode(jsonStr) as Map));
+          if (!entry.name.startsWith('[{') && entry.name.length <= 500 && entry.id.slug.length <= 200) {
+            items.add(entry);
+          }
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted other entry skipped in loadCustomOtherEntries');
+        }
+      }
+      return items;
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew custom entries');
       return [];
@@ -1700,6 +1859,49 @@ class HomebrewPersistenceService {
     return count;
   }
 
+  /// Loads all custom fluff/lore from persistent storage.
+  Future<List<EntityFluff>> loadCustomFluff() async {
+    try {
+      final rawList = await _loadStringList(_keyHomebrewFluff);
+      final items = <EntityFluff>[];
+      for (final jsonStr in rawList) {
+        try {
+          items.add(EntityFluff.fromMap(Map<String, dynamic>.from(json.decode(jsonStr) as Map)));
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Corrupted fluff skipped in loadCustomFluff');
+        }
+      }
+      if (items.isEmpty && EntityFluffService().fluffCount > 0) {
+        return EntityFluffService().getAllFluff();
+      }
+      return items;
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to load homebrew fluff');
+      return EntityFluffService().getAllFluff();
+    }
+  }
+
+  /// Batch saves fluff entries to persistent storage and updates runtime [EntityFluffService].
+  Future<void> saveCustomFluffBatch(
+    List<EntityFluff> newFluff, {
+    List<Map<String, dynamic>>? rawPayloads,
+  }) async {
+    if (newFluff.isEmpty) return;
+    EntityFluffService().batchRegisterFluff(newFluff);
+    final allFluff = EntityFluffService().getAllFluff();
+    await _saveStringList(
+      _keyHomebrewFluff,
+      allFluff.map((f) => json.encode(f.toMap())).toList(),
+    );
+    if (rawPayloads != null) {
+      final payloadMap = <String, Map<String, dynamic>>{};
+      for (int i = 0; i < newFluff.length && i < rawPayloads.length; i++) {
+        payloadMap['${newFluff[i].entityType}_${newFluff[i].slug}'] = rawPayloads[i];
+      }
+      await _saveRawPayloadsBatch(_keyHomebrewFluffRaw, payloadMap);
+    }
+  }
+
   /// Exports saved homebrew entities into a portable [HomebrewBundle].
   Future<HomebrewBundle> exportHomebrewBundle({
     String? bundleName,
@@ -1718,12 +1920,17 @@ class HomebrewPersistenceService {
     final includeOther = categories == null || categories.contains(EntityType.custom);
 
     final races = includeRaces ? await loadCustomRaces() : const <Race>[];
+    final standaloneSubs = await loadCustomSubraces();
     final subracesMap = <String, Subrace>{
       for (final s in SrdSpeciesLibrary.customSubraces) s.id.slug: s,
+      for (final s in standaloneSubs) s.id.slug: s,
       for (final r in races)
         for (final s in r.subraces) s.id.slug: s,
     };
     final subraces = subracesMap.values.toList();
+    final fluffList = EntityFluffService().getAllFluff().isNotEmpty
+        ? EntityFluffService().getAllFluff()
+        : await loadCustomFluff();
 
     return HomebrewBundle(
       appVersion: '1.0.0',
@@ -1741,11 +1948,12 @@ class HomebrewPersistenceService {
       feats: includeFeats ? await loadCustomFeats() : const [],
       backgrounds: includeBackgrounds ? await loadCustomBackgrounds() : const [],
       otherEntries: includeOther ? await loadCustomOtherEntries() : const [],
+      fluff: fluffList,
     );
   }
 
   /// Exports saved homebrew entities across all active registries into a comprehensive
-  /// dictionary with sibling arrays (`races`, `subraces`, `classes`, `subclasses`, `backgrounds`, `feats`, `items`, `spells`, `monsters`).
+  /// dictionary with sibling arrays (`races`, `subraces`, `classes`, `subclasses`, `backgrounds`, `feats`, `items`, `spells`, `monsters`, `fluff`).
   Future<Map<String, dynamic>> exportBundle({
     String? bundleName,
     String? author,
@@ -1768,8 +1976,10 @@ class HomebrewPersistenceService {
     final classes = includeClasses ? await loadCustomClasses() : const <CharacterClass>[];
     final subclasses = includeSubclasses ? await loadCustomSubclasses() : const <Subclass>[];
     final races = includeRaces ? await loadCustomRaces() : const <Race>[];
+    final standaloneSubs = await loadCustomSubraces();
     final exportSubracesMap = <String, Subrace>{
       for (final s in SrdSpeciesLibrary.customSubraces) s.id.slug: s,
+      for (final s in standaloneSubs) s.id.slug: s,
       for (final r in races)
         for (final s in r.subraces) s.id.slug: s,
     };
@@ -1777,6 +1987,9 @@ class HomebrewPersistenceService {
     final feats = includeFeats ? await loadCustomFeats() : const <Feat>[];
     final backgrounds = includeBackgrounds ? await loadCustomBackgrounds() : const <Background>[];
     final otherEntries = includeOther ? await loadCustomOtherEntries() : const <HomebrewCompendiumEntry>[];
+    final fluffList = EntityFluffService().getAllFluff().isNotEmpty
+        ? EntityFluffService().getAllFluff()
+        : await loadCustomFluff();
 
     return {
       'schemaVersion': 1,
@@ -1796,6 +2009,8 @@ class HomebrewPersistenceService {
       'feats': feats.map((f) => f.toMap()).toList(),
       if (otherEntries.isNotEmpty)
         'otherEntries': otherEntries.map((o) => o.toMap()).toList(),
+      if (fluffList.isNotEmpty)
+        'fluff': fluffList.map((f) => f.toMap()).toList(),
     };
   }
 
@@ -2206,6 +2421,11 @@ class HomebrewPersistenceService {
       );
     }
 
+    // Save any pending lore/fluff to persistent storage
+    if (EntityFluffService().fluffCount > 0) {
+      await saveCustomFluffBatch(EntityFluffService().getAllFluff());
+    }
+
     // Immediately synchronize runtime libraries
     await syncToLibraries();
   }
@@ -2373,6 +2593,10 @@ class HomebrewPersistenceService {
         await prefs.remove(_keyHomebrewRaces);
         await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewRacesRaw);
         await prefs.remove(_keyHomebrewRacesRaw);
+        await _db.delete(AppDatabaseService.boxHomebrew, _keyHomebrewSubraces);
+        await prefs.remove(_keyHomebrewSubraces);
+        await _db.delete(AppDatabaseService.boxHomebrewRaw, _keyHomebrewSubracesRaw);
+        await prefs.remove(_keyHomebrewSubracesRaw);
         SrdSpeciesLibrary.setCustomSpecies([]);
         SrdSpeciesLibrary.setCustomSubraces([]);
       case EntityType.feat:
@@ -2539,6 +2763,20 @@ class HomebrewPersistenceService {
       onSrdRemoved: (slug) {
         srdRemoved++;
         SrdSpeciesLibrary.removeCustomSpecies(slug);
+      },
+    );
+
+    // Re-parse subraces
+    updated += await _reparseCategory<Subrace>(
+      rawKey: _keyHomebrewSubracesRaw,
+      parsedKey: _keyHomebrewSubraces,
+      fromRaw: (raw) => CompendiumRaceParser().parseSubrace(raw),
+      toJson: (e) => json.encode(e.toMap()),
+      srdIndex: srdIndex,
+      entityType: EntityType.species,
+      onSrdRemoved: (slug) {
+        srdRemoved++;
+        SrdSpeciesLibrary.removeCustomSubrace(slug);
       },
     );
 
@@ -2870,7 +3108,8 @@ class HomebrewPersistenceService {
         EntityType.equipment => EquipmentItem.fromMap(map) as T,
         EntityType.classDefinition => CharacterClass.fromMap(map) as T,
         EntityType.subclass => Subclass.fromMap(map) as T,
-        EntityType.species => Race.fromMap(map) as T,
+        EntityType.species =>
+            (map.containsKey('raceSlug') ? Subrace.fromMap(map) : Race.fromMap(map)) as T,
         EntityType.feat => Feat.fromMap(map) as T,
         EntityType.background => Background.fromMap(map) as T,
         EntityType.custom => HomebrewCompendiumEntry.fromMap(map) as T,
@@ -2903,9 +3142,11 @@ class HomebrewPersistenceService {
     final classes = <CharacterClass>[];
     final subclasses = <Subclass>[];
     final races = <Race>[];
+    final subraces = <Subrace>[];
     final feats = <Feat>[];
     final backgrounds = <Background>[];
     final others = <HomebrewCompendiumEntry>[];
+    final fluffToSave = <EntityFluff>[];
 
     final spellPayloads = <Map<String, dynamic>>[];
     final monsterPayloads = <Map<String, dynamic>>[];
@@ -2913,9 +3154,11 @@ class HomebrewPersistenceService {
     final classPayloads = <Map<String, dynamic>>[];
     final subclassPayloads = <Map<String, dynamic>>[];
     final racePayloads = <Map<String, dynamic>>[];
+    final subracePayloads = <Map<String, dynamic>>[];
     final featPayloads = <Map<String, dynamic>>[];
     final backgroundPayloads = <Map<String, dynamic>>[];
     final otherPayloads = <Map<String, dynamic>>[];
+    final fluffPayloads = <Map<String, dynamic>>[];
 
     final adapters = CommunityCompendiumAdapters();
     final raceParser = CompendiumRaceParser();
@@ -2959,9 +3202,11 @@ class HomebrewPersistenceService {
             ? typeLower.substring(0, typeLower.length - 5)
             : 'generic';
         final pipeline = CompendiumJsonIngestionPipeline();
-        pipeline.ingestJsonMap({
+        final batchResult = pipeline.ingestJsonMap({
           '${rawType}Fluff': [payload],
         });
+        fluffToSave.addAll(batchResult.fluff);
+        fluffPayloads.add(payload);
         continue;
       }
 
@@ -3057,6 +3302,10 @@ class HomebrewPersistenceService {
                       SrdMatchResult.notSrd) {
                 break;
               }
+              subraces.add(sub);
+              subracePayloads.add(payload);
+              SrdSpeciesLibrary.addCustomSubrace(sub);
+
               if (sub.raceSlug.isNotEmpty) {
                 final match = races.where((r) => r.id.slug == sub.raceSlug).firstOrNull;
                 if (match != null) {
@@ -3070,15 +3319,22 @@ class HomebrewPersistenceService {
                       'subraces': existingSubs,
                     };
                   }
-                } else {
+                } else if (!excludeSrdCanon ||
+                    srdIndex.checkEntity(
+                          slug: sub.raceSlug,
+                          name: sub.raceSlug.replaceAll('-', ' '),
+                          type: EntityType.species,
+                        ) ==
+                        SrdMatchResult.notSrd) {
+                  final parentName = (payload['raceName'] as String?) ?? sub.raceSlug.replaceAll('-', ' ');
                   races.add(Race(
                     id: EntityId(slug: sub.raceSlug, ruleset: coreRuleset),
-                    name: sub.raceSlug.replaceAll('-', ' '),
+                    name: parentName,
                     traitsMarkdown: '',
                     subraces: [sub],
                   ));
                   racePayloads.add({
-                    'name': sub.raceSlug.replaceAll('-', ' '),
+                    'name': parentName,
                     'slug': sub.raceSlug,
                     'entityType': 'race',
                     'subraces': [payload],
@@ -3154,9 +3410,11 @@ class HomebrewPersistenceService {
     if (classes.isNotEmpty) await saveCustomClassesBatch(classes, rawPayloads: classPayloads);
     if (subclasses.isNotEmpty) await saveCustomSubclassesBatch(subclasses, rawPayloads: subclassPayloads);
     if (races.isNotEmpty) await saveCustomRacesBatch(races, rawPayloads: racePayloads);
+    if (subraces.isNotEmpty) await saveCustomSubracesBatch(subraces, rawPayloads: subracePayloads);
     if (feats.isNotEmpty) await saveCustomFeatsBatch(feats, rawPayloads: featPayloads);
     if (backgrounds.isNotEmpty) await saveCustomBackgroundsBatch(backgrounds, rawPayloads: backgroundPayloads);
     if (others.isNotEmpty) await saveCustomOtherEntriesBatch(others, rawPayloads: otherPayloads);
+    if (fluffToSave.isNotEmpty) await saveCustomFluffBatch(fluffToSave, rawPayloads: fluffPayloads);
 
     if (syncLibraries) {
       await syncToLibraries();

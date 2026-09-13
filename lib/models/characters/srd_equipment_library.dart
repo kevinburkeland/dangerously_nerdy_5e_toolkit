@@ -886,124 +886,132 @@ class SrdEquipmentLibrary {
     }
   }
 
-  /// Converts all MagicItem and standard gear into Domain EquipmentItem entities.
+  /// Converts base SRD MagicItem and standard gear into Domain EquipmentItem entities,
+  /// strictly unpolluted by homebrew items for deduplication indices.
+  static List<EquipmentItem> get baseEquipmentItems {
+    return MagicItemLibrary.baseItems.map(_mapItemToEquipmentItem).toList();
+  }
+
+  /// Converts all MagicItem and standard gear (SRD + custom homebrew) into Domain EquipmentItem entities.
   static List<EquipmentItem> get allEquipmentItems {
-    return MagicItemLibrary.allItems.map((item) {
-      final props = <String, dynamic>{
-        'cost': item.cost ?? item.cost2024 ?? item.cost2014,
-        'category': item.category.name,
-        'tags': item.tags,
-      };
+    return MagicItemLibrary.allItems.map(_mapItemToEquipmentItem).toList();
+  }
 
-      // Extract Rod of the Pact Keeper bonuses
-      final pactKeeperMatch = RegExp(r'rod\s+of\s+the\s+pact\s+keeper(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
-      if (pactKeeperMatch != null) {
-        final b = int.tryParse(pactKeeperMatch.group(1)!) ?? 0;
-        props['bonusSpellAttack'] = b;
-        props['bonusSpellSaveDc'] = b;
-        props['spellDcBonus'] = b;
-        props['spellClass'] = 'warlock';
-      }
+  static EquipmentItem _mapItemToEquipmentItem(MagicItem item) {
+    final props = <String, dynamic>{
+      'cost': item.cost ?? item.cost2024 ?? item.cost2014,
+      'category': item.category.name,
+      'tags': item.tags,
+    };
 
-      // Extract Wand of the War Mage bonuses
-      final warMageMatch = RegExp(r'wand\s+of\s+the\s+war\s+mage(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
-      if (warMageMatch != null) {
-        final b = int.tryParse(warMageMatch.group(1)!) ?? 0;
-        props['bonusSpellAttack'] = b;
-      }
+    // Extract Rod of the Pact Keeper bonuses
+    final pactKeeperMatch = RegExp(r'rod\s+of\s+the\s+pact\s+keeper(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+    if (pactKeeperMatch != null) {
+      final b = int.tryParse(pactKeeperMatch.group(1)!) ?? 0;
+      props['bonusSpellAttack'] = b;
+      props['bonusSpellSaveDc'] = b;
+      props['spellDcBonus'] = b;
+      props['spellClass'] = 'warlock';
+    }
 
-      // Extract AC bonuses (e.g. Ring/Cloak of Protection, +N Armor/Shield)
-      final acMatch = RegExp(r'(?:armor|shield|plate|breastplate|chain|leather|hide|ring of protection|cloak of protection)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name) ??
-          (item.category == ItemCategory.armor ? RegExp(r'\+(\d+)').firstMatch(item.name) : null);
-      if (acMatch != null) {
-        final b = int.tryParse(acMatch.group(1)!) ?? 0;
-        props['bonusAc'] = b;
-        props['acBonus'] = b;
-      } else if (item.name.toLowerCase() == 'ring of protection' || item.name.toLowerCase() == 'cloak of protection') {
-        props['bonusAc'] = 1;
-        props['acBonus'] = 1;
-      }
+    // Extract Wand of the War Mage bonuses
+    final warMageMatch = RegExp(r'wand\s+of\s+the\s+war\s+mage(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+    if (warMageMatch != null) {
+      final b = int.tryParse(warMageMatch.group(1)!) ?? 0;
+      props['bonusSpellAttack'] = b;
+    }
 
-      // If item is armor or shield, populate base armor metrics
-      final isShield = item.category == ItemCategory.armor &&
-          (item.name.toLowerCase().contains('shield') || item.tags.contains('shield'));
-      if (isShield) {
-        props['isShield'] = true;
-        props['shieldBonus'] = 2;
-        props['defaultSlot'] = EquipmentSlot.shield;
-      } else if (item.category == ItemCategory.armor || item.tags.contains('armor')) {
-        props['defaultSlot'] = EquipmentSlot.armor;
-        final nameLower = item.name.toLowerCase();
-        if (nameLower.contains('breastplate')) {
-          props['baseAc'] = 14;
-          props['armorType'] = 'medium';
-          props['maxDexBonus'] = 2;
-        } else if (nameLower.contains('half plate')) {
-          props['baseAc'] = 15;
-          props['armorType'] = 'medium';
-          props['maxDexBonus'] = 2;
-        } else if (nameLower.contains('plate')) {
-          props['baseAc'] = 18;
-          props['armorType'] = 'heavy';
-          props['maxDexBonus'] = 0;
-        } else if (nameLower.contains('splint')) {
-          props['baseAc'] = 17;
-          props['armorType'] = 'heavy';
-          props['maxDexBonus'] = 0;
-        } else if (nameLower.contains('chain mail')) {
-          props['baseAc'] = 16;
-          props['armorType'] = 'heavy';
-          props['maxDexBonus'] = 0;
-        } else if (nameLower.contains('ring mail')) {
-          props['baseAc'] = 14;
-          props['armorType'] = 'heavy';
-          props['maxDexBonus'] = 0;
-        } else if (nameLower.contains('scale mail')) {
-          props['baseAc'] = 14;
-          props['armorType'] = 'medium';
-          props['maxDexBonus'] = 2;
-        } else if (nameLower.contains('chain shirt') || nameLower.contains('elven chain')) {
-          props['baseAc'] = 13;
-          props['armorType'] = 'medium';
-          props['maxDexBonus'] = 2;
-        } else if (nameLower.contains('hide')) {
-          props['baseAc'] = 12;
-          props['armorType'] = 'medium';
-          props['maxDexBonus'] = 2;
-        } else if (nameLower.contains('studded leather') || nameLower.contains('studded')) {
-          props['baseAc'] = 12;
-          props['armorType'] = 'light';
-        } else if (nameLower.contains('leather') || nameLower.contains('padded')) {
-          props['baseAc'] = 11;
-          props['armorType'] = 'light';
-        }
-      }
+    // Extract AC bonuses (e.g. Ring/Cloak of Protection, +N Armor/Shield)
+    final acMatch = RegExp(r'(?:armor|shield|plate|breastplate|chain|leather|hide|ring of protection|cloak of protection)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name) ??
+        (item.category == ItemCategory.armor ? RegExp(r'\+(\d+)').firstMatch(item.name) : null);
+    if (acMatch != null) {
+      final b = int.tryParse(acMatch.group(1)!) ?? 0;
+      props['bonusAc'] = b;
+      props['acBonus'] = b;
+    } else if (item.name.toLowerCase() == 'ring of protection' || item.name.toLowerCase() == 'cloak of protection') {
+      props['bonusAc'] = 1;
+      props['acBonus'] = 1;
+    }
 
-      // Extract Weapon bonuses (+N Weapon)
-      final weaponMatch = RegExp(r'(?:weapon|sword|bow|axe|dagger|mace|hammer|spear)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
-      if (weaponMatch != null) {
-        final b = int.tryParse(weaponMatch.group(1)!) ?? 0;
-        props['attackBonus'] = b;
-        props['magicBonus'] = b;
-        props['bonusWeapon'] = b;
+    // If item is armor or shield, populate base armor metrics
+    final isShield = item.category == ItemCategory.armor &&
+        (item.name.toLowerCase().contains('shield') || item.tags.contains('shield'));
+    if (isShield) {
+      props['isShield'] = true;
+      props['shieldBonus'] = 2;
+      props['defaultSlot'] = EquipmentSlot.shield;
+    } else if (item.category == ItemCategory.armor || item.tags.contains('armor')) {
+      props['defaultSlot'] = EquipmentSlot.armor;
+      final nameLower = item.name.toLowerCase();
+      if (nameLower.contains('breastplate')) {
+        props['baseAc'] = 14;
+        props['armorType'] = 'medium';
+        props['maxDexBonus'] = 2;
+      } else if (nameLower.contains('half plate')) {
+        props['baseAc'] = 15;
+        props['armorType'] = 'medium';
+        props['maxDexBonus'] = 2;
+      } else if (nameLower.contains('plate')) {
+        props['baseAc'] = 18;
+        props['armorType'] = 'heavy';
+        props['maxDexBonus'] = 0;
+      } else if (nameLower.contains('splint')) {
+        props['baseAc'] = 17;
+        props['armorType'] = 'heavy';
+        props['maxDexBonus'] = 0;
+      } else if (nameLower.contains('chain mail')) {
+        props['baseAc'] = 16;
+        props['armorType'] = 'heavy';
+        props['maxDexBonus'] = 0;
+      } else if (nameLower.contains('ring mail')) {
+        props['baseAc'] = 14;
+        props['armorType'] = 'heavy';
+        props['maxDexBonus'] = 0;
+      } else if (nameLower.contains('scale mail')) {
+        props['baseAc'] = 14;
+        props['armorType'] = 'medium';
+        props['maxDexBonus'] = 2;
+      } else if (nameLower.contains('chain shirt') || nameLower.contains('elven chain')) {
+        props['baseAc'] = 13;
+        props['armorType'] = 'medium';
+        props['maxDexBonus'] = 2;
+      } else if (nameLower.contains('hide')) {
+        props['baseAc'] = 12;
+        props['armorType'] = 'medium';
+        props['maxDexBonus'] = 2;
+      } else if (nameLower.contains('studded leather') || nameLower.contains('studded')) {
+        props['baseAc'] = 12;
+        props['armorType'] = 'light';
+      } else if (nameLower.contains('leather') || nameLower.contains('padded')) {
+        props['baseAc'] = 11;
+        props['armorType'] = 'light';
       }
-      if (item.category == ItemCategory.weapon || item.tags.contains('weapon')) {
-        props['isWeapon'] = true;
-        props['defaultSlot'] = EquipmentSlot.mainHand;
-      }
-      if (item.category == ItemCategory.ring || item.tags.contains('ring')) {
-        props['defaultSlot'] = EquipmentSlot.ring1;
-      }
+    }
 
-      return EquipmentItem(
-        id: EntityId(slug: item.id.replaceAll('_', '-'), ruleset: RulesetVersion.v2024),
-        name: item.name,
-        itemType: item.category.name,
-        rarity: item.rarity.name,
-        requiresAttunement: item.requiresAttunement,
-        descriptionMarkdown: item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary,
-        customProperties: props,
-      );
-    }).toList();
+    // Extract Weapon bonuses (+N Weapon)
+    final weaponMatch = RegExp(r'(?:weapon|sword|bow|axe|dagger|mace|hammer|spear)(?:,\s*|\s*)\+(\d+)', caseSensitive: false).firstMatch(item.name);
+    if (weaponMatch != null) {
+      final b = int.tryParse(weaponMatch.group(1)!) ?? 0;
+      props['attackBonus'] = b;
+      props['magicBonus'] = b;
+      props['bonusWeapon'] = b;
+    }
+    if (item.category == ItemCategory.weapon || item.tags.contains('weapon')) {
+      props['isWeapon'] = true;
+      props['defaultSlot'] = EquipmentSlot.mainHand;
+    }
+    if (item.category == ItemCategory.ring || item.tags.contains('ring')) {
+      props['defaultSlot'] = EquipmentSlot.ring1;
+    }
+
+    return EquipmentItem(
+      id: EntityId(slug: item.id.replaceAll('_', '-'), ruleset: RulesetVersion.v2024),
+      name: item.name,
+      itemType: item.category.name,
+      rarity: item.rarity.name,
+      requiresAttunement: item.requiresAttunement,
+      descriptionMarkdown: item.rules2024.summary.isNotEmpty ? item.rules2024.summary : item.rules2014.summary,
+      customProperties: props,
+    );
   }
 }

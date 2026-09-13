@@ -207,3 +207,16 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - `IngestionBatchResult` must carry `final List<EntityFluff> fluff;` across the isolate port, allowing the main UI thread to call `EntityFluffService().batchRegisterFluff(ingestion.fluff)` upon receiving the computed batch.
 - **Universal Bundle & Backup Persistence:**
   - `HomebrewBundle` and persistence services serialize registered lore via `HomebrewBundle.fluff`, maintaining parity across import/export, cloud backups, and local storage.
+
+## 13. SRD Index Decoupling, Subrace/Fluff Persistence Parity, & Resilient Deserialization
+
+- **SRD Equipment Index Decoupling:**
+  - `MagicItemLibrary.allItems` dynamically combines base SRD items with runtime homebrew items synchronized via `syncToLibraries()`.
+  - `SrdEquivalenceIndex` must strictly index `SrdEquipmentLibrary.baseEquipmentItems` rather than `allEquipmentItems`. Referencing dynamic item collections in the SRD index causes all custom items to be marked as SRD canon and purged during `reparseAllHomebrew()`.
+- **Subrace & Fluff Persistence Parity:**
+  - `HomebrewPersistenceService` manages dedicated storage keys (`_keyHomebrewSubraces`, `_keyHomebrewSubracesRaw`, `_keyHomebrewFluff`, `_keyHomebrewFluffRaw`).
+  - Batch operations (`saveHomebrewEntitiesBatch`) persist subraces directly, register them into `SrdSpeciesLibrary.addCustomSubrace`, and only generate parent race entries when the parent is non-SRD canon (`srdIndex.checkEntity(...) == SrdMatchResult.notSrd`).
+  - `exportHomebrewBundle` and `exportBundle` gather and export both standalone `subraces` and `fluff` alongside core categories.
+- **Resilient Compendium Deserialization:**
+  - Deserialization in all `loadCustom*` methods must wrap per-entity map operations in individual `try-catch` blocks.
+  - A single corrupted or malformed record must be logged and bypassed without discarding the rest of the collection.

@@ -156,7 +156,7 @@ class SrdEquivalenceIndex {
       if (item.name2014 != null) itemNames.add(_slugify(item.name2014!));
       if (item.name2024 != null) itemNames.add(_slugify(item.name2024!));
     }
-    for (final eq in SrdEquipmentLibrary.allEquipmentItems) {
+    for (final eq in SrdEquipmentLibrary.baseEquipmentItems) {
       itemSlugs.add(eq.id.slug.toLowerCase().trim());
       itemSlugs.add(_slugify(eq.name));
       itemNames.add(_slugify(eq.name));

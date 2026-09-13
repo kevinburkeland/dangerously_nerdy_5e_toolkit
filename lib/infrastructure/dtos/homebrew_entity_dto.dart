@@ -189,8 +189,8 @@ class HomebrewEntityDto {
       );
     }
 
-    // In 2024, Species/Races MUST NOT define Ability Score Increases (ASIs belong to Backgrounds)
-    if (entityType == 'race' || entityType == 'species') {
+    // In 2024, Species/Races/Subraces MUST NOT define Ability Score Increases (ASIs belong to Backgrounds)
+    if (entityType == 'race' || entityType == 'species' || entityType == 'subrace') {
       if (json.containsKey('asi') ||
           json.containsKey('ability') ||
           json.containsKey('abilityScoreIncrease')) {
@@ -222,7 +222,8 @@ class HomebrewEntityDto {
         'item' || 'equipment' || 'magicitem' || 'weapon' || 'armor' => 'equipment',
         'class' || 'classdefinition' => 'class',
         'subclass' => 'subclass',
-        'race' || 'species' || 'subrace' => 'race',
+        'subrace' => 'subrace',
+        'race' || 'species' => 'race',
         'feat' => 'feat',
         'background' => 'background',
         _ => explicitEntityType,
@@ -290,9 +291,10 @@ class HomebrewEntityDto {
     if (json.containsKey('classFeatures') || json.containsKey('subclassFeatures')) {
       return 'subclass';
     }
-    if (json.containsKey('raceName') ||
-        json.containsKey('subrace') ||
-        (json.containsKey('speed') && (json.containsKey('size') || json.containsKey('subraces')))) {
+    if (json.containsKey('raceName') || json.containsKey('subrace')) {
+      return 'race';
+    }
+    if (json.containsKey('speed') && (json.containsKey('size') || json.containsKey('subraces'))) {
       return 'race';
     }
     if (json.containsKey('prerequisite') || json.containsKey('originFeat')) {
@@ -341,8 +343,8 @@ class HomebrewEntityDto {
       }
     }
 
-    // Species / Race Ability Extractions (Fixed and Flexible Choice Pools)
-    if (entityType == 'race') {
+    // Species / Race / Subrace Ability Extractions (Fixed and Flexible Choice Pools)
+    if (entityType == 'race' || entityType == 'species' || entityType == 'subrace') {
       final speciesAbilities = _extractSpeciesAbilities(json);
       if (speciesAbilities.fixed.isNotEmpty) {
         normalized['abilities'] = speciesAbilities.fixed;
