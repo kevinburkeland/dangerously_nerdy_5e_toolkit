@@ -319,5 +319,36 @@ void main() {
       expect(deserialized.fluff.first.loreMarkdown, contains('silvery beam'));
       expect(deserialized.fluff.first.images, contains('spells/PHB/Moonbeam.webp'));
     });
+
+    test('cleanRawTags sanitizes style and inline italic tags in loreMarkdown', () {
+      final pipeline = CompendiumJsonIngestionPipeline();
+      const styleTag = '{@style The Far Realm: Real Yet Unreal|small-caps}';
+      expect(CompendiumJsonIngestionPipeline.cleanRawTags(styleTag), equals('The Far Realm: Real Yet Unreal'));
+
+      const italicTag = '{@i The Binding Stone}';
+      expect(CompendiumJsonIngestionPipeline.cleanRawTags(italicTag), equals('*The Binding Stone*'));
+
+      final result = pipeline.ingestJsonMap({
+        'monsterFluff': [
+          {
+            'name': 'Far Realm Observer',
+            'source': 'HOMEBREW',
+            'entries': [
+              '{@style The Far Realm: Real Yet Unreal|small-caps}',
+              'Reflected in {@i The Binding Stone}.',
+            ],
+          }
+        ]
+      });
+
+      expect(result.hasErrors, isFalse);
+      final fluff = EntityFluffService().getFluff('monster', 'far-realm-observer');
+      expect(fluff, isNotNull);
+      expect(fluff!.loreMarkdown, contains('The Far Realm: Real Yet Unreal'));
+      expect(fluff.loreMarkdown, isNot(contains('{@style')));
+      expect(fluff.loreMarkdown, contains('*The Binding Stone*'));
+      expect(fluff.loreMarkdown, isNot(contains('{@i')));
+    });
   });
 }
+

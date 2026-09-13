@@ -1465,6 +1465,10 @@ class CompendiumJsonIngestionPipeline {
       }
     }
 
+    if (loreMarkdown.isNotEmpty) {
+      loreMarkdown = cleanRawTags(loreMarkdown);
+    }
+
     if (loreMarkdown.isNotEmpty || images.isNotEmpty) {
       final item = EntityFluff(
         entityType: entityType.toLowerCase().trim(),
@@ -1551,6 +1555,8 @@ class CompendiumJsonIngestionPipeline {
           case 'color':
           case 'comic':
             return parts.length > 1 && parts[1].trim().isNotEmpty ? parts[1].trim() : primary;
+          case 'style':
+            return primary;
           case 'book':
           case 'variantrule':
           case 'spell':
