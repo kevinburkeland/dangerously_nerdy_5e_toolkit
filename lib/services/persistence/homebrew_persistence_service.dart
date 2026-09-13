@@ -472,8 +472,12 @@ class HomebrewPersistenceService {
   /// - Feature Options (Invocations, Pacts, Infusions, Character Options)
   /// - Rollable Tables (TableIndexScreen / SrdTablesLibrary)
   /// - DM Reference Items (RulesCompendiumScreen / DmScreenLibrary)
+  ///
+  /// Only entries with [isEnabled] == true are registered into the active runtime toolkit.
   static void _hydrateCustomOtherSubsystems(List<HomebrewCompendiumEntry> others) {
-    final customPactBoons = others
+    final activeOthers = others.where((e) => e.isEnabled).toList();
+
+    final customPactBoons = activeOthers
         .where((e) {
           final cat = e.category.toLowerCase();
           final name = e.name.toLowerCase();
@@ -488,7 +492,7 @@ class HomebrewPersistenceService {
         .toList();
     SrdFeatureOptions.setCustomPactBoons(customPactBoons);
 
-    final customInvocations = others
+    final customInvocations = activeOthers
         .where((e) {
           final cat = e.category.toLowerCase();
           final isPactBoon = cat.contains('pact boon') || cat.contains('pb') || e.name.toLowerCase().startsWith('pact of the');
@@ -507,7 +511,7 @@ class HomebrewPersistenceService {
         .toList();
     SrdFeatureOptions.setCustomInvocations(customInvocations);
 
-    final customInfusions = others
+    final customInfusions = activeOthers
         .where((e) {
           final cat = e.category.toLowerCase();
           final isPactBoon = cat.contains('pact boon') || cat.contains('pb') || e.name.toLowerCase().startsWith('pact of the');
@@ -530,7 +534,7 @@ class HomebrewPersistenceService {
         .toList();
     SrdFeatureOptions.setCustomInfusions(customInfusions);
 
-    final customCharOptions = others
+    final customCharOptions = activeOthers
         .where((e) {
           final classified = HomebrewOtherCategory.classify(
             category: e.category,
@@ -548,7 +552,7 @@ class HomebrewPersistenceService {
         .toList();
     SrdFeatureOptions.setCustomCharacterOptions(customCharOptions);
 
-    final customTables = others
+    final customTables = activeOthers
         .where((e) =>
             HomebrewOtherCategory.classify(
               category: e.category,
@@ -560,7 +564,7 @@ class HomebrewPersistenceService {
         .toList();
     SrdTablesLibrary.setCustomTables(customTables);
 
-    final customRefItems = others
+    final customRefItems = activeOthers
         .where((e) {
           final classified = HomebrewOtherCategory.classify(
             category: e.category,
@@ -1392,6 +1396,28 @@ class HomebrewPersistenceService {
     );
     await _deleteRawPayload(_keyHomebrewOtherRaw, slug);
     _hydrateCustomOtherSubsystems(entries);
+  }
+
+  /// Toggles or sets the [isEnabled] active flag on an individual homebrew compendium entry (rule, table, etc.).
+  ///
+  /// Persists the updated collection and re-synchronizes runtime libraries so disabled rules are excluded.
+  /// Returns the updated [isEnabled] state (or false if slug was not found).
+  Future<bool> toggleOtherEntryEnabled(String slug, {bool? isEnabled}) async {
+    final entries = await loadCustomOtherEntries();
+    final idx = entries.indexWhere((e) => e.id.slug == slug);
+    if (idx == -1) return false;
+
+    final target = entries[idx];
+    final newEnabled = isEnabled ?? !target.isEnabled;
+    entries[idx] = target.copyWith(isEnabled: newEnabled);
+
+    await _saveStringList(
+      _keyHomebrewOther,
+      entries.map((e) => json.encode(e.toMap())).toList(),
+    );
+
+    _hydrateCustomOtherSubsystems(entries);
+    return newEnabled;
   }
 
   /// Returns a map of counts for each granular [HomebrewOtherCategory] stored

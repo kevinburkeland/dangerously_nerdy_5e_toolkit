@@ -154,12 +154,19 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - `subrace` must route into `races` (`saveCustomRacesBatch`) and attach to parent race definitions.
   - `table` entries must be rendered into markdown tables using `colLabels` and rows.
   - `deity` entries must format structured metadata headers (Pantheon, Alignment, Domains, Symbol).
-- **Codex & Rules Cross-Tool Runtime Propagation:**
+- **Codex & Rules Cross-Tool Runtime Propagation & Individual Toggling:**
   - `HomebrewPersistenceService._hydrateCustomOtherSubsystems` automatically projects generic compendium entries (`HomebrewOtherCategory`) across the entire toolkit:
     - `HomebrewOtherCategory.tables` map via `compendiumEntryToRollableTable` to `SrdTablesLibrary.setCustomTables` with dynamic dice formula detection, rendering under the `TableCategory.custom` ("Homebrew & Codex") chip in `TableIndexScreen`.
     - `trapsAndHazards`, `conditionsAndDiseases`, `deities`, `vehicles`, `charmsAndRewards`, and `rulesAndReference` map via `compendiumEntryToDmReferenceItem` to `DmScreenLibrary.setCustomItems`, rendering in `RulesCompendiumScreen` and `DmDashboardScreen`.
     - `characterOptions` (maneuvers, metamagic, boons) map to `SrdFeatureOptions.setCustomCharacterOptions`, resolving through `SrdFeatureOptions.allOptions` in `CharacterActionsResolver` and Character Sheet ability traits.
     - Hydration runs automatically on startup (`initLibraries`), single/batch saves, single/batch deletes, and granular category prunes (`clearOtherEntriesByCategories`).
+  - **Individual Rule Toggling (`isEnabled`):**
+    - Every `HomebrewCompendiumEntry` includes an `isEnabled` boolean flag (default `true`).
+    - Disabled rules remain stored in persistence but are strictly filtered out (`activeOthers = others.where((e) => e.isEnabled).toList()`) during `_hydrateCustomOtherSubsystems`.
+    - `HomebrewPersistenceService.toggleOtherEntryEnabled(slug, {isEnabled})` updates the entry, persists to disk, and triggers immediate re-hydration.
+    - `HomebrewStudioScreen` (Codex & Rules tab) displays adaptive toggle switches on each rule tile and detail dialog, dimmed visual indicators and 'Disabled' badges on inactive items, and contextual `Active` / `Disabled` filter chips when disabled rules are present.
+    - `DmRuleComparisonDialog` and `DmRuleCard` visually highlight homebrew rules with pink badges and provide one-tap deactivation.
 - **Strict Avoidance of Non-SRD WotC Product Identity:**
   - All test fixtures, mock data, and documentation must strictly use generic SRD content or invented homebrew names (e.g., "Chronoblast", "Astral Knight", "Sand Corsair Captain").
+
 

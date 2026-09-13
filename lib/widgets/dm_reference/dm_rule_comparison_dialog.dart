@@ -3,6 +3,7 @@ import '../../models/dm_screen_data.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
 import '../common/diff_highlight_banner.dart';
+import '../../services/persistence/homebrew_persistence_service.dart';
 
 /// Interactive modal comparing 2014 RAW rules vs 2024 Revised rules side-by-side.
 class DmRuleComparisonDialog extends StatefulWidget {
@@ -97,9 +98,11 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                         ),
                       ),
                       Text(
-                        '2014 vs 2024 Rule Comparison',
+                        item.isHomebrew
+                            ? 'Homebrew Rule'
+                            : '2014 vs 2024 Rule Comparison',
                         style: TextStyle(
-                          color: theme.colorScheme.primary,
+                          color: item.isHomebrew ? Colors.pinkAccent : theme.colorScheme.primary,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -107,6 +110,20 @@ class _DmRuleComparisonDialogState extends State<DmRuleComparisonDialog> {
                     ],
                   ),
                 ),
+                if (item.isHomebrew)
+                  IconButton(
+                    icon: const Icon(Icons.power_settings_new, color: Colors.pinkAccent, size: 22),
+                    tooltip: 'Disable this homebrew rule',
+                    onPressed: () async {
+                      await HomebrewPersistenceService().toggleOtherEntryEnabled(item.id, isEnabled: false);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Disabled homebrew rule: "${item.title}".')),
+                        );
+                      }
+                    },
+                  ),
                 IconButton(
                   icon: Icon(
                     _pinned ? Icons.push_pin : Icons.push_pin_outlined,

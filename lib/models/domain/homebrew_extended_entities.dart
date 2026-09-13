@@ -1451,6 +1451,7 @@ class HomebrewCompendiumEntry extends DomainEntity {
   final String name;
   final String category; // e.g. "Table", "Rule", "Optional Feature", "Condition", "Hazard", "Reward"
   final String descriptionMarkdown;
+  final bool isEnabled;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -1459,6 +1460,7 @@ class HomebrewCompendiumEntry extends DomainEntity {
     required this.name,
     required this.category,
     required this.descriptionMarkdown,
+    this.isEnabled = true,
     this.customProperties = const {},
   });
 
@@ -1471,6 +1473,7 @@ class HomebrewCompendiumEntry extends DomainEntity {
         'name': name,
         'category': category,
         'descriptionMarkdown': descriptionMarkdown,
+        'isEnabled': isEnabled,
         'customProperties': customProperties,
       };
 
@@ -1480,6 +1483,7 @@ class HomebrewCompendiumEntry extends DomainEntity {
       name: map['name']?.toString() ?? '',
       category: map['category']?.toString() ?? 'General',
       descriptionMarkdown: map['descriptionMarkdown']?.toString() ?? '',
+      isEnabled: map['isEnabled'] as bool? ?? true,
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
@@ -1490,6 +1494,7 @@ class HomebrewCompendiumEntry extends DomainEntity {
     String? name,
     String? category,
     String? descriptionMarkdown,
+    bool? isEnabled,
     Map<String, dynamic>? customProperties,
   }) {
     return HomebrewCompendiumEntry(
@@ -1497,6 +1502,7 @@ class HomebrewCompendiumEntry extends DomainEntity {
       name: name ?? this.name,
       category: category ?? this.category,
       descriptionMarkdown: descriptionMarkdown ?? this.descriptionMarkdown,
+      isEnabled: isEnabled ?? this.isEnabled,
       customProperties: customProperties ?? this.customProperties,
     );
   }

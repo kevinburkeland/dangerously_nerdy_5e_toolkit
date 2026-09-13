@@ -43,6 +43,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
   List<Background> _backgrounds = [];
   List<HomebrewCompendiumEntry> _otherEntries = [];
   HomebrewOtherCategory? _selectedOtherFilter;
+  bool? _selectedStatusFilter;
   bool _isLoading = true;
 
   // Multi-select batch deletion mode
@@ -393,55 +394,107 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
     }
   }
 
+  Future<void> _toggleOtherEntryEnabled(HomebrewCompendiumEntry entry, bool isEnabled) async {
+    await _persistence.toggleOtherEntryEnabled(entry.id.slug, isEnabled: isEnabled);
+    await _loadAll();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isEnabled
+                ? 'Enabled homebrew rule "${entry.name}".'
+                : 'Disabled homebrew rule "${entry.name}".',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   void _showDetailModal({
     required String title,
     required String category,
     required String contentMarkdown,
     List<String>? metadataLines,
+    bool? isEnabled,
+    ValueChanged<bool>? onToggleEnabled,
   }) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (ctx) {
+        bool currentEnabled = isEnabled ?? true;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final theme = Theme.of(ctx);
+            return AlertDialog(
+              title: Row(
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  Text(category, style: TextStyle(fontSize: 12, color: Theme.of(ctx).colorScheme.primary)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text(category, style: TextStyle(fontSize: 12, color: theme.colorScheme.primary)),
+                      ],
+                    ),
+                  ),
+                  if (onToggleEnabled != null) ...[
+                    const SizedBox(width: 8),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          currentEnabled ? 'Active' : 'Disabled',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: currentEnabled ? Colors.greenAccent : Colors.amber,
+                          ),
+                        ),
+                        Switch.adaptive(
+                          value: currentEnabled,
+                          onChanged: (val) {
+                            setModalState(() {
+                              currentEnabled = val;
+                            });
+                            onToggleEnabled(val);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (metadataLines != null && metadataLines.isNotEmpty) ...[
-                for (final line in metadataLines)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(line, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                  ),
-                const Divider(),
-              ],
-              Text(
-                contentMarkdown.isNotEmpty ? contentMarkdown : 'No additional descriptions provided.',
-                style: const TextStyle(fontSize: 14, height: 1.4),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (metadataLines != null && metadataLines.isNotEmpty) ...[
+                      for (final line in metadataLines)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(line, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                        ),
+                      const Divider(),
+                    ],
+                    Text(
+                      contentMarkdown.isNotEmpty ? contentMarkdown : 'No additional descriptions provided.',
+                      style: const TextStyle(fontSize: 14, height: 1.4),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1405,23 +1458,32 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
       categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
     }
 
-    // Filter entries by selected category chip
-    final filtered = _selectedOtherFilter == null
-        ? _otherEntries
-        : _otherEntries.where((e) {
-            final cat = HomebrewOtherCategory.classify(
-              category: e.category,
-              name: e.name,
-              customProperties: e.customProperties,
-            );
-            return cat == _selectedOtherFilter;
-          }).toList();
+    final activeCount = _otherEntries.where((e) => e.isEnabled).length;
+    final disabledCount = _otherEntries.where((e) => !e.isEnabled).length;
+
+    // Filter entries by selected status and category chip
+    final filtered = _otherEntries.where((e) {
+      if (_selectedStatusFilter != null && e.isEnabled != _selectedStatusFilter) {
+        return false;
+      }
+      if (_selectedOtherFilter != null) {
+        final cat = HomebrewOtherCategory.classify(
+          category: e.category,
+          name: e.name,
+          customProperties: e.customProperties,
+        );
+        if (cat != _selectedOtherFilter) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
 
     final slugs = filtered.map((o) => o.id.slug).toList();
 
     return Column(
       children: [
-        // Category Filter Chips
+        // Category and Status Filter Chips
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1429,12 +1491,34 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
             children: [
               FilterChip(
                 label: Text('All (${_otherEntries.length})'),
-                selected: _selectedOtherFilter == null,
+                selected: _selectedOtherFilter == null && _selectedStatusFilter == null,
                 onSelected: (_) {
-                  setState(() => _selectedOtherFilter = null);
+                  setState(() {
+                    _selectedOtherFilter = null;
+                    _selectedStatusFilter = null;
+                  });
                 },
               ),
-              const SizedBox(width: 8),
+              if (disabledCount > 0) ...[
+                const SizedBox(width: 8),
+                FilterChip(
+                  avatar: const Icon(Icons.check_circle_outline, size: 16, color: Colors.greenAccent),
+                  label: Text('Active ($activeCount)'),
+                  selected: _selectedStatusFilter == true,
+                  onSelected: (selected) {
+                    setState(() => _selectedStatusFilter = selected ? true : null);
+                  },
+                ),
+                const SizedBox(width: 8),
+                FilterChip(
+                  avatar: const Icon(Icons.pause_circle_outline, size: 16, color: Colors.amberAccent),
+                  label: Text('Disabled ($disabledCount)'),
+                  selected: _selectedStatusFilter == false,
+                  onSelected: (selected) {
+                    setState(() => _selectedStatusFilter = selected ? false : null);
+                  },
+                ),
+              ],
               ...HomebrewOtherCategory.values
                   .where((c) => (categoryCounts[c] ?? 0) > 0)
                   .map((c) {
@@ -1462,7 +1546,7 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
           child: filtered.isEmpty
               ? Center(
                   child: Text(
-                    'No entries found in this category.',
+                    'No entries found matching filters.',
                     style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 )
@@ -1521,6 +1605,8 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
                                 title: entry.name,
                                 category: entry.category,
                                 contentMarkdown: entry.descriptionMarkdown,
+                                isEnabled: entry.isEnabled,
+                                onToggleEnabled: (val) => _toggleOtherEntryEnabled(entry, val),
                               ),
                         leading: _isSelectionMode
                             ? Checkbox(
@@ -1536,16 +1622,76 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
                                 },
                               )
                             : CircleAvatar(
-                                backgroundColor: catColor.withValues(alpha: 0.2),
-                                child: Icon(catIcon, color: catColor),
+                                backgroundColor: entry.isEnabled
+                                    ? catColor.withValues(alpha: 0.2)
+                                    : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                                child: Icon(
+                                  catIcon,
+                                  color: entry.isEnabled
+                                      ? catColor
+                                      : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                ),
                               ),
-                        title: Text(entry.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(sub),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                entry.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  decoration: entry.isEnabled ? null : TextDecoration.lineThrough,
+                                  color: entry.isEnabled
+                                      ? null
+                                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ),
+                            if (!entry.isEnabled)
+                              Container(
+                                margin: const EdgeInsets.only(left: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                                ),
+                                child: const Text(
+                                  'Disabled',
+                                  style: TextStyle(
+                                    color: Colors.amber,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        subtitle: Text(
+                          sub,
+                          style: TextStyle(
+                            color: entry.isEnabled
+                                ? null
+                                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                          ),
+                        ),
                         trailing: _isSelectionMode
                             ? null
-                            : IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                onPressed: () => _deleteOtherEntry(entry.id.slug),
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Semantics(
+                                    label: entry.isEnabled ? 'Disable ${entry.name}' : 'Enable ${entry.name}',
+                                    child: Switch.adaptive(
+                                      value: entry.isEnabled,
+                                      onChanged: (val) => _toggleOtherEntryEnabled(entry, val),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                    tooltip: 'Delete ${entry.name}',
+                                    onPressed: () => _deleteOtherEntry(entry.id.slug),
+                                  ),
+                                ],
                               ),
                       ),
                     );

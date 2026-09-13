@@ -121,6 +121,25 @@ class _DmRuleCardState extends State<DmRuleCard> {
                   ],
                 ),
               ),
+              if (item.isHomebrew) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.pinkAccent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.pinkAccent.withValues(alpha: 0.4)),
+                  ),
+                  child: const Text(
+                    'Homebrew',
+                    style: TextStyle(
+                      color: Colors.pinkAccent,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
               if (item.isChangedIn2024) ...[
                 const EditionDiffBadge(),
                 const SizedBox(width: 6),

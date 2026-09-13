@@ -67,6 +67,8 @@ required this.summary,
     this.extraData,
   });
 
+  bool get isHomebrew => tags.contains('Homebrew');
+
   String getTitle(DmRulesEdition edition) {
     if (edition == DmRulesEdition.v2014 && title2014 != null) return title2014!;
     if (edition == DmRulesEdition.v2024 && title2024 != null) return title2024!;
