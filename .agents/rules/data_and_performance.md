@@ -220,3 +220,17 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Resilient Compendium Deserialization:**
   - Deserialization in all `loadCustom*` methods must wrap per-entity map operations in individual `try-catch` blocks.
   - A single corrupted or malformed record must be logged and bypassed without discarding the rest of the collection.
+
+## 14. Table Classification, Remote Manifest Filtering, & Tabular UI Rendering
+
+- **Rolling vs Data Table Classification:**
+  - Compendium tables are dynamically categorized into `HomebrewOtherCategory.tables` (Rollable Tables) vs `HomebrewOtherCategory.dataTables` (Data & Reference Tables) using `isRollingTable`.
+  - `isRollingTable` inspects `colLabels` for dice patterns (`d\d+`, `d%`, `roll`, `die`, `dice`, `result`), `rows` for numeric roll range bounds (`01-20`, `1-4`), and explicit dice configuration attributes (`dice`, `roll`, `diceType`).
+  - Tables with non-numeric descriptive headers and text rows (such as Material Hardness & AC or Carrying Capacities) are designated as data tables.
+- **Sanitized Remote Manifest Discovery:**
+  - `GithubIngestorAdapter.discoverJsonManifest` filters out non-entity tooling files (`foundry-*.json`, `index.json`, `fluff-index.json`, `sources.json`, `books.json`, `adventures.json`, book/adventure narrative chapters, and generator indices).
+  - Unpacking expands bundle keys for all secondary tabletop categories (`optionalfeature`, `psionic`, `language`, `sense`, `skill`, `deck`, `recipe`, `tablegroup`, `monsterfeature`).
+- **Tabular UI Rendering & RenderFlex Overflow Protection:**
+  - Markdown table rows (`| ... |`) in `DmRuleCard` are parsed into native Flutter `Table` widgets via `FormattedMarkdownText` with header formatting, alternating surface shading, and horizontal scrolling.
+  - Roll buttons and `Rollable` badges appear exclusively on dice-driven rolling tables.
+  - To prevent horizontal `RenderFlex` overflow on small mobile displays (320-352px) or under 2.0x dynamic type scaling, card badges (`Rollable`, `Data Table`, `Homebrew`, `EditionDiffBadge`) are placed in a responsive `Wrap` inside an `Expanded` column.

@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1672%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1679%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -50,7 +50,7 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 ### 🧪 2. Homebrew Studio & Community Compendium Importer
 * **Custom Homebrew Builders**: Interactive in-app creation dialogs for custom Spells, Monsters, and Equipment/Magic Items.
 * **Comprehensive Anti-Corruption Layer (ACL)**:
-  - **Polymorphic Ingestion Engine**: Seamlessly parse, normalize, and quarantine data across Spells, Monsters, Magic Items, Classes, Subclasses, Races/Species, Feats, Backgrounds, and Tables.
+  - **Polymorphic Ingestion Engine**: Seamlessly parse, normalize, and quarantine data across Spells, Monsters, Magic Items, Classes, Subclasses, Races/Species, Feats, Backgrounds, Tables, Optional Features (Invocations, Metamagic, Infusions, Maneuvers), Psionics, Languages, Senses, Skills, Decks, and Recipes.
   - **AST & EntryNodeTransformer**: Decodes nested community JSON structures, entries, lists, tables, and tag syntax (e.g. `{@spell ...}`, `{@item ...}`, `{@dice ...}`, `{@creature ...}`, `{@condition ...}`, `{@damage ...}`).
   - **Automated Monster Extraction**: Parses abbreviated sizes, alignments, multiattack routines, damage types, and spellcasting blocks into fully playable statblocks.
   - **Subclass Feature Stitching**: Dynamically stitches subclass feature progressions into canonical or homebrew parent classes.
@@ -58,6 +58,7 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
     - Full community compendium fluff format support across monsters, spells, items, classes, subclasses, races/species, feats, backgrounds, conditions, rewards, objects, vehicles, and traps.
     - Two-pass deferred `_copy` inheritance resolving base lore descriptions and artwork paths for entity variants without data loss.
     - Isolate boundary bridging ensuring background compute parses (`_parseJsonInIsolate`) propagate directly into persistent storage and runtime codices.
+* **Sanitized Manifest Discovery**: Ingests directly from remote GitHub releases or source repos while strictly bypassing redundant utility scripts, generator lookups, and prose narrative book chapters to preserve database integrity.
 * **High-Performance Background Parsing**:
   - Offloads heavy JSON bundle parsing to a Dart background isolate to maintain a butter-smooth 60/120fps UI during multi-megabyte bundle imports.
   - Real-time modal progress reporting showing exact entry processing status.
@@ -175,6 +176,9 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 * **📖 Rules Compendium**:
   - Seamlessly toggle between 2014 5e RAW rules and 2024 Revised rules across all combat mechanics, conditions, environment hazards, DCs, resting, and spell limits.
   - Tokenized real-time search, category filtering, and interactive rule calculators.
+  - **Rolling vs Data Table Differentiation**: Automatically distinguishes dice-driven rolling tables (with integrated dice roller actions and amber badges) from static reference matrices (with cyan badges and no roller action).
+  - **Subcategory Filtering**: Filter the compendium rules view by `All Tables`, `Rollable Tables`, or `Data & Reference Tables`.
+  - **Native Tabular Rendering**: Formats compendium tables into scrollable, responsive Flutter `Table` widgets with styled headers, borders, and Markdown cells instead of plain text or unstructured bullet lists.
 * **🎲 Table Index & Loot Oracle**:
   - Interactive rolling for all 5e SRD tables: Treasure Hoards (CR 0–4, 5–10, 11–16, 17+), Magic Item Tables A–I, Gemstones (10 gp to 5,000 gp), Art Objects (25 gp to 7,500 gp), 100 Trinkets, Wild Magic Surge, Madness, Confusion, and Reincarnate.
   - Integrated Party Share Calculator with automatic coin liquidation.
