@@ -31,6 +31,7 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   DmCategory? _selectedCategory;
+  String? _selectedTableSubCategory;
   bool _showOnlyChangedIn2024 = false;
   bool _showOnlyPinned = false;
 
@@ -121,6 +122,11 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
       }
       if (_selectedCategory != null && item.category != _selectedCategory) {
         return false;
+      }
+      if (_selectedCategory == DmCategory.tables && _selectedTableSubCategory != null) {
+        if (item.subCategory != _selectedTableSubCategory) {
+          return false;
+        }
       }
       if (_showOnlyChangedIn2024 && !item.isChangedIn2024) {
         return false;
@@ -241,6 +247,69 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
                                   label: const Text('Open Roller', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
                                 ),
                               ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  ChoiceChip(
+                                    avatar: const Icon(Icons.table_rows, size: 14),
+                                    label: Text(
+                                      'All Tables (${allItems.where((i) => i.category == DmCategory.tables).length})',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    selected: _selectedTableSubCategory == null,
+                                    selectedColor: const Color(0xFFF59E0B),
+                                    labelStyle: TextStyle(
+                                      color: _selectedTableSubCategory == null ? Colors.black : theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    onSelected: (_) {
+                                      HapticService.selectionTick(context);
+                                      setState(() => _selectedTableSubCategory = null);
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ChoiceChip(
+                                    avatar: const Icon(Icons.casino_outlined, size: 14),
+                                    label: Text(
+                                      'Rollable Tables (${allItems.where((i) => i.category == DmCategory.tables && i.subCategory == 'Rollable Tables').length})',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    selected: _selectedTableSubCategory == 'Rollable Tables',
+                                    selectedColor: const Color(0xFFF59E0B),
+                                    labelStyle: TextStyle(
+                                      color: _selectedTableSubCategory == 'Rollable Tables' ? Colors.black : theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    onSelected: (_) {
+                                      HapticService.selectionTick(context);
+                                      setState(() => _selectedTableSubCategory = 'Rollable Tables');
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ChoiceChip(
+                                    avatar: const Icon(Icons.view_list, size: 14),
+                                    label: Text(
+                                      'Data & Reference Tables (${allItems.where((i) => i.category == DmCategory.tables && i.subCategory == 'Data & Reference Tables').length})',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                    selected: _selectedTableSubCategory == 'Data & Reference Tables',
+                                    selectedColor: Colors.tealAccent,
+                                    labelStyle: TextStyle(
+                                      color: _selectedTableSubCategory == 'Data & Reference Tables' ? Colors.black : theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    onSelected: (_) {
+                                      HapticService.selectionTick(context);
+                                      setState(() => _selectedTableSubCategory = 'Data & Reference Tables');
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -704,7 +773,10 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
               ),
               onSelected: (_) {
                 HapticService.selectionTick(context);
-                setState(() => _selectedCategory = null);
+                setState(() {
+                  _selectedCategory = null;
+                  _selectedTableSubCategory = null;
+                });
               },
             ),
           ),
@@ -725,7 +797,12 @@ class _RulesCompendiumScreenState extends State<RulesCompendiumScreen> {
                 ),
                 onSelected: (_) {
                   HapticService.selectionTick(context);
-                  setState(() => _selectedCategory = cat);
+                  setState(() {
+                    _selectedCategory = cat;
+                    if (cat != DmCategory.tables) {
+                      _selectedTableSubCategory = null;
+                    }
+                  });
                 },
               ),
             );

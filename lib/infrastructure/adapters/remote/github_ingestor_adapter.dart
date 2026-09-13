@@ -77,13 +77,36 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
         final path = item['path']?.toString();
         if (path != null && path.toLowerCase().endsWith('.json')) {
           final lower = path.toLowerCase();
-          // Filter out obvious package and build tooling manifests
+          // Filter out obvious package manifests, build tooling, VTT duplicates, index maps, and narrative book prose
           if (lower.endsWith('package.json') ||
               lower.endsWith('package-lock.json') ||
               lower.endsWith('tsconfig.json') ||
               lower.endsWith('.eslintrc.json') ||
               lower.contains('.github/') ||
-              lower.contains('/.git/')) {
+              lower.contains('/.git/') ||
+              lower.contains('foundry') ||
+              lower.endsWith('index.json') ||
+              lower.endsWith('fluff-index.json') ||
+              lower.endsWith('sources.json') ||
+              lower.endsWith('cr-index.json') ||
+              lower.endsWith('template.json') ||
+              lower.endsWith('changelog.json') ||
+              lower.endsWith('converter.json') ||
+              lower.endsWith('encounterbuilder.json') ||
+              lower.endsWith('encounters.json') ||
+              lower.contains('makebrew') ||
+              lower.endsWith('makecards.json') ||
+              lower.endsWith('renderdemo.json') ||
+              lower.endsWith('msbcr.json') ||
+              lower.contains('gendata-spell-source-lookup') ||
+              lower.contains('gendata-subclass-lookup') ||
+              lower.contains('gendata-nav-adventure-book-index') ||
+              lower.contains('gendata-maps') ||
+              lower.contains('bookref-') ||
+              lower.contains('/book/book-') ||
+              lower.contains('/adventure/adventure-') ||
+              lower.endsWith('books.json') ||
+              lower.endsWith('adventures.json')) {
             continue;
           }
           rawUrls.add(effectiveSource.rawFileUri(path).toString());
@@ -260,31 +283,88 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
 
       const bundleKeys = [
         'monster',
+        'monsters',
         'spell',
+        'spells',
         'item',
+        'items',
         'baseitem',
+        'baseitems',
         'magicvariant',
+        'magicvariants',
         'class',
+        'classes',
         'subclass',
+        'subclasses',
         'race',
+        'races',
         'subrace',
+        'subraces',
         'feat',
+        'feats',
         'background',
+        'backgrounds',
         'action',
+        'actions',
         'condition',
+        'conditions',
         'disease',
+        'diseases',
         'status',
+        'statuses',
         'cult',
+        'cults',
         'boon',
+        'boons',
         'deity',
+        'deities',
         'hazard',
+        'hazards',
         'object',
+        'objects',
         'trap',
+        'traps',
         'vehicle',
-        'vehicleUpgrade',
+        'vehicles',
+        'vehicleupgrade',
+        'vehicleupgrades',
         'table',
+        'tables',
+        'tablegroup',
+        'tablegroups',
         'reward',
+        'rewards',
         'charoption',
+        'charoptions',
+        'optionalfeature',
+        'optionalfeatures',
+        'optfeature',
+        'optfeatures',
+        'psionic',
+        'psionics',
+        'language',
+        'languages',
+        'languagescript',
+        'languagescripts',
+        'sense',
+        'senses',
+        'skill',
+        'skills',
+        'deck',
+        'decks',
+        'card',
+        'cards',
+        'variantrule',
+        'variantrules',
+        'rule',
+        'rules',
+        'monsterfeature',
+        'monsterfeatures',
+        'recipe',
+        'recipes',
+        'name',
+        'names',
+        // Fluff keys
         'monsterfluff',
         'spellfluff',
         'itemfluff',

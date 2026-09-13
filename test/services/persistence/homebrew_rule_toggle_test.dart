@@ -265,5 +265,95 @@ void main() {
 
       expect(find.text('Homebrew'), findsOneWidget);
     });
+
+    testWidgets('DmRuleCard renders markdown tables and shows Rollable badge with Table Roller button', (tester) async {
+      const rollableTableItem = DmReferenceItem(
+        id: 'wild-magic-surge-table',
+        title: 'Wild Magic Surge Table',
+        category: DmCategory.tables,
+        subCategory: 'Rollable Tables',
+        summary: 'Rollable table with 50 outcomes.',
+        rules2014: [
+          '| d100 | Effect |',
+          '| :--- | :--- |',
+          '| 01-02 | Roll on this table at start of turn. |',
+          '| 03-04 | For next minute, you can see any invisible creature. |',
+        ],
+        rules2024: [
+          '| d100 | Effect |',
+          '| :--- | :--- |',
+          '| 01-02 | Roll on this table at start of turn. |',
+          '| 03-04 | For next minute, you can see any invisible creature. |',
+        ],
+        tags: ['Homebrew', 'Table', 'Rollable Tables'],
+        linkedTableQuery: 'Wild Magic Surge Table',
+        linkedTableLabel: 'Roll on Table',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DmRuleCard(
+              item: rollableTableItem,
+              edition: DmRulesEdition.v2014,
+              isPinned: false,
+              onTogglePin: () {},
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rollable'), findsOneWidget);
+      expect(find.text('Roll on Table'), findsOneWidget);
+      expect(find.byType(Table), findsOneWidget);
+    });
+
+    testWidgets('DmRuleCard renders static data tables without Table Roller button and shows Data Table badge', (tester) async {
+      const dataTableItem = DmReferenceItem(
+        id: 'armor-don-doff-table',
+        title: 'Armor Donning & Doffing Table',
+        category: DmCategory.tables,
+        subCategory: 'Data & Reference Tables',
+        summary: 'Data and reference table with 3 rows.',
+        rules2014: [
+          '| Armor | Don | Doff |',
+          '| :--- | :--- | :--- |',
+          '| Light | 1 min | 1 min |',
+          '| Medium | 5 min | 1 min |',
+          '| Heavy | 10 min | 5 min |',
+        ],
+        rules2024: [
+          '| Armor | Don | Doff |',
+          '| :--- | :--- | :--- |',
+          '| Light | 1 min | 1 min |',
+          '| Medium | 5 min | 1 min |',
+          '| Heavy | 10 min | 5 min |',
+        ],
+        tags: ['Homebrew', 'Table', 'Data & Reference Tables'],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DmRuleCard(
+              item: dataTableItem,
+              edition: DmRulesEdition.v2014,
+              isPinned: false,
+              onTogglePin: () {},
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Data Table'), findsOneWidget);
+      // Roller button must not be shown for reference data tables
+      expect(find.text('Roll on Table'), findsNothing);
+      expect(find.text('Open in Table Roller'), findsNothing);
+      expect(find.byType(Table), findsOneWidget);
+    });
   });
 }

@@ -625,14 +625,21 @@ class CompendiumJsonIngestionPipeline {
     final hasBundleKeys = lowerKeys.any((k) {
       final isKnown = const {
         'spell', 'spells', 'monster', 'monsters', 'bestiary', 'creature', 'creatures',
-        'item', 'items', 'baseitem', 'magicitems', 'magicitem', 'magicvariants', 'equipment',
+        'item', 'items', 'baseitem', 'baseitems', 'magicitems', 'magicitem', 'magicvariants', 'equipment',
         'class', 'classes', 'subclass', 'subclasses', 'classfeature', 'classfeatures',
         'subclassfeature', 'subclassfeatures', 'race', 'races', 'species', 'lineage', 'lineages',
         'subrace', 'subraces', 'feat', 'feats', 'background', 'backgrounds',
         'invocation', 'invocations', 'eldritchinvocation', 'eldritchinvocations',
         'infusion', 'infusions', 'artificerinfusion', 'artificerinfusions',
-        'optionalfeature', 'optionalfeatures', 'table', 'tables', 'name', 'names', 'reward', 'rewards',
+        'optionalfeature', 'optionalfeatures', 'optfeature', 'optfeatures',
+        'table', 'tables', 'tablegroup', 'tablegroups', 'name', 'names', 'reward', 'rewards',
         'condition', 'conditions', 'hazard', 'hazards', 'variantrule', 'variantrules', 'rule', 'rules',
+        'deity', 'deities', 'vehicle', 'vehicles', 'vehicleupgrade', 'vehicleupgrades',
+        'trap', 'traps', 'object', 'objects', 'action', 'actions', 'status', 'statuses',
+        'cult', 'cults', 'boon', 'boons', 'charoption', 'charoptions',
+        'psionic', 'psionics', 'language', 'languages', 'languagescript', 'languagescripts',
+        'sense', 'senses', 'skill', 'skills', 'deck', 'decks', 'card', 'cards',
+        'recipe', 'recipes', 'monsterfeature', 'monsterfeatures',
         'monsterfluff', 'spellfluff', 'itemfluff', 'racefluff', 'classfluff', 'subclassfluff',
         'featfluff', 'backgroundfluff', 'optionalfeaturefluff', 'conditionfluff', 'rewardfluff',
         'objectfluff', 'vehiclefluff', 'trapfluff', 'languagefluff', 'recipefluff', 'charoptionfluff',
@@ -972,6 +979,14 @@ class CompendiumJsonIngestionPipeline {
     ingestKeys(['charoption', 'charoptions', 'characteroption', 'characteroptions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Character Option')), 'Character Option');
     ingestKeys(['action', 'actions'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Action')), 'Action');
     ingestKeys(['variantrule', 'variantrules', 'rule', 'rules'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Rule')), 'Rule');
+    ingestKeys(['tablegroup', 'tablegroups'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Table')), 'Table Group');
+    ingestKeys(['psionic', 'psionics'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Psionic')), 'Psionic');
+    ingestKeys(['language', 'languages', 'languagescript', 'languagescripts'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Language')), 'Language');
+    ingestKeys(['sense', 'senses'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Sense')), 'Sense');
+    ingestKeys(['skill', 'skills'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Skill')), 'Skill');
+    ingestKeys(['deck', 'decks', 'card', 'cards'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Deck')), 'Deck');
+    ingestKeys(['recipe', 'recipes'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Recipe')), 'Recipe');
+    ingestKeys(['monsterfeature', 'monsterfeatures'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset, defaultCategory: 'Monster Feature')), 'Monster Feature');
     ingestKeys(['otherentry', 'otherentries', 'genericentry', 'genericentries'], (raw) => otherEntries.add(genericParser.parseGenericEntry(raw, forceRuleset: forceRuleset)), 'Generic Entry');
 
     // Fluff & Lore Ingestion (community compendium bestiary / spell / item / race / class / feat fluff)

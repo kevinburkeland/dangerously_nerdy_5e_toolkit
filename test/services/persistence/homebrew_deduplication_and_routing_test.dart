@@ -5,6 +5,8 @@ import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/value_objects/rules
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_other_category.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/tables/srd_tables_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 
 void main() {
@@ -584,6 +586,171 @@ void main() {
       expect(updatedCounts[HomebrewOtherCategory.deities], equals(0));
       expect(updatedCounts[HomebrewOtherCategory.vehicles], equals(0));
       expect(updatedCounts[HomebrewOtherCategory.trapsAndHazards], equals(1));
+    });
+
+    test('HomebrewOtherCategory differentiates rolling tables from static data/reference tables', () {
+      // Rolling Table with dice column
+      final rollTable = HomebrewOtherCategory.classify(
+        category: 'Table',
+        name: 'Wild Magic Table',
+        customProperties: {
+          'colLabels': ['d100', 'Effect'],
+          'rows': [
+            ['01-02', 'Surge A'],
+            ['03-04', 'Surge B'],
+          ],
+        },
+      );
+      expect(rollTable, equals(HomebrewOtherCategory.tables));
+
+      // Rolling Table with numeric range first column
+      final numericRollTable = HomebrewOtherCategory.classify(
+        category: 'Table',
+        name: 'Carousing Complications',
+        customProperties: {
+          'colLabels': ['Result', 'Complication'],
+          'rows': [
+            [1, 'Arrested'],
+            [2, 'Lost pouch'],
+          ],
+        },
+      );
+      expect(numericRollTable, equals(HomebrewOtherCategory.tables));
+
+      // Data / Reference Table with non-dice headers and non-numeric rows
+      final dataTable = HomebrewOtherCategory.classify(
+        category: 'Table',
+        name: 'Armor Donning & Doffing',
+        customProperties: {
+          'colLabels': ['Armor Type', 'Don Time', 'Doff Time'],
+          'rows': [
+            ['Light Armor', '1 minute', '1 minute'],
+            ['Medium Armor', '5 minutes', '1 minute'],
+            ['Heavy Armor', '10 minutes', '5 minutes'],
+          ],
+        },
+      );
+      expect(dataTable, equals(HomebrewOtherCategory.dataTables));
+
+      // Data / Reference Table explicitly indicated by name/matrix
+      final matrixTable = HomebrewOtherCategory.classify(
+        category: 'Table',
+        name: 'Weapon Masteries Matrix',
+        customProperties: {
+          'colLabels': ['Mastery', 'Prerequisite', 'Effect'],
+          'rows': [
+            ['Cleave', 'Melee, Heavy', 'Make extra attack against adjacent target'],
+          ],
+        },
+      );
+      expect(matrixTable, equals(HomebrewOtherCategory.dataTables));
+    });
+
+    test('HomebrewOtherCategory accurately parses compendium list-based featureType values', () {
+      // Eldritch Invocation with array featureType ["EI"]
+      expect(
+        HomebrewOtherCategory.classify(
+          category: 'Optional Feature',
+          name: 'Agonizing Blast',
+          customProperties: {'featureType': ['EI']},
+        ),
+        equals(HomebrewOtherCategory.invocationsAndPacts),
+      );
+
+      // Pact Boon with array featureType ["PB"]
+      expect(
+        HomebrewOtherCategory.classify(
+          category: 'Optional Feature',
+          name: 'Pact of the Tome',
+          customProperties: {'featureType': ['PB']},
+        ),
+        equals(HomebrewOtherCategory.invocationsAndPacts),
+      );
+
+      // Artificer Infusion with array featureType ["AI"]
+      expect(
+        HomebrewOtherCategory.classify(
+          category: 'Optional Feature',
+          name: 'Enhanced Defense',
+          customProperties: {'featureType': ['AI']},
+        ),
+        equals(HomebrewOtherCategory.infusions),
+      );
+
+      // Metamagic with array featureType ["MM"]
+      expect(
+        HomebrewOtherCategory.classify(
+          category: 'Optional Feature',
+          name: 'Quickened Spell',
+          customProperties: {'featureType': ['MM']},
+        ),
+        equals(HomebrewOtherCategory.characterOptions),
+      );
+
+      // Battle Master Maneuver with array featureType ["MV:B"]
+      expect(
+        HomebrewOtherCategory.classify(
+          category: 'Optional Feature',
+          name: 'Riposte',
+          customProperties: {'featureType': ['MV:B']},
+        ),
+        equals(HomebrewOtherCategory.characterOptions),
+      );
+    });
+
+    test('syncToLibraries propagates both rolling tables and data tables to DmScreenLibrary', () async {
+      const rollEntry = HomebrewCompendiumEntry(
+        id: EntityId(slug: 'madness-table', ruleset: RulesetVersion.homebrew),
+        name: 'Short-Term Madness Homebrew',
+        category: 'Table',
+        descriptionMarkdown: '| d100 | Effect |\n| :--- | :--- |\n| 01-20 | Character faints. |\n| 21-100 | Character screams. |',
+        customProperties: {
+          'colLabels': ['d100', 'Effect'],
+          'rows': [
+            ['01-20', 'Character faints.'],
+            ['21-100', 'Character screams.'],
+          ],
+        },
+      );
+
+      const dataEntry = HomebrewCompendiumEntry(
+        id: EntityId(slug: 'material-hardness', ruleset: RulesetVersion.homebrew),
+        name: 'Material Hardness & AC Reference',
+        category: 'Table',
+        descriptionMarkdown: '| Material | AC |\n| :--- | :--- |\n| Glass | 13 |\n| Adamantine | 23 |',
+        customProperties: {
+          'colLabels': ['Material', 'AC'],
+          'rows': [
+            ['Glass', '13'],
+            ['Adamantine', '23'],
+          ],
+        },
+      );
+
+      final persistence = HomebrewPersistenceService();
+      await persistence.saveCustomOtherEntriesBatch([rollEntry, dataEntry]);
+      await persistence.syncToLibraries();
+
+      // Check DmScreenLibrary
+      final refItems = DmScreenLibrary.allItems;
+      final rollItem = refItems.firstWhere((i) => i.id == 'madness-table');
+      expect(rollItem.category, equals(DmCategory.tables));
+      expect(rollItem.subCategory, equals('Rollable Tables'));
+      expect(rollItem.linkedTableQuery, equals('Short-Term Madness Homebrew'));
+      expect(rollItem.linkedTableLabel, equals('Roll on Table'));
+
+      final dataItem = refItems.firstWhere((i) => i.id == 'material-hardness');
+      expect(dataItem.category, equals(DmCategory.tables));
+      expect(dataItem.subCategory, equals('Data & Reference Tables'));
+      expect(dataItem.linkedTableQuery, isNull);
+
+      // Check SrdTablesLibrary (only rollable table should be registered)
+      final rollTable = SrdTablesLibrary.getTableById('madness-table');
+      expect(rollTable, isNotNull);
+      expect(rollTable!.name, equals('Short-Term Madness Homebrew'));
+
+      final dataTableInRoller = SrdTablesLibrary.getTableById('material-hardness');
+      expect(dataTableInRoller, isNull);
     });
   });
 }

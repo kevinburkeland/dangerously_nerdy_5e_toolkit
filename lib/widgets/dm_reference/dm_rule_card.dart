@@ -4,6 +4,7 @@ import '../../models/dm_screen_data.dart';
 import '../../screens/table_index_screen.dart';
 import '../../services/haptic_service.dart';
 import '../common/edition_diff_badge.dart';
+import '../common/formatted_markdown_text.dart';
 import '../interactive/pressable_card.dart';
 import 'dm_interactive_tools.dart';
 
@@ -40,21 +41,20 @@ class _DmRuleCardState extends State<DmRuleCard> {
     final isPinned = widget.isPinned;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final itemColor = item.getLegibleColor(isDark);
+
     final diffColor = isDark ? Colors.amber : const Color(0xFFB45309);
+    final itemColor = item.category.getLegibleColor(isDark);
     final activeRules = item.getRules(edition);
     final cost = item.getCost(edition);
+    final isRollable = (item.linkedTableTabIndex != null ||
+            item.linkedTableQuery != null ||
+            item.subCategory == 'Rollable Tables' ||
+            (item.category == DmCategory.tables && item.subCategory != 'Data & Reference Tables')) &&
+        item.subCategory != 'Data & Reference Tables';
 
     return PressableCard(
       onTap: widget.onTap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: isPinned ? diffColor.withValues(alpha: 0.7) : itemColor.withValues(alpha: 0.35),
-          width: isPinned ? 1.5 : 1.2,
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -86,64 +86,87 @@ class _DmRuleCardState extends State<DmRuleCard> {
                       highlightColor: diffColor.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 2),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: item.category.label,
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          item.category == DmCategory.tables && item.subCategory != null
+                              ? item.subCategory!
+                              : (item.subCategory != null ? '${item.category.label} • ${item.subCategory}' : item.category.label),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                          ),
+                        ),
+                        if (cost != null)
+                          Text(
+                            '• $cost',
                             style: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color: itemColor,
+                              fontWeight: FontWeight.w600,
                               fontSize: 11,
                             ),
                           ),
-                          if (cost != null) ...[
-                            TextSpan(
-                              text: ' • ',
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 11,
+                        if (item.category == DmCategory.tables && item.subCategory != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: item.subCategory == 'Rollable Tables'
+                                  ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                                  : Colors.tealAccent.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: item.subCategory == 'Rollable Tables'
+                                    ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
+                                    : Colors.tealAccent.withValues(alpha: 0.4),
                               ),
                             ),
-                            TextSpan(
-                              text: cost,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  item.subCategory == 'Rollable Tables' ? Icons.casino_outlined : Icons.view_list,
+                                  size: 11,
+                                  color: item.subCategory == 'Rollable Tables' ? const Color(0xFFF59E0B) : Colors.tealAccent,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  item.subCategory == 'Rollable Tables' ? 'Rollable' : 'Data Table',
+                                  style: TextStyle(
+                                    color: item.subCategory == 'Rollable Tables' ? const Color(0xFFF59E0B) : Colors.tealAccent,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (item.isHomebrew)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.pinkAccent.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.pinkAccent.withValues(alpha: 0.4)),
+                            ),
+                            child: const Text(
+                              'Homebrew',
                               style: TextStyle(
-                                color: itemColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
+                                color: Colors.pinkAccent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ],
-                        ],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                          ),
+                        if (item.isChangedIn2024)
+                          const EditionDiffBadge(),
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (item.isHomebrew) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.pinkAccent.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.pinkAccent.withValues(alpha: 0.4)),
-                  ),
-                  child: const Text(
-                    'Homebrew',
-                    style: TextStyle(
-                      color: Colors.pinkAccent,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-              ],
-              if (item.isChangedIn2024) ...[
-                const EditionDiffBadge(),
-                const SizedBox(width: 6),
-              ],
               IconButton(
                 icon: Icon(
                   isPinned ? Icons.push_pin : Icons.push_pin_outlined,
@@ -206,28 +229,8 @@ class _DmRuleCardState extends State<DmRuleCard> {
             ),
           ],
 
-          // Rule Bullet points for current edition
-          ...activeRules.map((rule) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('• ', style: TextStyle(color: itemColor, fontWeight: FontWeight.bold)),
-                    Expanded(
-                      child: _buildHighlightedText(
-                        text: rule,
-                        query: widget.searchQuery,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
-                          fontSize: 13,
-                          height: 1.35,
-                        ),
-                        highlightColor: diffColor.withValues(alpha: 0.3),
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+          // Formatted Rule Content (supports tables, headings, and bullet points)
+          ..._buildRuleContent(activeRules, theme, itemColor, diffColor),
 
           // Embedded Interactive Tool if applicable
           if (item.interactiveTool != null) ...[
@@ -264,48 +267,48 @@ class _DmRuleCardState extends State<DmRuleCard> {
             ],
           ],
 
-          // Linked Table Roller Button (if table item or has linked table data)
-          if (item.linkedTableTabIndex != null || item.linkedTableQuery != null || item.category == DmCategory.tables) ...[
+          // Linked Table Roller Button (only for Rollable Tables)
+          if (isRollable) ...[
             const SizedBox(height: 6),
             InkWell(
-              onTap: () {
-                HapticService.selectionTick(context);
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => TableIndexScreen(
-                      initialTabIndex: item.linkedTableTabIndex ?? 1,
-                      initialSearchQuery: item.linkedTableQuery,
-                    ),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.table_chart, size: 14, color: Color(0xFFF59E0B)),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        item.linkedTableLabel ?? 'Open in Table Roller',
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFF59E0B),
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                onTap: () {
+                  HapticService.selectionTick(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => TableIndexScreen(
+                        initialTabIndex: item.linkedTableTabIndex ?? 1,
+                        initialSearchQuery: item.linkedTableQuery ?? item.title,
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios, size: 11, color: Color(0xFFF59E0B)),
-                  ],
+                  );
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.table_chart, size: 14, color: Color(0xFFF59E0B)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          item.linkedTableLabel ?? (item.subCategory == 'Rollable Tables' ? 'Roll on Table' : 'Open in Table Roller'),
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFF59E0B),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 11, color: Color(0xFFF59E0B)),
+                    ],
+                  ),
                 ),
-              ),
             ),
           ],
 
@@ -330,6 +333,89 @@ class _DmRuleCardState extends State<DmRuleCard> {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildRuleContent(
+    List<String> rules,
+    ThemeData theme,
+    Color itemColor,
+    Color diffColor,
+  ) {
+    final widgets = <Widget>[];
+    int i = 0;
+    while (i < rules.length) {
+      final rule = rules[i].trim();
+      if (rule.isEmpty) {
+        i++;
+        continue;
+      }
+
+      // Check if this starts a markdown table block
+      if (rule.startsWith('|')) {
+        final tableLines = <String>[];
+        while (i < rules.length && rules[i].trim().startsWith('|')) {
+          tableLines.add(rules[i].trim());
+          i++;
+        }
+        final tableMarkdown = tableLines.join('\n');
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: FormattedMarkdownText(
+              tableMarkdown,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                fontSize: 12.5,
+                height: 1.35,
+              ),
+              boldColor: itemColor,
+            ),
+          ),
+        );
+      } else if (rule.startsWith('#')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4, top: 4),
+            child: FormattedMarkdownText(
+              rule,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              boldColor: itemColor,
+            ),
+          ),
+        );
+        i++;
+      } else {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('• ', style: TextStyle(color: itemColor, fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: _buildHighlightedText(
+                    text: rule,
+                    query: widget.searchQuery,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                    highlightColor: diffColor.withValues(alpha: 0.3),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+        i++;
+      }
+    }
+    return widgets;
   }
 
   Widget _buildToolWidget(String toolId) {

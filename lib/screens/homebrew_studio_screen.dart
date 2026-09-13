@@ -1414,7 +1414,9 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
   (IconData, Color) _getCategoryVisuals(HomebrewOtherCategory cat) {
     switch (cat) {
       case HomebrewOtherCategory.tables:
-        return (Icons.table_chart, Colors.cyanAccent);
+        return (Icons.casino_outlined, Colors.cyanAccent);
+      case HomebrewOtherCategory.dataTables:
+        return (Icons.view_list, Colors.tealAccent);
       case HomebrewOtherCategory.deities:
         return (Icons.wb_sunny, Colors.amberAccent);
       case HomebrewOtherCategory.vehicles:
@@ -1580,6 +1582,10 @@ class _HomebrewStudioScreenState extends State<HomebrewStudioScreen>
                       if (tType != null && tType.isNotEmpty) {
                         sub += ' • $tType';
                       }
+                    } else if (cat == HomebrewOtherCategory.tables) {
+                      sub += ' • Rollable Table';
+                    } else if (cat == HomebrewOtherCategory.dataTables) {
+                      sub += ' • Data & Reference Table';
                     }
 
                     return Card(

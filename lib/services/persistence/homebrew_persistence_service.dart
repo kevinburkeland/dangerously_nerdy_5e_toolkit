@@ -477,7 +477,10 @@ class HomebrewPersistenceService {
         subCategory = entry.category;
       case HomebrewOtherCategory.tables:
         dmCat = DmCategory.tables;
-        subCategory = 'Codex Tables';
+        subCategory = 'Rollable Tables';
+      case HomebrewOtherCategory.dataTables:
+        dmCat = DmCategory.tables;
+        subCategory = 'Data & Reference Tables';
       case HomebrewOtherCategory.rulesAndReference:
         final catLower = entry.category.toLowerCase();
         if (catLower.contains('action') || catLower.contains('combat')) {
@@ -495,8 +498,28 @@ class HomebrewPersistenceService {
         .where((l) => l.isNotEmpty)
         .toList();
 
-    final summary = rawLines.isNotEmpty ? rawLines.first : entry.name;
+    String summary;
+    if (cat == HomebrewOtherCategory.tables || cat == HomebrewOtherCategory.dataTables) {
+      final caption = entry.customProperties['caption']?.toString();
+      final rowCount = entry.customProperties['rows'] is List ? (entry.customProperties['rows'] as List).length : 0;
+      if (caption != null && caption.isNotEmpty) {
+        summary = CompendiumJsonIngestionPipeline.cleanRawTags(caption);
+      } else {
+        final nonTableLines = rawLines.where((l) => !l.startsWith('|')).toList();
+        if (nonTableLines.isNotEmpty) {
+          summary = nonTableLines.first;
+        } else if (cat == HomebrewOtherCategory.tables) {
+          summary = rowCount > 0 ? 'Rollable dice table with $rowCount outcomes.' : 'Rollable random table.';
+        } else {
+          summary = rowCount > 0 ? 'Data and reference table with $rowCount rows.' : 'Reference data table.';
+        }
+      }
+    } else {
+      summary = rawLines.isNotEmpty ? rawLines.first : entry.name;
+    }
+
     final rules = rawLines.isNotEmpty ? rawLines : [entry.name];
+    final isRollableTable = cat == HomebrewOtherCategory.tables;
 
     return DmReferenceItem(
       id: entry.id.slug,
@@ -508,6 +531,8 @@ class HomebrewPersistenceService {
       rules2024: rules,
       tags: ['Homebrew', entry.category, subCategory],
       isChangedIn2024: false,
+      linkedTableQuery: isRollableTable ? entry.name : null,
+      linkedTableLabel: isRollableTable ? 'Roll on Table' : null,
       extraData: entry.customProperties,
     );
   }
@@ -620,7 +645,9 @@ class HomebrewPersistenceService {
               classified == HomebrewOtherCategory.deities ||
               classified == HomebrewOtherCategory.vehicles ||
               classified == HomebrewOtherCategory.charmsAndRewards ||
-              classified == HomebrewOtherCategory.rulesAndReference;
+              classified == HomebrewOtherCategory.rulesAndReference ||
+              classified == HomebrewOtherCategory.tables ||
+              classified == HomebrewOtherCategory.dataTables;
         })
         .map(compendiumEntryToDmReferenceItem)
         .toList();

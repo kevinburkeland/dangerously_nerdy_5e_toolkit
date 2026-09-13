@@ -320,5 +320,91 @@ void main() {
       expect(success0.entity.name, equals('Aboleth'));
       expect(success0.entity.entityType, equals('monsterfluff'));
     });
+
+    test('Manifest discovery skips Foundry duplicates, index files, and book prose while preserving tabletop content', () async {
+      final mockTree = jsonEncode({
+        'sha': 'tree_sha_content',
+        'tree': [
+          {'path': 'data/optionalfeatures.json', 'type': 'blob'},
+          {'path': 'data/psionics.json', 'type': 'blob'},
+          {'path': 'data/languages.json', 'type': 'blob'},
+          {'path': 'data/decks.json', 'type': 'blob'},
+          {'path': 'data/tables.json', 'type': 'blob'},
+          // VTT / Foundry duplicates (must be skipped)
+          {'path': 'data/foundry-items.json', 'type': 'blob'},
+          {'path': 'data/bestiary/foundry.json', 'type': 'blob'},
+          // Index and tooling manifests (must be skipped)
+          {'path': 'data/index.json', 'type': 'blob'},
+          {'path': 'data/fluff-index.json', 'type': 'blob'},
+          {'path': 'data/sources.json', 'type': 'blob'},
+          {'path': 'data/template.json', 'type': 'blob'},
+          {'path': 'data/converter.json', 'type': 'blob'},
+          {'path': 'data/generated/gendata-spell-source-lookup.json', 'type': 'blob'},
+          // Narrative prose books (must be skipped)
+          {'path': 'data/book/book-phb.json', 'type': 'blob'},
+          {'path': 'data/adventure/adventure-cos.json', 'type': 'blob'},
+          {'path': 'data/books.json', 'type': 'blob'},
+        ],
+      });
+
+      final client = MockHttpFetchClient({source.apiTreeUri.toString(): mockTree});
+      final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
+      final manifest = await adapter.discoverJsonManifest(source);
+
+      expect(manifest.length, equals(5));
+      expect(manifest.any((u) => u.contains('optionalfeatures.json')), isTrue);
+      expect(manifest.any((u) => u.contains('psionics.json')), isTrue);
+      expect(manifest.any((u) => u.contains('languages.json')), isTrue);
+      expect(manifest.any((u) => u.contains('decks.json')), isTrue);
+      expect(manifest.any((u) => u.contains('tables.json')), isTrue);
+
+      // Verify exclusions
+      expect(manifest.any((u) => u.contains('foundry')), isFalse);
+      expect(manifest.any((u) => u.contains('index.json')), isFalse);
+      expect(manifest.any((u) => u.contains('fluff-index.json')), isFalse);
+      expect(manifest.any((u) => u.contains('sources.json')), isFalse);
+      expect(manifest.any((u) => u.contains('book-phb')), isFalse);
+      expect(manifest.any((u) => u.contains('adventure-cos')), isFalse);
+    });
+
+    test('Unpacks optionalfeatures, psionics, languages, and decks into individual entities', () async {
+      const url = 'https://raw.githubusercontent.com/dnd/core/main/data/optionalfeatures.json';
+      final payload = jsonEncode({
+        'optionalfeature': [
+          {
+            'name': 'Agonizing Blast',
+            'source': 'PHB',
+            'featureType': ['EI'],
+            'prerequisite': [{'spell': ['eldritch blast#phb']}],
+            'entries': ['When you cast eldritch blast, add your Charisma modifier to the damage.'],
+          },
+          {
+            'name': 'Pact of the Blade',
+            'source': 'PHB',
+            'featureType': ['PB'],
+            'entries': ['You can use your action to create a pact weapon in your empty hand.'],
+          },
+          {
+            'name': 'Enhanced Defense',
+            'source': 'TCE',
+            'featureType': ['AI'],
+            'entries': ['A creature gains a +1 bonus to Armor Class while wearing (armor) or wielding (a shield) the infused item.'],
+          },
+        ]
+      });
+
+      final client = MockHttpFetchClient({url: payload});
+      final adapter = GithubIngestorAdapter(client: client, useIsolate: false);
+      final results = await adapter
+          .ingestPayloadStream(rawUrls: [url], ruleset: RulesetVersion.srd2014)
+          .toList();
+
+      expect(results.length, equals(3));
+      expect(results.every((r) => r is IngestionSuccessResult), isTrue);
+      final success0 = results[0] as IngestionSuccessResult;
+      expect(success0.entity.name, equals('Agonizing Blast'));
+      expect(success0.entity.entityType, equals('optionalfeature'));
+      expect(success0.entity.normalizedData['featureType'], equals(['EI']));
+    });
   });
 }

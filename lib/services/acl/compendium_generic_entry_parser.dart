@@ -66,6 +66,18 @@ class CompendiumGenericEntryParser {
       category = 'Infusion';
     } else if (rawCat.contains('charoption') || rawCat.contains('optionalfeature')) {
       category = 'Character Option';
+    } else if (rawCat.contains('psionic')) {
+      category = 'Psionic';
+    } else if (rawCat.contains('language') || rawCat.contains('script')) {
+      category = 'Language';
+    } else if (rawCat.contains('sense')) {
+      category = 'Sense';
+    } else if (rawCat.contains('skill')) {
+      category = 'Skill';
+    } else if (rawCat.contains('deck') || rawCat.contains('card')) {
+      category = 'Deck';
+    } else if (rawCat.contains('recipe')) {
+      category = 'Recipe';
     } else if (raw['category'] != null && raw['category'].toString().isNotEmpty) {
       category = _cleanCategoryString(raw['category'].toString());
     } else if (raw['entityType'] != null && raw['entityType'].toString().isNotEmpty) {
