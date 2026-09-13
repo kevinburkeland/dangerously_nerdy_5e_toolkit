@@ -525,21 +525,23 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                 if (analysis.otherEntries.any((e) {
                   final cat = e.incomingEntity.category.toLowerCase();
                   final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
-                  return !isPb && (cat.contains('invocation') || cat.contains('ei'));
+                  final isEi = cat.contains('invocation') || cat == 'ei' || cat.startsWith('ei:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'EI';
+                  return !isPb && isEi;
                 }))
                   _buildCategorySection(
                     'Eldritch Invocations',
                     analysis.otherEntries.where((e) {
                       final cat = e.incomingEntity.category.toLowerCase();
                       final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
-                      return !isPb && (cat.contains('invocation') || cat.contains('ei'));
+                      final isEi = cat.contains('invocation') || cat == 'ei' || cat.startsWith('ei:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'EI';
+                      return !isPb && isEi;
                     }).toList(),
                   ),
                 if (analysis.otherEntries.any((e) {
                   final cat = e.incomingEntity.category.toLowerCase();
                   final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
-                  final isEi = cat.contains('invocation') || cat.contains('ei');
-                  final isInf = cat.contains('infusion') || cat.contains('ai');
+                  final isEi = cat.contains('invocation') || cat == 'ei' || cat.startsWith('ei:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'EI';
+                  final isInf = cat.contains('infusion') || cat == 'ai' || cat.startsWith('ai:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'AI';
                   return !isPb && !isEi && isInf;
                 }))
                   _buildCategorySection(
@@ -547,16 +549,16 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                     analysis.otherEntries.where((e) {
                       final cat = e.incomingEntity.category.toLowerCase();
                       final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
-                      final isEi = cat.contains('invocation') || cat.contains('ei');
-                      final isInf = cat.contains('infusion') || cat.contains('ai');
+                      final isEi = cat.contains('invocation') || cat == 'ei' || cat.startsWith('ei:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'EI';
+                      final isInf = cat.contains('infusion') || cat == 'ai' || cat.startsWith('ai:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'AI';
                       return !isPb && !isEi && isInf;
                     }).toList(),
                   ),
                 if (analysis.otherEntries.any((e) {
                   final cat = e.incomingEntity.category.toLowerCase();
                   final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
-                  final isEi = cat.contains('invocation') || cat.contains('ei');
-                  final isInf = cat.contains('infusion') || cat.contains('ai');
+                  final isEi = cat.contains('invocation') || cat == 'ei' || cat.startsWith('ei:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'EI';
+                  final isInf = cat.contains('infusion') || cat == 'ai' || cat.startsWith('ai:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'AI';
                   return !isPb && !isEi && !isInf;
                 }))
                   _buildCategorySection(
@@ -564,8 +566,8 @@ class _HomebrewImportPreviewDialogState extends State<HomebrewImportPreviewDialo
                     analysis.otherEntries.where((e) {
                       final cat = e.incomingEntity.category.toLowerCase();
                       final isPb = cat.contains('pact boon') || cat.contains('pb') || e.incomingEntity.name.toLowerCase().startsWith('pact of the');
-                      final isEi = cat.contains('invocation') || cat.contains('ei');
-                      final isInf = cat.contains('infusion') || cat.contains('ai');
+                      final isEi = cat.contains('invocation') || cat == 'ei' || cat.startsWith('ei:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'EI';
+                      final isInf = cat.contains('infusion') || cat == 'ai' || cat.startsWith('ai:') || e.incomingEntity.customProperties['featureType']?.toString().toUpperCase() == 'AI';
                       return !isPb && !isEi && !isInf;
                     }).toList(),
                   ),

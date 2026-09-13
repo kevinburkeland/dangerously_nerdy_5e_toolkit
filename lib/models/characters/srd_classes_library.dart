@@ -345,6 +345,12 @@ class SrdFeatureOptions {
         ...warlockPactBoons,
       ];
 
+  /// Base SRD canonical Eldritch Invocations and Pact Boons without custom homebrew.
+  static List<FeatureOption> get baseWarlockInvocationsAndBoons => [
+        ..._baseWarlockInvocations,
+        ..._baseWarlockPactBoons,
+      ];
+
   /// Dynamic list of all custom Artificer Infusions (from homebrew / compendiums)
   static List<FeatureOption> get artificerInfusions => [
         ..._customInfusions,

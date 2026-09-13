@@ -235,7 +235,7 @@ class SrdEquivalenceIndex {
     // 9. Canonical Eldritch Invocations, Actions & Conditions (SrdFeatureOptions & Core Rules)
     final customSlugs = <String>{};
     final customNames = <String>{};
-    for (final inv in SrdFeatureOptions.warlockInvocationsAndBoons) {
+    for (final inv in SrdFeatureOptions.baseWarlockInvocationsAndBoons) {
       customSlugs.add(inv.id.toLowerCase().trim());
       customSlugs.add(inv.id.replaceAll('_', '-').toLowerCase().trim());
       customSlugs.add(_slugify(inv.name));

@@ -384,5 +384,42 @@ void main() {
       expect(others.firstWhere((o) => o.name == 'Sand Crawler').category, equals('Vehicle'));
       expect(others.firstWhere((o) => o.name == 'Glyph of Blinding').category, equals('Trap'));
     });
+
+    test('reparseAllHomebrew preserves Deities without misclassifying as eldritch invocations', () async {
+      const deity = HomebrewEntity(
+        id: 'solas-the-dawnbringer',
+        name: 'Solas the Dawnbringer',
+        entityType: 'deity',
+        ruleset: domain_rules.RulesetVersion.srd2014,
+        rawPayload: {
+          'name': 'Solas the Dawnbringer',
+          'source': 'HOMEBREW',
+          'pantheon': 'Solar Covenant',
+          'alignment': ['L', 'G'],
+          'title': 'The Guiding Light',
+          'domains': ['Light', 'Life'],
+          'symbol': 'A blazing sun rising above twin silver peaks',
+          'entityType': 'deity',
+        },
+      );
+
+      await persistence.saveHomebrewEntitiesBatch([deity]);
+
+      var others = await persistence.loadCustomOtherEntries();
+      expect(others.length, equals(1));
+      expect(others.first.name, equals('Solas the Dawnbringer'));
+      expect(others.first.category, equals('Deity'));
+
+      final result = await persistence.reparseAllHomebrew();
+      expect(result.updatedCount, equals(1));
+      expect(result.srdRemovedCount, equals(0));
+
+      others = await persistence.loadCustomOtherEntries();
+      expect(others.length, equals(1));
+      expect(others.first.name, equals('Solas the Dawnbringer'));
+      expect(others.first.category, equals('Deity'));
+      expect(others.first.descriptionMarkdown, contains('Solar Covenant'));
+      expect(others.first.descriptionMarkdown, contains('Light, Life'));
+    });
   });
 }

@@ -285,8 +285,9 @@ class HomebrewPersistenceService {
           final isPactBoon = cat.contains('pact boon') || cat.contains('pb') || e.name.toLowerCase().startsWith('pact of the');
           if (isPactBoon) return false;
           return cat.contains('invocation') ||
-              cat.contains('ei') ||
-              e.customProperties['featureType']?.toString().toUpperCase().contains('EI') == true;
+              cat == 'ei' ||
+              cat.startsWith('ei:') ||
+              e.customProperties['featureType']?.toString().toUpperCase() == 'EI';
         })
         .map((e) => FeatureOption(
               id: e.id.slug,
