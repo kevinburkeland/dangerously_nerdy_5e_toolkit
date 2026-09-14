@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import '../../domain/simulation/precomputed_attack.dart';
 import '../../models/arena/arena_action_result.dart';
 import '../../models/arena/arena_combatant.dart';
 import '../../models/arena/arena_simulation_models.dart';
@@ -2783,6 +2784,7 @@ class ArenaCombatEngine {
     int damageDealt = 0;
     bool isKillShot = false;
     bool shielded = false;
+    List<String> appliedRiderLogs = const [];
 
     // Defensive Reaction Hook: Shield (spell_shield)
     if (isHit && !isCrit && !defender.usedReactionThisRound &&
@@ -2800,20 +2802,46 @@ class ArenaCombatEngine {
       attacker.hitsLanded++;
       if (isCrit) attacker.critsLanded++;
 
-      // Primary damage roll (double dice count on crit)
-      final diceCount = isCrit ? attack.diceCount * 2 : attack.diceCount;
-      int rawDamage = _rollDice(diceCount, attack.diceSides) + attack.damageBonus;
+      // 1. Look up the precomputed attack:
+      final actionId = attack.name.toLowerCase().trim();
+      final profileAttacks = attacker.monster.getCombatProfile(edition).attacks;
+      final precomputedAttack = profileAttacks[actionId] ??
+          profileAttacks[attack.id.toLowerCase().trim()] ??
+          profileAttacks.values.where(
+            (pa) =>
+                pa.attackId == attack.id.toLowerCase().trim() ||
+                pa.attackId == actionId.replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
+          ).firstOrNull ??
+          PrecomputedAttack(
+            attackId: attack.id.isNotEmpty ? attack.id : actionId,
+            attackBonus: attack.attackBonus,
+            flatBonus: attack.damageBonus + attack.secondaryDamageBonus,
+            damageGroups: [
+              if (attack.diceCount > 0)
+                DamageDieGroup(count: attack.diceCount, faces: attack.diceSides),
+              if (attack.secondaryDiceCount > 0)
+                DamageDieGroup(count: attack.secondaryDiceCount, faces: attack.secondaryDiceSides),
+            ],
+          );
 
-      // Secondary damage roll if any
-      if (attack.secondaryDiceCount > 0 && attack.secondaryDiceSides > 0) {
-        final secCount = isCrit ? attack.secondaryDiceCount * 2 : attack.secondaryDiceCount;
-        rawDamage += _rollDice(secCount, attack.secondaryDiceSides);
-      }
+      // 2. Apply attack hit against defender:
+      final hitResult = defender.applyAttackHit(
+        precomputedAttack,
+        rng: _rng,
+        isCrit: isCrit,
+        edition: edition,
+        damageModifier: (raw) => _applyDefensiveModifiers(
+          raw,
+          attack.damageType,
+          defender,
+          edition,
+          environment,
+        ),
+      );
 
-      // Apply resistances, immunities & environmental modifiers
-      damageDealt = _applyDefensiveModifiers(rawDamage, attack.damageType, defender, edition, environment);
+      damageDealt = hitResult.damageDealt;
+      appliedRiderLogs = hitResult.riderLogs;
       attacker.totalDamageDealt += damageDealt;
-      defender.applyDamage(damageDealt);
 
       if (defender.isDefeated) {
         isKillShot = true;
@@ -2873,8 +2901,9 @@ class ArenaCombatEngine {
       damageType: attack.damageType,
       isKillShot: isKillShot,
       defenderRemainingHp: defender.currentHp,
-      defenderMaxHp: defender.maxHp,
+      defenderMaxHp: defender.effectiveMaxHp,
       summaryText: summary,
+      appliedRiderLogs: appliedRiderLogs,
     );
   }
 
@@ -3174,7 +3203,8 @@ class ArenaCombatEngine {
               isKillShot: event.isKillShot,
               defenderRemainingHp: event.defenderRemainingHp,
               defenderMaxHp: event.defenderMaxHp,
-              summaryText: '[Legendary Action] ${event.summaryText}',
+              summaryText: '[Legendary Action] ${event.baseSummaryText}',
+              appliedRiderLogs: event.appliedRiderLogs,
             ),
           );
         }

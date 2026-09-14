@@ -38,7 +38,7 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   final Map<String, int> _peerLastActiveTimestamps = {};
 
   StreamController<String> _incomingPayloadsController =
-      StreamController<String>.broadcast();
+      StreamController<String>.broadcast(sync: false);
   StreamController<Set<String>> _peersChangedController =
       StreamController<Set<String>>.broadcast();
   StreamSubscription<SignalingMessage>? _signalingSubscription;
@@ -87,7 +87,8 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     _isDisposed = false;
 
     if (_incomingPayloadsController.isClosed) {
-      _incomingPayloadsController = StreamController<String>.broadcast();
+      _incomingPayloadsController =
+          StreamController<String>.broadcast(sync: false);
     }
     if (_peersChangedController.isClosed) {
       _peersChangedController = StreamController<Set<String>>.broadcast();
@@ -332,8 +333,12 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
         return;
       }
 
-      // Application/CRDT payload
-      _incomingPayloadsController.add(text);
+      // Application/CRDT payload dispatched via microtask to prevent re-entrant mutex deadlock
+      scheduleMicrotask(() {
+        if (!_incomingPayloadsController.isClosed) {
+          _incomingPayloadsController.add(text);
+        }
+      });
     };
 
     dc.onDataChannelState = (state) {

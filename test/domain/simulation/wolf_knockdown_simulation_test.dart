@@ -5,7 +5,9 @@ import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_combatant.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/monster_codex_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/srd_summons/minion_stat_block.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/arena/arena_simulation_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/stat_block_acl_parser.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/arena_combat_engine.dart';
 
 /// Predictable pseudo-random generator for deterministic testing.
 class DeterministicRandom implements math.Random {
@@ -212,6 +214,52 @@ void main() {
       expect(result.riderLogs.length, equals(1));
       expect(result.riderLogs.first, contains('succeeded on DC 11 STR save'));
       expect(result.riderLogs.first, contains('against Prone'));
+    });
+
+    test('ArenaCombatEngine turn execution wires applyAttackHit rider logs into ArenaAttackEvent', () {
+      final attacker = ArenaCombatant(
+        id: 'wolf_1',
+        monster: const MonsterItem(
+          id: 'srd_wolf',
+          name: 'Wolf',
+          statBlock2014: wolfStatBlock,
+          statBlock2024: wolfStatBlock,
+          sourcePresetId: 'srd',
+          sourcePresetName: 'SRD',
+          sourceCategory: SummonCategory.spell,
+        ),
+        team: ArenaTeam.teamA,
+        displayName: 'Wolf',
+        maxHp: 11,
+        currentHp: 11,
+        ac: 13,
+        initiativeBonus: 2,
+      );
+      final defender = createDefender();
+
+      // Deterministic sequence:
+      // 1. Attack roll d20: nextInt(20) -> 14 (roll 15 + 4 = 19 vs AC 14 -> HIT)
+      // 2. Damage roll (2d4): nextInt(4) -> 2 (die=3), nextInt(4) -> 1 (die=2) => 5 + 2 = 7
+      // 3. Saving throw d20: nextInt(20) -> 3 (roll 4 + 0 = 4 < 11 -> FAIL)
+      final rng = DeterministicRandom([14, 2, 1, 3]);
+      final engine = ArenaCombatEngine(rng: rng);
+
+      final step = engine.executeTurn(
+        stepIndex: 0,
+        roundNumber: 1,
+        attacker: attacker,
+        allCombatants: [attacker, defender],
+        strategy: ArenaTargetingStrategy.focusLowestHp,
+      );
+
+      expect(step.attackEvents.isNotEmpty, isTrue);
+      final event = step.attackEvents.first;
+      expect(event.isHit, isTrue);
+      expect(event.appliedRiderLogs, isNotEmpty);
+      expect(event.appliedRiderLogs.first, contains('failed DC 11 STR save'));
+      expect(event.appliedRiderLogs.first, contains('fell Prone'));
+      expect(event.summaryText, contains('fell Prone'));
+      expect(defender.isProne, isTrue);
     });
   });
 }

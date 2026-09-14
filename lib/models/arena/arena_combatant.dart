@@ -758,9 +758,13 @@ class ArenaCombatant {
     math.Random? rng,
     bool isCrit = false,
     DmRulesEdition edition = DmRulesEdition.v2024,
+    int Function(int rawDamage)? damageModifier,
   }) {
     final random = rng ?? math.Random();
-    final damage = attack.rollDamage(random, isCrit: isCrit);
+    var damage = attack.rollDamage(random, isCrit: isCrit);
+    if (damageModifier != null) {
+      damage = damageModifier(damage);
+    }
     applyDamage(damage);
 
     final riderLogs = <String>[];

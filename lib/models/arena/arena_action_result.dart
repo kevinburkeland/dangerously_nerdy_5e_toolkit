@@ -32,6 +32,8 @@ class ArenaAttackEvent {
   final List<String> appliedRiderLogs;
   final String _summaryText;
 
+  String get baseSummaryText => _summaryText;
+
   String get summaryText {
     if (appliedRiderLogs.isEmpty) return _summaryText;
     return '$_summaryText ${appliedRiderLogs.join(' ')}';
