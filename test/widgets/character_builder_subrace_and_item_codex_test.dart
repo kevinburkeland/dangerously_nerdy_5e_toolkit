@@ -50,36 +50,35 @@ void main() {
       expect(drowTraits.darkvisionFeet, 120);
     });
 
-    test('2014 RAW mode stacks base species and subrace fixed ability score increases', () {
+    test('2014 mode subrace attributes replace base species ability score increases (not additive)', () {
       final elf = SrdSpeciesLibrary.findBySlug('elf')!;
       final highElf = elf.subraces.firstWhere((s) => s.id.slug == 'high-elf');
 
       // Elf base: +2 DEX
       expect(elf.fixedAbilityBonuses2014['dexterity'], 2);
 
-      // High Elf subrace: +1 INT
+      // High Elf subrace defines complete replacement: +2 DEX, +1 INT
+      expect(highElf.fixedAbilityBonuses2014['dexterity'], 2);
       expect(highElf.fixedAbilityBonuses2014['intelligence'], 1);
 
-      // Stacking logic verification
-      final combined = Map<String, int>.from(elf.fixedAbilityBonuses2014);
-      highElf.fixedAbilityBonuses2014.forEach((k, v) {
-        combined[k] = (combined[k] ?? 0) + v;
-      });
+      // Replacement logic verification: subrace attributes replace base species (not additive)
+      final effectiveBonuses = highElf.fixedAbilityBonuses2014.isNotEmpty
+          ? Map<String, int>.from(highElf.fixedAbilityBonuses2014)
+          : Map<String, int>.from(elf.fixedAbilityBonuses2014);
 
-      expect(combined['dexterity'], 2);
-      expect(combined['intelligence'], 1);
-      expect(combined['strength'] ?? 0, 0);
+      expect(effectiveBonuses['dexterity'], 2);
+      expect(effectiveBonuses['intelligence'], 1);
+      expect(effectiveBonuses['strength'] ?? 0, 0);
 
-      // Dwarf + Mountain Dwarf: +2 CON, +2 STR
+      // Mountain Dwarf defines complete replacement: +2 CON, +2 STR
       final dwarf = SrdSpeciesLibrary.findBySlug('dwarf')!;
       final mountainDwarf = dwarf.subraces.firstWhere((s) => s.id.slug == 'mountain-dwarf');
-      final dwarfCombined = Map<String, int>.from(dwarf.fixedAbilityBonuses2014);
-      mountainDwarf.fixedAbilityBonuses2014.forEach((k, v) {
-        dwarfCombined[k] = (dwarfCombined[k] ?? 0) + v;
-      });
+      final dwarfEffective = mountainDwarf.fixedAbilityBonuses2014.isNotEmpty
+          ? Map<String, int>.from(mountainDwarf.fixedAbilityBonuses2014)
+          : Map<String, int>.from(dwarf.fixedAbilityBonuses2014);
 
-      expect(dwarfCombined['constitution'], 2);
-      expect(dwarfCombined['strength'], 2);
+      expect(dwarfEffective['constitution'], 2);
+      expect(dwarfEffective['strength'], 2);
     });
 
     test('Drow subrace grants dancing-lights cantrip at level 1 and scales at levels 3 and 5', () {

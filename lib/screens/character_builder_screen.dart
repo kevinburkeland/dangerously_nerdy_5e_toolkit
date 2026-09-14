@@ -1738,6 +1738,29 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                         displayName: sub.name,
                                       ),
                                     );
+                                    if (_selectedRuleset == RulesetVersion.v2014) {
+                                      final flexCount = sub.flexibleAbilityChoiceCount > 0
+                                          ? sub.flexibleAbilityChoiceCount
+                                          : sp.flexibleAbilityChoiceCount;
+                                      if (flexCount == 0) {
+                                        _variantHumanBonuses.clear();
+                                      } else {
+                                        final fixed = (sub.fixedAbilityBonuses2014.isNotEmpty || sub.flexibleAbilityChoiceCount > 0)
+                                            ? sub.fixedAbilityBonuses2014
+                                            : sp.fixedAbilityBonuses2014;
+                                        final validAbilities = AbilityType.values
+                                            .where((a) => !fixed.containsKey(a.name.toLowerCase()))
+                                            .toList();
+                                        _variantHumanBonuses.retainAll(validAbilities);
+                                        while (_variantHumanBonuses.length > flexCount) {
+                                          _variantHumanBonuses.remove(_variantHumanBonuses.last);
+                                        }
+                                        while (_variantHumanBonuses.length < flexCount && validAbilities.isNotEmpty) {
+                                          final next = validAbilities.firstWhere((a) => !_variantHumanBonuses.contains(a), orElse: () => validAbilities.first);
+                                          _variantHumanBonuses.add(next);
+                                        }
+                                      }
+                                    }
                                   });
                                 },
                               ),
@@ -4217,17 +4240,22 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
   AbilityScores _calculateBonusScores(Race? curSpecies, Background? curBackground, RulesetVersion ruleset, {Subrace? curSubrace}) {
     if (ruleset == RulesetVersion.v2014) {
-      if (curSpecies == null) return const AbilityScores.zero();
-      final fixed = Map<String, int>.from(curSpecies.fixedAbilityBonuses2014);
-      if (curSubrace != null) {
-        curSubrace.fixedAbilityBonuses2014.forEach((k, v) {
-          fixed[k] = (fixed[k] ?? 0) + v;
-        });
-      }
-      final flexibleCount = curSpecies.flexibleAbilityChoiceCount + (curSubrace?.flexibleAbilityChoiceCount ?? 0);
-      final flexibleBonus = curSpecies.flexibleAbilityBonusValue > 0
-          ? curSpecies.flexibleAbilityBonusValue
-          : (curSubrace?.flexibleAbilityBonusValue ?? 0);
+      if (curSpecies == null && curSubrace == null) return const AbilityScores.zero();
+
+      final bool hasSubraceAbilities = curSubrace != null &&
+          (curSubrace.fixedAbilityBonuses2014.isNotEmpty || curSubrace.flexibleAbilityChoiceCount > 0);
+
+      final fixed = hasSubraceAbilities
+          ? Map<String, int>.from(curSubrace.fixedAbilityBonuses2014)
+          : (curSpecies != null ? Map<String, int>.from(curSpecies.fixedAbilityBonuses2014) : <String, int>{});
+
+      final flexibleCount = hasSubraceAbilities
+          ? curSubrace.flexibleAbilityChoiceCount
+          : (curSpecies?.flexibleAbilityChoiceCount ?? 0);
+
+      final flexibleBonus = hasSubraceAbilities
+          ? curSubrace.flexibleAbilityBonusValue
+          : (curSpecies?.flexibleAbilityBonusValue ?? 0);
 
       int str = fixed['strength'] ?? 0;
       int dex = fixed['dexterity'] ?? 0;

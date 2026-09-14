@@ -40,25 +40,31 @@ class AbilityScoreStep extends StatelessWidget {
   });
 
   Map<String, int> get effectiveFixedBonuses {
-    final map = <String, int>{};
+    if (curSubrace != null &&
+        (curSubrace!.fixedAbilityBonuses2014.isNotEmpty ||
+            curSubrace!.flexibleAbilityChoiceCount > 0)) {
+      return Map<String, int>.from(curSubrace!.fixedAbilityBonuses2014);
+    }
     if (curSpecies != null) {
-      map.addAll(curSpecies!.fixedAbilityBonuses2014);
+      return Map<String, int>.from(curSpecies!.fixedAbilityBonuses2014);
     }
-    if (curSubrace != null) {
-      curSubrace!.fixedAbilityBonuses2014.forEach((k, v) {
-        map[k] = (map[k] ?? 0) + v;
-      });
-    }
-    return map;
+    return const {};
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final is2014 = selectedRuleset == RulesetVersion.v2014;
-    final flexibleCount = curSpecies?.flexibleAbilityChoiceCount ?? 0;
-    final flexibleBonusValue = curSpecies?.flexibleAbilityBonusValue ?? 0;
-    final hasFlexibleLineageBonus = is2014 && flexibleCount > 0 && curSpecies != null;
+    final hasSubraceBonuses = curSubrace != null &&
+        (curSubrace!.fixedAbilityBonuses2014.isNotEmpty ||
+            curSubrace!.flexibleAbilityChoiceCount > 0);
+    final flexibleCount = hasSubraceBonuses
+        ? curSubrace!.flexibleAbilityChoiceCount
+        : (curSpecies?.flexibleAbilityChoiceCount ?? 0);
+    final flexibleBonusValue = hasSubraceBonuses
+        ? curSubrace!.flexibleAbilityBonusValue
+        : (curSpecies?.flexibleAbilityBonusValue ?? 0);
+    final hasFlexibleLineageBonus = is2014 && flexibleCount > 0 && (curSpecies != null || curSubrace != null);
 
     return ListenableBuilder(
       listenable: controller,
@@ -972,11 +978,12 @@ class AbilityScoreStep extends StatelessWidget {
         ),
       );
     }
-    final summary = [
-      curSpecies!.abilityScoreSummary,
-      if (curSubrace != null && (curSubrace!.abilityScoreSummary?.isNotEmpty == true))
-        '${curSubrace!.name} (${curSubrace!.abilityScoreSummary})',
-    ].join(' + ');
+    final String summary;
+    if (curSubrace != null && (curSubrace!.abilityScoreSummary?.isNotEmpty == true)) {
+      summary = '${curSubrace!.name} (${curSubrace!.abilityScoreSummary})';
+    } else {
+      summary = curSpecies?.abilityScoreSummary ?? '';
+    }
 
     return Container(
       padding: const EdgeInsets.all(10),
