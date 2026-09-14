@@ -43,10 +43,11 @@ dangerously_nerdy_5e_toolkit/
 │   ├── theme/                          # AppTheme: 9 fantasy accent themes & OLED black
 │   ├── utils/                          # SecureRandom, CryptoUtils, DiceFormatters
 │   └── widgets/                        # Modular UI components (AbilitiesAndTraitsTab, SpellUpcastSheet, dialogs, charts)
-├── test/                               # Comprehensive test suite (1,696 passing tests)
+├── test/                               # Comprehensive test suite (1,701 passing tests)
 │   ├── domain/                         # Domain purity & CRDT logic tests
 │   ├── application/                    # Application service tests
-│   ├── infrastructure/                 # DTO serialization & repository tests
+│   ├── infrastructure/                 # DTO serialization, repository, & compliance tests
+│   │   └── compliance/                 # SRD Legal Compliance & Product Identity Invariant Suite
 │   ├── accessibility/                  # A11y & dynamic type scaling tests
 │   └── widgets/                        # Widget interaction & visual tests
 ├── docs/                               # System architecture & CRDT safety guidelines
@@ -127,6 +128,7 @@ dangerously_nerdy_5e_toolkit/
 
 ### 7. Legal & SRD Compliance
 - **Zero Product Identity:** Prohibited terms: Beholder, Mind Flayer, Illithid, Displacer Beast, Strahd, Hexblade, etc. Use generic SRD equivalents only (CC-BY-4.0).
+- **Static Compendium IP Sanity Invariant Suite:** `test/infrastructure/compliance/srd_legal_compliance_test.dart` asserts that all bundled static compendiums (`SrdClassesLibrary.allOptions`, `SrdBackgroundsLibrary.allBackgrounds`, `SrdSpeciesLibrary.allSpecies`, `MonsterCodexLibrary.allMonsters`, `MagicItemLibrary.allItems`) contain zero proprietary Wizards of the Coast Product Identity tokens (e.g. Eberron, Faerûn, Toril, Ravnica, Dragonmark, Warforged, Kalashtar, Shifter, Changeling, Mind Flayer, Beholder, etc.). Test fixtures must strictly use generic variant lineages (`Human (Lineage of Artifice)`, `CUSTOM_LINEAGE`) instead of proprietary settings or marks.
 
 ### 8. Continuous Documentation & Living AI Rules Protocol (Definition of Done)
 Before completing any engineering task, the agent MUST perform this two-gate audit:

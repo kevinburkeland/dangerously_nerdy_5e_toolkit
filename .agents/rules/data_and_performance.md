@@ -285,4 +285,20 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Fallback Summary Generation Parity:**
   - In entity converters (e.g., `equipmentItemToMagicItem` in `HomebrewPersistenceService`), `summary` fallback generation filters out leading `#` heading lines and `|` table lines to pick the first substantive narrative line, while keeping the full markdown payload in `description` intact.
 
+## 19. Legal Compliance & Product Identity Invariant Enforcement
+
+- **OGL 1.0a & CC-BY-4.0 Asset Hygiene:**
+  - Bundled compendiums and codebases must strictly exclude proprietary Wizards of the Coast Product Identity terms, campaign settings, factions, and non-SRD trademarks.
+  - Prohibited tokens include: Eberron, Faerûn, Toril, Ravnica, Krynn, Athas, Barovia, Spelljammer, Planescape, Waterdeep, Baldur's Gate, Neverwinter, Harpers, Zhentarim, Lord's Alliance, Emerald Enclave, Order of the Gauntlet, Dragonmark, Warforged, Kalashtar, Shifter, Changeling, Simic Hybrid, Vedalken, Githyanki, Githzerai, Beholder, Mind Flayer, Illithid, Gith, Displacer Beast, Gauth, Carrion Crawler, Umber Hulk, Slaad, Yuan-ti, Beholderkin, Bigby, Tasha, Mordenkainen, Otiluke, Drawmij, Rary, Leomund, Evard, Tenser, Aganazzar, Melf, Elminster, Drizzt, Strahd, Acererak.
+- **Automated Compliance Test Suite (`srd_legal_compliance_test.dart`):**
+  - An automated regression test scans all static compendiums:
+    - `SrdClassesLibrary.allOptions`
+    - `SrdBackgroundsLibrary.allBackgrounds`
+    - `SrdSpeciesLibrary.allSpecies`
+    - `MonsterCodexLibrary.allMonsters`
+    - `MagicItemLibrary.allItems`
+  - Asserts that all names, summaries, traits, and markdown descriptions yield zero matches against the word-boundary Product Identity regular expression.
+- **Test Fixture Cleansing:**
+  - Test fixtures simulating homebrew ingestion must never introduce proprietary tokens. Use generic labels and custom lineages (e.g. `Human (Lineage of Artifice)` with `'source': 'CUSTOM_LINEAGE'` and `'lineageType': 'Artifice'`) rather than setting-specific dragonmark or Eberron tokens.
+
 

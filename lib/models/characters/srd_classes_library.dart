@@ -1246,4 +1246,7 @@ class SrdClassesLibrary {
     }
     return allClasses.where((c) => c.id.slug == clean || c.name.toLowerCase() == clean).firstOrNull;
   }
+
+  /// All feature options across all classes, custom invocations, pact boons, infusions, and character options
+  static List<FeatureOption> get allOptions => SrdFeatureOptions.allOptions;
 }

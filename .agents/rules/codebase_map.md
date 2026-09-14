@@ -24,6 +24,6 @@ Use this cheat sheet to immediately navigate to the relevant files without expen
 | **UI Theme & Glyphs** | `lib/theme/app_theme.dart`, `lib/widgets/glyphs/`, `lib/widgets/app_logo.dart` | `AppTheme`, `DndGlyphPainter`, `AppLogo` |
 | **A11y Core Components** | `lib/presentation/core/` | `AccessibleActionTile` |
 | **Persistence & Database** | `lib/services/persistence/` | `AppDatabaseService`, `HomebrewPersistenceService`, `CharacterPersistenceService` |
-| **Security & Firestore** | `firestore.rules`, `firestore.indexes.json` | Room security, passkey validation, rate limiting |
+| **Legal & IP Compliance** | `test/infrastructure/compliance/` | `srd_legal_compliance_test.dart` |
 | **Web Build Scripts** | `scripts/build_web.sh` | PWA cache busting, service worker version injection |
-| **Automated Tests** | `test/` (1,325 tests across unit, widget, accessibility, architecture) | `test/domain/domain_purity_test.dart`, `test/domain/crdt/`, `test/application/`, `test/infrastructure/` |
+| **Automated Tests** | `test/` (unit, widget, accessibility, architecture, legal compliance) | `test/domain/domain_purity_test.dart`, `test/infrastructure/compliance/`, `test/application/` |

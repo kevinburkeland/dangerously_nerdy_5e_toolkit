@@ -19,6 +19,9 @@ flutter test test/application/
 # Infrastructure Repositories & DTOs
 flutter test test/infrastructure/
 
+# Legal & Product Identity Compliance Invariants
+flutter test test/infrastructure/compliance/
+
 # Accessibility & Dynamic Type Scaling (2.0x)
 flutter test test/accessibility/
 
