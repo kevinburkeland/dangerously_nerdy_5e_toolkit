@@ -119,9 +119,45 @@ class CompendiumRaceParser {
       raceSlug = _slugify(defaultRaceSlug);
     }
 
-    final traitsData = raw['trait'] ?? raw['traits'] ?? raw['entries'] ?? raw['desc'] ?? raw['description'];
+    // Speed
+    final speed = raw['speed'] != null ? _parseSpeed(raw['speed']) : null;
+
+    // Ability Score Parsing (Fixed and Flexible)
+    final isModernLineage = raw['lineage'] != null ||
+        raw['isCustomLineage'] == true ||
+        raw['isLineage'] == true ||
+        ruleset == RulesetVersion.v2024;
+
+    final abilityResult = _parseAbilityScores(raw['ability'] ?? raw['abilities'], isModernLineage: isModernLineage);
+
+    // Traits Data: combine entries, traits, and description
+    final traitsList = <dynamic>[];
+    if (raw['entries'] is List) {
+      traitsList.addAll(raw['entries'] as List);
+    } else if (raw['entries'] != null) {
+      traitsList.add(raw['entries']);
+    }
+    if (raw['trait'] is List) {
+      traitsList.addAll(raw['trait'] as List);
+    } else if (raw['trait'] != null) {
+      traitsList.add(raw['trait']);
+    }
+    if (raw['traits'] is List) {
+      traitsList.addAll(raw['traits'] as List);
+    } else if (raw['traits'] != null) {
+      traitsList.add(raw['traits']);
+    }
+    if (traitsList.isEmpty) {
+      final fallback = raw['desc'] ?? raw['description'];
+      if (fallback is List) {
+        traitsList.addAll(fallback);
+      } else if (fallback != null) {
+        traitsList.add(fallback);
+      }
+    }
+
     final parsedEntries = transformer.transformEntries(
-      traitsData,
+      traitsList.isNotEmpty ? traitsList : null,
       defaultRuleset: ruleset,
     );
 
@@ -132,11 +168,33 @@ class CompendiumRaceParser {
       }
     });
 
+    if (raw.containsKey('darkvision')) customProperties['darkvision'] = raw['darkvision'];
+    if (raw.containsKey('skillProficiencies')) customProperties['skillProficiencies'] = raw['skillProficiencies'];
+    if (raw.containsKey('toolProficiencies')) customProperties['toolProficiencies'] = raw['toolProficiencies'];
+    if (raw.containsKey('languageProficiencies')) customProperties['languageProficiencies'] = raw['languageProficiencies'];
+    if (raw.containsKey('additionalSpells')) customProperties['additionalSpells'] = raw['additionalSpells'];
+    if (raw.containsKey('ability')) customProperties['ability'] = raw['ability'];
+    if (raw.containsKey('speed')) customProperties['speed'] = raw['speed'];
+
+    final rawDarkvision = raw['darkvision'] ?? customProperties['darkvision'];
+    final int? darkvision = rawDarkvision is num
+        ? rawDarkvision.toInt()
+        : (rawDarkvision == true ? 60 : null);
+
+    final grants = _extractGrants(slug, raw, customProperties);
+
     return Subrace(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
       raceSlug: raceSlug,
       traitsMarkdown: parsedEntries.markdown,
+      abilityScoreSummary: abilityResult.summary,
+      fixedAbilityBonuses: abilityResult.fixedBonuses,
+      flexibleAbilityCount: abilityResult.flexibleCount,
+      flexibleAbilityBonus: abilityResult.flexibleBonus,
+      grants: grants,
+      speed: speed,
+      darkvision: darkvision,
       customProperties: customProperties,
     );
   }
@@ -165,6 +223,13 @@ class CompendiumRaceParser {
     'entries',
     'desc',
     'description',
+    'ability',
+    'speed',
+    'darkvision',
+    'skillProficiencies',
+    'toolProficiencies',
+    'languageProficiencies',
+    'additionalSpells',
   };
 
   String _parseSize(dynamic sizeData) {
@@ -232,6 +297,50 @@ class CompendiumRaceParser {
     return '30 ft.';
   }
 
+  static String _normalizeAbilityKey(String key) {
+    switch (key.toLowerCase()) {
+      case 'str':
+      case 'strength':
+        return 'strength';
+      case 'dex':
+      case 'dexterity':
+        return 'dexterity';
+      case 'con':
+      case 'constitution':
+        return 'constitution';
+      case 'int':
+      case 'intelligence':
+        return 'intelligence';
+      case 'wis':
+      case 'wisdom':
+        return 'wisdom';
+      case 'cha':
+      case 'charisma':
+        return 'charisma';
+      default:
+        return key.toLowerCase();
+    }
+  }
+
+  static String _shortAbilityName(String norm) {
+    switch (norm) {
+      case 'strength':
+        return 'STR';
+      case 'dexterity':
+        return 'DEX';
+      case 'constitution':
+        return 'CON';
+      case 'intelligence':
+        return 'INT';
+      case 'wisdom':
+        return 'WIS';
+      case 'charisma':
+        return 'CHA';
+      default:
+        return norm.toUpperCase();
+    }
+  }
+
   ({
     String? summary,
     int bonusFeatCount,
@@ -269,9 +378,10 @@ class CompendiumRaceParser {
         if (ab is Map) {
           ab.forEach((k, v) {
             final key = k.toString().toLowerCase();
-            if (['str', 'dex', 'con', 'int', 'wis', 'cha'].contains(key) && v is num) {
-              fixed[key.toUpperCase()] = v.toInt();
-              parts.add('${key.toUpperCase()} +$v');
+            if (['str', 'dex', 'con', 'int', 'wis', 'cha', 'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].contains(key) && v is num) {
+              final norm = _normalizeAbilityKey(key);
+              fixed[norm] = v.toInt();
+              parts.add('+${v.toInt()} ${_shortAbilityName(norm)}');
             } else if (key == 'choose' && v is Map) {
               final count = (v['count'] as num?)?.toInt() ?? 1;
               final amount = (v['amount'] as num?)?.toInt() ?? 1;
@@ -285,9 +395,10 @@ class CompendiumRaceParser {
     } else if (abilityData is Map) {
       abilityData.forEach((k, v) {
         final key = k.toString().toLowerCase();
-        if (['str', 'dex', 'con', 'int', 'wis', 'cha'].contains(key) && v is num) {
-          fixed[key.toUpperCase()] = v.toInt();
-          parts.add('${key.toUpperCase()} +$v');
+        if (['str', 'dex', 'con', 'int', 'wis', 'cha', 'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].contains(key) && v is num) {
+          final norm = _normalizeAbilityKey(key);
+          fixed[norm] = v.toInt();
+          parts.add('+${v.toInt()} ${_shortAbilityName(norm)}');
         } else if (key == 'choose' && v is Map) {
           final count = (v['count'] as num?)?.toInt() ?? 1;
           final amount = (v['amount'] as num?)?.toInt() ?? 1;
@@ -336,15 +447,28 @@ class CompendiumRaceParser {
             grantId: 'race-$slug-skill-${s.toLowerCase().trim()}',
             label: '$s Proficiency',
           ));
-        } else if (s is Map && s['choose'] is Map) {
-          final count = (s['choose']['count'] as num?)?.toInt() ?? 1;
-          final from = s['choose']['from'] as List?;
-          grants.add(FeatureGrant.skillChoice(
-            grantId: 'race-$slug-skill-choice',
-            count: count,
-            pool: from?.map((e) => e.toString()).toList(),
-            label: 'Skill Choice ($count)',
-          ));
+        } else if (s is Map) {
+          if (s['choose'] is Map) {
+            final count = (s['choose']['count'] as num?)?.toInt() ?? 1;
+            final from = s['choose']['from'] as List?;
+            grants.add(FeatureGrant.skillChoice(
+              grantId: 'race-$slug-skill-choice',
+              count: count,
+              pool: from?.map((e) => e.toString()).toList(),
+              label: 'Skill Choice ($count)',
+            ));
+          } else {
+            for (final entry in s.entries) {
+              if (entry.value == true || entry.value == 1) {
+                final sk = entry.key.toString().toLowerCase().trim();
+                grants.add(FeatureGrant.skillProficiency(
+                  sk,
+                  grantId: 'race-$slug-skill-$sk',
+                  label: '${sk[0].toUpperCase()}${sk.substring(1)} Proficiency',
+                ));
+              }
+            }
+          }
         }
       }
     }

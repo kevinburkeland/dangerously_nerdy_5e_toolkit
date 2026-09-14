@@ -5,6 +5,7 @@ import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/haptic_service.dart';
 import '../common/edition_diff_badge.dart';
+import '../common/formatted_markdown_text.dart';
 import '../glyphs/dnd_glyph.dart';
 import '../glyphs/glyph_tokens.dart';
 import '../interactive/pressable_card.dart';
@@ -128,12 +129,6 @@ class RaceCard extends StatelessWidget {
         race.traitsMarkdown.toLowerCase().contains('darkvision');
     final darkvisionFeet = race.customProperties['darkvisionFeet'] ?? 60;
 
-    // Clean plain-text preview of traits
-    final cleanTraits = race.traitsMarkdown
-        .replaceAll(RegExp(r'\*\*|__|\*|_|#|`'), '')
-        .replaceAll(RegExp(r'\n+'), ' ')
-        .trim();
-
     return PressableCard(
       onTap: onTap,
       shape: RoundedRectangleBorder(
@@ -244,8 +239,8 @@ class RaceCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Traits Snippet Preview
-          Text(
-            cleanTraits,
+          FormattedMarkdownText(
+            race.traitsMarkdown,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

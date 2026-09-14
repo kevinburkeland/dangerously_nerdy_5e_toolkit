@@ -73,13 +73,27 @@ class SrdSpeciesLibrary {
         id: EntityId(slug: 'high-elf', ruleset: RulesetVersion.v2024),
         name: 'High Elf',
         raceSlug: 'elf',
-        traitsMarkdown: '**Cantrip.** You know one cantrip of your choice from the Wizard spell list.',
+        abilityScoreSummary: '+1 INT',
+        fixedAbilityBonuses: {'intelligence': 1},
+        traitsMarkdown: '**Cantrip.** You know one cantrip of your choice from the Wizard spell list.\n\n**Elf Weapon Training.** Proficiency with longsword, shortsword, shortbow, and longbow.\n\n**Extra Language.** Speak, read, and write one extra language of your choice.',
       ),
       const Subrace(
         id: EntityId(slug: 'wood-elf', ruleset: RulesetVersion.v2024),
         name: 'Wood Elf',
         raceSlug: 'elf',
-        traitsMarkdown: '**Fleet of Foot.** Your base walking speed increases to 35 feet.',
+        abilityScoreSummary: '+1 WIS',
+        fixedAbilityBonuses: {'wisdom': 1},
+        speed: '35 ft.',
+        traitsMarkdown: '**Fleet of Foot.** Your base walking speed increases to 35 feet.\n\n**Elf Weapon Training.** Proficiency with longsword, shortsword, shortbow, and longbow.\n\n**Mask of the Wild.** You can attempt to hide even when lightly obscured by foliage, heavy rain, or mist.',
+      ),
+      const Subrace(
+        id: EntityId(slug: 'drow', ruleset: RulesetVersion.v2024),
+        name: 'Drow',
+        raceSlug: 'elf',
+        abilityScoreSummary: '+1 CHA',
+        fixedAbilityBonuses: {'charisma': 1},
+        darkvision: 120,
+        traitsMarkdown: '**Superior Darkvision.** Darkvision out to 120 feet.\n\n**Sunlight Sensitivity.** Disadvantage on attack rolls and Wisdom (Perception) checks relying on sight in direct sunlight.\n\n**Drow Magic.** Dancing Lights cantrip, Faerie Fire (level 3), Darkness (level 5).\n\n**Drow Weapon Training.** Proficiency with rapiers, shortswords, and hand crossbows.',
       ),
     ],
   );
@@ -107,12 +121,16 @@ class SrdSpeciesLibrary {
         id: EntityId(slug: 'hill-dwarf', ruleset: RulesetVersion.v2024),
         name: 'Hill Dwarf',
         raceSlug: 'dwarf',
-        traitsMarkdown: '**Dwarven Toughness.** +1 HP maximum per level.',
+        abilityScoreSummary: '+1 WIS',
+        fixedAbilityBonuses: {'wisdom': 1},
+        traitsMarkdown: '**Dwarven Toughness.** Your hit point maximum increases by 1, and increases by 1 every time you gain a level.',
       ),
       const Subrace(
         id: EntityId(slug: 'mountain-dwarf', ruleset: RulesetVersion.v2024),
         name: 'Mountain Dwarf',
         raceSlug: 'dwarf',
+        abilityScoreSummary: '+2 STR',
+        fixedAbilityBonuses: {'strength': 2},
         traitsMarkdown: '**Dwarven Armor Training.** Proficiency with light and medium armor.',
       ),
     ],
@@ -138,7 +156,17 @@ class SrdSpeciesLibrary {
         id: EntityId(slug: 'lightfoot-halfling', ruleset: RulesetVersion.v2024),
         name: 'Lightfoot Halfling',
         raceSlug: 'halfling',
+        abilityScoreSummary: '+1 CHA',
+        fixedAbilityBonuses: {'charisma': 1},
         traitsMarkdown: '**Naturally Stealthy.** You can attempt to hide even when obscured only by a larger creature.',
+      ),
+      const Subrace(
+        id: EntityId(slug: 'stout-halfling', ruleset: RulesetVersion.v2024),
+        name: 'Stout Halfling',
+        raceSlug: 'halfling',
+        abilityScoreSummary: '+1 CON',
+        fixedAbilityBonuses: {'constitution': 1},
+        traitsMarkdown: '**Stout Resilience.** You have advantage on saving throws against poison, and you have resistance against poison damage.',
       ),
     ],
   );
@@ -178,6 +206,24 @@ class SrdSpeciesLibrary {
       'gnomeCunning': true,
       'abilityBonuses2014': {'intelligence': 2},
     },
+    subraces: [
+      const Subrace(
+        id: EntityId(slug: 'forest-gnome', ruleset: RulesetVersion.v2024),
+        name: 'Forest Gnome',
+        raceSlug: 'gnome',
+        abilityScoreSummary: '+1 DEX',
+        fixedAbilityBonuses: {'dexterity': 1},
+        traitsMarkdown: '**Natural Illusionist.** You know the Minor Illusion cantrip. Intelligence is your spellcasting ability for it.\n\n**Speak with Small Beasts.** Through sounds and gestures, you can communicate simple ideas with Small or smaller beasts.',
+      ),
+      const Subrace(
+        id: EntityId(slug: 'rock-gnome', ruleset: RulesetVersion.v2024),
+        name: 'Rock Gnome',
+        raceSlug: 'gnome',
+        abilityScoreSummary: '+1 CON',
+        fixedAbilityBonuses: {'constitution': 1},
+        traitsMarkdown: '**Artificer\'s Lore.** Double proficiency on Intelligence (History) checks related to magic items, alchemical objects, or technological devices.\n\n**Tinker.** Proficiency with tinker\'s tools to construct clockwork toys, fire starters, or music boxes.',
+      ),
+    ],
   );
 
   static final Race halfElf = Race(
@@ -328,5 +374,17 @@ class SrdSpeciesLibrary {
   static Race? findBySlug(String slug) {
     final clean = slug.toLowerCase().trim();
     return allSpecies.where((r) => r.id.slug == clean || r.name.toLowerCase() == clean).firstOrNull;
+  }
+
+  static Subrace? findSubraceBySlug(String slug) {
+    final clean = slug.toLowerCase().trim();
+    for (final r in allSpecies) {
+      for (final s in r.subraces) {
+        if (s.id.slug.toLowerCase().trim() == clean || s.name.toLowerCase().trim() == clean) {
+          return s;
+        }
+      }
+    }
+    return _customSubraces.where((s) => s.id.slug.toLowerCase().trim() == clean || s.name.toLowerCase().trim() == clean).firstOrNull;
   }
 }

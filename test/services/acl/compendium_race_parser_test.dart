@@ -59,11 +59,57 @@ void main() {
       expect(sub.name, equals('Solar Astral Elf'));
       expect(sub.raceSlug, equals('astral-elf'));
       expect(sub.traitsMarkdown, contains('Solar Wrath'));
+      expect(sub.fixedAbilityBonuses['charisma'], equals(1));
+      expect(sub.abilityScoreSummary, contains('+1 CHA'));
 
       // 0% data loss
       expect(race.customProperties['lineageNotes'], equals('Inhabitants of the Astral Plane'));
       expect(race.customProperties['darkvision'], equals(60));
       expect(race.customProperties['additionalSpells'], isNotNull);
+    });
+
+    test('parseSubrace extracts abilities, speed, darkvision, grants and markdown cleanly', () {
+      final subRaw = {
+        'name': 'Deep Gnome (Svirfneblin)',
+        'raceName': 'Gnome',
+        'source': 'HOMEBREW',
+        'speed': 25,
+        'darkvision': 120,
+        'ability': [
+          {'dex': 1}
+        ],
+        'skillProficiencies': [
+          {'stealth': true}
+        ],
+        'additionalSpells': [
+          {
+            'innate': {
+              '1': ['{@spell disguise self#c}'],
+              '3': ['{@spell nondetection}']
+            }
+          }
+        ],
+        'trait': [
+          {
+            'name': 'Stone Camouflage',
+            'entries': ['You have advantage on Dexterity (Stealth) checks made to hide in rocky terrain.']
+          }
+        ],
+        'customLore': 'Subterranean dwellers'
+      };
+
+      final sub = parser.parseSubrace(subRaw, defaultRaceSlug: 'gnome');
+
+      expect(sub.name, equals('Deep Gnome (Svirfneblin)'));
+      expect(sub.raceSlug, equals('gnome'));
+      expect(sub.speed, equals('25 ft.'));
+      expect(sub.darkvision, equals(120));
+      expect(sub.fixedAbilityBonuses['dexterity'], equals(1));
+      expect(sub.abilityScoreSummary, contains('+1 DEX'));
+      expect(sub.traitsMarkdown, contains('Stone Camouflage'));
+      expect(sub.traitsMarkdown, contains('advantage on Dexterity (Stealth)'));
+      expect(sub.grants.any((g) => g.payload['skill'] == 'stealth'), isTrue);
+      expect(sub.customProperties['customLore'], equals('Subterranean dwellers'));
     });
 
     test('parses flexible ability score increases (e.g. choose 2 +1)', () {

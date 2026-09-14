@@ -84,6 +84,11 @@ void main() {
       expect(find.text('Traits & Lineages'), findsOneWidget);
       expect(find.text('Lore & Notes'), findsOneWidget);
       expect(find.text('High Elf'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Wood Elf'),
+        100.0,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('Wood Elf'), findsOneWidget);
     });
 

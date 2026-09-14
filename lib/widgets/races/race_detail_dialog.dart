@@ -267,12 +267,62 @@ class _RaceDetailDialogState extends State<RaceDetailDialog> with SingleTickerPr
                       children: [
                         const Icon(Icons.shield_moon, size: 16, color: Color(0xFF10B981)),
                         const SizedBox(width: 6),
-                        Text(
-                          subrace.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                        Expanded(
+                          child: Text(
+                            subrace.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                          ),
                         ),
                       ],
                     ),
+                    if ((subrace.abilityScoreSummary?.isNotEmpty == true) || (subrace.speed?.isNotEmpty == true) || (subrace.darkvision != null && subrace.darkvision! > 0)) ...[
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (subrace.abilityScoreSummary?.isNotEmpty == true)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                              ),
+                              child: Text(
+                                subrace.abilityScoreSummary!,
+                                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                              ),
+                            ),
+                          if (subrace.speed?.isNotEmpty == true)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                              ),
+                              child: Text(
+                                'Speed ${subrace.speed!.contains("ft") ? subrace.speed : "${subrace.speed} ft."}',
+                                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFF38BDF8)),
+                              ),
+                            ),
+                          if (subrace.darkvision != null && subrace.darkvision! > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFACC15).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: const Color(0xFFFACC15).withValues(alpha: 0.4)),
+                              ),
+                              child: Text(
+                                'Darkvision ${subrace.darkvision} ft.',
+                                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Color(0xFFFACC15)),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     FormattedMarkdownText(subrace.traitsMarkdown),
                   ],

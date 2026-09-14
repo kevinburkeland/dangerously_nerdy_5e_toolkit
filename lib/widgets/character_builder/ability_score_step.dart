@@ -12,6 +12,7 @@ import '../../services/rules/dnd_5e_rules_engine.dart';
 class AbilityScoreStep extends StatelessWidget {
   final CharacterBuilderController controller;
   final Race? curSpecies;
+  final Subrace? curSubrace;
   final Background? curBackground;
   final RulesetVersion selectedRuleset;
   final Set<AbilityType> variantHumanBonuses;
@@ -26,6 +27,7 @@ class AbilityScoreStep extends StatelessWidget {
     super.key,
     required this.controller,
     this.curSpecies,
+    this.curSubrace,
     this.curBackground,
     required this.selectedRuleset,
     required this.variantHumanBonuses,
@@ -36,6 +38,19 @@ class AbilityScoreStep extends StatelessWidget {
     required this.onBackgroundSecondaryBonusChanged,
     required this.bonusScores,
   });
+
+  Map<String, int> get effectiveFixedBonuses {
+    final map = <String, int>{};
+    if (curSpecies != null) {
+      map.addAll(curSpecies!.fixedAbilityBonuses2014);
+    }
+    if (curSubrace != null) {
+      curSubrace!.fixedAbilityBonuses2014.forEach((k, v) {
+        map[k] = (map[k] ?? 0) + v;
+      });
+    }
+    return map;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -818,7 +833,7 @@ class AbilityScoreStep extends StatelessWidget {
               spacing: 8,
               runSpacing: 6,
               children: AbilityType.values.map((ab) {
-                final fixedBonuses = curSpecies?.fixedAbilityBonuses2014 ?? const {};
+                final fixedBonuses = effectiveFixedBonuses;
                 final isFixed = fixedBonuses.containsKey(ab.name.toLowerCase());
                 final isSelected = variantHumanBonuses.contains(ab);
                 return FilterChip(
@@ -957,6 +972,12 @@ class AbilityScoreStep extends StatelessWidget {
         ),
       );
     }
+    final summary = [
+      curSpecies!.abilityScoreSummary,
+      if (curSubrace != null && (curSubrace!.abilityScoreSummary?.isNotEmpty == true))
+        '${curSubrace!.name} (${curSubrace!.abilityScoreSummary})',
+    ].join(' + ');
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -969,7 +990,7 @@ class AbilityScoreStep extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '2014 Species Racial Bonus: ${curSpecies!.abilityScoreSummary}',
+              '2014 Species Racial Bonus: $summary',
               style: const TextStyle(fontSize: 12, color: Colors.white70),
             ),
           ),

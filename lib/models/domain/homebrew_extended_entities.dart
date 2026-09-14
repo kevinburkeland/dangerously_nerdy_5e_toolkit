@@ -859,6 +859,13 @@ class Subrace extends DomainEntity {
   final String name;
   final String raceSlug;
   final String traitsMarkdown;
+  final String? abilityScoreSummary;
+  final Map<String, int> fixedAbilityBonuses;
+  final int flexibleAbilityCount;
+  final int flexibleAbilityBonus;
+  final List<FeatureGrant> grants;
+  final String? speed;
+  final int? darkvision;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -867,11 +874,52 @@ class Subrace extends DomainEntity {
     required this.name,
     required this.raceSlug,
     required this.traitsMarkdown,
+    this.abilityScoreSummary,
+    this.fixedAbilityBonuses = const {},
+    this.flexibleAbilityCount = 0,
+    this.flexibleAbilityBonus = 0,
+    this.grants = const [],
+    this.speed,
+    this.darkvision,
     this.customProperties = const {},
   });
 
+  Map<String, int> get fixedAbilityBonuses2014 => fixedAbilityBonuses;
+  int get flexibleAbilityChoiceCount => flexibleAbilityCount;
+  int get flexibleAbilityBonusValue => flexibleAbilityBonus;
+
   @override
   EntityType get entityType => EntityType.species;
+
+  Subrace copyWith({
+    EntityId? id,
+    String? name,
+    String? raceSlug,
+    String? traitsMarkdown,
+    String? abilityScoreSummary,
+    Map<String, int>? fixedAbilityBonuses,
+    int? flexibleAbilityCount,
+    int? flexibleAbilityBonus,
+    List<FeatureGrant>? grants,
+    String? speed,
+    int? darkvision,
+    Map<String, dynamic>? customProperties,
+  }) {
+    return Subrace(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      raceSlug: raceSlug ?? this.raceSlug,
+      traitsMarkdown: traitsMarkdown ?? this.traitsMarkdown,
+      abilityScoreSummary: abilityScoreSummary ?? this.abilityScoreSummary,
+      fixedAbilityBonuses: fixedAbilityBonuses ?? this.fixedAbilityBonuses,
+      flexibleAbilityCount: flexibleAbilityCount ?? this.flexibleAbilityCount,
+      flexibleAbilityBonus: flexibleAbilityBonus ?? this.flexibleAbilityBonus,
+      grants: grants ?? this.grants,
+      speed: speed ?? this.speed,
+      darkvision: darkvision ?? this.darkvision,
+      customProperties: customProperties ?? this.customProperties,
+    );
+  }
 
   @override
   Map<String, dynamic> toMap() => {
@@ -879,15 +927,59 @@ class Subrace extends DomainEntity {
         'name': name,
         'raceSlug': raceSlug,
         'traitsMarkdown': traitsMarkdown,
+        if (abilityScoreSummary != null) 'abilityScoreSummary': abilityScoreSummary,
+        if (fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': fixedAbilityBonuses,
+        if (flexibleAbilityCount > 0) 'flexibleAbilityCount': flexibleAbilityCount,
+        if (flexibleAbilityBonus > 0) 'flexibleAbilityBonus': flexibleAbilityBonus,
+        if (grants.isNotEmpty) 'grants': grants.map((g) => g.toMap()).toList(),
+        if (speed != null) 'speed': speed,
+        if (darkvision != null) 'darkvision': darkvision,
         'customProperties': customProperties,
       };
 
   factory Subrace.fromMap(Map<String, dynamic> map) {
+    // Deserialize fixed ability bonuses safely
+    final fixedRaw = map['fixedAbilityBonuses'] as Map? ??
+        map['customProperties']?['abilityBonuses2014'] as Map? ??
+        map['customProperties']?['abilities'] as Map?;
+    final fixedBonuses = <String, int>{};
+    if (fixedRaw != null) {
+      fixedRaw.forEach((k, v) {
+        if (v is num) fixedBonuses[k.toString().toLowerCase()] = v.toInt();
+      });
+    }
+
+    // Deserialize grants
+    final grantsList = <FeatureGrant>[];
+    final rawGrants = map['grants'];
+    if (rawGrants is List) {
+      for (final g in rawGrants) {
+        if (g is Map) {
+          try {
+            grantsList.add(FeatureGrant.fromMap(Map<String, dynamic>.from(g)));
+          } catch (_) {}
+        }
+      }
+    }
+
+    final rawDarkvision = map['darkvision'] ?? map['customProperties']?['darkvision'];
+    final darkvisionVal = rawDarkvision is num
+        ? rawDarkvision.toInt()
+        : (rawDarkvision == true ? 60 : null);
+
     return Subrace(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
       raceSlug: map['raceSlug']?.toString() ?? '',
       traitsMarkdown: map['traitsMarkdown']?.toString() ?? '',
+      abilityScoreSummary: map['abilityScoreSummary']?.toString() ??
+          (map['customProperties']?['abilityScoreSummary']?.toString()),
+      fixedAbilityBonuses: fixedBonuses,
+      flexibleAbilityCount: (map['flexibleAbilityCount'] as num?)?.toInt() ?? 0,
+      flexibleAbilityBonus: (map['flexibleAbilityBonus'] as num?)?.toInt() ?? 0,
+      grants: grantsList,
+      speed: map['speed']?.toString() ?? map['customProperties']?['speed']?.toString(),
+      darkvision: darkvisionVal,
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );

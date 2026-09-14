@@ -1252,22 +1252,26 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 'subclass' => curClass != null ? _buildStepSubclass(theme, curClass) : const SizedBox.shrink(),
                 'class_decisions' => curClass != null ? _buildStepClassDecisions(theme, curClass, lvl1Decisions) : const SizedBox.shrink(),
                 'background' => _buildStep3Background(theme, curBackground),
-                'scores' => AbilityScoreStep(
-                  controller: _abilityScoreController,
-                  curSpecies: curSpecies,
-                  curBackground: curBackground,
-                  selectedRuleset: _selectedRuleset,
-                  variantHumanBonuses: _variantHumanBonuses,
-                  onVariantHumanBonusesChanged: (set) => setState(() {
-                    _variantHumanBonuses.clear();
-                    _variantHumanBonuses.addAll(set);
-                  }),
-                  backgroundPrimaryBonus: _backgroundPrimaryBonus,
-                  onBackgroundPrimaryBonusChanged: (ab) => setState(() => _backgroundPrimaryBonus = ab),
-                  backgroundSecondaryBonus: _backgroundSecondaryBonus,
-                  onBackgroundSecondaryBonusChanged: (ab) => setState(() => _backgroundSecondaryBonus = ab),
-                  bonusScores: _calculateBonusScores(curSpecies, curBackground, _selectedRuleset),
-                ),
+                'scores' => () {
+                  final curSubrace = _selectedSubrace != null ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) : null;
+                  return AbilityScoreStep(
+                    controller: _abilityScoreController,
+                    curSpecies: curSpecies,
+                    curSubrace: curSubrace,
+                    curBackground: curBackground,
+                    selectedRuleset: _selectedRuleset,
+                    variantHumanBonuses: _variantHumanBonuses,
+                    onVariantHumanBonusesChanged: (set) => setState(() {
+                      _variantHumanBonuses.clear();
+                      _variantHumanBonuses.addAll(set);
+                    }),
+                    backgroundPrimaryBonus: _backgroundPrimaryBonus,
+                    onBackgroundPrimaryBonusChanged: (ab) => setState(() => _backgroundPrimaryBonus = ab),
+                    backgroundSecondaryBonus: _backgroundSecondaryBonus,
+                    onBackgroundSecondaryBonusChanged: (ab) => setState(() => _backgroundSecondaryBonus = ab),
+                    bonusScores: _calculateBonusScores(curSpecies, curBackground, _selectedRuleset, curSubrace: curSubrace),
+                  );
+                }(),
                 'feats' => _buildStep5Feats(theme),
                 'spells' => curClass != null ? _buildStepSpells(theme, curClass) : const SizedBox.shrink(),
                 'equipment' => _buildStep6Equipment(theme),
@@ -1443,6 +1447,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final spReport = curClass != null
         ? SkillTraitResolver.resolveSkills(
             speciesSlug: _selectedSpecies,
+            subraceSlug: _selectedSubrace,
             backgroundSlug: _selectedBackground,
             classSlug: curClass.id.slug,
             requestedClassSkills: _wizardSelectedSkills,
@@ -1658,12 +1663,68 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                     color: isSubSelected ? Colors.white : Colors.white70,
                                   ),
                                 ),
-                                subtitle: sub.traitsMarkdown.isNotEmpty
-                                    ? Text(
-                                        sub.traitsMarkdown.replaceAll(RegExp(r'\*\*|`'), ''),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 11, color: Colors.white60),
+                                subtitle: ((sub.abilityScoreSummary?.isNotEmpty == true) || (sub.speed?.isNotEmpty == true) || (sub.darkvision != null && sub.darkvision! > 0) || sub.traitsMarkdown.isNotEmpty)
+                                    ? Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          if ((sub.abilityScoreSummary?.isNotEmpty == true) || (sub.speed?.isNotEmpty == true) || (sub.darkvision != null && sub.darkvision! > 0)) ...[
+                                            const SizedBox(height: 4),
+                                            Wrap(
+                                              spacing: 6,
+                                              runSpacing: 4,
+                                              children: [
+                                                if (sub.abilityScoreSummary?.isNotEmpty == true)
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.cyanAccent.withValues(alpha: 0.15),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+                                                    ),
+                                                    child: Text(
+                                                      sub.abilityScoreSummary!,
+                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                                                    ),
+                                                  ),
+                                                if (sub.speed?.isNotEmpty == true)
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.greenAccent.withValues(alpha: 0.15),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                      border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+                                                    ),
+                                                    child: Text(
+                                                      'Speed ${sub.speed!.contains("ft") ? sub.speed : "${sub.speed} ft."}',
+                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                                                    ),
+                                                  ),
+                                                if (sub.darkvision != null && sub.darkvision! > 0)
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.purpleAccent.withValues(alpha: 0.15),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                      border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+                                                    ),
+                                                    child: Text(
+                                                      'Darkvision ${sub.darkvision} ft.',
+                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.purpleAccent),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ],
+                                          if (sub.traitsMarkdown.isNotEmpty) ...[
+                                            const SizedBox(height: 6),
+                                            FormattedMarkdownText(
+                                              sub.traitsMarkdown,
+                                              style: const TextStyle(fontSize: 11, color: Colors.white70),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ],
                                       )
                                     : null,
                                 onTap: () {
@@ -2060,7 +2121,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   }
 
   Widget _buildSpeciesRacialBonusSummary(Race sp, Background? curBackground) {
-    final bonuses = _calculateBonusScores(sp, curBackground, _selectedRuleset);
+    final curSub = _selectedSubrace != null ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) : null;
+    final bonuses = _calculateBonusScores(sp, curBackground, _selectedRuleset, curSubrace: curSub);
     final hasBaseScores = _abilityScoreController.isAbilityAllocationComplete || _abilityScoreController.hasValidScores;
     final baseScores = _wizardBaseScores;
 
@@ -2144,6 +2206,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final skillReport = curClass != null
         ? SkillTraitResolver.resolveSkills(
             speciesSlug: _selectedSpecies,
+            subraceSlug: _selectedSubrace,
             backgroundSlug: _selectedBackground,
             classSlug: curClass.id.slug,
             requestedClassSkills: _wizardSelectedSkills,
@@ -3440,7 +3503,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final castingAbility = _getCastingAbility(curClass.id.slug);
     final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
     final curBackground = _selectedBackground != null ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!) : null;
-    final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
+    final curSub = _selectedSubrace != null ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) : null;
+    final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset, curSubrace: curSub);
     final effectiveScores = _wizardBaseScores.withBonus(calculatedBonuses);
     final castingMod = effectiveScores.getModifier(castingAbility);
 
@@ -3819,6 +3883,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
         Builder(builder: (ctx) {
           final reviewSkillReport = SkillTraitResolver.resolveSkills(
             speciesSlug: _selectedSpecies,
+            subraceSlug: _selectedSubrace,
             backgroundSlug: _selectedBackground,
             classSlug: cls.id.slug,
             requestedClassSkills: _wizardSelectedSkills,
@@ -4150,12 +4215,19 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     );
   }
 
-  AbilityScores _calculateBonusScores(Race? curSpecies, Background? curBackground, RulesetVersion ruleset) {
+  AbilityScores _calculateBonusScores(Race? curSpecies, Background? curBackground, RulesetVersion ruleset, {Subrace? curSubrace}) {
     if (ruleset == RulesetVersion.v2014) {
       if (curSpecies == null) return const AbilityScores.zero();
-      final fixed = curSpecies.fixedAbilityBonuses2014;
-      final flexibleCount = curSpecies.flexibleAbilityChoiceCount;
-      final flexibleBonus = curSpecies.flexibleAbilityBonusValue;
+      final fixed = Map<String, int>.from(curSpecies.fixedAbilityBonuses2014);
+      if (curSubrace != null) {
+        curSubrace.fixedAbilityBonuses2014.forEach((k, v) {
+          fixed[k] = (fixed[k] ?? 0) + v;
+        });
+      }
+      final flexibleCount = curSpecies.flexibleAbilityChoiceCount + (curSubrace?.flexibleAbilityChoiceCount ?? 0);
+      final flexibleBonus = curSpecies.flexibleAbilityBonusValue > 0
+          ? curSpecies.flexibleAbilityBonusValue
+          : (curSubrace?.flexibleAbilityBonusValue ?? 0);
 
       int str = fixed['strength'] ?? 0;
       int dex = fixed['dexterity'] ?? 0;
@@ -4220,6 +4292,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     // Map skill proficiencies using SkillTraitResolver
     final skillReport = SkillTraitResolver.resolveSkills(
       speciesSlug: _selectedSpecies,
+      subraceSlug: _selectedSubrace,
       backgroundSlug: _selectedBackground,
       classSlug: curClass.id.slug,
       requestedClassSkills: _wizardSelectedSkills,
@@ -4268,6 +4341,25 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       }
     }
 
+    // Auto-grant innate species & subrace cantrips and spells
+    final innateSpells = SkillTraitResolver.getInnateSpeciesSpells(
+      speciesSlug: curSpecies.id.slug,
+      subraceSlug: _selectedSubrace,
+      totalCharacterLevel: 1,
+      edition: _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014,
+    );
+    for (final isp in innateSpells) {
+      if (isp.isCantrip) {
+        if (!cantripRefs.any((c) => c.slug == isp.spellRef.slug)) {
+          cantripRefs.add(isp.spellRef);
+        }
+      } else {
+        if (!allSelectedSpells.contains(isp.spellRef.slug)) {
+          allSelectedSpells.add(isp.spellRef.slug);
+        }
+      }
+    }
+
     final spellRefs = allSelectedSpells.map((id) {
       final spell = SpellbookLibrary.getSpellById(id);
       return EntityReference<Spell>(
@@ -4277,7 +4369,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       );
     }).toList();
 
-    final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset);
+    final curSubrace = _selectedSubrace != null ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) : null;
+    final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset, curSubrace: curSubrace);
     var finalBonusScores = calculatedBonuses;
     final finalSaveProficiencies = Set<AbilityType>.from(saveProficiencies);
 
@@ -4351,16 +4444,20 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       slug: curSpecies.id.slug,
       displayName: curSpecies.name,
     );
-    if (curSpecies.subraces.isNotEmpty && _selectedSubrace != null) {
-      final chosenSub = curSpecies.subraces.firstWhere(
-        (s) => s.id.slug == _selectedSubrace,
-        orElse: () => curSpecies.subraces.first,
-      );
-      draft.subraceRef = EntityReference(
-        refType: EntityType.species,
-        slug: chosenSub.id.slug,
-        displayName: chosenSub.name,
-      );
+    if (_selectedSubrace != null) {
+      final chosenSub = SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) ??
+          (curSpecies.subraces.isNotEmpty
+              ? curSpecies.subraces.firstWhere((s) => s.id.slug == _selectedSubrace, orElse: () => curSpecies.subraces.first)
+              : null);
+      if (chosenSub != null) {
+        draft.subraceRef = EntityReference(
+          refType: EntityType.species,
+          slug: chosenSub.id.slug,
+          displayName: chosenSub.name,
+        );
+      } else {
+        draft.subraceRef = null;
+      }
     } else {
       draft.subraceRef = null;
     }

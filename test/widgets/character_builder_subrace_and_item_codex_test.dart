@@ -12,6 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_
 import 'package:dangerously_nerdy_5e_toolkit/services/persistence/homebrew_persistence_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/widgets/common/formatted_markdown_text.dart';
+import 'package:dangerously_nerdy_5e_toolkit/widgets/races/race_card.dart';
 
 void main() {
   group('Subrace & Character Builder Support', () {
@@ -47,6 +48,62 @@ void main() {
         subraceSlug: 'drow',
       );
       expect(drowTraits.darkvisionFeet, 120);
+    });
+
+    test('2014 RAW mode stacks base species and subrace fixed ability score increases', () {
+      final elf = SrdSpeciesLibrary.findBySlug('elf')!;
+      final highElf = elf.subraces.firstWhere((s) => s.id.slug == 'high-elf');
+
+      // Elf base: +2 DEX
+      expect(elf.fixedAbilityBonuses2014['dexterity'], 2);
+
+      // High Elf subrace: +1 INT
+      expect(highElf.fixedAbilityBonuses2014['intelligence'], 1);
+
+      // Stacking logic verification
+      final combined = Map<String, int>.from(elf.fixedAbilityBonuses2014);
+      highElf.fixedAbilityBonuses2014.forEach((k, v) {
+        combined[k] = (combined[k] ?? 0) + v;
+      });
+
+      expect(combined['dexterity'], 2);
+      expect(combined['intelligence'], 1);
+      expect(combined['strength'] ?? 0, 0);
+
+      // Dwarf + Mountain Dwarf: +2 CON, +2 STR
+      final dwarf = SrdSpeciesLibrary.findBySlug('dwarf')!;
+      final mountainDwarf = dwarf.subraces.firstWhere((s) => s.id.slug == 'mountain-dwarf');
+      final dwarfCombined = Map<String, int>.from(dwarf.fixedAbilityBonuses2014);
+      mountainDwarf.fixedAbilityBonuses2014.forEach((k, v) {
+        dwarfCombined[k] = (dwarfCombined[k] ?? 0) + v;
+      });
+
+      expect(dwarfCombined['constitution'], 2);
+      expect(dwarfCombined['strength'], 2);
+    });
+
+    test('Drow subrace grants dancing-lights cantrip at level 1 and scales at levels 3 and 5', () {
+      final lvl1 = SkillTraitResolver.getInnateSpeciesSpells(
+        speciesSlug: 'elf',
+        subraceSlug: 'drow',
+        totalCharacterLevel: 1,
+      );
+      expect(lvl1.any((s) => s.spellRef.slug == 'dancing-lights' && s.isCantrip), isTrue);
+      expect(lvl1.any((s) => s.spellRef.slug == 'faerie-fire'), isFalse);
+
+      final lvl3 = SkillTraitResolver.getInnateSpeciesSpells(
+        speciesSlug: 'elf',
+        subraceSlug: 'drow',
+        totalCharacterLevel: 3,
+      );
+      expect(lvl3.any((s) => s.spellRef.slug == 'faerie-fire'), isTrue);
+
+      final lvl5 = SkillTraitResolver.getInnateSpeciesSpells(
+        speciesSlug: 'elf',
+        subraceSlug: 'drow',
+        totalCharacterLevel: 5,
+      );
+      expect(lvl5.any((s) => s.spellRef.slug == 'darkness'), isTrue);
     });
   });
 
@@ -150,6 +207,26 @@ void main() {
       expect(find.textContaining('Important tactical note'), findsOneWidget);
       expect(find.textContaining('Failure'), findsOneWidget);
       expect(find.textContaining('Success'), findsOneWidget);
+    });
+
+    testWidgets('RaceCard renders traits using FormattedMarkdownText', (tester) async {
+      final elf = SrdSpeciesLibrary.findBySlug('elf')!;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RaceCard(
+              race: elf,
+              isPinned: false,
+              onTogglePin: () {},
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(FormattedMarkdownText), findsOneWidget);
+      expect(find.textContaining('Darkvision'), findsWidgets);
     });
   });
 }

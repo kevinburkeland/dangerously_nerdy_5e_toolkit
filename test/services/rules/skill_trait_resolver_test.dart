@@ -1,6 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_species_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/feature_grant.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver.dart';
 
 void main() {
@@ -85,6 +89,96 @@ void main() {
         subraceSlug: 'hill-dwarf',
       );
       expect(hillDwarf.hpPerLevelBonus, 1);
+    });
+
+    test('Subrace skill grant and collision detection with background', () {
+      // Register custom subrace that grants Stealth
+      final testSubrace = Subrace(
+        id: const EntityId(slug: 'shadow-elf', ruleset: RulesetVersion.homebrew),
+        name: 'Shadow Elf',
+        raceSlug: 'elf',
+        traitsMarkdown: 'Born in shadow.',
+        abilityScoreSummary: '+1 CHA',
+        fixedAbilityBonuses: const {'charisma': 1},
+        grants: [
+          FeatureGrant.skillProficiency('stealth', grantId: 'shadow-elf-stealth'),
+        ],
+        speed: '35 ft.',
+        darkvision: 120,
+      );
+      SrdSpeciesLibrary.addCustomSubrace(testSubrace);
+
+      // Urchin background grants Sleight of Hand and Stealth -> collision on Stealth!
+      final report = SkillTraitResolver.resolveSkills(
+        speciesSlug: 'elf',
+        subraceSlug: 'shadow-elf',
+        backgroundSlug: 'urchin',
+        classSlug: 'fighter',
+        requestedClassSkills: {SkillType.athletics, SkillType.survival},
+        compensatoryPicks: {SkillType.acrobatics},
+      );
+
+      expect(report.collidingSkills, contains(SkillType.stealth));
+      expect(report.compensatoryPicksEarned, 1);
+      expect(report.resolvedProficiencies.containsKey(SkillType.stealth), isTrue);
+      expect(report.resolvedProficiencies.containsKey(SkillType.perception), isTrue); // from Elf
+      expect(report.resolvedProficiencies.containsKey(SkillType.acrobatics), isTrue); // compensatory
+
+      // Check speed and darkvision resolution from custom subrace
+      final traits = SkillTraitResolver.getSpeciesTraits(
+        speciesSlug: 'elf',
+        subraceSlug: 'shadow-elf',
+      );
+      expect(traits.baseSpeedFeet, 35);
+      expect(traits.darkvisionFeet, 120);
+
+      // Cleanup
+      SrdSpeciesLibrary.removeCustomSubrace('shadow-elf');
+    });
+
+    test('Subrace dynamic innate spells resolution', () {
+      final magicSubrace = Subrace(
+        id: const EntityId(slug: 'mystic-elf', ruleset: RulesetVersion.homebrew),
+        name: 'Mystic Elf',
+        raceSlug: 'elf',
+        traitsMarkdown: 'Mystic lore.',
+        grants: [
+          FeatureGrant.bonusSpell(
+            grantId: 'mystic-spell-guidance',
+            slug: 'guidance',
+            displayName: 'Guidance',
+          ),
+        ],
+        customProperties: {
+          'additionalSpells': [
+            {
+              'innate': {
+                '1': ['shield#c'],
+                '3': ['misty-step'],
+              },
+            },
+          ],
+        },
+      );
+      SrdSpeciesLibrary.addCustomSubrace(magicSubrace);
+
+      final lvl1 = SkillTraitResolver.getInnateSpeciesSpells(
+        speciesSlug: 'elf',
+        subraceSlug: 'mystic-elf',
+        totalCharacterLevel: 1,
+      );
+      expect(lvl1.any((s) => s.spellRef.slug == 'guidance'), isTrue);
+      expect(lvl1.any((s) => s.spellRef.slug == 'shield'), isTrue);
+
+      final lvl3 = SkillTraitResolver.getInnateSpeciesSpells(
+        speciesSlug: 'elf',
+        subraceSlug: 'mystic-elf',
+        totalCharacterLevel: 3,
+      );
+      expect(lvl3.any((s) => s.spellRef.slug == 'misty-step'), isTrue);
+
+      // Cleanup
+      SrdSpeciesLibrary.removeCustomSubrace('mystic-elf');
     });
   });
 }
