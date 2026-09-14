@@ -101,7 +101,35 @@ class CharacterFactory {
     final hitDie = draft.startingClassHitDie ?? 'd8';
     final cleanHitDie = hitDie.replaceAll('d', '').trim();
     final hitDieSides = int.tryParse(cleanHitDie) ?? 8;
-    final totalCon = draft.baseScores!.constitution + draft.bonusScores.constitution;
+
+    // Resolve 2024 Background ASIs if bonusScores not already populated
+    AbilityScores finalBonusScores = draft.bonusScores;
+    if (draft.rulesEdition == DmRulesEdition.v2024) {
+      if (finalBonusScores == const AbilityScores.zero() && draft.backgroundBonusScores != const AbilityScores.zero()) {
+        finalBonusScores = draft.backgroundBonusScores;
+      }
+      if (finalBonusScores == const AbilityScores.zero() && draft.backgroundRef != null) {
+        final bgAbilities = draft.backgroundRef!.customProperties['abilities'];
+        if (bgAbilities is Map) {
+          int str = (bgAbilities['str'] as num?)?.toInt() ?? 0;
+          int dex = (bgAbilities['dex'] as num?)?.toInt() ?? 0;
+          int con = (bgAbilities['con'] as num?)?.toInt() ?? 0;
+          int intl = (bgAbilities['int'] as num?)?.toInt() ?? 0;
+          int wis = (bgAbilities['wis'] as num?)?.toInt() ?? 0;
+          int cha = (bgAbilities['cha'] as num?)?.toInt() ?? 0;
+          finalBonusScores = AbilityScores(
+            strength: str,
+            dexterity: dex,
+            constitution: con,
+            intelligence: intl,
+            wisdom: wis,
+            charisma: cha,
+          );
+        }
+      }
+    }
+
+    final totalCon = draft.baseScores!.constitution + finalBonusScores.constitution;
     final conMod = totalCon.dndModifier;
     final startingHp = hitDieSides + conMod;
 
@@ -121,6 +149,62 @@ class CharacterFactory {
         isAttuned: false,
         requiresAttunement: equipReq.requiresAttunement,
       ));
+    }
+
+    // Ingest background starting equipment if present
+    final bgEquip = draft.backgroundRef?.customProperties['startingEquipment'];
+    if (bgEquip is List) {
+      for (final item in bgEquip) {
+        String itemName = '';
+        if (item is String) {
+          itemName = item;
+        } else if (item is Map) {
+          itemName = (item['item'] ?? item['name'] ?? item['slug'] ?? '').toString();
+        }
+        if (itemName.isNotEmpty) {
+          final slug = _slugify(itemName);
+          final alreadyPresent = inventory.any((inv) => inv.itemRef.slug == slug);
+          if (!alreadyPresent) {
+            final instanceId = 'item-inst-$instanceCounter-$slug';
+            instanceCounter++;
+            inventory.add(InventoryItemInstance(
+              instanceId: instanceId,
+              itemRef: EntityReference(
+                refType: EntityType.equipment,
+                slug: slug,
+                displayName: itemName,
+              ),
+              quantity: 1,
+              isEquipped: false,
+              requiresAttunement: false,
+            ));
+          }
+        }
+      }
+    }
+
+    // Merge skills: draft.selectedSkills + background skills
+    final compiledSkills = Map<SkillType, SkillProficiencyLevel>.from(draft.selectedSkills);
+    if (draft.backgroundRef != null) {
+      for (final skill in draft.backgroundRef!.grantedSkills) {
+        if (!compiledSkills.containsKey(skill) || compiledSkills[skill] == SkillProficiencyLevel.none) {
+          compiledSkills[skill] = SkillProficiencyLevel.proficient;
+        }
+      }
+      final bgSkillsRaw = draft.backgroundRef!.customProperties['skillProficiencies'] ??
+          draft.backgroundRef!.customProperties['skills'];
+      if (bgSkillsRaw is List) {
+        for (final s in bgSkillsRaw) {
+          final sName = s.toString().toLowerCase().trim().replaceAll(' ', '').replaceAll('-', '');
+          for (final st in SkillType.values) {
+            if (st.name.toLowerCase() == sName) {
+              if (!compiledSkills.containsKey(st) || compiledSkills[st] == SkillProficiencyLevel.none) {
+                compiledSkills[st] = SkillProficiencyLevel.proficient;
+              }
+            }
+          }
+        }
+      }
     }
 
     // Progression
@@ -166,8 +250,8 @@ class CharacterFactory {
       backgroundRef: draft.backgroundRef,
       progression: progression,
       baseScores: draft.baseScores!,
-      bonusScores: draft.bonusScores,
-      skillProficiencies: draft.selectedSkills,
+      bonusScores: finalBonusScores,
+      skillProficiencies: compiledSkills,
       savingThrowProficiencies: draft.savingThrowProficiencies,
       toolProficiencies: draft.toolProficiencies,
       languages: draft.languages,

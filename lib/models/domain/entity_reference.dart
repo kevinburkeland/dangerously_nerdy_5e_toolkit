@@ -45,6 +45,7 @@ class EntityReference<T extends DomainEntity> {
   final RulesetVersion? rulesetPreferred;
   final String displayName;
   final List<SkillType> grantedSkills;
+  final Map<String, dynamic> customProperties;
 
   const EntityReference({
     required this.refType,
@@ -52,6 +53,7 @@ class EntityReference<T extends DomainEntity> {
     required this.displayName,
     this.rulesetPreferred,
     this.grantedSkills = const [],
+    this.customProperties = const {},
   });
 
   Map<String, dynamic> toMap() => {
@@ -60,6 +62,7 @@ class EntityReference<T extends DomainEntity> {
         'rulesetPreferred': rulesetPreferred?.name,
         'displayName': displayName,
         'grantedSkills': grantedSkills.map((s) => s.name).toList(),
+        if (customProperties.isNotEmpty) 'customProperties': customProperties,
       };
 
   factory EntityReference.fromMap(Map<String, dynamic> map) {
@@ -93,12 +96,17 @@ class EntityReference<T extends DomainEntity> {
       }
     }
 
+    final customProps = map['customProperties'] is Map
+        ? Map<String, dynamic>.from(map['customProperties'] as Map)
+        : const <String, dynamic>{};
+
     return EntityReference<T>(
       refType: refType,
       slug: map['slug']?.toString() ?? '',
       displayName: map['displayName']?.toString() ?? map['slug']?.toString() ?? '',
       rulesetPreferred: ruleset,
       grantedSkills: skills,
+      customProperties: customProps,
     );
   }
 
@@ -111,7 +119,8 @@ class EntityReference<T extends DomainEntity> {
           slug == other.slug &&
           rulesetPreferred == other.rulesetPreferred &&
           displayName == other.displayName &&
-          listEquals(grantedSkills, other.grantedSkills);
+          listEquals(grantedSkills, other.grantedSkills) &&
+          mapEquals(customProperties, other.customProperties);
 
   @override
   int get hashCode =>
@@ -119,7 +128,9 @@ class EntityReference<T extends DomainEntity> {
       slug.hashCode ^
       rulesetPreferred.hashCode ^
       displayName.hashCode ^
-      Object.hashAll(grantedSkills);
+      Object.hashAll(grantedSkills) ^
+      Object.hashAll(customProperties.keys) ^
+      Object.hashAll(customProperties.values);
 
   @override
   String toString() => 'Ref<$refType>($slug, pref: $rulesetPreferred)';

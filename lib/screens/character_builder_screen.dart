@@ -1736,6 +1736,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                         refType: EntityType.species,
                                         slug: sub.id.slug,
                                         displayName: sub.name,
+                                        customProperties: {
+                                          if (sub.flexibleAbilityPool != null) 'flexibleAbilityPool': sub.flexibleAbilityPool,
+                                          if (sub.flexibleAbilityCount > 0) 'flexibleAbilityCount': sub.flexibleAbilityCount,
+                                          if (sub.flexibleAbilityBonus > 0) 'flexibleAbilityBonus': sub.flexibleAbilityBonus,
+                                          if (sub.fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': sub.fixedAbilityBonuses,
+                                        },
                                       ),
                                     );
                                     if (_selectedRuleset == RulesetVersion.v2014) {
@@ -1748,8 +1754,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                         final fixed = (sub.fixedAbilityBonuses2014.isNotEmpty || sub.flexibleAbilityChoiceCount > 0)
                                             ? sub.fixedAbilityBonuses2014
                                             : sp.fixedAbilityBonuses2014;
+                                        final pool = sub.flexibleAbilityPool;
                                         final validAbilities = AbilityType.values
                                             .where((a) => !fixed.containsKey(a.name.toLowerCase()))
+                                            .where((a) => pool == null || pool.isEmpty || pool.any((p) {
+                                              final pStr = p.toLowerCase().trim();
+                                              final prefix = pStr.length > 3 ? pStr.substring(0, 3) : pStr;
+                                              return a.name.toLowerCase().startsWith(prefix);
+                                            }))
                                             .toList();
                                         _variantHumanBonuses.retainAll(validAbilities);
                                         while (_variantHumanBonuses.length > flexCount) {
@@ -4482,7 +4494,14 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
           refType: EntityType.species,
           slug: chosenSub.id.slug,
           displayName: chosenSub.name,
+          customProperties: {
+            if (chosenSub.flexibleAbilityPool != null) 'flexibleAbilityPool': chosenSub.flexibleAbilityPool,
+            if (chosenSub.flexibleAbilityCount > 0) 'flexibleAbilityCount': chosenSub.flexibleAbilityCount,
+            if (chosenSub.flexibleAbilityBonus > 0) 'flexibleAbilityBonus': chosenSub.flexibleAbilityBonus,
+            if (chosenSub.fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': chosenSub.fixedAbilityBonuses,
+          },
         );
+        draft.pendingFlexibleAbilityChoices = _variantHumanBonuses.toList();
       } else {
         draft.subraceRef = null;
       }

@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 import '../domain/character_models.dart';
 import '../srd_summons/minion_stat_block.dart';
+import '../../domain/simulation/precomputed_attack.dart';
 import '../../services/ingestion/stat_block_acl_parser.dart';
 
 /// Pre-calculated, strongly typed combat profile for monster simulation.
 /// Decouples text corpus regex parsing from runtime entity instantiation in Arena loops.
 class MonsterCombatProfile {
+  final Map<String, PrecomputedAttack> attacks;
   final Map<int, int> maxSpellSlots;
   final List<String> knownSpellIds;
   final int spellSaveDc;
@@ -25,6 +27,7 @@ class MonsterCombatProfile {
   final bool hasNimbleEscape;
 
   const MonsterCombatProfile({
+    this.attacks = const {},
     this.maxSpellSlots = const {},
     this.knownSpellIds = const [],
     this.spellSaveDc = 10,
@@ -103,6 +106,7 @@ class MonsterCombatProfile {
         : (sb.explicitSpellSlots ?? const {});
 
     return MonsterCombatProfile(
+      attacks: parsed.attacks,
       maxSpellSlots: slots,
       knownSpellIds: parsed.knownSpellIds,
       spellSaveDc: spellSaveDc,

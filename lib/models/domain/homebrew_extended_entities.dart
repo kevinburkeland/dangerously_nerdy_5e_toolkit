@@ -863,6 +863,7 @@ class Subrace extends DomainEntity {
   final Map<String, int> fixedAbilityBonuses;
   final int flexibleAbilityCount;
   final int flexibleAbilityBonus;
+  final List<String>? flexibleAbilityPool;
   final List<FeatureGrant> grants;
   final String? speed;
   final int? darkvision;
@@ -878,6 +879,7 @@ class Subrace extends DomainEntity {
     this.fixedAbilityBonuses = const {},
     this.flexibleAbilityCount = 0,
     this.flexibleAbilityBonus = 0,
+    this.flexibleAbilityPool,
     this.grants = const [],
     this.speed,
     this.darkvision,
@@ -900,6 +902,7 @@ class Subrace extends DomainEntity {
     Map<String, int>? fixedAbilityBonuses,
     int? flexibleAbilityCount,
     int? flexibleAbilityBonus,
+    List<String>? flexibleAbilityPool,
     List<FeatureGrant>? grants,
     String? speed,
     int? darkvision,
@@ -914,6 +917,7 @@ class Subrace extends DomainEntity {
       fixedAbilityBonuses: fixedAbilityBonuses ?? this.fixedAbilityBonuses,
       flexibleAbilityCount: flexibleAbilityCount ?? this.flexibleAbilityCount,
       flexibleAbilityBonus: flexibleAbilityBonus ?? this.flexibleAbilityBonus,
+      flexibleAbilityPool: flexibleAbilityPool ?? this.flexibleAbilityPool,
       grants: grants ?? this.grants,
       speed: speed ?? this.speed,
       darkvision: darkvision ?? this.darkvision,
@@ -931,6 +935,7 @@ class Subrace extends DomainEntity {
         if (fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': fixedAbilityBonuses,
         if (flexibleAbilityCount > 0) 'flexibleAbilityCount': flexibleAbilityCount,
         if (flexibleAbilityBonus > 0) 'flexibleAbilityBonus': flexibleAbilityBonus,
+        if (flexibleAbilityPool != null && flexibleAbilityPool!.isNotEmpty) 'flexibleAbilityPool': flexibleAbilityPool,
         if (grants.isNotEmpty) 'grants': grants.map((g) => g.toMap()).toList(),
         if (speed != null) 'speed': speed,
         if (darkvision != null) 'darkvision': darkvision,
@@ -967,6 +972,25 @@ class Subrace extends DomainEntity {
         ? rawDarkvision.toInt()
         : (rawDarkvision == true ? 60 : null);
 
+    final flexProps = map['customProperties'] is Map ? map['customProperties'] as Map : null;
+    final flexAbilities = flexProps?['flexibleAbilities'] is Map ? flexProps!['flexibleAbilities'] as Map : null;
+
+    final poolRaw = map['flexibleAbilityPool'] as List? ??
+        flexProps?['flexibleAbilityPool'] as List? ??
+        flexProps?['flexiblePool'] as List? ??
+        (flexAbilities?['from'] as List?);
+    final flexiblePool = poolRaw?.map((e) => e.toString().toLowerCase()).toList();
+
+    final flexCountRaw = map['flexibleAbilityCount'] ??
+        flexProps?['flexibleAbilityCount'] ??
+        flexAbilities?['count'];
+    final flexCount = (flexCountRaw as num?)?.toInt();
+
+    final flexBonusRaw = map['flexibleAbilityBonus'] ??
+        flexProps?['flexibleAbilityBonus'] ??
+        flexAbilities?['amount'];
+    final flexBonus = (flexBonusRaw as num?)?.toInt();
+
     return Subrace(
       id: EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map? ?? {})),
       name: map['name']?.toString() ?? '',
@@ -975,8 +999,9 @@ class Subrace extends DomainEntity {
       abilityScoreSummary: map['abilityScoreSummary']?.toString() ??
           (map['customProperties']?['abilityScoreSummary']?.toString()),
       fixedAbilityBonuses: fixedBonuses,
-      flexibleAbilityCount: (map['flexibleAbilityCount'] as num?)?.toInt() ?? 0,
-      flexibleAbilityBonus: (map['flexibleAbilityBonus'] as num?)?.toInt() ?? 0,
+      flexibleAbilityCount: flexCount ?? 0,
+      flexibleAbilityBonus: flexBonus ?? 0,
+      flexibleAbilityPool: flexiblePool,
       grants: grantsList,
       speed: map['speed']?.toString() ?? map['customProperties']?['speed']?.toString(),
       darkvision: darkvisionVal,

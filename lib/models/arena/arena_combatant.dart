@@ -8,6 +8,7 @@ import 'arena_condition.dart';
 import 'monster_combat_profile.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../domain/simulation/precomputed_attack.dart';
+import '../../domain/models/value_objects/hit_points.dart';
 export 'package:fast_immutable_collections/fast_immutable_collections.dart';
 export 'arena_condition.dart';
 export 'monster_combat_profile.dart';
@@ -43,9 +44,19 @@ class ArenaCombatant {
   final MonsterItem monster;
   final ArenaTeam team;
   final String displayName;
-  final int maxHp;
-  int currentHp;
-  int tempHp;
+  HitPoints hitPoints;
+  int get maxHp => hitPoints.maxHp;
+  set maxHp(int val) {
+    hitPoints = hitPoints.copyWith(maxHp: val);
+  }
+  int get currentHp => hitPoints.currentHp;
+  set currentHp(int val) {
+    hitPoints = hitPoints.copyWith(currentHp: val);
+  }
+  int get tempHp => hitPoints.tempHp;
+  set tempHp(int val) {
+    hitPoints = hitPoints.copyWith(tempHp: val);
+  }
   final int ac;
   final int initiativeBonus;
   int initiative;
@@ -95,9 +106,10 @@ class ArenaCombatant {
     required this.monster,
     required this.team,
     required this.displayName,
-    required this.maxHp,
-    required this.currentHp,
-    this.tempHp = 0,
+    HitPoints? hitPoints,
+    int? maxHp,
+    int? currentHp,
+    int tempHp = 0,
     required this.ac,
     required this.initiativeBonus,
     this.initiative = 0,
@@ -131,7 +143,13 @@ class ArenaCombatant {
     dynamic drainedAbilityScores,
     this.maxHpReduction = 0,
     this.isHealingSuppressed = false,
-  })  : conditions = _parseConditions(conditions, activeConditions),
+  })  : hitPoints = hitPoints ??
+            HitPoints(
+              currentHp: currentHp ?? maxHp ?? 1,
+              maxHp: maxHp ?? 1,
+              tempHp: tempHp,
+            ),
+        conditions = _parseConditions(conditions, activeConditions),
         activeConditions = _parseActiveConditions(activeConditions, conditions),
         maxSpellSlots = _parseIMap<int, int>(maxSpellSlots),
         currentSpellSlots = currentSpellSlots != null
@@ -554,17 +572,10 @@ class ArenaCombatant {
   /// Applies damage with temporary HP buffering.
   int applyDamage(int damage) {
     if (damage <= 0 || isDefeated) return 0;
-    int remaining = damage;
-    if (tempHp > 0) {
-      if (tempHp >= remaining) {
-        tempHp -= remaining;
-        remaining = 0;
-      } else {
-        remaining -= tempHp;
-        tempHp = 0;
-      }
+    hitPoints = hitPoints.takeDamage(damage);
+    if (currentHp > effectiveMaxHp) {
+      currentHp = effectiveMaxHp;
     }
-    currentHp = (currentHp - remaining).clamp(0, effectiveMaxHp);
     totalDamageTaken += damage;
     return damage;
   }
@@ -573,7 +584,10 @@ class ArenaCombatant {
   int applyHealing(int amount) {
     if (amount <= 0 || isDefeated || isHealingSuppressed) return 0;
     final prevHp = currentHp;
-    currentHp = (currentHp + amount).clamp(0, effectiveMaxHp);
+    hitPoints = hitPoints.heal(amount);
+    if (currentHp > effectiveMaxHp) {
+      currentHp = effectiveMaxHp;
+    }
     return currentHp - prevHp;
   }
 
@@ -670,13 +684,16 @@ class ArenaCombatant {
   }
 
   /// Executes a single [CombatEffectRider] against this combatant.
-  void applyRider(
+  ({List<String> logs, List<ArenaCondition> conditionsApplied}) applyRider(
     CombatEffectRider rider, {
     math.Random? rng,
     int damageDealt = 0,
     DmRulesEdition edition = DmRulesEdition.v2024,
   }) {
     final random = rng ?? math.Random();
+    final logs = <String>[];
+    final conditions = <ArenaCondition>[];
+
     switch (rider) {
       case ConditionRider(:final condition, :final requiresSave, :final saveDc, :final saveAbility):
         if (requiresSave && saveDc != null && saveAbility != null) {
@@ -684,9 +701,16 @@ class ArenaCombatant {
           final roll = random.nextInt(20) + 1 + saveBonus;
           if (roll < saveDc) {
             applyActiveCondition(ActiveCondition(condition: condition), edition: edition);
+            conditions.add(condition);
+            final actionVerb = condition == ArenaCondition.prone ? 'fell' : 'became';
+            logs.add('$displayName failed DC $saveDc ${saveAbility.shortName.toUpperCase()} save ($roll) and $actionVerb ${condition.label}!');
+          } else {
+            logs.add('$displayName succeeded on DC $saveDc ${saveAbility.shortName.toUpperCase()} save ($roll) against ${condition.label}.');
           }
         } else {
           applyActiveCondition(ActiveCondition(condition: condition), edition: edition);
+          conditions.add(condition);
+          logs.add('$displayName gained ${condition.label}!');
         }
       case AttributeDrainRider(
           :final targetAbility,
@@ -700,6 +724,7 @@ class ArenaCombatant {
           drain += random.nextInt(diceSides) + 1;
         }
         applyAttributeDrain(targetAbility, drain, deathAtZero: deathAtZero);
+        logs.add('$displayName had ${targetAbility.shortName.toUpperCase()} drained by $drain!');
       case MaxHpReductionRider(
           :final reductionEqualsDamage,
           :final flatReduction,
@@ -707,6 +732,7 @@ class ArenaCombatant {
         ):
         final reduction = reductionEqualsDamage ? damageDealt : (flatReduction ?? 0);
         applyMaxHpReduction(reduction, deathAtZero: deathAtZero);
+        logs.add("$displayName's hit point maximum was reduced by $reduction!");
       case ForcedMovementRider(:final pullDistanceFeet, :final toMeleeReach):
         if (isAirborne && altitudeInFeet > 0) {
           if (toMeleeReach && altitudeInFeet <= pullDistanceFeet) {
@@ -716,15 +742,18 @@ class ArenaCombatant {
             altitudeInFeet = math.max(0, altitudeInFeet - pullDistanceFeet);
           }
         }
+        logs.add('$displayName was pulled $pullDistanceFeet ft.!');
       case HealingSupressionRider():
         isHealingSuppressed = true;
+        logs.add("$displayName's healing was suppressed!");
       case PeriodicDamageRider():
         break;
     }
+    return (logs: logs, conditionsApplied: conditions);
   }
 
   /// Applies a [PrecomputedAttack] hit to this combatant, including damage and all riders.
-  int applyAttackHit(
+  ({int damageDealt, List<String> riderLogs, List<ArenaCondition> conditionsApplied}) applyAttackHit(
     PrecomputedAttack attack, {
     math.Random? rng,
     bool isCrit = false,
@@ -734,10 +763,19 @@ class ArenaCombatant {
     final damage = attack.rollDamage(random, isCrit: isCrit);
     applyDamage(damage);
 
+    final riderLogs = <String>[];
+    final conditionsApplied = <ArenaCondition>[];
+
     for (final rider in attack.riders) {
-      applyRider(rider, rng: random, damageDealt: damage, edition: edition);
+      final res = applyRider(rider, rng: random, damageDealt: damage, edition: edition);
+      riderLogs.addAll(res.logs);
+      conditionsApplied.addAll(res.conditionsApplied);
     }
-    return damage;
+    return (
+      damageDealt: damage,
+      riderLogs: riderLogs,
+      conditionsApplied: conditionsApplied,
+    );
   }
 
   /// Calculates saving throw modifier for a given [AbilityType].

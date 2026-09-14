@@ -29,7 +29,13 @@ class ArenaAttackEvent {
   final bool isKillShot;
   final int defenderRemainingHp;
   final int defenderMaxHp;
-  final String summaryText;
+  final List<String> appliedRiderLogs;
+  final String _summaryText;
+
+  String get summaryText {
+    if (appliedRiderLogs.isEmpty) return _summaryText;
+    return '$_summaryText ${appliedRiderLogs.join(' ')}';
+  }
 
   const ArenaAttackEvent({
     required this.attackerId,
@@ -59,8 +65,9 @@ class ArenaAttackEvent {
     this.isKillShot = false,
     required this.defenderRemainingHp,
     required this.defenderMaxHp,
-    required this.summaryText,
-  });
+    required String summaryText,
+    this.appliedRiderLogs = const [],
+  }) : _summaryText = summaryText;
 }
 
 /// Represents a single turn taken by a combatant, which may contain multiple attacks or recharge events.

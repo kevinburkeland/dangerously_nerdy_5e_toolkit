@@ -4,6 +4,8 @@ import '../spellbook_data.dart';
 import 'core_types.dart';
 import 'entity_reference.dart';
 import 'feature_grant.dart';
+import '../../domain/simulation/combat_rider.dart';
+import '../../services/ingestion/stat_block_acl_parser.dart';
 
 /// Isolated mathematical formula for damage and dice evaluation
 @immutable
@@ -217,6 +219,7 @@ class Spell extends DomainEntity {
   final String? higherLevelsMarkdown;
   final List<EvaluationMath> damageMath;
   final List<EntityReference<DomainEntity>> relatedEntityRefs;
+  final List<CombatEffectRider> riders;
   @override
   final Map<String, dynamic> customProperties;
 
@@ -236,6 +239,7 @@ class Spell extends DomainEntity {
     this.higherLevelsMarkdown,
     this.damageMath = const [],
     this.relatedEntityRefs = const [],
+    this.riders = const [],
     this.customProperties = const {},
   });
 
@@ -327,6 +331,7 @@ class Spell extends DomainEntity {
           .whereType<Map>()
           .map((r) => EntityReference.fromMap(Map<String, dynamic>.from(r)))
           .toList(),
+      riders: StatBlockAclParser.extractRiders(map['descriptionMarkdown']?.toString() ?? ''),
       customProperties: cp,
     );
   }
@@ -347,6 +352,7 @@ class Spell extends DomainEntity {
     String? higherLevelsMarkdown,
     List<EvaluationMath>? damageMath,
     List<EntityReference<DomainEntity>>? relatedEntityRefs,
+    List<CombatEffectRider>? riders,
     Map<String, dynamic>? customProperties,
   }) {
     return Spell(
@@ -365,6 +371,7 @@ class Spell extends DomainEntity {
       higherLevelsMarkdown: higherLevelsMarkdown ?? this.higherLevelsMarkdown,
       damageMath: damageMath ?? this.damageMath,
       relatedEntityRefs: relatedEntityRefs ?? this.relatedEntityRefs,
+      riders: riders ?? this.riders,
       customProperties: customProperties ?? this.customProperties,
     );
   }

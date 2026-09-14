@@ -435,6 +435,58 @@ class HomebrewIngestor {
             final subTraitsMarkdown = subTraits is List
                 ? subTraits.map((e) => e is Map ? (e['name'] != null ? '### ${e['name']}\n${e['entries'] ?? ''}' : e.toString()) : e.toString()).join('\n\n')
                 : subTraits.toString();
+
+            final subFixed = <String, int>{};
+            final subRawAb = subMap['abilities'] ?? subMap['ability'];
+            if (subRawAb is Map) {
+              subRawAb.forEach((k, v) {
+                final keyLower = k.toString().toLowerCase().trim();
+                if (v is num && ['str', 'dex', 'con', 'int', 'wis', 'cha'].contains(keyLower)) {
+                  subFixed[keyLower] = v.toInt();
+                }
+              });
+            } else if (subRawAb is List) {
+              for (final item in subRawAb) {
+                if (item is Map) {
+                  item.forEach((k, v) {
+                    final keyLower = k.toString().toLowerCase().trim();
+                    if (v is num && ['str', 'dex', 'con', 'int', 'wis', 'cha'].contains(keyLower)) {
+                      subFixed[keyLower] = v.toInt();
+                    }
+                  });
+                }
+              }
+            }
+            for (final k in ['str', 'dex', 'con', 'int', 'wis', 'cha']) {
+              if (subMap.containsKey(k) && subMap[k] is num) {
+                subFixed[k] = (subMap[k] as num).toInt();
+              }
+            }
+
+            int? subFlexCount;
+            int? subFlexBonus;
+            List<String>? subFlexPool;
+            final subFlexData = subMap['flexibleAbilities'] ?? subMap['choose'];
+            if (subFlexData is Map) {
+              if (subFlexData['count'] is num) subFlexCount = (subFlexData['count'] as num).toInt();
+              if (subFlexData['amount'] is num) subFlexBonus = (subFlexData['amount'] as num).toInt();
+              if (subFlexData['from'] is List) {
+                subFlexPool = (subFlexData['from'] as List).map((e) => e.toString().toLowerCase().trim()).toList();
+              }
+            }
+            if (subRawAb is List) {
+              for (final item in subRawAb) {
+                if (item is Map && item.containsKey('choose') && item['choose'] is Map) {
+                  final ch = item['choose'] as Map;
+                  if (ch['count'] is num) subFlexCount = (ch['count'] as num).toInt();
+                  if (ch['amount'] is num) subFlexBonus = (ch['amount'] as num).toInt();
+                  if (ch['from'] is List) {
+                    subFlexPool = (ch['from'] as List).map((e) => e.toString().toLowerCase().trim()).toList();
+                  }
+                }
+              }
+            }
+
             subraces.add(Subrace(
               id: EntityId(
                 slug: subMap['id']?.toString() ??
@@ -447,6 +499,10 @@ class HomebrewIngestor {
               name: subName,
               raceSlug: dto.id,
               traitsMarkdown: subTraitsMarkdown,
+              fixedAbilityBonuses: subFixed,
+              flexibleAbilityCount: subFlexCount ?? 0,
+              flexibleAbilityBonus: subFlexBonus ?? 0,
+              flexibleAbilityPool: subFlexPool,
               customProperties: subMap,
             ));
           }
@@ -519,5 +575,146 @@ class HomebrewIngestor {
       fixedAbilityBonuses: fixedBonuses.isNotEmpty ? fixedBonuses : null,
       customProperties: customProps,
     );
+  }
+
+  /// Maps a validated [HomebrewEntityDto] into a Domain [Background].
+  static Background mapBackgroundFromDto(HomebrewEntityDto dto) {
+    final raw = dto.rawPayload;
+    final normalized = dto.normalizedData;
+
+    // 1. Skill Proficiencies
+    final skillList = <String>[];
+    final rawSkills = normalized['skillProficiencies'] ??
+        raw['skillProficiencies'] ??
+        raw['skills'] ??
+        raw['skill'];
+    if (rawSkills is List) {
+      for (final s in rawSkills) {
+        if (s != null && s.toString().trim().isNotEmpty) {
+          skillList.add(s.toString().trim());
+        }
+      }
+    } else if (rawSkills is String && rawSkills.isNotEmpty) {
+      skillList.addAll(rawSkills.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty));
+    }
+
+    // 2. Tool Proficiencies
+    final toolList = <String>[];
+    final rawTools = normalized['toolProficiencies'] ??
+        raw['toolProficiencies'] ??
+        raw['tools'] ??
+        raw['tool'];
+    if (rawTools is List) {
+      for (final t in rawTools) {
+        if (t != null && t.toString().trim().isNotEmpty) {
+          toolList.add(t.toString().trim());
+        }
+      }
+    } else if (rawTools is String && rawTools.isNotEmpty) {
+      toolList.addAll(rawTools.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty));
+    }
+
+    // 3. Languages
+    final langList = <String>[];
+    final rawLangs = normalized['languages'] ?? raw['languages'] ?? raw['language'];
+    if (rawLangs is List) {
+      for (final l in rawLangs) {
+        if (l != null && l.toString().trim().isNotEmpty) {
+          langList.add(l.toString().trim());
+        }
+      }
+    } else if (rawLangs is String && rawLangs.isNotEmpty) {
+      langList.addAll(rawLangs.split(',').map((l) => l.trim()).where((l) => l.isNotEmpty));
+    }
+
+    // 4. Starting Equipment & Origin Feat
+    final originFeat = normalized['originFeat']?.toString() ??
+        raw['originFeat']?.toString() ??
+        raw['feat']?.toString();
+
+    // 5. Description Markdown
+    String desc = '';
+    final rawEntries = raw['entries'] ?? raw['desc'] ?? raw['description'];
+    if (rawEntries is List) {
+      desc = rawEntries.map((e) {
+        if (e is Map) {
+          final name = e['name']?.toString() ?? '';
+          final txt = e['entries'] ?? e['text'] ?? '';
+          return name.isNotEmpty ? '### $name\n$txt' : txt.toString();
+        }
+        return e.toString();
+      }).join('\n\n');
+    } else if (rawEntries is String) {
+      desc = rawEntries;
+    }
+
+    // 6. Custom Properties & 2024 ASIs
+    final customProps = Map<String, dynamic>.from(dto.unparsedPayload);
+    customProps.addAll(raw);
+    if (normalized.containsKey('abilities')) {
+      customProps['abilities'] = normalized['abilities'];
+    }
+    if (normalized.containsKey('flexibleAbilities')) {
+      customProps['flexibleAbilities'] = normalized['flexibleAbilities'];
+    }
+    if (normalized.containsKey('startingEquipment')) {
+      customProps['startingEquipment'] = normalized['startingEquipment'];
+    }
+
+    // Format abilityScoreSummary for 2024 ASIs if present
+    String? abilityScoreSummary;
+    if (normalized['abilities'] is Map) {
+      final abMap = normalized['abilities'] as Map;
+      final parts = <String>[];
+      abMap.forEach((k, v) {
+        parts.add('${k.toString().toUpperCase()} +$v');
+      });
+      if (parts.isNotEmpty) {
+        abilityScoreSummary = parts.join(', ');
+      }
+    }
+
+    return Background(
+      id: EntityId(
+        slug: dto.id,
+        ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+            ? RulesetVersion.v2024
+            : RulesetVersion.v2014,
+      ),
+      name: dto.name,
+      abilityScoreSummary: abilityScoreSummary,
+      originFeat: originFeat,
+      skillProficiencies: skillList,
+      toolProficiencies: toolList,
+      languages: langList,
+      descriptionMarkdown: desc,
+      customProperties: customProps,
+    );
+  }
+
+  /// Parses a batch of raw background payloads into domain [Background] entities.
+  static List<Background> parseCustomBackgrounds(
+    List<dynamic> rawList, {
+    required domain_rules.RulesetVersion ruleset,
+  }) {
+    final backgrounds = <Background>[];
+
+    for (final item in rawList) {
+      if (item is! Map) continue;
+      final map = item is Map<String, dynamic> ? item : Map<String, dynamic>.from(item);
+
+      try {
+        final dto = HomebrewEntityDto.fromJson(map, ruleset: ruleset);
+        backgrounds.add(mapBackgroundFromDto(dto));
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to ingest homebrew background ${map['name']}. Skipping.',
+        );
+      }
+    }
+
+    return backgrounds;
   }
 }

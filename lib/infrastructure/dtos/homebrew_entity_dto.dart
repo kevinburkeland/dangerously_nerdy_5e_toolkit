@@ -354,6 +354,37 @@ class HomebrewEntityDto {
       }
     }
 
+    // Background Ingestion: Skills, Starting Equipment, and 2024 ASIs
+    if (entityType == 'background') {
+      // 1. Skill Proficiencies
+      final skillsRaw = normalized['skillProficiencies'] ??
+          normalized['skills'] ??
+          normalized['skill'];
+      if (skillsRaw is List) {
+        normalized['skillProficiencies'] = skillsRaw
+            .where((s) => s != null)
+            .map((s) => s.toString().trim())
+            .toList();
+      }
+
+      // 2. Starting Equipment
+      final equipRaw = normalized['startingEquipment'] ??
+          normalized['equipment'] ??
+          normalized['items'];
+      if (equipRaw != null) {
+        normalized['startingEquipment'] = equipRaw;
+      }
+
+      // 3. 2024 ASIs
+      final bgAbilities = _extractSpeciesAbilities(json);
+      if (bgAbilities.fixed.isNotEmpty) {
+        normalized['abilities'] = bgAbilities.fixed;
+      }
+      if (bgAbilities.flexible != null) {
+        normalized['flexibleAbilities'] = bgAbilities.flexible;
+      }
+    }
+
     return normalized;
   }
 

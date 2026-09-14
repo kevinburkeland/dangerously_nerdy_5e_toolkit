@@ -3,6 +3,8 @@ import 'package:meta/meta.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../domain/simulation/combat_rider.dart';
+import '../../services/ingestion/stat_block_acl_parser.dart';
 import '../mappers/homebrew_ingestor.dart';
 
 /// Data Transfer Object for [Spell], isolating full document serialization,
@@ -25,6 +27,7 @@ class SpellDto {
   final String? higherLevelsMarkdown;
   final List<EvaluationMath> damageMath;
   final List<EntityReference<DomainEntity>> relatedEntityRefs;
+  final List<CombatEffectRider> riders;
   final Map<String, dynamic> customProperties;
   final Map<String, dynamic> unparsedPayload;
   final Map<String, dynamic> _rawMap;
@@ -46,6 +49,7 @@ class SpellDto {
     this.higherLevelsMarkdown,
     this.damageMath = const [],
     this.relatedEntityRefs = const [],
+    this.riders = const [],
     this.customProperties = const {},
     this.unparsedPayload = const {},
     Map<String, dynamic>? rawMap,
@@ -274,6 +278,7 @@ class SpellDto {
       higherLevelsMarkdown: resolvedHigherLevels,
       damageMath: enrichedDamageMath,
       relatedEntityRefs: resolvedRefs,
+      riders: StatBlockAclParser.extractRiders(resolvedDescription),
       customProperties: resolvedCustomProps,
       unparsedPayload: unparsed,
       rawMap: Map<String, dynamic>.from(json),
@@ -306,6 +311,7 @@ class SpellDto {
       higherLevelsMarkdown: spell.higherLevelsMarkdown,
       damageMath: spell.damageMath,
       relatedEntityRefs: spell.relatedEntityRefs,
+      riders: spell.riders,
       customProperties: spell.customProperties,
       unparsedPayload: const {},
       rawMap: spell.toMap(),
@@ -347,6 +353,7 @@ class SpellDto {
       higherLevelsMarkdown: higherLevelsMarkdown,
       damageMath: damageMath,
       relatedEntityRefs: relatedEntityRefs,
+      riders: riders,
       customProperties: mergedCustomProps,
     );
   }

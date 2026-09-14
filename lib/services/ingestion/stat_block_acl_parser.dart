@@ -3,7 +3,7 @@ import '../../models/arena/arena_condition.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/srd_summons/minion_stat_block.dart';
 import '../../models/spellbook_data.dart';
-import '../../domain/simulation/combat_rider.dart';
+import '../../domain/simulation/precomputed_attack.dart';
 
 /// Anti-Corruption Layer (ACL) Boundary Parser.
 /// Quarantines all unstructured text scraping, regex heuristics, and legacy JSON
@@ -61,6 +61,23 @@ class StatBlockAclParser {
     r'takes (?:(\d+)\s*\()?(\d+)d(\d+)(?:\s*\+\s*(\d+))?\)?\s*(\w+)?\s*damage at the (start|end) of (?:each of )?its turns?',
     caseSensitive: false,
   );
+  static final _saveConditionPattern = RegExp(
+    r'(?:must\s+succeed\s+on\s+a\s+|takes?.*?and\s+a\s+)(?:DC\s*(\d+)\s+)?(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|STR|DEX|CON|INT|WIS|CHA)?\s*saving\s*throw.*?(?:or\s*(?:be\s*knocked|be|become|fall)?\s*(knocked prone|prone|poisoned|paralyzed|stunned|blinded|deafened|frightened|charmed|unconscious|restrained))',
+    caseSensitive: false,
+    dotAll: true,
+  );
+  static final _knockedPronePattern = RegExp(
+    r'\b(?:knocked prone|falls? prone)\b',
+    caseSensitive: false,
+  );
+  static final _attackToHitPattern = RegExp(
+    r'([+-]?\s*\d+)\s*to\s*hit',
+    caseSensitive: false,
+  );
+  static final _damageDicePattern = RegExp(
+    r'(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?',
+    caseSensitive: false,
+  );
 
   /// Parses an unstructured/third-party [MinionStatBlock] at the ingestion boundary
   /// to pre-calculate all combat metrics into explicit typed primitives.
@@ -81,6 +98,7 @@ class StatBlockAclParser {
     int maxLegendaryActions,
     int maxLegendaryResistances,
     Map<AbilityType, int> savingThrows,
+    Map<String, PrecomputedAttack> attacks,
   }) parseStatBlockBoundary(
     MinionStatBlock sb, {
     double challengeRating = 0.0,
@@ -211,6 +229,60 @@ class StatBlockAclParser {
       savingThrows[ab] = _computeSavingThrowBonus(sb, ab);
     }
 
+    // 9. Executable Attacks & Action Riders
+    final attacks = <String, PrecomputedAttack>{};
+    final pb = _computeProficiencyBonus(challengeRating);
+    final fallbackDc = (8 + pb + math.max(sb.strMod, sb.dexMod)).toInt();
+    final allActions = [
+      ...sb.actions,
+      ...sb.legendaryActions,
+    ];
+
+    for (final a in allActions) {
+      final desc = a.description;
+      final actionKey = a.name.toLowerCase().trim();
+      if (actionKey.isEmpty) continue;
+
+      int atkBonus = a.attackBonus ?? 0;
+      final atkMatch = _attackToHitPattern.firstMatch(desc);
+      if (atkMatch != null) {
+        final parsed = int.tryParse(atkMatch.group(1)!.replaceAll('+', '').replaceAll(' ', ''));
+        if (parsed != null) atkBonus = parsed;
+      } else if (a.attackBonus == null && (desc.contains('Attack:') || desc.contains('Hit:'))) {
+        atkBonus = pb + math.max(sb.strMod, sb.dexMod);
+      }
+
+      final groups = <DamageDieGroup>[];
+      int flatBonus = 0;
+      final hitIndex = desc.indexOf('Hit:');
+      final hitPart = hitIndex >= 0 ? desc.substring(hitIndex) : desc;
+      for (final m in _damageDicePattern.allMatches(hitPart)) {
+        final count = int.tryParse(m.group(1) ?? '') ?? 1;
+        final faces = int.tryParse(m.group(2) ?? '') ?? 6;
+        groups.add(DamageDieGroup(count: count, faces: faces));
+        if (m.group(4) != null) {
+          final sign = m.group(3) == '-' ? -1 : 1;
+          final bonusVal = int.tryParse(m.group(4)!) ?? 0;
+          flatBonus += sign * bonusVal;
+        }
+      }
+
+      final riders = extractRiders(
+        desc,
+        defaultDc: fallbackDc,
+        defaultAbility: AbilityType.strength,
+      );
+
+      final attackId = actionKey.replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+      attacks[actionKey] = PrecomputedAttack(
+        attackId: attackId,
+        attackBonus: atkBonus,
+        flatBonus: flatBonus,
+        damageGroups: groups,
+        riders: riders,
+      );
+    }
+
     return (
       spellSlots: slots,
       knownSpellIds: knownSpells,
@@ -228,6 +300,7 @@ class StatBlockAclParser {
       maxLegendaryActions: maxLegendaryActions,
       maxLegendaryResistances: maxLegendaryResistances,
       savingThrows: savingThrows,
+      attacks: attacks,
     );
   }
 
@@ -306,9 +379,13 @@ class StatBlockAclParser {
     };
   }
 
-  /// Extracts up to 6 stacked [CombatEffectRider]s from raw action descriptions
+  /// Extracts stacked [CombatEffectRider]s from raw action descriptions
   /// at the ingestion boundary using pre-compiled regex tokens.
-  static List<CombatEffectRider> extractRiders(String text) {
+  static List<CombatEffectRider> extractRiders(
+    String text, {
+    int? defaultDc,
+    AbilityType? defaultAbility,
+  }) {
     if (text.isEmpty) return const [];
     final riders = <CombatEffectRider>[];
 
@@ -435,6 +512,48 @@ class StatBlockAclParser {
         damageType: dmgType,
         onTurnStart: isStart,
       ));
+    }
+
+    // 7. Condition Saving Throw Riders (e.g. Wolf prone save or poison save)
+    final saveMatch = _saveConditionPattern.firstMatch(text);
+    if (saveMatch != null) {
+      final dcVal = int.tryParse(saveMatch.group(1) ?? '') ?? defaultDc;
+      final abilityStr = saveMatch.group(2);
+      final ability = abilityStr != null ? AbilityType.fromLooseString(abilityStr) : defaultAbility;
+      final condStr = (saveMatch.group(3) ?? '').toLowerCase();
+
+      final condition = switch (condStr) {
+        'knocked prone' || 'prone' || 'fall prone' => ArenaCondition.prone,
+        'poisoned' => ArenaCondition.poisoned,
+        'paralyzed' => ArenaCondition.paralyzed,
+        'stunned' => ArenaCondition.stunned,
+        'blinded' => ArenaCondition.blinded,
+        'deafened' => ArenaCondition.deafened,
+        'frightened' => ArenaCondition.frightened,
+        'charmed' => ArenaCondition.charmed,
+        'unconscious' => ArenaCondition.unconscious,
+        'restrained' => ArenaCondition.restrained,
+        _ => null,
+      };
+
+      if (condition != null && !riders.any((r) => r is ConditionRider && r.condition == condition)) {
+        riders.add(ConditionRider(
+          condition: condition,
+          requiresSave: true,
+          saveDc: dcVal,
+          saveAbility: ability,
+        ));
+      }
+    } else {
+      final proneMatch = _knockedPronePattern.firstMatch(text);
+      if (proneMatch != null && !riders.any((r) => r is ConditionRider && r.condition == ArenaCondition.prone)) {
+        riders.add(ConditionRider(
+          condition: ArenaCondition.prone,
+          requiresSave: defaultDc != null || defaultAbility != null,
+          saveDc: defaultDc,
+          saveAbility: defaultAbility,
+        ));
+      }
     }
 
     return riders;

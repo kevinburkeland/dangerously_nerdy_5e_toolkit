@@ -135,8 +135,10 @@ void main() {
       );
 
       // Execute attack hit against target
-      final damageApplied = target.applyAttackHit(compositeAttack);
-      expect(damageApplied, equals(25));
+      final hitResult = target.applyAttackHit(compositeAttack);
+      expect(hitResult.damageDealt, equals(25));
+      expect(hitResult.riderLogs, isNotEmpty);
+      expect(hitResult.conditionsApplied, containsAll([ArenaCondition.grappled, ArenaCondition.restrained]));
 
       // 1. Assert damage absorption:
       // 15 tempHp absorbed all 15 tempHp -> tempHp == 0.

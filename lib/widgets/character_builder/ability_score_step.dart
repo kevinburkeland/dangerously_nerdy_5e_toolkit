@@ -838,36 +838,46 @@ class AbilityScoreStep extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 6,
-              children: AbilityType.values.map((ab) {
-                final fixedBonuses = effectiveFixedBonuses;
-                final isFixed = fixedBonuses.containsKey(ab.name.toLowerCase());
-                final isSelected = variantHumanBonuses.contains(ab);
-                return FilterChip(
-                  label: Text(isFixed
-                      ? '${ab.name.toUpperCase()} (+${fixedBonuses[ab.name.toLowerCase()]} Fixed)'
-                      : '${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
-                  selected: isSelected,
-                  selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
-                  checkmarkColor: Colors.cyanAccent,
-                  onSelected: isFixed
-                      ? null
-                      : (selected) {
-                          HapticService.selectionTick(context);
-                          final updated = Set<AbilityType>.from(variantHumanBonuses);
-                          if (selected) {
-                            while (updated.length >= flexibleCount && updated.isNotEmpty) {
-                              updated.remove(updated.first);
+              children: (() {
+                final pool = curSubrace?.flexibleAbilityPool;
+                final availableAbilities = pool != null && pool.isNotEmpty
+                    ? AbilityType.values.where((ab) => pool.any((p) {
+                        final pStr = p.toLowerCase().trim();
+                        final prefix = pStr.length > 3 ? pStr.substring(0, 3) : pStr;
+                        return ab.name.toLowerCase().startsWith(prefix);
+                      })).toList()
+                    : AbilityType.values;
+                return availableAbilities.map((ab) {
+                  final fixedBonuses = effectiveFixedBonuses;
+                  final isFixed = fixedBonuses.containsKey(ab.name.toLowerCase());
+                  final isSelected = variantHumanBonuses.contains(ab);
+                  return FilterChip(
+                    label: Text(isFixed
+                        ? '${ab.name.toUpperCase()} (+${fixedBonuses[ab.name.toLowerCase()]} Fixed)'
+                        : '${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
+                    selected: isSelected,
+                    selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                    checkmarkColor: Colors.cyanAccent,
+                    onSelected: isFixed
+                        ? null
+                        : (selected) {
+                            HapticService.selectionTick(context);
+                            final updated = Set<AbilityType>.from(variantHumanBonuses);
+                            if (selected) {
+                              while (updated.length >= flexibleCount && updated.isNotEmpty) {
+                                updated.remove(updated.first);
+                              }
+                              updated.add(ab);
+                            } else {
+                              if (updated.length > 1) {
+                                updated.remove(ab);
+                              }
                             }
-                            updated.add(ab);
-                          } else {
-                            if (updated.length > 1) {
-                              updated.remove(ab);
-                            }
-                          }
-                          onVariantHumanBonusesChanged(updated);
-                        },
-                );
-              }).toList(),
+                            onVariantHumanBonusesChanged(updated);
+                          },
+                  );
+                }).toList();
+              })(),
             ),
           ],
         ),

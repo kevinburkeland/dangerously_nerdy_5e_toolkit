@@ -43,6 +43,7 @@ class CharacterDraft {
   EntityReference<DomainEntity>? startingSubclassRef;
   Map<String, List<String>> selectedFeatureOptions;
   int baseSpeedFeet;
+  List<AbilityType> pendingFlexibleAbilityChoices;
 
   CharacterDraft({
     this.characterName,
@@ -69,6 +70,7 @@ class CharacterDraft {
     this.startingSubclassRef,
     Map<String, List<String>>? selectedFeatureOptions,
     this.baseSpeedFeet = 30,
+    List<AbilityType>? pendingFlexibleAbilityChoices,
   })  : _rulesEdition = rulesEdition,
         selectedSkills = selectedSkills != null ? Map.from(selectedSkills) : {},
         savingThrowProficiencies = savingThrowProficiencies != null ? Set.from(savingThrowProficiencies) : {},
@@ -79,7 +81,8 @@ class CharacterDraft {
         spellsKnown = spellsKnown != null ? List.from(spellsKnown) : [],
         spellsPrepared = spellsPrepared != null ? List.from(spellsPrepared) : [],
         originFeats = originFeats != null ? List.from(originFeats) : [],
-        selectedFeatureOptions = selectedFeatureOptions != null ? Map.from(selectedFeatureOptions) : {} {
+        selectedFeatureOptions = selectedFeatureOptions != null ? Map.from(selectedFeatureOptions) : {},
+        pendingFlexibleAbilityChoices = pendingFlexibleAbilityChoices != null ? List.from(pendingFlexibleAbilityChoices) : [] {
     reconcile();
   }
 
@@ -91,8 +94,32 @@ class CharacterDraft {
       }
       backgroundBonusScores = const AbilityScores.zero();
       bonusScores = const AbilityScores.zero();
+
+      // Ensure flexible ability choices honor subrace pool in 2014 mode without defaulting to Strength
+      if (subraceRef != null) {
+        final pool = subraceRef!.customProperties['flexibleAbilityPool'] as List?;
+        if (pool != null && pool.isNotEmpty) {
+          final allowed = <AbilityType>[];
+          for (final item in pool) {
+            final str = item.toString().toLowerCase().trim();
+            final prefix = str.length > 3 ? str.substring(0, 3) : str;
+            for (final ab in AbilityType.values) {
+              if (ab.name.toLowerCase().startsWith(prefix)) {
+                if (!allowed.contains(ab)) allowed.add(ab);
+              }
+            }
+          }
+          if (allowed.isNotEmpty) {
+            pendingFlexibleAbilityChoices.retainWhere(allowed.contains);
+            if (pendingFlexibleAbilityChoices.isEmpty) {
+              pendingFlexibleAbilityChoices.add(allowed.first);
+            }
+          }
+        }
+      }
     } else {
       speciesBonusScores = const AbilityScores.zero();
+      pendingFlexibleAbilityChoices.clear();
     }
   }
 
@@ -121,6 +148,7 @@ class CharacterDraft {
     EntityReference<DomainEntity>? startingSubclassRef,
     Map<String, List<String>>? selectedFeatureOptions,
     int? baseSpeedFeet,
+    List<AbilityType>? pendingFlexibleAbilityChoices,
   }) {
     return CharacterDraft(
       characterName: characterName ?? this.characterName,
@@ -147,6 +175,7 @@ class CharacterDraft {
       startingSubclassRef: startingSubclassRef ?? this.startingSubclassRef,
       selectedFeatureOptions: selectedFeatureOptions ?? this.selectedFeatureOptions,
       baseSpeedFeet: baseSpeedFeet ?? this.baseSpeedFeet,
+      pendingFlexibleAbilityChoices: pendingFlexibleAbilityChoices ?? this.pendingFlexibleAbilityChoices,
     );
   }
 

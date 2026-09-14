@@ -301,4 +301,20 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
 - **Test Fixture Cleansing:**
   - Test fixtures simulating homebrew ingestion must never introduce proprietary tokens. Use generic labels and custom lineages (e.g. `Human (Lineage of Artifice)` with `'source': 'CUSTOM_LINEAGE'` and `'lineageType': 'Artifice'`) rather than setting-specific dragonmark or Eberron tokens.
 
+## 20. Action Rider Execution, Subrace Pool Constraints, & Background Compilation
+
+- **Saving Throw Action Riders & Dynamic Fallbacks:**
+  - `StatBlockAclParser.extractRiders()` captures conditions from actions and spells with explicit saving throw DCs (e.g. `succeed on a DC 11 Strength saving throw or be knocked prone`) and implicit DCs where $\text{DC} = 8 + \text{PB} + \text{AbilityMod}$.
+  - Precomputed attacks (`attacks` on `MonsterCombatProfile`) carry composite `CombatEffectRider` ASTs that execute without runtime regular expressions during combat simulations.
+  - `ArenaCombatant.applyAttackHit()` delegates HP management to domain `HitPoints`, evaluates saving throws with d20 rolls, applies conditions, and logs outcomes into `ArenaAttackEvent.summaryText`.
+- **Subrace Flexible Choice Pool Constraints:**
+  - `Subrace` models store `flexibleAbilityPool`, `flexibleAbilityCount`, and `flexibleAbilityBonus`.
+  - In 2014 mode, `CharacterDraft.reconcile()` enforces that unselected flexible choices are populated from `flexibleAbilityPool` (e.g. `['dex', 'int']`), preventing unwanted fallbacks to `AbilityType.strength`.
+  - `CharacterBuilderScreen` and `AbilityScoreStep` filter selectable option chips strictly to the subrace's allowed ability pool.
+- **Background Ingestion & Character Compilation:**
+  - `HomebrewEntityDto._normalizeAndClamp()` normalizes background `skillProficiencies`, `startingEquipment`, and 2024 ASIs.
+  - `HomebrewIngestor.mapBackgroundFromDto()` and `parseCustomBackgrounds()` map raw JSON into domain `Background` entities.
+  - `CharacterFactory.buildFromDraft()` grants background skills into `character.skillProficiencies`, instantiates background starting equipment into `character.inventory`, applies 2024 ASIs (`bonusScores`), and factors Constitution modifiers into starting HP calculation.
+
+
 
