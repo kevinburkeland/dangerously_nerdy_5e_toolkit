@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../models/characters/srd_backgrounds_library.dart';
 import '../../models/characters/srd_species_library.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../models/domain/core_types.dart';
@@ -6,6 +7,7 @@ import '../../models/domain/character_models.dart';
 import '../../models/domain/entity_reference.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/spellbook_data.dart';
 
 /// Innate/Racial native spell model for spells granted by species or racial heritage.
 @immutable
@@ -240,6 +242,8 @@ class SkillTraitResolver {
     required String? subraceSlug,
     required int totalCharacterLevel,
     DmRulesEdition edition = DmRulesEdition.v2024,
+    EntityReference<DomainEntity>? subraceRef,
+    Map<String, dynamic>? customProperties,
   }) {
     final spells = <InnateSpeciesSpell>[];
     final slug = speciesSlug.toLowerCase();
@@ -247,8 +251,9 @@ class SkillTraitResolver {
 
     // Check dynamic grants and additionalSpells from Subrace and Species
     final race = SrdSpeciesLibrary.findBySlug(speciesSlug);
-    final subrace = subraceSlug != null && subraceSlug.isNotEmpty
-        ? SrdSpeciesLibrary.findSubraceBySlug(subraceSlug)
+    final subrace = (subraceSlug != null && subraceSlug.isNotEmpty)
+        ? (SrdSpeciesLibrary.findSubraceBySlug(subraceSlug) ??
+            race?.subraces.where((s) => s.id.slug.toLowerCase() == subSlug || s.name.toLowerCase() == subSlug).firstOrNull)
         : null;
 
     void processGrantsAndSpells(List<FeatureGrant> grants, Map<String, dynamic> customProps) {
@@ -256,7 +261,8 @@ class SkillTraitResolver {
         if (g.type == GrantType.bonusSpell) {
           final spellSlug = g.payload['slug']?.toString() ?? '';
           final spellName = g.payload['displayName']?.toString() ?? g.label ?? spellSlug;
-          final isCantrip = g.payload['isCantrip'] == true;
+          final spellFromLib = SpellbookLibrary.getSpellById(spellSlug);
+          final isCantrip = g.payload['isCantrip'] == true || spellFromLib?.level == 0;
           if (spellSlug.isNotEmpty && !spells.any((s) => s.spellRef.slug == spellSlug)) {
             spells.add(InnateSpeciesSpell(
               spellRef: EntityReference<Spell>(
@@ -272,34 +278,72 @@ class SkillTraitResolver {
         }
       }
 
-      if (customProps['additionalSpells'] is List) {
-        for (final entry in customProps['additionalSpells'] as List) {
+      final rawAddSpells = customProps['additionalSpells'] ?? customProps['spells'];
+      if (rawAddSpells is List) {
+        for (final entry in rawAddSpells) {
           if (entry is Map) {
-            final innate = entry['innate'] ?? entry['known'] ?? entry['prepared'];
-            if (innate is Map) {
-              innate.forEach((lvlKey, spellList) {
-                final reqLevel = int.tryParse(lvlKey.toString()) ?? 1;
-                if (totalCharacterLevel >= reqLevel && spellList is List) {
-                  for (final item in spellList) {
-                    final str = item.toString().trim();
-                    final isCantrip = str.contains('#c');
-                    final cleanName = str.replaceAll('#c', '').split('|').first.trim();
-                    final cleanSlug = cleanName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
-                    if (cleanSlug.isNotEmpty && !spells.any((s) => s.spellRef.slug == cleanSlug)) {
-                      spells.add(InnateSpeciesSpell(
-                        spellRef: EntityReference<Spell>(
-                          refType: EntityType.spell,
-                          slug: cleanSlug,
-                          displayName: cleanName,
-                        ),
-                        minCharacterLevel: reqLevel,
-                        isCantrip: isCantrip,
-                        chargesPerLongRest: isCantrip ? 0 : 1,
-                      ));
+            for (final sectionKey in ['innate', 'known', 'prepared', 'expanded']) {
+              final section = entry[sectionKey];
+              if (section is Map) {
+                section.forEach((lvlKey, spellList) {
+                  int reqLevel = 1;
+                  final lvlStr = lvlKey.toString().toLowerCase().trim();
+                  if (sectionKey == 'expanded') {
+                    if (lvlStr == 's1' || lvlStr == '1' || lvlStr == '_') {
+                      reqLevel = 1;
+                    } else if (lvlStr == 's2' || lvlStr == '2') {
+                      reqLevel = 3;
+                    } else if (lvlStr == 's3' || lvlStr == '3') {
+                      reqLevel = 5;
+                    } else if (lvlStr == 's4' || lvlStr == '4') {
+                      reqLevel = 7;
+                    } else if (lvlStr == 's5' || lvlStr == '5') {
+                      reqLevel = 9;
+                    } else {
+                      reqLevel = int.tryParse(lvlStr.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+                    }
+                  } else {
+                    if (lvlStr == '_') {
+                      reqLevel = 1;
+                    } else {
+                      reqLevel = int.tryParse(lvlStr.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
                     }
                   }
-                }
-              });
+
+                  void addSpellItems(dynamic listOrMap) {
+                    if (listOrMap is List) {
+                      for (final item in listOrMap) {
+                        final str = item.toString().trim();
+                        final isCantripRaw = str.contains('#c') || lvlStr == '_' || lvlStr == '0' || lvlStr == 's0';
+                        final cleanName = str.replaceAll('#c', '').split('|').first.trim();
+                        final cleanSlug = cleanName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
+                        if (cleanSlug.isEmpty) continue;
+                        final spellFromLib = SpellbookLibrary.getSpellById(cleanSlug);
+                        final isCantrip = isCantripRaw || spellFromLib?.level == 0;
+                        final finalMinLevel = isCantrip ? 1 : reqLevel;
+                        if (totalCharacterLevel >= finalMinLevel && !spells.any((s) => s.spellRef.slug == cleanSlug)) {
+                          spells.add(InnateSpeciesSpell(
+                            spellRef: EntityReference<Spell>(
+                              refType: EntityType.spell,
+                              slug: cleanSlug,
+                              displayName: cleanName,
+                            ),
+                            minCharacterLevel: finalMinLevel,
+                            isCantrip: isCantrip,
+                            chargesPerLongRest: isCantrip ? 0 : 1,
+                          ));
+                        }
+                      }
+                    } else if (listOrMap is Map) {
+                      for (final val in listOrMap.values) {
+                        addSpellItems(val);
+                      }
+                    }
+                  }
+
+                  addSpellItems(spellList);
+                });
+              }
             }
           }
         }
@@ -311,6 +355,22 @@ class SkillTraitResolver {
     }
     if (subrace != null) {
       processGrantsAndSpells(subrace.grants, subrace.customProperties);
+    }
+    if (subraceRef != null && subraceRef.customProperties.isNotEmpty) {
+      final refGrants = <FeatureGrant>[];
+      if (subraceRef.customProperties['grants'] is List) {
+        for (final g in subraceRef.customProperties['grants'] as List) {
+          if (g is Map) {
+            try {
+              refGrants.add(FeatureGrant.fromMap(Map<String, dynamic>.from(g)));
+            } catch (_) {}
+          }
+        }
+      }
+      processGrantsAndSpells(refGrants, subraceRef.customProperties);
+    }
+    if (customProperties != null && customProperties.isNotEmpty) {
+      processGrantsAndSpells(const [], customProperties);
     }
 
     // Baseline SRD species fallbacks
@@ -379,6 +439,80 @@ class SkillTraitResolver {
     }
 
     return spells;
+  }
+
+  /// Resolves and aggregates tool proficiencies across class, species/subrace, and background.
+  static List<String> resolveTools({
+    List<String> draftTools = const [],
+    String? classSlug,
+    String? speciesSlug,
+    String? subraceSlug,
+    String? backgroundSlug,
+    Map<String, dynamic>? customProperties,
+  }) {
+    final tools = <String>{};
+    for (final t in draftTools) {
+      if (t.trim().isNotEmpty) tools.add(t.trim());
+    }
+
+    final cl = classSlug?.toLowerCase().trim();
+    if (cl == 'artificer') {
+      if (!tools.any((t) => t.toLowerCase().contains('thieves'))) {
+        tools.add('Thieves\' Tools');
+      }
+      if (!tools.any((t) => t.toLowerCase().contains('tinker'))) {
+        tools.add('Tinker\'s Tools');
+      }
+    } else if (cl == 'rogue') {
+      if (!tools.any((t) => t.toLowerCase().contains('thieves'))) {
+        tools.add('Thieves\' Tools');
+      }
+    } else if (cl == 'druid') {
+      if (!tools.any((t) => t.toLowerCase().contains('herbalism'))) {
+        tools.add('Herbalism Kit');
+      }
+    }
+
+    if (backgroundSlug != null && backgroundSlug.isNotEmpty) {
+      final bg = SrdBackgroundsLibrary.findBySlug(backgroundSlug);
+      if (bg != null) {
+        for (final bt in bg.toolProficiencies) {
+          if (!tools.any((t) => t.toLowerCase() == bt.toLowerCase())) {
+            tools.add(bt);
+          }
+        }
+      }
+    }
+
+    if (speciesSlug != null && speciesSlug.isNotEmpty) {
+      final sp = SrdSpeciesLibrary.findBySlug(speciesSlug);
+      if (sp != null) {
+        for (final g in sp.grants) {
+          if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
+            final prof = g.payload['proficiency'].toString();
+            if (!tools.any((t) => t.toLowerCase() == prof.toLowerCase())) {
+              tools.add(prof);
+            }
+          }
+        }
+      }
+    }
+
+    if (subraceSlug != null && subraceSlug.isNotEmpty) {
+      final sub = SrdSpeciesLibrary.findSubraceBySlug(subraceSlug);
+      if (sub != null) {
+        for (final g in sub.grants) {
+          if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
+            final prof = g.payload['proficiency'].toString();
+            if (!tools.any((t) => t.toLowerCase() == prof.toLowerCase())) {
+              tools.add(prof);
+            }
+          }
+        }
+      }
+    }
+
+    return tools.toList();
   }
 
   /// Derives native physical and sensory traits from species

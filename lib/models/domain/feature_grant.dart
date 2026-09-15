@@ -285,6 +285,7 @@ class FeatureGrant {
     required String grantId,
     required String slug,
     required String displayName,
+    bool isCantrip = false,
     String? label,
   }) =>
       FeatureGrant(
@@ -293,45 +294,49 @@ class FeatureGrant {
         payload: {
           'slug': slug,
           'displayName': displayName,
+          if (isCantrip) 'isCantrip': true,
         },
         label: label,
       );
 
-  /// Exhaustively extracts clean spell names from compendium additionalSpells / subclassSpells structures.
-  static Set<String> extractSpellNames(dynamic addSpellsData) {
+  /// Exhaustively extracts clean spell names and cantrip flags from compendium additionalSpells / subclassSpells structures.
+  static Map<String, bool> extractSpellDescriptors(dynamic addSpellsData) {
     if (addSpellsData == null) return const {};
-    final names = <String>{};
+    final descriptors = <String, bool>{};
 
-    void processSpellItem(dynamic item) {
+    void processSpellItem(dynamic item, {bool isCantripContext = false}) {
       if (item == null) return;
       if (item is String) {
+        final isCantrip = isCantripContext || item.contains('#c');
         final clean = item.split('|').first.replaceAll('#c', '').trim();
         if (clean.isNotEmpty && !clean.startsWith('{')) {
-          names.add(clean);
+          descriptors[clean] = (descriptors[clean] ?? false) || isCantrip;
         }
       } else if (item is List) {
         for (final subItem in item) {
-          processSpellItem(subItem);
+          processSpellItem(subItem, isCantripContext: isCantripContext);
         }
       } else if (item is Map) {
         if (item.containsKey('choose')) {
           final ch = item['choose'];
           if (ch is Map && ch['from'] != null) {
-            processSpellItem(ch['from']);
+            processSpellItem(ch['from'], isCantripContext: isCantripContext);
           } else if (ch is String && ch.isNotEmpty) {
+            final isCantrip = isCantripContext || ch.contains('#c');
             final clean = ch.split('|').first.replaceAll('#c', '').trim();
             if (!clean.contains('=')) {
-              processSpellItem(clean);
+              descriptors[clean] = (descriptors[clean] ?? false) || isCantrip;
             }
           }
         }
         if (item.containsKey('from')) {
-          processSpellItem(item['from']);
+          processSpellItem(item['from'], isCantripContext: isCantripContext);
         }
         for (final entry in item.entries) {
           final k = entry.key.toString().toLowerCase();
           if (k == 'choose' || k == 'count' || k == 'all' || k == 'from') continue;
-          processSpellItem(entry.value);
+          final isSubCantrip = isCantripContext || k == '_' || k == '0' || k == 's0';
+          processSpellItem(entry.value, isCantripContext: isSubCantrip);
         }
       }
     }
@@ -356,7 +361,8 @@ class FeatureGrant {
             if (k == 'name' || k == 'source' || k == 'class' || k == 'subclass' || k == 'choose' || k == 'count' || k == 'all') {
               continue;
             }
-            processSpellItem(entry.value);
+            final isSubCantrip = k == '_' || k == '0' || k == 's0';
+            processSpellItem(entry.value, isCantripContext: isSubCantrip);
           }
         }
       } else if (group is String) {
@@ -365,16 +371,23 @@ class FeatureGrant {
     }
 
     processSpellGroup(addSpellsData);
-    return names;
+    return descriptors;
+  }
+
+  /// Exhaustively extracts clean spell names from compendium additionalSpells / subclassSpells structures.
+  static Set<String> extractSpellNames(dynamic addSpellsData) {
+    return extractSpellDescriptors(addSpellsData).keys.toSet();
   }
 
   /// Exhaustively extracts [FeatureGrant.bonusSpell] grants from compendium additionalSpells data.
   static List<FeatureGrant> extractBonusSpells(dynamic addSpellsData, String ownerPrefix, String ownerSlug) {
-    final names = extractSpellNames(addSpellsData);
+    final descriptors = extractSpellDescriptors(addSpellsData);
     final grants = <FeatureGrant>[];
     final seenSlugs = <String>{};
 
-    for (final clean in names) {
+    for (final entry in descriptors.entries) {
+      final clean = entry.key;
+      final isCantrip = entry.value;
       final slug = clean
           .toLowerCase()
           .replaceAll(RegExp(r"['’]"), '')
@@ -385,6 +398,7 @@ class FeatureGrant {
           grantId: '$ownerPrefix-$ownerSlug-spell-$slug',
           slug: slug,
           displayName: clean,
+          isCantrip: isCantrip,
           label: clean,
         ));
       }

@@ -277,6 +277,40 @@ class CharacterFactory {
       }
     }
 
+    final compiledTools = SkillTraitResolver.resolveTools(
+      draftTools: draft.toolProficiencies,
+      classSlug: draft.startingClassRef?.slug,
+      speciesSlug: draft.speciesRef?.slug,
+      subraceSlug: draft.subraceRef?.slug,
+      backgroundSlug: draft.backgroundRef?.slug,
+      customProperties: draft.speciesRef?.customProperties,
+    );
+
+    final compiledCantrips = List<EntityReference<Spell>>.from(draft.cantrips);
+    final compiledSpellsKnown = List<EntityReference<Spell>>.from(draft.spellsKnown);
+
+    if (draft.speciesRef != null) {
+      final innateSpells = SkillTraitResolver.getInnateSpeciesSpells(
+        speciesSlug: draft.speciesRef!.slug,
+        subraceSlug: draft.subraceRef?.slug,
+        totalCharacterLevel: 1,
+        edition: draft.rulesEdition,
+        subraceRef: draft.subraceRef,
+        customProperties: draft.speciesRef?.customProperties,
+      );
+      for (final isp in innateSpells) {
+        if (isp.isCantrip) {
+          if (!compiledCantrips.any((c) => c.slug == isp.spellRef.slug)) {
+            compiledCantrips.add(isp.spellRef);
+          }
+        } else {
+          if (!compiledSpellsKnown.any((s) => s.slug == isp.spellRef.slug)) {
+            compiledSpellsKnown.add(isp.spellRef);
+          }
+        }
+      }
+    }
+
     final character = Character(
       id: EntityId(
         slug: _slugify(draft.characterName!),
@@ -290,12 +324,12 @@ class CharacterFactory {
       bonusScores: finalBonusScores,
       skillProficiencies: compiledSkills,
       savingThrowProficiencies: draft.savingThrowProficiencies,
-      toolProficiencies: draft.toolProficiencies,
+      toolProficiencies: compiledTools,
       languages: draft.languages,
       inventory: inventory,
       purse: draft.startingPurse,
-      cantrips: draft.cantrips,
-      spellsKnown: draft.spellsKnown,
+      cantrips: compiledCantrips,
+      spellsKnown: compiledSpellsKnown,
       spellsPrepared: draft.spellsPrepared,
       feats: feats,
       resources: CharacterResourcePool(

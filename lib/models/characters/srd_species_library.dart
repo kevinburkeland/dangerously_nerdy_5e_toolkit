@@ -378,13 +378,27 @@ class SrdSpeciesLibrary {
 
   static Subrace? findSubraceBySlug(String slug) {
     final clean = slug.toLowerCase().trim();
+    final stripped = clean.replaceFirst(RegExp(r'^(human|elf|dwarf|gnome|halfling)-'), '');
+
+    bool matchesSubrace(Subrace s) {
+      final sSlug = s.id.slug.toLowerCase().trim();
+      final sName = s.name.toLowerCase().trim();
+      final sNameSlug = sName.replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
+      return sSlug == clean ||
+          sName == clean ||
+          sSlug == stripped ||
+          sNameSlug == clean ||
+          sNameSlug == stripped ||
+          sSlug.replaceFirst(RegExp(r'^(human|elf|dwarf|gnome|halfling)-'), '') == stripped;
+    }
+
     for (final r in allSpecies) {
       for (final s in r.subraces) {
-        if (s.id.slug.toLowerCase().trim() == clean || s.name.toLowerCase().trim() == clean) {
+        if (matchesSubrace(s)) {
           return s;
         }
       }
     }
-    return _customSubraces.where((s) => s.id.slug.toLowerCase().trim() == clean || s.name.toLowerCase().trim() == clean).firstOrNull;
+    return _customSubraces.where(matchesSubrace).firstOrNull;
   }
 }

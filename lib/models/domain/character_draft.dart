@@ -1,6 +1,8 @@
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
+import 'core_types.dart';
 import 'character_models.dart';
 import 'entity_reference.dart';
+import 'feature_grant.dart';
 import 'spell_monster_equipment.dart';
 import '../party/party_purse.dart';
 import '../../services/rules/character_factory.dart' show StartingEquipmentItemRequest;
@@ -199,6 +201,56 @@ class CharacterDraft {
       pendingFlexibleAbilityChoices.clear();
       if (backgroundBonusScores != const AbilityScores.zero()) {
         bonusScores = backgroundBonusScores;
+      }
+    }
+
+    // Seed class tool proficiencies
+    final clSlug = startingClassRef?.slug.toLowerCase().trim();
+    if (clSlug == 'artificer') {
+      if (!toolProficiencies.any((t) => t.toLowerCase().contains('thieves'))) {
+        toolProficiencies.add('Thieves\' Tools');
+      }
+      if (!toolProficiencies.any((t) => t.toLowerCase().contains('tinker'))) {
+        toolProficiencies.add('Tinker\'s Tools');
+      }
+    } else if (clSlug == 'rogue') {
+      if (!toolProficiencies.any((t) => t.toLowerCase().contains('thieves'))) {
+        toolProficiencies.add('Thieves\' Tools');
+      }
+    } else if (clSlug == 'druid') {
+      if (!toolProficiencies.any((t) => t.toLowerCase().contains('herbalism'))) {
+        toolProficiencies.add('Herbalism Kit');
+      }
+    }
+
+    // Auto-seed species & subrace bonus spells from additionalSpells metadata if present
+    final subAddSpells = subraceRef?.customProperties['additionalSpells'] ?? speciesRef?.customProperties['additionalSpells'];
+    if (subAddSpells != null) {
+      final descriptors = FeatureGrant.extractSpellDescriptors(subAddSpells);
+      for (final entry in descriptors.entries) {
+        final clean = entry.key;
+        final isCantrip = entry.value;
+        final slug = clean
+            .toLowerCase()
+            .replaceAll(RegExp(r"['’]"), '')
+            .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+            .replaceAll(RegExp(r'^-+|-+$'), '');
+        if (slug.isNotEmpty) {
+          final spellRef = EntityReference<Spell>(
+            refType: EntityType.spell,
+            slug: slug,
+            displayName: clean,
+          );
+          if (isCantrip) {
+            if (!cantrips.any((c) => c.slug == slug)) {
+              cantrips.add(spellRef);
+            }
+          } else {
+            if (!spellsKnown.any((s) => s.slug == slug)) {
+              spellsKnown.add(spellRef);
+            }
+          }
+        }
       }
     }
   }

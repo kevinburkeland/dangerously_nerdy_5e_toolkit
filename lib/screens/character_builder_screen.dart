@@ -12,6 +12,7 @@ import '../models/magic_items/magic_item_library.dart';
 import '../models/domain/core_types.dart';
 import '../models/domain/character_models.dart';
 import '../models/domain/entity_reference.dart';
+import '../models/domain/feature_grant.dart';
 import '../models/domain/homebrew_extended_entities.dart';
 import '../models/domain/spell_monster_equipment.dart';
 import '../models/party/party_purse.dart';
@@ -2069,6 +2070,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final clSlug = curClass.id.slug.toLowerCase();
     final isBard = clSlug == 'bard';
     final isMonk = clSlug == 'monk';
+    final isArtificer = clSlug == 'artificer';
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -2085,7 +2087,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
               const Icon(Icons.construction, size: 16, color: Colors.amberAccent),
               const SizedBox(width: 6),
               Text(
-                isBard ? 'Bard Musical Instruments (Select 3):' : (isMonk ? 'Monk Tool / Instrument (Select 1):' : 'Class Tools & Dialects:'),
+                isBard
+                    ? 'Bard Musical Instruments (Select 3):'
+                    : (isMonk
+                        ? 'Monk Tool / Instrument (Select 1):'
+                        : (isArtificer
+                            ? 'Artificer Tool Proficiencies (Select 1 Artisan\'s Tool):'
+                            : 'Class Tools & Dialects:')),
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amberAccent),
               ),
             ],
@@ -2128,6 +2136,32 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 ...SrdProficienciesLibrary.artisansTools.take(6),
                 ...SrdProficienciesLibrary.musicalInstruments.take(4),
               ].map((tool) {
+                final isChosen = _classBonusTools.contains(tool);
+                return FilterChip(
+                  label: Text(tool, style: const TextStyle(fontSize: 11)),
+                  selected: isChosen,
+                  selectedColor: Colors.amberAccent.withValues(alpha: 0.3),
+                  onSelected: (selected) {
+                    HapticService.selectionTick(context);
+                    setState(() {
+                      _classBonusTools.clear();
+                      if (selected) {
+                        _classBonusTools.add(tool);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ] else if (isArtificer) ...[
+            const Text('Granted: Thieves\' Tools & Tinker\'s Tools', style: TextStyle(fontSize: 12, color: Colors.white70)),
+            const SizedBox(height: 8),
+            const Text('Choose one artisan\'s tool of your choice:', style: TextStyle(fontSize: 11.5, color: Colors.white70)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: SrdProficienciesLibrary.artisansTools.map((tool) {
                 final isChosen = _classBonusTools.contains(tool);
                 return FilterChip(
                   label: Text(tool, style: const TextStyle(fontSize: 11)),
@@ -3520,13 +3554,32 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   Widget _buildStepSpells(ThemeData theme, CharacterClass curClass) {
     final edition = _selectedRuleset == RulesetVersion.v2024 ? DmRulesEdition.v2024 : DmRulesEdition.v2014;
     final spellClass = _findSpellClass(curClass.id.slug);
+    final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
+    final curSub = _selectedSubrace != null ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) : null;
+
+    final speciesBonusSpells = <String>{};
+    if (curSub != null) {
+      speciesBonusSpells.addAll(curSub.grants.where((g) => g.type == GrantType.bonusSpell).map((g) => g.payload['slug']?.toString().toLowerCase() ?? ''));
+      final addSpells = curSub.customProperties['additionalSpells'];
+      if (addSpells != null) {
+        speciesBonusSpells.addAll(FeatureGrant.extractSpellNames(addSpells).map((n) => n.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')));
+      }
+    }
+    if (curSpecies != null) {
+      speciesBonusSpells.addAll(curSpecies.grants.where((g) => g.type == GrantType.bonusSpell).map((g) => g.payload['slug']?.toString().toLowerCase() ?? ''));
+      final addSpells = curSpecies.customProperties['additionalSpells'];
+      if (addSpells != null) {
+        speciesBonusSpells.addAll(FeatureGrant.extractSpellNames(addSpells).map((n) => n.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')));
+      }
+    }
 
     final allClassSpells = SpellbookLibrary.allSpells.where((s) {
       if (s.level > 1) return false;
       if (spellClass == null) return s.level <= 1;
       final rules = s.getRules(edition);
       final isClassSpell = rules.classes.contains(spellClass);
-      final isExpanded = SubclassSpellsLibrary.isExpandedSpell(curClass.id.slug, _wizardSelectedSubclass, s, edition);
+      final isExpanded = SubclassSpellsLibrary.isExpandedSpell(curClass.id.slug, _wizardSelectedSubclass, s, edition) ||
+          speciesBonusSpells.contains(s.id.toLowerCase());
       return isClassSpell || isExpanded;
     }).toList();
 
@@ -3536,9 +3589,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
     // Calculate dynamic spell limits based on class, level, ability score modifier, and edition
     final castingAbility = _getCastingAbility(curClass.id.slug);
-    final curSpecies = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
     final curBackground = _selectedBackground != null ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!) : null;
-    final curSub = _selectedSubrace != null ? SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) : null;
     final calculatedBonuses = _calculateBonusScores(curSpecies, curBackground, _selectedRuleset, curSubrace: curSub);
     final effectiveScores = _wizardBaseScores.withBonus(calculatedBonuses);
     final castingMod = effectiveScores.getModifier(castingAbility);

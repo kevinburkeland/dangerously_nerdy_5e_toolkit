@@ -522,30 +522,8 @@ class CompendiumRaceParser {
 
     // Additional Spells
     final addSpells = raw['additionalSpells'] ?? custom['additionalSpells'];
-    if (addSpells is List) {
-      for (final spGroup in addSpells) {
-        if (spGroup is Map) {
-          final innate = spGroup['innate'] ?? spGroup['known'];
-          if (innate is Map) {
-            innate.forEach((lvl, spList) {
-              if (spList is List) {
-                for (final sp in spList) {
-                  final spName = sp.toString().split('|').first.replaceAll('#c', '').trim();
-                  final spSlug = spName.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), '-').replaceAll(RegExp(r"^-+|-+$"), '');
-                  if (spSlug.isNotEmpty) {
-                    grants.add(FeatureGrant.bonusSpell(
-                      grantId: 'race-$slug-spell-$spSlug',
-                      slug: spSlug,
-                      displayName: spName,
-                      label: spName,
-                    ));
-                  }
-                }
-              }
-            });
-          }
-        }
-      }
+    if (addSpells != null) {
+      grants.addAll(FeatureGrant.extractBonusSpells(addSpells, 'race', slug));
     }
 
     return grants;

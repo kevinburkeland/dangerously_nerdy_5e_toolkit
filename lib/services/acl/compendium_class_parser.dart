@@ -114,6 +114,22 @@ class CompendiumClassParser {
       slug,
     );
 
+    if (raw['startingProficiencies'] is Map) {
+      final sp = raw['startingProficiencies'] as Map;
+      if (sp['tools'] is List) {
+        for (final t in sp['tools'] as List) {
+          final tStr = t.toString().trim();
+          if (tStr.isNotEmpty) {
+            grants.add(FeatureGrant.weaponArmorProficiency(
+              tStr,
+              grantId: 'class-$slug-tool-${tStr.toLowerCase().replaceAll(RegExp(r"[^a-z0-9]+"), "-")}',
+              label: '$tStr Proficiency',
+            ));
+          }
+        }
+      }
+    }
+
     return CharacterClass(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,

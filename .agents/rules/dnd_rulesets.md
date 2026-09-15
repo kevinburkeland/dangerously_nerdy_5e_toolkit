@@ -90,3 +90,16 @@ The toolkit natively supports both the **2014 Rules As Written (SRD 5.1)** and t
   - Permanent magical treatises/tomes expand inherent maximums via `customProperties['abilityMaximums']` (e.g. `{'strength': 22}`).
   - When referencing non-SRD tomes or manuals, always use generic SRD-compliant/homebrew names (e.g. "Treatise of Inherent Might").
   - Inherent ability score increases clamp against `getAbilityScoreMaximum(ability)` (ceiling of 30). Dual +1 ASI increases must be allocated to two distinct ability scores.
+
+## 9. Lineage Spell Tables & Starting Tool Proficiencies
+
+- **Lineage Spell Ingestion & Extraction:**
+  - Species and subraces with `additionalSpells` define innate cantrips (`_`), innate daily spells (`daily`), and expanded spell lists (`expanded.s1`..`s5`).
+  - All spells are extracted via `FeatureGrant.extractBonusSpells` with `isCantrip: true` parsed for `#c` tokens or level 0 cantrips.
+  - In `SkillTraitResolver.getInnateSpeciesSpells`, `innate` and `known` level keys represent character levels, whereas `expanded` level keys represent spell slot levels (`s1`..`s5`).
+  - During character compilation, `CharacterFactory.buildFromDraft` auto-merges species/subrace cantrips into `character.cantrips` and innate/expanded spells into `character.spellsKnown`.
+- **Artificer Starting Tool Proficiencies:**
+  - Artificers receive Thieves' Tools, Tinker's Tools, and one artisan's tool of choice.
+  - `CharacterBuilderScreen._buildClassToolsPrompt` renders an interactive artisan's tool selection chip group while displaying granted tools.
+  - `SkillTraitResolver.resolveTools` and `CharacterDraft.reconcile` ensure starting tools for Artificers (`Thieves' Tools`, `Tinker's Tools`), Rogues (`Thieves' Tools`), and Druids (`Herbalism Kit`) are never dropped.
+
