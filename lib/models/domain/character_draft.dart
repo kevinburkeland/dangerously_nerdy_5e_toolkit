@@ -36,6 +36,7 @@ class CharacterDraft {
   List<String> languages;
   List<StartingEquipmentItemRequest> startingEquipment;
   PartyPurse startingPurse;
+  bool takesStartingWealth;
   List<EntityReference<Spell>> cantrips;
   List<EntityReference<Spell>> spellsKnown;
   List<EntityReference<Spell>> spellsPrepared;
@@ -63,6 +64,7 @@ class CharacterDraft {
     List<String>? languages,
     List<StartingEquipmentItemRequest>? startingEquipment,
     this.startingPurse = const PartyPurse(),
+    this.takesStartingWealth = false,
     List<EntityReference<Spell>>? cantrips,
     List<EntityReference<Spell>>? spellsKnown,
     List<EntityReference<Spell>>? spellsPrepared,
@@ -86,6 +88,43 @@ class CharacterDraft {
     reconcile();
   }
 
+  static AbilityScores _parseAbilityScores(dynamic raw) {
+    if (raw is! Map || raw.isEmpty) return const AbilityScores.zero();
+    var str = 0, dex = 0, con = 0, intl = 0, wis = 0, cha = 0;
+    for (final entry in raw.entries) {
+      final key = entry.key.toString().toLowerCase().trim();
+      final prefix = key.length > 3 ? key.substring(0, 3) : key;
+      final val = (entry.value as num?)?.toInt() ?? 0;
+      for (final ab in AbilityType.values) {
+        if (ab.name.toLowerCase().startsWith(prefix)) {
+          switch (ab) {
+            case AbilityType.strength:
+              str += val;
+            case AbilityType.dexterity:
+              dex += val;
+            case AbilityType.constitution:
+              con += val;
+            case AbilityType.intelligence:
+              intl += val;
+            case AbilityType.wisdom:
+              wis += val;
+            case AbilityType.charisma:
+              cha += val;
+          }
+          break;
+        }
+      }
+    }
+    return AbilityScores(
+      strength: str,
+      dexterity: dex,
+      constitution: con,
+      intelligence: intl,
+      wisdom: wis,
+      charisma: cha,
+    );
+  }
+
   /// Reconciles ruleset-dependent invariants in-place.
   void reconcile() {
     if (_rulesEdition == DmRulesEdition.v2014) {
@@ -93,7 +132,6 @@ class CharacterDraft {
         originFeats.clear();
       }
       backgroundBonusScores = const AbilityScores.zero();
-      bonusScores = const AbilityScores.zero();
 
       // Ensure flexible ability choices honor subrace pool in 2014 mode without defaulting to Strength
       if (subraceRef != null) {
@@ -116,10 +154,52 @@ class CharacterDraft {
             }
           }
         }
+
+        final baseSpeciesFixed = _parseAbilityScores(
+          speciesRef?.customProperties['fixedAbilityBonuses'] ??
+              speciesRef?.customProperties['abilityBonuses2014'],
+        );
+        final subraceFixed = _parseAbilityScores(
+          subraceRef!.customProperties['fixedAbilityBonuses'],
+        );
+
+        final flexBonus = (subraceRef!.customProperties['flexibleAbilityBonus'] as num?)?.toInt() ?? 1;
+        var flexScores = const AbilityScores.zero();
+        for (final choice in pendingFlexibleAbilityChoices) {
+          switch (choice) {
+            case AbilityType.strength:
+              flexScores = flexScores.copyWith(strength: flexScores.strength + flexBonus);
+            case AbilityType.dexterity:
+              flexScores = flexScores.copyWith(dexterity: flexScores.dexterity + flexBonus);
+            case AbilityType.constitution:
+              flexScores = flexScores.copyWith(constitution: flexScores.constitution + flexBonus);
+            case AbilityType.intelligence:
+              flexScores = flexScores.copyWith(intelligence: flexScores.intelligence + flexBonus);
+            case AbilityType.wisdom:
+              flexScores = flexScores.copyWith(wisdom: flexScores.wisdom + flexBonus);
+            case AbilityType.charisma:
+              flexScores = flexScores.copyWith(charisma: flexScores.charisma + flexBonus);
+          }
+        }
+
+        speciesBonusScores = baseSpeciesFixed + subraceFixed + flexScores;
+      } else if (speciesRef != null) {
+        final baseSpeciesFixed = _parseAbilityScores(
+          speciesRef?.customProperties['fixedAbilityBonuses'] ??
+              speciesRef?.customProperties['abilityBonuses2014'],
+        );
+        if (baseSpeciesFixed != const AbilityScores.zero()) {
+          speciesBonusScores = baseSpeciesFixed;
+        }
       }
+
+      bonusScores = speciesBonusScores;
     } else {
       speciesBonusScores = const AbilityScores.zero();
       pendingFlexibleAbilityChoices.clear();
+      if (backgroundBonusScores != const AbilityScores.zero()) {
+        bonusScores = backgroundBonusScores;
+      }
     }
   }
 
@@ -141,6 +221,7 @@ class CharacterDraft {
     List<String>? languages,
     List<StartingEquipmentItemRequest>? startingEquipment,
     PartyPurse? startingPurse,
+    bool? takesStartingWealth,
     List<EntityReference<Spell>>? cantrips,
     List<EntityReference<Spell>>? spellsKnown,
     List<EntityReference<Spell>>? spellsPrepared,
@@ -168,6 +249,7 @@ class CharacterDraft {
       languages: languages ?? this.languages,
       startingEquipment: startingEquipment ?? this.startingEquipment,
       startingPurse: startingPurse ?? this.startingPurse,
+      takesStartingWealth: takesStartingWealth ?? this.takesStartingWealth,
       cantrips: cantrips ?? this.cantrips,
       spellsKnown: spellsKnown ?? this.spellsKnown,
       spellsPrepared: spellsPrepared ?? this.spellsPrepared,

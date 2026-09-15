@@ -41,9 +41,13 @@ class StatBlockAclParser {
     caseSensitive: false,
   );
   static final _attributeDrainPattern = RegExp(
-    r"target's\s*(Strength|Constitution|Dexterity|Intelligence|Wisdom|Charisma)\s*score is reduced by\s*(\d+d\d+|\d+)(?:.*?(target dies if this reduces its.*?to 0))?",
+    r"target's\s*(Strength|Constitution|Dexterity|Intelligence|Wisdom|Charisma)\s*score is reduced by\s*(\d+d\d+|\d+)(?:.*?(target dies if this reduces (?:its\s+)?.*?to 0))?",
     caseSensitive: false,
     dotAll: true,
+  );
+  static final _attributeDrainDeathPattern = RegExp(
+    r'dies if this reduces (?:its\s+)?(?:Strength|Constitution|Dexterity|Intelligence|Wisdom|Charisma|ability|score)?\s*to 0',
+    caseSensitive: false,
   );
   static final _maxHpReductionPattern = RegExp(
     r"target's hit point maximum is reduced by (?:an amount equal to the (?:necrotic )?damage|(\d+d\d+|\d+))",
@@ -441,6 +445,7 @@ class StatBlockAclParser {
       final ability = AbilityType.fromLooseString(abilityStr);
       final amountStr = drainMatch.group(2)!;
       final deathAtZero = drainMatch.group(3) != null ||
+          _attributeDrainDeathPattern.hasMatch(text) ||
           text.toLowerCase().contains('target dies if this reduces') ||
           text.toLowerCase().contains('dies if this reduces its');
 

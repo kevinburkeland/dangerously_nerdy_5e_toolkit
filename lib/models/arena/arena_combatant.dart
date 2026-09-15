@@ -302,7 +302,7 @@ class ArenaCombatant {
   bool get isAlive =>
       currentHp > 0 &&
       effectiveMaxHp > 0 &&
-      (drainedAbilityScores['str'] == null || getAbilityScore(AbilityType.strength) > 0);
+      getAbilityScore(AbilityType.strength) > 0;
   bool get isDefeated => !isAlive;
   double get hpPercent => effectiveMaxHp > 0 ? (currentHp / effectiveMaxHp).clamp(0.0, 1.0) : 0.0;
 
@@ -666,7 +666,7 @@ class ArenaCombatant {
     drainedAbilityScores = drainedAbilityScores.add(key, currentDrain + drain);
 
     if (deathAtZero && getAbilityScore(ability) <= 0) {
-      currentHp = 0;
+      hitPoints = hitPoints.copyWith(currentHp: 0);
     }
   }
 
@@ -725,6 +725,9 @@ class ArenaCombatant {
         }
         applyAttributeDrain(targetAbility, drain, deathAtZero: deathAtZero);
         logs.add('$displayName had ${targetAbility.shortName.toUpperCase()} drained by $drain!');
+        if (getAbilityScore(targetAbility) <= 0) {
+          logs.add("$displayName's ${targetAbility.shortName.toUpperCase()} was reduced to 0! $displayName dies instantly!");
+        }
       case MaxHpReductionRider(
           :final reductionEqualsDamage,
           :final flatReduction,

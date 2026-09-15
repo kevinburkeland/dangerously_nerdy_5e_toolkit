@@ -84,7 +84,7 @@ class CharacterValidationEngine {
     updated = reconcileAsiBifurcation(updated);
     if (updated.rulesEdition == DmRulesEdition.v2014) {
       // In 2014, bonuses come from Species/Race, not Background
-      updated = updated.copyWith(bonusScores: const AbilityScores.zero());
+      updated = updated.copyWith(bonusScores: updated.speciesBonusScores);
     }
 
     return updated;

@@ -4533,6 +4533,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     ];
     draft.startingEquipment = equipRequests;
     draft.startingPurse = startingPurse;
+    draft.takesStartingWealth = selectedPkg.id.startsWith('starting_wealth_');
     draft.cantrips = cantripRefs;
     draft.spellsKnown = spellRefs;
     draft.spellsPrepared = spellRefs;

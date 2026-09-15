@@ -6,6 +6,7 @@ import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/party_purse.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
+import '../../models/characters/srd_backgrounds_library.dart';
 import 'character_progression_engine.dart';
 import 'dnd_5e_rules_engine.dart';
 import 'skill_trait_resolver.dart';
@@ -102,9 +103,18 @@ class CharacterFactory {
     final cleanHitDie = hitDie.replaceAll('d', '').trim();
     final hitDieSides = int.tryParse(cleanHitDie) ?? 8;
 
-    // Resolve 2024 Background ASIs if bonusScores not already populated
+    // Resolve background
+    final resolvedBg = draft.backgroundRef != null
+        ? SrdBackgroundsLibrary.findBySlug(draft.backgroundRef!.slug)
+        : null;
+
+    // Resolve 2014 / 2024 Background ASIs if bonusScores not already populated
     AbilityScores finalBonusScores = draft.bonusScores;
-    if (draft.rulesEdition == DmRulesEdition.v2024) {
+    if (draft.rulesEdition == DmRulesEdition.v2014) {
+      if (finalBonusScores == const AbilityScores.zero() && draft.speciesBonusScores != const AbilityScores.zero()) {
+        finalBonusScores = draft.speciesBonusScores;
+      }
+    } else if (draft.rulesEdition == DmRulesEdition.v2024) {
       if (finalBonusScores == const AbilityScores.zero() && draft.backgroundBonusScores != const AbilityScores.zero()) {
         finalBonusScores = draft.backgroundBonusScores;
       }
@@ -151,8 +161,14 @@ class CharacterFactory {
       ));
     }
 
-    // Ingest background starting equipment if present
-    final bgEquip = draft.backgroundRef?.customProperties['startingEquipment'];
+    // Ingest background starting equipment if present (unless character took starting wealth / gold only)
+    final bgEquip = !draft.takesStartingWealth
+        ? (draft.backgroundRef?.customProperties['startingEquipment'] ??
+            (draft.rulesEdition == DmRulesEdition.v2014
+                ? (resolvedBg?.customProperties['startingEquipment'] ??
+                    (draft.backgroundRef != null ? SrdBackgroundsLibrary.extractStartingEquipment(draft.backgroundRef!.slug) : null))
+                : null))
+        : null;
     if (bgEquip is List) {
       for (final item in bgEquip) {
         String itemName = '';
@@ -192,7 +208,8 @@ class CharacterFactory {
         }
       }
       final bgSkillsRaw = draft.backgroundRef!.customProperties['skillProficiencies'] ??
-          draft.backgroundRef!.customProperties['skills'];
+          draft.backgroundRef!.customProperties['skills'] ??
+          resolvedBg?.skillProficiencies;
       if (bgSkillsRaw is List) {
         for (final s in bgSkillsRaw) {
           final sName = s.toString().toLowerCase().trim().replaceAll(' ', '').replaceAll('-', '');
@@ -240,6 +257,26 @@ class CharacterFactory {
       edition: draft.rulesEdition,
     );
 
+    final feats = List<EntityReference<DomainEntity>>.from(draft.originFeats);
+    final customProps = <String, dynamic>{
+      if (draft.subraceRef != null) 'subrace': draft.subraceRef!.toMap(),
+      if (draft.subraceRef != null) 'subspecies': draft.subraceRef!.displayName,
+    };
+
+    if (draft.rulesEdition == DmRulesEdition.v2014 && draft.backgroundRef != null) {
+      final feature = SrdBackgroundsLibrary.get2014Feature(draft.backgroundRef!.slug) ??
+          (resolvedBg?.customProperties['feature'] != null
+              ? (
+                  name: resolvedBg!.customProperties['feature'].toString(),
+                  description: resolvedBg.customProperties['featureDescription']?.toString() ?? '',
+                )
+              : null);
+      if (feature != null) {
+        customProps['backgroundFeature'] = feature.name;
+        customProps['backgroundFeatureDescription'] = feature.description;
+      }
+    }
+
     final character = Character(
       id: EntityId(
         slug: _slugify(draft.characterName!),
@@ -260,7 +297,7 @@ class CharacterFactory {
       cantrips: draft.cantrips,
       spellsKnown: draft.spellsKnown,
       spellsPrepared: draft.spellsPrepared,
-      feats: draft.originFeats,
+      feats: feats,
       resources: CharacterResourcePool(
         currentHp: startingHp + speciesTraits.hpPerLevelBonus,
         tempHp: 0,
@@ -270,10 +307,7 @@ class CharacterFactory {
       maxAttunementSlots: 3,
       baseSpeedFeet: speciesTraits.baseSpeedFeet,
       rulesEdition: draft.rulesEdition,
-      customProperties: {
-        if (draft.subraceRef != null) 'subrace': draft.subraceRef!.toMap(),
-        if (draft.subraceRef != null) 'subspecies': draft.subraceRef!.displayName,
-      },
+      customProperties: customProps,
     );
 
     return character;
