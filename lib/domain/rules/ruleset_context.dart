@@ -1,38 +1,29 @@
 import 'ruleset_edition.dart';
 export 'ruleset_edition.dart';
 
-enum RulesetVersion {
-  v2014,
-  v2024;
-
-  RulesetEdition toEdition() => switch (this) {
-        RulesetVersion.v2014 => RulesetEdition.dnd2014,
-        RulesetVersion.v2024 => RulesetEdition.dnd2024,
-      };
-
-  static RulesetVersion fromEdition(RulesetEdition edition) => switch (edition) {
-        RulesetEdition.dnd2014 => RulesetVersion.v2014,
-        RulesetEdition.dnd2024 => RulesetVersion.v2024,
-      };
-}
+/// Canonical RulesetEdition alias for backward compatibility.
+typedef RulesetVersion = RulesetEdition;
 
 enum ActionCost { action, bonusAction, reaction, free }
 
 abstract class RulesetEngine {
-  final RulesetVersion version;
-  const RulesetEngine(this.version);
+  final RulesetEdition edition;
+  const RulesetEngine(this.edition);
 
-  factory RulesetEngine.forVersion(RulesetVersion version) {
-    switch (version) {
-      case RulesetVersion.v2014:
+  /// Backwards-compatible alias for [edition].
+  RulesetEdition get version => edition;
+
+  factory RulesetEngine.forEdition(RulesetEdition edition) {
+    switch (edition) {
+      case RulesetEdition.dnd2014:
         return const RulesetEngine2014();
-      case RulesetVersion.v2024:
+      case RulesetEdition.dnd2024:
         return const RulesetEngine2024();
     }
   }
 
-  factory RulesetEngine.forEdition(RulesetEdition edition) =>
-      RulesetEngine.forVersion(RulesetVersion.fromEdition(edition));
+  factory RulesetEngine.forVersion(RulesetEdition version) =>
+      RulesetEngine.forEdition(version);
 
   ActionCost get potionConsumptionCost;
   int calculateExhaustionD20Penalty(int level);
@@ -42,7 +33,7 @@ abstract class RulesetEngine {
 }
 
 class RulesetEngine2014 extends RulesetEngine {
-  const RulesetEngine2014() : super(RulesetVersion.v2014);
+  const RulesetEngine2014() : super(RulesetEdition.dnd2014);
 
   @override
   ActionCost get potionConsumptionCost => ActionCost.action;
@@ -65,7 +56,7 @@ class RulesetEngine2014 extends RulesetEngine {
 }
 
 class RulesetEngine2024 extends RulesetEngine {
-  const RulesetEngine2024() : super(RulesetVersion.v2024);
+  const RulesetEngine2024() : super(RulesetEdition.dnd2024);
 
   @override
   ActionCost get potionConsumptionCost => ActionCost.bonusAction;

@@ -26,7 +26,6 @@ class CampaignProfileDto {
   final String notesMarkdown;
   final Map<String, dynamic> partyPurse;
   final List<Map<String, dynamic>> changeLog;
-  final List<Character> migratedCharacters;
   final List<Map<String, dynamic>> unparsedPartyRoster;
   final List<Map<String, dynamic>> unparsedMinions;
 
@@ -42,7 +41,6 @@ class CampaignProfileDto {
     this.notesMarkdown = '',
     this.partyPurse = const {},
     this.changeLog = const [],
-    this.migratedCharacters = const [],
     this.unparsedPartyRoster = const [],
     this.unparsedMinions = const [],
   });
@@ -65,7 +63,6 @@ class CampaignProfileDto {
       notesMarkdown: profile.notesMarkdown,
       partyPurse: profile.partyPurse.toMap(),
       changeLog: profile.changeLog.map((e) => e.toMap()).toList(),
-      migratedCharacters: List<Character>.from(profile.migratedCharacters),
       unparsedPartyRoster: List<Map<String, dynamic>>.from(unparsedPartyRoster),
       unparsedMinions: List<Map<String, dynamic>>.from(unparsedMinions),
     );
@@ -127,7 +124,6 @@ class CampaignProfileDto {
       notesMarkdown: notesMarkdown,
       partyPurse: purse,
       changeLog: parsedEvents,
-      migratedCharacters: migratedCharacters,
     );
   }
 
@@ -142,7 +138,6 @@ class CampaignProfileDto {
         : <String, dynamic>{};
 
     final extractedIds = <String>[];
-    final extractedChars = <Character>[];
     final unparsedRoster = <Map<String, dynamic>>[];
 
     // Migrate partyCharacterIds or legacy partyRoster
@@ -162,7 +157,6 @@ class CampaignProfileDto {
             }
             final parsedChar = CharacterDto.fromMap(itemMap).toDomain();
             extractedIds.add(parsedChar.id.slug);
-            extractedChars.add(parsedChar);
           } catch (e, st) {
             LoggingService().logNonFatal(
               e,
@@ -244,7 +238,6 @@ class CampaignProfileDto {
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
       partyPurse: purseMap,
       changeLog: changeLogList,
-      migratedCharacters: extractedChars,
       unparsedPartyRoster: unparsedRoster,
       unparsedMinions: unparsedMinionList,
     );
@@ -277,4 +270,23 @@ class CampaignProfileDto {
 
   factory CampaignProfileDto.fromJson(String source) =>
       CampaignProfileDto.fromMap(Map<String, dynamic>.from(json.decode(source) as Map));
+
+  /// Explicit service-layer helper to extract legacy embedded characters from a raw map.
+  static List<Character> extractLegacyCharacters(Map<String, dynamic> map) {
+    final rawParty = map['partyCharacterIds'] ?? map['partyRoster'] ?? [];
+    final characters = <Character>[];
+    if (rawParty is List) {
+      for (final raw in rawParty) {
+        if (raw is Map) {
+          try {
+            final itemMap = Map<String, dynamic>.from(raw);
+            if (!itemMap.containsKey('invalid_schema')) {
+              characters.add(CharacterDto.fromMap(itemMap).toDomain());
+            }
+          } catch (_) {}
+        }
+      }
+    }
+    return characters;
+  }
 }

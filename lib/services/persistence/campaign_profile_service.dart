@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -95,9 +96,11 @@ class CampaignProfileService extends ChangeNotifier implements ICampaignReposito
 
         if (rawJson != null && rawJson.isNotEmpty) {
           try {
-            final profile = CampaignProfileDto.fromJson(rawJson).toDomain();
-            if (profile.migratedCharacters.isNotEmpty) {
-              await CharacterPersistenceService().saveCharacters(profile.migratedCharacters);
+            final rawMap = json.decode(rawJson) as Map<String, dynamic>;
+            final profile = CampaignProfileDto.fromMap(rawMap).toDomain();
+            final legacyChars = CampaignProfileDto.extractLegacyCharacters(rawMap);
+            if (legacyChars.isNotEmpty) {
+              await CharacterPersistenceService().saveCharacters(legacyChars);
               await _persistProfileToDisk(profile);
             }
             _memoryCache[id] = profile;

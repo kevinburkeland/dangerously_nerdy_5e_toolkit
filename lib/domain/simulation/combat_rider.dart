@@ -175,9 +175,10 @@ class PeriodicDamageRider extends CombatEffectRider {
     this.onTurnStart = true,
   });
 
-  int rollDamage(Random rng) {
+  int rollDamage(Random rng, {bool isCrit = false}) {
     var total = flatBonus;
-    for (var i = 0; i < diceCount; i++) {
+    final totalDice = isCrit ? diceCount * 2 : diceCount;
+    for (var i = 0; i < totalDice; i++) {
       total += rng.nextInt(diceSides) + 1;
     }
     return total;

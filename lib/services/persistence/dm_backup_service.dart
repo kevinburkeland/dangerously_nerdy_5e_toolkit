@@ -198,8 +198,9 @@ class DmBackupService {
       }
 
       final profile = CampaignProfileDto.fromMap(campaignMap).toDomain();
-      if (profile.migratedCharacters.isNotEmpty) {
-        await CharacterPersistenceService().saveCharacters(profile.migratedCharacters);
+      final legacyChars = CampaignProfileDto.extractLegacyCharacters(campaignMap);
+      if (legacyChars.isNotEmpty) {
+        await CharacterPersistenceService().saveCharacters(legacyChars);
       }
       // Ensure unique ID on import to prevent accidental key collisions with active games
       final now = DateTime.now();

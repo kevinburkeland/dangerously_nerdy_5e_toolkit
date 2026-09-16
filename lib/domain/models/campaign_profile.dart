@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/domain/character_models.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_event.dart';
 import '../../models/party/party_purse.dart';
@@ -21,10 +20,6 @@ class CampaignProfile {
   final String notesMarkdown;
   final PartyPurse partyPurse;
   final List<PartyEvent> changeLog;
-
-  /// Transient, non-serialized field holding characters extracted during deserialization migration.
-  final List<Character> _migratedCharacters;
-  List<Character> get migratedCharacters => _migratedCharacters;
 
   static const _listEquality = ListEquality<String>();
   static const _setEquality = SetEquality<String>();
@@ -47,8 +42,7 @@ class CampaignProfile {
     this.notesMarkdown = '',
     this.partyPurse = const PartyPurse(),
     this.changeLog = const [],
-    List<Character> migratedCharacters = const [],
-  }) : _migratedCharacters = migratedCharacters;
+  });
 
   /// Factory creating a fresh default campaign profile.
   factory CampaignProfile.defaultProfile({
@@ -100,7 +94,6 @@ class CampaignProfile {
     String? notesMarkdown,
     PartyPurse? partyPurse,
     List<PartyEvent>? changeLog,
-    List<Character>? migratedCharacters,
   }) {
     return CampaignProfile(
       id: id ?? this.id,
@@ -120,7 +113,6 @@ class CampaignProfile {
       changeLog: changeLog != null
           ? List<PartyEvent>.from(changeLog)
           : this.changeLog,
-      migratedCharacters: migratedCharacters ?? _migratedCharacters,
     );
   }
 

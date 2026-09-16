@@ -48,6 +48,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
   Timer? _stepUpProbeTimer;
   bool _isProbing = false;
 
+  final Duration stepUpCooldown;
+  int _lastStepDownTimestamp = 0;
+  int _stepDownCountInWindow = 0;
+
   final Map<String, int> _peerLastSeen = {};
 
   CascadingTransportRouter({
@@ -57,6 +61,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     this.heartbeatTtl = const Duration(seconds: 15),
     this.checkInterval = const Duration(seconds: 1),
     this.stepUpProbeInterval = const Duration(seconds: 30),
+    this.stepUpCooldown = const Duration(seconds: 15),
     this.peerTimestampProvider,
     this.onPeerPruned,
   });
@@ -101,6 +106,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _roomCode = cleanCode;
     _localNodeId = localNodeId;
     _peerLastSeen.clear();
+    _lastStepDownTimestamp = 0;
+    _stepDownCountInWindow = 0;
     _changeState(TransportState.connecting);
 
     // Tier 1: Local Wi-Fi (Zero Cost)
@@ -199,6 +206,9 @@ class CascadingTransportRouter implements IP2pTransportPort {
   }
 
   Future<void> _stepDownWaterfall() async {
+    _lastStepDownTimestamp = DateTime.now().millisecondsSinceEpoch;
+    _stepDownCountInWindow++;
+
     await _activeSubscription?.cancel();
     _activeSubscription = null;
     await _activeAdapter?.disconnect();
@@ -323,12 +333,20 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
   /// Triggers a non-disruptive probe of higher-tier transport adapters.
   @visibleForTesting
-  Future<void> probeHigherTiers() => _attemptStepUpRecovery();
+  Future<void> probeHigherTiers({bool force = true}) => _attemptStepUpRecovery(force: force);
 
-  Future<void> _attemptStepUpRecovery() async {
+  Future<void> _attemptStepUpRecovery({bool force = false}) async {
     if (_isProbing || _roomCode == null || _localNodeId == null) return;
     if (_currentState == TransportState.localWifi ||
         _currentState == TransportState.offline) {
+      return;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final dynamicCooldownMs = stepUpCooldown.inMilliseconds *
+        (_stepDownCountInWindow > 3 ? 3 : (_stepDownCountInWindow > 0 ? _stepDownCountInWindow : 1));
+    if (!force && (now - _lastStepDownTimestamp < dynamicCooldownMs)) {
+      // Cooldown active; decouple transient step-downs to prevent rapid channel flapping glare
       return;
     }
 
@@ -362,6 +380,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     IP2pTransportPort higherAdapter,
     TransportState newState,
   ) async {
+    _stepDownCountInWindow = 0;
     final previousAdapter = _activeAdapter;
     await _activateAdapter(higherAdapter, newState);
     if (previousAdapter != null && previousAdapter != higherAdapter) {

@@ -89,8 +89,9 @@ void main() {
       final domain = dto.toDomain();
 
       expect(domain.partyCharacterIds, equals(['fighter_old']));
-      expect(domain.migratedCharacters.length, equals(1));
-      expect(domain.migratedCharacters.first.name, equals('Old Fighter'));
+      final legacyChars = CampaignProfileDto.extractLegacyCharacters(legacyRaw);
+      expect(legacyChars.length, equals(1));
+      expect(legacyChars.first.name, equals('Old Fighter'));
       expect(domain.roomState.activeMinions.length, equals(1));
       expect(domain.roomState.activeMinions.first.name, equals('Flying Coin'));
     });

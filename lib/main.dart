@@ -113,11 +113,11 @@ void main() {
     try {
       if (kIsWeb) {
         await FirebaseAppCheck.instance.activate(
-          webProvider: ReCaptchaEnterpriseProvider('6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF'),
+          providerWeb: ReCaptchaEnterpriseProvider('6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF'),
         );
       } else {
         await FirebaseAppCheck.instance.activate(
-          androidProvider: AndroidProvider.playIntegrity,
+          providerAndroid: const AndroidPlayIntegrityProvider(),
         );
       }
       logger.logInfo('Firebase App Check initialized successfully.');

@@ -148,8 +148,9 @@ void main() {
       );
       expect(CharacterValidationEngine.calculateSkillRefunds(draftOneCollision), equals(1));
 
-      // 2 Collisions: Background (Perception, Athletics) + Species (Perception) + Class (Athletics)
-      final draftTwoCollisions = CharacterDraft(
+      // Class choice pool does not collide: Background (Perception, Athletics) + Species (Perception) = 1 collision
+      // Fighter choice pool containing Athletics does not grant a refund; the player picks another choice.
+      final draftClassChoicePool = CharacterDraft(
         backgroundRef: const EntityReference(
           refType: EntityType.background,
           slug: 'sailor',
@@ -169,7 +170,31 @@ void main() {
           grantedSkills: [SkillType.athletics],
         ),
       );
-      expect(CharacterValidationEngine.calculateSkillRefunds(draftTwoCollisions), equals(2));
+      expect(CharacterValidationEngine.calculateSkillRefunds(draftClassChoicePool), equals(1));
+
+      // 2 Collisions when Class has fixed auto-granted skills: Background + Species + Fixed Class
+      final draftTwoCollisionsFixed = CharacterDraft(
+        backgroundRef: const EntityReference(
+          refType: EntityType.background,
+          slug: 'sailor',
+          displayName: 'Sailor',
+          grantedSkills: [SkillType.athletics, SkillType.perception],
+        ),
+        speciesRef: const EntityReference(
+          refType: EntityType.species,
+          slug: 'elf',
+          displayName: 'Elf',
+          grantedSkills: [SkillType.perception],
+        ),
+        startingClassRef: const EntityReference(
+          refType: EntityType.classDefinition,
+          slug: 'fighter',
+          displayName: 'Fighter',
+          grantedSkills: [SkillType.athletics],
+          customProperties: {'isFixed': true},
+        ),
+      );
+      expect(CharacterValidationEngine.calculateSkillRefunds(draftTwoCollisionsFixed), equals(2));
     });
 
     test('ASI Bifurcation: 2014 strips background ASIs while 2024 strips species ASIs', () {

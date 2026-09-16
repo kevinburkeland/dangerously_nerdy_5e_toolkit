@@ -289,19 +289,30 @@ class CharacterSheetController extends ChangeNotifier {
   }
 
   /// Heals the character by [amount], clamping at dynamic evaluated max HP.
-  Future<void> heal(int amount) async {
+  /// Characters who are dying (currentHp == 0 and failures < 3) regain hit points and reset death saves.
+  /// Dead characters (deathSaveFailures >= 3) cannot regain hit points unless [isRevival] is true.
+  Future<void> heal(int amount, {bool isRevival = false}) async {
     if (amount <= 0) return;
+
+    final isDead = _character.resources.deathSaveFailures >= 3;
+    if (isDead && !isRevival) return;
 
     // Resolve dynamic maximum HP accounting for active CON buffs, Tough feat, etc.
     final evaluated = CharacterEvaluationEngine.evaluate(_character);
     final effectiveMaxHp = evaluated.maxHp;
 
+    final canRevive = isRevival || _character.resources.deathSaveFailures < 3;
+
     final updatedHp = _character.resources.hitPoints
         .copyWith(maxHp: effectiveMaxHp)
-        .heal(amount);
+        .heal(amount, allowRevive: canRevive);
 
     _character = _character.copyWith(
-      resources: _character.resources.copyWith(hitPoints: updatedHp),
+      resources: _character.resources.copyWith(
+        hitPoints: updatedHp,
+        deathSaveSuccesses: updatedHp.currentHp > 0 ? 0 : _character.resources.deathSaveSuccesses,
+        deathSaveFailures: updatedHp.currentHp > 0 ? 0 : _character.resources.deathSaveFailures,
+      ),
     );
     _recalculateStats();
     notifyListeners();

@@ -3,13 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_character_repository.dart';
-import '../../models/domain/session_graph_models.dart';
 import '../../services/app_services.dart';
 import '../../services/logging_service.dart';
-import '../../services/party/campaign_registry_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../dtos/campaign_profile_dto.dart';
-import 'local_character_repository.dart';
 
 /// Infrastructure-level cache holding raw unparsed JSON payloads
 /// to preserve 100% data fidelity on round-trip without leaking into the Domain layer.
@@ -34,7 +31,6 @@ class LocalCampaignRepository implements ICampaignRepository {
   static const String activeProfileIdKey = 'dn5e_campaign_active_id';
 
   final AppDatabaseService _db;
-  final ICharacterRepository _characterRepo;
   final Map<String, CampaignProfile> _memoryCache = {};
   final Map<String, UnparsedPayloadCache> _unparsedCache = {};
   String? _activeProfileId;
@@ -48,8 +44,7 @@ class LocalCampaignRepository implements ICampaignRepository {
   LocalCampaignRepository({
     AppDatabaseService? db,
     ICharacterRepository? characterRepo,
-  })  : _db = db ?? AppDatabaseService.instance,
-        _characterRepo = characterRepo ?? LocalCharacterRepository();
+  })  : _db = db ?? AppDatabaseService.instance;
 
   @override
   String? get activeProfileId => _activeProfileId;
@@ -98,10 +93,6 @@ class LocalCampaignRepository implements ICampaignRepository {
               );
             }
             final profile = dto.toDomain();
-            if (profile.migratedCharacters.isNotEmpty) {
-              await _characterRepo.saveCharacters(profile.migratedCharacters);
-              await _persistProfileToDisk(profile);
-            }
             _memoryCache[id] = profile;
             profiles.add(profile);
           } catch (e, st) {
@@ -111,50 +102,6 @@ class LocalCampaignRepository implements ICampaignRepository {
               reason: 'Corrupted campaign profile skipped: $id',
             );
           }
-        }
-      }
-
-      // Sync with CampaignRegistryService
-      final registry = CampaignRegistryService();
-      final memberships = await registry.loadMemberships();
-      final savedCharacters = await _characterRepo.loadCharacters();
-
-      for (final m in memberships) {
-        final alreadyExists = profiles.any(
-          (p) =>
-              p.roomState.roomCode.toUpperCase() == m.roomCode.toUpperCase() ||
-              p.id == 'campaign_${m.roomCode}',
-        );
-        if (!alreadyExists) {
-          final prof = CampaignProfile.defaultProfile(
-            id: 'campaign_${m.roomCode}',
-            name: m.campaignName.trim().isNotEmpty
-                ? m.campaignName
-                : 'Room ${m.roomCode}',
-          ).copyWith(
-            roomState: RoomNodeState(
-              roomId: 'room_${m.roomCode}',
-              roomCode: m.roomCode.toUpperCase(),
-              title: '${m.campaignName.isNotEmpty ? m.campaignName : "Room"} Staging',
-              description: 'Active DM session staging node.',
-            ),
-          );
-
-          final matchedChar = savedCharacters.cast<dynamic>().firstWhere(
-                (c) => c.id.slug == m.characterId || c.name == m.characterId,
-                orElse: () => null,
-              );
-
-          CampaignProfile populated = prof;
-          if (matchedChar != null && !prof.partyCharacterIds.contains(matchedChar.id.slug)) {
-            populated = prof.copyWith(
-              partyCharacterIds: [matchedChar.id.slug as String],
-            );
-          }
-
-          _memoryCache[populated.id] = populated;
-          profiles.add(populated);
-          await _persistProfileToDisk(populated);
         }
       }
 

@@ -76,7 +76,7 @@ class DprSimulator {
           for (var r = 0; r < riders.length; r++) {
             final rider = riders[r];
             if (rider is PeriodicDamageRider) {
-              dmg += rider.rollDamage(random);
+              dmg += rider.rollDamage(random, isCrit: true);
             } else if (rider is AttributeDrainRider) {
               dmg += rider.rollDrain(random);
             }
@@ -97,7 +97,7 @@ class DprSimulator {
           for (var r = 0; r < riders.length; r++) {
             final rider = riders[r];
             if (rider is PeriodicDamageRider) {
-              dmg += rider.rollDamage(random);
+              dmg += rider.rollDamage(random, isCrit: false);
             } else if (rider is AttributeDrainRider) {
               dmg += rider.rollDrain(random);
             }

@@ -46,6 +46,7 @@ class RoomSyncOrchestrator {
 
   static const int maxProcessedPayloadHashes = 500;
   final Set<String> _processedPayloadHashes = <String>{};
+  final Map<String, int> _lastSeenSequenceByNode = <String, int>{};
   final int Function() _localTimeProvider;
 
   final Mutex _syncMutex = Mutex();
@@ -162,6 +163,9 @@ class RoomSyncOrchestrator {
       },
       onCancel: () {
         sub?.cancel();
+        if (!subController.isClosed) {
+          subController.close();
+        }
       },
     );
 
@@ -201,18 +205,26 @@ class RoomSyncOrchestrator {
               ? (decoded['timestamp'] as num).toInt()
               : (int.tryParse(decoded['timestamp']?.toString() ?? '') ?? 0);
 
-          final localTime = _localTimeProvider();
-          if (inboundTimestamp < localTime - 30000) {
+          final originNode = decoded['origin_node_id']?.toString();
+          if (originNode != null && originNode == hostNodeId) {
             return;
+          }
+
+          final originSeq = (decoded['origin_seq'] is num)
+              ? (decoded['origin_seq'] as num).toInt()
+              : (int.tryParse(decoded['origin_seq']?.toString() ?? '') ?? 0);
+
+          // Causality tracking: reject stale out-of-order sequence updates from the same origin node
+          if (originNode != null && originSeq > 0) {
+            final lastSeq = _lastSeenSequenceByNode[originNode];
+            if (lastSeq != null && originSeq <= lastSeq) {
+              return;
+            }
+            _lastSeenSequenceByNode[originNode] = originSeq;
           }
 
           final payloadHash = CryptoUtils.sha256Hex(jsonPayload);
           if (_isDuplicatePayload(payloadHash)) {
-            return;
-          }
-
-          final originNode = decoded['origin_node_id'];
-          if (originNode != null && originNode == hostNodeId) {
             return;
           }
 
@@ -384,6 +396,7 @@ class RoomSyncOrchestrator {
     _lastProfileSyncTimestamp = 0;
     _isApplyingRemoteSync = false;
     _processedPayloadHashes.clear();
+    _lastSeenSequenceByNode.clear();
     _emitTelemetry();
   }
 

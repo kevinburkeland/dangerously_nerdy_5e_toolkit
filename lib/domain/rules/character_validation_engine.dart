@@ -36,6 +36,9 @@ class CharacterValidationEngine {
 
   /// Calculates overlapping proficiencies between Background, Species, and Class.
   /// Returns an exact integer count of refunded wildcard skills to drive the UI state.
+  /// Under 5e RAW, class skill choice pools do not grant skill refunds upon
+  /// overlapping with background/species proficiencies because players select
+  /// alternative skills from the choice pool. Only fixed auto-granted proficiencies collide.
   static int calculateSkillRefunds(CharacterDraft draft) {
     final Set<SkillType> grantedPool = {};
     int collisions = 0;
@@ -52,7 +55,16 @@ class CharacterValidationEngine {
 
     applySkills(draft.backgroundRef?.grantedSkills ?? []);
     applySkills(draft.speciesRef?.grantedSkills ?? []);
-    applySkills(draft.startingClassRef?.grantedSkills ?? []);
+
+    // Only fixed auto-granted class proficiencies collide with species/background choices.
+    // Choice pools allow selecting alternative skills without granting improper skill refunds.
+    final classRef = draft.startingClassRef;
+    if (classRef != null) {
+      final isFixedClassSkill = classRef.customProperties['isFixed'] == true;
+      if (isFixedClassSkill) {
+        applySkills(classRef.grantedSkills);
+      }
+    }
 
     return collisions;
   }

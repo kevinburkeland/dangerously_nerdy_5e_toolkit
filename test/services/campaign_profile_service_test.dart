@@ -124,8 +124,9 @@ void main() {
 
       // Verify migration gateway extracted character and minion
       expect(profile.partyCharacterIds, equals(['fighter_legacy']));
-      expect(profile.migratedCharacters.length, equals(1));
-      expect(profile.migratedCharacters.first.name, equals('Grom the Barbarian'));
+      final legacyChars = CampaignProfileDto.extractLegacyCharacters(legacyPayload);
+      expect(legacyChars.length, equals(1));
+      expect(legacyChars.first.name, equals('Grom the Barbarian'));
       expect(profile.roomState.activeMinions.length, equals(1));
       expect(profile.roomState.activeMinions.first.name, equals('Silver Coin'));
 

@@ -521,14 +521,16 @@ void main() {
       expect(defaultOrchestrator.telemetryInterval, equals(const Duration(seconds: 2)));
     });
 
-    test('Sliding Deduplication Window: out-of-order packet within 30s is accepted while exact duplicates and packets >30s stale are dropped', () async {
+    test('Causality Tracking & Offline Edits: valid offline edits older than 30s reconnect and reconcile cleanly while duplicate/stale sequence packets are dropped', () async {
       orchestrator.startSynchronization();
       const localTime = 1700000000500;
 
-      // 1. Process initial inbound profile at t = localTime - 500ms (1700000000000)
+      // 1. Process initial inbound profile at t = localTime - 500ms (1700000000000) with origin sequence 1
       final profile1 = initialProfile.copyWith(name: 'Authoritative Title at 1700000000000');
       final inbound1 = jsonEncode({
         'type': 'room_sync_full',
+        'origin_node_id': 'node-remote-1',
+        'origin_seq': 1,
         'payload': CampaignProfileDto.fromDomain(profile1).toMap(),
         'timestamp': 1700000000000,
       });
@@ -546,45 +548,46 @@ void main() {
       expect(mockRepo.savedImmediateProfiles.length, equals(1));
       expect(orchestrator.processedPayloadHashes.length, equals(1));
 
-      // 3. Legitimate out-of-order packet arriving via WebRTC jitter at t = localTime - 10000ms (1699999990500)
-      // Timestamp is older than profile1 (1699999990500 < 1700000000000), but within 30s sliding window
-      final outOfOrderProfile = initialProfile.copyWith(
-        name: 'Out of Order Packet within 30s Window',
-        partyCharacterIds: ['char-remote-out-of-order'],
+      // 3. Valid offline edits made >30s ago (localTime - 35000ms = 1699965000500) reconnecting with sequence 2
+      // Must NOT be silently dropped by arbitrary 30s window; must reconcile cleanly via causality tracking
+      final offlineProfile = initialProfile.copyWith(
+        name: 'Reconnecting Offline Edits',
+        partyCharacterIds: ['char-offline-reconnect'],
       );
-      final inboundOutOfOrder = jsonEncode({
+      final inboundOffline = jsonEncode({
         'type': 'room_sync_full',
-        'payload': CampaignProfileDto.fromDomain(outOfOrderProfile).toMap(),
-        'timestamp': 1699999990500,
+        'origin_node_id': 'node-remote-1',
+        'origin_seq': 2,
+        'payload': CampaignProfileDto.fromDomain(offlineProfile).toMap(),
+        'timestamp': localTime - 35000,
       });
-      await orchestrator.handleIncomingPayload(inboundOutOfOrder);
+      await orchestrator.handleIncomingPayload(inboundOffline);
 
-      // Successfully processed and saved through sliding lookback window
+      // Successfully processed and reconciled without silent drop
       expect(mockRepo.savedImmediateProfiles.length, equals(2));
-      // Field reconciliation ensures newer name is preserved while sub-resource roster is merged
-      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 1700000000000'));
-      expect(mockRepo.savedImmediateProfiles.last.partyCharacterIds, contains('char-remote-out-of-order'));
-      // lastProfileSyncTimestamp monotonically preserves highest timestamp seen
-      expect(orchestrator.lastProfileSyncTimestamp, equals(1700000000000));
+      expect(mockRepo.savedImmediateProfiles.last.partyCharacterIds, contains('char-offline-reconnect'));
       expect(orchestrator.processedPayloadHashes.length, equals(2));
 
-      // 4. Stale packet older than 30s sliding lookback window (localTime - 35000ms = 1699965000500)
-      final staleProfile = initialProfile.copyWith(name: 'Stale Delayed Packet > 30s');
+      // 4. Stale packet with old sequence number (origin_seq: 1 when node-remote-1 is already at seq 2)
+      final staleProfile = initialProfile.copyWith(name: 'Stale Sequence Packet');
       final inboundStale = jsonEncode({
         'type': 'room_sync_full',
+        'origin_node_id': 'node-remote-1',
+        'origin_seq': 1,
         'payload': CampaignProfileDto.fromDomain(staleProfile).toMap(),
-        'timestamp': localTime - 35000,
+        'timestamp': localTime + 1000,
       });
       await orchestrator.handleIncomingPayload(inboundStale);
 
-      // Must NOT be saved; repo count remains 2
+      // Must be dropped by causality tracking; repo count remains 2
       expect(mockRepo.savedImmediateProfiles.length, equals(2));
-      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 1700000000000'));
 
-      // 5. Strictly newer packet at t = localTime + 2000ms (1700000002500)
+      // 5. Strictly newer packet at sequence 3
       final newerProfile = initialProfile.copyWith(name: 'Newer Packet at 1700000002500');
       final inboundNewer = jsonEncode({
         'type': 'room_sync_full',
+        'origin_node_id': 'node-remote-1',
+        'origin_seq': 3,
         'payload': CampaignProfileDto.fromDomain(newerProfile).toMap(),
         'timestamp': localTime + 2000,
       });

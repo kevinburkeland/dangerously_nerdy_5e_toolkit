@@ -100,11 +100,17 @@ void main() {
       expect(damaged2.isDead, true);
       expect(damaged2.hpPercent, 0.0);
 
-      final healed1 = damaged2.applyHealing(10);
-      expect(healed1.currentHp, 10);
-      expect(healed1.isDead, false);
+      // Normal healing cannot revive a destroyed object (0 HP)
+      final stillDead = damaged2.applyHealing(10);
+      expect(stillDead.currentHp, 0);
+      expect(stillDead.isDead, true);
 
-      final healed2 = healed1.applyHealing(50);
+      // Explicit revival reconstructs the destroyed object
+      final revived = damaged2.revive(10);
+      expect(revived.currentHp, 10);
+      expect(revived.isDead, false);
+
+      final healed2 = revived.applyHealing(50);
       expect(healed2.currentHp, 20); // Clamped at maxHp
     });
 

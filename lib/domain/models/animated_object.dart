@@ -274,8 +274,12 @@ class AnimatedObjectInstance {
       copyWith(hitPoints: hitPoints.takeDamage(amount));
 
   /// Pure copy-transform healing application capped to Max HP.
-  AnimatedObjectInstance applyHealing(int amount) =>
-      copyWith(hitPoints: hitPoints.heal(amount));
+  AnimatedObjectInstance applyHealing(int amount, {bool allowRevive = false}) =>
+      copyWith(hitPoints: hitPoints.heal(amount, allowRevive: allowRevive));
+
+  /// Pure copy-transform revival restoring a destroyed object to positive HP.
+  AnimatedObjectInstance revive(int amount) =>
+      copyWith(hitPoints: hitPoints.revive(amount));
 
   /// Pure copy-transform Temporary HP application (RAW: non-stacking, highest wins).
   AnimatedObjectInstance applyTempHp(int amount) =>

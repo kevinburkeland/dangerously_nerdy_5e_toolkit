@@ -60,8 +60,11 @@ class HitPoints {
   }
 
   /// Applies healing bounded by [maxHp]. Does not affect temporary hit points.
-  HitPoints heal(int amount) {
+  /// Under 5e RAW, healing cannot revive an actor that is dead / at 0 HP
+  /// unless explicit revival semantics are specified via [allowRevive].
+  HitPoints heal(int amount, {bool allowRevive = false}) {
     if (amount <= 0) return this;
+    if (isDead && !allowRevive) return this;
     final newCurrent = (currentHp + amount).clamp(0, maxHp);
     return HitPoints(
       currentHp: newCurrent,
@@ -69,6 +72,9 @@ class HitPoints {
       tempHp: tempHp,
     );
   }
+
+  /// Explicit revival method to restore a dead/zero-HP actor to positive HP.
+  HitPoints revive(int amount) => heal(amount, allowRevive: true);
 
   /// Grants Temporary Hit Points (5e RAW: non-stacking; overrides if higher, or if [forceOverride]).
   HitPoints grantTempHp(int amount, {bool forceOverride = false}) {

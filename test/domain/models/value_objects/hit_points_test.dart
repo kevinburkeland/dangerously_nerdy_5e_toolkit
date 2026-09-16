@@ -45,6 +45,26 @@ void main() {
       expect(overHealed.tempHp, equals(4));
     });
 
+    test('heal does not revive a dead/zero-HP actor unless allowRevive is true', () {
+      const dead = HitPoints(currentHp: 0, maxHp: 20);
+      expect(dead.isDead, isTrue);
+
+      // Normal heal cannot revive a dead actor
+      final stillDead = dead.heal(10);
+      expect(stillDead.currentHp, equals(0));
+      expect(stillDead.isDead, isTrue);
+
+      // Explicit allowRevive restores HP
+      final revived = dead.heal(10, allowRevive: true);
+      expect(revived.currentHp, equals(10));
+      expect(revived.isDead, isFalse);
+
+      // Convenience revive() restores HP
+      final revivedMethod = dead.revive(15);
+      expect(revivedMethod.currentHp, equals(15));
+      expect(revivedMethod.isDead, isFalse);
+    });
+
     test('grantTempHp does not stack and takes highest unless forceOverride', () {
       const hp = HitPoints(currentHp: 15, maxHp: 20, tempHp: 5);
 

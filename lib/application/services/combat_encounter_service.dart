@@ -58,13 +58,18 @@ class CombatEncounterService {
       }
     }();
 
+    final isDead = character.resources.deathSaveFailures >= 3;
+    if (isDead) return character;
+
     final updatedHp = character.resources.hitPoints
         .copyWith(maxHp: effectiveMaxHp)
-        .heal(amount);
+        .heal(amount, allowRevive: character.resources.deathSaveFailures < 3);
 
     final updated = character.copyWith(
       resources: character.resources.copyWith(
         hitPoints: updatedHp,
+        deathSaveSuccesses: updatedHp.currentHp > 0 ? 0 : character.resources.deathSaveSuccesses,
+        deathSaveFailures: updatedHp.currentHp > 0 ? 0 : character.resources.deathSaveFailures,
       ),
     );
 
@@ -200,7 +205,7 @@ class CombatEncounterService {
           isDefeated: updatedHp.isDead,
         );
       } else {
-        final updatedHp = p.hitPoints.heal(delta);
+        final updatedHp = p.hitPoints.heal(delta, allowRevive: true);
         return p.copyWith(
           hitPoints: updatedHp,
           isDefeated: updatedHp.isDead,

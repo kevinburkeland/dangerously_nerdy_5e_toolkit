@@ -145,5 +145,25 @@ void main() {
       // Bleed (avg +5.5) deals more than Drain (avg +3.5)
       expect(bleedResult.meanDamage, greaterThan(drainResult.meanDamage));
     });
+
+    test('PeriodicDamageRider doubles damage dice on crits without doubling flat bonus', () {
+      const rider = PeriodicDamageRider(
+        diceCount: 2,
+        diceSides: 6,
+        flatBonus: 5,
+        damageType: 'fire',
+      );
+
+      // Deterministic RNG: all rolls return max value
+      // Regular roll: 2d6 (2 * 6 = 12) + 5 = 17
+      // Crit roll: 4d6 (4 * 6 = 24) + 5 = 29
+      final rng1 = Random(42);
+      final regRoll = rider.rollDamage(rng1, isCrit: false);
+      expect(regRoll, inInclusiveRange(7, 17)); // 2*1+5 to 2*6+5
+
+      final rng2 = Random(42);
+      final critRoll = rider.rollDamage(rng2, isCrit: true);
+      expect(critRoll, inInclusiveRange(9, 29)); // 4*1+5 to 4*6+5
+    });
   });
 }

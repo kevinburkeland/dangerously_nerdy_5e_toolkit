@@ -3,6 +3,7 @@ import '../../domain/crdt/hybrid_logical_clock.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_event.dart';
+import '../../models/party/party_purse.dart';
 
 /// Application service orchestrating safe CRDT state reconciliation, tombstone pruning,
 /// and deterministic field-level campaign profile merging.
@@ -81,35 +82,33 @@ class RoomStateReconciliationService {
         ? remote.notesMarkdown
         : (local.notesMarkdown.isNotEmpty ? local.notesMarkdown : remote.notesMarkdown);
 
-    // 3. Party Purse: LWW based on timestamp, preserving non-empty purse if remote is empty
-    final mergedPurse = isRemoteNewer
-        ? (remote.partyPurse.isEmpty && !local.partyPurse.isEmpty
-            ? local.partyPurse
-            : remote.partyPurse)
-        : (local.partyPurse.isEmpty && !remote.partyPurse.isEmpty
-            ? remote.partyPurse
-            : local.partyPurse);
+    // 3. Party Purse: Granular field-by-field reconciliation
+    final mergedPurse = _mergePartyPurse(
+      local.partyPurse,
+      remote.partyPurse,
+      isRemoteNewer: isRemoteNewer,
+    );
 
-    // 4. Party Roster: Set Union (preserving existing local order, appending new remote characters)
-    final mergedPartyCharacterIds = <String>[...local.partyCharacterIds];
-    for (final charId in remote.partyCharacterIds) {
-      if (!mergedPartyCharacterIds.contains(charId)) {
-        mergedPartyCharacterIds.add(charId);
-      }
-    }
+    // 4. Change Log: Merged and deduplicated by event ID
+    final mergedChangeLog = _mergeChangeLogs(local.changeLog, remote.changeLog);
 
-    // 5. Pinned Rules: Set Union
+    // 5. Party Roster: Granular merge preserving order and respecting removals in changelog
+    final mergedPartyCharacterIds = _mergePartyRosters(
+      local: local.partyCharacterIds,
+      remote: remote.partyCharacterIds,
+      changeLog: mergedChangeLog,
+      isRemoteNewer: isRemoteNewer,
+    );
+
+    // 6. Pinned Rules: Set Union
     final mergedPinnedRules = {...local.pinnedRuleIds, ...remote.pinnedRuleIds};
 
-    // 6. Room Node State: Sub-resource reconciliation (activeMinions, activeEncounter, containers, entityLinks)
+    // 7. Room Node State: Sub-resource reconciliation (activeMinions, activeEncounter, containers, entityLinks)
     final mergedRoomState = _mergeRoomState(
       local.roomState,
       remote.roomState,
       isRemoteNewer: isRemoteNewer,
     );
-
-    // 7. Change Log: Merged and deduplicated by event ID
-    final mergedChangeLog = _mergeChangeLogs(local.changeLog, remote.changeLog);
 
     return local.copyWith(
       name: mergedName,
@@ -172,5 +171,59 @@ class RoomStateReconciliationService {
     final list = eventMap.values.toList()
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return list;
+  }
+
+  PartyPurse _mergePartyPurse(
+    PartyPurse local,
+    PartyPurse remote, {
+    required bool isRemoteNewer,
+  }) {
+    if (local == remote) return local;
+    if (local.isEmpty) return remote;
+    if (remote.isEmpty) return local;
+
+    int reconcileCoin(int localCoin, int remoteCoin) {
+      if (localCoin == remoteCoin) return localCoin;
+      if (localCoin == 0) return remoteCoin;
+      if (remoteCoin == 0) return localCoin;
+      return isRemoteNewer ? remoteCoin : localCoin;
+    }
+
+    return PartyPurse(
+      cp: reconcileCoin(local.cp, remote.cp),
+      sp: reconcileCoin(local.sp, remote.sp),
+      ep: reconcileCoin(local.ep, remote.ep),
+      gp: reconcileCoin(local.gp, remote.gp),
+      pp: reconcileCoin(local.pp, remote.pp),
+    );
+  }
+
+  List<String> _mergePartyRosters({
+    required List<String> local,
+    required List<String> remote,
+    required List<PartyEvent> changeLog,
+    required bool isRemoteNewer,
+  }) {
+    final removed = <String>{};
+    for (final event in changeLog) {
+      if (event.type == 'characterRemove' || event.type == 'playerLeave') {
+        if (event.details.trim().isNotEmpty) {
+          removed.add(event.details.trim());
+        }
+      }
+    }
+
+    final merged = <String>[];
+    for (final id in local) {
+      if (!removed.contains(id) && !merged.contains(id)) {
+        merged.add(id);
+      }
+    }
+    for (final id in remote) {
+      if (!removed.contains(id) && !merged.contains(id)) {
+        merged.add(id);
+      }
+    }
+    return merged;
   }
 }

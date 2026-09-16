@@ -19,6 +19,13 @@ class FirebaseSignalingAdapter {
   /// Tracks all document paths created or received during signaling,
   /// partitioned by peer ID (or '*' for broadcasts) to isolate cleanup.
   final Map<String, Set<String>> _peerTrackedDocPaths = {};
+
+  /// Tracks documents authored and sent by this node, partitioned by target peer ID.
+  final Map<String, Set<String>> _peerAuthoredDocPaths = {};
+
+  /// Tracks active in-flight deletions to prevent simultaneous double-deletion races.
+  final Set<String> _deletingDocPaths = {};
+
   final int slidingTtlMs;
   int? _lastPruningThreshold;
 
@@ -185,6 +192,7 @@ class FirebaseSignalingAdapter {
     }
 
     _peerTrackedDocPaths.putIfAbsent(toNodeId, () => <String>{}).add(path);
+    _peerAuthoredDocPaths.putIfAbsent(toNodeId, () => <String>{}).add(path);
 
     return signalId;
   }
@@ -216,9 +224,19 @@ class FirebaseSignalingAdapter {
   /// Cleans up and deletes all ephemeral signaling documents associated
   /// with a specific peer once that peer's P2P handshake completes,
   /// preserving in-flight signaling documents for other peers.
+  ///
+  /// Prevents cross-deletion race conditions: each peer deletes the documents that
+  /// it authored and sent for [peerId]. If this node did not author documents for [peerId]
+  /// (such as in receiver-only test fixtures), it falls back to deleting the tracked documents.
   Future<void> cleanUpPeerSignaling(String peerId) async {
-    final pathsToDelete = _peerTrackedDocPaths.remove(peerId);
-    if (pathsToDelete == null || pathsToDelete.isEmpty) return;
+    final authored = _peerAuthoredDocPaths.remove(peerId);
+    final allForPeer = _peerTrackedDocPaths.remove(peerId);
+
+    final pathsToDelete = (authored != null && authored.isNotEmpty)
+        ? authored
+        : (allForPeer ?? <String>{});
+    if (pathsToDelete.isEmpty) return;
+
     for (final path in List<String>.from(pathsToDelete)) {
       final docId = path.split('/').last;
       await _deletePath(path, docId);
@@ -229,35 +247,47 @@ class FirebaseSignalingAdapter {
   /// across all peers and wildcard channels, leaving ZERO persistent
   /// signaling residue in Firestore.
   Future<void> cleanUpSignalingSession() async {
-    final pathsToDelete = _peerTrackedDocPaths.values.expand((s) => s).toList();
+    final pathsToDelete = _peerTrackedDocPaths.values.expand((s) => s).toSet().toList();
     for (final path in pathsToDelete) {
       final docId = path.split('/').last;
       await _deletePath(path, docId);
     }
     _peerTrackedDocPaths.clear();
+    _peerAuthoredDocPaths.clear();
   }
 
   Future<void> _deletePath(String path, String docId) async {
-    for (final entry in _peerTrackedDocPaths.entries) {
-      entry.value.remove(path);
-    }
-    _peerTrackedDocPaths.removeWhere((_, set) => set.isEmpty);
-
-    if (_onDeleteDocument != null) {
-      await _onDeleteDocument!(path);
-    }
-
-    if (isFirebaseAvailable && _roomCode != null) {
-      try {
-        await _effectiveFirestore
-            .collection('rooms')
-            .doc(_roomCode)
-            .collection('signaling')
-            .doc(docId)
-            .delete();
-      } catch (_) {
-        // Silently ignore if already deleted by peer
+    if (_deletingDocPaths.contains(path)) return;
+    _deletingDocPaths.add(path);
+    try {
+      for (final entry in _peerTrackedDocPaths.entries) {
+        entry.value.remove(path);
       }
+      _peerTrackedDocPaths.removeWhere((_, set) => set.isEmpty);
+
+      for (final entry in _peerAuthoredDocPaths.entries) {
+        entry.value.remove(path);
+      }
+      _peerAuthoredDocPaths.removeWhere((_, set) => set.isEmpty);
+
+      if (_onDeleteDocument != null) {
+        await _onDeleteDocument!(path);
+      }
+
+      if (isFirebaseAvailable && _roomCode != null) {
+        try {
+          await _effectiveFirestore
+              .collection('rooms')
+              .doc(_roomCode)
+              .collection('signaling')
+              .doc(docId)
+              .delete();
+        } catch (_) {
+          // Silently ignore if already deleted by peer
+        }
+      }
+    } finally {
+      _deletingDocPaths.remove(path);
     }
   }
 

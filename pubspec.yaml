@@ -9,14 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^3.1.0
-  cloud_firestore: ^5.1.0
-  firebase_crashlytics: ^4.1.0
+  firebase_core: ^4.15.0
+  cloud_firestore: ^6.10.0
+  firebase_crashlytics: ^5.4.0
   shared_preferences: ^2.5.5
-  firebase_app_check: ^0.3.1+4
+  firebase_app_check: ^0.4.8
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  file_picker: ^12.2.0
+  file_picker: ^13.1.0
   url_launcher: ^6.3.0
   meta: ^1.19.0
   uuid: ^4.6.0
@@ -30,7 +30,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   plugin_platform_interface: ^2.1.8
   url_launcher_platform_interface: ^2.3.2
   test: ^1.31.1

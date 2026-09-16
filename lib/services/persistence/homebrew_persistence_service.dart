@@ -33,7 +33,6 @@ import '../fluff/entity_fluff_service.dart';
 import '../logging_service.dart';
 import '../repository/layered_priority_repository.dart';
 import '../../domain/homebrew/models/homebrew_entity.dart';
-import '../../domain/homebrew/value_objects/ruleset_version.dart' as domain_rules;
 import 'app_database_service.dart';
 
 /// Service managing persistent storage and repository hydration for user-created homebrew and campaign overrides.
@@ -3156,11 +3155,8 @@ class HomebrewPersistenceService {
     }
   }
 
-  RulesetVersion _mapDomainRulesetToCore(domain_rules.RulesetVersion ruleset) {
-    return switch (ruleset) {
-      domain_rules.RulesetVersion.srd2014 => RulesetVersion.v2014,
-      domain_rules.RulesetVersion.srd2024 => RulesetVersion.v2024,
-    };
+  RulesetVersion _mapDomainRulesetToCore(RulesetEdition ruleset) {
+    return ruleset.is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024;
   }
 
   /// Persists a batch of [HomebrewEntity] items parsed from remote repositories
