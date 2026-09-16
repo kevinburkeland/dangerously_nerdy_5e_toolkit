@@ -63,25 +63,22 @@ service cloud.firestore {
 
       allow delete: if false;
 
-      // --- SUBCOLLECTION: WEBRTC EPHEMERAL SIGNALING ---
-      match /signaling/{signalId} {
+      // --- SUBCOLLECTION: DEDICATED NODE SIGNALING MAILBOXES ---
+      match /nodes/{toNodeId}/signals/{signalId} {
         allow get, list: if isAppCheckVerified();
-        
+
         allow create: if isAppCheckVerified()
                       && request.resource.data.keys().hasOnly(['id', 'roomCode', 'fromNodeId', 'toNodeId', 'type', 'sdp', 'candidate', 'timestamp'])
                       && request.resource.data.roomCode == roomCode
+                      && request.resource.data.toNodeId == toNodeId
                       && request.resource.data.fromNodeId is string
                       && request.resource.data.fromNodeId.size() > 0
                       && request.resource.data.fromNodeId.size() <= 64
-                      && request.resource.data.toNodeId is string
-                      && request.resource.data.toNodeId.size() > 0
-                      && request.resource.data.toNodeId.size() <= 64
                       && request.resource.data.type in ['offer', 'answer', 'candidate', 'peerJoin', 'peerLeave']
                       && (!('sdp' in request.resource.data) || (request.resource.data.sdp is string && request.resource.data.sdp.size() <= 32768))
                       && (!('candidate' in request.resource.data) || request.resource.data.candidate is map)
                       && isRecentTimestamp(request.resource.data.timestamp);
 
-        // Prevent arbitrary deletion of un-consumed messages by unrelated third parties
         allow delete: if isAppCheckVerified();
         allow update: if false;
       }
@@ -97,7 +94,7 @@ service cloud.firestore {
                       && request.resource.data.senderId.size() > 0
                       && request.resource.data.senderId.size() <= 64
                       && request.resource.data.payload is string
-                      && request.resource.data.payload.size() < 60000 
+                      && request.resource.data.payload.size() < 300000 
                       && isRecentTimestamp(request.resource.data.timestamp)
                       && request.resource.data.expireAt is timestamp
                       && request.resource.data.expireAt > request.time;

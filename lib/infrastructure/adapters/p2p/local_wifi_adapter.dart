@@ -11,6 +11,7 @@ class LocalWifiAdapter implements IP2pTransportPort {
   final Future<void> Function(String roomCode, String localNodeId)? onInitialize;
   final Future<void> Function(String jsonPayload)? onBroadcast;
   final Future<void> Function()? onDisconnect;
+  final Future<bool> Function(String roomCode, String localNodeId)? onProbe;
 
   String? _roomCode;
   String? _localNodeId;
@@ -23,6 +24,7 @@ class LocalWifiAdapter implements IP2pTransportPort {
     this.onInitialize,
     this.onBroadcast,
     this.onDisconnect,
+    this.onProbe,
   });
 
   bool get isInitialized => _isInitialized;
@@ -44,7 +46,15 @@ class LocalWifiAdapter implements IP2pTransportPort {
 
   @override
   Future<bool> probeViability(String roomCode, String localNodeId) async {
-    return _isInitialized;
+    if (onProbe != null) {
+      try {
+        return await onProbe!(roomCode, localNodeId);
+      } catch (_) {
+        return false;
+      }
+    }
+    if (_isInitialized) return true;
+    return onInitialize != null;
   }
 
   @override
@@ -107,6 +117,7 @@ class LocalWifiTransportAdapter extends LocalWifiAdapter {
     super.onInitialize,
     super.onBroadcast,
     super.onDisconnect,
+    super.onProbe,
   });
 }
 

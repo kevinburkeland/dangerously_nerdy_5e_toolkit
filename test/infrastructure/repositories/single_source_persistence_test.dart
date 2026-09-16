@@ -25,6 +25,12 @@ class _RecordingDatabaseService extends AppDatabaseService {
   }
 
   @override
+  Future<void> putAll(String boxName, Map<String, dynamic> entries) async {
+    putCalls += entries.length;
+    writtenData.putIfAbsent(boxName, () => {}).addAll(entries);
+  }
+
+  @override
   dynamic get(String boxName, String key, {dynamic defaultValue}) {
     return writtenData[boxName]?[key] ?? defaultValue;
   }
@@ -33,6 +39,14 @@ class _RecordingDatabaseService extends AppDatabaseService {
   Future<void> delete(String boxName, String key) async {
     deleteCalls++;
     writtenData[boxName]?.remove(key);
+  }
+
+  @override
+  Future<void> deleteAll(String boxName, Iterable<String> keys) async {
+    deleteCalls += keys.length;
+    for (final k in keys) {
+      writtenData[boxName]?.remove(k);
+    }
   }
 }
 

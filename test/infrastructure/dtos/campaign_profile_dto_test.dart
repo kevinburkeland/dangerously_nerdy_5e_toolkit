@@ -15,7 +15,7 @@ void main() {
         edition: DmRulesEdition.v2024,
         createdAt: now,
         lastPlayedAt: now,
-        roomState: RoomNodeState(
+        roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'TOMB',
           title: 'Tomb Entrance',

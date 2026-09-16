@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../domain/models/animated_object.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../utils/dice_formatters.dart';
 import '../../widgets/glyphs/glyph_tokens.dart';
 
 import '../domain/character_models.dart';
+import 'srd_summons_library.dart';
 
 enum SummonCategory { spell, magicItem }
 
@@ -369,3 +371,57 @@ extension MinionStatBlockGlyphExt on MinionStatBlock {
     return DamageAccent.physical;
   }
 }
+
+/// Extension resolving concrete MinionStatBlock from outer-layer SRD summons libraries
+/// without leaking outer-layer dependencies into the pure domain AnimatedObjectInstance entity.
+extension AnimatedObjectStatBlockX on AnimatedObjectInstance {
+  /// Resolves the full 5e SRD MinionStatBlock for this creature instance.
+  MinionStatBlock get statBlock {
+    if (statBlockId != null) {
+      final found = SrdSummonsLibrary.findStatBlockById(statBlockId!);
+      if (found != null) return found;
+    }
+    final byName = SrdSummonsLibrary.findStatBlockByName(name);
+    if (byName != null) return byName;
+
+    // Fallback to synthetic Animate Object stat block matching size
+    return switch (size) {
+      ObjectSize.tiny => SrdSummonsLibrary.tinyObject,
+      ObjectSize.small => SrdSummonsLibrary.smallObject,
+      ObjectSize.medium => SrdSummonsLibrary.mediumObject,
+      ObjectSize.large => SrdSummonsLibrary.largeObject,
+      ObjectSize.huge => SrdSummonsLibrary.hugeObject,
+    };
+  }
+}
+
+/// Factory extension to construct AnimatedObjectInstance from an SRD MinionStatBlock.
+extension MinionStatBlockInstanceFactory on MinionStatBlock {
+  AnimatedObjectInstance toInstance({
+    required String id,
+    String? customName,
+    int tempHp = 0,
+  }) {
+    return AnimatedObjectInstance(
+      id: id,
+      name: customName ?? name,
+      size: ObjectSize.fromString(sizeDisplay),
+      currentHp: maxHp,
+      maxHp: maxHp,
+      tempHp: tempHp,
+      damageType: damageType,
+      statBlockId: this.id,
+      customAc: ac,
+      customAttackBonus: attackBonus,
+      customDamageDiceCount: damageDiceCount,
+      customDamageDiceSides: damageDiceSides,
+      customDamageBonus: damageBonus,
+      secondaryDamageDiceCount: secondaryDamageDiceCount,
+      secondaryDamageDiceSides: secondaryDamageDiceSides,
+      secondaryDamageType: secondaryDamageType,
+      hasPackTactics: hasPackTactics,
+      specialTrait: specialTrait,
+    );
+  }
+}
+

@@ -230,10 +230,13 @@ class LocalCampaignRepository implements ICampaignRepository {
         unparsedMinions: cachedUnparsed?.unparsedMinions ?? const [],
       );
       final jsonStr = dto.toJson();
-      await _db.put(
+      final idList = _memoryCache.keys.toList();
+      await _db.putAll(
         AppDatabaseService.boxCampaignProfiles,
-        '$profileKeyPrefix${profile.id}',
-        jsonStr,
+        {
+          '$profileKeyPrefix${profile.id}': jsonStr,
+          profileIndexKey: idList,
+        },
       );
     } catch (e) {
       LoggingService().logWarning('Failed to persist campaign profile: $e', e);

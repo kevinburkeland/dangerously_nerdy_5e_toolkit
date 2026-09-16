@@ -182,7 +182,7 @@ void main() {
 
         await signalingAdapter.initialize(roomCode: 'ROOM-SIG', localNodeId: 'local-node');
         final offerId = await signalingAdapter.sendOffer(toNodeId: 'remote-node', sdp: 'fake-sdp');
-        expect(signalingAdapter.trackedDocPaths, contains('rooms/ROOM-SIG/signaling/$offerId'));
+        expect(signalingAdapter.trackedDocPaths, contains('rooms/ROOM-SIG/nodes/remote-node/signals/$offerId'));
         expect(deletedDocPaths, isEmpty);
 
         final realWebRtcAdapter = WebRtcMeshAdapter(signalingAdapter: signalingAdapter);
@@ -198,8 +198,8 @@ void main() {
         expect(sigRouter.currentState, TransportState.webRtc);
 
         // Verify cleanUpSignalingSession() was triggered and wiped prior handshake docs
-        expect(deletedDocPaths, contains('rooms/ROOM-SIG/signaling/$offerId'));
-        expect(signalingAdapter.trackedDocPaths, isNot(contains('rooms/ROOM-SIG/signaling/$offerId')));
+        expect(deletedDocPaths, contains('rooms/ROOM-SIG/nodes/remote-node/signals/$offerId'));
+        expect(signalingAdapter.trackedDocPaths, isNot(contains('rooms/ROOM-SIG/nodes/remote-node/signals/$offerId')));
         expect(signalingAdapter.trackedDocPaths.isNotEmpty, isTrue);
 
         await sigRouter.disconnect();

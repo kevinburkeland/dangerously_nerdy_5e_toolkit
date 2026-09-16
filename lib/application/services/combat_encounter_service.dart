@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../../domain/crdt/hybrid_logical_clock.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/models/animated_object.dart';
 import '../../domain/ports/i_campaign_repository.dart';
@@ -115,12 +116,14 @@ class CombatEncounterService {
     required String minionId,
     required int delta,
   }) async {
-    final minions = profile.roomState.activeMinions.map((m) {
-      if (m.id != minionId) return m;
-      return delta < 0 ? m.applyDamage(delta.abs()) : m.applyHealing(delta);
-    }).toList();
+    final currentMinion = profile.roomState.activeMinions.items[minionId]?.value;
+    if (currentMinion == null) return profile;
 
-    final updatedRoom = profile.roomState.copyWith(activeMinions: minions);
+    final updated = delta < 0 ? currentMinion.applyDamage(delta.abs()) : currentMinion.applyHealing(delta);
+    final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp;
+    final hlc = _nextHlc(nodeId: profile.id, previousClock: prevTs);
+    final updatedMinions = profile.roomState.activeMinions.add(minionId, updated, hlc);
+    final updatedRoom = profile.roomState.copyWith(activeMinions: updatedMinions);
     final updatedProfile = profile.copyWith(roomState: updatedRoom);
 
     await campaignRepo.saveProfile(updatedProfile);
@@ -132,8 +135,11 @@ class CombatEncounterService {
     required CampaignProfile profile,
     required AnimatedObjectInstance minion,
   }) async {
-    final minions = List<AnimatedObjectInstance>.from(profile.roomState.activeMinions)..add(minion);
-    final updatedRoom = profile.roomState.copyWith(activeMinions: minions);
+    final prevTs = profile.roomState.activeMinions.items[minion.id]?.timestamp ??
+        profile.roomState.activeMinions.tombstones[minion.id];
+    final hlc = _nextHlc(nodeId: profile.id, previousClock: prevTs);
+    final updatedMinions = profile.roomState.activeMinions.add(minion.id, minion, hlc);
+    final updatedRoom = profile.roomState.copyWith(activeMinions: updatedMinions);
     final updatedProfile = profile.copyWith(roomState: updatedRoom);
 
     await campaignRepo.saveProfile(updatedProfile);
@@ -145,13 +151,34 @@ class CombatEncounterService {
     required CampaignProfile profile,
     required String minionId,
   }) async {
-    final minions = List<AnimatedObjectInstance>.from(profile.roomState.activeMinions)
-      ..removeWhere((m) => m.id == minionId);
-    final updatedRoom = profile.roomState.copyWith(activeMinions: minions);
+    final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp ??
+        profile.roomState.activeMinions.tombstones[minionId];
+    final hlc = _nextHlc(nodeId: profile.id, previousClock: prevTs);
+    final updatedMinions = profile.roomState.activeMinions.remove(minionId, hlc);
+    final updatedRoom = profile.roomState.copyWith(activeMinions: updatedMinions);
     final updatedProfile = profile.copyWith(roomState: updatedRoom);
 
     await campaignRepo.saveProfile(updatedProfile);
     return updatedProfile;
+  }
+
+  HybridLogicalClock _nextHlc({
+    required String nodeId,
+    HybridLogicalClock? previousClock,
+  }) {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (previousClock != null && previousClock.physicalTime >= nowMs) {
+      return HybridLogicalClock(
+        physicalTime: previousClock.physicalTime,
+        logicalCounter: previousClock.logicalCounter + 1,
+        nodeId: nodeId,
+      );
+    }
+    return HybridLogicalClock(
+      physicalTime: nowMs,
+      logicalCounter: 0,
+      nodeId: nodeId,
+    );
   }
 
   // ==========================================
@@ -249,7 +276,23 @@ class CombatEncounterService {
     required CampaignProfile profile,
     required List<EncounterParticipant> encounter,
   }) async {
-    final updatedRoom = profile.roomState.copyWith(activeEncounter: encounter);
+    final hlc = HybridLogicalClock(
+      physicalTime: DateTime.now().millisecondsSinceEpoch,
+      logicalCounter: 0,
+      nodeId: profile.id,
+    );
+    var updatedEncounter = profile.roomState.activeEncounter;
+    final currentIds = updatedEncounter.activeValues.map((p) => p.participantId).toSet();
+    final newIds = encounter.map((p) => p.participantId).toSet();
+
+    for (final id in currentIds.difference(newIds)) {
+      updatedEncounter = updatedEncounter.remove(id, hlc);
+    }
+    for (final p in encounter) {
+      updatedEncounter = updatedEncounter.add(p.participantId, p, hlc);
+    }
+
+    final updatedRoom = profile.roomState.copyWith(activeEncounter: updatedEncounter);
     final updatedProfile = profile.copyWith(roomState: updatedRoom);
     await campaignRepo.saveProfileImmediate(updatedProfile);
     return updatedProfile;

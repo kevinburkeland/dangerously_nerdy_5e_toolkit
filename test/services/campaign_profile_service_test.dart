@@ -23,7 +23,7 @@ void main() {
         edition: DmRulesEdition.v2024,
         createdAt: now,
         lastPlayedAt: now,
-        roomState: RoomNodeState(
+        roomState: RoomNodeState.fromLists(
           roomId: 'room_101',
           roomCode: 'CR-101',
           title: 'Shadow Gates',

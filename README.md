@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1784%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1786%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -121,15 +121,20 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - **State-Based Positive-Negative Counter Currency (`PnCounter`)**: Party purse denominations (`CP`, `SP`, `EP`, `GP`, `PP`) track positive increments and negative decrements per device node ID. Reconciling party funds unconditionally executes a CvRDT lattice join (`local.merge(remote)`), eradicating scalar Last-Write-Wins overwriting and preventing spent currency from resurrecting.
   - **Focused Delta Protocol (`crdt_purse_delta`)**: High-frequency currency changes emit lightweight delta frames rather than whole-room snapshots, enabling instantaneous convergence across partitions with minimal network overhead.
   - Delta fast-forwarding and milestone snapshots via `RoomStateReconciliationService` with automatic tombstone pruning to prevent memory leaks.
+  - **Vectorized Reconnection Ordering & Offline Causal Convergence**: `RoomSyncOrchestrator` eliminates strict scalar sequence drops (`originSeq <= lastSeq`) in favor of per-node sequence vector clocks (`_nodeSequenceVectors`) and offline mutation tracking. Out-of-order packet relays and partitioned burst edits converge deterministically into local state without dropping valid mutations.
+  - **Pure CRDT Room State Reconciliation**: Replaces scalar wall-clock comparisons (`inboundTimestamp >= localTimestamp`) with pure CRDT joins. Minions and encounters reconcile via `CrdtOrSet` with HLC tombstones, campaign notes merge via `CrdtLwwRegister<String>`, and party purse converges via `PnCounter`.
   - **Field-Level Sub-Resource Convergence**: Receiving full sync payloads (`room_sync_full`) reconciles sub-resources independently (notes, party purse, party rosters, active minions keyed by `m.id`, encounters keyed by `participantId`, room metadata) rather than wholesale document replacement, preventing silent overwrites of concurrent offline edits.
-  - **Timestamp-Gated Reconciliation & Explicit Causality**: Inbound payloads are stamped with `origin_node_id` and monotonic sequence numbers, dropping stale frames within a 30s sliding window while eliminating recursive echo loops and self-echo broadcasts.
+  - **Explicit Causality & Deduplication**: Outbound payloads are mapped and serialized via `RoomSyncPayloadMapper`, stamped with `origin_node_id` and monotonic sequence numbers, dropping stale frames within a 30s sliding window while eliminating recursive echo loops and self-echo broadcasts.
   - **Unconditional Tombstone Invariants & Skew-Safe Pruning**: Removals generate immediate tombstones to neutralize out-of-order adds, while host milestone pruning buffers lookback horizons by $2 \times$ heartbeat TTL against network-synchronized time (`INetworkTimePort`), deferring pruning gracefully under clock skew inversion.
 * **4-Tier Cost-Optimized Transport Waterfall (`CascadingTransportRouter`)**:
-  - **Tier 1 (Local Wi-Fi / LAN)**: Zero-latency, zero-cloud-cost direct local network communication.
-  - **Tier 2 (WebRTC P2P Mesh)**: Zero-cost DataChannels with ephemeral Firebase signaling; 60-second sliding TTL query filtering and late-joiner re-signaling (`peerJoin`), coupled with DataChannel-guarded document cleanup (`RTCDataChannelOpen`), leave zero handshake residue in Firestore. W3C polite peer glare rollback (`RTCSessionDescription('', 'rollback')`) prevents simultaneous-offer collisions.
+  - **Tier 1 (Local Wi-Fi / LAN)**: Zero-latency, zero-cloud-cost direct local network communication with non-destructive socket re-use and UDP health probing.
+  - **Tier 2 (WebRTC P2P Mesh)**: Zero-cost DataChannels with dedicated recipient mailbox signaling (`rooms/{roomCode}/nodes/{toNodeId}/signals/{signalId}`) in Firestore, eliminating wildcard race conditions and multi-peer signaling collisions. W3C polite peer glare rollback (`RTCSessionDescription('', 'rollback')`) prevents simultaneous-offer collisions.
   - **Tier 3 (Firebase Cloud Relay)**: Reliable metered cloud relay fallback, activated only when WebRTC transmission encounters an unhandled error, times out, or active peers drop to zero.
   - **Tier 4 (Offline Mode)**: Complete offline isolation when local networks and cloud relays are unavailable.
   - **Bi-Directional Step-Up Waterfall Recovery**: Periodically probes higher tiers via `probeHigherTiers()` using polymorphic `IP2pTransportPort.probeViability()`, automatically promoting active transport back to WebRTC or LAN when connections recover.
+* **Storage Atomicity & Lifecycle Flush Shield**:
+  - Writes campaign profile data and index keys atomically via `AppDatabaseService.putAll` to eliminate index desynchronization on crash or process kill.
+  - Wires `AppLifecycleListener` for awaited asynchronous storage flushes across `onPause`, `onHide`, `onDetach`, and `onExitRequested` with non-fatal error isolation.
 * **Append-Only Audit Stream**: Live event log capturing coin deposits, withdrawals, loot additions, claims, attunements, and restorations.
 
 ---

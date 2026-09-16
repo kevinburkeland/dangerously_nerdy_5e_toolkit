@@ -165,8 +165,7 @@ class SpellSession {
     String name = customName ?? '${statBlock.name} #$count';
 
     activeObjects.add(
-      AnimatedObjectInstance.fromStatBlock(
-        statBlock,
+      statBlock.toInstance(
         id: '${DateTime.now().microsecondsSinceEpoch}_${activeObjects.length}',
         customName: name,
       ),

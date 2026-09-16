@@ -1,9 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/crdt_lww_register.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/crdt_or_set.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/hybrid_logical_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/models/animated_object.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/models/campaign_profile.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 
 void main() {
@@ -171,6 +174,116 @@ void main() {
 
       // Both deposits converge: 100 + 50 = 150 GP
       expect(merged.partyPurse.gp, 150);
+    });
+
+    test('Zero-Loss Partition Convergence: Offline minion and encounter removal merges without entity resurrection', () {
+      const tsInitial = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'host');
+      const tsLocalRemoval = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'clientA');
+
+      final minion1 = AnimatedObjectInstance(
+        id: 'minion-wolf-1',
+        name: 'Dire Wolf Minion',
+        size: ObjectSize.large,
+        currentHp: 37,
+        maxHp: 37,
+        tempHp: 0,
+      );
+      final minion2 = AnimatedObjectInstance(
+        id: 'minion-hawk-1',
+        name: 'Blood Hawk Minion',
+        size: ObjectSize.tiny,
+        currentHp: 7,
+        maxHp: 7,
+        tempHp: 0,
+      );
+
+      const encounterParticipant = EncounterParticipant(
+        participantId: 'goblin-scout-1',
+        entityLink: RoomEntityLink(
+          refType: SessionRefType.monster,
+          entityId: 'goblin-1',
+          displayName: 'Goblin Scout',
+        ),
+        currentHp: 12,
+        maxHp: 12,
+        armorClass: 15,
+        initiativeScore: 18,
+      );
+
+      // Both host and client initially had minion1, minion2, and encounterParticipant
+      final initialMinions = const CrdtOrSet<AnimatedObjectInstance>()
+          .add(minion1.id, minion1, tsInitial)
+          .add(minion2.id, minion2, tsInitial);
+
+      final initialEncounter = const CrdtOrSet<EncounterParticipant>()
+          .add(encounterParticipant.participantId, encounterParticipant, tsInitial);
+
+      // Client A enters network partition, dismisses/kills minion1 and defeats encounterParticipant (producing tombstones)
+      final clientMinions = initialMinions.remove(minion1.id, tsLocalRemoval);
+      final clientEncounter = initialEncounter.remove(encounterParticipant.participantId, tsLocalRemoval);
+
+      final clientProfile = CampaignProfile.defaultProfile(id: 'camp-partition').copyWith(
+        roomState: RoomNodeState(
+          roomId: 'r1',
+          roomCode: 'CR-101',
+          title: 'Client Node',
+          activeMinions: clientMinions,
+          activeEncounter: clientEncounter,
+        ),
+      );
+
+      // Remote host remained online, but only has original un-dismissed minions/encounter state
+      final hostProfile = CampaignProfile.defaultProfile(id: 'camp-partition').copyWith(
+        roomState: RoomNodeState(
+          roomId: 'r1',
+          roomCode: 'CR-101',
+          title: 'Host Node',
+          activeMinions: initialMinions,
+          activeEncounter: initialEncounter,
+        ),
+      );
+
+      // Reconcile client state with remote host state
+      final reconciled = service.reconcileProfile(
+        local: clientProfile,
+        remote: hostProfile,
+        inboundTimestampMs: 2500,
+        localTimestampMs: 1500,
+      );
+
+      // Assert that minion1 was NOT resurrected by remote host's older state
+      expect(reconciled.roomState.activeMinions.items.containsKey(minion1.id), isFalse);
+      expect(reconciled.roomState.activeMinions.tombstones.containsKey(minion1.id), isTrue);
+      expect(reconciled.roomState.activeMinions.activeValues.map((m) => m.id), contains('minion-hawk-1'));
+      expect(reconciled.roomState.activeMinions.activeValues.map((m) => m.id), isNot(contains('minion-wolf-1')));
+
+      // Assert that encounterParticipant was NOT resurrected
+      expect(reconciled.roomState.activeEncounter.items.containsKey(encounterParticipant.participantId), isFalse);
+      expect(reconciled.roomState.activeEncounter.tombstones.containsKey(encounterParticipant.participantId), isTrue);
+      expect(reconciled.roomState.activeEncounter.activeValues, isEmpty);
+    });
+
+    test('Notes Convergence: Concurrent edits across network partition merge without loss', () {
+      const tsA = HybridLogicalClock(physicalTime: 1000, logicalCounter: 1, nodeId: 'peerA');
+      const tsB = HybridLogicalClock(physicalTime: 1000, logicalCounter: 2, nodeId: 'peerB');
+
+      final profileA = CampaignProfile.defaultProfile(id: 'camp1').copyWith(
+        notesRegister: const CrdtLwwRegister<String>(value: 'Local notes: Discovered hidden cave.', timestamp: tsA),
+      );
+      final profileB = CampaignProfile.defaultProfile(id: 'camp1').copyWith(
+        notesRegister: const CrdtLwwRegister<String>(value: 'Remote notes: Trapped the chest.', timestamp: tsB),
+      );
+
+      final merged = service.reconcileProfile(
+        local: profileA,
+        remote: profileB,
+        inboundTimestampMs: 1500,
+        localTimestampMs: 1200,
+      );
+
+      // Concurrent distinct edits must combine both notes rather than dropping one
+      expect(merged.notesMarkdown, contains('Discovered hidden cave.'));
+      expect(merged.notesMarkdown, contains('Trapped the chest.'));
     });
   });
 }

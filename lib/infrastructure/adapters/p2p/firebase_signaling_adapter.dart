@@ -12,9 +12,12 @@ class FirebaseSignalingAdapter {
 
   String? _roomCode;
   String? _localNodeId;
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _firestoreSubscription;
+  final List<StreamSubscription<QuerySnapshot<Map<String, dynamic>>>> _subscriptions = [];
   final StreamController<SignalingMessage> _incomingSignalsController =
       StreamController<SignalingMessage>.broadcast();
+
+  /// Maps docId -> full document path for rapid lookup on delete.
+  final Map<String, String> _docIdToPath = {};
 
   /// Tracks all document paths created or received during signaling,
   /// partitioned by peer ID (or '*' for broadcasts) to isolate cleanup.
@@ -62,50 +65,57 @@ class FirebaseSignalingAdapter {
     _peerTrackedDocPaths.clear();
     _peerAuthoredDocPaths.clear();
     _deletingDocPaths.clear();
+    _docIdToPath.clear();
 
-    await _firestoreSubscription?.cancel();
-    _firestoreSubscription = null;
+    for (final sub in _subscriptions) {
+      await sub.cancel();
+    }
+    _subscriptions.clear();
 
     // Strict 60-second sliding TTL window to prune historical signaling residue
     final pruningThreshold = DateTime.now().millisecondsSinceEpoch - slidingTtlMs;
     _lastPruningThreshold = pruningThreshold;
 
     if (isFirebaseAvailable) {
-      final collection = _effectiveFirestore
+      final localMailbox = _effectiveFirestore
           .collection('rooms')
           .doc(_roomCode)
-          .collection('signaling');
+          .collection('nodes')
+          .doc(_localNodeId)
+          .collection('signals');
 
-      // Listen for signals targeted at this node or broadcast wildcard.
-      // Filter sliding TTL in memory to eliminate composite index requirement in Firestore.
-      _firestoreSubscription = collection
-          .where('toNodeId', whereIn: [_localNodeId, '*'])
-          .snapshots()
-          .listen(
-            (snapshot) {
-              final now = DateTime.now().millisecondsSinceEpoch;
-              for (final change in snapshot.docChanges) {
-                if (change.type == DocumentChangeType.added) {
-                  final data = change.doc.data();
-                  if (data != null) {
-                    final message = SignalingMessage.fromMap(data, docId: change.doc.id);
-                    if (message.fromNodeId != _localNodeId) {
-                      if (now - message.timestamp > slidingTtlMs) {
-                        continue;
-                      }
-                      _peerTrackedDocPaths
-                          .putIfAbsent(message.fromNodeId, () => <String>{})
-                          .add(change.doc.reference.path);
-                      _incomingSignalsController.add(message);
-                    }
-                  }
+      final broadcastMailbox = _effectiveFirestore
+          .collection('rooms')
+          .doc(_roomCode)
+          .collection('nodes')
+          .doc('*')
+          .collection('signals');
+
+      void handleSnapshot(QuerySnapshot<Map<String, dynamic>> snapshot) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        for (final change in snapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            final data = change.doc.data();
+            if (data != null) {
+              final message = SignalingMessage.fromMap(data, docId: change.doc.id);
+              if (message.fromNodeId != _localNodeId) {
+                if (now - message.timestamp > slidingTtlMs) {
+                  continue;
                 }
+                final path = change.doc.reference.path;
+                _docIdToPath[change.doc.id] = path;
+                _peerTrackedDocPaths
+                    .putIfAbsent(message.fromNodeId, () => <String>{})
+                    .add(path);
+                _incomingSignalsController.add(message);
               }
-            },
-            onError: (error) {
-              // Silently handle stream error
-            },
-          );
+            }
+          }
+        }
+      }
+
+      _subscriptions.add(localMailbox.snapshots().listen(handleSnapshot, onError: (_) {}));
+      _subscriptions.add(broadcastMailbox.snapshots().listen(handleSnapshot, onError: (_) {}));
 
       // Broadcast join presence for late-joiner detection
       try {
@@ -197,17 +207,20 @@ class FirebaseSignalingAdapter {
       timestamp: DateTime.now().millisecondsSinceEpoch,
     );
 
-    final path = 'rooms/$_roomCode/signaling/$signalId';
+    final path = 'rooms/$_roomCode/nodes/$toNodeId/signals/$signalId';
 
     if (isFirebaseAvailable) {
       await _effectiveFirestore
           .collection('rooms')
           .doc(_roomCode)
-          .collection('signaling')
+          .collection('nodes')
+          .doc(toNodeId)
+          .collection('signals')
           .doc(signalId)
           .set(message.toMap());
     }
 
+    _docIdToPath[signalId] = path;
     _peerTrackedDocPaths.putIfAbsent(toNodeId, () => <String>{}).add(path);
     _peerAuthoredDocPaths.putIfAbsent(toNodeId, () => <String>{}).add(path);
 
@@ -226,7 +239,8 @@ class FirebaseSignalingAdapter {
       // Discard stale signaling residue beyond sliding TTL
       return;
     }
-    final path = 'rooms/${message.roomCode}/signaling/${message.id}';
+    final path = 'rooms/${message.roomCode}/nodes/${message.toNodeId}/signals/${message.id}';
+    _docIdToPath[message.id] = path;
     _peerTrackedDocPaths.putIfAbsent(message.fromNodeId, () => <String>{}).add(path);
     _incomingSignalsController.add(message);
   }
@@ -234,7 +248,8 @@ class FirebaseSignalingAdapter {
   /// Deletes a specific signaling document from Firestore.
   Future<void> deleteSignal(String docId) async {
     if (_roomCode == null) return;
-    final path = 'rooms/$_roomCode/signaling/$docId';
+    final path = _docIdToPath[docId] ??
+        'rooms/$_roomCode/nodes/$_localNodeId/signals/$docId';
     await _deletePath(path, docId);
   }
 
@@ -281,6 +296,7 @@ class FirebaseSignalingAdapter {
     if (_deletingDocPaths.contains(path)) return;
     _deletingDocPaths.add(path);
     try {
+      _docIdToPath.remove(docId);
       final trackedEntries =
           List<MapEntry<String, Set<String>>>.from(_peerTrackedDocPaths.entries);
       for (final entry in trackedEntries) {
@@ -303,12 +319,7 @@ class FirebaseSignalingAdapter {
 
       if (isFirebaseAvailable && _roomCode != null) {
         try {
-          await _effectiveFirestore
-              .collection('rooms')
-              .doc(_roomCode)
-              .collection('signaling')
-              .doc(docId)
-              .delete();
+          await _effectiveFirestore.doc(path).delete();
         } catch (_) {
           // Silently ignore if already deleted by peer or Firestore not-found
         }
@@ -320,8 +331,10 @@ class FirebaseSignalingAdapter {
 
   /// Cleans up subscriptions and deletes all remaining tracked signaling documents.
   Future<void> dispose() async {
-    await _firestoreSubscription?.cancel();
-    _firestoreSubscription = null;
+    for (final sub in _subscriptions) {
+      await sub.cancel();
+    }
+    _subscriptions.clear();
     await cleanUpSignalingSession();
     await _incomingSignalsController.close();
   }

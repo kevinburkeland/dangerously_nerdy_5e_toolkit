@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:meta/meta.dart';
+import '../../domain/crdt/crdt_lww_register.dart';
+import '../../domain/crdt/hybrid_logical_clock.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/models/animated_object.dart';
 import '../../models/dm_screen_data.dart';
@@ -10,6 +12,7 @@ import '../../models/party/party_purse.dart';
 import '../../services/logging_service.dart';
 import 'animated_object_dto.dart';
 import 'character_dto.dart';
+import 'crdt/crdt_lww_register_dto.dart';
 
 /// Data Transfer Object for [CampaignProfile], isolating JSON serialization,
 /// legacy schema migrations, and unparsed fallback payloads to the Infrastructure layer.
@@ -24,6 +27,7 @@ class CampaignProfileDto {
   final List<String> partyCharacterIds;
   final List<String> pinnedRuleIds;
   final String notesMarkdown;
+  final Map<String, dynamic> notesRegister;
   final Map<String, dynamic> partyPurse;
   final List<Map<String, dynamic>> changeLog;
   final List<Map<String, dynamic>> unparsedPartyRoster;
@@ -39,6 +43,7 @@ class CampaignProfileDto {
     this.partyCharacterIds = const [],
     this.pinnedRuleIds = const [],
     this.notesMarkdown = '',
+    this.notesRegister = const {},
     this.partyPurse = const {},
     this.changeLog = const [],
     this.unparsedPartyRoster = const [],
@@ -61,6 +66,7 @@ class CampaignProfileDto {
       partyCharacterIds: List<String>.from(profile.partyCharacterIds),
       pinnedRuleIds: profile.pinnedRuleIds.toList(),
       notesMarkdown: profile.notesMarkdown,
+      notesRegister: CrdtLwwRegisterDto.toMap(profile.notesRegister, (v) => v),
       partyPurse: profile.partyPurse.toMap(),
       changeLog: profile.changeLog.map((e) => e.toMap()).toList(),
       unparsedPartyRoster: List<Map<String, dynamic>>.from(unparsedPartyRoster),
@@ -112,6 +118,26 @@ class CampaignProfileDto {
             'resting',
           };
 
+    final parsedNotesRegister = notesRegister.isNotEmpty
+        ? CrdtLwwRegisterDto.fromMap<String>(notesRegister, (v) => v.toString())
+        : (notesMarkdown.isNotEmpty
+            ? CrdtLwwRegister<String>(
+                value: notesMarkdown,
+                timestamp: const HybridLogicalClock(
+                  physicalTime: 0,
+                  logicalCounter: 0,
+                  nodeId: 'genesis',
+                ),
+              )
+            : const CrdtLwwRegister<String>(
+                value: '',
+                timestamp: HybridLogicalClock(
+                  physicalTime: 0,
+                  logicalCounter: 0,
+                  nodeId: 'genesis',
+                ),
+              ));
+
     return CampaignProfile(
       id: id,
       name: name,
@@ -121,7 +147,15 @@ class CampaignProfileDto {
       roomState: parsedRoom,
       partyCharacterIds: partyCharacterIds,
       pinnedRuleIds: pinned,
-      notesMarkdown: notesMarkdown,
+      notesRegister: parsedNotesRegister ??
+          const CrdtLwwRegister<String>(
+            value: '',
+            timestamp: HybridLogicalClock(
+              physicalTime: 0,
+              logicalCounter: 0,
+              nodeId: 'genesis',
+            ),
+          ),
       partyPurse: purse,
       changeLog: parsedEvents,
     );
@@ -236,6 +270,9 @@ class CampaignProfileDto {
       partyCharacterIds: extractedIds,
       pinnedRuleIds: pinned,
       notesMarkdown: map['notesMarkdown']?.toString() ?? '',
+      notesRegister: map['notesRegister'] is Map
+          ? Map<String, dynamic>.from(map['notesRegister'] as Map)
+          : const {},
       partyPurse: purseMap,
       changeLog: changeLogList,
       unparsedPartyRoster: unparsedRoster,
@@ -254,6 +291,7 @@ class CampaignProfileDto {
       'partyCharacterIds': partyCharacterIds,
       'pinnedRuleIds': pinnedRuleIds,
       'notesMarkdown': notesMarkdown,
+      'notesRegister': notesRegister,
       'partyPurse': partyPurse,
       'changeLog': changeLog,
     };

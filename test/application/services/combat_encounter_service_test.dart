@@ -216,7 +216,7 @@ void main() {
         maxHp: 10,
       );
       final profile = CampaignProfile.defaultProfile().copyWith(
-        roomState: RoomNodeState(
+        roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'R1',
           title: 'Dungeon Room',
@@ -260,7 +260,7 @@ void main() {
         tempHp: 5,
       );
       final profile = CampaignProfile.defaultProfile().copyWith(
-        roomState: RoomNodeState(
+        roomState: RoomNodeState.fromLists(
           roomId: 'r_immutable',
           roomCode: 'IMMUTABLE',
           title: 'Testing Vault',

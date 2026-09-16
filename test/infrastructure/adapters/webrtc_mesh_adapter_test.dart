@@ -235,9 +235,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       // Verify targeted offer was sent to node-B
-      expect(signalingAdapter.trackedDocPaths.any((p) => p.contains('rooms/ROOM-REJOIN/signaling/')), isTrue);
+      expect(signalingAdapter.trackedDocPaths.any((p) => p.contains('rooms/ROOM-REJOIN/nodes/')), isTrue);
       // Verify join signal was deleted
-      expect(deletedSignalingDocs, contains('rooms/ROOM-REJOIN/signaling/join-signal-node-b'));
+      expect(deletedSignalingDocs, contains('rooms/ROOM-REJOIN/nodes/*/signals/join-signal-node-b'));
 
       await adapterWithFactory.disconnect();
     });
@@ -314,7 +314,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       // Node Z is higher rank -> drops colliding offer and consumes/deletes signal
-      expect(deletedSignalingDocs, contains('rooms/ROOM-GLARE/signaling/offer-signal-from-a'));
+      expect(deletedSignalingDocs, contains('rooms/ROOM-GLARE/nodes/node-Z/signals/offer-signal-from-a'));
       // In-flight connection to node-A was NOT closed
       expect(fakePc.isClosed, isFalse);
 

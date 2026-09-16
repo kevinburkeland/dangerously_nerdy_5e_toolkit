@@ -1,6 +1,4 @@
 import 'package:meta/meta.dart';
-import '../../utils/dice_formatters.dart';
-import '../../models/srd_summons/srd_summons_library.dart';
 import 'value_objects/hit_points.dart';
 
 /// Represents standard 5e animated object size classifications and combat metrics.
@@ -98,11 +96,10 @@ enum ObjectSize {
     required this.defaultExample,
   });
 
-  String get damageFormula => DiceFormatters.formatFormula(
-        count: damageDiceCount,
-        sides: damageDiceSides,
-        bonus: damageBonus,
-      );
+  String get damageFormula {
+    final bonusStr = damageBonus == 0 ? '' : (damageBonus > 0 ? '+$damageBonus' : '$damageBonus');
+    return '${damageDiceCount}d$damageDiceSides$bonusStr';
+  }
 
   static final RegExp _whitespacePattern = RegExp(r'\s+');
 
@@ -157,7 +154,6 @@ class AnimatedObjectInstance {
   final bool hasPackTactics;
   final String? specialTrait;
   final String? statBlockId;
-  final MinionStatBlock? originalStatBlock;
   final MinionMarker marker;
 
   AnimatedObjectInstance({
@@ -171,7 +167,6 @@ class AnimatedObjectInstance {
     this.damageType = 'Bludgeoning',
     this.isSilvered = false,
     this.statBlockId,
-    this.originalStatBlock,
     this.customAc,
     this.customAttackBonus,
     this.customDamageDiceCount,
@@ -196,56 +191,6 @@ class AnimatedObjectInstance {
 
   int get tempHp => hitPoints.tempHp;
 
-  /// Resolves the full 5e SRD MinionStatBlock for this creature instance.
-  MinionStatBlock get statBlock {
-    if (originalStatBlock != null) return originalStatBlock!;
-    if (statBlockId != null) {
-      final found = SrdSummonsLibrary.findStatBlockById(statBlockId!);
-      if (found != null) return found;
-    }
-    final byName = SrdSummonsLibrary.findStatBlockByName(name);
-    if (byName != null) return byName;
-
-    // Fallback to synthetic Animate Object stat block matching size
-    return switch (size) {
-      ObjectSize.tiny => SrdSummonsLibrary.tinyObject,
-      ObjectSize.small => SrdSummonsLibrary.smallObject,
-      ObjectSize.medium => SrdSummonsLibrary.mediumObject,
-      ObjectSize.large => SrdSummonsLibrary.largeObject,
-      ObjectSize.huge => SrdSummonsLibrary.hugeObject,
-    };
-  }
-
-  /// Factory constructor to generate an instance from an SRD MinionStatBlock.
-  factory AnimatedObjectInstance.fromStatBlock(
-    MinionStatBlock statBlock, {
-    required String id,
-    String? customName,
-    int tempHp = 0,
-  }) {
-    return AnimatedObjectInstance(
-      id: id,
-      name: customName ?? statBlock.name,
-      size: ObjectSize.fromString(statBlock.sizeDisplay),
-      currentHp: statBlock.maxHp,
-      maxHp: statBlock.maxHp,
-      tempHp: tempHp,
-      damageType: statBlock.damageType,
-      statBlockId: statBlock.id,
-      originalStatBlock: statBlock,
-      customAc: statBlock.ac,
-      customAttackBonus: statBlock.attackBonus,
-      customDamageDiceCount: statBlock.damageDiceCount,
-      customDamageDiceSides: statBlock.damageDiceSides,
-      customDamageBonus: statBlock.damageBonus,
-      secondaryDamageDiceCount: statBlock.secondaryDamageDiceCount,
-      secondaryDamageDiceSides: statBlock.secondaryDamageDiceSides,
-      secondaryDamageType: statBlock.secondaryDamageType,
-      hasPackTactics: statBlock.hasPackTactics,
-      specialTrait: statBlock.specialTrait,
-    );
-  }
-
   // Effective Stat Getters
   int get ac => customAc ?? size.ac;
   int get attackBonus => customAttackBonus ?? size.attackBonus;
@@ -254,15 +199,18 @@ class AnimatedObjectInstance {
   int get damageBonus => customDamageBonus ?? size.damageBonus;
 
   /// Formatted damage formula string (e.g., "1d4+4 Bludgeoning").
-  String get damageFormula => DiceFormatters.formatCompositeFormula(
-        primaryCount: damageDiceCount,
-        primarySides: damageDiceSides,
-        primaryBonus: damageBonus,
-        primaryDamageType: damageType,
-        secondaryCount: secondaryDamageDiceCount,
-        secondarySides: secondaryDamageDiceSides,
-        secondaryDamageType: secondaryDamageType,
-      );
+  String get damageFormula {
+    final bonusStr = damageBonus == 0 ? '' : (damageBonus > 0 ? '+$damageBonus' : '$damageBonus');
+    final typeStr = damageType.trim().isNotEmpty ? ' ${damageType.trim()}' : '';
+    final primary = '${damageDiceCount}d$damageDiceSides$bonusStr$typeStr';
+    if (secondaryDamageDiceCount > 0 &&
+        secondaryDamageType != null &&
+        secondaryDamageType!.trim().isNotEmpty) {
+      final secTypeStr = ' ${secondaryDamageType!.trim()}';
+      return '$primary + ${secondaryDamageDiceCount}d$secondaryDamageDiceSides$secTypeStr';
+    }
+    return primary;
+  }
 
   bool get isDead => hitPoints.isDead || hitPoints.currentHp <= 0;
 

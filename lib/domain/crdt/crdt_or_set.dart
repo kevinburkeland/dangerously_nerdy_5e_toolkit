@@ -21,6 +21,39 @@ class CrdtOrSet<T> {
   /// Returns the current list of active (non-tombstoned) values.
   List<T> get activeValues => items.values.map((r) => r.value).toList();
 
+  /// Returns the count of active values.
+  int get length => items.length;
+
+  /// Returns whether there are no active values.
+  bool get isEmpty => items.isEmpty;
+
+  /// Returns whether there are active values.
+  bool get isNotEmpty => items.isNotEmpty;
+
+  /// Returns the first active value.
+  T get first => activeValues.first;
+
+  /// Returns the last active value.
+  T get last => activeValues.last;
+
+  /// Returns the active value at index [index].
+  T operator [](int index) => activeValues[index];
+
+  /// Maps active values using [toElement].
+  Iterable<R> map<R>(R Function(T e) toElement) => activeValues.map(toElement);
+
+  /// Filters active values by [test].
+  Iterable<T> where(bool Function(T element) test) => activeValues.where(test);
+
+  /// Checks if any active value satisfies [test].
+  bool any(bool Function(T element) test) => activeValues.any(test);
+
+  /// Returns active values as a List.
+  List<T> toList({bool growable = true}) => activeValues.toList(growable: growable);
+
+  /// Iterator over active values.
+  Iterator<T> get iterator => activeValues.iterator;
+
   /// Adds or updates an item with the given [id] and [timestamp].
   /// If a tombstone exists for [id] that is newer than [timestamp], the addition is rejected.
   CrdtOrSet<T> add(String id, T item, HybridLogicalClock timestamp) {

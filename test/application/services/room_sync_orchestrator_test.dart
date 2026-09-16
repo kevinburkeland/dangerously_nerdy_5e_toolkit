@@ -587,19 +587,24 @@ void main() {
       expect(mockRepo.savedImmediateProfiles.last.partyCharacterIds, contains('char-offline-reconnect'));
       expect(orchestrator.processedPayloadHashes.length, equals(2));
 
-      // 4. Stale packet with old sequence number (origin_seq: 1 when node-remote-1 is already at seq 2)
-      final staleProfile = initialProfile.copyWith(name: 'Stale Sequence Packet');
-      final inboundStale = jsonEncode({
+      // 4. Out-of-order sequence packet from partitioned node (origin_seq: 1 arriving after seq 2)
+      // Must NOT be dropped by strict scalar checks; CRDT state merges deterministically
+      final outOfOrderProfile = initialProfile.copyWith(
+        name: 'Out-of-Order Partition Packet',
+        pinnedRuleIds: {'underwater_combat'},
+      );
+      final inboundOutOfOrder = jsonEncode({
         'type': 'room_sync_full',
         'origin_node_id': 'node-remote-1',
         'origin_seq': 1,
-        'payload': CampaignProfileDto.fromDomain(staleProfile).toMap(),
-        'timestamp': localTime + 1000,
+        'payload': CampaignProfileDto.fromDomain(outOfOrderProfile).toMap(),
+        'timestamp': localTime - 30000,
       });
-      await orchestrator.handleIncomingPayload(inboundStale);
+      await orchestrator.handleIncomingPayload(inboundOutOfOrder);
 
-      // Must be dropped by causality tracking; repo count remains 2
-      expect(mockRepo.savedImmediateProfiles.length, equals(2));
+      // Successfully processed and CRDT merged instead of dropped; repo count becomes 3
+      expect(mockRepo.savedImmediateProfiles.length, equals(3));
+      expect(mockRepo.savedImmediateProfiles.last.pinnedRuleIds, contains('underwater_combat'));
 
       // 5. Strictly newer packet at sequence 3
       final newerProfile = initialProfile.copyWith(name: 'Newer Packet at 1700000002500');
@@ -612,7 +617,7 @@ void main() {
       });
       await orchestrator.handleIncomingPayload(inboundNewer);
 
-      expect(mockRepo.savedImmediateProfiles.length, equals(3));
+      expect(mockRepo.savedImmediateProfiles.length, equals(4));
       expect(mockRepo.savedImmediateProfiles.last.name, equals('Newer Packet at 1700000002500'));
       expect(orchestrator.lastProfileSyncTimestamp, equals(localTime + 2000));
     });

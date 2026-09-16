@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
+import '../../domain/crdt/crdt_or_set.dart';
+import '../../domain/crdt/hybrid_logical_clock.dart';
+import '../../domain/models/animated_object.dart';
 import '../../domain/models/value_objects/hit_points.dart';
-import '../animated_object.dart';
+import '../../infrastructure/dtos/animated_object_dto.dart';
+import '../../infrastructure/dtos/crdt/crdt_or_set_dto.dart';
 import 'loot_models.dart';
 
 /// Entity Types bindable within a session or room node
@@ -225,9 +229,12 @@ class RoomNodeState {
   final String description;
   final List<RoomEntityLink> entityLinks;
   final List<LootContainer> containers;
-  final List<EncounterParticipant> activeEncounter;
-  final List<AnimatedObjectInstance> activeMinions;
+  final CrdtOrSet<EncounterParticipant> activeEncounter;
+  final CrdtOrSet<AnimatedObjectInstance> activeMinions;
   final Map<String, dynamic> customProperties;
+
+  List<EncounterParticipant> get activeEncounterList => activeEncounter.activeValues;
+  List<AnimatedObjectInstance> get activeMinionsList => activeMinions.activeValues;
 
   const RoomNodeState({
     required this.roomId,
@@ -236,10 +243,62 @@ class RoomNodeState {
     this.description = '',
     this.entityLinks = const [],
     this.containers = const [],
-    this.activeEncounter = const [],
-    this.activeMinions = const [],
+    this.activeEncounter = const CrdtOrSet<EncounterParticipant>(),
+    this.activeMinions = const CrdtOrSet<AnimatedObjectInstance>(),
     this.customProperties = const {},
   });
+
+  factory RoomNodeState.fromLists({
+    required String roomId,
+    required String roomCode,
+    required String title,
+    String description = '',
+    List<RoomEntityLink> entityLinks = const [],
+    List<LootContainer> containers = const [],
+    Iterable<EncounterParticipant>? activeEncounter,
+    Iterable<AnimatedObjectInstance>? activeMinions,
+    Map<String, dynamic> customProperties = const {},
+  }) {
+    final effectiveEncounter = activeEncounter != null
+        ? const CrdtOrSet<EncounterParticipant>().addBatch(activeEncounter.map(
+            (e) => (
+              id: e.participantId,
+              item: e,
+              timestamp: const HybridLogicalClock(
+                physicalTime: 0,
+                logicalCounter: 0,
+                nodeId: 'genesis',
+              ),
+            ),
+          ))
+        : const CrdtOrSet<EncounterParticipant>();
+
+    final effectiveMinions = activeMinions != null
+        ? const CrdtOrSet<AnimatedObjectInstance>().addBatch(activeMinions.map(
+            (m) => (
+              id: m.id,
+              item: m,
+              timestamp: const HybridLogicalClock(
+                physicalTime: 0,
+                logicalCounter: 0,
+                nodeId: 'genesis',
+              ),
+            ),
+          ))
+        : const CrdtOrSet<AnimatedObjectInstance>();
+
+    return RoomNodeState(
+      roomId: roomId,
+      roomCode: roomCode,
+      title: title,
+      description: description,
+      entityLinks: entityLinks,
+      containers: containers,
+      activeEncounter: effectiveEncounter,
+      activeMinions: effectiveMinions,
+      customProperties: customProperties,
+    );
+  }
 
   RoomNodeState copyWith({
     String? roomId,
@@ -248,10 +307,34 @@ class RoomNodeState {
     String? description,
     List<RoomEntityLink>? entityLinks,
     List<LootContainer>? containers,
-    List<EncounterParticipant>? activeEncounter,
-    List<AnimatedObjectInstance>? activeMinions,
+    dynamic activeEncounter,
+    dynamic activeMinions,
     Map<String, dynamic>? customProperties,
   }) {
+    CrdtOrSet<EncounterParticipant>? resolvedEncounter;
+    if (activeEncounter is CrdtOrSet<EncounterParticipant>) {
+      resolvedEncounter = activeEncounter;
+    } else if (activeEncounter is Iterable<EncounterParticipant>) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      var set = const CrdtOrSet<EncounterParticipant>();
+      for (final p in activeEncounter) {
+        set = set.add(p.participantId, p, HybridLogicalClock(physicalTime: now, logicalCounter: 0, nodeId: 'local'));
+      }
+      resolvedEncounter = set;
+    }
+
+    CrdtOrSet<AnimatedObjectInstance>? resolvedMinions;
+    if (activeMinions is CrdtOrSet<AnimatedObjectInstance>) {
+      resolvedMinions = activeMinions;
+    } else if (activeMinions is Iterable<AnimatedObjectInstance>) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      var set = const CrdtOrSet<AnimatedObjectInstance>();
+      for (final m in activeMinions) {
+        set = set.add(m.id, m, HybridLogicalClock(physicalTime: now, logicalCounter: 0, nodeId: 'local'));
+      }
+      resolvedMinions = set;
+    }
+
     return RoomNodeState(
       roomId: roomId ?? this.roomId,
       roomCode: roomCode ?? this.roomCode,
@@ -259,10 +342,8 @@ class RoomNodeState {
       description: description ?? this.description,
       entityLinks: entityLinks ?? this.entityLinks,
       containers: containers ?? this.containers,
-      activeEncounter: activeEncounter ?? this.activeEncounter,
-      activeMinions: activeMinions != null
-          ? List<AnimatedObjectInstance>.from(activeMinions)
-          : this.activeMinions,
+      activeEncounter: resolvedEncounter ?? this.activeEncounter,
+      activeMinions: resolvedMinions ?? this.activeMinions,
       customProperties: customProperties ?? this.customProperties,
     );
   }
@@ -274,20 +355,67 @@ class RoomNodeState {
         'description': description,
         'entityLinks': entityLinks.map((e) => e.toMap()).toList(),
         'containers': containers.map((c) => c.toMap()).toList(),
-        'activeEncounter': activeEncounter.map((e) => e.toMap()).toList(),
-        'activeMinions': activeMinions.map((m) => AnimatedObjectDto.fromDomain(m).toMap()).toList(),
+        'activeEncounter': activeEncounter.activeValues.map((e) => e.toMap()).toList(),
+        'activeEncounter_crdt': CrdtOrSetDto.toMap(activeEncounter, (e) => e.toMap()),
+        'activeMinions': activeMinions.activeValues.map((m) => AnimatedObjectDto.fromDomain(m).toMap()).toList(),
+        'activeMinions_crdt': CrdtOrSetDto.toMap(activeMinions, (m) => AnimatedObjectDto.fromDomain(m).toMap()),
         'customProperties': customProperties,
       };
 
   factory RoomNodeState.fromMap(Map<String, dynamic> map) {
-    final rawMinions = map['activeMinions'] as List? ?? [];
-    final minionsList = <AnimatedObjectInstance>[];
-    for (final raw in rawMinions) {
-      if (raw is Map) {
-        try {
-          minionsList.add(
-              AnimatedObjectDto.fromMap(Map<String, dynamic>.from(raw)).toDomain());
-        } catch (_) {}
+    CrdtOrSet<AnimatedObjectInstance> minionsSet = const CrdtOrSet<AnimatedObjectInstance>();
+    if (map['activeMinions_crdt'] is Map) {
+      try {
+        minionsSet = CrdtOrSetDto.fromMap<AnimatedObjectInstance>(
+          Map<dynamic, dynamic>.from(map['activeMinions_crdt'] as Map),
+          (raw) => AnimatedObjectDto.fromMap(Map<String, dynamic>.from(raw as Map)).toDomain(),
+        );
+      } catch (_) {}
+    } else if (map['activeMinions'] is Map && (map['activeMinions'] as Map).containsKey('items')) {
+      try {
+        minionsSet = CrdtOrSetDto.fromMap<AnimatedObjectInstance>(
+          Map<dynamic, dynamic>.from(map['activeMinions'] as Map),
+          (raw) => AnimatedObjectDto.fromMap(Map<String, dynamic>.from(raw as Map)).toDomain(),
+        );
+      } catch (_) {}
+    } else if (map['activeMinions'] is List) {
+      final rawMinions = map['activeMinions'] as List;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final raw in rawMinions) {
+        if (raw is Map) {
+          try {
+            final m = AnimatedObjectDto.fromMap(Map<String, dynamic>.from(raw)).toDomain();
+            minionsSet = minionsSet.add(m.id, m, HybridLogicalClock(physicalTime: now, logicalCounter: 0, nodeId: 'genesis'));
+          } catch (_) {}
+        }
+      }
+    }
+
+    CrdtOrSet<EncounterParticipant> encounterSet = const CrdtOrSet<EncounterParticipant>();
+    if (map['activeEncounter_crdt'] is Map) {
+      try {
+        encounterSet = CrdtOrSetDto.fromMap<EncounterParticipant>(
+          Map<dynamic, dynamic>.from(map['activeEncounter_crdt'] as Map),
+          (raw) => EncounterParticipant.fromMap(Map<String, dynamic>.from(raw as Map)),
+        );
+      } catch (_) {}
+    } else if (map['activeEncounter'] is Map && (map['activeEncounter'] as Map).containsKey('items')) {
+      try {
+        encounterSet = CrdtOrSetDto.fromMap<EncounterParticipant>(
+          Map<dynamic, dynamic>.from(map['activeEncounter'] as Map),
+          (raw) => EncounterParticipant.fromMap(Map<String, dynamic>.from(raw as Map)),
+        );
+      } catch (_) {}
+    } else if (map['activeEncounter'] is List) {
+      final rawEnc = map['activeEncounter'] as List;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final raw in rawEnc) {
+        if (raw is Map) {
+          try {
+            final p = EncounterParticipant.fromMap(Map<String, dynamic>.from(raw));
+            encounterSet = encounterSet.add(p.participantId, p, HybridLogicalClock(physicalTime: now, logicalCounter: 0, nodeId: 'genesis'));
+          } catch (_) {}
+        }
       }
     }
 
@@ -304,14 +432,34 @@ class RoomNodeState {
           .whereType<Map>()
           .map((c) => LootContainer.fromMap(Map<String, dynamic>.from(c)))
           .toList(),
-      activeEncounter: (map['activeEncounter'] as List? ?? [])
-          .whereType<Map>()
-          .map((e) =>
-              EncounterParticipant.fromMap(Map<String, dynamic>.from(e)))
-          .toList(),
-      activeMinions: minionsList,
+      activeEncounter: encounterSet,
+      activeMinions: minionsSet,
       customProperties:
           Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RoomNodeState &&
+          runtimeType == other.runtimeType &&
+          roomId == other.roomId &&
+          roomCode == other.roomCode &&
+          title == other.title &&
+          description == other.description &&
+          listEquals(entityLinks, other.entityLinks) &&
+          listEquals(containers, other.containers) &&
+          activeEncounter == other.activeEncounter &&
+          activeMinions == other.activeMinions;
+
+  @override
+  int get hashCode => Object.hash(
+        roomId,
+        roomCode,
+        title,
+        description,
+        activeEncounter,
+        activeMinions,
+      );
 }

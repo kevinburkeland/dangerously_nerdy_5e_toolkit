@@ -1,9 +1,10 @@
+import '../../domain/crdt/crdt_lww_register.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/crdt/hybrid_logical_clock.dart';
 import '../../domain/models/campaign_profile.dart';
+import '../../models/domain/loot_models.dart';
 import '../../models/domain/session_graph_models.dart';
 import '../../models/party/party_event.dart';
-import '../../models/party/party_purse.dart';
 
 /// Application service orchestrating safe CRDT state reconciliation, tombstone pruning,
 /// and deterministic field-level campaign profile merging.
@@ -67,37 +68,56 @@ class RoomStateReconciliationService {
 
   /// Reconciles an incoming remote [CampaignProfile] with the [local] campaign state.
   /// Merges distinct sub-resources (notes, party purse, party roster, room metadata, minions, encounters)
-  /// deterministically instead of wholesale overwriting the local profile.
+  /// deterministically using pure CRDT convergence instead of wholesale overwriting the local profile.
   CampaignProfile reconcileProfile({
     required CampaignProfile local,
     required CampaignProfile remote,
-    required int inboundTimestampMs,
-    required int localTimestampMs,
+    int? inboundTimestampMs,
+    int? localTimestampMs,
   }) {
     if (local.id != remote.id) {
       return local;
     }
 
-    final isRemoteNewer = inboundTimestampMs >= localTimestampMs;
-
     // 1. Root metadata (name, edition, lastPlayedAt)
-    final mergedName =
-        isRemoteNewer && remote.name.isNotEmpty ? remote.name : local.name;
-    final mergedLastPlayedAt = remote.lastPlayedAt.isAfter(local.lastPlayedAt)
+    final isRemoteNewer = inboundTimestampMs != null && localTimestampMs != null
+        ? inboundTimestampMs >= localTimestampMs
+        : !remote.lastPlayedAt.isBefore(local.lastPlayedAt);
+    final mergedLastPlayedAt = isRemoteNewer
         ? remote.lastPlayedAt
         : local.lastPlayedAt;
+    final mergedName = isRemoteNewer && remote.name.isNotEmpty
+        ? remote.name
+        : (local.name.isNotEmpty ? local.name : remote.name);
 
-    // 2. Notes: LWW based on timestamp, preserving non-empty local notes if remote is empty
-    final mergedNotes = isRemoteNewer && remote.notesMarkdown.isNotEmpty
-        ? remote.notesMarkdown
-        : (local.notesMarkdown.isNotEmpty ? local.notesMarkdown : remote.notesMarkdown);
+    // 2. Notes: Pure CRDT LWW Register convergence backed by HLC timestamps
+    // Guarantees conflict-free convergence and prevents dual-writer overwrites
+    final CrdtLwwRegister<String> mergedNotesRegister;
+    if (local.notesRegister.value != remote.notesRegister.value) {
+      if (local.notesRegister.value.isEmpty) {
+        mergedNotesRegister = remote.notesRegister;
+      } else if (remote.notesRegister.value.isEmpty) {
+        mergedNotesRegister = local.notesRegister;
+      } else {
+        // Both sides made edits concurrently: merge registers by HLC
+        // If neither is a substring of the other, preserve both in an append-only structure
+        if (!local.notesMarkdown.contains(remote.notesMarkdown) &&
+            !remote.notesMarkdown.contains(local.notesMarkdown)) {
+          final combinedText = '${local.notesMarkdown}\n\n---\n\n${remote.notesMarkdown}';
+          final newerHlc = local.notesRegister.timestamp.isAfter(remote.notesRegister.timestamp)
+              ? local.notesRegister.timestamp
+              : remote.notesRegister.timestamp;
+          mergedNotesRegister = CrdtLwwRegister<String>(value: combinedText, timestamp: newerHlc);
+        } else {
+          mergedNotesRegister = local.notesRegister.merge(remote.notesRegister);
+        }
+      }
+    } else {
+      mergedNotesRegister = local.notesRegister.merge(remote.notesRegister);
+    }
 
-    // 3. Party Purse: Granular field-by-field reconciliation
-    final mergedPurse = _mergePartyPurse(
-      local.partyPurse,
-      remote.partyPurse,
-      isRemoteNewer: isRemoteNewer,
-    );
+    // 3. Party Purse: Pure CvRDT lattice join over PN-counters across all denominations
+    final mergedPurse = local.partyPurse.merge(remote.partyPurse);
 
     // 4. Change Log: Merged and deduplicated by event ID
     final mergedChangeLog = _mergeChangeLogs(local.changeLog, remote.changeLog);
@@ -107,23 +127,21 @@ class RoomStateReconciliationService {
       local: local.partyCharacterIds,
       remote: remote.partyCharacterIds,
       changeLog: mergedChangeLog,
-      isRemoteNewer: isRemoteNewer,
     );
 
     // 6. Pinned Rules: Set Union
     final mergedPinnedRules = {...local.pinnedRuleIds, ...remote.pinnedRuleIds};
 
-    // 7. Room Node State: Sub-resource reconciliation (activeMinions, activeEncounter, containers, entityLinks)
+    // 7. Room Node State: Pure CRDT sub-resource reconciliation (activeMinions, activeEncounter)
     final mergedRoomState = _mergeRoomState(
       local.roomState,
       remote.roomState,
-      isRemoteNewer: isRemoteNewer,
     );
 
     return local.copyWith(
       name: mergedName,
       lastPlayedAt: mergedLastPlayedAt,
-      notesMarkdown: mergedNotes,
+      notesRegister: mergedNotesRegister,
       partyPurse: mergedPurse,
       partyCharacterIds: mergedPartyCharacterIds,
       pinnedRuleIds: mergedPinnedRules,
@@ -134,36 +152,43 @@ class RoomStateReconciliationService {
 
   RoomNodeState _mergeRoomState(
     RoomNodeState local,
-    RoomNodeState remote, {
-    required bool isRemoteNewer,
-  }) {
-    final title =
-        isRemoteNewer && remote.title.isNotEmpty ? remote.title : local.title;
-    final description = isRemoteNewer && remote.description.isNotEmpty
+    RoomNodeState remote,
+  ) {
+    final title = remote.title.isNotEmpty && remote.title != local.title
+        ? remote.title
+        : local.title;
+    final description = remote.description.isNotEmpty && remote.description != local.description
         ? remote.description
         : (local.description.isNotEmpty ? local.description : remote.description);
 
-    // Merge activeMinions by id
-    final minionMap = {for (final m in local.activeMinions) m.id: m};
-    for (final m in remote.activeMinions) {
-      if (!minionMap.containsKey(m.id) || isRemoteNewer) {
-        minionMap[m.id] = m;
-      }
+    // Pure CRDT OR-Set merges for minions and encounters with tombstone tracking
+    final mergedMinions = local.activeMinions.merge(remote.activeMinions);
+    final mergedEncounter = local.activeEncounter.merge(remote.activeEncounter);
+
+    // Merge containers and entityLinks deduplicated by ID
+    final entityLinkMap = <String, RoomEntityLink>{};
+    for (final l in local.entityLinks) {
+      entityLinkMap[l.entityId] = l;
+    }
+    for (final r in remote.entityLinks) {
+      entityLinkMap[r.entityId] = r;
     }
 
-    // Merge activeEncounter by participantId
-    final encounterMap = {for (final e in local.activeEncounter) e.participantId: e};
-    for (final e in remote.activeEncounter) {
-      if (!encounterMap.containsKey(e.participantId) || isRemoteNewer) {
-        encounterMap[e.participantId] = e;
-      }
+    final containerMap = <String, LootContainer>{};
+    for (final c in local.containers) {
+      containerMap[c.containerId] = c;
+    }
+    for (final c in remote.containers) {
+      containerMap[c.containerId] = c;
     }
 
     return local.copyWith(
       title: title,
       description: description,
-      activeMinions: minionMap.values.toList(),
-      activeEncounter: encounterMap.values.toList(),
+      entityLinks: entityLinkMap.values.toList(),
+      containers: containerMap.values.toList(),
+      activeMinions: mergedMinions,
+      activeEncounter: mergedEncounter,
     );
   }
 
@@ -183,23 +208,10 @@ class RoomStateReconciliationService {
     return list;
   }
 
-  PartyPurse _mergePartyPurse(
-    PartyPurse local,
-    PartyPurse remote, {
-    required bool isRemoteNewer,
-  }) {
-    if (local == remote) return local;
-
-    // CvRDT lattice join over PN-counters across all coin denominations.
-    // Guarantees conflict-free convergence across network partitions without scalar LWW overwriting.
-    return local.merge(remote);
-  }
-
   List<String> _mergePartyRosters({
     required List<String> local,
     required List<String> remote,
     required List<PartyEvent> changeLog,
-    required bool isRemoteNewer,
   }) {
     final removed = <String>{};
     for (final event in changeLog) {

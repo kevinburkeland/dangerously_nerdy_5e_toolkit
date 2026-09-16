@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -152,14 +153,38 @@ class DangerouslyNerdy5eToolkitApp extends StatefulWidget {
 }
 
 class _DangerouslyNerdy5eToolkitAppState extends State<DangerouslyNerdy5eToolkitApp> with WidgetsBindingObserver {
+  late final AppLifecycleListener _lifecycleListener;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _lifecycleListener = AppLifecycleListener(
+      onPause: _flushStorage,
+      onHide: _flushStorage,
+      onDetach: _flushStorage,
+      onExitRequested: () async {
+        await _flushStorage();
+        return AppExitResponse.exit;
+      },
+    );
+  }
+
+  Future<void> _flushStorage() async {
+    try {
+      await AppServices.instance.debouncedStorage.flushAll();
+    } catch (e, stackTrace) {
+      AppServices.instance.logger.logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Storage flush failed during lifecycle state change',
+      );
+    }
   }
 
   @override
   void dispose() {
+    _lifecycleListener.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -170,25 +195,7 @@ class _DangerouslyNerdy5eToolkitAppState extends State<DangerouslyNerdy5eToolkit
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.hidden) {
-      // Immediately flush all debounced disk writes to avoid data loss on background kill
-      try {
-        final flushFuture = AppServices.instance.debouncedStorage.flushAll();
-        unawaited(
-          flushFuture.catchError((Object e, StackTrace stackTrace) {
-            AppServices.instance.logger.logNonFatal(
-              e,
-              stackTrace,
-              reason: 'Lifecycle flushAll failed during state: $state',
-            );
-          }),
-        );
-      } catch (e, stackTrace) {
-        AppServices.instance.logger.logNonFatal(
-          e,
-          stackTrace,
-          reason: 'Synchronous failure initiating flushAll during state: $state',
-        );
-      }
+      _flushStorage();
     }
   }
 

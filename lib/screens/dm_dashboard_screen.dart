@@ -183,7 +183,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                             ),
                           ),
                           subtitle: Text(
-                            '${prof.edition.label} Edition • ${prof.partyCharacterIds.length} Players • ${prof.roomState.activeEncounter.length} Encounter',
+                            '${prof.edition.label} Edition • ${prof.partyCharacterIds.length} Players • ${prof.roomState.activeEncounterList.length} Encounter',
                             style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                           ),
                           trailing: PopupMenuButton<String>(
@@ -528,7 +528,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
     final updated = _controller.combatEncounterService.nextTurn(
-      _activeProfile!.roomState.activeEncounter,
+      _activeProfile!.roomState.activeEncounterList,
       onNewRound: (round) => setState(() => _currentRound = round),
       currentRound: _currentRound,
     );
@@ -539,7 +539,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
     final updated = _controller.combatEncounterService.prevTurn(
-      _activeProfile!.roomState.activeEncounter,
+      _activeProfile!.roomState.activeEncounterList,
     );
     _updateEncounter(updated);
   }
@@ -557,7 +557,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
     final updated = _controller.combatEncounterService.applyParticipantDamageOrHeal(
-      participants: _activeProfile!.roomState.activeEncounter,
+      participants: _activeProfile!.roomState.activeEncounterList,
       participantId: participantId,
       delta: delta,
     );
@@ -568,7 +568,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
     final updated = _controller.combatEncounterService.toggleParticipantCondition(
-      participants: _activeProfile!.roomState.activeEncounter,
+      participants: _activeProfile!.roomState.activeEncounterList,
       participantId: participantId,
       conditionName: conditionName,
     );
@@ -649,10 +649,10 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                   currentHp: hp,
                   maxHp: hp,
                   armorClass: ac,
-                  isActiveTurn: _activeProfile?.roomState.activeEncounter.isEmpty ?? true,
+                  isActiveTurn: _activeProfile?.roomState.activeEncounterList.isEmpty ?? true,
                 );
 
-                final list = List<EncounterParticipant>.from(_activeProfile?.roomState.activeEncounter ?? [])
+                final list = List<EncounterParticipant>.from(_activeProfile?.roomState.activeEncounterList ?? [])
                   ..add(newCombatant);
                 // Sort by initiative descending
                 list.sort((a, b) => b.initiativeScore.compareTo(a.initiativeScore));
@@ -672,7 +672,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
     if (_activeProfile == null) return;
     HapticService.selectionTick(context);
 
-    final participants = _activeProfile!.roomState.activeEncounter.map((p) {
+    final participants = _activeProfile!.roomState.activeEncounterList.map((p) {
       final roll = secureRandom.nextInt(20) + 1;
       return p.copyWith(initiativeScore: roll);
     }).toList();
@@ -1318,7 +1318,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
 
   Widget _buildCombatTrackerCard() {
     final theme = Theme.of(context);
-    final participants = _activeProfile!.roomState.activeEncounter;
+    final participants = _activeProfile!.roomState.activeEncounterList;
 
     return Card(
       elevation: 2,
@@ -1492,7 +1492,7 @@ class _DmDashboardScreenState extends State<DmDashboardScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
                 onPressed: () {
-                  final list = List<EncounterParticipant>.from(_activeProfile!.roomState.activeEncounter)
+                  final list = List<EncounterParticipant>.from(_activeProfile!.roomState.activeEncounterList)
                     ..removeWhere((item) => item.participantId == p.participantId);
                   _updateEncounter(list);
                 },

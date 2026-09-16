@@ -34,16 +34,16 @@ void main() {
 
       final offerId = await adapter.sendOffer(toNodeId: 'node-beta', sdp: 'v=0\r\no=...');
       expect(offerId.isNotEmpty, isTrue);
-      expect(adapter.trackedDocPaths, contains('rooms/TEST-1234/signaling/$offerId'));
+      expect(adapter.trackedDocPaths, contains('rooms/TEST-1234/nodes/node-beta/signals/$offerId'));
 
       final answerId = await adapter.sendAnswer(toNodeId: 'node-beta', sdp: 'v=0\r\no=answer...');
-      expect(adapter.trackedDocPaths, contains('rooms/TEST-1234/signaling/$answerId'));
+      expect(adapter.trackedDocPaths, contains('rooms/TEST-1234/nodes/node-beta/signals/$answerId'));
 
       final candidateId = await adapter.sendIceCandidate(
         toNodeId: 'node-beta',
         candidate: {'candidate': 'candidate:1 1 UDP ...', 'sdpMid': '0', 'sdpMLineIndex': 0},
       );
-      expect(adapter.trackedDocPaths, contains('rooms/TEST-1234/signaling/$candidateId'));
+      expect(adapter.trackedDocPaths, contains('rooms/TEST-1234/nodes/node-beta/signals/$candidateId'));
       expect(adapter.trackedDocPaths.length, 3);
     });
 
@@ -64,9 +64,9 @@ void main() {
       await adapter.cleanUpSignalingSession();
 
       // All documents MUST be deleted, leaving zero persistent signaling data in the cloud
-      expect(deletedPaths, contains('rooms/ROOM-ALPHA/signaling/$offerId'));
-      expect(deletedPaths, contains('rooms/ROOM-ALPHA/signaling/$answerId'));
-      expect(deletedPaths, contains('rooms/ROOM-ALPHA/signaling/$candId'));
+      expect(deletedPaths, contains('rooms/ROOM-ALPHA/nodes/node-beta/signals/$offerId'));
+      expect(deletedPaths, contains('rooms/ROOM-ALPHA/nodes/node-beta/signals/$answerId'));
+      expect(deletedPaths, contains('rooms/ROOM-ALPHA/nodes/node-beta/signals/$candId'));
       expect(deletedPaths.length, 3);
       expect(adapter.trackedDocPaths, isEmpty);
     });
@@ -75,11 +75,11 @@ void main() {
       await adapter.initialize(roomCode: 'ROOM-BETA', localNodeId: 'node-alpha');
 
       final signalId = await adapter.sendOffer(toNodeId: 'node-beta', sdp: 'sdp-offer');
-      expect(adapter.trackedDocPaths, contains('rooms/ROOM-BETA/signaling/$signalId'));
+      expect(adapter.trackedDocPaths, contains('rooms/ROOM-BETA/nodes/node-beta/signals/$signalId'));
 
       await adapter.deleteSignal(signalId);
-      expect(deletedPaths, contains('rooms/ROOM-BETA/signaling/$signalId'));
-      expect(adapter.trackedDocPaths.contains('rooms/ROOM-BETA/signaling/$signalId'), isFalse);
+      expect(deletedPaths, contains('rooms/ROOM-BETA/nodes/node-beta/signals/$signalId'));
+      expect(adapter.trackedDocPaths.contains('rooms/ROOM-BETA/nodes/node-beta/signals/$signalId'), isFalse);
     });
 
     test('watchIncomingSignals receives emitted signals and tracks them for cleanup', () async {
@@ -104,10 +104,10 @@ void main() {
 
       expect(receivedSignals.length, 1);
       expect(receivedSignals.first.sdp, 'remote-sdp-offer');
-      expect(adapter.trackedDocPaths, contains('rooms/ROOM-BETA/signaling/incoming-signal-1'));
+      expect(adapter.trackedDocPaths, contains('rooms/ROOM-BETA/nodes/node-alpha/signals/incoming-signal-1'));
 
       await adapter.cleanUpSignalingSession();
-      expect(deletedPaths, contains('rooms/ROOM-BETA/signaling/incoming-signal-1'));
+      expect(deletedPaths, contains('rooms/ROOM-BETA/nodes/node-alpha/signals/incoming-signal-1'));
 
       await sub.cancel();
     });
@@ -139,7 +139,7 @@ void main() {
 
       // Must be completely ignored and NOT tracked or emitted
       expect(receivedSignals, isEmpty);
-      expect(adapter.trackedDocPaths.contains('rooms/ROOM-TTL/signaling/stale-signal-1'), isFalse);
+      expect(adapter.trackedDocPaths.contains('rooms/ROOM-TTL/nodes/node-alpha/signals/stale-signal-1'), isFalse);
 
       // Fresh signal from 10 seconds ago
       final freshSignal = SignalingMessage(
@@ -156,7 +156,7 @@ void main() {
 
       expect(receivedSignals.length, 1);
       expect(receivedSignals.first.id, 'fresh-signal-1');
-      expect(adapter.trackedDocPaths, contains('rooms/ROOM-TTL/signaling/fresh-signal-1'));
+      expect(adapter.trackedDocPaths, contains('rooms/ROOM-TTL/nodes/node-alpha/signals/fresh-signal-1'));
 
       await sub.cancel();
     });
@@ -166,7 +166,7 @@ void main() {
 
       final joinId = await adapter.broadcastJoin();
       expect(joinId.isNotEmpty, isTrue);
-      expect(adapter.trackedDocPaths, contains('rooms/ROOM-JOIN/signaling/$joinId'));
+      expect(adapter.trackedDocPaths, contains('rooms/ROOM-JOIN/nodes/*/signals/$joinId'));
     });
 
     test('cleanUpPeerSignaling isolates document cleanup per peer and preserves other peers in multi-peer rooms', () async {
@@ -176,16 +176,16 @@ void main() {
       final offerC = await adapter.sendOffer(toNodeId: 'node-c', sdp: 'sdp-c');
 
       expect(adapter.trackedDocPaths.length, 2);
-      expect(adapter.peerTrackedDocPaths['node-b'], contains('rooms/MULTI-ROOM/signaling/$offerB'));
-      expect(adapter.peerTrackedDocPaths['node-c'], contains('rooms/MULTI-ROOM/signaling/$offerC'));
+      expect(adapter.peerTrackedDocPaths['node-b'], contains('rooms/MULTI-ROOM/nodes/node-b/signals/$offerB'));
+      expect(adapter.peerTrackedDocPaths['node-c'], contains('rooms/MULTI-ROOM/nodes/node-c/signals/$offerC'));
 
       // Node B establishes connection -> cleanUpPeerSignaling('node-b')
       await adapter.cleanUpPeerSignaling('node-b');
 
       // Only Node B's document deleted
-      expect(deletedPaths, contains('rooms/MULTI-ROOM/signaling/$offerB'));
-      expect(deletedPaths, isNot(contains('rooms/MULTI-ROOM/signaling/$offerC')));
-      expect(adapter.trackedDocPaths, contains('rooms/MULTI-ROOM/signaling/$offerC'));
+      expect(deletedPaths, contains('rooms/MULTI-ROOM/nodes/node-b/signals/$offerB'));
+      expect(deletedPaths, isNot(contains('rooms/MULTI-ROOM/nodes/node-c/signals/$offerC')));
+      expect(adapter.trackedDocPaths, contains('rooms/MULTI-ROOM/nodes/node-c/signals/$offerC'));
       expect(adapter.peerTrackedDocPaths.containsKey('node-b'), isFalse);
       expect(adapter.peerTrackedDocPaths['node-c'], isNotNull);
     });
@@ -213,6 +213,9 @@ class _FakeFailingDocRef implements DocumentReference<Map<String, dynamic>> {
   Future<void> set(Map<String, dynamic> data, [SetOptions? options]) async {
     throw Exception('Simulated Firestore network write error');
   }
+
+  @override
+  Future<void> delete() async {}
 
   @override
   CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
@@ -246,6 +249,9 @@ class _FakeFailingFirestore implements FirebaseFirestore {
   @override
   CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
       _FakeRoomsCollectionRef();
+
+  @override
+  DocumentReference<Map<String, dynamic>> doc(String documentPath) => _FakeFailingDocRef();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

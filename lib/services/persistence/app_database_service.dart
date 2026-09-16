@@ -85,6 +85,16 @@ class AppDatabaseService {
     }
   }
 
+  /// Asynchronously writes multiple [entries] to [boxName] atomically.
+  Future<void> putAll(String boxName, Map<String, dynamic> entries) async {
+    final box = _getBox(boxName);
+    if (box != null) {
+      await box.putAll(entries);
+    } else {
+      _inMemoryFallback.putIfAbsent(boxName, () => {}).addAll(entries);
+    }
+  }
+
   /// Deletes a [key] from [boxName].
   Future<void> delete(String boxName, String key) async {
     final box = _getBox(boxName);
@@ -92,6 +102,18 @@ class AppDatabaseService {
       await box.delete(key);
     } else {
       _inMemoryFallback[boxName]?.remove(key);
+    }
+  }
+
+  /// Deletes multiple [keys] from [boxName] atomically.
+  Future<void> deleteAll(String boxName, Iterable<String> keys) async {
+    final box = _getBox(boxName);
+    if (box != null) {
+      await box.deleteAll(keys);
+    } else {
+      for (final key in keys) {
+        _inMemoryFallback[boxName]?.remove(key);
+      }
     }
   }
 

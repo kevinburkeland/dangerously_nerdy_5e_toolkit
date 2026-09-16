@@ -68,11 +68,11 @@ void main() {
         id: 'camp_init_test',
         name: 'Initiative Arena',
       ).copyWith(
-        roomState: const RoomNodeState(
+        roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'CR-1',
           title: 'Arena Room',
-          activeEncounter: [
+          activeEncounter: const [
             EncounterParticipant(
               participantId: 'p1',
               entityLink: RoomEntityLink(
@@ -132,11 +132,11 @@ void main() {
         id: 'camp_hp_test',
         name: 'HP Test Table',
       ).copyWith(
-        roomState: const RoomNodeState(
+        roomState: RoomNodeState.fromLists(
           roomId: 'r1',
           roomCode: 'CR-1',
           title: 'Room',
-          activeEncounter: [
+          activeEncounter: const [
             EncounterParticipant(
               participantId: 'p1',
               entityLink: RoomEntityLink(
