@@ -99,6 +99,8 @@ class HomebrewEntityDto {
       'traits', 'actions', 'bonusActions', 'reactions', 'spells',
       'originFeat', 'asi', 'ability', 'abilityScoreIncrease',
       'raceName', 'subrace', 'subraces', 'flexibleAbilities',
+      'startingProficiencies', 'proficiencyChoices', 'flexibleSkills', 'skillProficiencies',
+      'allowedSkills', 'skillChoiceCount', 'classFeatures', 'hitDie', 'hd', 'savingThrows', 'proficiency',
     };
 
     final unparsed = <String, dynamic>{};
@@ -285,11 +287,13 @@ class HomebrewEntityDto {
     if (json.containsKey('rarity') || json.containsKey('itemType') || json.containsKey('weaponCategory')) {
       return 'equipment';
     }
-    if (json.containsKey('hitDie') && json.containsKey('proficiencyChoices')) {
-      return 'class';
-    }
-    if (json.containsKey('classFeatures') || json.containsKey('subclassFeatures')) {
+    if (json.containsKey('subclassFeatures')) {
       return 'subclass';
+    }
+    if (json.containsKey('hitDie') ||
+        json.containsKey('classFeatures') ||
+        json.containsKey('startingProficiencies')) {
+      return 'class';
     }
     if (json.containsKey('raceName') || json.containsKey('subrace')) {
       return 'race';
@@ -385,7 +389,189 @@ class HomebrewEntityDto {
       }
     }
 
+    // Class Ingestion: Skills, Starting Proficiencies, and Choice Pools
+    if (entityType == 'class') {
+      final classSkills = _extractClassSkills(json);
+      if (classSkills.fixed.isNotEmpty) {
+        normalized['skillProficiencies'] = classSkills.fixed;
+      }
+      if (classSkills.flexible != null) {
+        normalized['flexibleSkills'] = classSkills.flexible;
+      }
+      if (classSkills.allowedSkills.isNotEmpty) {
+        normalized['allowedSkills'] = classSkills.allowedSkills;
+      }
+      normalized['skillChoiceCount'] = classSkills.choiceCount;
+    }
+
     return normalized;
+  }
+
+  static const _canonicalSkills = {
+    'athletics', 'acrobatics', 'sleight of hand', 'stealth',
+    'arcana', 'history', 'investigation', 'nature', 'religion',
+    'animal handling', 'insight', 'medicine', 'perception', 'survival',
+    'deception', 'intimidation', 'performance', 'persuasion',
+  };
+
+  /// Extracts class skill proficiencies, differentiating fixed skills from choice pools.
+  static ({
+    List<String> fixed,
+    Map<String, dynamic>? flexible,
+    List<String> allowedSkills,
+    int choiceCount,
+  }) _extractClassSkills(Map<String, dynamic> json) {
+    final fixedSkills = <String>{};
+    final allowedSkills = <String>{};
+    int choiceCount = 2;
+    Map<String, dynamic>? flexible;
+
+    // Check startingProficiencies (nested 5eTools format or flat map)
+    final sources = <dynamic>[];
+    final sp = json['startingProficiencies'] ?? json['proficiency'] ?? json['proficiencies'];
+    if (sp is Map) {
+      if (sp['skills'] != null) sources.add(sp['skills']);
+      if (sp['skill'] != null) sources.add(sp['skill']);
+    } else if (sp != null) {
+      sources.add(sp);
+    }
+    if (json['skills'] != null && json['skills'] != sp) sources.add(json['skills']);
+    if (json['skillProficiencies'] != null) sources.add(json['skillProficiencies']);
+    if (json['proficiencyChoices'] != null) sources.add(json['proficiencyChoices']);
+
+    void parseSkillChoiceItem(dynamic item) {
+      if (item == null) return;
+      if (item is Map) {
+        if (item.containsKey('any')) {
+          final anyVal = item['any'];
+          if (anyVal is num) choiceCount = anyVal.toInt();
+          allowedSkills.addAll(_canonicalSkills);
+          flexible = {
+            'count': choiceCount,
+            'from': _canonicalSkills.toList(),
+          };
+          return;
+        }
+
+        Map? chooseMap;
+        if (item.containsKey('choose') && item['choose'] is Map) {
+          chooseMap = item['choose'] as Map;
+        } else if (item.containsKey('from')) {
+          chooseMap = item;
+        }
+
+        if (chooseMap != null) {
+          if (chooseMap['count'] is num) {
+            choiceCount = (chooseMap['count'] as num).toInt();
+          }
+          final fromRaw = chooseMap['from'];
+          final pool = <String>[];
+          if (fromRaw is List) {
+            for (final f in fromRaw) {
+              if (f == null) continue;
+              final str = f.toString().trim();
+              final lower = str.toLowerCase();
+              if (_canonicalSkills.contains(lower)) {
+                pool.add(str);
+                allowedSkills.add(str);
+              } else {
+                final match = RegExp(r'\{@skill\s+([^}]+)\}').firstMatch(str);
+                if (match != null) {
+                  pool.add(match.group(1)!);
+                  allowedSkills.add(match.group(1)!);
+                } else if (str.isNotEmpty) {
+                  pool.add(str);
+                  allowedSkills.add(str);
+                }
+              }
+            }
+          }
+          if (pool.isNotEmpty) {
+            flexible = {
+              'count': choiceCount,
+              'from': pool,
+            };
+          }
+        }
+      } else if (item is String) {
+        final lower = item.toLowerCase().trim();
+        if (lower.contains('choose') || lower.contains('from')) {
+          final countMatch = RegExp(r'choose\s+(one|two|three|four|five|\d+)', caseSensitive: false).firstMatch(lower);
+          if (countMatch != null) {
+            final countStr = countMatch.group(1)!;
+            choiceCount = switch (countStr) {
+              'one' || '1' => 1,
+              'two' || '2' => 2,
+              'three' || '3' => 3,
+              'four' || '4' => 4,
+              'five' || '5' => 5,
+              _ => int.tryParse(countStr) ?? 2,
+            };
+          }
+          final pool = <String>[];
+          for (final s in _canonicalSkills) {
+            final reg = RegExp('\\b${RegExp.escape(s)}\\b', caseSensitive: false);
+            if (reg.hasMatch(lower)) {
+              pool.add(s);
+              allowedSkills.add(s);
+            }
+          }
+          if (pool.isNotEmpty) {
+            flexible = {
+              'count': choiceCount,
+              'from': pool,
+            };
+          }
+        } else if (_canonicalSkills.contains(lower)) {
+          fixedSkills.add(item.trim());
+        }
+      }
+    }
+
+    for (final src in sources) {
+      if (src is List) {
+        for (final elem in src) {
+          if (elem is Map) {
+            parseSkillChoiceItem(elem);
+          } else if (elem is String) {
+            final lower = elem.toLowerCase().trim();
+            if (lower.contains('choose') || lower.contains('from')) {
+              parseSkillChoiceItem(elem);
+            } else if (_canonicalSkills.contains(lower)) {
+              fixedSkills.add(elem.trim());
+            }
+          }
+        }
+      } else if (src is Map) {
+        parseSkillChoiceItem(src);
+      } else if (src is String) {
+        parseSkillChoiceItem(src);
+      }
+    }
+
+    if (json['skillChoiceCount'] is num) {
+      choiceCount = (json['skillChoiceCount'] as num).toInt();
+      final flex = flexible;
+      if (flex != null) {
+        flex['count'] = choiceCount;
+      }
+    }
+    if (json['allowedSkills'] is List) {
+      for (final s in json['allowedSkills'] as List) {
+        if (s != null) allowedSkills.add(s.toString().trim());
+      }
+      flexible ??= {
+        'count': choiceCount,
+        'from': allowedSkills.toList(),
+      };
+    }
+
+    return (
+      fixed: fixedSkills.toList(),
+      flexible: flexible,
+      allowedSkills: allowedSkills.toList(),
+      choiceCount: choiceCount,
+    );
   }
 
   /// Extracts species ability modifiers, parsing root-level stat keys,

@@ -717,4 +717,120 @@ class HomebrewIngestor {
 
     return backgrounds;
   }
+
+  /// Maps a validated [HomebrewEntityDto] into a Domain [CharacterClass] / [ClassDefinition].
+  static CharacterClass mapClassFromDto(HomebrewEntityDto dto) {
+    final raw = dto.rawPayload;
+    final normalized = dto.normalizedData;
+
+    // Hit Die
+    String hitDie = 'd8';
+    final hdVal = raw['hitDie'] ?? raw['hd'] ?? raw['hitDice'];
+    if (hdVal != null) {
+      final hdStr = hdVal.toString().trim();
+      hitDie = hdStr.startsWith('d') ? hdStr : 'd$hdStr';
+    }
+
+    // Saving Throws
+    final savingThrows = <String>[];
+    final rawSaves = raw['savingThrows'] ?? raw['proficiency'] ?? raw['proficiencies'];
+    if (rawSaves is List) {
+      for (final s in rawSaves) {
+        if (s != null && s.toString().trim().isNotEmpty) {
+          savingThrows.add(s.toString().toLowerCase().trim());
+        }
+      }
+    }
+
+    // Armor and Weapon Proficiencies
+    final armorProficiencies = <String>[];
+    final weaponProficiencies = <String>[];
+    final sp = raw['startingProficiencies'];
+    if (sp is Map) {
+      if (sp['armor'] is List) {
+        armorProficiencies.addAll((sp['armor'] as List).map((e) => e.toString().trim()));
+      }
+      if (sp['weapons'] is List) {
+        weaponProficiencies.addAll((sp['weapons'] as List).map((e) => e.toString().trim()));
+      }
+    }
+
+    // Features Markdown
+    String featuresMarkdown = '';
+    final rawEntries = raw['entries'] ?? raw['classFeatures'] ?? raw['features'] ?? raw['desc'];
+    if (rawEntries is List) {
+      featuresMarkdown = rawEntries.map((e) {
+        if (e is Map) {
+          final name = e['name']?.toString() ?? '';
+          final txt = e['entries'] ?? e['text'] ?? '';
+          return name.isNotEmpty ? '### $name\n$txt' : txt.toString();
+        }
+        return e.toString();
+      }).join('\n\n');
+    } else if (rawEntries is String) {
+      featuresMarkdown = rawEntries;
+    }
+
+    // Custom Properties (preserve 100% data + normalized skill metadata)
+    final customProps = Map<String, dynamic>.from(dto.unparsedPayload);
+    customProps.addAll(raw);
+
+    // Populate normalized skills into custom properties for domain consumption
+    if (normalized.containsKey('skillProficiencies')) {
+      customProps['skillProficiencies'] = normalized['skillProficiencies'];
+    }
+    if (normalized.containsKey('flexibleSkills')) {
+      customProps['flexibleSkills'] = normalized['flexibleSkills'];
+    }
+    if (normalized.containsKey('allowedSkills')) {
+      customProps['allowedSkills'] = normalized['allowedSkills'];
+    }
+    if (normalized.containsKey('skillChoiceCount')) {
+      customProps['skillChoiceCount'] = normalized['skillChoiceCount'];
+    }
+
+    return CharacterClass(
+      id: EntityId(
+        slug: dto.id,
+        ruleset: dto.ruleset == domain_rules.RulesetVersion.srd2024
+            ? RulesetVersion.v2024
+            : RulesetVersion.v2014,
+      ),
+      name: dto.name,
+      hitDie: hitDie,
+      primaryAbility: raw['primaryAbility']?.toString(),
+      spellcastingAbility: raw['spellcastingAbility']?.toString(),
+      savingThrows: savingThrows,
+      armorProficiencies: armorProficiencies,
+      weaponProficiencies: weaponProficiencies,
+      featuresMarkdown: featuresMarkdown,
+      customProperties: customProps,
+    );
+  }
+
+  /// Parses a batch of raw class payloads into domain [CharacterClass] entities.
+  static List<CharacterClass> parseCustomClasses(
+    List<dynamic> rawList, {
+    required domain_rules.RulesetVersion ruleset,
+  }) {
+    final classes = <CharacterClass>[];
+
+    for (final item in rawList) {
+      if (item is! Map) continue;
+      final map = item is Map<String, dynamic> ? item : Map<String, dynamic>.from(item);
+
+      try {
+        final dto = HomebrewEntityDto.fromJson(map, ruleset: ruleset);
+        classes.add(mapClassFromDto(dto));
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to ingest homebrew class ${map['name']}. Skipping.',
+        );
+      }
+    }
+
+    return classes;
+  }
 }

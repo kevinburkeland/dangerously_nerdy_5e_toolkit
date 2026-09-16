@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/simulation/dpr_simulator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/simulation/precomputed_attack.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 
 void main() {
   group('DprSimulator', () {
@@ -69,6 +70,80 @@ void main() {
       expect(result.iterations, equals(10000));
       expect(result.hitCount, isPositive);
       expect(result.meanDamage, isPositive);
+    });
+
+    test('evaluates damage riders (PeriodicDamageRider, AttributeDrainRider) to reflect higher DPR than base attack', () {
+      const simulator = DprSimulator();
+
+      final attackWithBleed = PrecomputedAttack(
+        attackId: 'halberd_bleed',
+        attackBonus: 7,
+        flatBonus: 4,
+        damageGroups: const [
+          DamageDieGroup(count: 1, faces: 10),
+        ],
+        riders: const [
+          PeriodicDamageRider(
+            diceCount: 1,
+            diceSides: 6,
+            flatBonus: 2,
+            damageType: 'acid',
+          ),
+        ],
+      );
+
+      final attackWithDrain = PrecomputedAttack(
+        attackId: 'shadow_drain',
+        attackBonus: 7,
+        flatBonus: 4,
+        damageGroups: const [
+          DamageDieGroup(count: 1, faces: 10),
+        ],
+        riders: const [
+          AttributeDrainRider(
+            targetAbility: AbilityType.strength,
+            diceCount: 1,
+            diceSides: 4,
+            flatBonus: 1,
+          ),
+        ],
+      );
+
+      final baseResult = simulator.run(
+        attack: testAttack,
+        targetAc: 15,
+        iterations: 10000,
+        rng: Random(100),
+      );
+
+      final bleedResult = simulator.run(
+        attack: attackWithBleed,
+        targetAc: 15,
+        iterations: 10000,
+        rng: Random(100),
+      );
+
+      final drainResult = simulator.run(
+        attack: attackWithDrain,
+        targetAc: 15,
+        iterations: 10000,
+        rng: Random(100),
+      );
+
+      // Hit rates should remain around 65% for target AC 15 with +7 attack bonus
+      expect(bleedResult.hitRate, closeTo(0.65, 0.03));
+      expect(drainResult.hitRate, closeTo(0.65, 0.03));
+
+      // Periodic damage rider (1d6+2 avg 5.5) must increase meanDamage and DPR
+      expect(bleedResult.meanDamage, greaterThan(baseResult.meanDamage));
+      expect(bleedResult.dpr, greaterThan(baseResult.dpr));
+
+      // Attribute drain rider (1d4+1 avg 3.5) must increase meanDamage and DPR
+      expect(drainResult.meanDamage, greaterThan(baseResult.meanDamage));
+      expect(drainResult.dpr, greaterThan(baseResult.dpr));
+
+      // Bleed (avg +5.5) deals more than Drain (avg +3.5)
+      expect(bleedResult.meanDamage, greaterThan(drainResult.meanDamage));
     });
   });
 }

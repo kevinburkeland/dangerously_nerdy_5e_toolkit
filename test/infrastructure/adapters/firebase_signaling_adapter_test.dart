@@ -1,3 +1,6 @@
+// ignore_for_file: subtype_of_sealed_class
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_signaling_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/signaling_message.dart';
@@ -186,5 +189,65 @@ void main() {
       expect(adapter.peerTrackedDocPaths.containsKey('node-b'), isFalse);
       expect(adapter.peerTrackedDocPaths['node-c'], isNotNull);
     });
+
+    test('Zero phantom tracked document paths on failed network writes', () async {
+      final fakeFirestore = _FakeFailingFirestore();
+      final failingAdapter = FirebaseSignalingAdapter(firestore: fakeFirestore);
+
+      await failingAdapter.initialize(roomCode: 'FAIL-ROOM', localNodeId: 'node-fail');
+
+      expect(
+        () async => failingAdapter.sendOffer(toNodeId: 'node-target', sdp: 'fake-sdp'),
+        throwsA(isA<Exception>()),
+      );
+
+      expect(failingAdapter.trackedDocPaths, isEmpty);
+      expect(failingAdapter.peerTrackedDocPaths, isEmpty);
+      await failingAdapter.dispose();
+    });
   });
 }
+
+class _FakeFailingDocRef implements DocumentReference<Map<String, dynamic>> {
+  @override
+  Future<void> set(Map<String, dynamic> data, [SetOptions? options]) async {
+    throw Exception('Simulated Firestore network write error');
+  }
+
+  @override
+  CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
+      _FakeSignalingCollectionRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeSignalingCollectionRef implements CollectionReference<Map<String, dynamic>> {
+  @override
+  DocumentReference<Map<String, dynamic>> doc([String? path]) => _FakeFailingDocRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #where) return this;
+    if (invocation.memberName == #snapshots) return const Stream<QuerySnapshot<Map<String, dynamic>>>.empty();
+    return super.noSuchMethod(invocation);
+  }
+}
+
+class _FakeRoomsCollectionRef implements CollectionReference<Map<String, dynamic>> {
+  @override
+  DocumentReference<Map<String, dynamic>> doc([String? path]) => _FakeFailingDocRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeFailingFirestore implements FirebaseFirestore {
+  @override
+  CollectionReference<Map<String, dynamic>> collection(String collectionPath) =>
+      _FakeRoomsCollectionRef();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+

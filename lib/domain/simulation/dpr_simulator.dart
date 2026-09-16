@@ -61,6 +61,8 @@ class DprSimulator {
     var maxDamage = 0;
 
     final attackBonus = attack.attackBonus;
+    final riders = attack.riders;
+    final hasDamageRiders = riders.any((r) => r is PeriodicDamageRider || r is AttributeDrainRider);
 
     for (var i = 0; i < iterations; i++) {
       final d20 = random.nextInt(20) + 1;
@@ -69,7 +71,17 @@ class DprSimulator {
         // Critical hit
         hitCount++;
         critCount++;
-        final dmg = attack.rollDamage(random, isCrit: true);
+        var dmg = attack.rollDamage(random, isCrit: true);
+        if (hasDamageRiders) {
+          for (var r = 0; r < riders.length; r++) {
+            final rider = riders[r];
+            if (rider is PeriodicDamageRider) {
+              dmg += rider.rollDamage(random);
+            } else if (rider is AttributeDrainRider) {
+              dmg += rider.rollDrain(random);
+            }
+          }
+        }
         totalDamage += dmg;
         if (dmg < minDamage) minDamage = dmg;
         if (dmg > maxDamage) maxDamage = dmg;
@@ -80,7 +92,17 @@ class DprSimulator {
       } else if (d20 + attackBonus >= targetAc) {
         // Regular hit
         hitCount++;
-        final dmg = attack.rollDamage(random, isCrit: false);
+        var dmg = attack.rollDamage(random, isCrit: false);
+        if (hasDamageRiders) {
+          for (var r = 0; r < riders.length; r++) {
+            final rider = riders[r];
+            if (rider is PeriodicDamageRider) {
+              dmg += rider.rollDamage(random);
+            } else if (rider is AttributeDrainRider) {
+              dmg += rider.rollDrain(random);
+            }
+          }
+        }
         totalDamage += dmg;
         if (dmg < minDamage) minDamage = dmg;
         if (dmg > maxDamage) maxDamage = dmg;

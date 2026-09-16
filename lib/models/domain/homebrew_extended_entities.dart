@@ -392,6 +392,9 @@ class ClassFeatureDecision {
   }
 }
 
+/// Alias for CharacterClass representing a class definition entity.
+typedef ClassDefinition = CharacterClass;
+
 /// A comprehensive class definition entity supporting dual-ruleset progression and custom extensions.
 @immutable
 class CharacterClass extends DomainEntity {

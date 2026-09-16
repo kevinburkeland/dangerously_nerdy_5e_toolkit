@@ -174,7 +174,6 @@ class FirebaseSignalingAdapter {
     );
 
     final path = 'rooms/$_roomCode/signaling/$signalId';
-    _peerTrackedDocPaths.putIfAbsent(toNodeId, () => <String>{}).add(path);
 
     if (isFirebaseAvailable) {
       await _effectiveFirestore
@@ -184,6 +183,8 @@ class FirebaseSignalingAdapter {
           .doc(signalId)
           .set(message.toMap());
     }
+
+    _peerTrackedDocPaths.putIfAbsent(toNodeId, () => <String>{}).add(path);
 
     return signalId;
   }
