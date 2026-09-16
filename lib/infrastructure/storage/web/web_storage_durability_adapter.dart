@@ -4,6 +4,7 @@ import 'package:web/web.dart' as web;
 import '../../../domain/storage/models/engine_profile.dart';
 import '../../../domain/storage/models/storage_telemetry_report.dart';
 import '../../../domain/storage/ports/i_storage_durability_port.dart';
+import '../user_agent_parser.dart';
 
 /// Web implementation of [IStorageDurabilityPort] utilizing W3C StorageManager standards.
 class StorageDurabilityAdapter implements IStorageDurabilityPort {
@@ -29,8 +30,8 @@ class StorageDurabilityAdapter implements IStorageDurabilityPort {
       }
     } catch (_) {}
 
-    return EngineProfile.fromUserAgent(
-      userAgent: ua,
+    return UserAgentParser.parse(
+      ua,
       isStandalonePwa: isStandalone,
     );
   }

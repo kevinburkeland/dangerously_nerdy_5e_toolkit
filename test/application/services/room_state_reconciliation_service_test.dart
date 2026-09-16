@@ -3,6 +3,8 @@ import 'package:dangerously_nerdy_5e_toolkit/application/services/party_room_ser
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/crdt_or_set.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/hybrid_logical_clock.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/models/campaign_profile.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 
 void main() {
   group('PartyRoomService Tests', () {
@@ -106,6 +108,69 @@ void main() {
       expect(pruned.tombstones.containsKey('old-tomb-2'), isFalse);
       expect(pruned.tombstones.containsKey('active-tomb'), isTrue);
       expect(pruned.tombstones['active-tomb'], equals(recentTs));
+    });
+
+    test('Milestone Pruning Safety: executeMilestonePrune defers pruning when epoch >= network time', () {
+      final skewService = RoomStateReconciliationService(
+        networkTimeProvider: () => 5000,
+      );
+
+      const pastTs = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
+      const setWithTombstones = CrdtOrSet<String>(
+        tombstones: {'tomb-1': pastTs},
+      );
+
+      // Server acknowledges snapshot at epoch 6000 (ahead of network time 5000 due to skew)
+      final deferred = skewService.executeMilestonePrune(
+        setWithTombstones,
+        6000,
+        'server-host',
+      );
+
+      // Must not wipe tombstones up to currentNetworkTime - 1; must defer pruning
+      expect(deferred.tombstones.containsKey('tomb-1'), isTrue);
+      expect(deferred.tombstones.length, equals(1));
+    });
+
+    test('PartyPurse Reconciliation: Spending money to 0 does not resurrect remote currency', () {
+      // Local spent all 100 GP
+      final local = const PartyPurse()
+          .depositCoins(gp: 100, nodeId: 'host')
+          .withdrawCoins(gp: 100, nodeId: 'local');
+      expect(local.gp, 0);
+
+      // Remote still has the unspent 100 GP
+      final remote = const PartyPurse().depositCoins(gp: 100, nodeId: 'host');
+      expect(remote.gp, 100);
+
+      // Merge local and remote
+      final merged = service.reconcileProfile(
+        local: CampaignProfile.defaultProfile(id: 'camp1').copyWith(partyPurse: local),
+        remote: CampaignProfile.defaultProfile(id: 'camp1').copyWith(partyPurse: remote),
+        inboundTimestampMs: 2000,
+        localTimestampMs: 1000,
+      );
+
+      // The 100 GP spent by local MUST NOT be resurrected!
+      expect(merged.partyPurse.gp, 0);
+    });
+
+    test('PartyPurse Reconciliation: Concurrent deposits across peers converge via PN-counter', () {
+      // Peer A deposits 100 GP
+      final purseA = const PartyPurse().depositCoins(gp: 100, nodeId: 'peerA');
+
+      // Peer B deposits 50 GP
+      final purseB = const PartyPurse().depositCoins(gp: 50, nodeId: 'peerB');
+
+      final merged = service.reconcileProfile(
+        local: CampaignProfile.defaultProfile(id: 'camp1').copyWith(partyPurse: purseA),
+        remote: CampaignProfile.defaultProfile(id: 'camp1').copyWith(partyPurse: purseB),
+        inboundTimestampMs: 2000,
+        localTimestampMs: 1000,
+      );
+
+      // Both deposits converge: 100 + 50 = 150 GP
+      expect(merged.partyPurse.gp, 150);
     });
   });
 }

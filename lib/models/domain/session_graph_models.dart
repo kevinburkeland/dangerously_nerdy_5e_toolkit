@@ -105,12 +105,14 @@ class EncounterParticipant {
   final int armorClass;
   final List<String> activeConditions;
   final bool isDefeated;
+  final bool isDead;
   final bool isActiveTurn;
 
   HitPoints get hitPoints => HitPoints(
         currentHp: currentHp,
         maxHp: maxHp,
         tempHp: tempHp,
+        isDead: isDead,
       );
 
   const EncounterParticipant({
@@ -124,6 +126,7 @@ class EncounterParticipant {
     this.armorClass = 10,
     this.activeConditions = const [],
     this.isDefeated = false,
+    this.isDead = false,
     this.isActiveTurn = false,
   });
 
@@ -139,11 +142,13 @@ class EncounterParticipant {
     int? armorClass,
     List<String>? activeConditions,
     bool? isDefeated,
+    bool? isDead,
     bool? isActiveTurn,
   }) {
     final int resolvedCurrentHp = hitPoints?.currentHp ?? currentHp ?? this.currentHp;
     final int resolvedMaxHp = hitPoints?.maxHp ?? maxHp ?? this.maxHp;
     final int resolvedTempHp = hitPoints?.tempHp ?? tempHp ?? this.tempHp;
+    final bool resolvedIsDead = hitPoints?.isDead ?? isDead ?? this.isDead;
 
     return EncounterParticipant(
       participantId: participantId ?? this.participantId,
@@ -156,6 +161,7 @@ class EncounterParticipant {
       armorClass: armorClass ?? this.armorClass,
       activeConditions: activeConditions ?? this.activeConditions,
       isDefeated: isDefeated ?? this.isDefeated,
+      isDead: resolvedIsDead,
       isActiveTurn: isActiveTurn ?? this.isActiveTurn,
     );
   }
@@ -171,6 +177,7 @@ class EncounterParticipant {
         'armorClass': armorClass,
         'activeConditions': activeConditions,
         'isDefeated': isDefeated,
+        'isDead': isDead,
         'isActiveTurn': isActiveTurn,
       };
 
@@ -183,6 +190,7 @@ class EncounterParticipant {
             currentHp: ((map['hitPoints'] as Map)['currentHp'] as num?)?.toInt() ?? cur,
             maxHp: ((map['hitPoints'] as Map)['maxHp'] as num?)?.toInt() ?? max,
             tempHp: ((map['hitPoints'] as Map)['tempHp'] as num?)?.toInt() ?? temp,
+            isDead: (map['hitPoints'] as Map)['isDead'] == true,
           )
         : HitPoints(currentHp: cur, maxHp: max, tempHp: temp);
 
@@ -201,9 +209,11 @@ class EncounterParticipant {
           .whereType<String>()
           .toList(),
       isDefeated: map['isDefeated'] == true,
+      isDead: map['isDead'] == true || hp.isDead,
       isActiveTurn: map['isActiveTurn'] == true,
     );
   }
+
 }
 
 /// Root Node Representation of a dynamic Dungeon Room or Session Graph State

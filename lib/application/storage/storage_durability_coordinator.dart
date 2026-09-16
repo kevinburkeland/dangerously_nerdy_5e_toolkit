@@ -140,18 +140,8 @@ class StorageDurabilityCoordinator {
         (campaignRepo.activeProfile?.id == inboundProfile.id
             ? campaignRepo.activeProfile
             : null);
-
-    if (localProfile != null) {
-      // 30-second sliding lookback window to tolerate physical clock skew:
-      // If local state has a newer timestamp outside the 30-second skew tolerance window,
-      // drop or reject overwriting with stale snapshot.
-      final toleranceThreshold =
-          localProfile.lastPlayedAt.subtract(const Duration(seconds: 30));
-
-      if (bundle.exportedAt.isBefore(toleranceThreshold)) {
-        return false;
-      }
-    }
+    // User-initiated cold-storage snapshot restoration allows rollbacks;
+    // cryptographic validity is already verified via bundle.isValid above.
 
     // Reconcile / save state
     await campaignRepo.saveProfileImmediate(inboundProfile);

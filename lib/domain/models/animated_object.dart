@@ -264,14 +264,19 @@ class AnimatedObjectInstance {
         secondaryDamageType: secondaryDamageType,
       );
 
-  bool get isDead => hitPoints.isDead;
+  bool get isDead => hitPoints.isDead || hitPoints.currentHp <= 0;
 
   /// Safe calculation of remaining HP percentage, strictly protected against NaN / division-by-zero.
   double get hpPercent => hitPoints.hpPercent;
 
   /// Pure copy-transform damage application with Temporary HP absorption (5e RAW).
-  AnimatedObjectInstance applyDamage(int amount) =>
-      copyWith(hitPoints: hitPoints.takeDamage(amount));
+  /// When an animated object's HP is reduced to 0, it is destroyed (isDead: true).
+  AnimatedObjectInstance applyDamage(int amount) {
+    final newHp = hitPoints.takeDamage(amount);
+    return copyWith(
+      hitPoints: newHp.copyWith(isDead: newHp.isDead || newHp.currentHp <= 0),
+    );
+  }
 
   /// Pure copy-transform healing application capped to Max HP.
   AnimatedObjectInstance applyHealing(int amount, {bool allowRevive = false}) =>

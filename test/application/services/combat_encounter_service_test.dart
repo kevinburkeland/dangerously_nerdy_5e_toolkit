@@ -362,7 +362,7 @@ void main() {
       expect(damaged.first.tempHp, equals(0));
       expect(damaged.first.isDefeated, isFalse);
 
-      // Lethal damage: 15 damage -> 0 HP, isDefeated = true
+      // Lethal non-massive damage: 15 damage -> 0 HP, isDefeated = true, isDead = false (downed/unconscious)
       final lethal = service.applyParticipantDamageOrHeal(
         participants: damaged,
         participantId: 'p1',
@@ -370,8 +370,9 @@ void main() {
       );
       expect(lethal.first.currentHp, equals(0));
       expect(lethal.first.isDefeated, isTrue);
+      expect(lethal.first.isDead, isFalse);
 
-      // Healing: +10 HP -> 10 HP, isDefeated = false
+      // Healing a downed (0 HP) participant: +10 HP -> 10 HP, isDefeated = false per 5e RAW
       final healed = service.applyParticipantDamageOrHeal(
         participants: lethal,
         participantId: 'p1',
@@ -379,6 +380,84 @@ void main() {
       );
       expect(healed.first.currentHp, equals(10));
       expect(healed.first.isDefeated, isFalse);
+      expect(healed.first.isDead, isFalse);
+
+      // Massive lethal damage (e.g. 50 damage on 10 HP / 20 max HP -> excess 40 >= 20 maxHp)
+      final massiveLethal = service.applyParticipantDamageOrHeal(
+        participants: healed,
+        participantId: 'p1',
+        delta: -50,
+      );
+      expect(massiveLethal.first.currentHp, equals(0));
+      expect(massiveLethal.first.isDefeated, isTrue);
+      expect(massiveLethal.first.isDead, isTrue);
+
+      // Standard healing cannot revive a permanently dead participant
+      final stillDead = service.applyParticipantDamageOrHeal(
+        participants: massiveLethal,
+        participantId: 'p1',
+        delta: 10,
+      );
+      expect(stillDead.first.currentHp, equals(0));
+      expect(stillDead.first.isDead, isTrue);
+      expect(stillDead.first.isDefeated, isTrue);
+
+      // Explicit revival restores the dead participant
+      final revived = service.applyParticipantDamageOrHeal(
+        participants: stillDead,
+        participantId: 'p1',
+        delta: 15,
+        allowRevive: true,
+      );
+      expect(revived.first.currentHp, equals(15));
+      expect(revived.first.isDead, isFalse);
+      expect(revived.first.isDefeated, isFalse);
+    });
+
+    test('applyCharacterHealing handles unconscious vs dead characters per 5e RAW', () async {
+      // 1. Downed character at 0 HP with 1 death save failure
+      final downedChar = testChar.copyWith(
+        resources: testChar.resources.copyWith(
+          currentHp: 0,
+          deathSaveFailures: 1,
+          deathSaveSuccesses: 1,
+        ),
+      );
+      final revivedDowned = await service.applyCharacterHealing(
+        character: downedChar,
+        amount: 8,
+        maxHp: 20,
+      );
+      expect(revivedDowned.resources.currentHp, equals(8));
+      // Death saves are reset on waking up
+      expect(revivedDowned.resources.deathSaveFailures, equals(0));
+      expect(revivedDowned.resources.deathSaveSuccesses, equals(0));
+
+      // 2. Permanently dead character with 3 death save failures
+      final deadChar = testChar.copyWith(
+        resources: testChar.resources.copyWith(
+          currentHp: 0,
+          deathSaveFailures: 3,
+        ),
+      );
+      // Standard healing rejected without isRevival
+      final failedHeal = await service.applyCharacterHealing(
+        character: deadChar,
+        amount: 10,
+        maxHp: 20,
+      );
+      expect(failedHeal.resources.currentHp, equals(0));
+      expect(failedHeal.resources.deathSaveFailures, equals(3));
+
+      // Explicit revival restores HP and resets death saves
+      final explicitRevived = await service.applyCharacterHealing(
+        character: deadChar,
+        amount: 10,
+        maxHp: 20,
+        isRevival: true,
+      );
+      expect(explicitRevived.resources.currentHp, equals(10));
+      expect(explicitRevived.resources.deathSaveFailures, equals(0));
     });
 
     test('toggleParticipantCondition adds and removes conditions', () {

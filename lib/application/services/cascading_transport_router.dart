@@ -49,8 +49,12 @@ class CascadingTransportRouter implements IP2pTransportPort {
   bool _isProbing = false;
 
   final Duration stepUpCooldown;
+  final Duration stepUpHoldoff;
+  final int sequentialFailureThreshold;
   int _lastStepDownTimestamp = 0;
+  int _lastStepUpTimestamp = 0;
   int _stepDownCountInWindow = 0;
+  int _consecutiveFailureCount = 0;
 
   final Map<String, int> _peerLastSeen = {};
 
@@ -62,6 +66,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
     this.checkInterval = const Duration(seconds: 1),
     this.stepUpProbeInterval = const Duration(seconds: 30),
     this.stepUpCooldown = const Duration(seconds: 15),
+    this.stepUpHoldoff = const Duration(seconds: 5),
+    this.sequentialFailureThreshold = 3,
     this.peerTimestampProvider,
     this.onPeerPruned,
   });
@@ -74,6 +80,14 @@ class CascadingTransportRouter implements IP2pTransportPort {
   IP2pTransportPort? get activeAdapter => _activeAdapter;
   String? get roomCode => _roomCode;
   String? get localNodeId => _localNodeId;
+
+  /// Visible for testing failure counter state.
+  @visibleForTesting
+  int get consecutiveFailureCount => _consecutiveFailureCount;
+
+  /// Visible for testing step up timestamp.
+  @visibleForTesting
+  int get lastStepUpTimestamp => _lastStepUpTimestamp;
 
   @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
@@ -107,7 +121,9 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _localNodeId = localNodeId;
     _peerLastSeen.clear();
     _lastStepDownTimestamp = 0;
+    _lastStepUpTimestamp = 0;
     _stepDownCountInWindow = 0;
+    _consecutiveFailureCount = 0;
     _changeState(TransportState.connecting);
 
     // Tier 1: Local Wi-Fi (Zero Cost)
@@ -194,20 +210,33 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
     try {
       await _activeAdapter!.broadcastPayload(jsonPayload);
+      _consecutiveFailureCount = 0;
     } catch (_) {
-      // Failover step down waterfall if transmission fails
-      await _stepDownWaterfall();
-      try {
-        await _activeAdapter?.broadcastPayload(jsonPayload);
-      } catch (_) {
-        _changeState(TransportState.offline);
+      _consecutiveFailureCount++;
+      if (_consecutiveFailureCount >= sequentialFailureThreshold) {
+        _consecutiveFailureCount = 0;
+        await _stepDownWaterfall();
+        try {
+          await _activeAdapter?.broadcastPayload(jsonPayload);
+        } catch (_) {
+          _changeState(TransportState.offline);
+        }
       }
     }
   }
 
-  Future<void> _stepDownWaterfall() async {
-    _lastStepDownTimestamp = DateTime.now().millisecondsSinceEpoch;
+  Future<void> _stepDownWaterfall({bool force = false}) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (!force &&
+        _lastStepUpTimestamp > 0 &&
+        (now - _lastStepUpTimestamp < stepUpHoldoff.inMilliseconds)) {
+      // Holdoff dampening active; suppress step-down to prevent ping-pong flapping
+      return;
+    }
+
+    _lastStepDownTimestamp = now;
     _stepDownCountInWindow++;
+    _consecutiveFailureCount = 0;
 
     await _activeSubscription?.cancel();
     _activeSubscription = null;
@@ -286,7 +315,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
             _currentState == TransportState.webRtc) &&
         _peerLastSeen.isEmpty &&
         zombieNodes.isNotEmpty) {
-      await _stepDownWaterfall();
+      await _stepDownWaterfall(force: true);
     }
   }
 
@@ -381,6 +410,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
     TransportState newState,
   ) async {
     _stepDownCountInWindow = 0;
+    _lastStepUpTimestamp = DateTime.now().millisecondsSinceEpoch;
+    _consecutiveFailureCount = 0;
     final previousAdapter = _activeAdapter;
     await _activateAdapter(higherAdapter, newState);
     if (previousAdapter != null && previousAdapter != higherAdapter) {

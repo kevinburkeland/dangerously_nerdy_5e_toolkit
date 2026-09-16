@@ -47,6 +47,7 @@ class CombatEncounterService {
     required Character character,
     required int amount,
     int? maxHp,
+    bool isRevival = false,
   }) async {
     if (amount <= 0) return character;
 
@@ -59,11 +60,11 @@ class CombatEncounterService {
     }();
 
     final isDead = character.resources.deathSaveFailures >= 3;
-    if (isDead) return character;
+    if (isDead && !isRevival) return character;
 
     final updatedHp = character.resources.hitPoints
-        .copyWith(maxHp: effectiveMaxHp)
-        .heal(amount, allowRevive: character.resources.deathSaveFailures < 3);
+        .copyWith(maxHp: effectiveMaxHp, isDead: isDead)
+        .heal(amount, allowRevive: isRevival);
 
     final updated = character.copyWith(
       resources: character.resources.copyWith(
@@ -157,11 +158,11 @@ class CombatEncounterService {
   // Turn Tracker & Encounter Mechanics
   // ==========================================
 
-  /// Advances the initiative turn to the next active participant.
+  /// Advances turn pointer forward in active encounter participant list.
   List<EncounterParticipant> nextTurn(
     List<EncounterParticipant> participants, {
-    void Function(int nextRound)? onNewRound,
-    int currentRound = 1,
+    required int currentRound,
+    void Function(int newRound)? onNewRound,
   }) {
     if (participants.isEmpty) return participants;
 
@@ -177,7 +178,7 @@ class CombatEncounterService {
     }).toList();
   }
 
-  /// Moves the initiative turn back to the previous participant.
+  /// Reverses turn pointer backwards in active encounter participant list.
   List<EncounterParticipant> prevTurn(List<EncounterParticipant> participants) {
     if (participants.isEmpty) return participants;
 
@@ -190,10 +191,17 @@ class CombatEncounterService {
   }
 
   /// Applies damage or healing to a specific [EncounterParticipant] in the active encounter.
+  ///
+  /// Under 5e RAW:
+  /// - Dropping to 0 HP marks a participant as defeated/downed ([isDefeated] = true).
+  /// - Massive damage that exceeds [maxHp] marks the participant as permanently dead ([isDead] = true).
+  /// - Standard healing to a downed participant at 0 HP revives them ([isDefeated] = false).
+  /// - A permanently dead participant cannot be healed unless [allowRevive] is explicitly true.
   List<EncounterParticipant> applyParticipantDamageOrHeal({
     required List<EncounterParticipant> participants,
     required String participantId,
     required int delta,
+    bool allowRevive = false,
   }) {
     return participants.map((p) {
       if (p.participantId != participantId) return p;
@@ -202,13 +210,17 @@ class CombatEncounterService {
         final updatedHp = p.hitPoints.takeDamage(delta.abs());
         return p.copyWith(
           hitPoints: updatedHp,
-          isDefeated: updatedHp.isDead,
+          isDefeated: updatedHp.isDowned || updatedHp.isDead,
+          isDead: updatedHp.isDead,
         );
       } else {
-        final updatedHp = p.hitPoints.heal(delta, allowRevive: true);
+        if (p.hitPoints.isDead && !allowRevive) return p;
+
+        final updatedHp = p.hitPoints.heal(delta, allowRevive: allowRevive);
         return p.copyWith(
           hitPoints: updatedHp,
-          isDefeated: updatedHp.isDead,
+          isDefeated: updatedHp.isDowned || updatedHp.isDead,
+          isDead: updatedHp.isDead,
         );
       }
     }).toList();

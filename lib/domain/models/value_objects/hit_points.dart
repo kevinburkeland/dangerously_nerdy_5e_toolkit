@@ -8,11 +8,13 @@ class HitPoints {
   final int currentHp;
   final int maxHp;
   final int tempHp;
+  final bool isDead;
 
   const HitPoints({
     required int currentHp,
     required int maxHp,
     int tempHp = 0,
+    this.isDead = false,
   })  : maxHp = maxHp < 1 ? 1 : maxHp,
         currentHp = currentHp < 0 ? 0 : (currentHp > (maxHp < 1 ? 1 : maxHp) ? (maxHp < 1 ? 1 : maxHp) : currentHp),
         tempHp = tempHp < 0 ? 0 : tempHp;
@@ -24,17 +26,20 @@ class HitPoints {
       currentHp: validMax,
       maxHp: validMax,
       tempHp: tempHp,
+      isDead: false,
     );
   }
 
-  /// Whether current HP has reached 0 (unconscious or destroyed).
-  bool get isDead => currentHp <= 0;
+  /// Whether current HP has reached 0 (unconscious/downed or dying).
+  bool get isDowned => currentHp <= 0;
 
   /// Safe calculation of remaining HP percentage [0.0, 1.0].
   double get hpPercent => maxHp > 0 ? (currentHp / maxHp).clamp(0.0, 1.0) : 0.0;
 
   /// Applies damage according to 5e RAW:
   /// Temporary hit points absorb incoming damage first. Any remainder reduces current HP.
+  /// If the remaining damage reduces current HP to 0 and the excess damage equals or exceeds
+  /// max HP, instant death occurs (5e RAW Massive Damage).
   HitPoints takeDamage(int amount) {
     if (amount <= 0) return this;
 
@@ -51,17 +56,24 @@ class HitPoints {
       }
     }
 
-    final newCurrent = (currentHp - remaining).clamp(0, maxHp);
+    final damageToHp = remaining;
+    final newCurrent = (currentHp - damageToHp).clamp(0, maxHp);
+    final bool instantDeath = isDead || (damageToHp - currentHp >= maxHp);
+
     return HitPoints(
       currentHp: newCurrent,
       maxHp: maxHp,
       tempHp: newTemp,
+      isDead: instantDeath,
     );
   }
 
   /// Applies healing bounded by [maxHp]. Does not affect temporary hit points.
-  /// Under 5e RAW, healing cannot revive an actor that is dead / at 0 HP
-  /// unless explicit revival semantics are specified via [allowRevive].
+  /// Under 5e RAW:
+  /// - A downed creature at 0 HP (unconscious/dying, but not permanently dead)
+  ///   regains hit points and wakes up from standard healing.
+  /// - A creature that has suffered permanent death ([isDead] == true) cannot be
+  ///   healed unless explicit revival semantics are specified via [allowRevive].
   HitPoints heal(int amount, {bool allowRevive = false}) {
     if (amount <= 0) return this;
     if (isDead && !allowRevive) return this;
@@ -70,11 +82,12 @@ class HitPoints {
       currentHp: newCurrent,
       maxHp: maxHp,
       tempHp: tempHp,
+      isDead: allowRevive ? false : isDead,
     );
   }
 
-  /// Explicit revival method to restore a dead/zero-HP actor to positive HP.
-  HitPoints revive(int amount) => heal(amount, allowRevive: true);
+  /// Explicit revival method to restore a permanently dead actor to positive HP.
+  HitPoints revive(int amount) => heal(amount, allowRevive: true).copyWith(isDead: false);
 
   /// Grants Temporary Hit Points (5e RAW: non-stacking; overrides if higher, or if [forceOverride]).
   HitPoints grantTempHp(int amount, {bool forceOverride = false}) {
@@ -84,6 +97,7 @@ class HitPoints {
       currentHp: currentHp,
       maxHp: maxHp,
       tempHp: newTemp,
+      isDead: isDead,
     );
   }
 
@@ -94,11 +108,13 @@ class HitPoints {
     int? currentHp,
     int? maxHp,
     int? tempHp,
+    bool? isDead,
   }) {
     return HitPoints(
       currentHp: currentHp ?? this.currentHp,
       maxHp: maxHp ?? this.maxHp,
       tempHp: tempHp ?? this.tempHp,
+      isDead: isDead ?? this.isDead,
     );
   }
 
@@ -109,11 +125,12 @@ class HitPoints {
           runtimeType == other.runtimeType &&
           currentHp == other.currentHp &&
           maxHp == other.maxHp &&
-          tempHp == other.tempHp;
+          tempHp == other.tempHp &&
+          isDead == other.isDead;
 
   @override
-  int get hashCode => Object.hash(currentHp, maxHp, tempHp);
+  int get hashCode => Object.hash(currentHp, maxHp, tempHp, isDead);
 
   @override
-  String toString() => 'HitPoints($currentHp/$maxHp + $tempHp temp)';
+  String toString() => 'HitPoints($currentHp/$maxHp + $tempHp temp${isDead ? ', DEAD' : ''})';
 }

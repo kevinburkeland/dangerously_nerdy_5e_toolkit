@@ -5,6 +5,7 @@ import 'package:dangerously_nerdy_5e_toolkit/domain/storage/models/engine_profil
 import 'package:dangerously_nerdy_5e_toolkit/domain/storage/models/storage_checksum.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/storage/models/storage_snapshot_bundle.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/storage/models/storage_telemetry_report.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/storage/user_agent_parser.dart';
 
 void main() {
   group('EngineProfile Value Object Invariants', () {
@@ -12,7 +13,7 @@ void main() {
       // Chrome on macOS
       const chromeUa =
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-      final chromeProfile = EngineProfile.fromUserAgent(userAgent: chromeUa);
+      final chromeProfile = UserAgentParser.parse(chromeUa);
       expect(chromeProfile.engine, equals(BrowserEngine.chromium));
       expect(chromeProfile.os, equals(PlatformOs.macos));
       expect(chromeProfile.isStandalonePwa, isFalse);
@@ -22,7 +23,7 @@ void main() {
       // Safari on macOS
       const safariUa =
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15';
-      final safariProfile = EngineProfile.fromUserAgent(userAgent: safariUa);
+      final safariProfile = UserAgentParser.parse(safariUa);
       expect(safariProfile.engine, equals(BrowserEngine.webkit));
       expect(safariProfile.os, equals(PlatformOs.macos));
       expect(safariProfile.isWebKitEvictionRisk, isTrue);
@@ -30,7 +31,7 @@ void main() {
       // Firefox on Windows
       const firefoxUa =
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/119.0';
-      final firefoxProfile = EngineProfile.fromUserAgent(userAgent: firefoxUa);
+      final firefoxProfile = UserAgentParser.parse(firefoxUa);
       expect(firefoxProfile.engine, equals(BrowserEngine.gecko));
       expect(firefoxProfile.os, equals(PlatformOs.windows));
       expect(firefoxProfile.requiresExplicitGesture, isTrue);
@@ -39,18 +40,18 @@ void main() {
       // Safari on iOS (iPhone)
       const iosSafariUa =
           'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1';
-      final iosTabProfile = EngineProfile.fromUserAgent(userAgent: iosSafariUa, isStandalonePwa: false);
+      final iosTabProfile = UserAgentParser.parse(iosSafariUa, isStandalonePwa: false);
       expect(iosTabProfile.engine, equals(BrowserEngine.webkit));
       expect(iosTabProfile.os, equals(PlatformOs.ios));
       expect(iosTabProfile.isWebKitEvictionRisk, isTrue);
 
       // Standalone PWA on iOS
-      final iosPwaProfile = EngineProfile.fromUserAgent(userAgent: iosSafariUa, isStandalonePwa: true);
+      final iosPwaProfile = UserAgentParser.parse(iosSafariUa, isStandalonePwa: true);
       expect(iosPwaProfile.isWebKitEvictionRisk, isFalse);
       expect(iosPwaProfile.requiresExplicitGesture, isFalse);
 
       // Standalone PWA on Firefox Desktop
-      final ffPwaProfile = EngineProfile.fromUserAgent(userAgent: firefoxUa, isStandalonePwa: true);
+      final ffPwaProfile = UserAgentParser.parse(firefoxUa, isStandalonePwa: true);
       expect(ffPwaProfile.requiresExplicitGesture, isFalse);
     });
   });

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:meta/meta.dart';
-import 'package:mutex/mutex.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
@@ -19,8 +18,8 @@ import '../../utils/crypto_utils.dart';
 /// Application service orchestrating bidirectional synchronization between
 /// the cascading P2P network transport mesh and local IndexedDB/Hive persistence.
 ///
-/// Employs a mutex lock ([_isProcessingNetworkPayload]) to cancel echo loops
-/// when network payloads are persisted and reactive database streams re-emit.
+/// Employs granular mutation tokens and an applied profile hash ring to eliminate echo loops
+/// when network payloads are persisted, without holding blocking mutex locks over disk I/O.
 class RoomSyncOrchestrator {
   final IP2pTransportPort transportPort;
   final ICampaignRepository campaignRepo;
@@ -49,7 +48,9 @@ class RoomSyncOrchestrator {
   final Map<String, int> _lastSeenSequenceByNode = <String, int>{};
   final int Function() _localTimeProvider;
 
-  final Mutex _syncMutex = Mutex();
+  bool _isProcessingNetworkPayload = false;
+  final Set<int> _appliedProfileHashRing = <int>{};
+  static const int maxAppliedHashRingSize = 100;
   bool _isApplyingRemoteSync = false;
   int _localSequenceNumber = 0;
   int _lastProfileSyncTimestamp = 0;
@@ -100,7 +101,7 @@ class RoomSyncOrchestrator {
   int get lastProfileSyncTimestamp => _lastProfileSyncTimestamp;
 
   /// Visible for testing and debugging sync lock state.
-  bool get isProcessingNetworkPayload => _syncMutex.isLocked;
+  bool get isProcessingNetworkPayload => _isProcessingNetworkPayload;
 
   /// Returns whether synchronization is actively listening to transport and DB streams.
   bool get isSynchronizing => _networkSub != null && _localDbSub != null;
@@ -185,129 +186,141 @@ class RoomSyncOrchestrator {
     });
   }
 
+  void _recordAppliedProfileHash(int hash) {
+    _appliedProfileHashRing.add(hash);
+    if (_appliedProfileHashRing.length > maxAppliedHashRingSize) {
+      _appliedProfileHashRing.remove(_appliedProfileHashRing.first);
+    }
+  }
+
   /// Handles incoming JSON payloads from the P2P transport.
   @visibleForTesting
   Future<void> handleIncomingPayload(String jsonPayload) => _handleIncomingPayload(jsonPayload);
 
   Future<void> _handleIncomingPayload(String jsonPayload) async {
-    await _syncMutex.protect(() async {
-      try {
-        final decoded = jsonDecode(jsonPayload);
-        if (decoded is! Map<String, dynamic>) return;
+    _isProcessingNetworkPayload = true;
+    try {
+      final decoded = jsonDecode(jsonPayload);
+      if (decoded is! Map<String, dynamic>) return;
 
-        final type = decoded['type']?.toString();
+      final type = decoded['type']?.toString();
 
-        if (type == 'room_sync_full') {
-          final payloadData = decoded['payload'];
-          if (payloadData is! Map) return;
+      if (type == 'room_sync_full') {
+        final payloadData = decoded['payload'];
+        if (payloadData is! Map) return;
 
-          final inboundTimestamp = (decoded['timestamp'] is num)
-              ? (decoded['timestamp'] as num).toInt()
-              : (int.tryParse(decoded['timestamp']?.toString() ?? '') ?? 0);
+        final inboundTimestamp = (decoded['timestamp'] is num)
+            ? (decoded['timestamp'] as num).toInt()
+            : (int.tryParse(decoded['timestamp']?.toString() ?? '') ?? 0);
 
-          final originNode = decoded['origin_node_id']?.toString();
-          if (originNode != null && originNode == hostNodeId) {
+        final originNode = decoded['origin_node_id']?.toString();
+        if (originNode != null && originNode == hostNodeId) {
+          return;
+        }
+
+        final originSeq = (decoded['origin_seq'] is num)
+            ? (decoded['origin_seq'] as num).toInt()
+            : (int.tryParse(decoded['origin_seq']?.toString() ?? '') ?? 0);
+
+        // Causality tracking: reject stale out-of-order sequence updates from the same origin node
+        if (originNode != null && originSeq > 0) {
+          final lastSeq = _lastSeenSequenceByNode[originNode];
+          if (lastSeq != null && originSeq <= lastSeq) {
             return;
           }
+          _lastSeenSequenceByNode[originNode] = originSeq;
+        }
 
-          final originSeq = (decoded['origin_seq'] is num)
-              ? (decoded['origin_seq'] as num).toInt()
-              : (int.tryParse(decoded['origin_seq']?.toString() ?? '') ?? 0);
+        final payloadHash = CryptoUtils.sha256Hex(jsonPayload);
+        if (_isDuplicatePayload(payloadHash)) {
+          return;
+        }
 
-          // Causality tracking: reject stale out-of-order sequence updates from the same origin node
-          if (originNode != null && originSeq > 0) {
-            final lastSeq = _lastSeenSequenceByNode[originNode];
-            if (lastSeq != null && originSeq <= lastSeq) {
-              return;
-            }
-            _lastSeenSequenceByNode[originNode] = originSeq;
-          }
+        final remoteProfileDto = CampaignProfileDto.fromMap(
+          Map<String, dynamic>.from(payloadData),
+        );
+        final remoteProfile = remoteProfileDto.toDomain();
+        final localProfile = campaignRepo.activeProfile;
 
-          final payloadHash = CryptoUtils.sha256Hex(jsonPayload);
-          if (_isDuplicatePayload(payloadHash)) {
-            return;
-          }
-
-          final remoteProfileDto = CampaignProfileDto.fromMap(
-            Map<String, dynamic>.from(payloadData),
-          );
-          final remoteProfile = remoteProfileDto.toDomain();
-          final localProfile = campaignRepo.activeProfile;
-
-          if (localProfile != null && localProfile.id == remoteProfile.id) {
-            // Reconcile pinned rules CRDT set if present
-            if (decoded.containsKey('pinned_rules_crdt') && decoded['pinned_rules_crdt'] is Map) {
-              try {
-                final remoteRulesSet = CrdtOrSetDto.fromMap<String>(
-                  Map<dynamic, dynamic>.from(decoded['pinned_rules_crdt'] as Map),
-                  (raw) => raw.toString(),
-                );
-                _trackedRulesSet = _trackedRulesSet.merge(remoteRulesSet);
-              } catch (_) {}
-            }
-
-            // Reconcile sub-resources deterministically at field-level
-            final reconciledProfile = reconciliationService.reconcileProfile(
-              local: localProfile,
-              remote: remoteProfile,
-              inboundTimestampMs: inboundTimestamp,
-              localTimestampMs: _lastProfileSyncTimestamp,
-            );
-
-            if (inboundTimestamp > _lastProfileSyncTimestamp) {
-              _lastProfileSyncTimestamp = inboundTimestamp;
-            }
-
-            _isApplyingRemoteSync = true;
+        if (localProfile != null && localProfile.id == remoteProfile.id) {
+          // Reconcile pinned rules CRDT set if present
+          if (decoded.containsKey('pinned_rules_crdt') && decoded['pinned_rules_crdt'] is Map) {
             try {
-              await campaignRepo.saveProfileImmediate(reconciledProfile);
-            } finally {
-              scheduleMicrotask(() {
-                _isApplyingRemoteSync = false;
-              });
-            }
-          }
-        } else if (type == 'crdt_or_set_delta') {
-          final payloadData = decoded['payload'];
-          if (payloadData is! Map) return;
-
-          final localProfile = campaignRepo.activeProfile;
-          if (localProfile != null) {
-            final remoteSet = CrdtOrSetDto.fromMap<String>(
-              Map<dynamic, dynamic>.from(payloadData),
-              (raw) => raw.toString(),
-            );
-
-            // Execute CrdtOrSet.merge()
-            _trackedRulesSet = _trackedRulesSet.merge(remoteSet);
-
-            // Reflect merged active values into profile's pinned rules
-            final updatedProfile = localProfile.copyWith(
-              pinnedRuleIds: _trackedRulesSet.activeValues.toSet(),
-            );
-
-            _isApplyingRemoteSync = true;
-            try {
-              await campaignRepo.saveProfileImmediate(updatedProfile);
-            } finally {
-              scheduleMicrotask(() {
-                _isApplyingRemoteSync = false;
-              });
-            }
-          }
-        } else if (type == 'dice_roll') {
-          final payloadData = decoded['payload'];
-          if (payloadData is Map) {
-            try {
-              final roll = RoomRoll.fromMap(Map<String, dynamic>.from(payloadData));
-              diceRoomService.ingestRemoteRoll(roll);
+              final remoteRulesSet = CrdtOrSetDto.fromMap<String>(
+                Map<dynamic, dynamic>.from(decoded['pinned_rules_crdt'] as Map),
+                (raw) => raw.toString(),
+              );
+              _trackedRulesSet = _trackedRulesSet.merge(remoteRulesSet);
             } catch (_) {}
           }
+
+          // Reconcile sub-resources deterministically at field-level
+          final reconciledProfile = reconciliationService.reconcileProfile(
+            local: localProfile,
+            remote: remoteProfile,
+            inboundTimestampMs: inboundTimestamp,
+            localTimestampMs: _lastProfileSyncTimestamp,
+          );
+
+          if (inboundTimestamp > _lastProfileSyncTimestamp) {
+            _lastProfileSyncTimestamp = inboundTimestamp;
+          }
+
+          _recordAppliedProfileHash(reconciledProfile.hashCode);
+          _isApplyingRemoteSync = true;
+          try {
+            await campaignRepo.saveProfileImmediate(reconciledProfile);
+          } finally {
+            scheduleMicrotask(() {
+              _isApplyingRemoteSync = false;
+            });
+          }
         }
-      } catch (_) {
-        // Safely ignore malformed network payloads
+      } else if (type == 'crdt_or_set_delta') {
+        final payloadData = decoded['payload'];
+        if (payloadData is! Map) return;
+
+        final localProfile = campaignRepo.activeProfile;
+        if (localProfile != null) {
+          final remoteSet = CrdtOrSetDto.fromMap<String>(
+            Map<dynamic, dynamic>.from(payloadData),
+            (raw) => raw.toString(),
+          );
+
+          // Execute CrdtOrSet.merge()
+          _trackedRulesSet = _trackedRulesSet.merge(remoteSet);
+
+          // Reflect merged active values into profile's pinned rules
+          final updatedProfile = localProfile.copyWith(
+            pinnedRuleIds: _trackedRulesSet.activeValues.toSet(),
+          );
+
+          _recordAppliedProfileHash(updatedProfile.hashCode);
+          _isApplyingRemoteSync = true;
+          try {
+            await campaignRepo.saveProfileImmediate(updatedProfile);
+          } finally {
+            scheduleMicrotask(() {
+              _isApplyingRemoteSync = false;
+            });
+          }
+        }
+      } else if (type == 'dice_roll') {
+        final payloadData = decoded['payload'];
+        if (payloadData is Map) {
+          try {
+            final roll = RoomRoll.fromMap(Map<String, dynamic>.from(payloadData));
+            diceRoomService.ingestRemoteRoll(roll);
+          } catch (_) {}
+        }
       }
-    });
+    } catch (_) {
+      // Safely ignore malformed network payloads
+    } finally {
+      scheduleMicrotask(() {
+        _isProcessingNetworkPayload = false;
+      });
+    }
   }
 
   /// Handles local profile changes emitted by the campaign repository.
@@ -320,30 +333,31 @@ class RoomSyncOrchestrator {
     if (_isApplyingRemoteSync) {
       return;
     }
+    if (_appliedProfileHashRing.contains(profile.hashCode)) {
+      return;
+    }
 
-    await _syncMutex.protect(() async {
-      final dto = CampaignProfileDto.fromDomain(profile);
-      final payloadMap = <String, dynamic>{
-        'type': 'room_sync_full',
-        'origin_node_id': hostNodeId,
-        'origin_seq': ++_localSequenceNumber,
-        'payload': dto.toMap(),
-        'timestamp': _localTimeProvider(),
-      };
+    final dto = CampaignProfileDto.fromDomain(profile);
+    final payloadMap = <String, dynamic>{
+      'type': 'room_sync_full',
+      'origin_node_id': hostNodeId,
+      'origin_seq': ++_localSequenceNumber,
+      'payload': dto.toMap(),
+      'timestamp': _localTimeProvider(),
+    };
 
-      if (_trackedRulesSet.items.isNotEmpty || _trackedRulesSet.tombstones.isNotEmpty) {
-        payloadMap['pinned_rules_crdt'] = CrdtOrSetDto.toMap<String>(
-          _trackedRulesSet,
-          (val) => val,
-        );
-      }
+    if (_trackedRulesSet.items.isNotEmpty || _trackedRulesSet.tombstones.isNotEmpty) {
+      payloadMap['pinned_rules_crdt'] = CrdtOrSetDto.toMap<String>(
+        _trackedRulesSet,
+        (val) => val,
+      );
+    }
 
-      final payload = jsonEncode(payloadMap);
+    final payload = jsonEncode(payloadMap);
 
-      try {
-        await transportPort.broadcastPayload(payload);
-      } catch (_) {}
-    });
+    try {
+      await transportPort.broadcastPayload(payload);
+    } catch (_) {}
   }
 
   void _startMilestoneFlushTimer() {

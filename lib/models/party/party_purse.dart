@@ -1,12 +1,19 @@
 import 'dart:convert';
+import '../../domain/crdt/pn_counter.dart';
 
-/// Represents party coin purse denominations with conversion and splitting math.
+/// Represents party coin purse denominations with conversion and splitting math,
+/// backed by PN-Counter CvRDT vectors for conflict-free distributed convergence.
 class PartyPurse {
   final int cp;
   final int sp;
   final int ep;
   final int gp;
   final int pp;
+  final PnCounter cpCounter;
+  final PnCounter spCounter;
+  final PnCounter epCounter;
+  final PnCounter gpCounter;
+  final PnCounter ppCounter;
 
   const PartyPurse({
     this.cp = 0,
@@ -14,7 +21,38 @@ class PartyPurse {
     this.ep = 0,
     this.gp = 0,
     this.pp = 0,
+    this.cpCounter = const PnCounter(),
+    this.spCounter = const PnCounter(),
+    this.epCounter = const PnCounter(),
+    this.gpCounter = const PnCounter(),
+    this.ppCounter = const PnCounter(),
   });
+
+  /// Effective PN-counters guaranteeing starting balance is preserved in CRDT vectors.
+  PnCounter get effectiveCpCounter =>
+      cpCounter.positive.isNotEmpty || cpCounter.negative.isNotEmpty
+          ? cpCounter
+          : (cp > 0 ? PnCounter.withInitialValue(cp) : const PnCounter());
+
+  PnCounter get effectiveSpCounter =>
+      spCounter.positive.isNotEmpty || spCounter.negative.isNotEmpty
+          ? spCounter
+          : (sp > 0 ? PnCounter.withInitialValue(sp) : const PnCounter());
+
+  PnCounter get effectiveEpCounter =>
+      epCounter.positive.isNotEmpty || epCounter.negative.isNotEmpty
+          ? epCounter
+          : (ep > 0 ? PnCounter.withInitialValue(ep) : const PnCounter());
+
+  PnCounter get effectiveGpCounter =>
+      gpCounter.positive.isNotEmpty || gpCounter.negative.isNotEmpty
+          ? gpCounter
+          : (gp > 0 ? PnCounter.withInitialValue(gp) : const PnCounter());
+
+  PnCounter get effectivePpCounter =>
+      ppCounter.positive.isNotEmpty || ppCounter.negative.isNotEmpty
+          ? ppCounter
+          : (pp > 0 ? PnCounter.withInitialValue(pp) : const PnCounter());
 
   /// Total gold piece equivalent (1 PP = 10 GP, 1 EP = 0.5 GP, 1 SP = 0.1 GP, 1 CP = 0.01 GP)
   double get totalGpEquivalent =>
@@ -31,35 +69,75 @@ class PartyPurse {
     int? ep,
     int? gp,
     int? pp,
+    PnCounter? cpCounter,
+    PnCounter? spCounter,
+    PnCounter? epCounter,
+    PnCounter? gpCounter,
+    PnCounter? ppCounter,
   }) {
+    final resolvedCp = cp ?? (cpCounter != null ? cpCounter.value : this.cp);
+    final resolvedSp = sp ?? (spCounter != null ? spCounter.value : this.sp);
+    final resolvedEp = ep ?? (epCounter != null ? epCounter.value : this.ep);
+    final resolvedGp = gp ?? (gpCounter != null ? gpCounter.value : this.gp);
+    final resolvedPp = pp ?? (ppCounter != null ? ppCounter.value : this.pp);
+
     return PartyPurse(
-      cp: cp ?? this.cp,
-      sp: sp ?? this.sp,
-      ep: ep ?? this.ep,
-      gp: gp ?? this.gp,
-      pp: pp ?? this.pp,
+      cp: resolvedCp,
+      sp: resolvedSp,
+      ep: resolvedEp,
+      gp: resolvedGp,
+      pp: resolvedPp,
+      cpCounter: cpCounter ?? (cp != null ? PnCounter.withInitialValue(cp) : this.cpCounter),
+      spCounter: spCounter ?? (sp != null ? PnCounter.withInitialValue(sp) : this.spCounter),
+      epCounter: epCounter ?? (ep != null ? PnCounter.withInitialValue(ep) : this.epCounter),
+      gpCounter: gpCounter ?? (gp != null ? PnCounter.withInitialValue(gp) : this.gpCounter),
+      ppCounter: ppCounter ?? (pp != null ? PnCounter.withInitialValue(pp) : this.ppCounter),
+    );
+  }
+
+  /// Merges another purse using CvRDT lattice join over PN-counters across all denominations.
+  PartyPurse merge(PartyPurse other) {
+    final mergedCp = effectiveCpCounter.merge(other.effectiveCpCounter);
+    final mergedSp = effectiveSpCounter.merge(other.effectiveSpCounter);
+    final mergedEp = effectiveEpCounter.merge(other.effectiveEpCounter);
+    final mergedGp = effectiveGpCounter.merge(other.effectiveGpCounter);
+    final mergedPp = effectivePpCounter.merge(other.effectivePpCounter);
+
+    return PartyPurse(
+      cp: mergedCp.value,
+      sp: mergedSp.value,
+      ep: mergedEp.value,
+      gp: mergedGp.value,
+      pp: mergedPp.value,
+      cpCounter: mergedCp,
+      spCounter: mergedSp,
+      epCounter: mergedEp,
+      gpCounter: mergedGp,
+      ppCounter: mergedPp,
     );
   }
 
   /// Adds another purse's coins to this purse
-  PartyPurse add(PartyPurse other) {
-    return PartyPurse(
-      cp: cp + other.cp,
-      sp: sp + other.sp,
-      ep: ep + other.ep,
-      gp: gp + other.gp,
-      pp: pp + other.pp,
+  PartyPurse add(PartyPurse other, {String nodeId = 'local'}) {
+    return depositCoins(
+      cp: other.cp,
+      sp: other.sp,
+      ep: other.ep,
+      gp: other.gp,
+      pp: other.pp,
+      nodeId: nodeId,
     );
   }
 
   /// Deducts another purse's coins, clamped at zero
-  PartyPurse deduct(PartyPurse other) {
-    return PartyPurse(
-      cp: (cp - other.cp).clamp(0, 999999999),
-      sp: (sp - other.sp).clamp(0, 999999999),
-      ep: (ep - other.ep).clamp(0, 999999999),
-      gp: (gp - other.gp).clamp(0, 999999999),
-      pp: (pp - other.pp).clamp(0, 999999999),
+  PartyPurse deduct(PartyPurse other, {String nodeId = 'local'}) {
+    return withdrawCoins(
+      cp: other.cp,
+      sp: other.sp,
+      ep: other.ep,
+      gp: other.gp,
+      pp: other.pp,
+      nodeId: nodeId,
     );
   }
 
@@ -67,7 +145,7 @@ class PartyPurse {
   /// and repacking into optimal coin denominations (PP -> GP -> EP -> SP -> CP).
   ///
   /// Throws [StateError] if total purse value in GP is less than [costGp].
-  PartyPurse deductGpEquivalent(double costGp) {
+  PartyPurse deductGpEquivalent(double costGp, {String nodeId = 'local'}) {
     if (costGp <= 0) return this;
     final costInCp = (costGp * 100).round();
     int balanceInCp = (pp * 1000) + (gp * 100) + (ep * 50) + (sp * 10) + cp;
@@ -91,12 +169,29 @@ class PartyPurse {
     final newSp = balanceInCp ~/ 10;
     final newCp = balanceInCp % 10;
 
+    PnCounter applyDiff(PnCounter counter, int diff) {
+      if (diff > 0) return counter.increment(diff, nodeId: nodeId);
+      if (diff < 0) return counter.decrement(-diff, nodeId: nodeId);
+      return counter;
+    }
+
+    final newCpC = applyDiff(effectiveCpCounter, newCp - cp);
+    final newSpC = applyDiff(effectiveSpCounter, newSp - sp);
+    final newEpC = applyDiff(effectiveEpCounter, newEp - ep);
+    final newGpC = applyDiff(effectiveGpCounter, newGp - gp);
+    final newPpC = applyDiff(effectivePpCounter, newPp - pp);
+
     return PartyPurse(
       pp: newPp,
       gp: newGp,
       ep: newEp,
       sp: newSp,
       cp: newCp,
+      cpCounter: newCpC,
+      spCounter: newSpC,
+      epCounter: newEpC,
+      gpCounter: newGpC,
+      ppCounter: newPpC,
     );
   }
 
@@ -107,13 +202,25 @@ class PartyPurse {
     int ep = 0,
     int gp = 0,
     int pp = 0,
+    String nodeId = 'local',
   }) {
+    final newCpCounter = cp > 0 ? effectiveCpCounter.increment(cp, nodeId: nodeId) : effectiveCpCounter;
+    final newSpCounter = sp > 0 ? effectiveSpCounter.increment(sp, nodeId: nodeId) : effectiveSpCounter;
+    final newEpCounter = ep > 0 ? effectiveEpCounter.increment(ep, nodeId: nodeId) : effectiveEpCounter;
+    final newGpCounter = gp > 0 ? effectiveGpCounter.increment(gp, nodeId: nodeId) : effectiveGpCounter;
+    final newPpCounter = pp > 0 ? effectivePpCounter.increment(pp, nodeId: nodeId) : effectivePpCounter;
+
     return PartyPurse(
-      cp: this.cp + cp,
-      sp: this.sp + sp,
-      ep: this.ep + ep,
-      gp: this.gp + gp,
-      pp: this.pp + pp,
+      cp: newCpCounter.value,
+      sp: newSpCounter.value,
+      ep: newEpCounter.value,
+      gp: newGpCounter.value,
+      pp: newPpCounter.value,
+      cpCounter: newCpCounter,
+      spCounter: newSpCounter,
+      epCounter: newEpCounter,
+      gpCounter: newGpCounter,
+      ppCounter: newPpCounter,
     );
   }
 
@@ -124,13 +231,25 @@ class PartyPurse {
     int ep = 0,
     int gp = 0,
     int pp = 0,
+    String nodeId = 'local',
   }) {
+    final newCpCounter = cp > 0 ? effectiveCpCounter.decrement(cp, nodeId: nodeId) : effectiveCpCounter;
+    final newSpCounter = sp > 0 ? effectiveSpCounter.decrement(sp, nodeId: nodeId) : effectiveSpCounter;
+    final newEpCounter = ep > 0 ? effectiveEpCounter.decrement(ep, nodeId: nodeId) : effectiveEpCounter;
+    final newGpCounter = gp > 0 ? effectiveGpCounter.decrement(gp, nodeId: nodeId) : effectiveGpCounter;
+    final newPpCounter = pp > 0 ? effectivePpCounter.decrement(pp, nodeId: nodeId) : effectivePpCounter;
+
     return PartyPurse(
-      cp: (this.cp - cp).clamp(0, 999999999),
-      sp: (this.sp - sp).clamp(0, 999999999),
-      ep: (this.ep - ep).clamp(0, 999999999),
-      gp: (this.gp - gp).clamp(0, 999999999),
-      pp: (this.pp - pp).clamp(0, 999999999),
+      cp: newCpCounter.value,
+      sp: newSpCounter.value,
+      ep: newEpCounter.value,
+      gp: newGpCounter.value,
+      pp: newPpCounter.value,
+      cpCounter: newCpCounter,
+      spCounter: newSpCounter,
+      epCounter: newEpCounter,
+      gpCounter: newGpCounter,
+      ppCounter: newPpCounter,
     );
   }
 
@@ -216,16 +335,53 @@ class PartyPurse {
       'ep': ep,
       'gp': gp,
       'pp': pp,
+      if (cpCounter.positive.isNotEmpty || cpCounter.negative.isNotEmpty)
+        'cpCounter': cpCounter.toMap(),
+      if (spCounter.positive.isNotEmpty || spCounter.negative.isNotEmpty)
+        'spCounter': spCounter.toMap(),
+      if (epCounter.positive.isNotEmpty || epCounter.negative.isNotEmpty)
+        'epCounter': epCounter.toMap(),
+      if (gpCounter.positive.isNotEmpty || gpCounter.negative.isNotEmpty)
+        'gpCounter': gpCounter.toMap(),
+      if (ppCounter.positive.isNotEmpty || ppCounter.negative.isNotEmpty)
+        'ppCounter': ppCounter.toMap(),
     };
   }
 
   factory PartyPurse.fromMap(Map<String, dynamic> map) {
+    final cpVal = (map['cp'] as num?)?.toInt() ?? 0;
+    final spVal = (map['sp'] as num?)?.toInt() ?? 0;
+    final epVal = (map['ep'] as num?)?.toInt() ?? 0;
+    final gpVal = (map['gp'] as num?)?.toInt() ?? 0;
+    final ppVal = (map['pp'] as num?)?.toInt() ?? 0;
+
+    final cpC = map['cpCounter'] is Map
+        ? PnCounter.fromMap(map['cpCounter'] as Map<String, dynamic>)
+        : (cpVal > 0 ? PnCounter.withInitialValue(cpVal) : const PnCounter());
+    final spC = map['spCounter'] is Map
+        ? PnCounter.fromMap(map['spCounter'] as Map<String, dynamic>)
+        : (spVal > 0 ? PnCounter.withInitialValue(spVal) : const PnCounter());
+    final epC = map['epCounter'] is Map
+        ? PnCounter.fromMap(map['epCounter'] as Map<String, dynamic>)
+        : (epVal > 0 ? PnCounter.withInitialValue(epVal) : const PnCounter());
+    final gpC = map['gpCounter'] is Map
+        ? PnCounter.fromMap(map['gpCounter'] as Map<String, dynamic>)
+        : (gpVal > 0 ? PnCounter.withInitialValue(gpVal) : const PnCounter());
+    final ppC = map['ppCounter'] is Map
+        ? PnCounter.fromMap(map['ppCounter'] as Map<String, dynamic>)
+        : (ppVal > 0 ? PnCounter.withInitialValue(ppVal) : const PnCounter());
+
     return PartyPurse(
-      cp: (map['cp'] as num?)?.toInt() ?? 0,
-      sp: (map['sp'] as num?)?.toInt() ?? 0,
-      ep: (map['ep'] as num?)?.toInt() ?? 0,
-      gp: (map['gp'] as num?)?.toInt() ?? 0,
-      pp: (map['pp'] as num?)?.toInt() ?? 0,
+      cp: cpC.positive.isNotEmpty || cpC.negative.isNotEmpty ? cpC.value : cpVal,
+      sp: spC.positive.isNotEmpty || spC.negative.isNotEmpty ? spC.value : spVal,
+      ep: epC.positive.isNotEmpty || epC.negative.isNotEmpty ? epC.value : epVal,
+      gp: gpC.positive.isNotEmpty || gpC.negative.isNotEmpty ? gpC.value : gpVal,
+      pp: ppC.positive.isNotEmpty || ppC.negative.isNotEmpty ? ppC.value : ppVal,
+      cpCounter: cpC,
+      spCounter: spC,
+      epCounter: epC,
+      gpCounter: gpC,
+      ppCounter: ppC,
     );
   }
 
@@ -242,10 +398,26 @@ class PartyPurse {
           sp == other.sp &&
           ep == other.ep &&
           gp == other.gp &&
-          pp == other.pp;
+          pp == other.pp &&
+          cpCounter == other.cpCounter &&
+          spCounter == other.spCounter &&
+          epCounter == other.epCounter &&
+          gpCounter == other.gpCounter &&
+          ppCounter == other.ppCounter;
 
   @override
-  int get hashCode => Object.hash(cp, sp, ep, gp, pp);
+  int get hashCode => Object.hash(
+        cp,
+        sp,
+        ep,
+        gp,
+        pp,
+        cpCounter,
+        spCounter,
+        epCounter,
+        gpCounter,
+        ppCounter,
+      );
 }
 
 class PartyPurseSplit {

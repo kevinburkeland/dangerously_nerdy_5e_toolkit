@@ -44,8 +44,10 @@ class FirebaseSignalingAdapter {
 
   String? get currentRoomCode => _roomCode;
   String? get localNodeId => _localNodeId;
-  Set<String> get trackedDocPaths =>
-      Set.unmodifiable(_peerTrackedDocPaths.values.expand((s) => s).toSet());
+  Set<String> get trackedDocPaths => Set.unmodifiable({
+        ..._peerTrackedDocPaths.values.expand((s) => s),
+        ..._peerAuthoredDocPaths.values.expand((s) => s),
+      });
   Map<String, Set<String>> get peerTrackedDocPaths =>
       Map.unmodifiable(_peerTrackedDocPaths.map((k, v) => MapEntry(k, Set.unmodifiable(v))));
   int? get lastPruningThreshold => _lastPruningThreshold;
@@ -57,6 +59,12 @@ class FirebaseSignalingAdapter {
   }) async {
     _roomCode = roomCode.trim().toUpperCase();
     _localNodeId = localNodeId;
+    _peerTrackedDocPaths.clear();
+    _peerAuthoredDocPaths.clear();
+    _deletingDocPaths.clear();
+
+    await _firestoreSubscription?.cancel();
+    _firestoreSubscription = null;
 
     // Strict 60-second sliding TTL window to prune historical signaling residue
     final pruningThreshold = DateTime.now().millisecondsSinceEpoch - slidingTtlMs;
@@ -142,8 +150,16 @@ class FirebaseSignalingAdapter {
     );
   }
 
-  /// Broadcasts a peerJoin signal to all peers in the room (`toNodeId: '*'`).
+  /// Broadcasts a join signal to all peers in the room.
   Future<String> broadcastJoin() async {
+    return _sendSignal(
+      toNodeId: '*',
+      type: SignalingType.peerJoin,
+    );
+  }
+
+  /// Broadcasts a peerJoin signal to all peers in the room (`toNodeId: '*'`).
+  Future<String> sendPeerJoin() async {
     return _sendSignal(
       toNodeId: '*',
       type: SignalingType.peerJoin,
@@ -158,6 +174,7 @@ class FirebaseSignalingAdapter {
     );
   }
 
+  /// Internal helper to send a signal to Firestore and track authored paths.
   Future<String> _sendSignal({
     required String toNodeId,
     required SignalingType type,
@@ -247,7 +264,11 @@ class FirebaseSignalingAdapter {
   /// across all peers and wildcard channels, leaving ZERO persistent
   /// signaling residue in Firestore.
   Future<void> cleanUpSignalingSession() async {
-    final pathsToDelete = _peerTrackedDocPaths.values.expand((s) => s).toSet().toList();
+    final allPaths = <String>{
+      ..._peerTrackedDocPaths.values.expand((s) => s),
+      ..._peerAuthoredDocPaths.values.expand((s) => s),
+    };
+    final pathsToDelete = allPaths.toList();
     for (final path in pathsToDelete) {
       final docId = path.split('/').last;
       await _deletePath(path, docId);
@@ -260,18 +281,24 @@ class FirebaseSignalingAdapter {
     if (_deletingDocPaths.contains(path)) return;
     _deletingDocPaths.add(path);
     try {
-      for (final entry in _peerTrackedDocPaths.entries) {
+      final trackedEntries =
+          List<MapEntry<String, Set<String>>>.from(_peerTrackedDocPaths.entries);
+      for (final entry in trackedEntries) {
         entry.value.remove(path);
       }
       _peerTrackedDocPaths.removeWhere((_, set) => set.isEmpty);
 
-      for (final entry in _peerAuthoredDocPaths.entries) {
+      final authoredEntries =
+          List<MapEntry<String, Set<String>>>.from(_peerAuthoredDocPaths.entries);
+      for (final entry in authoredEntries) {
         entry.value.remove(path);
       }
       _peerAuthoredDocPaths.removeWhere((_, set) => set.isEmpty);
 
       if (_onDeleteDocument != null) {
-        await _onDeleteDocument!(path);
+        try {
+          await _onDeleteDocument!(path);
+        } catch (_) {}
       }
 
       if (isFirebaseAvailable && _roomCode != null) {
@@ -283,7 +310,7 @@ class FirebaseSignalingAdapter {
               .doc(docId)
               .delete();
         } catch (_) {
-          // Silently ignore if already deleted by peer
+          // Silently ignore if already deleted by peer or Firestore not-found
         }
       }
     } finally {

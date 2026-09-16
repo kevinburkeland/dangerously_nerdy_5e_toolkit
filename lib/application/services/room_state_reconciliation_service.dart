@@ -20,14 +20,15 @@ class RoomStateReconciliationService {
   ///
   /// If [globallyAcknowledgedThreshold] is in the present or future relative to network time
   /// (due to transient clock skew or late clock sync), gracefully defers pruning and returns [targetSet]
-  /// intact rather than throwing an unhandled exception that disrupts active sessions.
+  /// intact rather than throwing an unhandled exception or prematurely wiping tombstones.
   CrdtOrSet<T> safePrune<T>(
     CrdtOrSet<T> targetSet,
-    HybridLogicalClock globallyAcknowledgedThreshold,
-  ) {
-    // Safety check: ensure we aren't pruning with an unverified present or future timestamp
+    HybridLogicalClock globallyAcknowledgedThreshold, {
+    int safeBufferMs = 0,
+  }) {
     final currentNetworkTime = _networkTimeProvider();
-    if (globallyAcknowledgedThreshold.physicalTime >= currentNetworkTime) {
+    final horizon = currentNetworkTime - safeBufferMs;
+    if (globallyAcknowledgedThreshold.physicalTime >= horizon) {
       // Gracefully defer pruning to prevent premature tombstone deletion during clock skew
       return targetSet;
     }
@@ -36,18 +37,27 @@ class RoomStateReconciliationService {
   }
 
   /// Prunes tombstones using an authoritative milestone timestamp provided by the ledger/server.
+  ///
+  /// If [serverAcknowledgedEpochMs] is in the present or future relative to network time
+  /// (e.g. clock skew, late sync, or drift), pruning is gracefully deferred to prevent immediate
+  /// tombstone deletion that resurrects entities on reconnecting clients.
   CrdtOrSet<T> executeMilestonePrune<T>(
     CrdtOrSet<T> targetSet,
     int serverAcknowledgedEpochMs,
-    String hostNodeId,
-  ) {
+    String hostNodeId, {
+    int safeBufferMs = 0,
+  }) {
     final currentNetworkTime = _networkTimeProvider();
-    final safeEpoch = serverAcknowledgedEpochMs >= currentNetworkTime
-        ? currentNetworkTime - 1
-        : serverAcknowledgedEpochMs;
+    final horizon = currentNetworkTime - safeBufferMs;
+
+    // Boundary safety: if the acknowledged milestone timestamp is at or beyond the safe horizon,
+    // gracefully defer pruning rather than wiping active tombstones up to the present millisecond.
+    if (serverAcknowledgedEpochMs >= horizon) {
+      return targetSet;
+    }
 
     final threshold = HybridLogicalClock(
-      physicalTime: safeEpoch,
+      physicalTime: serverAcknowledgedEpochMs,
       logicalCounter: 0,
       nodeId: hostNodeId,
     );
@@ -179,22 +189,48 @@ class RoomStateReconciliationService {
     required bool isRemoteNewer,
   }) {
     if (local == remote) return local;
-    if (local.isEmpty) return remote;
-    if (remote.isEmpty) return local;
 
-    int reconcileCoin(int localCoin, int remoteCoin) {
+    // 1. If either purse contains active PN-counter vectors, merge via CvRDT lattice join
+    final hasLocalPn = local.cpCounter.positive.isNotEmpty ||
+        local.cpCounter.negative.isNotEmpty ||
+        local.spCounter.positive.isNotEmpty ||
+        local.spCounter.negative.isNotEmpty ||
+        local.epCounter.positive.isNotEmpty ||
+        local.epCounter.negative.isNotEmpty ||
+        local.gpCounter.positive.isNotEmpty ||
+        local.gpCounter.negative.isNotEmpty ||
+        local.ppCounter.positive.isNotEmpty ||
+        local.ppCounter.negative.isNotEmpty;
+
+    final hasRemotePn = remote.cpCounter.positive.isNotEmpty ||
+        remote.cpCounter.negative.isNotEmpty ||
+        remote.spCounter.positive.isNotEmpty ||
+        remote.spCounter.negative.isNotEmpty ||
+        remote.epCounter.positive.isNotEmpty ||
+        remote.epCounter.negative.isNotEmpty ||
+        remote.gpCounter.positive.isNotEmpty ||
+        remote.gpCounter.negative.isNotEmpty ||
+        remote.ppCounter.positive.isNotEmpty ||
+        remote.ppCounter.negative.isNotEmpty;
+
+    if (hasLocalPn || hasRemotePn) {
+      return local.merge(remote);
+    }
+
+    // 2. Pure scalar merge fallback:
+    // Uses deterministic causality / timestamp precedence without treating 0 as empty.
+    // Spending money down to 0 NEVER resurrects remote currency!
+    int reconcileScalar(int localCoin, int remoteCoin) {
       if (localCoin == remoteCoin) return localCoin;
-      if (localCoin == 0) return remoteCoin;
-      if (remoteCoin == 0) return localCoin;
       return isRemoteNewer ? remoteCoin : localCoin;
     }
 
     return PartyPurse(
-      cp: reconcileCoin(local.cp, remote.cp),
-      sp: reconcileCoin(local.sp, remote.sp),
-      ep: reconcileCoin(local.ep, remote.ep),
-      gp: reconcileCoin(local.gp, remote.gp),
-      pp: reconcileCoin(local.pp, remote.pp),
+      cp: reconcileScalar(local.cp, remote.cp),
+      sp: reconcileScalar(local.sp, remote.sp),
+      ep: reconcileScalar(local.ep, remote.ep),
+      gp: reconcileScalar(local.gp, remote.gp),
+      pp: reconcileScalar(local.pp, remote.pp),
     );
   }
 

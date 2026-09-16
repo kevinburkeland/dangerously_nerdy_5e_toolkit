@@ -25,11 +25,12 @@ void main() {
       expect(after8.tempHp, equals(0));
       expect(after8.currentHp, equals(17)); // 20 - (8 - 5) = 17
 
-      // Massive lethal damage
+      // Massive lethal damage (50 damage on 20 HP with 0 temp -> excess 30 >= 20 maxHp)
       final lethal = hp.takeDamage(50);
       expect(lethal.tempHp, equals(0));
       expect(lethal.currentHp, equals(0));
       expect(lethal.isDead, isTrue);
+      expect(lethal.isDowned, isTrue);
       expect(lethal.hpPercent, equals(0.0));
     });
 
@@ -45,24 +46,42 @@ void main() {
       expect(overHealed.tempHp, equals(4));
     });
 
-    test('heal does not revive a dead/zero-HP actor unless allowRevive is true', () {
-      const dead = HitPoints(currentHp: 0, maxHp: 20);
-      expect(dead.isDead, isTrue);
+    test('non-massive damage to 0 HP leaves actor downed but not dead', () {
+      const hp = HitPoints(currentHp: 10, maxHp: 20);
+      // 15 damage: 10 damage to HP -> 0 HP, excess 5 is less than 20 maxHp
+      final downed = hp.takeDamage(15);
+      expect(downed.currentHp, equals(0));
+      expect(downed.isDowned, isTrue);
+      expect(downed.isDead, isFalse);
 
-      // Normal heal cannot revive a dead actor
+      // Standard healing can revive/heal a downed actor per 5e RAW
+      final healed = downed.heal(8);
+      expect(healed.currentHp, equals(8));
+      expect(healed.isDowned, isFalse);
+      expect(healed.isDead, isFalse);
+    });
+
+    test('heal does not revive a permanently dead actor unless allowRevive is true', () {
+      const dead = HitPoints(currentHp: 0, maxHp: 20, isDead: true);
+      expect(dead.isDead, isTrue);
+      expect(dead.isDowned, isTrue);
+
+      // Normal heal cannot revive a permanently dead actor
       final stillDead = dead.heal(10);
       expect(stillDead.currentHp, equals(0));
       expect(stillDead.isDead, isTrue);
 
-      // Explicit allowRevive restores HP
+      // Explicit allowRevive restores HP and revives actor
       final revived = dead.heal(10, allowRevive: true);
       expect(revived.currentHp, equals(10));
       expect(revived.isDead, isFalse);
+      expect(revived.isDowned, isFalse);
 
-      // Convenience revive() restores HP
+      // Convenience revive() restores HP and clears isDead
       final revivedMethod = dead.revive(15);
       expect(revivedMethod.currentHp, equals(15));
       expect(revivedMethod.isDead, isFalse);
+      expect(revivedMethod.isDowned, isFalse);
     });
 
     test('grantTempHp does not stack and takes highest unless forceOverride', () {

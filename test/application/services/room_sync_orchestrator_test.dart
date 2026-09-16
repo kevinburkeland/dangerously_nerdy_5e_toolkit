@@ -452,6 +452,25 @@ void main() {
     });
 
     test('Deadlock Prevention Test: broadcast failure steps down to fallbackRelay while fallback adapter emits inbound packet without deadlock', () async {
+      // Re-initialize router with sequentialFailureThreshold: 1 to simulate immediate step-down failover
+      router = CascadingTransportRouter(
+        localWifiAdapter: mockWifi,
+        webRtcAdapter: mockWebRtc,
+        firebaseFallbackAdapter: mockFallback,
+        sequentialFailureThreshold: 1,
+      );
+      await router.initializeRoom('CR-101', 'localNode1');
+
+      orchestrator = RoomSyncOrchestrator(
+        router: router,
+        campaignRepo: mockRepo,
+        reconciliationService: reconciliationService,
+        clockSyncService: clockSyncService,
+        localTimeProvider: () => 1700000000500,
+        isHost: false,
+        telemetryInterval: const Duration(milliseconds: 50),
+      );
+
       mockRepo.emitOnSaveImmediate = false;
       orchestrator.startSynchronization();
 

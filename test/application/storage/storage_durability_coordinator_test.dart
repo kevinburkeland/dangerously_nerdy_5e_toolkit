@@ -242,7 +242,7 @@ void main() {
       coordinator.dispose();
     });
 
-    test('Hydrates snapshot respecting 30-second sliding lookback window to protect newer local vectors', () async {
+    test('Hydrates snapshot allowing user-initiated rollbacks to older snapshots', () async {
       final storagePort = FakeStorageDurabilityPort(
         currentProfile: const EngineProfile(
           engine: BrowserEngine.chromium,
@@ -270,24 +270,24 @@ void main() {
         campaignRepo: campaignRepo,
       );
 
-      // 1. Inbound stale snapshot from 60 seconds ago (older than local 10s by 50s, outside the 30s window)
-      final staleProfile = localProfile.copyWith(name: 'Stale State Overwrite Attempt');
-      final stalePayload = Uint8List.fromList(
-        utf8.encode(CampaignProfileDto.fromDomain(staleProfile).toJson()),
+      // 1. Inbound older snapshot (e.g. 60 seconds ago) for an intentional user rollback
+      final rollbackProfile = localProfile.copyWith(name: 'Rolled Back State');
+      final rollbackPayload = Uint8List.fromList(
+        utf8.encode(CampaignProfileDto.fromDomain(rollbackProfile).toJson()),
       );
-      final staleBundle = StorageSnapshotBundle.create(
+      final rollbackBundle = StorageSnapshotBundle.create(
         vaultId: 'vault_sync_1',
-        payloadBytes: stalePayload,
+        payloadBytes: rollbackPayload,
         exportedAt: now.subtract(const Duration(seconds: 60)),
       );
-      snapshotPort.storedBundle = staleBundle;
+      snapshotPort.storedBundle = rollbackBundle;
 
-      final staleResult = await coordinator.hydrateFromColdStorage();
-      expect(staleResult, isFalse, reason: 'Stale snapshot should be rejected to protect newer local vectors');
-      final currentAfterStale = await campaignRepo.getProfile('vault_sync_1');
-      expect(currentAfterStale!.name, equals('Local Fresh State'));
+      final rollbackResult = await coordinator.hydrateFromColdStorage();
+      expect(rollbackResult, isTrue, reason: 'User-initiated rollback should succeed when bundle is valid');
+      final currentAfterRollback = await campaignRepo.getProfile('vault_sync_1');
+      expect(currentAfterRollback!.name, equals('Rolled Back State'));
 
-      // 2. Fresh inbound snapshot (within sliding lookback window or newer)
+      // 2. Fresh inbound snapshot
       final freshProfile = localProfile.copyWith(name: 'Authorized Fresh State');
       final freshPayload = Uint8List.fromList(
         utf8.encode(CampaignProfileDto.fromDomain(freshProfile).toJson()),

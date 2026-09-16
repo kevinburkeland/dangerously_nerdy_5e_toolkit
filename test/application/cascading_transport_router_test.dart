@@ -229,7 +229,7 @@ void main() {
         await sub.cancel();
       });
 
-      test('Broadcast failure on WebRTC steps down to Firebase Relay and routes payloads through it', () async {
+      test('Broadcast failure on WebRTC steps down to Firebase Relay after reaching sequential failure threshold', () async {
         mockLocalWifi.initializeShouldThrow = true; // Start in WebRTC tier
         await router.initializeRoom('ROOM-1234', 'node-player-1');
         expect(router.currentState, TransportState.webRtc);
@@ -239,9 +239,19 @@ void main() {
         mockWebRtc.broadcastShouldThrow = true;
 
         const payload = '{"type":"save_throw","stat":"DEX","val":15}';
-        await router.broadcastPayload(payload);
 
-        // Verify router stepped down to Firebase relay
+        // 1st failure: does NOT immediately step down (resilience against single packet drop)
+        await router.broadcastPayload(payload);
+        expect(router.currentState, TransportState.webRtc);
+        expect(router.consecutiveFailureCount, 1);
+
+        // 2nd failure: still resilient
+        await router.broadcastPayload(payload);
+        expect(router.currentState, TransportState.webRtc);
+        expect(router.consecutiveFailureCount, 2);
+
+        // 3rd failure: reaches sequentialFailureThreshold (3) and steps down to Firebase Relay
+        await router.broadcastPayload(payload);
         expect(router.currentState, TransportState.fallbackRelay);
         expect(mockFirebase.isInitialized, isTrue);
         expect(mockFirebase.broadcastedPayloads, [payload]);
@@ -257,7 +267,25 @@ void main() {
         expect(mockWebRtc.broadcastedPayloads, isEmpty);
       });
 
-      test('Broadcast failure on Firebase relay steps down to total offline', () async {
+      test('Transient broadcast failure followed by success resets consecutive failure count without step down', () async {
+        mockLocalWifi.initializeShouldThrow = true;
+        await router.initializeRoom('ROOM-TRANSIENT', 'node-player-1');
+        expect(router.currentState, TransportState.webRtc);
+
+        // 1 transient failure
+        mockWebRtc.broadcastShouldThrow = true;
+        await router.broadcastPayload('{"type":"temp_fail"}');
+        expect(router.currentState, TransportState.webRtc);
+        expect(router.consecutiveFailureCount, 1);
+
+        // Subsequent success resets failure count
+        mockWebRtc.broadcastShouldThrow = false;
+        await router.broadcastPayload('{"type":"success"}');
+        expect(router.currentState, TransportState.webRtc);
+        expect(router.consecutiveFailureCount, 0);
+      });
+
+      test('Broadcast failure on Firebase relay steps down to total offline after reaching threshold', () async {
         mockLocalWifi.initializeShouldThrow = true;
         mockWebRtc.initializeShouldThrow = true;
         await router.initializeRoom('ROOM-1234', 'node-player-1');
@@ -265,7 +293,9 @@ void main() {
 
         // Firebase broadcast fails
         mockFirebase.broadcastShouldThrow = true;
-        await router.broadcastPayload('{"type":"fail"}');
+        for (int i = 0; i < router.sequentialFailureThreshold; i++) {
+          await router.broadcastPayload('{"type":"fail"}');
+        }
 
         expect(router.currentState, TransportState.offline);
       });
