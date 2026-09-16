@@ -14,6 +14,9 @@ import 'services/app_services.dart';
 import 'services/persistence/app_database_service.dart';
 import 'services/persistence/homebrew_persistence_service.dart';
 import 'services/persistence/web_lifecycle.dart';
+import 'application/storage/storage_durability_coordinator.dart';
+import 'domain/storage/models/engine_profile.dart';
+import 'infrastructure/storage/storage_durability_adapter.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -40,10 +43,30 @@ void main() {
       return true;
     };
 
+    // 0. Storage durability silent preflight (Must complete before initializing IndexedDB / Hive connection pools)
+    try {
+      const storagePort = StorageDurabilityAdapter();
+      final preflightProfile = storagePort.detectProfile();
+      if (preflightProfile.engine == BrowserEngine.chromium ||
+          ((preflightProfile.engine == BrowserEngine.webkit || preflightProfile.os == PlatformOs.ios) &&
+              preflightProfile.isStandalonePwa)) {
+        await storagePort.requestPersistence();
+      }
+    } catch (e, stackTrace) {
+      logger.logNonFatal(
+        e,
+        stackTrace,
+        reason: 'Storage durability silent preflight failed during early startup',
+      );
+    }
+
     // 1. Initialize local NoSQL database & web lifecycle before rendering Frame 1
     try {
       await AppDatabaseService.instance.init();
       await initServiceLocator();
+      try {
+        await sl<StorageDurabilityCoordinator>().executeSilentPreflight();
+      } catch (_) {}
       setupWebLifecycle(services.debouncedStorage);
     } catch (e, stackTrace) {
       logger.logNonFatal(

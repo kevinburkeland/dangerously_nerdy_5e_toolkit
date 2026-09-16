@@ -3,10 +3,13 @@ import '../../application/services/clock_sync_service.dart';
 import '../../application/services/combat_encounter_service.dart';
 import '../../application/services/room_state_reconciliation_service.dart';
 import '../../application/services/room_sync_orchestrator.dart';
+import '../../application/storage/storage_durability_coordinator.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_character_repository.dart';
 import '../../domain/ports/i_network_time_port.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
+import '../../domain/storage/ports/i_physical_snapshot_port.dart';
+import '../../domain/storage/ports/i_storage_durability_port.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../adapters/p2p/firebase_fallback_adapter.dart';
@@ -16,6 +19,8 @@ import '../adapters/p2p/webrtc_mesh_adapter.dart';
 import '../adapters/system_network_time_port.dart';
 import '../repositories/local_campaign_repository.dart';
 import '../repositories/local_character_repository.dart';
+import '../storage/physical_snapshot_adapter.dart';
+import '../storage/storage_durability_adapter.dart';
 
 /// Lightweight, type-safe Service Locator for Dependency Injection.
 /// Eradicates singleton constructors in domain/infrastructure repositories
@@ -78,6 +83,8 @@ Future<void> initServiceLocator({
   ICharacterRepository? characterRepo,
   ICampaignRepository? campaignRepo,
   IP2pTransportPort? p2pTransport,
+  IStorageDurabilityPort? storageDurabilityPort,
+  IPhysicalSnapshotPort? physicalSnapshotPort,
 }) async {
   final db = databaseService ?? AppDatabaseService.instance;
   sl.registerSingleton<AppDatabaseService>(db);
@@ -87,6 +94,22 @@ Future<void> initServiceLocator({
 
   final campRepo = campaignRepo ?? LocalCampaignRepository(db: db, characterRepo: charRepo);
   sl.registerSingleton<ICampaignRepository>(campRepo);
+
+  sl.registerLazySingleton<IStorageDurabilityPort>(
+    () => storageDurabilityPort ?? const StorageDurabilityAdapter(),
+  );
+
+  sl.registerLazySingleton<IPhysicalSnapshotPort>(
+    () => physicalSnapshotPort ?? const PhysicalSnapshotAdapter(),
+  );
+
+  sl.registerLazySingleton<StorageDurabilityCoordinator>(
+    () => StorageDurabilityCoordinator(
+      storagePort: sl<IStorageDurabilityPort>(),
+      snapshotPort: sl<IPhysicalSnapshotPort>(),
+      campaignRepo: sl<ICampaignRepository>(),
+    ),
+  );
 
   sl.registerLazySingleton<CombatEncounterService>(() => CombatEncounterService(
         characterRepo: sl<ICharacterRepository>(),

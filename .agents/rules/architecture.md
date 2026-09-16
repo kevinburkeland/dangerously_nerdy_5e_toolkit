@@ -30,19 +30,20 @@ The codebase strictly follows **Domain-Driven Design (DDD)** combined with **Hex
 - **Enforced via Automated Test:** `test/domain/domain_purity_test.dart` scans `lib/domain/` recursively and fails CI if any Flutter package import is detected.
 - **No Persistence or Network:** No Hive, SQLite, Firebase, HTTP, or device I/O imports are permitted in `lib/domain/`.
 - **Pure Models & Immutability:** All entities and value objects (e.g., `HitPoints`, `AnimatedObject`, `CampaignProfile`) must be immutable pure Dart classes with `const` constructors and `copyWith()` methods.
-- **Ports (Interfaces):** Define all repository contracts and synchronization ports in `lib/domain/ports/` (e.g., `ICampaignRepository`, `ICharacterRepository`, `IPartySyncPort`).
-- **Distributed Primitives:** Core CvRDT state types (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`) reside in `lib/domain/crdt/`.
+- **Ports (Interfaces):** Define all repository contracts, synchronization ports, and storage durability contracts in `lib/domain/ports/` and `lib/domain/storage/ports/` (e.g., `ICampaignRepository`, `ICharacterRepository`, `IStorageDurabilityPort`, `IPhysicalSnapshotPort`).
+- **Distributed & Storage Primitives:** Core CvRDT state types (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`) reside in `lib/domain/crdt/`, while engine profiling, storage telemetry, and cold storage snapshot bundles (`EngineProfile`, `StorageTelemetryReport`, `StorageSnapshotBundle`) reside in `lib/domain/storage/models/`.
 
 ### 1.2. Application Layer (`lib/application/`) - Orchestration
 - Coordinates tasks between the Domain and Infrastructure.
-- Examples: `RoomStateReconciliationService` (merges CRDT deltas on top of base snapshots), `CombatEncounterService` (initiates combat encounters and evaluates actions), `PartyRoomService`.
+- Examples: `RoomStateReconciliationService` (merges CRDT deltas on top of base snapshots), `CombatEncounterService` (initiates combat encounters and evaluates actions), `StorageDurabilityCoordinator` (preflight persistence negotiation, contextual permission management, and cold-storage hydration with 30-second sliding lookback window).
 - Application services do not hold long-term persistent state; they process inputs, invoke domain rules, and delegate storage to infrastructure ports.
 
 ### 1.3. Infrastructure Layer (`lib/infrastructure/`) - Adapters & IO
-- Implements the abstract domain ports defined in `lib/domain/ports/`.
+- Implements the abstract domain ports defined in `lib/domain/ports/` and `lib/domain/storage/ports/`.
 - **Repositories (`lib/infrastructure/repositories/`):** Implement persistence using local storage or remote backends (e.g., `LocalCampaignRepository`, `LocalCharacterRepository`).
+- **Storage Durability Adapters (`lib/infrastructure/storage/`):** W3C StorageManager and Blob/FileReader adapters with non-web conditional stubs.
 - **DTOs (`lib/infrastructure/dtos/`):** Translate outside JSON/network formats into pure domain entities and vice versa. Always preserve unparsed payload and clamp numeric bounds.
-- **Dependency Injection (`lib/infrastructure/di/`):** Service Locator (`injection_container.dart` / `sl`) registers singletons and factories for repositories and services.
+- **Dependency Injection (`lib/infrastructure/di/`):** Service Locator (`injection_container.dart` / `sl`) registers singletons and factories for repositories, ports, and services.
 
 ### 1.4. Presentation Layer (`lib/presentation/`, `lib/screens/`, `lib/widgets/`)
 - Purely presentation and user interaction.

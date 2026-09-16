@@ -268,11 +268,21 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 
 ---
 
-### 💾 16. Persistence, Offline Storage & Web Lifecycle
+### 💾 16. Persistence, Offline Storage & Eviction-Immunity Durability
 * **Local NoSQL Storage**: Powered by Hive and IndexedDB (`AppDatabaseService`, `HomebrewPersistenceService`, `CharacterPersistenceService`) for instant startup hydration and zero cold-start delay.
+* **Storage Durability & Eviction-Immunity Subsystem**:
+  - **Hexagonal Domain Core (`lib/domain/storage/`)**: Zero-dependency domain models (`EngineProfile`, `StorageTelemetryReport`, `StorageSnapshotBundle`) and abstract port contracts (`IStorageDurabilityPort`, `IPhysicalSnapshotPort`).
+  - **Engine Profiling & Deterministic Token Matching**: Classifies Chromium, WebKit, and Gecko environments without regular expressions, accurately identifying Safari 7-day ITP eviction risks (`isWebKitEvictionRisk`) and Firefox gesture fences (`requiresExplicitGesture`).
+  - **Silent Preflight Persistence Negotiation**: Coordinates persistence requests prior to IndexedDB/Hive connection pool initialization to prevent browsers from locking storage into an ephemeral tier. Suppresses boot prompts on Firefox Desktop while silently requesting persistence on Chromium and WebKit Standalone PWAs.
+  - **Contextual Persistence Gateways**: Prompts for persistence (`StorageLockOfflineAction`) strictly during user-initiated mutation gestures (saving characters, importing homebrew, exporting campaigns).
+  - **Tamper-Evident Cold Storage Backups**: Exports atomic binary snapshots (`StorageSnapshotBundle`) sealed with constant-time pure Dart SHA-256 verification against `SHA-256(vaultId + payloadBytes)`.
+  - **30-Second Sliding Lookback Reconciliation**: Hydration verifies cryptographic integrity and validates HLC timestamps against a 30-second sliding lookback window to prevent stale snapshots from overwriting fresh local CRDT vectors.
+  - **Ambient & Accessible Telemetry UI (`StorageDurabilityBanner`)**: Zero-friction invariant hides warnings when storage is persisted or running as a standalone PWA; displays non-modal dismissible notices for Safari browser tabs and high-contrast alerts for storage pressure $\ge 80\%$, fully compliant with WCAG 48x48dp touch targets and 2.0x Dynamic Type scaling.
+* **PWA App Shell Cache Shield (`web/service_worker.js` & `web/sw.js`)**:
+  - Immutable cache-first strategy for app shell assets (`index.html`, `flutter.js`, `main.dart.js`, `canvaskit/*`, wasm binaries) while strictly excluding APIs, external domains, and dynamic websocket streams to preserve IndexedDB as the singular offline authority.
 * **Web Lifecycle Management**:
   - Synchronous disk flush on `paused`, `inactive`, `detached`, or `hidden` lifecycle state changes to guarantee zero data loss on browser tab closes or mobile app switches.
-* **Comprehensive Backup & Restore**: Full JSON backup export and import for campaigns, DM notes, custom homebrew bundles, and characters.
+* **Comprehensive Backup & Restore**: Full JSON and atomic cold-storage backup export and import for campaigns, DM notes, custom homebrew bundles, and characters.
 
 ---
 
