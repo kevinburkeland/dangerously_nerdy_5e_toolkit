@@ -1,3 +1,4 @@
+import '../../models/domain/character_models.dart' show SkillType;
 import '../../models/domain/core_types.dart';
 import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
@@ -107,6 +108,10 @@ class CompendiumClassParser {
     if (raw.containsKey('spellsKnownProgression')) {
       customProperties['spellsKnownProgression'] = raw['spellsKnownProgression'];
     }
+
+    final parsedSkills = parseClassSkills(raw);
+    customProperties['allowedSkills'] = parsedSkills.allowedSkills;
+    customProperties['skillChoiceCount'] = parsedSkills.skillChoiceCount;
 
     final grants = extractSpellsGrants(
       raw['additionalSpells'] ?? raw['spells'],
@@ -566,5 +571,126 @@ class CompendiumClassParser {
 
     processSpellGroup(addSpellsData);
     return grants;
+  }
+
+  /// Extracts allowed skills and choice count from class definitions across
+  /// 5eTools schemas, startingProficiencies, direct properties, and text features.
+  static ({List<String> allowedSkills, int skillChoiceCount}) parseClassSkills(Map<String, dynamic> raw) {
+    final allowed = <String>{};
+    int choiceCount = 2;
+    bool allowsAny = false;
+
+    if (raw['skillChoiceCount'] is num) {
+      choiceCount = (raw['skillChoiceCount'] as num).toInt();
+    }
+    if (raw['allowedSkills'] is List) {
+      for (final s in raw['allowedSkills'] as List) {
+        final st = SkillType.tryParse(s.toString());
+        if (st != null) allowed.add(st.name);
+      }
+    }
+
+    final sp = raw['startingProficiencies'] ?? raw['proficiency'] ?? raw['proficiencies'];
+    dynamic skillsData;
+    if (sp is Map) {
+      skillsData = sp['skills'] ?? sp['skill'];
+    } else if (raw.containsKey('skills')) {
+      skillsData = raw['skills'];
+    }
+
+    void extractSkills(dynamic data) {
+      if (data == null) return;
+      if (data is String) {
+        final tagMatches = RegExp(r'\{@skill\s+([^}]+)\}').allMatches(data);
+        if (tagMatches.isNotEmpty) {
+          for (final m in tagMatches) {
+            final st = SkillType.tryParse(m.group(1));
+            if (st != null) allowed.add(st.name);
+          }
+        } else {
+          final st = SkillType.tryParse(data);
+          if (st != null) {
+            allowed.add(st.name);
+          } else {
+            for (final s in SkillType.values) {
+              final reg = RegExp('\\b${RegExp.escape(s.displayName)}\\b', caseSensitive: false);
+              if (reg.hasMatch(data)) {
+                allowed.add(s.name);
+              }
+            }
+          }
+        }
+      } else if (data is List) {
+        for (final item in data) {
+          extractSkills(item);
+        }
+      } else if (data is Map) {
+        if (data.containsKey('any')) {
+          allowsAny = true;
+          if (data['any'] is num) {
+            choiceCount = (data['any'] as num).toInt();
+          }
+        }
+        if (data.containsKey('count') && data['count'] is num) {
+          choiceCount = (data['count'] as num).toInt();
+        }
+        if (data.containsKey('choose')) {
+          final ch = data['choose'];
+          if (ch is Map) {
+            if (ch['count'] is num) {
+              choiceCount = (ch['count'] as num).toInt();
+            }
+            if (ch['from'] != null) {
+              extractSkills(ch['from']);
+            }
+          }
+        }
+        if (data.containsKey('from')) {
+          extractSkills(data['from']);
+        }
+      }
+    }
+
+    if (skillsData != null) {
+      extractSkills(skillsData);
+    }
+
+    // Inspect class features if allowed skills are still empty
+    if (allowed.isEmpty && !allowsAny) {
+      final features = raw['classFeatures'] ?? raw['entries'] ?? raw['desc'];
+      if (features != null) {
+        final text = features.toString();
+        final match = RegExp(r'Skills:\s*Choose\s+(\w+)\s+(?:skills?\s+)?from\s+([^.]+)\.', caseSensitive: false).firstMatch(text);
+        if (match != null) {
+          final word = match.group(1)?.toLowerCase() ?? '';
+          choiceCount = switch (word) {
+            'one' => 1,
+            'two' => 2,
+            'three' => 3,
+            'four' => 4,
+            _ => int.tryParse(word) ?? choiceCount,
+          };
+          final listPart = match.group(2) ?? '';
+          for (final st in SkillType.values) {
+            final reg = RegExp('\\b${RegExp.escape(st.displayName)}\\b', caseSensitive: false);
+            if (reg.hasMatch(listPart)) {
+              allowed.add(st.name);
+            }
+          }
+        }
+      }
+    }
+
+    if (allowsAny || allowed.isEmpty) {
+      return (
+        allowedSkills: SkillType.values.map((s) => s.name).toList(),
+        skillChoiceCount: choiceCount,
+      );
+    }
+
+    return (
+      allowedSkills: allowed.toList(),
+      skillChoiceCount: choiceCount,
+    );
   }
 }

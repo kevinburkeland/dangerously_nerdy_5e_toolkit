@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_class_parser.dart';
 
 void main() {
@@ -73,6 +74,62 @@ void main() {
       // Class 0% data loss preservation
       expect(cl.customProperties['authorCredits'], equals('Mage Hand Press'));
       expect(cl.customProperties['classTableGroups'], isNotNull);
+    });
+
+    test('parses starting skill proficiencies from 5eTools choose.from schema', () {
+      final raw = {
+        'name': 'Scholar',
+        'hd': {'number': 1, 'faces': 8},
+        'proficiency': ['int', 'wis'],
+        'startingProficiencies': {
+          'skills': [
+            {
+              'choose': {
+                'from': ['arcana', 'history', 'investigation', 'nature', 'religion'],
+                'count': 3
+              }
+            }
+          ]
+        }
+      };
+
+      final cl = parser.parseClass(raw);
+      expect(cl.allowedSkills.length, equals(5));
+      expect(cl.allowedSkills, contains(SkillType.arcana));
+      expect(cl.allowedSkills, contains(SkillType.history));
+      expect(cl.allowedSkills, contains(SkillType.investigation));
+      expect(cl.allowedSkills, contains(SkillType.nature));
+      expect(cl.allowedSkills, contains(SkillType.religion));
+      expect(cl.skillChoiceCount, equals(3));
+    });
+
+    test('parses starting skill proficiencies with any skill wildcard choice', () {
+      final raw = {
+        'name': 'Jack of All Trades Class',
+        'hd': {'number': 1, 'faces': 8},
+        'startingProficiencies': {
+          'skills': [
+            {
+              'any': 4
+            }
+          ]
+        }
+      };
+
+      final cl = parser.parseClass(raw);
+      expect(cl.allowedSkills.length, equals(SkillType.values.length));
+      expect(cl.skillChoiceCount, equals(4));
+    });
+
+    test('falls back to safe defaults when skills are omitted or unstructured', () {
+      final raw = {
+        'name': 'Minimal Class',
+        'hd': {'number': 1, 'faces': 10},
+      };
+
+      final cl = parser.parseClass(raw);
+      expect(cl.allowedSkills, equals(SkillType.values));
+      expect(cl.skillChoiceCount, equals(2));
     });
   });
 }

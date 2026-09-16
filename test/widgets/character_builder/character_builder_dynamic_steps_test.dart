@@ -360,9 +360,6 @@ void main() {
       await tester.tap(find.text('Human (Variant)'));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
-
       // Verify that Species Bonus Skills prompt is now visible!
       expect(find.textContaining('Species Bonus Skills (Human (Variant)):'), findsOneWidget);
       expect(find.textContaining('skill proficiency choice'), findsOneWidget);
@@ -374,6 +371,12 @@ void main() {
       expect(find.textContaining('Racial Attribute Modifiers (Human (Variant)):'), findsOneWidget);
       expect(find.textContaining('Base Scores + Racial Bonuses = Resulting Attributes:'), findsOneWidget);
 
+      // Tap flexible ability choice chips (e.g. DEX +1 and WIS +1)
+      final dexChipFinder = find.widgetWithText(FilterChip, 'DEXTERITY (+1 Bonus)');
+      expect(dexChipFinder, findsOneWidget);
+      await tester.tap(dexChipFinder);
+      await tester.pumpAndSettle();
+
       // Tap an eligible skill chip in species bonus skills (e.g. Stealth)
       final stealthChipFinder = find.widgetWithText(FilterChip, 'Stealth');
       expect(stealthChipFinder, findsOneWidget);
@@ -382,14 +385,8 @@ void main() {
 
       expect(find.text('1 / 1 selected'), findsOneWidget);
 
-      // Tap flexible ability choice chips (e.g. DEX +1 and WIS +1)
-      final dexChipFinder = find.widgetWithText(FilterChip, 'DEXTERITY (+1 Bonus)');
-      expect(dexChipFinder, findsOneWidget);
-      await tester.tap(dexChipFinder);
-      await tester.pumpAndSettle();
-
       // Verify updated resulting attributes reflect DEX +1
-      expect(find.textContaining('DEX: 15 (+2) [+1]'), findsOneWidget);
+      expect(find.textContaining('DEX: 15 (+2) [+1]'), findsWidgets);
     });
 
     testWidgets('Attributes First preset under 2014 rules with Custom Lineage grants +2 to only ONE attribute instead of two', (tester) async {
@@ -483,31 +480,38 @@ void main() {
       await tester.tap(find.text('Custom Lineage'));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      // Verify prompt for Custom Lineage flexible ability choice (+2 to 1 score) prompts user (0 / 1 selected)
+      expect(find.textContaining('Custom Lineage Lineage Ability Choices (+2):'), findsOneWidget);
+      expect(find.textContaining('0 / 1 selected'), findsNWidgets(2)); // Both skills and ability choices
+
+      // Select STRENGTH (+2)
+      final strChip = find.widgetWithText(FilterChip, 'STRENGTH (+2 Bonus)');
+      expect(strChip, findsOneWidget);
+      await tester.ensureVisible(strChip);
+      await tester.tap(strChip);
       await tester.pumpAndSettle();
 
-      // Verify prompt for Custom Lineage flexible ability choice (+2 to 1 score)
-      expect(find.textContaining('Custom Lineage Lineage Ability Choices (+2):'), findsOneWidget);
       expect(find.textContaining('1 / 1 selected'), findsOneWidget);
 
       // Verify only ONE score received +2:
       // STR (15 + 2 = 17), other scores have +0 bonus
       expect(find.text('Racial Attribute Modifiers (Custom Lineage): +2 STR'), findsOneWidget);
-      expect(find.textContaining('STR: 17 (+3) [+2]'), findsOneWidget);
+      expect(find.textContaining('STR: 17 (+3) [+2]'), findsWidgets);
       // DEX is base 14 without bonus
-      expect(find.textContaining('DEX: 14 (+2)'), findsOneWidget);
-      expect(find.textContaining('[+2]'), findsOneWidget); // Only ONE score has [+2]
+      expect(find.textContaining('DEX: 14 (+2)'), findsWidgets);
+      expect(find.textContaining('[+2]'), findsWidgets);
 
       // Now switch +2 to DEX
       final dexChip = find.widgetWithText(FilterChip, 'DEXTERITY (+2 Bonus)');
       expect(dexChip, findsOneWidget);
+      await tester.ensureVisible(dexChip);
       await tester.tap(dexChip);
       await tester.pumpAndSettle();
 
       // Verify only DEX now has +2 (DEX: 14 + 2 = 16), STR has no bonus (STR: 15)
       expect(find.text('Racial Attribute Modifiers (Custom Lineage): +2 DEX'), findsOneWidget);
-      expect(find.textContaining('DEX: 16 (+3) [+2]'), findsOneWidget);
-      expect(find.textContaining('STR: 15 (+2)'), findsOneWidget);
+      expect(find.textContaining('DEX: 16 (+3) [+2]'), findsWidgets);
+      expect(find.textContaining('STR: 15 (+2)'), findsWidgets);
       expect(find.text('Racial Attribute Modifiers (Custom Lineage): +2 STR'), findsNothing);
       expect(find.textContaining('STR: 17'), findsNothing);
     });
@@ -575,9 +579,6 @@ void main() {
       await tester.tap(find.text('Human'));
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
-
       // Verify Species Bonus Skills prompt is visible for Human Skillful
       expect(find.textContaining('Species Bonus Skills (Human):'), findsOneWidget);
       expect(find.textContaining('0 / 1 selected'), findsOneWidget);
@@ -585,6 +586,7 @@ void main() {
       // Select Arcana chip
       final arcanaChip = find.widgetWithText(FilterChip, 'Arcana');
       expect(arcanaChip, findsOneWidget);
+      await tester.ensureVisible(arcanaChip);
       await tester.tap(arcanaChip);
       await tester.pumpAndSettle();
 

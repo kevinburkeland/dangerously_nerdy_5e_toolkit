@@ -461,6 +461,87 @@ class CharacterClass extends DomainEntity {
     return featureDecisions.where((d) => d.id == decisionId).firstOrNull;
   }
 
+  /// List of skills allowed for this class at level 1. If not specified or unconstrained, defaults to all 18 skills.
+  List<SkillType> get allowedSkills {
+    final rawList = customProperties['allowedSkills'];
+    if (rawList is List && rawList.isNotEmpty) {
+      final parsed = <SkillType>[];
+      for (final s in rawList) {
+        final st = SkillType.tryParse(s.toString());
+        if (st != null && !parsed.contains(st)) {
+          parsed.add(st);
+        }
+      }
+      if (parsed.isNotEmpty) return parsed;
+    }
+    // Check startingProficiencies in customProperties if allowedSkills not explicitly present
+    final sp = customProperties['startingProficiencies'] ?? customProperties['proficiency'];
+    if (sp is Map) {
+      final skillsData = sp['skills'] ?? sp['skill'];
+      if (skillsData != null) {
+        final extracted = _extractSkillsFromData(skillsData);
+        if (extracted.isNotEmpty) return extracted;
+      }
+    }
+    return SkillType.values;
+  }
+
+  /// Number of skill choices allowed for this class at level 1. Defaults to 2.
+  int get skillChoiceCount {
+    final rawCount = customProperties['skillChoiceCount'];
+    if (rawCount is num) return rawCount.toInt();
+    final sp = customProperties['startingProficiencies'] ?? customProperties['proficiency'];
+    if (sp is Map) {
+      final skillsData = sp['skills'] ?? sp['skill'];
+      if (skillsData is Map) {
+        if (skillsData['count'] is num) return (skillsData['count'] as num).toInt();
+        if (skillsData['any'] is num) return (skillsData['any'] as num).toInt();
+        if (skillsData['choose'] is Map && (skillsData['choose']['count'] is num)) {
+          return (skillsData['choose']['count'] as num).toInt();
+        }
+      } else if (skillsData is List && skillsData.isNotEmpty && skillsData.first is Map) {
+        final first = skillsData.first as Map;
+        if (first['count'] is num) return (first['count'] as num).toInt();
+        if (first['any'] is num) return (first['any'] as num).toInt();
+        if (first['choose'] is Map && (first['choose']['count'] is num)) {
+          return (first['choose']['count'] as num).toInt();
+        }
+      }
+    }
+    return 2;
+  }
+
+  static List<SkillType> _extractSkillsFromData(dynamic data) {
+    final result = <SkillType>[];
+    void visit(dynamic item) {
+      if (item == null) return;
+      if (item is String) {
+        final st = SkillType.tryParse(item);
+        if (st != null && !result.contains(st)) {
+          result.add(st);
+        }
+      } else if (item is List) {
+        for (final sub in item) {
+          visit(sub);
+        }
+      } else if (item is Map) {
+        if (item.containsKey('any')) {
+          result.clear();
+          result.addAll(SkillType.values);
+          return;
+        }
+        if (item.containsKey('choose') && item['choose'] is Map) {
+          visit(item['choose']['from']);
+        }
+        if (item.containsKey('from')) {
+          visit(item['from']);
+        }
+      }
+    }
+    visit(data);
+    return result;
+  }
+
   @override
   Map<String, dynamic> toMap() => {
         'id': id.toMap(),
@@ -755,6 +836,9 @@ class Race extends DomainEntity {
 
   /// Fixed ability score bonuses granted in 2014 rules (e.g. +2 DEX for Elf, +2 CON for Dwarf, +1 to all for Human).
   Map<String, int> get fixedAbilityBonuses2014 => fixedAbilityBonuses;
+
+  /// Flexible ability pool allowed for choice selections, if constrained.
+  List<String>? get flexibleAbilityPool => (customProperties['flexibleAbilityPool'] as List?)?.map((e) => e.toString()).toList();
 
   /// Returns the base movement speed formatted for the selected rules edition.
   String getSpeedForEdition(DmRulesEdition edition) {

@@ -1,6 +1,7 @@
 import '../../models/domain/core_types.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
+import '../acl/compendium_class_parser.dart';
 import 'compendium_tag_parser.dart';
 
 /// Adapters to transform community compendium raw JSON maps into strongly-typed domain entities.
@@ -421,6 +422,7 @@ class CommunityCompendiumAdapters {
       }
     }
 
+    final parsedSkills = CompendiumClassParser.parseClassSkills(json);
     return CharacterClass(
       id: EntityId(slug: slug, ruleset: ruleset),
       name: name,
@@ -431,6 +433,9 @@ class CommunityCompendiumAdapters {
       customProperties: {
         'source': source ?? 'HOMEBREW',
         'rawJson': json,
+        'allowedSkills': parsedSkills.allowedSkills,
+        'skillChoiceCount': parsedSkills.skillChoiceCount,
+        if (json.containsKey('startingProficiencies')) 'startingProficiencies': json['startingProficiencies'],
       },
     );
   }

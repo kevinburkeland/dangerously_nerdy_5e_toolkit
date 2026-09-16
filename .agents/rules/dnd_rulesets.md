@@ -103,3 +103,15 @@ The toolkit natively supports both the **2014 Rules As Written (SRD 5.1)** and t
   - `CharacterBuilderScreen._buildClassToolsPrompt` renders an interactive artisan's tool selection chip group while displaying granted tools.
   - `SkillTraitResolver.resolveTools` and `CharacterDraft.reconcile` ensure starting tools for Artificers (`Thieves' Tools`, `Tinker's Tools`), Rogues (`Thieves' Tools`), and Druids (`Herbalism Kit`) are never dropped.
 
+## 10. Class Starting Skills & Attributes-First Flexible Lineage Architecture
+
+- **Class Starting Skills Ingestion:**
+  - Class definitions ingest starting skill proficiencies via `CompendiumClassParser.parseClassSkills` from 5eTools `startingProficiencies.skills` (handling `choose.from`, `any`, lists, and `{@skill}` tags) into `customProperties['allowedSkills']` and `customProperties['skillChoiceCount']`.
+  - `CharacterClass` exposes domain getters `allowedSkills` (falling back safely to all skills) and `skillChoiceCount` (defaulting to 2).
+- **Flexible Lineage Attributes Compilation:**
+  - `CharacterDraft.reconcile()` reconciles `pendingFlexibleAbilityChoices` into `speciesBonusScores` for base species (`speciesRef`) as well as subraces (`subraceRef`), honoring `flexibleAbilityPool` bounds.
+- **Attributes-First Ordering & Inline Lineage Prompting:**
+  - In `CharacterBuilderScreen`, when ability scores are allocated prior to species (`WizardOrderingPreset.attributesFirst` or manual step navigation), selecting a lineage with flexible choices (Half-Elf, Variant Human, Custom Lineage) renders the flexible choices prompt inline directly inside the selected species card.
+  - The inline prompt renders a live preview of resulting attributes, updates draft bonuses in real time, and gates advancement until all choices are made.
+  - In standard wizard ordering where species precedes attributes, flexible choices can be selected at the species step or finalized at the ability scores step.
+

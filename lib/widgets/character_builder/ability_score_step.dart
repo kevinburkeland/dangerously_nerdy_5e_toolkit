@@ -839,7 +839,7 @@ class AbilityScoreStep extends StatelessWidget {
               spacing: 8,
               runSpacing: 6,
               children: (() {
-                final pool = curSubrace?.flexibleAbilityPool;
+                final pool = curSubrace?.flexibleAbilityPool ?? curSpecies?.flexibleAbilityPool;
                 final availableAbilities = pool != null && pool.isNotEmpty
                     ? AbilityType.values.where((ab) => pool.any((p) {
                         final pStr = p.toLowerCase().trim();
@@ -874,10 +874,34 @@ class AbilityScoreStep extends StatelessWidget {
                               }
                             }
                             onVariantHumanBonusesChanged(updated);
+                            controller.setFlexibleAbilityChoices(updated.toList());
                           },
                   );
                 }).toList();
               })(),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (is2014 && curSpecies == null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.cyanAccent, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Lineage attribute bonuses will be selected when you choose your Species / Lineage.',
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
             ),
           ],
         ),

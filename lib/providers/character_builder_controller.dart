@@ -320,6 +320,12 @@ class CharacterBuilderController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setFlexibleAbilityChoices(List<AbilityType> choices) {
+    _draft.pendingFlexibleAbilityChoices = List.from(choices);
+    _reconcileDraftInvariants();
+    notifyListeners();
+  }
+
   void setSelectedSkills(dynamic skills) {
     if (skills is Map<SkillType, SkillProficiencyLevel>) {
       _draft.selectedSkills = Map.from(skills);

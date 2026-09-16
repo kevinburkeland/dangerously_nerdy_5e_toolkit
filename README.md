@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1747%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1752%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -28,6 +28,10 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - Full ingestion and compilation of background skill proficiencies, starting equipment packages, and 2024 Background ASIs into character sheets and HP math.
   - Automatic background skill collision detection with RAW overlap refund choices.
   - Innate racial spell progression, physical traits propagation (Speed, Darkvision, Size, HP modifiers).
+* **Class Starting Skills & Attributes-First Ordering Pipeline**:
+  - Full ingestion of class starting skill choices (`startingProficiencies.skills`, `choose.from`, `any`, lists, tags) into `allowedSkills` and `skillChoiceCount` across both SRD canon and custom imported compendium classes.
+  - When stats precede species (`attributesFirst` preset or manual step navigation), selecting a flexible lineage (Half-Elf, Variant Human, Custom Lineage) renders the flexible choices prompt inline directly inside the selected species card with live resulting attribute totals, gating progression until choices are made.
+  - Reconciles `pendingFlexibleAbilityChoices` into `speciesBonusScores` for base species as well as subraces without losing lineage bonuses.
 * **Automated Equipment & Inventory Resolution**:
   - Full SRD 2014 and 2024 starting equipment package selection.
   - Reactive AC engine with unarmored defense (Barbarian Con, Monk Wis), shields, and plate armor classification.

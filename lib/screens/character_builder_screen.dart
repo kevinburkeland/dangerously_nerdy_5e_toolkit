@@ -164,7 +164,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
   AbilityScores get _wizardBaseScores => _abilityScoreController.effectiveBaseScores;
 
   // Lineage / Background Bonus Allocations
-  final Set<AbilityType> _variantHumanBonuses = {AbilityType.strength, AbilityType.constitution};
+  final Set<AbilityType> _variantHumanBonuses = {};
   AbilityType _backgroundPrimaryBonus = AbilityType.strength; // +2 in 2024
   AbilityType _backgroundSecondaryBonus = AbilityType.constitution; // +1 in 2024
 
@@ -1209,10 +1209,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
 
     final curClass = _selectedClass != null ? SrdClassesLibrary.findBySlug(_selectedClass!, ruleset: _selectedRuleset) : null;
     final curBackground = _selectedBackground != null ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!) : null;
-    final allowedClassSkills = (curClass?.customProperties['allowedSkills'] as List? ?? [])
-        .map((s) => SkillType.values.firstWhere((st) => st.name == s.toString(), orElse: () => SkillType.athletics))
-        .toList();
-    final allowedSkillCount = (curClass?.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
+    final allowedClassSkills = curClass != null ? curClass.allowedSkills : <SkillType>[];
+    final allowedSkillCount = curClass?.skillChoiceCount ?? 2;
     final lvl1Decisions = curClass?.getDecisionsForLevel(1, ruleset: _selectedRuleset) ?? [];
 
     final currentStepKey = steps[_wizardStep];
@@ -1265,6 +1263,7 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     onVariantHumanBonusesChanged: (set) => setState(() {
                       _variantHumanBonuses.clear();
                       _variantHumanBonuses.addAll(set);
+                      _abilityScoreController.setFlexibleAbilityChoices(_variantHumanBonuses.toList());
                     }),
                     backgroundPrimaryBonus: _backgroundPrimaryBonus,
                     onBackgroundPrimaryBonusChanged: (ab) => setState(() => _backgroundPrimaryBonus = ab),
@@ -1306,8 +1305,22 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                   canAdvance = true;
                 case 'species':
                   final curSp = _selectedSpecies != null ? SrdSpeciesLibrary.findBySlug(_selectedSpecies!) : null;
+                  final chosenSub = _selectedSubrace != null
+                      ? curSp?.subraces.where((s) => s.id.slug == _selectedSubrace).firstOrNull
+                      : null;
+                  final hasSubBonuses = chosenSub != null &&
+                      (chosenSub.fixedAbilityBonuses2014.isNotEmpty || chosenSub.flexibleAbilityChoiceCount > 0);
+                  final flexCount = hasSubBonuses
+                      ? chosenSub.flexibleAbilityChoiceCount
+                      : (curSp?.flexibleAbilityChoiceCount ?? 0);
+                  final isNon2024 = _selectedRuleset != RulesetVersion.v2024;
                   final subraceValid = curSp == null || curSp.subraces.isEmpty || _selectedSubrace != null;
-                  canAdvance = _abilityScoreController.hasValidSpecies && _abilityScoreController.refundedSkillChoices == 0 && subraceValid;
+                  final statsChosenBeforeSpecies = _abilityScoreController.isAbilityAllocationComplete;
+                  final flexibleValid = !isNon2024 || flexCount == 0 || !statsChosenBeforeSpecies || _variantHumanBonuses.length == flexCount;
+                  canAdvance = _abilityScoreController.hasValidSpecies &&
+                      _abilityScoreController.refundedSkillChoices == 0 &&
+                      subraceValid &&
+                      flexibleValid;
                 case 'class':
                   canAdvance = _abilityScoreController.hasValidClass;
                 case 'subclass':
@@ -1441,9 +1454,25 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     final speciesBonusSkillCount = SkillTraitResolver.getSpeciesBonusSkillCount(_selectedSpecies, edition);
     final curClass = _selectedClass != null ? SrdClassesLibrary.findBySlug(_selectedClass!, ruleset: _selectedRuleset) : null;
     final curBackground = _selectedBackground != null ? SrdBackgroundsLibrary.findBySlug(_selectedBackground!) : null;
-    final flexibleCount = selectedSpeciesObj?.flexibleAbilityChoiceCount ?? 0;
-    final flexibleBonusValue = selectedSpeciesObj?.flexibleAbilityBonusValue ?? 0;
-    final fixedBonuses = selectedSpeciesObj?.fixedAbilityBonuses2014 ?? const {};
+
+    final selectedSubraceObj = (_selectedSubrace != null && selectedSpeciesObj != null)
+        ? selectedSpeciesObj.subraces.where((s) => s.id.slug == _selectedSubrace).firstOrNull
+        : null;
+    final subFlexCount = selectedSubraceObj?.flexibleAbilityChoiceCount ?? 0;
+    final hasSubBonuses = selectedSubraceObj != null &&
+        (selectedSubraceObj.fixedAbilityBonuses2014.isNotEmpty || subFlexCount > 0);
+    final flexibleCount = hasSubBonuses
+        ? subFlexCount
+        : (selectedSpeciesObj?.flexibleAbilityChoiceCount ?? 0);
+    final flexibleBonusValue = (selectedSubraceObj != null && selectedSubraceObj.flexibleAbilityBonus > 0)
+        ? selectedSubraceObj.flexibleAbilityBonus
+        : (selectedSpeciesObj?.flexibleAbilityBonusValue ?? 1);
+    final fixedBonuses = hasSubBonuses
+        ? selectedSubraceObj.fixedAbilityBonuses2014
+        : (selectedSpeciesObj?.fixedAbilityBonuses2014 ?? const {});
+    final flexiblePool = hasSubBonuses
+        ? selectedSubraceObj.flexibleAbilityPool
+        : selectedSpeciesObj?.flexibleAbilityPool;
 
     final spReport = curClass != null
         ? SkillTraitResolver.resolveSkills(
@@ -1579,6 +1608,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                             refType: EntityType.species,
                             slug: sp.id.slug,
                             displayName: sp.name,
+                            customProperties: {
+                              if (sp.flexibleAbilityPool != null) 'flexibleAbilityPool': sp.flexibleAbilityPool,
+                              if (sp.flexibleAbilityChoiceCount > 0) 'flexibleAbilityCount': sp.flexibleAbilityChoiceCount,
+                              if (sp.flexibleAbilityBonus > 0) 'flexibleAbilityBonus': sp.flexibleAbilityBonus,
+                              if (sp.fixedAbilityBonuses2014.isNotEmpty) 'fixedAbilityBonuses': sp.fixedAbilityBonuses2014,
+                            },
                           ),
                         );
                         if (_selectedSubrace != null) {
@@ -1588,28 +1623,47 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                               refType: EntityType.species,
                               slug: chosenSub.id.slug,
                               displayName: chosenSub.name,
+                              customProperties: {
+                                if (chosenSub.flexibleAbilityPool != null) 'flexibleAbilityPool': chosenSub.flexibleAbilityPool,
+                                if (chosenSub.flexibleAbilityCount > 0) 'flexibleAbilityCount': chosenSub.flexibleAbilityCount,
+                                if (chosenSub.flexibleAbilityBonus > 0) 'flexibleAbilityBonus': chosenSub.flexibleAbilityBonus,
+                                if (chosenSub.fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': chosenSub.fixedAbilityBonuses,
+                              },
                             ),
                           );
                         }
                         if (prevSpecies != sp.id.slug) {
                           _speciesBonusSkillPicks.clear();
-                          final is2014 = _selectedRuleset == RulesetVersion.v2014;
-                          final flexCount = is2014 ? sp.flexibleAbilityChoiceCount : 0;
-                          if (flexCount == 0) {
-                            _variantHumanBonuses.clear();
-                          } else {
-                            final fixed = sp.fixedAbilityBonuses2014;
-                            final validAbilities = AbilityType.values.where((a) => !fixed.containsKey(a.name.toLowerCase())).toList();
-                            _variantHumanBonuses.retainAll(validAbilities);
-                            while (_variantHumanBonuses.length > flexCount) {
-                              _variantHumanBonuses.remove(_variantHumanBonuses.last);
-                            }
-                            while (_variantHumanBonuses.length < flexCount && validAbilities.isNotEmpty) {
-                              final next = validAbilities.firstWhere((a) => !_variantHumanBonuses.contains(a), orElse: () => validAbilities.first);
-                              _variantHumanBonuses.add(next);
-                            }
+                        }
+                        final is2014 = _selectedRuleset == RulesetVersion.v2014;
+                        final chosenSub = _selectedSubrace != null
+                            ? sp.subraces.where((s) => s.id.slug == _selectedSubrace).firstOrNull
+                            : null;
+                        final hasSubAbilities = chosenSub != null &&
+                            (chosenSub.fixedAbilityBonuses2014.isNotEmpty || chosenSub.flexibleAbilityChoiceCount > 0);
+                        final flexCount = is2014
+                            ? (hasSubAbilities ? chosenSub.flexibleAbilityChoiceCount : sp.flexibleAbilityChoiceCount)
+                            : 0;
+                        if (flexCount == 0) {
+                          _variantHumanBonuses.clear();
+                        } else {
+                          final fixed = hasSubAbilities ? chosenSub.fixedAbilityBonuses2014 : sp.fixedAbilityBonuses2014;
+                          final pool = hasSubAbilities ? chosenSub.flexibleAbilityPool : sp.flexibleAbilityPool;
+                          final validAbilities = AbilityType.values
+                              .where((a) => !fixed.containsKey(a.name.toLowerCase()))
+                              .where((a) => pool == null || pool.isEmpty || pool.any((p) {
+                                final pStr = p.toLowerCase().trim();
+                                final prefix = pStr.length > 3 ? pStr.substring(0, 3) : pStr;
+                                return a.name.toLowerCase().startsWith(prefix);
+                              }))
+                              .toList();
+                          _variantHumanBonuses.retainAll(validAbilities);
+                          while (_variantHumanBonuses.length > flexCount) {
+                            _variantHumanBonuses.remove(_variantHumanBonuses.last);
                           }
                         }
+                        _abilityScoreController.setFlexibleAbilityChoices(_variantHumanBonuses.toList());
+
                         final is2024 = _selectedRuleset == RulesetVersion.v2024;
                         final hasFeatStep = is2024 || sp.grantsBonusFeat;
                         final maxStepIndex = hasFeatStep ? 7 : 6;
@@ -1656,132 +1710,347 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                                     size: 18,
                                     color: isSubSelected ? Colors.cyanAccent : Colors.white38,
                                   ),
-                                title: Text(
-                                  sub.name,
-                                  style: TextStyle(
-                                    fontWeight: isSubSelected ? FontWeight.bold : FontWeight.w600,
-                                    fontSize: 13,
-                                    color: isSubSelected ? Colors.white : Colors.white70,
+                                  title: Text(
+                                    sub.name,
+                                    style: TextStyle(
+                                      fontWeight: isSubSelected ? FontWeight.bold : FontWeight.w600,
+                                      fontSize: 13,
+                                      color: isSubSelected ? Colors.white : Colors.white70,
+                                    ),
                                   ),
-                                ),
-                                subtitle: ((sub.abilityScoreSummary?.isNotEmpty == true) || (sub.speed?.isNotEmpty == true) || (sub.darkvision != null && sub.darkvision! > 0) || sub.traitsMarkdown.isNotEmpty)
-                                    ? Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          if ((sub.abilityScoreSummary?.isNotEmpty == true) || (sub.speed?.isNotEmpty == true) || (sub.darkvision != null && sub.darkvision! > 0)) ...[
-                                            const SizedBox(height: 4),
-                                            Wrap(
-                                              spacing: 6,
-                                              runSpacing: 4,
-                                              children: [
-                                                if (sub.abilityScoreSummary?.isNotEmpty == true)
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.cyanAccent.withValues(alpha: 0.15),
-                                                      borderRadius: BorderRadius.circular(4),
-                                                      border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+                                  subtitle: ((sub.abilityScoreSummary?.isNotEmpty == true) || (sub.speed?.isNotEmpty == true) || (sub.darkvision != null && sub.darkvision! > 0) || sub.traitsMarkdown.isNotEmpty)
+                                      ? Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if ((sub.abilityScoreSummary?.isNotEmpty == true) || (sub.speed?.isNotEmpty == true) || (sub.darkvision != null && sub.darkvision! > 0)) ...[
+                                              const SizedBox(height: 4),
+                                              Wrap(
+                                                spacing: 6,
+                                                runSpacing: 4,
+                                                children: [
+                                                  if (sub.abilityScoreSummary?.isNotEmpty == true)
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.cyanAccent.withValues(alpha: 0.15),
+                                                        borderRadius: BorderRadius.circular(4),
+                                                        border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+                                                      ),
+                                                      child: Text(
+                                                        sub.abilityScoreSummary!,
+                                                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                                                      ),
                                                     ),
-                                                    child: Text(
-                                                      sub.abilityScoreSummary!,
-                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                                                  if (sub.speed?.isNotEmpty == true)
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.greenAccent.withValues(alpha: 0.15),
+                                                        borderRadius: BorderRadius.circular(4),
+                                                        border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+                                                      ),
+                                                      child: Text(
+                                                        'Speed ${sub.speed!.contains("ft") ? sub.speed : "${sub.speed} ft."}',
+                                                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                                                      ),
                                                     ),
-                                                  ),
-                                                if (sub.speed?.isNotEmpty == true)
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.greenAccent.withValues(alpha: 0.15),
-                                                      borderRadius: BorderRadius.circular(4),
-                                                      border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.4)),
+                                                  if (sub.darkvision != null && sub.darkvision! > 0)
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.purpleAccent.withValues(alpha: 0.15),
+                                                        borderRadius: BorderRadius.circular(4),
+                                                        border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+                                                      ),
+                                                      child: Text(
+                                                        'Darkvision ${sub.darkvision} ft.',
+                                                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.purpleAccent),
+                                                      ),
                                                     ),
-                                                    child: Text(
-                                                      'Speed ${sub.speed!.contains("ft") ? sub.speed : "${sub.speed} ft."}',
-                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.greenAccent),
-                                                    ),
-                                                  ),
-                                                if (sub.darkvision != null && sub.darkvision! > 0)
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.purpleAccent.withValues(alpha: 0.15),
-                                                      borderRadius: BorderRadius.circular(4),
-                                                      border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
-                                                    ),
-                                                    child: Text(
-                                                      'Darkvision ${sub.darkvision} ft.',
-                                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.purpleAccent),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
+                                                ],
+                                              ),
+                                            ],
+                                            if (sub.traitsMarkdown.isNotEmpty) ...[
+                                              const SizedBox(height: 6),
+                                              FormattedMarkdownText(
+                                                sub.traitsMarkdown,
+                                                style: const TextStyle(fontSize: 11, color: Colors.white70),
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
                                           ],
-                                          if (sub.traitsMarkdown.isNotEmpty) ...[
-                                            const SizedBox(height: 6),
-                                            FormattedMarkdownText(
-                                              sub.traitsMarkdown,
-                                              style: const TextStyle(fontSize: 11, color: Colors.white70),
-                                              maxLines: 3,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ],
-                                      )
-                                    : null,
-                                onTap: () {
-                                  HapticService.selectionTick(context);
-                                  setState(() {
-                                    _selectedSubrace = sub.id.slug;
-                                    _abilityScoreController.setSubrace(
-                                      EntityReference(
-                                        refType: EntityType.species,
-                                        slug: sub.id.slug,
-                                        displayName: sub.name,
-                                        customProperties: {
-                                          if (sub.flexibleAbilityPool != null) 'flexibleAbilityPool': sub.flexibleAbilityPool,
-                                          if (sub.flexibleAbilityCount > 0) 'flexibleAbilityCount': sub.flexibleAbilityCount,
-                                          if (sub.flexibleAbilityBonus > 0) 'flexibleAbilityBonus': sub.flexibleAbilityBonus,
-                                          if (sub.fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': sub.fixedAbilityBonuses,
-                                        },
-                                      ),
-                                    );
-                                    if (_selectedRuleset == RulesetVersion.v2014) {
-                                      final flexCount = sub.flexibleAbilityChoiceCount > 0
-                                          ? sub.flexibleAbilityChoiceCount
-                                          : sp.flexibleAbilityChoiceCount;
-                                      if (flexCount == 0) {
-                                        _variantHumanBonuses.clear();
-                                      } else {
-                                        final fixed = (sub.fixedAbilityBonuses2014.isNotEmpty || sub.flexibleAbilityChoiceCount > 0)
-                                            ? sub.fixedAbilityBonuses2014
-                                            : sp.fixedAbilityBonuses2014;
-                                        final pool = sub.flexibleAbilityPool;
-                                        final validAbilities = AbilityType.values
-                                            .where((a) => !fixed.containsKey(a.name.toLowerCase()))
-                                            .where((a) => pool == null || pool.isEmpty || pool.any((p) {
-                                              final pStr = p.toLowerCase().trim();
-                                              final prefix = pStr.length > 3 ? pStr.substring(0, 3) : pStr;
-                                              return a.name.toLowerCase().startsWith(prefix);
-                                            }))
-                                            .toList();
-                                        _variantHumanBonuses.retainAll(validAbilities);
-                                        while (_variantHumanBonuses.length > flexCount) {
-                                          _variantHumanBonuses.remove(_variantHumanBonuses.last);
+                                        )
+                                      : null,
+                                  onTap: () {
+                                    HapticService.selectionTick(context);
+                                    setState(() {
+                                      _selectedSubrace = sub.id.slug;
+                                      _abilityScoreController.setSubrace(
+                                        EntityReference(
+                                          refType: EntityType.species,
+                                          slug: sub.id.slug,
+                                          displayName: sub.name,
+                                          customProperties: {
+                                            if (sub.flexibleAbilityPool != null) 'flexibleAbilityPool': sub.flexibleAbilityPool,
+                                            if (sub.flexibleAbilityCount > 0) 'flexibleAbilityCount': sub.flexibleAbilityCount,
+                                            if (sub.flexibleAbilityBonus > 0) 'flexibleAbilityBonus': sub.flexibleAbilityBonus,
+                                            if (sub.fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': sub.fixedAbilityBonuses,
+                                          },
+                                        ),
+                                      );
+                                      if (_selectedRuleset == RulesetVersion.v2014) {
+                                        final flexCount = sub.flexibleAbilityChoiceCount > 0
+                                            ? sub.flexibleAbilityChoiceCount
+                                            : sp.flexibleAbilityChoiceCount;
+                                        if (flexCount == 0) {
+                                          _variantHumanBonuses.clear();
+                                        } else {
+                                          final fixed = (sub.fixedAbilityBonuses2014.isNotEmpty || sub.flexibleAbilityChoiceCount > 0)
+                                              ? sub.fixedAbilityBonuses2014
+                                              : sp.fixedAbilityBonuses2014;
+                                          final pool = sub.flexibleAbilityPool ?? sp.flexibleAbilityPool;
+                                          final validAbilities = AbilityType.values
+                                              .where((a) => !fixed.containsKey(a.name.toLowerCase()))
+                                              .where((a) => pool == null || pool.isEmpty || pool.any((p) {
+                                                final pStr = p.toLowerCase().trim();
+                                                final prefix = pStr.length > 3 ? pStr.substring(0, 3) : pStr;
+                                                return a.name.toLowerCase().startsWith(prefix);
+                                              }))
+                                              .toList();
+                                          _variantHumanBonuses.retainAll(validAbilities);
+                                          while (_variantHumanBonuses.length > flexCount) {
+                                            _variantHumanBonuses.remove(_variantHumanBonuses.last);
+                                          }
                                         }
-                                        while (_variantHumanBonuses.length < flexCount && validAbilities.isNotEmpty) {
-                                          final next = validAbilities.firstWhere((a) => !_variantHumanBonuses.contains(a), orElse: () => validAbilities.first);
-                                          _variantHumanBonuses.add(next);
-                                        }
+                                        _abilityScoreController.setFlexibleAbilityChoices(_variantHumanBonuses.toList());
                                       }
-                                    }
-                                  });
-                                },
+                                    });
+                                  },
+                                ),
                               ),
-                            ),
-                          );
-                        }),
+                            );
+                          }),
                         ],
                       ),
+                    ),
+                  ],
+                  if (isSelected) ...[
+                    // 2014 Racial Attributes & Lineage Flexible Choices
+                    if (_selectedRuleset == RulesetVersion.v2014 && flexibleCount > 0) ...[
+                      const Divider(height: 1, color: Colors.cyanAccent),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.cyan.shade900.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _variantHumanBonuses.length == flexibleCount
+                                  ? Colors.greenAccent
+                                  : Colors.cyanAccent.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${sp.name}${selectedSubraceObj != null ? " (${selectedSubraceObj.name})" : ""} Lineage Ability Choices (+$flexibleBonusValue):',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent, fontSize: 13),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${_variantHumanBonuses.length} / $flexibleCount selected',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: _variantHumanBonuses.length == flexibleCount ? Colors.greenAccent : Colors.amberAccent,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Select $flexibleCount different ability score${flexibleCount > 1 ? 's' : ''} to receive a +$flexibleBonusValue bonus:',
+                                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                children: AbilityType.values.map((ab) {
+                                  final isFixed = fixedBonuses.containsKey(ab.name.toLowerCase());
+                                  final inPool = flexiblePool == null ||
+                                      flexiblePool.isEmpty ||
+                                      flexiblePool.any((p) {
+                                        final pStr = p.toLowerCase().trim();
+                                        final prefix = pStr.length > 3 ? pStr.substring(0, 3) : pStr;
+                                        return ab.name.toLowerCase().startsWith(prefix);
+                                      });
+                                  if (!isFixed && !inPool) return const SizedBox.shrink();
+
+                                  final isChosen = _variantHumanBonuses.contains(ab);
+                                  return FilterChip(
+                                    label: Text(isFixed
+                                        ? '${ab.name.toUpperCase()} (+${fixedBonuses[ab.name.toLowerCase()]} Fixed)'
+                                        : '${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
+                                    selected: isChosen,
+                                    selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
+                                    checkmarkColor: Colors.cyanAccent,
+                                    onSelected: isFixed
+                                        ? null
+                                        : (selected) {
+                                            HapticService.selectionTick(context);
+                                            setState(() {
+                                              if (selected) {
+                                                while (_variantHumanBonuses.length >= flexibleCount && _variantHumanBonuses.isNotEmpty) {
+                                                  _variantHumanBonuses.remove(_variantHumanBonuses.first);
+                                                }
+                                                _variantHumanBonuses.add(ab);
+                                              } else {
+                                                _variantHumanBonuses.remove(ab);
+                                              }
+                                              _abilityScoreController.setFlexibleAbilityChoices(_variantHumanBonuses.toList());
+                                            });
+                                          },
+                                  );
+                                }).toList(),
+                              ),
+                              if (_wizardBaseScores.strength > 0) ...[
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Current Ability Totals (allocated base + lineage bonuses):',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white70),
+                                ),
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: AbilityType.values.map((ab) {
+                                    final base = _wizardBaseScores.getScore(ab);
+                                    final fixedAmt = fixedBonuses[ab.name.toLowerCase()] ?? 0;
+                                    final flexAmt = _variantHumanBonuses.contains(ab) ? flexibleBonusValue : 0;
+                                    final bonusAmt = fixedAmt + flexAmt;
+                                    final total = base + bonusAmt;
+                                    final mod = (total - 10) ~/ 2;
+                                    final modStr = mod >= 0 ? '+$mod' : '$mod';
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: bonusAmt > 0 ? Colors.cyan.shade900.withValues(alpha: 0.4) : Colors.black26,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: bonusAmt > 0 ? Colors.cyanAccent.withValues(alpha: 0.5) : Colors.white12),
+                                      ),
+                                      child: Text(
+                                        '${ab.name.substring(0, 3).toUpperCase()}: $total ($modStr)${bonusAmt > 0 ? ' [+$bonusAmt]' : ''}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: bonusAmt > 0 ? FontWeight.bold : FontWeight.normal,
+                                          color: bonusAmt > 0 ? Colors.cyanAccent : Colors.white70,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    // Species Flexible Bonus Skills (e.g. 2024 Human Skillful, 2014 Variant Human, Half-Elf Skill Versatility)
+                    if (speciesBonusSkillCount > 0) ...[
+                      const Divider(height: 1, color: Colors.tealAccent),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.tealAccent.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _speciesBonusSkillPicks.length == speciesBonusSkillCount
+                                  ? Colors.greenAccent
+                                  : Colors.tealAccent.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Species Bonus Skills (${sp.name}):',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.tealAccent),
+                                  ),
+                                  Text(
+                                    '${_speciesBonusSkillPicks.length} / $speciesBonusSkillCount selected',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: _speciesBonusSkillPicks.length == speciesBonusSkillCount ? Colors.greenAccent : Colors.amberAccent,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Your lineage grants $speciesBonusSkillCount skill proficiency choice${speciesBonusSkillCount > 1 ? 's' : ''}:',
+                                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: eligibleBonusSkills.map((sk) {
+                                  final isChosen = _speciesBonusSkillPicks.contains(sk);
+                                  return FilterChip(
+                                    label: Text(sk.displayName, style: const TextStyle(fontSize: 12)),
+                                    selected: isChosen,
+                                    selectedColor: Colors.tealAccent.withValues(alpha: 0.3),
+                                    onSelected: (selected) {
+                                      HapticService.selectionTick(context);
+                                      setState(() {
+                                        if (selected) {
+                                          if (_speciesBonusSkillPicks.length < speciesBonusSkillCount) {
+                                            _speciesBonusSkillPicks.add(sk);
+                                          } else {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Cannot select more than $speciesBonusSkillCount species bonus skill(s).'),
+                                                duration: const Duration(seconds: 2),
+                                              ),
+                                            );
+                                          }
+                                        } else {
+                                          _speciesBonusSkillPicks.remove(sk);
+                                        }
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    // Dwarf Tools / Bonus Languages
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: _buildSpeciesProficienciesPrompt(sp),
+                    ),
+                    const SizedBox(height: 8),
+                    // Species Racial Bonus Summary
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: _buildSpeciesRacialBonusSummary(sp, curBackground),
                     ),
                   ],
                 ],
@@ -1789,168 +2058,6 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             ),
           );
         }),
-
-        // Species Flexible Bonus Skills (e.g. 2024 Human Skillful, 2014 Variant Human, Half-Elf Skill Versatility)
-        if (speciesBonusSkillCount > 0 && selectedSpeciesObj != null) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.tealAccent.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: _speciesBonusSkillPicks.length == speciesBonusSkillCount
-                    ? Colors.greenAccent
-                    : Colors.tealAccent.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Species Bonus Skills (${selectedSpeciesObj.name}):',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.tealAccent),
-                    ),
-                    Text(
-                      '${_speciesBonusSkillPicks.length} / $speciesBonusSkillCount selected',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _speciesBonusSkillPicks.length == speciesBonusSkillCount ? Colors.greenAccent : Colors.amberAccent,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Your lineage grants $speciesBonusSkillCount skill proficiency choice${speciesBonusSkillCount > 1 ? 's' : ''}:',
-                  style: const TextStyle(fontSize: 12, color: Colors.white70),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: eligibleBonusSkills.map((sk) {
-                    final isChosen = _speciesBonusSkillPicks.contains(sk);
-                    return FilterChip(
-                      label: Text(sk.displayName, style: const TextStyle(fontSize: 12)),
-                      selected: isChosen,
-                      selectedColor: Colors.tealAccent.withValues(alpha: 0.3),
-                      onSelected: (selected) {
-                        HapticService.selectionTick(context);
-                        setState(() {
-                          if (selected) {
-                            if (_speciesBonusSkillPicks.length < speciesBonusSkillCount) {
-                              _speciesBonusSkillPicks.add(sk);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Cannot select more than $speciesBonusSkillCount species bonus skill(s).'),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          } else {
-                            _speciesBonusSkillPicks.remove(sk);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ],
-
-        // 2014 Racial Attributes & Lineage Flexible Choices
-        if (_selectedRuleset == RulesetVersion.v2014 && selectedSpeciesObj != null) ...[
-          if (flexibleCount > 0) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.cyan.shade900.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: _variantHumanBonuses.length == flexibleCount
-                      ? Colors.greenAccent
-                      : Colors.cyanAccent.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${selectedSpeciesObj.name} Lineage Ability Choices (+$flexibleBonusValue):',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent, fontSize: 13),
-                      ),
-                      Text(
-                        '${_variantHumanBonuses.length} / $flexibleCount selected',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _variantHumanBonuses.length == flexibleCount ? Colors.greenAccent : Colors.amberAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Select $flexibleCount different ability score${flexibleCount > 1 ? 's' : ''} to receive a +$flexibleBonusValue bonus:',
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: AbilityType.values.map((ab) {
-                      final isFixed = fixedBonuses.containsKey(ab.name.toLowerCase());
-                      final isSelected = _variantHumanBonuses.contains(ab);
-                      return FilterChip(
-                        label: Text(isFixed
-                            ? '${ab.name.toUpperCase()} (+${fixedBonuses[ab.name.toLowerCase()]} Fixed)'
-                            : '${ab.name.toUpperCase()} (+$flexibleBonusValue Bonus)'),
-                        selected: isSelected,
-                        selectedColor: Colors.cyanAccent.withValues(alpha: 0.3),
-                        checkmarkColor: Colors.cyanAccent,
-                        onSelected: isFixed
-                            ? null
-                            : (selected) {
-                                HapticService.selectionTick(context);
-                                setState(() {
-                                  if (selected) {
-                                    while (_variantHumanBonuses.length >= flexibleCount && _variantHumanBonuses.isNotEmpty) {
-                                      _variantHumanBonuses.remove(_variantHumanBonuses.first);
-                                    }
-                                    _variantHumanBonuses.add(ab);
-                                  } else {
-                                    if (_variantHumanBonuses.length > 1) {
-                                      _variantHumanBonuses.remove(ab);
-                                    }
-                                  }
-                                });
-                              },
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-
-        if (selectedSpeciesObj != null) ...[
-          _buildSpeciesProficienciesPrompt(selectedSpeciesObj),
-          const SizedBox(height: 16),
-          _buildSpeciesRacialBonusSummary(selectedSpeciesObj, curBackground),
-        ],
       ],
     );
   }
@@ -2405,10 +2512,8 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                 ),
                 hitDie: newCls.hitDie,
               );
-              final newAllowed = (newCls.customProperties['allowedSkills'] as List? ?? [])
-                  .map((s) => SkillType.values.firstWhere((st) => st.name == s.toString(), orElse: () => SkillType.athletics))
-                  .toList();
-              final cnt = (newCls.customProperties['skillChoiceCount'] as num?)?.toInt() ?? 2;
+              final newAllowed = newCls.allowedSkills;
+              final cnt = newCls.skillChoiceCount;
               _wizardSelectedSkills = newAllowed.take(cnt).toSet();
               _compensatorySkillPicks.clear();
               _abilityScoreController.setSelectedSkills(_wizardSelectedSkills);
@@ -4534,6 +4639,12 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
       refType: EntityType.species,
       slug: curSpecies.id.slug,
       displayName: curSpecies.name,
+      customProperties: {
+        if (curSpecies.flexibleAbilityPool != null) 'flexibleAbilityPool': curSpecies.flexibleAbilityPool,
+        if (curSpecies.flexibleAbilityChoiceCount > 0) 'flexibleAbilityCount': curSpecies.flexibleAbilityChoiceCount,
+        if (curSpecies.flexibleAbilityBonus > 0) 'flexibleAbilityBonus': curSpecies.flexibleAbilityBonus,
+        if (curSpecies.fixedAbilityBonuses2014.isNotEmpty) 'fixedAbilityBonuses': curSpecies.fixedAbilityBonuses2014,
+      },
     );
     if (_selectedSubrace != null) {
       final chosenSub = SrdSpeciesLibrary.findSubraceBySlug(_selectedSubrace!) ??
@@ -4552,13 +4663,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
             if (chosenSub.fixedAbilityBonuses.isNotEmpty) 'fixedAbilityBonuses': chosenSub.fixedAbilityBonuses,
           },
         );
-        draft.pendingFlexibleAbilityChoices = _variantHumanBonuses.toList();
       } else {
         draft.subraceRef = null;
       }
     } else {
       draft.subraceRef = null;
     }
+    draft.pendingFlexibleAbilityChoices = _variantHumanBonuses.toList();
     draft.backgroundRef = EntityReference(
       refType: EntityType.background,
       slug: curBackground.id.slug,

@@ -135,64 +135,61 @@ class CharacterDraft {
       }
       backgroundBonusScores = const AbilityScores.zero();
 
-      // Ensure flexible ability choices honor subrace pool in 2014 mode without defaulting to Strength
-      if (subraceRef != null) {
-        final pool = subraceRef!.customProperties['flexibleAbilityPool'] as List?;
-        if (pool != null && pool.isNotEmpty) {
-          final allowed = <AbilityType>[];
-          for (final item in pool) {
-            final str = item.toString().toLowerCase().trim();
-            final prefix = str.length > 3 ? str.substring(0, 3) : str;
-            for (final ab in AbilityType.values) {
-              if (ab.name.toLowerCase().startsWith(prefix)) {
-                if (!allowed.contains(ab)) allowed.add(ab);
-              }
-            }
-          }
-          if (allowed.isNotEmpty) {
-            pendingFlexibleAbilityChoices.retainWhere(allowed.contains);
-            if (pendingFlexibleAbilityChoices.isEmpty) {
-              pendingFlexibleAbilityChoices.add(allowed.first);
+      // Ensure flexible ability choices honor pool in 2014 mode without defaulting to Strength
+      final activePool = (subraceRef?.customProperties['flexibleAbilityPool'] ??
+              speciesRef?.customProperties['flexibleAbilityPool']) as List?;
+      if (activePool != null && activePool.isNotEmpty) {
+        final allowed = <AbilityType>[];
+        for (final item in activePool) {
+          final str = item.toString().toLowerCase().trim();
+          final prefix = str.length > 3 ? str.substring(0, 3) : str;
+          for (final ab in AbilityType.values) {
+            if (ab.name.toLowerCase().startsWith(prefix)) {
+              if (!allowed.contains(ab)) allowed.add(ab);
             }
           }
         }
+        if (allowed.isNotEmpty) {
+          pendingFlexibleAbilityChoices.retainWhere(allowed.contains);
+          if (pendingFlexibleAbilityChoices.isEmpty) {
+            pendingFlexibleAbilityChoices.add(allowed.first);
+          }
+        }
+      }
 
-        final baseSpeciesFixed = _parseAbilityScores(
-          speciesRef?.customProperties['fixedAbilityBonuses'] ??
-              speciesRef?.customProperties['abilityBonuses2014'],
-        );
+      final flexBonus = (subraceRef?.customProperties['flexibleAbilityBonus'] as num?)?.toInt() ??
+          (speciesRef?.customProperties['flexibleAbilityBonus'] as num?)?.toInt() ??
+          1;
+      var flexScores = const AbilityScores.zero();
+      for (final choice in pendingFlexibleAbilityChoices) {
+        switch (choice) {
+          case AbilityType.strength:
+            flexScores = flexScores.copyWith(strength: flexScores.strength + flexBonus);
+          case AbilityType.dexterity:
+            flexScores = flexScores.copyWith(dexterity: flexScores.dexterity + flexBonus);
+          case AbilityType.constitution:
+            flexScores = flexScores.copyWith(constitution: flexScores.constitution + flexBonus);
+          case AbilityType.intelligence:
+            flexScores = flexScores.copyWith(intelligence: flexScores.intelligence + flexBonus);
+          case AbilityType.wisdom:
+            flexScores = flexScores.copyWith(wisdom: flexScores.wisdom + flexBonus);
+          case AbilityType.charisma:
+            flexScores = flexScores.copyWith(charisma: flexScores.charisma + flexBonus);
+        }
+      }
+
+      final baseSpeciesFixed = _parseAbilityScores(
+        speciesRef?.customProperties['fixedAbilityBonuses'] ??
+            speciesRef?.customProperties['abilityBonuses2014'],
+      );
+
+      if (subraceRef != null) {
         final subraceFixed = _parseAbilityScores(
           subraceRef!.customProperties['fixedAbilityBonuses'],
         );
-
-        final flexBonus = (subraceRef!.customProperties['flexibleAbilityBonus'] as num?)?.toInt() ?? 1;
-        var flexScores = const AbilityScores.zero();
-        for (final choice in pendingFlexibleAbilityChoices) {
-          switch (choice) {
-            case AbilityType.strength:
-              flexScores = flexScores.copyWith(strength: flexScores.strength + flexBonus);
-            case AbilityType.dexterity:
-              flexScores = flexScores.copyWith(dexterity: flexScores.dexterity + flexBonus);
-            case AbilityType.constitution:
-              flexScores = flexScores.copyWith(constitution: flexScores.constitution + flexBonus);
-            case AbilityType.intelligence:
-              flexScores = flexScores.copyWith(intelligence: flexScores.intelligence + flexBonus);
-            case AbilityType.wisdom:
-              flexScores = flexScores.copyWith(wisdom: flexScores.wisdom + flexBonus);
-            case AbilityType.charisma:
-              flexScores = flexScores.copyWith(charisma: flexScores.charisma + flexBonus);
-          }
-        }
-
         speciesBonusScores = baseSpeciesFixed + subraceFixed + flexScores;
       } else if (speciesRef != null) {
-        final baseSpeciesFixed = _parseAbilityScores(
-          speciesRef?.customProperties['fixedAbilityBonuses'] ??
-              speciesRef?.customProperties['abilityBonuses2014'],
-        );
-        if (baseSpeciesFixed != const AbilityScores.zero()) {
-          speciesBonusScores = baseSpeciesFixed;
-        }
+        speciesBonusScores = baseSpeciesFixed + flexScores;
       }
 
       bonusScores = speciesBonusScores;

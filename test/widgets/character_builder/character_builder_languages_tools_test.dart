@@ -88,17 +88,15 @@ void main() {
       await tester.tap(find.text('Human'));
       await tester.pumpAndSettle();
 
-      // Scroll down to reveal bonus language prompt
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
-
-      // Verify bonus language prompt is displayed
+      // Verify bonus language prompt is displayed inside Human card
       expect(find.text('Species Bonus Language:'), findsOneWidget);
       expect(find.text('Elvish'), findsOneWidget);
-      expect(find.text('Draconic'), findsOneWidget);
+      final draconicFinder = find.text('Draconic');
+      expect(draconicFinder, findsOneWidget);
+      await tester.ensureVisible(draconicFinder);
 
       // Select Draconic
-      await tester.tap(find.text('Draconic'));
+      await tester.tap(draconicFinder);
       await tester.pumpAndSettle();
 
       expect(find.text('1 / 1 languages selected'), findsOneWidget);
