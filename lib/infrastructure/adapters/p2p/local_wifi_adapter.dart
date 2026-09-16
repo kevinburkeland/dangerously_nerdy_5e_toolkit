@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../../../application/services/cascading_transport_router.dart' show TransportState;
 import '../../../domain/ports/i_p2p_transport_port.dart';
 
 /// Transport adapter for Tier 1 Local Wi-Fi / LAN communication.

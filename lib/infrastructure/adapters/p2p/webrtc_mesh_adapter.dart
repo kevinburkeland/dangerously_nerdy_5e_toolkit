@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import '../../../application/services/cascading_transport_router.dart' show TransportState;
 import '../../../domain/ports/i_p2p_transport_port.dart';
 import 'firebase_signaling_adapter.dart';
 import 'signaling_message.dart';
@@ -324,9 +323,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
     };
 
     pc.onIceConnectionState = (state) {
-      if (state == RTCIceConnectionState.RTCIceConnectionStateConnected ||
-          state == RTCIceConnectionState.RTCIceConnectionStateCompleted) {
-        // Clean up lingering signaling documents for this peer once P2P is established!
+      if (state == RTCIceConnectionState.RTCIceConnectionStateCompleted ||
+          (state == RTCIceConnectionState.RTCIceConnectionStateConnected &&
+              _dataChannels[peerId]?.state == RTCDataChannelState.RTCDataChannelOpen)) {
+        // Clean up lingering signaling documents for this peer once P2P data transport is verified open
         _signalingAdapter?.cleanUpPeerSignaling(peerId);
       } else if (state == RTCIceConnectionState.RTCIceConnectionStateFailed) {
         prunePeer(peerId);

@@ -190,48 +190,9 @@ class RoomStateReconciliationService {
   }) {
     if (local == remote) return local;
 
-    // 1. If either purse contains active PN-counter vectors, merge via CvRDT lattice join
-    final hasLocalPn = local.cpCounter.positive.isNotEmpty ||
-        local.cpCounter.negative.isNotEmpty ||
-        local.spCounter.positive.isNotEmpty ||
-        local.spCounter.negative.isNotEmpty ||
-        local.epCounter.positive.isNotEmpty ||
-        local.epCounter.negative.isNotEmpty ||
-        local.gpCounter.positive.isNotEmpty ||
-        local.gpCounter.negative.isNotEmpty ||
-        local.ppCounter.positive.isNotEmpty ||
-        local.ppCounter.negative.isNotEmpty;
-
-    final hasRemotePn = remote.cpCounter.positive.isNotEmpty ||
-        remote.cpCounter.negative.isNotEmpty ||
-        remote.spCounter.positive.isNotEmpty ||
-        remote.spCounter.negative.isNotEmpty ||
-        remote.epCounter.positive.isNotEmpty ||
-        remote.epCounter.negative.isNotEmpty ||
-        remote.gpCounter.positive.isNotEmpty ||
-        remote.gpCounter.negative.isNotEmpty ||
-        remote.ppCounter.positive.isNotEmpty ||
-        remote.ppCounter.negative.isNotEmpty;
-
-    if (hasLocalPn || hasRemotePn) {
-      return local.merge(remote);
-    }
-
-    // 2. Pure scalar merge fallback:
-    // Uses deterministic causality / timestamp precedence without treating 0 as empty.
-    // Spending money down to 0 NEVER resurrects remote currency!
-    int reconcileScalar(int localCoin, int remoteCoin) {
-      if (localCoin == remoteCoin) return localCoin;
-      return isRemoteNewer ? remoteCoin : localCoin;
-    }
-
-    return PartyPurse(
-      cp: reconcileScalar(local.cp, remote.cp),
-      sp: reconcileScalar(local.sp, remote.sp),
-      ep: reconcileScalar(local.ep, remote.ep),
-      gp: reconcileScalar(local.gp, remote.gp),
-      pp: reconcileScalar(local.pp, remote.pp),
-    );
+    // CvRDT lattice join over PN-counters across all coin denominations.
+    // Guarantees conflict-free convergence across network partitions without scalar LWW overwriting.
+    return local.merge(remote);
   }
 
   List<String> _mergePartyRosters({

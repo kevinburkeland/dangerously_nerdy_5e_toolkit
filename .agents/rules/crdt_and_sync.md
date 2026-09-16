@@ -144,4 +144,17 @@ Located at `lib/infrastructure/adapters/p2p/webrtc_mesh_adapter.dart` and `room_
 - **W3C Polite Peer Rollback:** When signaling collisions occur (receiving an SDP offer while in `have-local-offer`), the polite peer rolls back its local offer (`await connection.setLocalDescription(RTCSessionDescription('', 'rollback'))`) and accepts the incoming offer without tearing down the connection.
 - **Clock Skew Inversion Defense:** In `RoomStateReconciliationService.safePrune`, the pruning threshold is checked against monotonic network-synchronized physical time (`INetworkTimePort`). If local clock drift or inversion would cause `threshold >= networkTime`, pruning is deferred gracefully (returning the unpruned set) rather than throwing `StateError`.
 
+## 16. PN-Counter Currency Convergence & crdt_purse_delta Protocol
+Located at `lib/domain/crdt/pn_counter.dart`, `lib/models/party/party_purse.dart`, and `lib/application/services/room_sync_orchestrator.dart`:
+- **State-Based Positive-Negative Counter:** Party currency denominations (`cp`, `sp`, `ep`, `gp`, `pp`) converge using `PnCounter`, which tracks positive increments (`P`) and negative decrements (`N`) per node ID.
+- **Eradication of Scalar LWW Overwrites:** In `RoomStateReconciliationService._mergePartyPurse`, currency convergence unconditionally performs a CvRDT lattice join (`local.merge(remote)`). Legacy scalar field LWW overwrites are strictly eradicated to prevent stale remote balances from overwriting or resurrecting spent funds.
+- **Granular Coin Modification:** `PartyPurse.modifyCoin(denomination, delta, {required String nodeId})` dynamically routes positive deltas to `counter.increment(nodeId, delta)` and negative deltas to `counter.decrement(nodeId, -delta)`.
+- **Focused Delta Protocol:** In `RoomSyncOrchestrator._broadcastActiveProfile`, purse changes emit lightweight, focused `crdt_purse_delta` packets containing the serialized `party_purse_crdt` payload, avoiding full profile document dumps on routine currency transactions. Inbound `crdt_purse_delta` packets are directly merged into the local profile via `_handleIncomingPurseDelta`.
+
+## 17. WebRTC DataChannel Readiness Signaling Gate
+Located at `lib/infrastructure/adapters/p2p/webrtc_mesh_adapter.dart`:
+- **Preserving Signaling During Early ICE Transitions:** `onIceConnectionState` transitions to `RTCIceConnectionState.RTCIceConnectionStateConnected` must not immediately purge peer signaling documents. Transient connection states can occur before the underlying `RTCDataChannel` is confirmed open.
+- **Readiness Gate:** Signaling cleanup (`_signalingAdapter.cleanUpPeerSignaling(peerId)`) is only triggered once `_dataChannels[peerId]?.state == RTCDataChannelState.RTCDataChannelOpen` or when the ICE connection state reaches `RTCIceConnectionState.RTCIceConnectionStateCompleted`, preventing premature teardown of in-flight handshake exchanges.
+
+
 

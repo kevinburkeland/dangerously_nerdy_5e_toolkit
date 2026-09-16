@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:uuid/uuid.dart';
-import '../../../application/services/cascading_transport_router.dart' show TransportState;
 import '../../../domain/ports/i_p2p_transport_port.dart';
 
 /// Firebase Firestore-backed relay transport adapter implementing [IP2pTransportPort].

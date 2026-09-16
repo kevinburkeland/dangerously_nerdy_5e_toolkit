@@ -112,8 +112,12 @@ void main() {
 
     try {
       if (kIsWeb) {
+        const recaptchaSiteKey = String.fromEnvironment(
+          'RECAPTCHA_ENTERPRISE_KEY',
+          defaultValue: '6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF',
+        );
         await FirebaseAppCheck.instance.activate(
-          providerWeb: ReCaptchaEnterpriseProvider('6LfoR4gtAAAAAHcbNHAO3f8maSKPf7rBeWbbDdUF'),
+          providerWeb: ReCaptchaEnterpriseProvider(recaptchaSiteKey),
         );
       } else {
         await FirebaseAppCheck.instance.activate(

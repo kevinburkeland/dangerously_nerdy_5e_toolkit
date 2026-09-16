@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
@@ -11,6 +12,7 @@ import 'cascading_transport_router.dart';
 import 'clock_sync_service.dart';
 import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
+import '../../models/party/party_purse.dart';
 import '../../models/room_roll.dart';
 import '../../services/dice_room_service.dart';
 import '../../utils/crypto_utils.dart';
@@ -54,6 +56,7 @@ class RoomSyncOrchestrator {
   bool _isApplyingRemoteSync = false;
   int _localSequenceNumber = 0;
   int _lastProfileSyncTimestamp = 0;
+  CampaignProfile? _lastEmittedProfile;
   CrdtOrSet<String> _trackedRulesSet = const CrdtOrSet<String>();
   StreamController<RoomConnectionTelemetry> _telemetryController =
       StreamController<RoomConnectionTelemetry>.broadcast();
@@ -254,10 +257,22 @@ class RoomSyncOrchestrator {
             } catch (_) {}
           }
 
+          // Reconcile party purse CRDT delta if present in envelope
+          PartyPurse effectiveRemotePurse = remoteProfile.partyPurse;
+          if (decoded.containsKey('party_purse_crdt') && decoded['party_purse_crdt'] is Map) {
+            try {
+              final crdtPurse = PartyPurse.fromMap(
+                Map<String, dynamic>.from(decoded['party_purse_crdt'] as Map),
+              );
+              effectiveRemotePurse = effectiveRemotePurse.merge(crdtPurse);
+            } catch (_) {}
+          }
+          final remoteWithPurse = remoteProfile.copyWith(partyPurse: effectiveRemotePurse);
+
           // Reconcile sub-resources deterministically at field-level
           final reconciledProfile = reconciliationService.reconcileProfile(
             local: localProfile,
-            remote: remoteProfile,
+            remote: remoteWithPurse,
             inboundTimestampMs: inboundTimestamp,
             localTimestampMs: _lastProfileSyncTimestamp,
           );
@@ -267,6 +282,7 @@ class RoomSyncOrchestrator {
           }
 
           _recordAppliedProfileHash(reconciledProfile.hashCode);
+          _lastEmittedProfile = reconciledProfile;
           _isApplyingRemoteSync = true;
           try {
             await campaignRepo.saveProfileImmediate(reconciledProfile);
@@ -274,6 +290,37 @@ class RoomSyncOrchestrator {
             scheduleMicrotask(() {
               _isApplyingRemoteSync = false;
             });
+          }
+        }
+      } else if (type == 'crdt_purse_delta' || type == 'party_purse_delta') {
+        final payloadData = decoded['payload'];
+        if (payloadData is! Map) return;
+
+        final originNode = decoded['origin_node_id']?.toString();
+        if (originNode != null && originNode == hostNodeId) {
+          return;
+        }
+
+        final localProfile = campaignRepo.activeProfile;
+        if (localProfile != null) {
+          final remotePurse = PartyPurse.fromMap(
+            Map<String, dynamic>.from(payloadData),
+          );
+
+          // Converge purse via CvRDT PN-counter lattice join
+          final updatedPurse = localProfile.partyPurse.merge(remotePurse);
+          if (updatedPurse != localProfile.partyPurse) {
+            final updatedProfile = localProfile.copyWith(partyPurse: updatedPurse);
+            _recordAppliedProfileHash(updatedProfile.hashCode);
+            _lastEmittedProfile = updatedProfile;
+            _isApplyingRemoteSync = true;
+            try {
+              await campaignRepo.saveProfileImmediate(updatedProfile);
+            } finally {
+              scheduleMicrotask(() {
+                _isApplyingRemoteSync = false;
+              });
+            }
           }
         }
       } else if (type == 'crdt_or_set_delta') {
@@ -296,6 +343,7 @@ class RoomSyncOrchestrator {
           );
 
           _recordAppliedProfileHash(updatedProfile.hashCode);
+          _lastEmittedProfile = updatedProfile;
           _isApplyingRemoteSync = true;
           try {
             await campaignRepo.saveProfileImmediate(updatedProfile);
@@ -337,6 +385,58 @@ class RoomSyncOrchestrator {
       return;
     }
 
+    final last = _lastEmittedProfile;
+    _lastEmittedProfile = profile;
+
+    // Focused CRDT delta: if only partyPurse mutated, emit crdt_purse_delta
+    if (last != null &&
+        last.id == profile.id &&
+        last.partyPurse != profile.partyPurse &&
+        last.name == profile.name &&
+        last.notesMarkdown == profile.notesMarkdown &&
+        last.pinnedRuleIds == profile.pinnedRuleIds &&
+        last.roomState == profile.roomState &&
+        const ListEquality().equals(last.partyCharacterIds, profile.partyCharacterIds)) {
+      final deltaMap = <String, dynamic>{
+        'type': 'crdt_purse_delta',
+        'origin_node_id': hostNodeId,
+        'origin_seq': ++_localSequenceNumber,
+        'campaign_id': profile.id,
+        'payload': profile.partyPurse.toMap(),
+        'timestamp': _localTimeProvider(),
+      };
+      try {
+        await transportPort.broadcastPayload(jsonEncode(deltaMap));
+      } catch (_) {}
+      return;
+    }
+
+    // Focused CRDT delta: if only pinnedRuleIds mutated, emit crdt_or_set_delta
+    if (last != null &&
+        last.id == profile.id &&
+        last.pinnedRuleIds != profile.pinnedRuleIds &&
+        last.partyPurse == profile.partyPurse &&
+        last.name == profile.name &&
+        last.notesMarkdown == profile.notesMarkdown &&
+        last.roomState == profile.roomState &&
+        const ListEquality().equals(last.partyCharacterIds, profile.partyCharacterIds)) {
+      final deltaMap = <String, dynamic>{
+        'type': 'crdt_or_set_delta',
+        'origin_node_id': hostNodeId,
+        'origin_seq': ++_localSequenceNumber,
+        'campaign_id': profile.id,
+        'payload': CrdtOrSetDto.toMap<String>(
+          _trackedRulesSet,
+          (val) => val,
+        ),
+        'timestamp': _localTimeProvider(),
+      };
+      try {
+        await transportPort.broadcastPayload(jsonEncode(deltaMap));
+      } catch (_) {}
+      return;
+    }
+
     final dto = CampaignProfileDto.fromDomain(profile);
     final payloadMap = <String, dynamic>{
       'type': 'room_sync_full',
@@ -344,6 +444,7 @@ class RoomSyncOrchestrator {
       'origin_seq': ++_localSequenceNumber,
       'payload': dto.toMap(),
       'timestamp': _localTimeProvider(),
+      'party_purse_crdt': profile.partyPurse.toMap(),
     };
 
     if (_trackedRulesSet.items.isNotEmpty || _trackedRulesSet.tombstones.isNotEmpty) {

@@ -8,7 +8,6 @@ import 'package:dangerously_nerdy_5e_toolkit/screens/party_room_screen.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/campaign_registry_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/party/party_room_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/theme/app_theme.dart';
-import 'package:dangerously_nerdy_5e_toolkit/application/services/cascading_transport_router.dart' show TransportState;
 import 'package:dangerously_nerdy_5e_toolkit/application/services/clock_sync_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_state_reconciliation_service.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/room_sync_orchestrator.dart';

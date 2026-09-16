@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../../infrastructure/dtos/character_telemetry_dto.dart';
 import '../../models/party/party_session_state.dart';
 
 /// Port (interface) defining remote room synchronization operations in the Domain layer.
@@ -14,7 +13,7 @@ abstract class IPartySyncPort {
   Future<void> joinCampaignRoom(String roomCode, String playerName);
 
   /// Broadcasts minified character combat telemetry to room participants.
-  Future<void> broadcastTelemetry(String roomCode, CharacterTelemetryDto telemetry);
+  Future<void> broadcastTelemetry(String roomCode, Object telemetry);
 
   /// Subscribes to real-time party session updates for the given room code.
   Stream<PartySessionState?> watchRoomSession(String roomCode);

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 import '../application/services/combat_encounter_service.dart';
 import '../domain/ports/i_campaign_repository.dart';
 import '../domain/ports/i_character_repository.dart';
@@ -25,6 +26,7 @@ class DmDashboardController extends ChangeNotifier {
   final ICharacterRepository _characterPersistenceService;
   final CombatEncounterService _combatEncounterService;
   final RoomSyncOrchestrator? _roomSyncOrchestrator;
+  final String _nodeId;
 
   CampaignProfile? _activeProfile;
   List<CampaignProfile> _allProfiles = [];
@@ -41,7 +43,9 @@ class DmDashboardController extends ChangeNotifier {
     CampaignProfileService? campaignProfileService,
     CharacterPersistenceService? characterPersistenceService,
     RoomSyncOrchestrator? roomSyncOrchestrator,
-  })  : _campaignProfileService = campaignRepository ??
+    String? nodeId,
+  })  : _nodeId = nodeId ?? const Uuid().v4(),
+        _campaignProfileService = campaignRepository ??
             campaignProfileService ??
             (sl.isRegistered<ICampaignRepository>()
                 ? sl<ICampaignRepository>()
@@ -366,15 +370,9 @@ class DmDashboardController extends ChangeNotifier {
 
   /// Modifies coins in the active campaign's shared party treasury.
   Future<void> modifyPartyPurseCoin(String coinKey, int delta) async {
-    if (_activeProfile == null) return;
+    if (_activeProfile == null || delta == 0) return;
     final curPurse = _activeProfile!.partyPurse;
-    final newPurse = PartyPurse(
-      cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 9999999) : curPurse.cp,
-      sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 9999999) : curPurse.sp,
-      ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 9999999) : curPurse.ep,
-      gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 9999999) : curPurse.gp,
-      pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 9999999) : curPurse.pp,
-    );
+    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _nodeId);
     _activeProfile = _activeProfile!.copyWith(partyPurse: newPurse);
     notifyListeners();
     await _campaignProfileService.saveProfileImmediate(_activeProfile!);
@@ -387,16 +385,10 @@ class DmDashboardController extends ChangeNotifier {
   /// Modifies coins in a specific linked character's personal coin purse.
   Future<void> modifyCharacterPurseCoin(String characterId, String coinKey, int delta) async {
     final char = _partyCharactersMap[characterId];
-    if (char == null) return;
+    if (char == null || delta == 0) return;
 
     final curPurse = char.purse;
-    final newPurse = PartyPurse(
-      cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 9999999) : curPurse.cp,
-      sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 9999999) : curPurse.sp,
-      ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 9999999) : curPurse.ep,
-      gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 9999999) : curPurse.gp,
-      pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 9999999) : curPurse.pp,
-    );
+    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _nodeId);
     final updated = char.copyWith(purse: newPurse);
     _partyCharactersMap[characterId] = updated;
     notifyListeners();

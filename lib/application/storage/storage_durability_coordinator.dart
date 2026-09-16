@@ -114,8 +114,8 @@ class StorageDurabilityCoordinator {
   }
 
   /// Hydrates campaign state from an atomic cold-storage bundle.
-  /// Validates cryptographic checksums and respects a 30-second sliding lookback window
-  /// to ensure newer local CRDT vectors are never overwritten.
+  /// Acts as an authoritative, user-directed import based solely on constant-time SHA-256
+  /// bundle integrity and schema validation, independent of real-time packet sliding windows.
   Future<bool> hydrateFromColdStorage() async {
     final bundle = await snapshotPort.importAtomicSnapshot();
     if (bundle == null) return false;
@@ -135,11 +135,6 @@ class StorageDurabilityCoordinator {
     final inboundDto = CampaignProfileDto.fromMap(decoded);
     final inboundProfile = inboundDto.toDomain();
 
-    // 3. Inspect existing local state for vector collision
-    final localProfile = await campaignRepo.getProfile(inboundProfile.id) ??
-        (campaignRepo.activeProfile?.id == inboundProfile.id
-            ? campaignRepo.activeProfile
-            : null);
     // User-initiated cold-storage snapshot restoration allows rollbacks;
     // cryptographic validity is already verified via bundle.isValid above.
 

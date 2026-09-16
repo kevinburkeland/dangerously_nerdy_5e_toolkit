@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:uuid/uuid.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
@@ -109,24 +110,28 @@ class PartyRoomService {
   static final PartyRoomService _instance = PartyRoomService._internal();
   factory PartyRoomService() => _instance;
 
+  final String localNodeId;
   final CampaignRegistryService _registry;
   final DiceRoomService _diceRoomService;
   final CharacterPersistenceService _characterPersistenceService;
   final CampaignProfileService _campaignProfileService;
 
-  PartyRoomService._internal()
-      : _registry = CampaignRegistryService(),
+  PartyRoomService._internal({String? localNodeId})
+      : localNodeId = localNodeId ?? const Uuid().v4(),
+        _registry = CampaignRegistryService(),
         _diceRoomService = DiceRoomService(),
         _characterPersistenceService = CharacterPersistenceService(),
         _campaignProfileService = CampaignProfileService();
 
   @visibleForTesting
   PartyRoomService.newInstance({
+    String? localNodeId,
     CampaignRegistryService? registry,
     DiceRoomService? diceRoomService,
     CharacterPersistenceService? characterPersistenceService,
     CampaignProfileService? campaignProfileService,
-  })  : _registry = registry ??
+  })  : localNodeId = localNodeId ?? const Uuid().v4(),
+        _registry = registry ??
             // ignore: invalid_use_of_visible_for_testing_member
             CampaignRegistryService.newInstance(),
         _diceRoomService = diceRoomService ??
@@ -1146,7 +1151,14 @@ class PartyRoomService {
         expiresAt: DateTime.now().add(defaultLootExpiration),
       );
     }
-    final updatedPurse = current.partyPurse.depositCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+    final updatedPurse = current.partyPurse.depositCoins(
+      cp: cp,
+      sp: sp,
+      ep: ep,
+      gp: gp,
+      pp: pp,
+      nodeId: localNodeId,
+    );
     _localRooms[clean] = current.copyWith(
       partyPurse: updatedPurse,
       version: current.version + 1,
@@ -1278,7 +1290,14 @@ class PartyRoomService {
       ));
     }
 
-    final updatedPurse = current.partyPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+    final updatedPurse = current.partyPurse.withdrawCoins(
+      cp: cp,
+      sp: sp,
+      ep: ep,
+      gp: gp,
+      pp: pp,
+      nodeId: localNodeId,
+    );
     _localRooms[clean] = current.copyWith(
       partyPurse: updatedPurse,
       version: current.version + 1,
@@ -1380,6 +1399,7 @@ class PartyRoomService {
           ep: ep,
           sp: sp,
           cp: cp,
+          nodeId: localNodeId,
         );
         final updatedChar = matched.copyWith(purse: updatedPurse);
         await _characterPersistenceService.saveCharacter(updatedChar);
@@ -1585,7 +1605,7 @@ class PartyRoomService {
 
       for (final recipient in recipients) {
         final prev = updatedMemberPurses[recipient] ?? const PartyPurse();
-        updatedMemberPurses[recipient] = prev.depositCoins(gp: perShareGp);
+        updatedMemberPurses[recipient] = prev.depositCoins(gp: perShareGp, nodeId: localNodeId);
         await _syncCoinsToCharacter(
           roomCode: clean,
           characterIdentifier: recipient,
@@ -1594,9 +1614,9 @@ class PartyRoomService {
       }
 
       if (includePartyReserve) {
-        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: perShareGp + remainderGp);
+        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: perShareGp + remainderGp, nodeId: localNodeId);
       } else if (remainderGp > 0) {
-        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: remainderGp);
+        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: remainderGp, nodeId: localNodeId);
       }
     } else {
       // Even denomination split across PP, GP, EP, SP, CP
@@ -1620,6 +1640,7 @@ class PartyRoomService {
           ep: epPerShare,
           sp: spPerShare,
           cp: cpPerShare,
+          nodeId: localNodeId,
         );
         await _syncCoinsToCharacter(
           roomCode: clean,
@@ -1639,6 +1660,7 @@ class PartyRoomService {
           ep: epPerShare + epRem,
           sp: spPerShare + spRem,
           cp: cpPerShare + cpRem,
+          nodeId: localNodeId,
         );
       } else {
         // Remainder always goes to party reserve so nothing is lost
@@ -1648,6 +1670,7 @@ class PartyRoomService {
           ep: epRem,
           sp: spRem,
           cp: cpRem,
+          nodeId: localNodeId,
         );
       }
     }
@@ -1751,8 +1774,22 @@ class PartyRoomService {
     var current = _localRooms[clean];
     if (current != null) {
       final currentMemberPurse = current.getMemberPurse(trimmedName);
-      final updatedMemberPurse = currentMemberPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
-      final updatedPartyPurse = current.partyPurse.depositCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+      final updatedMemberPurse = currentMemberPurse.withdrawCoins(
+        cp: cp,
+        sp: sp,
+        ep: ep,
+        gp: gp,
+        pp: pp,
+        nodeId: localNodeId,
+      );
+      final updatedPartyPurse = current.partyPurse.depositCoins(
+        cp: cp,
+        sp: sp,
+        ep: ep,
+        gp: gp,
+        pp: pp,
+        nodeId: localNodeId,
+      );
 
       final updatedMap = Map<String, PartyPurse>.from(current.memberPurses);
       updatedMap[trimmedName] = updatedMemberPurse;
@@ -1809,9 +1846,23 @@ class PartyRoomService {
     var current = _localRooms[clean];
     if (current != null) {
       final currentPartyPurse = current.partyPurse;
-      final updatedPartyPurse = currentPartyPurse.withdrawCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+      final updatedPartyPurse = currentPartyPurse.withdrawCoins(
+        cp: cp,
+        sp: sp,
+        ep: ep,
+        gp: gp,
+        pp: pp,
+        nodeId: localNodeId,
+      );
       final currentMemberPurse = current.getMemberPurse(trimmedName);
-      final updatedMemberPurse = currentMemberPurse.depositCoins(cp: cp, sp: sp, ep: ep, gp: gp, pp: pp);
+      final updatedMemberPurse = currentMemberPurse.depositCoins(
+        cp: cp,
+        sp: sp,
+        ep: ep,
+        gp: gp,
+        pp: pp,
+        nodeId: localNodeId,
+      );
 
       final updatedMap = Map<String, PartyPurse>.from(current.memberPurses);
       updatedMap[trimmedName] = updatedMemberPurse;

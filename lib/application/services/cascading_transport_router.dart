@@ -3,18 +3,7 @@ import 'dart:convert';
 import 'package:meta/meta.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
 
-/// Connection states for the 4-tier cascading transport hierarchy.
-enum TransportState {
-  connecting,
-  localWifi,
-  webRtc,
-  fallbackRelay,
-  offline;
-
-  /// Backwards compatibility alias for code expecting [p2pEstablished].
-  @Deprecated('Use webRtc instead')
-  static const TransportState p2pEstablished = TransportState.webRtc;
-}
+export '../../domain/ports/transport_state.dart';
 
 /// Application service orchestrating a 4-tier cost-optimized cascading transport model:
 /// 1. Tier 1: Local Wi-Fi / LAN (Zero Cost)

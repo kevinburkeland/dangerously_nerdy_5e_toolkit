@@ -253,6 +253,32 @@ class PartyPurse {
     );
   }
 
+  /// Modifies a single denomination by [delta] (positive for deposit, negative for withdrawal),
+  /// routing directly through CvRDT [PnCounter] vectors for conflict-free convergence.
+  PartyPurse modifyCoin(String denomination, int delta, {String nodeId = 'local'}) {
+    if (delta == 0) return this;
+    final clean = denomination.trim().toLowerCase();
+    if (delta > 0) {
+      return depositCoins(
+        cp: clean == 'cp' ? delta : 0,
+        sp: clean == 'sp' ? delta : 0,
+        ep: clean == 'ep' ? delta : 0,
+        gp: clean == 'gp' ? delta : 0,
+        pp: clean == 'pp' ? delta : 0,
+        nodeId: nodeId,
+      );
+    } else {
+      return withdrawCoins(
+        cp: clean == 'cp' ? -delta : 0,
+        sp: clean == 'sp' ? -delta : 0,
+        ep: clean == 'ep' ? -delta : 0,
+        gp: clean == 'gp' ? -delta : 0,
+        pp: clean == 'pp' ? -delta : 0,
+        nodeId: nodeId,
+      );
+    }
+  }
+
   /// Calculates per-player split distribution and leftovers
   PartyPurseSplit splitShares(
     int playerCount, {
@@ -329,22 +355,27 @@ class PartyPurse {
   }
 
   Map<String, dynamic> toMap() {
+    final effCp = effectiveCpCounter;
+    final effSp = effectiveSpCounter;
+    final effEp = effectiveEpCounter;
+    final effGp = effectiveGpCounter;
+    final effPp = effectivePpCounter;
     return {
       'cp': cp,
       'sp': sp,
       'ep': ep,
       'gp': gp,
       'pp': pp,
-      if (cpCounter.positive.isNotEmpty || cpCounter.negative.isNotEmpty)
-        'cpCounter': cpCounter.toMap(),
-      if (spCounter.positive.isNotEmpty || spCounter.negative.isNotEmpty)
-        'spCounter': spCounter.toMap(),
-      if (epCounter.positive.isNotEmpty || epCounter.negative.isNotEmpty)
-        'epCounter': epCounter.toMap(),
-      if (gpCounter.positive.isNotEmpty || gpCounter.negative.isNotEmpty)
-        'gpCounter': gpCounter.toMap(),
-      if (ppCounter.positive.isNotEmpty || ppCounter.negative.isNotEmpty)
-        'ppCounter': ppCounter.toMap(),
+      if (effCp.positive.isNotEmpty || effCp.negative.isNotEmpty)
+        'cpCounter': effCp.toMap(),
+      if (effSp.positive.isNotEmpty || effSp.negative.isNotEmpty)
+        'spCounter': effSp.toMap(),
+      if (effEp.positive.isNotEmpty || effEp.negative.isNotEmpty)
+        'epCounter': effEp.toMap(),
+      if (effGp.positive.isNotEmpty || effGp.negative.isNotEmpty)
+        'gpCounter': effGp.toMap(),
+      if (effPp.positive.isNotEmpty || effPp.negative.isNotEmpty)
+        'ppCounter': effPp.toMap(),
     };
   }
 

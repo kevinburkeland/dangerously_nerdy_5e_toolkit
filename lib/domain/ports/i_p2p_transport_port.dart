@@ -1,5 +1,7 @@
 import 'dart:async';
-import '../../application/services/cascading_transport_router.dart' show TransportState;
+import 'transport_state.dart';
+
+export 'transport_state.dart';
 
 /// Protocol-agnostic port interface for peer-to-peer and relay payload transport.
 ///
