@@ -192,19 +192,9 @@ class AnimatedObjectInstance {
 
   int get currentHp => hitPoints.currentHp;
 
-  @Deprecated('AnimatedObjectInstance is immutable. Use copyWith(currentHp: ...) instead.')
-  set currentHp(int value) {
-    // In-place mutation is deprecated and disabled on immutable domain entities.
-  }
-
   int get maxHp => hitPoints.maxHp;
 
   int get tempHp => hitPoints.tempHp;
-
-  @Deprecated('AnimatedObjectInstance is immutable. Use copyWith(tempHp: ...) or applyTempHp(...) instead.')
-  set tempHp(int value) {
-    // In-place mutation is deprecated and disabled on immutable domain entities.
-  }
 
   /// Resolves the full 5e SRD MinionStatBlock for this creature instance.
   MinionStatBlock get statBlock {
@@ -293,12 +283,12 @@ class AnimatedObjectInstance {
 
   @Deprecated('AnimatedObjectInstance is immutable. Use applyDamage(amount) instead.')
   void takeDamage(int amount) {
-    // In-place mutation is deprecated and disabled on immutable domain entities.
+    throw StateError('AnimatedObjectInstance is strictly immutable. Use copyWith() or applyDamage() instead.');
   }
 
   @Deprecated('AnimatedObjectInstance is immutable. Use applyHealing(amount) instead.')
   void heal(int amount) {
-    // In-place mutation is deprecated and disabled on immutable domain entities.
+    throw StateError('AnimatedObjectInstance is strictly immutable. Use copyWith() or applyDamage() instead.');
   }
 
   @Deprecated('AnimatedObjectInstance is immutable. Use applyHealing(amount) instead.')
@@ -306,7 +296,7 @@ class AnimatedObjectInstance {
 
   @Deprecated('AnimatedObjectInstance is immutable. Use applyTempHp(amount) instead.')
   void grantTempHp(int amount) {
-    // In-place mutation is deprecated and disabled on immutable domain entities.
+    throw StateError('AnimatedObjectInstance is strictly immutable. Use copyWith() or applyDamage() instead.');
   }
 
   AnimatedObjectInstance copyWith({

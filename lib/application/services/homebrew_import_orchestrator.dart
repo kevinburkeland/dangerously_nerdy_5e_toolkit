@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/crdt/hybrid_logical_clock.dart';
 import '../../domain/homebrew/models/homebrew_entity.dart';
@@ -87,7 +88,7 @@ class HomebrewImportOrchestrator {
     CrdtOrSet<HomebrewEntity>? initialLedger,
   }) : this._internal(
           ingestorPort: ingestorPort,
-          nodeId: nodeId ?? 'node_homebrew_${DateTime.now().millisecondsSinceEpoch}',
+          nodeId: nodeId ?? 'node_homebrew_${const Uuid().v4()}',
           persister: persister,
           batchPersister: batchPersister,
           batchSize: batchSize,

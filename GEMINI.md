@@ -14,7 +14,7 @@ For full codebase documentation, directory maps, and engineering directives, see
 ## Quick Rules Summary
 1. **Domain & DTO Purity:** Files in `lib/domain/` and `lib/infrastructure/dtos/` MUST NOT import `package:flutter/...`. Use pure Dart annotations (`package:meta/meta.dart`). Verified by `domain_purity_test.dart` and `dto_purity_test.dart`.
 2. **Ports & Adapters:** Interfaces go in `lib/domain/ports/`; implementations go in `lib/infrastructure/repositories/`.
-3. **CvRDT Immutability & Safety:** `HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`, and minion summons (`AnimatedObjectInstance`) mutations return new immutable instances. Use deterministic `nodeId` tie-breakers and implement `prune(threshold)`.
+3. **CvRDT Immutability & Safety:** `HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`, and minion summons (`AnimatedObjectInstance`) mutations return new immutable instances. Eradicate all silent empty setters; legacy mutating methods throw `StateError`. Use cryptographically secure UUID v4 node identifiers for deterministic tie-breakers, implement sliding lookback deduplication windows (`inboundTimestamp >= localTime - 30000`) with bounded LRU SHA-256 caching (500 entries) in `RoomSyncOrchestrator`, and implement `prune(threshold)`.
 4. **DTO Safety:** Map JSON to DTOs in `lib/infrastructure/dtos/` with numeric bounds clamping and `unparsedPayload` retention.
 5. **Asynchronous Stream Emission:** Broadcast StreamControllers in repositories MUST NOT use `sync: true` to prevent re-entrant deadlocks during mutex lock acquisition.
 6. **A11y:** 48x48dp touch targets minimum, expand abbreviations in `Semantics` labels, support `TextScaler.linear(2.0)`.

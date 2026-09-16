@@ -14,6 +14,7 @@ import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
 import '../../models/room_roll.dart';
 import '../../services/dice_room_service.dart';
+import '../../utils/crypto_utils.dart';
 
 /// Application service orchestrating bidirectional synchronization between
 /// the cascading P2P network transport mesh and local IndexedDB/Hive persistence.
@@ -43,6 +44,10 @@ class RoomSyncOrchestrator {
   Timer? _milestoneTimer;
   Timer? _telemetryTimer;
 
+  static const int maxProcessedPayloadHashes = 500;
+  final Set<String> _processedPayloadHashes = <String>{};
+  final int Function() _localTimeProvider;
+
   final Mutex _syncMutex = Mutex();
   CampaignProfile? _lastInboundProfile;
   int _lastProfileSyncTimestamp = 0;
@@ -57,6 +62,7 @@ class RoomSyncOrchestrator {
     required this.reconciliationService,
     required this.clockSyncService,
     DiceRoomService? diceRoomService,
+    int Function()? localTimeProvider,
     this.isHost = false,
     this.hostNodeId = 'dm-host-prime',
     this.telemetryInterval = const Duration(seconds: 2),
@@ -64,6 +70,7 @@ class RoomSyncOrchestrator {
     Duration? heartbeatTtl,
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
+        _localTimeProvider = localTimeProvider ?? (() => clockSyncService.currentNetworkTimeMs),
         heartbeatTtl = heartbeatTtl ??
             (transportPort is CascadingTransportRouter
                 ? transportPort.heartbeatTtl
@@ -72,6 +79,23 @@ class RoomSyncOrchestrator {
           transportPort != null || router != null,
           'Must provide either transportPort or router',
         );
+
+  /// Tracked payload hashes for deduplication (exposed for testing).
+  @visibleForTesting
+  Set<String> get processedPayloadHashes => Set.unmodifiable(_processedPayloadHashes);
+
+  bool _isDuplicatePayload(String payloadHash) {
+    if (_processedPayloadHashes.contains(payloadHash)) {
+      _processedPayloadHashes.remove(payloadHash);
+      _processedPayloadHashes.add(payloadHash);
+      return true;
+    }
+    _processedPayloadHashes.add(payloadHash);
+    if (_processedPayloadHashes.length > maxProcessedPayloadHashes) {
+      _processedPayloadHashes.remove(_processedPayloadHashes.first);
+    }
+    return false;
+  }
 
   /// Last processed timestamp for room_sync_full payloads.
   int get lastProfileSyncTimestamp => _lastProfileSyncTimestamp;
@@ -179,7 +203,13 @@ class RoomSyncOrchestrator {
               ? (decoded['timestamp'] as num).toInt()
               : (int.tryParse(decoded['timestamp']?.toString() ?? '') ?? 0);
 
-          if (inboundTimestamp <= _lastProfileSyncTimestamp) {
+          final localTime = _localTimeProvider();
+          if (inboundTimestamp < localTime - 30000) {
+            return;
+          }
+
+          final payloadHash = CryptoUtils.sha256Hex(jsonPayload);
+          if (_isDuplicatePayload(payloadHash)) {
             return;
           }
 
@@ -201,7 +231,9 @@ class RoomSyncOrchestrator {
               } catch (_) {}
             }
 
-            _lastProfileSyncTimestamp = inboundTimestamp;
+            if (inboundTimestamp > _lastProfileSyncTimestamp) {
+              _lastProfileSyncTimestamp = inboundTimestamp;
+            }
             _lastInboundProfile = remoteProfile;
             await campaignRepo.saveProfileImmediate(remoteProfile);
           }
@@ -258,7 +290,7 @@ class RoomSyncOrchestrator {
       final payloadMap = <String, dynamic>{
         'type': 'room_sync_full',
         'payload': dto.toMap(),
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs,
+        'timestamp': _localTimeProvider(),
       };
 
       if (_trackedRulesSet.items.isNotEmpty || _trackedRulesSet.tombstones.isNotEmpty) {
@@ -289,9 +321,7 @@ class RoomSyncOrchestrator {
     if (activeProfile == null) return;
 
     final authoritativeTimestamp =
-        DateTime.now().toUtc().millisecondsSinceEpoch +
-        clockSyncService.currentOffsetMs -
-        (heartbeatTtl.inMilliseconds * 2);
+        _localTimeProvider() - (heartbeatTtl.inMilliseconds * 2);
 
     // Prune tracked CRDT tombstones older than the milestone snapshot
     if (_trackedRulesSet.tombstones.isNotEmpty) {
@@ -320,6 +350,7 @@ class RoomSyncOrchestrator {
     _telemetryTimer = null;
     _lastProfileSyncTimestamp = 0;
     _lastInboundProfile = null;
+    _processedPayloadHashes.clear();
     _emitTelemetry();
   }
 

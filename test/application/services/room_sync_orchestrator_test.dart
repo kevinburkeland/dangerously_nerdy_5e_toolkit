@@ -187,6 +187,7 @@ void main() {
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        localTimeProvider: () => 1700000000500,
         isHost: false,
         telemetryInterval: const Duration(milliseconds: 50),
       );
@@ -509,72 +510,108 @@ void main() {
       expect(defaultOrchestrator.telemetryInterval, equals(const Duration(seconds: 2)));
     });
 
-    test('Timestamp-Gated Profile Reconciliation: stale or equal timestamp does not overwrite local state', () async {
+    test('Sliding Deduplication Window: out-of-order packet within 30s is accepted while exact duplicates and packets >30s stale are dropped', () async {
       orchestrator.startSynchronization();
+      const localTime = 1700000000500;
 
-      // Process initial inbound profile at t = 2000
-      final profileT2000 = initialProfile.copyWith(name: 'Authoritative Title at 2000');
-      final inboundT2000 = jsonEncode({
+      // 1. Process initial inbound profile at t = localTime - 500ms (1700000000000)
+      final profile1 = initialProfile.copyWith(name: 'Authoritative Title at 1700000000000');
+      final inbound1 = jsonEncode({
         'type': 'room_sync_full',
-        'payload': CampaignProfileDto.fromDomain(profileT2000).toMap(),
-        'timestamp': 2000,
+        'payload': CampaignProfileDto.fromDomain(profile1).toMap(),
+        'timestamp': 1700000000000,
       });
-      await orchestrator.handleIncomingPayload(inboundT2000);
+      await orchestrator.handleIncomingPayload(inbound1);
 
       expect(mockRepo.savedImmediateProfiles.length, equals(1));
-      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 2000'));
-      expect(orchestrator.lastProfileSyncTimestamp, equals(2000));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 1700000000000'));
+      expect(orchestrator.lastProfileSyncTimestamp, equals(1700000000000));
+      expect(orchestrator.processedPayloadHashes.length, equals(1));
 
-      // Attempt to apply a delayed/stale packet from t = 1500
-      final staleProfile = initialProfile.copyWith(name: 'Stale Delayed Packet at 1500');
+      // 2. Attempt to apply exact duplicate payload (same SHA-256)
+      await orchestrator.handleIncomingPayload(inbound1);
+
+      // Dropped as duplicate by LRU cache; repo count remains 1
+      expect(mockRepo.savedImmediateProfiles.length, equals(1));
+      expect(orchestrator.processedPayloadHashes.length, equals(1));
+
+      // 3. Legitimate out-of-order packet arriving via WebRTC jitter at t = localTime - 10000ms (1699999990500)
+      // Timestamp is older than profile1 (1699999990500 < 1700000000000), but within 30s sliding window
+      final outOfOrderProfile = initialProfile.copyWith(name: 'Out of Order Packet within 30s Window');
+      final inboundOutOfOrder = jsonEncode({
+        'type': 'room_sync_full',
+        'payload': CampaignProfileDto.fromDomain(outOfOrderProfile).toMap(),
+        'timestamp': 1699999990500,
+      });
+      await orchestrator.handleIncomingPayload(inboundOutOfOrder);
+
+      // Successfully processed and saved through sliding lookback window
+      expect(mockRepo.savedImmediateProfiles.length, equals(2));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Out of Order Packet within 30s Window'));
+      // lastProfileSyncTimestamp monotonically preserves highest timestamp seen
+      expect(orchestrator.lastProfileSyncTimestamp, equals(1700000000000));
+      expect(orchestrator.processedPayloadHashes.length, equals(2));
+
+      // 4. Stale packet older than 30s sliding lookback window (localTime - 35000ms = 1699965000500)
+      final staleProfile = initialProfile.copyWith(name: 'Stale Delayed Packet > 30s');
       final inboundStale = jsonEncode({
         'type': 'room_sync_full',
         'payload': CampaignProfileDto.fromDomain(staleProfile).toMap(),
-        'timestamp': 1500,
+        'timestamp': localTime - 35000,
       });
       await orchestrator.handleIncomingPayload(inboundStale);
 
-      // Must NOT be saved; repo count remains 1 and title unchanged
-      expect(mockRepo.savedImmediateProfiles.length, equals(1));
-      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 2000'));
-      expect(orchestrator.lastProfileSyncTimestamp, equals(2000));
+      // Must NOT be saved; repo count remains 2
+      expect(mockRepo.savedImmediateProfiles.length, equals(2));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Out of Order Packet within 30s Window'));
 
-      // Attempt to apply packet with equal timestamp t = 2000
-      final equalProfile = initialProfile.copyWith(name: 'Equal Timestamp Packet at 2000');
-      final inboundEqual = jsonEncode({
-        'type': 'room_sync_full',
-        'payload': CampaignProfileDto.fromDomain(equalProfile).toMap(),
-        'timestamp': 2000,
-      });
-      await orchestrator.handleIncomingPayload(inboundEqual);
-      expect(mockRepo.savedImmediateProfiles.length, equals(1));
-
-      // Apply strictly newer packet at t = 3000
-      final newerProfile = initialProfile.copyWith(name: 'Newer Packet at 3000');
+      // 5. Strictly newer packet at t = localTime + 2000ms (1700000002500)
+      final newerProfile = initialProfile.copyWith(name: 'Newer Packet at 1700000002500');
       final inboundNewer = jsonEncode({
         'type': 'room_sync_full',
         'payload': CampaignProfileDto.fromDomain(newerProfile).toMap(),
-        'timestamp': 3000,
+        'timestamp': localTime + 2000,
       });
       await orchestrator.handleIncomingPayload(inboundNewer);
 
-      expect(mockRepo.savedImmediateProfiles.length, equals(2));
-      expect(mockRepo.savedImmediateProfiles.last.name, equals('Newer Packet at 3000'));
-      expect(orchestrator.lastProfileSyncTimestamp, equals(3000));
+      expect(mockRepo.savedImmediateProfiles.length, equals(3));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Newer Packet at 1700000002500'));
+      expect(orchestrator.lastProfileSyncTimestamp, equals(localTime + 2000));
+    });
+
+    test('LRU Cache Eviction: caps at 500 entries and evicts least recently used', () async {
+      orchestrator.startSynchronization();
+      const localTime = 1700000000500;
+
+      // Inject 501 unique payloads within sliding lookback window
+      for (int i = 0; i < 501; i++) {
+        final profile = initialProfile.copyWith(name: 'Bulk Item $i');
+        final payload = jsonEncode({
+          'type': 'room_sync_full',
+          'payload': CampaignProfileDto.fromDomain(profile).toMap(),
+          'timestamp': localTime - 1000,
+          'nonce': i,
+        });
+        await orchestrator.handleIncomingPayload(payload);
+      }
+
+      // Max cache size is bounded at 500 entries
+      expect(orchestrator.processedPayloadHashes.length, equals(500));
     });
 
     test('Buffered Milestone Pruning Horizon: subtracts 2x heartbeat TTL from authoritative timestamp', () async {
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs;
       final hostOrchestrator = RoomSyncOrchestrator(
         router: router,
         campaignRepo: mockRepo,
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
+        localTimeProvider: () => now,
         isHost: true,
         hostNodeId: 'dm-host-1',
         heartbeatTtl: const Duration(seconds: 10), // lookback = 20,000 ms
       );
 
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs;
       // 2 * 10s TTL = 20,000 ms lookback window:
       // veryOldTs: 50,000ms in the past (older than lookback window) -> pruned
       // recentTombstoneWithinLookback: 5,000ms in the past (within lookback window) -> PRESERVED

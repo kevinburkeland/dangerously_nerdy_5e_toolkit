@@ -204,5 +204,20 @@ void main() {
       expect(restored.specialTrait, obj.specialTrait);
       expect(restored, equals(obj));
     });
+
+    test('Legacy in-place mutating methods throw StateError enforcing strict immutability', () {
+      final obj = AnimatedObjectInstance(
+        id: '1',
+        name: 'Iron Golem Minion',
+        size: ObjectSize.large,
+        currentHp: 50,
+        maxHp: 50,
+      );
+
+      expect(() => obj.takeDamage(10), throwsA(isA<StateError>()));
+      expect(() => obj.heal(10), throwsA(isA<StateError>()));
+      expect(() => obj.applyHeal(10), throwsA(isA<StateError>()));
+      expect(() => obj.grantTempHp(10), throwsA(isA<StateError>()));
+    });
   });
 }

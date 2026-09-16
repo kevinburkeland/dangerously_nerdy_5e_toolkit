@@ -17,6 +17,9 @@ class ClockSyncService {
   /// Current physical time offset in milliseconds to be applied to local time.
   int get currentOffsetMs => _offsetMs;
 
+  /// Current synchronized network time in milliseconds.
+  int get currentNetworkTimeMs => _localTimeProvider() + _offsetMs;
+
   /// Synchronizes local clock offset against the authoritative network time port.
   /// If the network port throws or is unreachable, safely falls back to a 0ms offset.
   Future<void> synchronizeClock() async {
