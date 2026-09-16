@@ -43,6 +43,15 @@ class _MockSyncTransport implements IP2pTransportPort {
     disconnected = true;
     await _incoming.close();
   }
+
+  @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+
+  @override
+  Future<void> prepareSession() async {}
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async => false;
 }
 
 class _MockTimePort implements INetworkTimePort {

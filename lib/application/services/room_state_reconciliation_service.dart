@@ -1,23 +1,34 @@
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/crdt/hybrid_logical_clock.dart';
+import '../../domain/models/campaign_profile.dart';
+import '../../models/domain/session_graph_models.dart';
+import '../../models/party/party_event.dart';
 
-/// Application service orchestrating safe CRDT state reconciliation and tombstone pruning.
+/// Application service orchestrating safe CRDT state reconciliation, tombstone pruning,
+/// and deterministic field-level campaign profile merging.
 class RoomStateReconciliationService {
+  final int Function() _networkTimeProvider;
+
+  RoomStateReconciliationService({
+    int Function()? networkTimeProvider,
+  }) : _networkTimeProvider =
+            networkTimeProvider ?? (() => DateTime.now().toUtc().millisecondsSinceEpoch);
+
   /// Prunes an OR-Set only if the provided threshold timestamp has been globally
-  /// acknowledged by the milestone snapshot ledger.
+  /// acknowledged by the milestone snapshot ledger and is strictly older than network time.
   ///
-  /// Throws [StateError] if [globallyAcknowledgedThreshold] is in the present or future,
-  /// preventing premature tombstone deletion and collection resurrection.
+  /// If [globallyAcknowledgedThreshold] is in the present or future relative to network time
+  /// (due to transient clock skew or late clock sync), gracefully defers pruning and returns [targetSet]
+  /// intact rather than throwing an unhandled exception that disrupts active sessions.
   CrdtOrSet<T> safePrune<T>(
     CrdtOrSet<T> targetSet,
     HybridLogicalClock globallyAcknowledgedThreshold,
   ) {
-    // Safety check: ensure we aren't pruning with a timestamp from the future or unverified present
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    if (globallyAcknowledgedThreshold.physicalTime >= now) {
-      throw StateError(
-        'Cannot prune CRDT tombstones using an unverified current/future timestamp.',
-      );
+    // Safety check: ensure we aren't pruning with an unverified present or future timestamp
+    final currentNetworkTime = _networkTimeProvider();
+    if (globallyAcknowledgedThreshold.physicalTime >= currentNetworkTime) {
+      // Gracefully defer pruning to prevent premature tombstone deletion during clock skew
+      return targetSet;
     }
 
     return targetSet.prune(globallyAcknowledgedThreshold);
@@ -29,12 +40,137 @@ class RoomStateReconciliationService {
     int serverAcknowledgedEpochMs,
     String hostNodeId,
   ) {
+    final currentNetworkTime = _networkTimeProvider();
+    final safeEpoch = serverAcknowledgedEpochMs >= currentNetworkTime
+        ? currentNetworkTime - 1
+        : serverAcknowledgedEpochMs;
+
     final threshold = HybridLogicalClock(
-      physicalTime: serverAcknowledgedEpochMs,
+      physicalTime: safeEpoch,
       logicalCounter: 0,
       nodeId: hostNodeId,
     );
 
     return targetSet.prune(threshold);
+  }
+
+  /// Reconciles an incoming remote [CampaignProfile] with the [local] campaign state.
+  /// Merges distinct sub-resources (notes, party purse, party roster, room metadata, minions, encounters)
+  /// deterministically instead of wholesale overwriting the local profile.
+  CampaignProfile reconcileProfile({
+    required CampaignProfile local,
+    required CampaignProfile remote,
+    required int inboundTimestampMs,
+    required int localTimestampMs,
+  }) {
+    if (local.id != remote.id) {
+      return local;
+    }
+
+    final isRemoteNewer = inboundTimestampMs >= localTimestampMs;
+
+    // 1. Root metadata (name, edition, lastPlayedAt)
+    final mergedName =
+        isRemoteNewer && remote.name.isNotEmpty ? remote.name : local.name;
+    final mergedLastPlayedAt = remote.lastPlayedAt.isAfter(local.lastPlayedAt)
+        ? remote.lastPlayedAt
+        : local.lastPlayedAt;
+
+    // 2. Notes: LWW based on timestamp, preserving non-empty local notes if remote is empty
+    final mergedNotes = isRemoteNewer && remote.notesMarkdown.isNotEmpty
+        ? remote.notesMarkdown
+        : (local.notesMarkdown.isNotEmpty ? local.notesMarkdown : remote.notesMarkdown);
+
+    // 3. Party Purse: LWW based on timestamp, preserving non-empty purse if remote is empty
+    final mergedPurse = isRemoteNewer
+        ? (remote.partyPurse.isEmpty && !local.partyPurse.isEmpty
+            ? local.partyPurse
+            : remote.partyPurse)
+        : (local.partyPurse.isEmpty && !remote.partyPurse.isEmpty
+            ? remote.partyPurse
+            : local.partyPurse);
+
+    // 4. Party Roster: Set Union (preserving existing local order, appending new remote characters)
+    final mergedPartyCharacterIds = <String>[...local.partyCharacterIds];
+    for (final charId in remote.partyCharacterIds) {
+      if (!mergedPartyCharacterIds.contains(charId)) {
+        mergedPartyCharacterIds.add(charId);
+      }
+    }
+
+    // 5. Pinned Rules: Set Union
+    final mergedPinnedRules = {...local.pinnedRuleIds, ...remote.pinnedRuleIds};
+
+    // 6. Room Node State: Sub-resource reconciliation (activeMinions, activeEncounter, containers, entityLinks)
+    final mergedRoomState = _mergeRoomState(
+      local.roomState,
+      remote.roomState,
+      isRemoteNewer: isRemoteNewer,
+    );
+
+    // 7. Change Log: Merged and deduplicated by event ID
+    final mergedChangeLog = _mergeChangeLogs(local.changeLog, remote.changeLog);
+
+    return local.copyWith(
+      name: mergedName,
+      lastPlayedAt: mergedLastPlayedAt,
+      notesMarkdown: mergedNotes,
+      partyPurse: mergedPurse,
+      partyCharacterIds: mergedPartyCharacterIds,
+      pinnedRuleIds: mergedPinnedRules,
+      roomState: mergedRoomState,
+      changeLog: mergedChangeLog,
+    );
+  }
+
+  RoomNodeState _mergeRoomState(
+    RoomNodeState local,
+    RoomNodeState remote, {
+    required bool isRemoteNewer,
+  }) {
+    final title =
+        isRemoteNewer && remote.title.isNotEmpty ? remote.title : local.title;
+    final description = isRemoteNewer && remote.description.isNotEmpty
+        ? remote.description
+        : (local.description.isNotEmpty ? local.description : remote.description);
+
+    // Merge activeMinions by id
+    final minionMap = {for (final m in local.activeMinions) m.id: m};
+    for (final m in remote.activeMinions) {
+      if (!minionMap.containsKey(m.id) || isRemoteNewer) {
+        minionMap[m.id] = m;
+      }
+    }
+
+    // Merge activeEncounter by participantId
+    final encounterMap = {for (final e in local.activeEncounter) e.participantId: e};
+    for (final e in remote.activeEncounter) {
+      if (!encounterMap.containsKey(e.participantId) || isRemoteNewer) {
+        encounterMap[e.participantId] = e;
+      }
+    }
+
+    return local.copyWith(
+      title: title,
+      description: description,
+      activeMinions: minionMap.values.toList(),
+      activeEncounter: encounterMap.values.toList(),
+    );
+  }
+
+  List<PartyEvent> _mergeChangeLogs(
+    List<PartyEvent> local,
+    List<PartyEvent> remote,
+  ) {
+    final eventMap = <String, PartyEvent>{};
+    for (final ev in local) {
+      eventMap[ev.id] = ev;
+    }
+    for (final ev in remote) {
+      eventMap[ev.id] = ev;
+    }
+    final list = eventMap.values.toList()
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return list;
   }
 }

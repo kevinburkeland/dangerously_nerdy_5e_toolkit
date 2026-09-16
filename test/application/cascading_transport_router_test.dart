@@ -26,6 +26,22 @@ class MockTransportAdapter implements IP2pTransportPort {
   Map<String, int> peerLastSeen = const {};
 
   @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+
+  bool prepareSessionCalled = false;
+  bool probeViabilityResult = false;
+
+  @override
+  Future<void> prepareSession() async {
+    prepareSessionCalled = true;
+  }
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async {
+    return probeViabilityResult;
+  }
+
+  @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
     if (initializeShouldThrow) {
       throw StateError('Simulated network initialization failure');
@@ -431,6 +447,37 @@ void main() {
       expect(received, equals(['{"msg": "async_delivery"}']), reason: 'Payload must arrive after microtask execution');
 
       await sub.cancel();
+      await router.disconnect();
+    });
+
+    test('Bi-directional Waterfall Recovery: steps up from fallbackRelay to localWifi when probe succeeds', () async {
+      // Start in fallbackRelay by failing localWifi and webRtc initialization
+      mockLocalWifi.initializeShouldThrow = true;
+      mockWebRtc.initializeShouldThrow = true;
+      mockFirebase.currentState = TransportState.fallbackRelay;
+
+      await router.initializeRoom('ROOM-STEP-UP', 'node-local');
+      expect(router.currentState, equals(TransportState.fallbackRelay));
+      expect(router.activeAdapter, equals(mockFirebase));
+
+      // Network improves: localWifi becomes viable again
+      mockLocalWifi.initializeShouldThrow = false;
+      mockLocalWifi.probeViabilityResult = true;
+      mockLocalWifi.currentState = TransportState.localWifi;
+
+      // Probe higher tiers
+      await router.probeHigherTiers();
+
+      expect(router.currentState, equals(TransportState.localWifi));
+      expect(router.activeAdapter, equals(mockLocalWifi));
+      expect(mockFirebase.isDisconnected, isTrue);
+
+      await router.disconnect();
+    });
+
+    test('Session preparation polymorphism: invokes prepareSession on active adapter during initialization', () async {
+      await router.initializeRoom('ROOM-PREPARE', 'node-local');
+      expect(mockLocalWifi.prepareSessionCalled, isTrue);
       await router.disconnect();
     });
 

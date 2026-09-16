@@ -50,6 +50,15 @@ class MockP2pTransport implements IP2pTransportPort {
   Future<void> disconnect() async {
     isDisconnected = true;
   }
+
+  @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+
+  @override
+  Future<void> prepareSession() async {}
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async => false;
 }
 
 class MockCampaignRepo implements ICampaignRepository {

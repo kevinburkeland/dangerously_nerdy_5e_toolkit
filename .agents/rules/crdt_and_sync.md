@@ -129,3 +129,19 @@ Located at `lib/domain/ports/i_p2p_transport_port.dart`:
 - **Physical Clock Skew in Fallback Relays:** In `FirebaseFallbackAdapter`, Firestore relay message queries must buffer the timestamp threshold by 30 seconds into the past (`DateTime.now().millisecondsSinceEpoch - 30000`) to tolerate physical clock drift between participating devices. To prevent duplicate deliveries resulting from this wider query window, the adapter must maintain an in-memory bounded LRU set of processed message IDs (maximum 500 entries) that is cleared on `disconnect()`.
 - **Peer-Scoped WebRTC Signaling Isolation:** Ephemeral signaling documents in `FirebaseSignalingAdapter` must be tracked and partitioned per peer (`Map<String, Set<String>> _peerTrackedDocPaths`). In multi-peer mesh topologies, establishing a connection or opening a DataChannel with peer B must call `cleanUpPeerSignaling(peerId)` rather than wiping all session documents (`cleanUpSignalingSession()`), ensuring in-flight signaling handshakes with peer C are never prematurely purged. Full session cleanup is reserved exclusively for adapter disposal and room disconnect.
 
+## 13. Field-Level Sub-Resource Profile Reconciliation & Explicit Causality
+Located at `lib/application/services/room_state_reconciliation_service.dart` and `room_sync_orchestrator.dart`:
+- **Sub-Resource Merging Over Full-Document LWW:** Receiving `room_sync_full` updates reconciles local and remote `CampaignProfile` instances field-by-field via `RoomStateReconciliationService.reconcileProfile()` rather than overwriting wholesale. Notes, party purse, party rosters, room metadata, change logs, active encounters (keyed by `participantId`), and active minions (keyed by `m.id`) merge independently with LWW registers and tombstone-safe sets.
+- **Explicit Causality & Echo Loop Suppression:** State synchronization payloads are tagged with `origin_node_id` and monotonic `sequence_number`. Incoming payloads from the local node are discarded immediately (`originNodeId == _localNodeId`). Outbound broadcasts are suppressed during inbound remote payload application via microtask-scoped mutex flag `_isApplyingRemoteSync`.
+
+## 14. Bi-Directional Step-Up Waterfall Recovery & Transport Port Polymorphism
+Located at `lib/application/services/cascading_transport_router.dart`:
+- **Dynamic Step-Up Probing:** When degraded to Tier 3 (Cloud Relay) or Tier 4 (Offline), `CascadingTransportRouter` initiates a 30-second periodic recovery monitor (`_startStepUpRecoveryMonitor()`). Higher-tier adapters are probed for viability (`probeHigherTiers()`) via the abstract contract `IP2pTransportPort.probeViability(roomCode, localNodeId)`.
+- **Zero Concrete Downcasting:** Eliminates concrete downcasting (`adapter is WebRtcMeshAdapter`). `IP2pTransportPort` declares `heartbeatTtl`, `prepareSession()`, and `probeViability()` polymorphically.
+
+## 15. W3C Polite Peer Glare Rollback & Clock Skew Safe Pruning Deferral
+Located at `lib/infrastructure/adapters/p2p/webrtc_mesh_adapter.dart` and `room_state_reconciliation_service.dart`:
+- **W3C Polite Peer Rollback:** When signaling collisions occur (receiving an SDP offer while in `have-local-offer`), the polite peer rolls back its local offer (`await connection.setLocalDescription(RTCSessionDescription('', 'rollback'))`) and accepts the incoming offer without tearing down the connection.
+- **Clock Skew Inversion Defense:** In `RoomStateReconciliationService.safePrune`, the pruning threshold is checked against monotonic network-synchronized physical time (`INetworkTimePort`). If local clock drift or inversion would cause `threshold >= networkTime`, pruning is deferred gracefully (returning the unpruned set) rather than throwing `StateError`.
+
+

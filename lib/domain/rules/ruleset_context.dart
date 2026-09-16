@@ -1,4 +1,20 @@
-enum RulesetVersion { v2014, v2024 }
+import 'ruleset_edition.dart';
+export 'ruleset_edition.dart';
+
+enum RulesetVersion {
+  v2014,
+  v2024;
+
+  RulesetEdition toEdition() => switch (this) {
+        RulesetVersion.v2014 => RulesetEdition.dnd2014,
+        RulesetVersion.v2024 => RulesetEdition.dnd2024,
+      };
+
+  static RulesetVersion fromEdition(RulesetEdition edition) => switch (edition) {
+        RulesetEdition.dnd2014 => RulesetVersion.v2014,
+        RulesetEdition.dnd2024 => RulesetVersion.v2024,
+      };
+}
 
 enum ActionCost { action, bonusAction, reaction, free }
 
@@ -14,6 +30,9 @@ abstract class RulesetEngine {
         return const RulesetEngine2024();
     }
   }
+
+  factory RulesetEngine.forEdition(RulesetEdition edition) =>
+      RulesetEngine.forVersion(RulesetVersion.fromEdition(edition));
 
   ActionCost get potionConsumptionCost;
   int calculateExhaustionD20Penalty(int level);

@@ -81,6 +81,21 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
   Stream<Set<String>> get onPeersChanged => _peersChangedController.stream;
 
   @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+
+  @override
+  Future<void> prepareSession() async {
+    await signalingAdapter?.cleanUpSignalingSession();
+  }
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async {
+    return _dataChannels.values.any(
+      (ch) => ch.state == RTCDataChannelState.RTCDataChannelOpen,
+    );
+  }
+
+  @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
     _roomCode = roomCode.trim().toUpperCase();
     _localNodeId = localNodeId;
@@ -209,24 +224,35 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
       return;
     }
 
-    // Glare resolution: both nodes simultaneously initiated offers
+    // Glare resolution: both nodes simultaneously initiated offers (W3C Polite Peer pattern)
     final existingPc = _peerConnections[peerId];
     if (existingPc != null) {
-      final isLocalPrecedent = (_localNodeId ?? '').compareTo(peerId) > 0;
-      if (isLocalPrecedent) {
-        // Local node has priority; drop colliding offer and let remote peer answer our offer
+      final isPolite = (_localNodeId ?? '').compareTo(peerId) < 0;
+      if (!isPolite) {
+        // Impolite peer maintains its offer; drops colliding offer and lets remote polite peer rollback and answer
         final signaling = _signalingAdapter;
         if (signaling != null) {
           await signaling.deleteSignal(signalId);
         }
         return;
       } else {
-        // Remote node has priority; yield our in-flight connection
-        prunePeer(peerId);
+        // Polite peer rolls back in-flight local offer to accept remote offer
+        bool rollbackSucceeded = false;
+        try {
+          await existingPc.setLocalDescription(RTCSessionDescription('', 'rollback'));
+          rollbackSucceeded = true;
+        } catch (_) {
+          rollbackSucceeded = false;
+        }
+        if (!rollbackSucceeded) {
+          // If driver/platform does not support rollback description, prune and re-instantiate cleanly
+          prunePeer(peerId);
+        }
       }
     }
 
-    final pc = await _connectionFactory.createConnection(_rtcConfiguration);
+    final pc = _peerConnections[peerId] ??
+        await _connectionFactory.createConnection(_rtcConfiguration);
     _peerConnections[peerId] = pc;
 
     pc.onDataChannel = (channel) {

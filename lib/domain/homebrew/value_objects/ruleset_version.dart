@@ -1,3 +1,6 @@
+import '../../rules/ruleset_edition.dart';
+export '../../rules/ruleset_edition.dart';
+
 /// Explicit ruleset baselines for remote homebrew repositories.
 ///
 /// Mandates explicit assignment without default fallback values
@@ -5,6 +8,16 @@
 enum RulesetVersion {
   srd2014,
   srd2024;
+
+  RulesetEdition toEdition() => switch (this) {
+        RulesetVersion.srd2014 => RulesetEdition.dnd2014,
+        RulesetVersion.srd2024 => RulesetEdition.dnd2024,
+      };
+
+  static RulesetVersion fromEdition(RulesetEdition edition) => switch (edition) {
+        RulesetEdition.dnd2014 => RulesetVersion.srd2014,
+        RulesetEdition.dnd2024 => RulesetVersion.srd2024,
+      };
 
   /// Human-readable display label.
   String get displayName => switch (this) {

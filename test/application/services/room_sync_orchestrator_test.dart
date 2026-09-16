@@ -16,6 +16,7 @@ import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profil
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/crdt/crdt_or_set_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 
 class MockTransportPort implements IP2pTransportPort {
   final List<String> broadcastedPayloads = [];
@@ -30,6 +31,15 @@ class MockTransportPort implements IP2pTransportPort {
 
   @override
   Map<String, int> peerLastSeen = {};
+
+  @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+
+  @override
+  Future<void> prepareSession() async {}
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async => true;
 
   @override
   Future<void> broadcastPayload(String jsonPayload) async {
@@ -70,6 +80,7 @@ class MockCampaignRepository implements ICampaignRepository {
 
   @override
   CampaignProfile? get activeProfile => _activeProfile;
+  set activeProfile(CampaignProfile? profile) => _activeProfile = profile;
 
   @override
   String? get activeProfileId => _activeProfile?.id;
@@ -537,7 +548,10 @@ void main() {
 
       // 3. Legitimate out-of-order packet arriving via WebRTC jitter at t = localTime - 10000ms (1699999990500)
       // Timestamp is older than profile1 (1699999990500 < 1700000000000), but within 30s sliding window
-      final outOfOrderProfile = initialProfile.copyWith(name: 'Out of Order Packet within 30s Window');
+      final outOfOrderProfile = initialProfile.copyWith(
+        name: 'Out of Order Packet within 30s Window',
+        partyCharacterIds: ['char-remote-out-of-order'],
+      );
       final inboundOutOfOrder = jsonEncode({
         'type': 'room_sync_full',
         'payload': CampaignProfileDto.fromDomain(outOfOrderProfile).toMap(),
@@ -547,7 +561,9 @@ void main() {
 
       // Successfully processed and saved through sliding lookback window
       expect(mockRepo.savedImmediateProfiles.length, equals(2));
-      expect(mockRepo.savedImmediateProfiles.last.name, equals('Out of Order Packet within 30s Window'));
+      // Field reconciliation ensures newer name is preserved while sub-resource roster is merged
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 1700000000000'));
+      expect(mockRepo.savedImmediateProfiles.last.partyCharacterIds, contains('char-remote-out-of-order'));
       // lastProfileSyncTimestamp monotonically preserves highest timestamp seen
       expect(orchestrator.lastProfileSyncTimestamp, equals(1700000000000));
       expect(orchestrator.processedPayloadHashes.length, equals(2));
@@ -563,7 +579,7 @@ void main() {
 
       // Must NOT be saved; repo count remains 2
       expect(mockRepo.savedImmediateProfiles.length, equals(2));
-      expect(mockRepo.savedImmediateProfiles.last.name, equals('Out of Order Packet within 30s Window'));
+      expect(mockRepo.savedImmediateProfiles.last.name, equals('Authoritative Title at 1700000000000'));
 
       // 5. Strictly newer packet at t = localTime + 2000ms (1700000002500)
       final newerProfile = initialProfile.copyWith(name: 'Newer Packet at 1700000002500');
@@ -632,6 +648,51 @@ void main() {
       expect(hostOrchestrator.trackedRulesSet.tombstones.containsKey('rule-ancient'), isFalse);
       // Recent tombstone within the 2x TTL window is PRESERVED for transient reconnects
       expect(hostOrchestrator.trackedRulesSet.tombstones.containsKey('rule-recent-disconnect'), isTrue);
+    });
+
+    test('Concurrent Conflict Resolution: concurrent edits to notes and purse merge without wholesale overwrite', () async {
+      final baseProfile = CampaignProfile.defaultProfile(id: 'camp_conflict');
+      // Local has updated notes
+      final localProfile = baseProfile.copyWith(notesMarkdown: 'Local draft notes by DM');
+      mockRepo.activeProfile = localProfile;
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      // Remote payload has updated party purse
+      final remoteProfile = baseProfile.copyWith(
+        partyPurse: const PartyPurse(gp: 750, pp: 5),
+        notesMarkdown: '', // Remote did not edit notes (blank)
+      );
+
+      final inboundConflict = jsonEncode({
+        'type': 'room_sync_full',
+        'payload': CampaignProfileDto.fromDomain(remoteProfile).toMap(),
+        'timestamp': now + 500,
+      });
+
+      await orchestrator.handleIncomingPayload(inboundConflict);
+
+      expect(mockRepo.savedImmediateProfiles.isNotEmpty, isTrue);
+      final merged = mockRepo.savedImmediateProfiles.last;
+      // Notes preserved from local rather than wiped out
+      expect(merged.notesMarkdown, equals('Local draft notes by DM'));
+      // Purse updated from remote
+      expect(merged.partyPurse.gp, equals(750));
+      expect(merged.partyPurse.pp, equals(5));
+    });
+
+    test('Causality Tracking: drops self-broadcast packets matching origin_node_id', () async {
+      final initialCount = mockRepo.savedImmediateProfiles.length;
+      final selfEchoPayload = jsonEncode({
+        'type': 'room_sync_full',
+        'origin_node_id': orchestrator.hostNodeId,
+        'payload': CampaignProfileDto.fromDomain(initialProfile).toMap(),
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+
+      await orchestrator.handleIncomingPayload(selfEchoPayload);
+
+      // Dropped at ingress; repo was not invoked
+      expect(mockRepo.savedImmediateProfiles.length, equals(initialCount));
     });
   });
 }

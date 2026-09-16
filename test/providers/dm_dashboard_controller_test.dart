@@ -301,6 +301,12 @@ class _MockTransportPort implements IP2pTransportPort {
   Future<void> initializeRoom(String roomCode, String localNodeId) async {}
   @override
   Future<void> disconnect() async {}
+  @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+  @override
+  Future<void> prepareSession() async {}
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async => false;
 }
 
 class _MockNetworkTimePort implements INetworkTimePort {

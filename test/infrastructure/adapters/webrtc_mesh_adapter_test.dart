@@ -67,9 +67,14 @@ class FakeRTCPeerConnection implements RTCPeerConnection {
     return RTCSessionDescription('v=0\r\no=fake-answer-sdp', 'answer');
   }
 
+  bool rollbackCalled = false;
+
   @override
   Future<void> setLocalDescription(RTCSessionDescription description) async {
     localDescription = description;
+    if (description.type == 'rollback') {
+      rollbackCalled = true;
+    }
   }
 
   @override
@@ -352,11 +357,11 @@ void main() {
       signalingAdapter.emitIncomingSignal(collidingOffer);
       await Future<void>.delayed(Duration.zero);
 
-      // Node A yielded its in-flight connection to node-Z
-      expect(inFlightPc.isClosed, isTrue);
-      // Replacement PC accepted remote offer and created answer
-      expect(replacementPc.remoteDescription?.sdp, 'v=0\r\no=sdp-from-z');
-      expect(replacementPc.localDescription?.type, 'answer');
+      // Polite Node A executed rollback on its in-flight connection rather than deadlocking
+      expect(inFlightPc.rollbackCalled, isTrue);
+      // Existing PC accepted remote offer and created answer cleanly
+      expect(inFlightPc.remoteDescription?.sdp, 'v=0\r\no=sdp-from-z');
+      expect(inFlightPc.localDescription?.type, 'answer');
 
       await adapterNodeA.disconnect();
     });

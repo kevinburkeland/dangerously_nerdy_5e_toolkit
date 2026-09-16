@@ -38,6 +38,17 @@ class LocalWifiAdapter implements IP2pTransportPort {
   Map<String, int> get peerLastSeen => const {};
 
   @override
+  Duration get heartbeatTtl => const Duration(seconds: 15);
+
+  @override
+  Future<void> prepareSession() async {}
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async {
+    return _isInitialized;
+  }
+
+  @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
     _roomCode = roomCode.trim().toUpperCase();
     _localNodeId = localNodeId;

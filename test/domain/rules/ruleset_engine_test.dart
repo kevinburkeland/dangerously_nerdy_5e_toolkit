@@ -49,5 +49,30 @@ void main() {
       expect(engine.isExhaustionFatal(6), isTrue);
       expect(engine.isExhaustionFatal(10), isTrue);
     });
+
+    test('RulesetEdition canonical value object parsing and conversions', () {
+      expect(RulesetEdition.fromString('2014'), equals(RulesetEdition.dnd2014));
+      expect(RulesetEdition.fromString('5e-2014'), equals(RulesetEdition.dnd2014));
+      expect(RulesetEdition.fromString('srd2014'), equals(RulesetEdition.dnd2014));
+      expect(RulesetEdition.fromString('v2014'), equals(RulesetEdition.dnd2014));
+
+      expect(RulesetEdition.fromString('2024'), equals(RulesetEdition.dnd2024));
+      expect(RulesetEdition.fromString('5e-2024'), equals(RulesetEdition.dnd2024));
+      expect(RulesetEdition.fromString('srd5.2'), equals(RulesetEdition.dnd2024));
+      expect(RulesetEdition.fromString('xphb'), equals(RulesetEdition.dnd2024));
+
+      // Bi-directional conversion with RulesetVersion
+      expect(RulesetVersion.v2014.toEdition(), equals(RulesetEdition.dnd2014));
+      expect(RulesetVersion.v2024.toEdition(), equals(RulesetEdition.dnd2024));
+      expect(RulesetVersion.fromEdition(RulesetEdition.dnd2014), equals(RulesetVersion.v2014));
+      expect(RulesetVersion.fromEdition(RulesetEdition.dnd2024), equals(RulesetVersion.v2024));
+
+      // RulesetEngine.forEdition instantiates correct engine
+      final engine2014 = RulesetEngine.forEdition(RulesetEdition.dnd2014);
+      expect(engine2014.potionConsumptionCost, equals(ActionCost.action));
+
+      final engine2024 = RulesetEngine.forEdition(RulesetEdition.dnd2024);
+      expect(engine2024.potionConsumptionCost, equals(ActionCost.bonusAction));
+    });
   });
 }

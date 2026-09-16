@@ -1,3 +1,6 @@
+import '../domain/rules/ruleset_edition.dart';
+export '../domain/rules/ruleset_edition.dart';
+
 enum DmRulesEdition {
   v2014,
   v2024,
@@ -7,6 +10,17 @@ enum DmRulesEdition {
         DmRulesEdition.v2014 => '2014',
         DmRulesEdition.v2024 => '2024',
         DmRulesEdition.comparative => 'Diff',
+      };
+
+  RulesetEdition? toEdition() => switch (this) {
+        DmRulesEdition.v2014 => RulesetEdition.dnd2014,
+        DmRulesEdition.v2024 => RulesetEdition.dnd2024,
+        DmRulesEdition.comparative => null,
+      };
+
+  static DmRulesEdition fromEdition(RulesetEdition edition) => switch (edition) {
+        RulesetEdition.dnd2014 => DmRulesEdition.v2014,
+        RulesetEdition.dnd2024 => DmRulesEdition.v2024,
       };
 }
 

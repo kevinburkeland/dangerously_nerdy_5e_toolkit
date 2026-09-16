@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:meta/meta.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
-import '../../infrastructure/adapters/p2p/webrtc_mesh_adapter.dart';
 
 /// Connection states for the 4-tier cascading transport hierarchy.
 enum TransportState {
@@ -25,8 +25,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
   final IP2pTransportPort localWifiAdapter;
   final IP2pTransportPort webRtcAdapter;
   final IP2pTransportPort firebaseFallbackAdapter;
+  @override
   final Duration heartbeatTtl;
   final Duration checkInterval;
+  final Duration stepUpProbeInterval;
   final Map<String, int> Function()? peerTimestampProvider;
   final void Function(String peerId)? onPeerPruned;
 
@@ -43,6 +45,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
   StreamSubscription<String>? _activeSubscription;
   Timer? _heartbeatTimer;
   Timer? _fallbackHeartbeatTimer;
+  Timer? _stepUpProbeTimer;
+  bool _isProbing = false;
 
   final Map<String, int> _peerLastSeen = {};
 
@@ -52,6 +56,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     required this.firebaseFallbackAdapter,
     this.heartbeatTtl = const Duration(seconds: 15),
     this.checkInterval = const Duration(seconds: 1),
+    this.stepUpProbeInterval = const Duration(seconds: 30),
     this.peerTimestampProvider,
     this.onPeerPruned,
   });
@@ -78,6 +83,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _heartbeatTimer = null;
     _fallbackHeartbeatTimer?.cancel();
     _fallbackHeartbeatTimer = null;
+    _stepUpProbeTimer?.cancel();
+    _stepUpProbeTimer = null;
 
     if (_payloadController.isClosed) {
       _payloadController = StreamController<String>.broadcast();
@@ -122,10 +129,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
     IP2pTransportPort adapter,
     TransportState targetState,
   ) async {
-    // Ephemeral signaling guarantee: clean up any stale signaling docs from prior sessions
-    if (targetState == TransportState.webRtc && adapter is WebRtcMeshAdapter) {
-      await adapter.signalingAdapter?.cleanUpSignalingSession();
-    }
+    // Ephemeral session guarantee: clean up any stale signaling docs from prior sessions
+    await adapter.prepareSession();
 
     await adapter.initializeRoom(_roomCode!, _localNodeId!);
 
@@ -144,6 +149,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     }
 
     _startHeartbeatMonitor();
+    _startStepUpRecoveryMonitor();
   }
 
   void _handleIncomingPayload(String payload) {
@@ -291,6 +297,80 @@ class CascadingTransportRouter implements IP2pTransportPort {
     });
   }
 
+  void _startStepUpRecoveryMonitor() {
+    _stepUpProbeTimer?.cancel();
+    if (_currentState == TransportState.localWifi ||
+        _currentState == TransportState.offline) {
+      _stepUpProbeTimer = null;
+      return;
+    }
+
+    _stepUpProbeTimer = Timer.periodic(stepUpProbeInterval, (_) async {
+      await _attemptStepUpRecovery();
+    });
+  }
+
+  @override
+  Future<void> prepareSession() async {
+    await _activeAdapter?.prepareSession();
+  }
+
+  @override
+  Future<bool> probeViability(String roomCode, String localNodeId) async {
+    return _currentState != TransportState.offline &&
+        _currentState != TransportState.connecting;
+  }
+
+  /// Triggers a non-disruptive probe of higher-tier transport adapters.
+  @visibleForTesting
+  Future<void> probeHigherTiers() => _attemptStepUpRecovery();
+
+  Future<void> _attemptStepUpRecovery() async {
+    if (_isProbing || _roomCode == null || _localNodeId == null) return;
+    if (_currentState == TransportState.localWifi ||
+        _currentState == TransportState.offline) {
+      return;
+    }
+
+    _isProbing = true;
+    try {
+      // 1. Probe Local Wi-Fi (Tier 1 - Zero Cost) first
+      final wifiViable =
+          await localWifiAdapter.probeViability(_roomCode!, _localNodeId!);
+      if (wifiViable) {
+        await _promoteAdapter(localWifiAdapter, TransportState.localWifi);
+        return;
+      }
+
+      // 2. If in fallbackRelay, probe WebRTC (Tier 2 - Zero Cost Mesh)
+      if (_currentState == TransportState.fallbackRelay) {
+        final webRtcViable =
+            await webRtcAdapter.probeViability(_roomCode!, _localNodeId!);
+        if (webRtcViable) {
+          await _promoteAdapter(webRtcAdapter, TransportState.webRtc);
+          return;
+        }
+      }
+    } catch (_) {
+      // Probing failure is non-fatal; the active fallback stream continues unhindered
+    } finally {
+      _isProbing = false;
+    }
+  }
+
+  Future<void> _promoteAdapter(
+    IP2pTransportPort higherAdapter,
+    TransportState newState,
+  ) async {
+    final previousAdapter = _activeAdapter;
+    await _activateAdapter(higherAdapter, newState);
+    if (previousAdapter != null && previousAdapter != higherAdapter) {
+      try {
+        await previousAdapter.disconnect();
+      } catch (_) {}
+    }
+  }
+
   void _changeState(TransportState newState) {
     if (_currentState != newState) {
       _currentState = newState;
@@ -307,6 +387,8 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _heartbeatTimer = null;
     _fallbackHeartbeatTimer?.cancel();
     _fallbackHeartbeatTimer = null;
+    _stepUpProbeTimer?.cancel();
+    _stepUpProbeTimer = null;
 
     await _activeSubscription?.cancel();
     _activeSubscription = null;

@@ -49,7 +49,8 @@ class RoomSyncOrchestrator {
   final int Function() _localTimeProvider;
 
   final Mutex _syncMutex = Mutex();
-  CampaignProfile? _lastInboundProfile;
+  bool _isApplyingRemoteSync = false;
+  int _localSequenceNumber = 0;
   int _lastProfileSyncTimestamp = 0;
   CrdtOrSet<String> _trackedRulesSet = const CrdtOrSet<String>();
   StreamController<RoomConnectionTelemetry> _telemetryController =
@@ -71,10 +72,7 @@ class RoomSyncOrchestrator {
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         _localTimeProvider = localTimeProvider ?? (() => clockSyncService.currentNetworkTimeMs),
-        heartbeatTtl = heartbeatTtl ??
-            (transportPort is CascadingTransportRouter
-                ? transportPort.heartbeatTtl
-                : (router?.heartbeatTtl ?? const Duration(seconds: 15))),
+        heartbeatTtl = heartbeatTtl ?? (transportPort ?? router)!.heartbeatTtl,
         assert(
           transportPort != null || router != null,
           'Must provide either transportPort or router',
@@ -213,6 +211,11 @@ class RoomSyncOrchestrator {
             return;
           }
 
+          final originNode = decoded['origin_node_id'];
+          if (originNode != null && originNode == hostNodeId) {
+            return;
+          }
+
           final remoteProfileDto = CampaignProfileDto.fromMap(
             Map<String, dynamic>.from(payloadData),
           );
@@ -231,11 +234,26 @@ class RoomSyncOrchestrator {
               } catch (_) {}
             }
 
+            // Reconcile sub-resources deterministically at field-level
+            final reconciledProfile = reconciliationService.reconcileProfile(
+              local: localProfile,
+              remote: remoteProfile,
+              inboundTimestampMs: inboundTimestamp,
+              localTimestampMs: _lastProfileSyncTimestamp,
+            );
+
             if (inboundTimestamp > _lastProfileSyncTimestamp) {
               _lastProfileSyncTimestamp = inboundTimestamp;
             }
-            _lastInboundProfile = remoteProfile;
-            await campaignRepo.saveProfileImmediate(remoteProfile);
+
+            _isApplyingRemoteSync = true;
+            try {
+              await campaignRepo.saveProfileImmediate(reconciledProfile);
+            } finally {
+              scheduleMicrotask(() {
+                _isApplyingRemoteSync = false;
+              });
+            }
           }
         } else if (type == 'crdt_or_set_delta') {
           final payloadData = decoded['payload'];
@@ -255,8 +273,15 @@ class RoomSyncOrchestrator {
             final updatedProfile = localProfile.copyWith(
               pinnedRuleIds: _trackedRulesSet.activeValues.toSet(),
             );
-            _lastInboundProfile = updatedProfile;
-            await campaignRepo.saveProfileImmediate(updatedProfile);
+
+            _isApplyingRemoteSync = true;
+            try {
+              await campaignRepo.saveProfileImmediate(updatedProfile);
+            } finally {
+              scheduleMicrotask(() {
+                _isApplyingRemoteSync = false;
+              });
+            }
           }
         } else if (type == 'dice_roll') {
           final payloadData = decoded['payload'];
@@ -280,8 +305,7 @@ class RoomSyncOrchestrator {
 
   Future<void> _handleLocalProfileChange(CampaignProfile? profile) async {
     if (profile == null) return;
-    if (_lastInboundProfile == profile) {
-      _lastInboundProfile = null;
+    if (_isApplyingRemoteSync) {
       return;
     }
 
@@ -289,6 +313,8 @@ class RoomSyncOrchestrator {
       final dto = CampaignProfileDto.fromDomain(profile);
       final payloadMap = <String, dynamic>{
         'type': 'room_sync_full',
+        'origin_node_id': hostNodeId,
+        'origin_seq': ++_localSequenceNumber,
         'payload': dto.toMap(),
         'timestamp': _localTimeProvider(),
       };
@@ -333,7 +359,14 @@ class RoomSyncOrchestrator {
     }
 
     // Persist immediately to establish the snapshot boundary
-    await campaignRepo.saveProfileImmediate(activeProfile);
+    _isApplyingRemoteSync = true;
+    try {
+      await campaignRepo.saveProfileImmediate(activeProfile);
+    } finally {
+      scheduleMicrotask(() {
+        _isApplyingRemoteSync = false;
+      });
+    }
   }
 
   /// Cancels all subscriptions, timers, and emits offline telemetry.
@@ -349,7 +382,7 @@ class RoomSyncOrchestrator {
     _telemetryTimer?.cancel();
     _telemetryTimer = null;
     _lastProfileSyncTimestamp = 0;
-    _lastInboundProfile = null;
+    _isApplyingRemoteSync = false;
     _processedPayloadHashes.clear();
     _emitTelemetry();
   }

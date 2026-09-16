@@ -24,34 +24,35 @@ void main() {
   group('RoomStateReconciliationService Tests', () {
     final service = RoomStateReconciliationService();
 
-    test('Pruning Safety Test: throws StateError when threshold physical time >= current time', () {
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      final futureThreshold = HybridLogicalClock(
-        physicalTime: now + 60000,
+    test('Pruning Safety Test: gracefully defers pruning when threshold physical time >= current network time', () {
+      const now = 100000;
+      final timeSyncedService = RoomStateReconciliationService(
+        networkTimeProvider: () => now,
+      );
+
+      const futureThreshold = HybridLogicalClock(
+        physicalTime: 160000,
         logicalCounter: 0,
         nodeId: 'nodeLeader',
       );
-      final equalThreshold = HybridLogicalClock(
-        physicalTime: now + 50, // slightly in future or exact current
+      const equalThreshold = HybridLogicalClock(
+        physicalTime: 100000,
         logicalCounter: 0,
         nodeId: 'nodeLeader',
       );
 
-      const targetSet = CrdtOrSet<String>();
-
-      expect(
-        () => service.safePrune(targetSet, futureThreshold),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          contains('Cannot prune CRDT tombstones using an unverified current/future timestamp.'),
-        )),
+      const targetSet = CrdtOrSet<String>(
+        tombstones: {
+          'item-1': HybridLogicalClock(physicalTime: 50000, logicalCounter: 0, nodeId: 'nodeA'),
+        },
       );
 
-      expect(
-        () => service.safePrune(targetSet, equalThreshold),
-        throwsA(isA<StateError>()),
-      );
+      // Does not throw StateError; defers pruning and preserves targetSet
+      final deferred1 = timeSyncedService.safePrune(targetSet, futureThreshold);
+      expect(deferred1.tombstones.containsKey('item-1'), isTrue);
+
+      final deferred2 = timeSyncedService.safePrune(targetSet, equalThreshold);
+      expect(deferred2.tombstones.containsKey('item-1'), isTrue);
     });
 
     test('safePrune successfully prunes historical tombstones when threshold is safely in past', () {
