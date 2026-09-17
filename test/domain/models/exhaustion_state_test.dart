@@ -9,7 +9,9 @@ void main() {
 
       expect(state.clampedLevel, equals(3));
       expect(state.d20Penalty, equals(6));
-      expect(state.speedReduction, equals(15));
+      expect(state.speedReduction(), equals(15));
+      expect(state.speedReduction(30), equals(15));
+      expect(state.speedReduction(40), equals(15));
       expect(state.isDead, isFalse);
       expect(state.activeEffectsDescription.first, contains('D20 Test Penalty: -6'));
     });
@@ -19,7 +21,9 @@ void main() {
 
       expect(state.clampedLevel, equals(3));
       expect(state.d20Penalty, equals(0));
-      expect(state.speedReduction, equals(15));
+      expect(state.speedReduction(), equals(15));
+      expect(state.speedReduction(30), equals(15));
+      expect(state.speedReduction(40), equals(20));
       expect(state.isDead, isFalse);
       expect(state.activeEffectsDescription, contains('Disadvantage on ability checks'));
       expect(state.activeEffectsDescription, contains('Speed halved'));

@@ -20,10 +20,12 @@ void main() {
 
       expect(engine.calculateExhaustionD20Penalty(0), equals(0));
       expect(engine.calculateExhaustionD20Penalty(3), equals(0));
-      expect(engine.calculateExhaustionSpeedPenalty(1), equals(0));
-      expect(engine.calculateExhaustionSpeedPenalty(2), equals(15));
-      expect(engine.calculateExhaustionSpeedPenalty(4), equals(15));
-      expect(engine.calculateExhaustionSpeedPenalty(5), equals(999));
+      expect(engine.calculateExhaustionSpeedPenalty(1, 30), equals(0));
+      expect(engine.calculateExhaustionSpeedPenalty(2, 30), equals(15));
+      expect(engine.calculateExhaustionSpeedPenalty(4, 30), equals(15));
+      expect(engine.calculateExhaustionSpeedPenalty(2, 40), equals(20));
+      expect(engine.calculateExhaustionSpeedPenalty(5, 30), equals(30));
+      expect(engine.calculateExhaustionSpeedPenalty(5, 40), equals(40));
       expect(engine.isExhaustionFatal(5), isFalse);
       expect(engine.isExhaustionFatal(6), isTrue);
       expect(engine.isExhaustionFatal(7), isTrue);
@@ -40,10 +42,10 @@ void main() {
       expect(engine.calculateExhaustionD20Penalty(5), equals(10));
       expect(engine.calculateExhaustionD20Penalty(6), equals(12));
 
-      expect(engine.calculateExhaustionSpeedPenalty(0), equals(0));
-      expect(engine.calculateExhaustionSpeedPenalty(1), equals(5));
-      expect(engine.calculateExhaustionSpeedPenalty(3), equals(15));
-      expect(engine.calculateExhaustionSpeedPenalty(6), equals(30));
+      expect(engine.calculateExhaustionSpeedPenalty(0, 30), equals(0));
+      expect(engine.calculateExhaustionSpeedPenalty(1, 30), equals(5));
+      expect(engine.calculateExhaustionSpeedPenalty(3, 30), equals(15));
+      expect(engine.calculateExhaustionSpeedPenalty(6, 30), equals(30));
 
       expect(engine.isExhaustionFatal(5), isFalse);
       expect(engine.isExhaustionFatal(6), isTrue);

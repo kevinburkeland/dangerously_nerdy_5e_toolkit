@@ -3,10 +3,12 @@ import '../rules/ruleset_context.dart';
 class ExhaustionState {
   final int level;
   final RulesetVersion ruleset;
+  final int baseSpeed;
 
   const ExhaustionState({
     required this.level,
     this.ruleset = RulesetVersion.v2024,
+    this.baseSpeed = 30,
   });
 
   int get clampedLevel => level.clamp(0, 6);
@@ -18,9 +20,10 @@ class ExhaustionState {
     return engine.calculateExhaustionD20Penalty(clampedLevel);
   }
 
-  int get speedReduction {
+  int speedReduction([int? entityBaseSpeed]) {
+    final speed = entityBaseSpeed ?? baseSpeed;
     final engine = RulesetEngine.forVersion(ruleset);
-    return engine.calculateExhaustionSpeedPenalty(clampedLevel);
+    return engine.calculateExhaustionSpeedPenalty(clampedLevel, speed);
   }
 
   List<String> get activeEffectsDescription {
@@ -37,7 +40,7 @@ class ExhaustionState {
       }
       return [
         'D20 Test Penalty: -$d20Penalty (applies to d20 rolls: attack rolls, ability checks, saving throws)',
-        'Speed Reduction: -$speedReduction ft',
+        'Speed Reduction: -${speedReduction()} ft',
       ];
     } else {
       // 2014 SRD 5.1 cumulative effects
@@ -52,10 +55,11 @@ class ExhaustionState {
     }
   }
 
-  ExhaustionState copyWith({int? level, RulesetVersion? ruleset}) {
+  ExhaustionState copyWith({int? level, RulesetVersion? ruleset, int? baseSpeed}) {
     return ExhaustionState(
       level: level ?? this.level,
       ruleset: ruleset ?? this.ruleset,
+      baseSpeed: baseSpeed ?? this.baseSpeed,
     );
   }
 
@@ -71,8 +75,9 @@ class ExhaustionState {
       other is ExhaustionState &&
           runtimeType == other.runtimeType &&
           level == other.level &&
-          ruleset == other.ruleset;
+          ruleset == other.ruleset &&
+          baseSpeed == other.baseSpeed;
 
   @override
-  int get hashCode => Object.hash(level, ruleset);
+  int get hashCode => Object.hash(level, ruleset, baseSpeed);
 }

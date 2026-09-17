@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/p2p/firebase_fallback_adapter.dart';
+import 'package:dangerously_nerdy_5e_toolkit/utils/crypto_utils.dart';
 
 void main() {
   group('FirebaseFallbackAdapter Relay Tests', () {
@@ -71,6 +72,7 @@ void main() {
 
       // Re-initialize and verify clean stream re-opening
       await adapter.initializeRoom('ROOM-2', 'node-2');
+
       final receivedAfterReconnect = <String>[];
       final sub2 = adapter.watchIncomingPayloads().listen(receivedAfterReconnect.add);
 
@@ -81,7 +83,7 @@ void main() {
       await sub2.cancel();
     });
 
-    test('tolerates clock skew with 30-second query threshold and deduplicates message IDs', () async {
+    test('tolerates clock skew with 30-second query threshold and deduplicates payload hashes', () async {
       final now = DateTime.now().millisecondsSinceEpoch;
       await adapter.initializeRoom('ROOM-SKEW', 'node-skew');
 
@@ -93,31 +95,37 @@ void main() {
       final received = <String>[];
       final sub = adapter.watchIncomingPayloads().listen(received.add);
 
+      const payload1 = '{"action":"cast_spell","id":1}';
+      final payload1Hash = CryptoUtils.sha256Hex(payload1);
+
       // Emit first message with specific ID
-      adapter.emitIncomingPayload('{"action":"cast_spell","id":1}', messageId: 'msg-duplicate-1');
+      adapter.emitIncomingPayload(payload1, messageId: 'msg-duplicate-1');
       await Future<void>.delayed(Duration.zero);
 
       expect(received.length, 1);
-      expect(adapter.processedMessageIds, contains('msg-duplicate-1'));
+      expect(adapter.processedPayloadHashes, contains(payload1Hash));
 
-      // Re-emit with identical message ID (e.g. from skewed Firestore query)
-      adapter.emitIncomingPayload('{"action":"cast_spell","id":1}', messageId: 'msg-duplicate-1');
+      // Re-emit with different message ID but identical payload (hash poisoning / replay defense)
+      adapter.emitIncomingPayload(payload1, messageId: 'msg-duplicate-2');
       await Future<void>.delayed(Duration.zero);
 
-      // Must be dropped by deduplicator
+      // Must be dropped by deduplicator because payload hash matches
       expect(received.length, 1);
 
-      // Emit with distinct message ID
-      adapter.emitIncomingPayload('{"action":"cast_spell","id":2}', messageId: 'msg-unique-2');
+      const payload2 = '{"action":"cast_spell","id":2}';
+      final payload2Hash = CryptoUtils.sha256Hex(payload2);
+
+      // Emit with distinct payload
+      adapter.emitIncomingPayload(payload2, messageId: 'msg-unique-2');
       await Future<void>.delayed(Duration.zero);
 
       expect(received.length, 2);
-      expect(adapter.processedMessageIds, contains('msg-unique-2'));
+      expect(adapter.processedPayloadHashes, contains(payload2Hash));
 
       await sub.cancel();
     });
 
-    test('enforces maxProcessedMessageIds LRU bound and clears tracking on disconnect', () async {
+    test('enforces maxProcessedPayloadHashes LRU bound and clears tracking on disconnect', () async {
       await adapter.initializeRoom('ROOM-LRU', 'node-lru');
 
       final received = <String>[];
@@ -129,15 +137,18 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(received.length, 505);
-      expect(adapter.processedMessageIds.length, equals(FirebaseFallbackAdapter.maxProcessedMessageIds));
+      expect(adapter.processedPayloadHashes.length, equals(FirebaseFallbackAdapter.maxProcessedPayloadHashes));
       // First 5 messages should have been evicted from the LRU cache
-      expect(adapter.processedMessageIds.contains('msg-0'), isFalse);
-      expect(adapter.processedMessageIds.contains('msg-4'), isFalse);
-      expect(adapter.processedMessageIds.contains('msg-504'), isTrue);
+      final hash0 = CryptoUtils.sha256Hex('{"index":0}');
+      final hash4 = CryptoUtils.sha256Hex('{"index":4}');
+      final hash504 = CryptoUtils.sha256Hex('{"index":504}');
+      expect(adapter.processedPayloadHashes.contains(hash0), isFalse);
+      expect(adapter.processedPayloadHashes.contains(hash4), isFalse);
+      expect(adapter.processedPayloadHashes.contains(hash504), isTrue);
 
       // Disconnect clears tracking
       await adapter.disconnect();
-      expect(adapter.processedMessageIds, isEmpty);
+      expect(adapter.processedPayloadHashes, isEmpty);
 
       await sub.cancel();
     });

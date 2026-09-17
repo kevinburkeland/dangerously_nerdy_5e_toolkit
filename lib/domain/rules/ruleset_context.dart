@@ -27,7 +27,7 @@ abstract class RulesetEngine {
 
   ActionCost get potionConsumptionCost;
   int calculateExhaustionD20Penalty(int level);
-  int calculateExhaustionSpeedPenalty(int level);
+  int calculateExhaustionSpeedPenalty(int level, int baseSpeed);
   bool isExhaustionFatal(int level);
   bool supportsWeaponMasteries();
 }
@@ -42,11 +42,8 @@ class RulesetEngine2014 extends RulesetEngine {
   int calculateExhaustionD20Penalty(int level) => 0;
 
   @override
-  int calculateExhaustionSpeedPenalty(int level) {
-    if (level >= 5) return 999;
-    if (level >= 2) return 15;
-    return 0;
-  }
+  int calculateExhaustionSpeedPenalty(int level, int baseSpeed) =>
+      level >= 5 ? baseSpeed : (level >= 2 ? (baseSpeed ~/ 2) : 0);
 
   @override
   bool isExhaustionFatal(int level) => level >= 6;
@@ -65,7 +62,8 @@ class RulesetEngine2024 extends RulesetEngine {
   int calculateExhaustionD20Penalty(int level) => (level.clamp(0, 6)) * 2;
 
   @override
-  int calculateExhaustionSpeedPenalty(int level) => (level.clamp(0, 6)) * 5;
+  int calculateExhaustionSpeedPenalty(int level, int baseSpeed) =>
+      (level.clamp(0, 6)) * 5;
 
   @override
   bool isExhaustionFatal(int level) => level >= 6;

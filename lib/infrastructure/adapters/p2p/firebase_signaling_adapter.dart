@@ -14,7 +14,7 @@ class FirebaseSignalingAdapter {
   String? _localNodeId;
   final List<StreamSubscription<QuerySnapshot<Map<String, dynamic>>>> _subscriptions = [];
   final StreamController<SignalingMessage> _incomingSignalsController =
-      StreamController<SignalingMessage>.broadcast();
+      StreamController<SignalingMessage>.broadcast(sync: false);
 
   /// Maps docId -> full document path for rapid lookup on delete.
   final Map<String, String> _docIdToPath = {};

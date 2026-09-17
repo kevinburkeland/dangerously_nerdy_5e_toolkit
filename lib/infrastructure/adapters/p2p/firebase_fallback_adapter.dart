@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:uuid/uuid.dart';
 import '../../../domain/ports/i_p2p_transport_port.dart';
+import '../../../utils/crypto_utils.dart';
 
 /// Firebase Firestore-backed relay transport adapter implementing [IP2pTransportPort].
 /// Serves as the robust, reliable 3rd-tier fallback when P2P WebRTC mesh traversal
@@ -15,10 +16,11 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
   String? _localNodeId;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
   StreamController<String> _incomingPayloadsController =
-      StreamController<String>.broadcast();
+      StreamController<String>.broadcast(sync: false);
 
-  static const int maxProcessedMessageIds = 500;
-  final Set<String> _processedMessageIds = <String>{};
+  static const int maxProcessedPayloadHashes = 500;
+  static const int maxProcessedMessageIds = maxProcessedPayloadHashes;
+  final Set<String> _processedPayloadHashes = <String>{};
   int? _lastQueryThreshold;
 
   FirebaseFallbackAdapter({
@@ -51,8 +53,13 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
     return isFirebaseAvailable;
   }
 
-  /// Set of tracked message IDs processed to prevent duplicate emission.
-  Set<String> get processedMessageIds => Set.unmodifiable(_processedMessageIds);
+  /// Set of tracked payload hashes processed to prevent duplicate emission.
+  Set<String> get processedPayloadHashes =>
+      Set.unmodifiable(_processedPayloadHashes);
+
+  /// Backwards-compatible alias for [processedPayloadHashes].
+  @Deprecated('Use processedPayloadHashes instead')
+  Set<String> get processedMessageIds => processedPayloadHashes;
 
   /// The timestamp threshold used in the Firestore query constraint.
   int? get lastQueryThreshold => _lastQueryThreshold;
@@ -66,7 +73,8 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
     _localNodeId = localNodeId;
 
     if (_incomingPayloadsController.isClosed) {
-      _incomingPayloadsController = StreamController<String>.broadcast();
+      _incomingPayloadsController =
+          StreamController<String>.broadcast(sync: false);
     }
 
     // 30-second skew tolerance buffer (now - 30000)
@@ -114,12 +122,13 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
   }
 
   bool _handleRelayMessage(String messageId, String payload) {
-    if (_processedMessageIds.contains(messageId)) {
+    final payloadHash = CryptoUtils.sha256Hex(payload);
+    if (_processedPayloadHashes.contains(payloadHash)) {
       return false;
     }
-    _processedMessageIds.add(messageId);
-    if (_processedMessageIds.length > maxProcessedMessageIds) {
-      _processedMessageIds.remove(_processedMessageIds.first);
+    _processedPayloadHashes.add(payloadHash);
+    if (_processedPayloadHashes.length > maxProcessedPayloadHashes) {
+      _processedPayloadHashes.remove(_processedPayloadHashes.first);
     }
     if (!_incomingPayloadsController.isClosed) {
       _incomingPayloadsController.add(payload);
@@ -172,7 +181,7 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
     _subscription = null;
     _roomCode = null;
     _localNodeId = null;
-    _processedMessageIds.clear();
+    _processedPayloadHashes.clear();
     if (!_incomingPayloadsController.isClosed) {
       await _incomingPayloadsController.close();
     }
