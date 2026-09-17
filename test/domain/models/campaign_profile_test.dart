@@ -36,7 +36,7 @@ void main() {
         roomState: room,
         partyCharacterIds: const ['char-1', 'char-2'],
         pinnedRuleIds: const {'cover', 'grapple_shove'},
-        notesMarkdown: 'Session 1 notes',
+        notesRegister: profileA.notesRegister,
         partyPurse: const PartyPurse(gp: 50, sp: 10),
       );
 

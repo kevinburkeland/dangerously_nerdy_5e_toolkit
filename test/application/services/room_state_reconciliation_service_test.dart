@@ -265,7 +265,7 @@ void main() {
       expect(reconciled.roomState.activeEncounter.activeValues, isEmpty);
     });
 
-    test('Notes Convergence: Concurrent edits across network partition merge without loss', () {
+    test('Notes Convergence: Concurrent edits resolve via deterministic LWW with dropped delta logged to changeLog', () {
       const tsA = HybridLogicalClock(physicalTime: 1000, logicalCounter: 1, nodeId: 'peerA');
       const tsB = HybridLogicalClock(physicalTime: 1000, logicalCounter: 2, nodeId: 'peerB');
 
@@ -283,9 +283,15 @@ void main() {
         localTimestampMs: 1200,
       );
 
-      // Concurrent distinct edits must combine both notes rather than dropping one
-      expect(merged.notesMarkdown, contains('Discovered hidden cave.'));
-      expect(merged.notesMarkdown, contains('Trapped the chest.'));
+      // Higher HLC timestamp wins deterministically without string concatenation bloat
+      expect(merged.notesMarkdown, equals('Remote notes: Trapped the chest.'));
+      // Dropped delta is recorded in changeLog for audit and recovery
+      expect(
+        merged.changeLog.any((e) =>
+            e.type == 'notesConflictOverwrite' &&
+            e.details == 'Local notes: Discovered hidden cave.'),
+        isTrue,
+      );
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 import '../crdt/crdt_lww_register.dart';
 import '../crdt/crdt_or_set.dart';
 import '../crdt/hybrid_logical_clock.dart';
@@ -44,14 +45,7 @@ class CampaignProfile {
       'cover',
       'resting',
     },
-    this.notesRegister = const CrdtLwwRegister<String>(
-      value: '',
-      timestamp: HybridLogicalClock(
-        physicalTime: 0,
-        logicalCounter: 0,
-        nodeId: 'genesis',
-      ),
-    ),
+    required this.notesRegister,
     this.partyPurse = const PartyPurse(),
     this.changeLog = const [],
   });
@@ -80,18 +74,18 @@ class CampaignProfile {
         (notesMarkdown != null
             ? CrdtLwwRegister<String>(
                 value: notesMarkdown,
-                timestamp: const HybridLogicalClock(
+                timestamp: HybridLogicalClock(
                   physicalTime: 0,
                   logicalCounter: 0,
-                  nodeId: 'genesis',
+                  nodeId: const Uuid().v4(),
                 ),
               )
-            : const CrdtLwwRegister<String>(
+            : CrdtLwwRegister<String>(
                 value: '',
                 timestamp: HybridLogicalClock(
                   physicalTime: 0,
                   logicalCounter: 0,
-                  nodeId: 'genesis',
+                  nodeId: const Uuid().v4(),
                 ),
               ));
 

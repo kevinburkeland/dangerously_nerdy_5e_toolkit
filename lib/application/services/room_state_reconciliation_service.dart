@@ -89,26 +89,52 @@ class RoomStateReconciliationService {
         ? remote.name
         : (local.name.isNotEmpty ? local.name : remote.name);
 
-    // 2. Notes: Pure CRDT LWW Register convergence backed by HLC timestamps
-    // Guarantees conflict-free convergence and prevents dual-writer overwrites
+    // 2. Notes: Deterministic timestamp-based Last-Write-Wins overwrite backed by HLC timestamps.
+    // Favors the higher HLC timestamp, logging the dropped delta to changeLog instead of infinitely
+    // concatenating strings.
     final CrdtLwwRegister<String> mergedNotesRegister;
+    PartyEvent? droppedNotesEvent;
     if (local.notesRegister.value != remote.notesRegister.value) {
       if (local.notesRegister.value.isEmpty) {
         mergedNotesRegister = remote.notesRegister;
       } else if (remote.notesRegister.value.isEmpty) {
         mergedNotesRegister = local.notesRegister;
       } else {
-        // Both sides made edits concurrently: merge registers by HLC
-        // If neither is a substring of the other, preserve both in an append-only structure
-        if (!local.notesMarkdown.contains(remote.notesMarkdown) &&
-            !remote.notesMarkdown.contains(local.notesMarkdown)) {
-          final combinedText = '${local.notesMarkdown}\n\n---\n\n${remote.notesMarkdown}';
-          final newerHlc = local.notesRegister.timestamp.isAfter(remote.notesRegister.timestamp)
-              ? local.notesRegister.timestamp
-              : remote.notesRegister.timestamp;
-          mergedNotesRegister = CrdtLwwRegister<String>(value: combinedText, timestamp: newerHlc);
+        // Deterministic Last-Write-Wins resolution favoring the higher HLC timestamp
+        if (remote.notesRegister.timestamp.isAfter(local.notesRegister.timestamp)) {
+          mergedNotesRegister = remote.notesRegister;
+          droppedNotesEvent = PartyEvent(
+            id: 'conflict_notes_${local.notesRegister.timestamp.physicalTime}_${local.notesRegister.timestamp.nodeId}',
+            roomCode: local.roomState.roomCode.isNotEmpty
+                ? local.roomState.roomCode
+                : local.roomState.roomId,
+            type: 'notesConflictOverwrite',
+            playerName: local.notesRegister.timestamp.nodeId,
+            details: local.notesRegister.value,
+            timestamp: DateTime.fromMillisecondsSinceEpoch(
+              local.notesRegister.timestamp.physicalTime > 0
+                  ? local.notesRegister.timestamp.physicalTime
+                  : _networkTimeProvider(),
+              isUtc: true,
+            ),
+          );
         } else {
-          mergedNotesRegister = local.notesRegister.merge(remote.notesRegister);
+          mergedNotesRegister = local.notesRegister;
+          droppedNotesEvent = PartyEvent(
+            id: 'conflict_notes_${remote.notesRegister.timestamp.physicalTime}_${remote.notesRegister.timestamp.nodeId}',
+            roomCode: remote.roomState.roomCode.isNotEmpty
+                ? remote.roomState.roomCode
+                : remote.roomState.roomId,
+            type: 'notesConflictOverwrite',
+            playerName: remote.notesRegister.timestamp.nodeId,
+            details: remote.notesRegister.value,
+            timestamp: DateTime.fromMillisecondsSinceEpoch(
+              remote.notesRegister.timestamp.physicalTime > 0
+                  ? remote.notesRegister.timestamp.physicalTime
+                  : _networkTimeProvider(),
+              isUtc: true,
+            ),
+          );
         }
       }
     } else {
@@ -119,7 +145,10 @@ class RoomStateReconciliationService {
     final mergedPurse = local.partyPurse.merge(remote.partyPurse);
 
     // 4. Change Log: Merged and deduplicated by event ID
-    final mergedChangeLog = _mergeChangeLogs(local.changeLog, remote.changeLog);
+    final combinedLocalChangeLog = droppedNotesEvent != null
+        ? [...local.changeLog, droppedNotesEvent]
+        : local.changeLog;
+    final mergedChangeLog = _mergeChangeLogs(combinedLocalChangeLog, remote.changeLog);
 
     // 5. Party Roster: Granular merge preserving order and respecting removals in changelog
     final mergedPartyCharacterIds = _mergePartyRosters(

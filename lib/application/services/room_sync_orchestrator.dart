@@ -56,7 +56,7 @@ class RoomSyncOrchestrator {
   CampaignProfile? _lastEmittedProfile;
   CrdtOrSet<String> _trackedRulesSet = const CrdtOrSet<String>();
   StreamController<RoomConnectionTelemetry> _telemetryController =
-      StreamController<RoomConnectionTelemetry>.broadcast();
+      StreamController<RoomConnectionTelemetry>.broadcast(sync: false);
 
   RoomSyncOrchestrator({
     IP2pTransportPort? transportPort,
@@ -119,7 +119,8 @@ class RoomSyncOrchestrator {
   void startSynchronization() {
     if (isSynchronizing) return;
     if (_telemetryController.isClosed) {
-      _telemetryController = StreamController<RoomConnectionTelemetry>.broadcast();
+      _telemetryController =
+          StreamController<RoomConnectionTelemetry>.broadcast(sync: false);
     }
     _networkSub = transportPort.watchIncomingPayloads().listen(_handleIncomingPayload);
     _localDbSub = campaignRepo.watchActiveProfile().listen(_handleLocalProfileChange);
@@ -147,12 +148,14 @@ class RoomSyncOrchestrator {
   /// Immediately emits the latest [currentTelemetry] to each new subscriber upon listening.
   Stream<RoomConnectionTelemetry> watchTelemetry() {
     if (_telemetryController.isClosed) {
-      _telemetryController = StreamController<RoomConnectionTelemetry>.broadcast();
+      _telemetryController =
+          StreamController<RoomConnectionTelemetry>.broadcast(sync: false);
     }
     late StreamController<RoomConnectionTelemetry> subController;
     StreamSubscription<RoomConnectionTelemetry>? sub;
 
     subController = StreamController<RoomConnectionTelemetry>.broadcast(
+      sync: false,
       onListen: () {
         subController.add(currentTelemetry);
         sub = _telemetryController.stream.listen(

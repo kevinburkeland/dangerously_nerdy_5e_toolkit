@@ -32,9 +32,9 @@ class CascadingTransportRouter implements IP2pTransportPort {
   String? _localNodeId;
 
   StreamController<String> _payloadController =
-      StreamController<String>.broadcast();
+      StreamController<String>.broadcast(sync: false);
   StreamController<TransportState> _stateController =
-      StreamController<TransportState>.broadcast();
+      StreamController<TransportState>.broadcast(sync: false);
 
   StreamSubscription<String>? _activeSubscription;
   Timer? _heartbeatTimer;
@@ -106,10 +106,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _stepUpProbeTimer = null;
 
     if (_payloadController.isClosed) {
-      _payloadController = StreamController<String>.broadcast();
+      _payloadController = StreamController<String>.broadcast(sync: false);
     }
     if (_stateController.isClosed) {
-      _stateController = StreamController<TransportState>.broadcast();
+      _stateController = StreamController<TransportState>.broadcast(sync: false);
     }
 
     await _activeSubscription?.cancel();
