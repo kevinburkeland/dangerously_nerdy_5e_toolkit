@@ -1392,7 +1392,9 @@ class _SwitchActiveCharacterDialogState extends State<SwitchActiveCharacterDialo
         children: [
           Icon(Icons.badge, color: Colors.blueAccent),
           SizedBox(width: 10),
-          Text('Select Active Character', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Expanded(
+            child: Text('Select Active Character', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ),
         ],
       ),
       content: SingleChildScrollView(

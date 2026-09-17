@@ -395,5 +395,56 @@ void main() {
       expect(find.text('Legolas'), findsOneWidget);
       expect(find.text('24'), findsOneWidget);
     });
+
+    testWidgets('Active character banner renders horizontally without squishing on mobile view (360x640)', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      const roomCode = 'ROOM-MOBILE01';
+      final membership = CampaignMembership(
+        roomCode: roomCode,
+        campaignName: 'Mobile Expedition',
+        role: CampaignRole.player,
+        characterId: 'Elven Ranger',
+        lastPlayed: DateTime.now(),
+      );
+      await registry.saveMembership(membership);
+
+      await tester.pumpWidget(createWidgetUnderTest(
+        roomCode,
+        partyService,
+        registry,
+        initialPlayerName: 'Elven Ranger',
+      ));
+      await tester.pumpAndSettle();
+
+      // Verify the title text exists
+      final titleFinder = find.text('ACTIVE CHARACTER / SESSION IDENTITY');
+      expect(titleFinder, findsOneWidget);
+
+      // Verify width of title: it should have ample width (>200px) and not be squished into a narrow column
+      final titleSize = tester.getSize(titleFinder);
+      expect(titleSize.width, greaterThan(200));
+
+      // Verify player name is rendered
+      expect(find.text('Elven Ranger'), findsWidgets);
+
+      // Verify action buttons wrap below and are visible and clickable
+      expect(find.text('Link'), findsOneWidget);
+      expect(find.text('Switch'), findsOneWidget);
+      expect(find.text('Sheet'), findsOneWidget);
+      expect(find.text('Claim DM'), findsOneWidget);
+      expect(find.text('Roster'), findsOneWidget);
+
+      // Tap Switch to ensure actions remain interactive on mobile
+      await tester.tap(find.text('Switch'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select Active Character'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+    });
   });
 }
+

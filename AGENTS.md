@@ -162,6 +162,7 @@ dangerously_nerdy_5e_toolkit/
 - **Semantics:** Wrap icons and action triggers in `Semantics` widgets with expanded abbreviation labels (e.g., "STR" -> "Strength", "AC" -> "Armor Class").
 - **Dynamic Type Scaling:** All UI must render cleanly without `RenderFlex` overflow errors up to `TextScaler.linear(2.0)`.
 - **Reduced Motion:** Wrap intensive animations in `if (!MediaQuery.disableAnimationsOf(context))` checks.
+- **Party Room Mobile Responsive Layout:** `_buildActiveCharacterBanner` employs `LayoutBuilder` so the session identity header (`CircleAvatar`, `Expanded(Column('ACTIVE CHARACTER / SESSION IDENTITY', playerName, LinkedBadge))`) spans full width on compact screens (`maxWidth < 620`), while action buttons wrap beneath in a dedicated `Wrap(spacing: 6, runSpacing: 4)`. Dialog titles and card headers wrap text in `Expanded`/`Flexible` widgets with explicit spacing, and compact screen AppBars consolidate secondary icon buttons into popup menus to eliminate `RenderFlex` overflows on mobile screens.
 
 ### 7. Legal & SRD Compliance
 - **Zero Product Identity:** Prohibited terms: Beholder, Mind Flayer, Illithid, Displacer Beast, Strahd, Hexblade, etc. Use generic SRD equivalents only (CC-BY-4.0).
