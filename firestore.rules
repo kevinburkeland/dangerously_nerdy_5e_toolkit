@@ -11,7 +11,7 @@ service cloud.firestore {
 
     function isValidCoinMap(data) {
       return data is map
-        && data.keys().hasOnly(['pp', 'gp', 'ep', 'sp', 'cp'])
+        && data.keys().hasOnly(['pp', 'gp', 'ep', 'sp', 'cp', 'cpCounter', 'spCounter', 'epCounter', 'gpCounter', 'ppCounter'])
         && (!('pp' in data) || (data.pp is int && data.pp >= 0 && data.pp <= 10000000))
         && (!('gp' in data) || (data.gp is int && data.gp >= 0 && data.gp <= 10000000))
         && (!('ep' in data) || (data.ep is int && data.ep >= 0 && data.ep <= 10000000))

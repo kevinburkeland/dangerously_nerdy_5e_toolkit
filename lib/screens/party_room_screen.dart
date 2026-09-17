@@ -133,6 +133,13 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   }
 
   Future<void> _initSyncServices() async {
+    // Whenever someone opens or connects to the room, rehydrate and reset 30-day lease
+    unawaited(_partyService.ensureRoomExists(
+      roomCode: _roomCode,
+      campaignName: _currentMembership?.campaignName,
+      hostKey: _currentMembership?.hostKey,
+    ));
+
     if (widget.orchestrator != null) {
       _orchestrator = widget.orchestrator;
       _router = widget.router;

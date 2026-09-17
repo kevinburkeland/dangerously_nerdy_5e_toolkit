@@ -74,6 +74,20 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
     _lastQueryThreshold = queryThreshold;
 
     if (isFirebaseAvailable) {
+      // Rehydrate room stub and reset the 30-day lease on Firestore
+      try {
+        final now = DateTime.now();
+        final expiresAt = now.add(const Duration(days: 30));
+        await _effectiveFirestore.collection('rooms').doc(_roomCode).set({
+          'roomCode': _roomCode,
+          'code': _roomCode,
+          'campaignName': 'Campaign $_roomCode',
+          'isStateless': true,
+          'lastUpdated': now.toIso8601String(),
+          'expiresAt': expiresAt.toIso8601String(),
+        }, SetOptions(merge: true));
+      } catch (_) {}
+
       final collection = _effectiveFirestore
           .collection('rooms')
           .doc(_roomCode)

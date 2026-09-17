@@ -156,5 +156,9 @@ Located at `lib/infrastructure/adapters/p2p/webrtc_mesh_adapter.dart`:
 - **Preserving Signaling During Early ICE Transitions:** `onIceConnectionState` transitions to `RTCIceConnectionState.RTCIceConnectionStateConnected` must not immediately purge peer signaling documents. Transient connection states can occur before the underlying `RTCDataChannel` is confirmed open.
 - **Readiness Gate:** Signaling cleanup (`_signalingAdapter.cleanUpPeerSignaling(peerId)`) is only triggered once `_dataChannels[peerId]?.state == RTCDataChannelState.RTCDataChannelOpen` or when the ICE connection state reaches `RTCIceConnectionState.RTCIceConnectionStateCompleted`, preventing premature teardown of in-flight handshake exchanges.
 
-
-
+## 18. Stateless Room Stub Rehydration & 30-Day Lease Auto-Renewal
+Located at `lib/services/party/party_room_service.dart`, `lib/infrastructure/adapters/p2p/firebase_signaling_adapter.dart`, and `lib/infrastructure/adapters/p2p/firebase_fallback_adapter.dart`:
+- **Stateless Room Presence Discovery:** In pure P2P mesh and stateless architectures, signaling documents exist in subcollections (`rooms/{roomCode}/nodes` and `rooms/{roomCode}/relay_messages`) without requiring a pre-existing root document. `PartyRoomService.joinCampaign()` checks subcollection presence when `/rooms/{roomCode}` is absent, allowing incoming peers to connect cleanly rather than throwing false `CampaignNotFoundException` errors.
+- **30-Day Lease Auto-Renewal on Connect:** Whenever any participant connects (host room initialization, player join, or `PartyRoomScreen` mount), `PartyRoomService.ensureRoomExists`, `FirebaseSignalingAdapter.initialize`, and `FirebaseFallbackAdapter.initializeRoom` rehydrate/touch `/rooms/{roomCode}` with `isStateless: true` and reset the 30-day lease (`expiresAt: now + 30 days`, `lastUpdated: now`) via `SetOptions(merge: true)`.
+- **Anti-Ghost Record Defense:** Rooms with no root document, no active signaling nodes, no relay messages, and no local DM credentials are confirmed non-existent and throw `CampaignNotFoundException`, ensuring invalid room codes never generate phantom database stubs.
+- **Security Rules Parity:** `firestore.rules` allows `partyPurse` PN-counter map structures (`cpCounter`, etc.) and stateless lease renewals without permission failures.

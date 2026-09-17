@@ -117,6 +117,20 @@ class FirebaseSignalingAdapter {
       _subscriptions.add(localMailbox.snapshots().listen(handleSnapshot, onError: (_) {}));
       _subscriptions.add(broadcastMailbox.snapshots().listen(handleSnapshot, onError: (_) {}));
 
+      // Rehydrate room stub and reset the 30-day lease on Firestore
+      try {
+        final now = DateTime.now();
+        final expiresAt = now.add(const Duration(days: 30));
+        await _effectiveFirestore.collection('rooms').doc(_roomCode).set({
+          'roomCode': _roomCode,
+          'code': _roomCode,
+          'campaignName': 'Campaign $_roomCode',
+          'isStateless': true,
+          'lastUpdated': now.toIso8601String(),
+          'expiresAt': expiresAt.toIso8601String(),
+        }, SetOptions(merge: true));
+      } catch (_) {}
+
       // Broadcast join presence for late-joiner detection
       try {
         await broadcastJoin();

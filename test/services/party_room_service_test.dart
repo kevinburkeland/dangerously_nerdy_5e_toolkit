@@ -88,6 +88,49 @@ void main() {
       expect(registry.getMembership('ROOM-NONEXISTENT'), isNull);
     });
 
+    test('ensureRoomExists creates or rehydrates room stub and resets 30-day lease', () async {
+      final stub = await partyService.ensureRoomExists(
+        roomCode: 'ROOM-STUB01',
+        campaignName: 'Stateless Adventure',
+      );
+
+      expect(stub.roomCode, equals('ROOM-STUB01'));
+      expect(stub.campaignName, equals('Stateless Adventure'));
+      expect(stub.expiresAt.isAfter(DateTime.now().add(const Duration(days: 28))), isTrue);
+
+      final cached = partyService.getCachedSession('ROOM-STUB01');
+      expect(cached, isNotNull);
+      expect(cached!.campaignName, equals('Stateless Adventure'));
+
+      // Re-calling ensureRoomExists refreshes the lease
+      final refreshed = await partyService.ensureRoomExists(
+        roomCode: 'ROOM-STUB01',
+        campaignName: 'Stateless Adventure Updated',
+      );
+      expect(refreshed.campaignName, equals('Stateless Adventure Updated'));
+      expect(refreshed.expiresAt.isAfter(stub.expiresAt.subtract(const Duration(seconds: 1))), isTrue);
+    });
+
+    test('joinCampaign resets 30-day lease upon player connection', () async {
+      final created = await partyService.createCampaign(
+        campaignName: 'Lease Test Campaign',
+        playerName: 'DM',
+      );
+
+      await partyService.ensureRoomExists(
+        roomCode: created.roomCode,
+        campaignName: created.campaignName,
+      );
+
+      final joined = await partyService.joinCampaign(
+        roomCode: created.roomCode,
+        playerName: 'Adventurer',
+      );
+
+      // Joining should have reset the lease to 30 days
+      expect(joined.expiresAt.isAfter(DateTime.now().add(const Duration(days: 28))), isTrue);
+    });
+
     test('Automatic Rehydration of dormant campaign when valid hostKey exists locally', () async {
       const dormantCode = 'ROOM-DORMANT1';
       const hostKey = 'sample-host-uuid-1234';

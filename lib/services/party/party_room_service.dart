@@ -304,6 +304,61 @@ class PartyRoomService {
       }
     }
 
+    // Stateless presence check: If root document doesn't exist, check active signaling or relay presence
+    if (cloudSession == null && isFirebaseAvailable) {
+      for (final code in codeCandidates) {
+        try {
+          final signals = await FirebaseFirestore.instance
+              .collection('rooms')
+              .doc(code)
+              .collection('nodes')
+              .doc('*')
+              .collection('signals')
+              .limit(1)
+              .get();
+          if (signals.docs.isNotEmpty) {
+            matchedCode = code;
+            cloudSession = PartySessionState(
+              roomCode: matchedCode,
+              campaignName: 'Party Campaign ($matchedCode)',
+              hostKeyHash: '',
+              partyPurse: const PartyPurse(),
+              activePlayers: const [],
+              lastUpdated: DateTime.now(),
+              expiresAt: DateTime.now().add(defaultLootExpiration),
+            );
+            break;
+          }
+
+          final relays = await FirebaseFirestore.instance
+              .collection('rooms')
+              .doc(code)
+              .collection('relay_messages')
+              .limit(1)
+              .get();
+          if (relays.docs.isNotEmpty) {
+            matchedCode = code;
+            cloudSession = PartySessionState(
+              roomCode: matchedCode,
+              campaignName: 'Party Campaign ($matchedCode)',
+              hostKeyHash: '',
+              partyPurse: const PartyPurse(),
+              activePlayers: const [],
+              lastUpdated: DateTime.now(),
+              expiresAt: DateTime.now().add(defaultLootExpiration),
+            );
+            break;
+          }
+        } catch (e, st) {
+          LoggingService().logNonFatal(
+            e,
+            st,
+            reason: 'Stateless presence check failed for room $code',
+          );
+        }
+      }
+    }
+
     // Case 1: Room exists in Cloud / In-Memory
     if (cloudSession != null) {
       final existingMembership = _registry.getMembership(matchedCode);
@@ -376,13 +431,17 @@ class PartyRoomService {
         } catch (_) {}
       }
 
+      final now = DateTime.now();
+      final expiresAt = now.add(defaultLootExpiration);
+
       updatedSession = updatedSession.copyWith(
         activePlayers: updatedPlayers,
         characterRoster: updatedRoster,
         sharedCharacters: updatedShared,
         partyTelemetry: updatedTelemetry,
         version: updatedSession.version + 1,
-        lastUpdated: DateTime.now(),
+        lastUpdated: now,
+        expiresAt: expiresAt,
       );
 
       _localRooms[matchedCode] = updatedSession;
@@ -391,7 +450,11 @@ class PartyRoomService {
           await FirebaseFirestore.instance
               .collection('rooms')
               .doc(matchedCode)
-              .set(updatedSession.toMap(), SetOptions(merge: true));
+              .set({
+                ...updatedSession.toMap(),
+                'lastUpdated': now.toIso8601String(),
+                'expiresAt': expiresAt.toIso8601String(),
+              }, SetOptions(merge: true));
         } catch (e) {
           // Non-critical player union error
         }
@@ -429,6 +492,67 @@ class PartyRoomService {
 
     // Case 3: Does NOT exist anywhere -> Reject without creating documents
     throw CampaignNotFoundException('Campaign not found. Please check code with your DM.');
+  }
+
+  /// Ensures the room stub exists in Firestore and local cache, renewing the 30-day lease whenever called.
+  Future<PartySessionState> ensureRoomExists({
+    required String roomCode,
+    String? campaignName,
+    String? hostKey,
+    bool isStateless = true,
+  }) async {
+    final cleanCode = roomCode.trim().toUpperCase().replaceAll(' ', '');
+    final now = DateTime.now();
+    final expiresAt = now.add(defaultLootExpiration);
+
+    final existing = _localRooms[cleanCode];
+    final cName = campaignName ?? existing?.campaignName ?? 'Shared Campaign ($cleanCode)';
+    final hostKeyHash = hostKey != null && hostKey.isNotEmpty
+        ? CryptoUtils.sha256Hex(CryptoUtils.extractHostKey(hostKey))
+        : (existing?.hostKeyHash ?? '');
+
+    final session = existing?.copyWith(
+          campaignName: cName,
+          hostKeyHash: hostKeyHash.isNotEmpty ? hostKeyHash : (existing.hostKeyHash),
+          lastUpdated: now,
+          expiresAt: expiresAt,
+        ) ??
+        PartySessionState(
+          roomCode: cleanCode,
+          campaignName: cName,
+          hostKeyHash: hostKeyHash,
+          partyPurse: const PartyPurse(),
+          activePlayers: const [],
+          version: 1,
+          lastUpdated: now,
+          expiresAt: expiresAt,
+        );
+
+    _localRooms[cleanCode] = session;
+    _emitSession(cleanCode);
+
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(cleanCode);
+        await docRef.set({
+          'roomCode': cleanCode,
+          'code': cleanCode,
+          'campaignName': cName,
+          'isStateless': isStateless,
+          'hostKeyHash': hostKeyHash,
+          'lastUpdated': now.toIso8601String(),
+          'expiresAt': expiresAt.toIso8601String(),
+        }, SetOptions(merge: true));
+      } catch (e, st) {
+        LoggingService().logNonFatal(
+          e,
+          st,
+          reason: 'Failed to touch room stub in ensureRoomExists for $cleanCode',
+        );
+      }
+    }
+
+    return session;
   }
 
   /// Links a player's saved character to a campaign room.

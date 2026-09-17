@@ -135,7 +135,11 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
 * **Storage Atomicity & Lifecycle Flush Shield**:
   - Writes campaign profile data and index keys atomically via `AppDatabaseService.putAll` to eliminate index desynchronization on crash or process kill.
   - Wires `AppLifecycleListener` for awaited asynchronous storage flushes across `onPause`, `onHide`, `onDetach`, and `onExitRequested` with non-fatal error isolation.
+* **Stateless Room Stub Rehydration & 30-Day Lease Auto-Renewal**:
+  - Automatically queries active signaling presence (`rooms/{roomCode}/nodes` and `rooms/{roomCode}/relay_messages`) when incoming players join a room whose root document is missing, preventing false `"Campaign not found"` errors in pure stateless P2P mesh topologies.
+  - Whenever anyone connects (host room init, player join, or screen mount), the room stub is touched/rehydrated with `isStateless: true` and resets the 30-day lease (`expiresAt: now + 30 days`, `lastUpdated: now`) via atomic merge writes, while cleanly rejecting non-existent rooms without creating ghost records.
 * **Append-Only Audit Stream**: Live event log capturing coin deposits, withdrawals, loot additions, claims, attunements, and restorations.
+
 
 ---
 
