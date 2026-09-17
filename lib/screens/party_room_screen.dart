@@ -140,6 +140,9 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
       hostKey: _currentMembership?.hostKey,
     ));
 
+    // Flush any pending outbox actions immediately upon entering the room
+    unawaited(_partyService.flushOutbox(_roomCode));
+
     if (widget.orchestrator != null) {
       _orchestrator = widget.orchestrator;
       _router = widget.router;
@@ -401,6 +404,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                             label: Text('Syncing ($count)', style: const TextStyle(fontSize: 11)),
+                            tooltip: 'Syncing $count pending update(s) to cloud. Tap to force sync now.',
                             onPressed: () => _partyService.flushOutbox(_roomCode),
                           ),
                         );

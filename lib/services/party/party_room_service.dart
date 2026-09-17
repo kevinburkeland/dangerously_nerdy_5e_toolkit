@@ -166,6 +166,7 @@ class PartyRoomService {
   // Offline Outbox Queue (roomCode -> list of actions)
   final Map<String, List<PartyOutboxAction>> _outbox = {};
   final ValueNotifier<int> pendingOutboxCount = ValueNotifier<int>(0);
+  Timer? _autoFlushTimer;
 
   // =========================================================================
   // 1. EXPLICIT CREATE VS JOIN WORKFLOWS
@@ -300,6 +301,22 @@ class PartyRoomService {
             stackTrace,
             reason: 'Firestore check failed for room $code; fallback to local check',
           );
+        }
+      }
+
+      // If not found on immediate check, brief retry with propagation delay
+      if (cloudSession == null) {
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        for (final code in codeCandidates) {
+          try {
+            final docRef = FirebaseFirestore.instance.collection('rooms').doc(code);
+            final snapshot = await docRef.get();
+            if (snapshot.exists && snapshot.data() != null) {
+              cloudSession = PartySessionState.fromMap(snapshot.data()!);
+              matchedCode = code;
+              break;
+            }
+          } catch (_) {}
         }
       }
     }
@@ -2682,6 +2699,16 @@ class PartyRoomService {
     final list = _outbox.putIfAbsent(action.roomCode, () => []);
     list.add(action);
     _updateOutboxCount();
+    _scheduleAutoFlush(action.roomCode);
+  }
+
+  void _scheduleAutoFlush(String roomCode) {
+    _autoFlushTimer?.cancel();
+    _autoFlushTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (isFirebaseAvailable) {
+        flushOutbox(roomCode);
+      }
+    });
   }
 
   void _updateOutboxCount() {
@@ -2758,6 +2785,9 @@ class PartyRoomService {
       // Purge actions that failed repeatedly (max 3 retries) to unwedge the UI
       pending.removeWhere((a) => a.retryCount >= 3);
       _updateOutboxCount();
+      if (pending.isNotEmpty) {
+        _scheduleAutoFlush(clean);
+      }
     }
   }
 
@@ -2766,6 +2796,7 @@ class PartyRoomService {
     final clean = roomCode.trim().toUpperCase();
     _outbox.remove(clean);
     _updateOutboxCount();
+    _autoFlushTimer?.cancel();
   }
 
   // =========================================================================

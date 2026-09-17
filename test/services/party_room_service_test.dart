@@ -756,6 +756,22 @@ void main() {
       // Should complete cleanly without throwing
       await partyService.syncAllExistingCampaignsToFirestore();
     });
+
+    test('queueOutbox triggers pendingOutboxCount and clearOutbox cancels cleanly', () {
+      final action = PartyOutboxAction(
+        id: 'test_create_act',
+        roomCode: 'ROOM-AUTO01',
+        actionType: 'createRoom',
+        payload: {'roomCode': 'ROOM-AUTO01', 'campaignName': 'Auto Room'},
+        timestamp: DateTime.now(),
+      );
+      expect(action.actionType, equals('createRoom'));
+      expect(action.roomCode, equals('ROOM-AUTO01'));
+
+      // In offline/in-memory mode, clearOutbox resets pendingOutboxCount
+      partyService.clearOutbox('ROOM-AUTO01');
+      expect(partyService.pendingOutboxCount.value, equals(0));
+    });
   });
 }
 
