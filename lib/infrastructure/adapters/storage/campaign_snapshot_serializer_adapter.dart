@@ -34,9 +34,3 @@ class CampaignSnapshotSerializerAdapter implements ICampaignSnapshotSerializerPo
     return inboundDto.toDomain();
   }
 }
-
-// Ensure default provider is registered when adapter library is loaded
-final bool _defaultSerializerRegistered = () {
-  CampaignSnapshotSerializerAdapter.registerDefault();
-  return true;
-}();

@@ -8,7 +8,6 @@ import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_character_repository.dart';
 import '../../domain/ports/i_network_time_port.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
-import '../../domain/ports/i_room_sync_payload_port.dart';
 import '../../domain/storage/ports/i_campaign_snapshot_serializer_port.dart';
 import '../../domain/storage/ports/i_physical_snapshot_port.dart';
 import '../../domain/storage/ports/i_storage_durability_port.dart';
@@ -110,6 +109,7 @@ Future<void> initServiceLocator({
   sl.registerLazySingleton<ICampaignSnapshotSerializerPort>(
     () => const CampaignSnapshotSerializerAdapter(),
   );
+  CampaignSnapshotSerializerAdapter.registerDefault();
 
   sl.registerLazySingleton<StorageDurabilityCoordinator>(
     () => StorageDurabilityCoordinator(

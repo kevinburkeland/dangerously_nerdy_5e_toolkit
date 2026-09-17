@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:meta/meta.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_room_sync_payload_port.dart';
@@ -17,10 +16,12 @@ class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
   const RoomSyncPayloadMapper();
 
   /// Computes a deterministic SHA-256 hash string for payload deduplication.
+  @override
   String computePayloadHash(String jsonPayload) =>
       CryptoUtils.sha256Hex(jsonPayload);
 
   /// Parses a raw incoming JSON string into an [IncomingRoomSyncMessage].
+  @override
   IncomingRoomSyncMessage parsePayload(String jsonPayload) {
     try {
       final decoded = jsonDecode(jsonPayload);
@@ -130,6 +131,7 @@ class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
   }
 
   /// Serializes a full campaign profile sync broadcast into an envelope JSON string.
+  @override
   String serializeFullProfileSync({
     required CampaignProfile profile,
     required String originNodeId,
@@ -159,6 +161,7 @@ class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
   }
 
   /// Serializes a focused purse delta broadcast into an envelope JSON string.
+  @override
   String serializePurseDelta({
     required String campaignId,
     required PartyPurse purse,
@@ -178,6 +181,7 @@ class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
   }
 
   /// Serializes a focused OR-Set delta broadcast into an envelope JSON string.
+  @override
   String serializeOrSetDelta({
     required String campaignId,
     required CrdtOrSet<String> rulesSet,

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/storage/models/engine_profile.dart';
