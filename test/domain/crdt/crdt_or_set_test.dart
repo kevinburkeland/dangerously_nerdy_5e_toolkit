@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/crdt_lww_register.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/crdt_or_set.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/crdt/hybrid_logical_clock.dart';
 
@@ -6,7 +7,7 @@ void main() {
   group('CrdtOrSet Tests', () {
     test('Basic add and activeValues', () {
       const t1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
-      const set0 = CrdtOrSet<String>();
+      const set0 = CrdtOrSet<String>.empty();
       final set1 = set0.add('item-1', 'Goblin 1', t1);
 
       expect(set0.activeValues, isEmpty);
@@ -17,7 +18,7 @@ void main() {
       const t1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
       const t2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
 
-      final set1 = const CrdtOrSet<String>().add('item-1', 'Goblin 1', t1);
+      final set1 = const CrdtOrSet<String>.empty().add('item-1', 'Goblin 1', t1);
       final set2 = set1.remove('item-1', t2);
 
       expect(set2.activeValues, isEmpty);
@@ -29,7 +30,7 @@ void main() {
       const t2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
       const t1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
 
-      final set1 = const CrdtOrSet<String>().add('item-1', 'Goblin 1', t2);
+      final set1 = const CrdtOrSet<String>.empty().add('item-1', 'Goblin 1', t2);
       final set2 = set1.remove('item-1', t1);
 
       expect(set2.activeValues, equals(['Goblin 1']));
@@ -39,8 +40,8 @@ void main() {
     test('OR-Set Resurrection Prevention: Tombstone prevents older item from returning upon merge', () {
       // Client A and B both start with item-1 added at T1
       const t1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeShared');
-      var clientA = const CrdtOrSet<String>().add('minion-1', 'Skeleton Archer', t1);
-      final clientB = const CrdtOrSet<String>().add('minion-1', 'Skeleton Archer', t1);
+      var clientA = const CrdtOrSet<String>.empty().add('minion-1', 'Skeleton Archer', t1);
+      final clientB = const CrdtOrSet<String>.empty().add('minion-1', 'Skeleton Archer', t1);
 
       // Client A goes online and removes minion-1 at T2
       const t2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
@@ -69,7 +70,7 @@ void main() {
       const t2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
       const t3 = HybridLogicalClock(physicalTime: 3000, logicalCounter: 0, nodeId: 'nodeA');
 
-      final set1 = const CrdtOrSet<String>().add('minion-1', 'Zombie', t1);
+      final set1 = const CrdtOrSet<String>.empty().add('minion-1', 'Zombie', t1);
       final set2 = set1.remove('minion-1', t2);
       expect(set2.activeValues, isEmpty);
       expect(set2.tombstones.containsKey('minion-1'), isTrue);
@@ -84,7 +85,7 @@ void main() {
       const t2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
 
       // Set has tombstone at t2
-      const setWithTombstone = CrdtOrSet<String>(tombstones: {'item-1': t2});
+      final setWithTombstone = CrdtOrSet<String>(tombstones: {'item-1': t2});
       // Attempt to add with t1 < t2
       final resultSet = setWithTombstone.add('item-1', 'Old Zombie', t1);
 
@@ -100,7 +101,7 @@ void main() {
 
       const threshold = HybridLogicalClock(physicalTime: 2500, logicalCounter: 0, nodeId: 'nodeA');
 
-      const setWithTombstones = CrdtOrSet<String>(
+      final setWithTombstones = CrdtOrSet<String>(
         tombstones: {
           'tomb-1': oldTs1,
           'tomb-2': oldTs2,
@@ -126,8 +127,8 @@ void main() {
       const tA = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
       const tB = HybridLogicalClock(physicalTime: 1200, logicalCounter: 0, nodeId: 'nodeB');
 
-      final setA = const CrdtOrSet<String>().add('item-A', 'Fighter', tA);
-      final setB = const CrdtOrSet<String>().add('item-B', 'Wizard', tB);
+      final setA = const CrdtOrSet<String>.empty().add('item-A', 'Fighter', tA);
+      final setB = const CrdtOrSet<String>.empty().add('item-B', 'Wizard', tB);
 
       final merged = setA.merge(setB);
       expect(merged.activeValues, containsAll(['Fighter', 'Wizard']));
@@ -139,7 +140,7 @@ void main() {
       const tAddEarlier = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeB');
 
       // Empty set receives a removal for 'ghost-item'
-      const emptySet = CrdtOrSet<String>();
+      const emptySet = CrdtOrSet<String>.empty();
       expect(emptySet.items.containsKey('ghost-item'), isFalse);
 
       final setWithTombstone = emptySet.remove('ghost-item', tRemove);
@@ -157,7 +158,7 @@ void main() {
       const t2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeA');
       const t3 = HybridLogicalClock(physicalTime: 3000, logicalCounter: 0, nodeId: 'nodeA');
 
-      const initial = CrdtOrSet<String>(
+      final initial = CrdtOrSet<String>(
         tombstones: {'deleted-item': t2},
       );
 
@@ -174,6 +175,27 @@ void main() {
       expect(result.activeValues.contains('Ghost'), isFalse);
       expect(result.tombstones.containsKey('deleted-item'), isTrue);
       expect(result.items.length, equals(3));
+    });
+
+    test('CRDT Immutability: items and tombstones are sealed as unmodifiable maps', () {
+      const t1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
+      final set = const CrdtOrSet<String>.empty().add('item-1', 'Paladin', t1);
+
+      // Attempting to mutate items must throw UnsupportedError
+      expect(
+        () => (set.items as dynamic)['item-2'] =
+            const CrdtLwwRegister<String>(value: 'Fighter', timestamp: t1),
+        throwsUnsupportedError,
+      );
+
+      // Attempting to mutate tombstones must throw UnsupportedError
+      final setWithTombstone = set.remove('item-1', t1);
+      expect(() => (setWithTombstone.tombstones as dynamic)['tomb-1'] = t1, throwsUnsupportedError);
+
+      // Passing mutable map to constructor must wrap into unmodifiable map
+      final mutableMap = <String, HybridLogicalClock>{'tomb': t1};
+      final customSet = CrdtOrSet<String>(tombstones: mutableMap);
+      expect(() => (customSet.tombstones as dynamic)['tomb2'] = t1, throwsUnsupportedError);
     });
   });
 }

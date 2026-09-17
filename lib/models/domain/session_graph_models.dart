@@ -243,8 +243,8 @@ class RoomNodeState {
     this.description = '',
     this.entityLinks = const [],
     this.containers = const [],
-    this.activeEncounter = const CrdtOrSet<EncounterParticipant>(),
-    this.activeMinions = const CrdtOrSet<AnimatedObjectInstance>(),
+    this.activeEncounter = const CrdtOrSet<EncounterParticipant>.empty(),
+    this.activeMinions = const CrdtOrSet<AnimatedObjectInstance>.empty(),
     this.customProperties = const {},
   });
 
@@ -260,7 +260,7 @@ class RoomNodeState {
     Map<String, dynamic> customProperties = const {},
   }) {
     final effectiveEncounter = activeEncounter != null
-        ? const CrdtOrSet<EncounterParticipant>().addBatch(activeEncounter.map(
+        ? const CrdtOrSet<EncounterParticipant>.empty().addBatch(activeEncounter.map(
             (e) => (
               id: e.participantId,
               item: e,
@@ -271,10 +271,10 @@ class RoomNodeState {
               ),
             ),
           ))
-        : const CrdtOrSet<EncounterParticipant>();
+        : const CrdtOrSet<EncounterParticipant>.empty();
 
     final effectiveMinions = activeMinions != null
-        ? const CrdtOrSet<AnimatedObjectInstance>().addBatch(activeMinions.map(
+        ? const CrdtOrSet<AnimatedObjectInstance>.empty().addBatch(activeMinions.map(
             (m) => (
               id: m.id,
               item: m,
@@ -285,7 +285,7 @@ class RoomNodeState {
               ),
             ),
           ))
-        : const CrdtOrSet<AnimatedObjectInstance>();
+        : const CrdtOrSet<AnimatedObjectInstance>.empty();
 
     return RoomNodeState(
       roomId: roomId,
@@ -316,7 +316,7 @@ class RoomNodeState {
       resolvedEncounter = activeEncounter;
     } else if (activeEncounter is Iterable<EncounterParticipant>) {
       final now = DateTime.now().millisecondsSinceEpoch;
-      var set = const CrdtOrSet<EncounterParticipant>();
+      var set = const CrdtOrSet<EncounterParticipant>.empty();
       for (final p in activeEncounter) {
         set = set.add(p.participantId, p, HybridLogicalClock(physicalTime: now, logicalCounter: 0, nodeId: 'local'));
       }
@@ -328,7 +328,7 @@ class RoomNodeState {
       resolvedMinions = activeMinions;
     } else if (activeMinions is Iterable<AnimatedObjectInstance>) {
       final now = DateTime.now().millisecondsSinceEpoch;
-      var set = const CrdtOrSet<AnimatedObjectInstance>();
+      var set = const CrdtOrSet<AnimatedObjectInstance>.empty();
       for (final m in activeMinions) {
         set = set.add(m.id, m, HybridLogicalClock(physicalTime: now, logicalCounter: 0, nodeId: 'local'));
       }
@@ -363,7 +363,7 @@ class RoomNodeState {
       };
 
   factory RoomNodeState.fromMap(Map<String, dynamic> map) {
-    CrdtOrSet<AnimatedObjectInstance> minionsSet = const CrdtOrSet<AnimatedObjectInstance>();
+    CrdtOrSet<AnimatedObjectInstance> minionsSet = const CrdtOrSet<AnimatedObjectInstance>.empty();
     if (map['activeMinions_crdt'] is Map) {
       try {
         minionsSet = CrdtOrSetDto.fromMap<AnimatedObjectInstance>(
@@ -391,7 +391,7 @@ class RoomNodeState {
       }
     }
 
-    CrdtOrSet<EncounterParticipant> encounterSet = const CrdtOrSet<EncounterParticipant>();
+    CrdtOrSet<EncounterParticipant> encounterSet = const CrdtOrSet<EncounterParticipant>.empty();
     if (map['activeEncounter_crdt'] is Map) {
       try {
         encounterSet = CrdtOrSetDto.fromMap<EncounterParticipant>(

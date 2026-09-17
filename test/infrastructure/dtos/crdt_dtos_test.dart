@@ -153,7 +153,7 @@ void main() {
       const ts2 = HybridLogicalClock(physicalTime: 1700000002000, logicalCounter: 0, nodeId: 'nodeB');
       const tombstoneTs = HybridLogicalClock(physicalTime: 1700000000500, logicalCounter: 0, nodeId: 'nodeA');
 
-      var originalSet = const CrdtOrSet<AnimatedObjectInstance>();
+      var originalSet = const CrdtOrSet<AnimatedObjectInstance>.empty();
       originalSet = originalSet.add(minion1.id, minion1, ts1);
       originalSet = originalSet.add(minion2.id, minion2, ts2);
       // Simulate tombstone

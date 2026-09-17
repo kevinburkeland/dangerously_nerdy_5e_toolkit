@@ -13,10 +13,15 @@ class CrdtOrSet<T> {
   /// Maps item ID to the HLC timestamp of when it was removed.
   final Map<String, HybridLogicalClock> tombstones;
 
-  const CrdtOrSet({
-    this.items = const {},
-    this.tombstones = const {},
-  });
+  CrdtOrSet({
+    Map<String, CrdtLwwRegister<T>> items = const {},
+    Map<String, HybridLogicalClock> tombstones = const {},
+  })  : items = Map.unmodifiable(items),
+        tombstones = Map.unmodifiable(tombstones);
+
+  const CrdtOrSet.empty()
+      : items = const {},
+        tombstones = const {};
 
   /// Returns the current list of active (non-tombstoned) values.
   List<T> get activeValues => items.values.map((r) => r.value).toList();
@@ -75,7 +80,10 @@ class CrdtOrSet<T> {
       }
     }
 
-    return CrdtOrSet(items: newItems, tombstones: newTombstones);
+    return CrdtOrSet(
+      items: Map.unmodifiable(newItems),
+      tombstones: Map.unmodifiable(newTombstones),
+    );
   }
 
   /// Removes an item with the given [id] at [timestamp], recording a tombstone.
@@ -91,7 +99,10 @@ class CrdtOrSet<T> {
         newItems.remove(id);
       } else {
         // Item was added/revived strictly after this removal timestamp.
-        return CrdtOrSet(items: newItems, tombstones: newTombstones);
+        return CrdtOrSet(
+          items: Map.unmodifiable(newItems),
+          tombstones: Map.unmodifiable(newTombstones),
+        );
       }
     }
 
@@ -100,7 +111,10 @@ class CrdtOrSet<T> {
       newTombstones[id] = timestamp;
     }
 
-    return CrdtOrSet(items: newItems, tombstones: newTombstones);
+    return CrdtOrSet(
+      items: Map.unmodifiable(newItems),
+      tombstones: Map.unmodifiable(newTombstones),
+    );
   }
 
   /// Merges this OR-Set with a [remote] OR-Set deterministically.
@@ -141,7 +155,10 @@ class CrdtOrSet<T> {
       }
     });
 
-    return CrdtOrSet(items: mergedItems, tombstones: mergedTombstones);
+    return CrdtOrSet(
+      items: Map.unmodifiable(mergedItems),
+      tombstones: Map.unmodifiable(mergedTombstones),
+    );
   }
 
   /// Garbage-collects tombstones with timestamps older than [threshold] HLC.
@@ -149,7 +166,10 @@ class CrdtOrSet<T> {
     final prunedTombstones = Map<String, HybridLogicalClock>.from(tombstones)
       ..removeWhere((_, ts) => ts.isBefore(threshold));
 
-    return CrdtOrSet(items: items, tombstones: prunedTombstones);
+    return CrdtOrSet(
+      items: Map.unmodifiable(items),
+      tombstones: Map.unmodifiable(prunedTombstones),
+    );
   }
 
   /// Alias for [pruneTombstones] conforming to DATA_SAFETY_AND_CRDT.md directives.

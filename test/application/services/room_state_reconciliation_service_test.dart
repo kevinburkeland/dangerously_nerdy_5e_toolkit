@@ -48,9 +48,9 @@ void main() {
         nodeId: 'nodeLeader',
       );
 
-      const targetSet = CrdtOrSet<String>(
+      final targetSet = CrdtOrSet<String>(
         tombstones: {
-          'item-1': HybridLogicalClock(physicalTime: 50000, logicalCounter: 0, nodeId: 'nodeA'),
+          'item-1': const HybridLogicalClock(physicalTime: 50000, logicalCounter: 0, nodeId: 'nodeA'),
         },
       );
 
@@ -73,7 +73,7 @@ void main() {
         nodeId: 'nodeLeader',
       );
 
-      const setWithTombstones = CrdtOrSet<String>(
+      final setWithTombstones = CrdtOrSet<String>(
         tombstones: {
           'tomb-1': pastTs1,
           'tomb-2': pastTs2,
@@ -94,7 +94,7 @@ void main() {
       const pastTs2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeB');
       const recentTs = HybridLogicalClock(physicalTime: 5000, logicalCounter: 0, nodeId: 'nodeC');
 
-      const setWithTombstones = CrdtOrSet<String>(
+      final setWithTombstones = CrdtOrSet<String>(
         tombstones: {
           'old-tomb-1': pastTs1,
           'old-tomb-2': pastTs2,
@@ -121,7 +121,7 @@ void main() {
       );
 
       const pastTs = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
-      const setWithTombstones = CrdtOrSet<String>(
+      final setWithTombstones = CrdtOrSet<String>(
         tombstones: {'tomb-1': pastTs},
       );
 
@@ -213,11 +213,11 @@ void main() {
       );
 
       // Both host and client initially had minion1, minion2, and encounterParticipant
-      final initialMinions = const CrdtOrSet<AnimatedObjectInstance>()
+      final initialMinions = const CrdtOrSet<AnimatedObjectInstance>.empty()
           .add(minion1.id, minion1, tsInitial)
           .add(minion2.id, minion2, tsInitial);
 
-      final initialEncounter = const CrdtOrSet<EncounterParticipant>()
+      final initialEncounter = const CrdtOrSet<EncounterParticipant>.empty()
           .add(encounterParticipant.participantId, encounterParticipant, tsInitial);
 
       // Client A enters network partition, dismisses/kills minion1 and defeats encounterParticipant (producing tombstones)

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:typed_data';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
@@ -97,7 +98,7 @@ class StorageDurabilityCoordinator {
     }
 
     final dto = CampaignProfileDto.fromDomain(profile);
-    final jsonStr = jsonEncode(dto.toJson());
+    final jsonStr = await Isolate.run(() => jsonEncode(dto.toJson()));
     final payloadBytes = Uint8List.fromList(utf8.encode(jsonStr));
 
     final bundle = StorageSnapshotBundle.create(
@@ -127,7 +128,7 @@ class StorageDurabilityCoordinator {
 
     // 2. Deserialize inbound campaign state
     final jsonStr = utf8.decode(bundle.payloadBytes);
-    final decoded = jsonDecode(jsonStr);
+    final decoded = await Isolate.run(() => jsonDecode(jsonStr));
     if (decoded is! Map<String, dynamic>) {
       return false;
     }

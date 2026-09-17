@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'package:meta/meta.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
@@ -24,7 +25,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
   final String Function(String payload) payloadHasher;
 
   static const int maxProcessedPayloadHashes = 500;
-  final Set<String> _processedPayloadHashes = <String>{};
+  final LinkedHashMap<String, bool> _processedPayloadHashes = LinkedHashMap<String, bool>();
 
   TransportState _currentState = TransportState.connecting;
   IP2pTransportPort? _activeAdapter;
@@ -87,7 +88,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
   /// Tracked payload hashes for deduplication (exposed for testing).
   @visibleForTesting
   Set<String> get processedPayloadHashes =>
-      Set.unmodifiable(_processedPayloadHashes);
+      Set.unmodifiable(_processedPayloadHashes.keys);
 
   @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
@@ -178,14 +179,14 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
   void _handleIncomingPayload(String payload) {
     final payloadHash = payloadHasher(payload);
-    if (_processedPayloadHashes.contains(payloadHash)) {
+    if (_processedPayloadHashes.containsKey(payloadHash)) {
       _processedPayloadHashes.remove(payloadHash);
-      _processedPayloadHashes.add(payloadHash);
+      _processedPayloadHashes[payloadHash] = true;
       return;
     }
-    _processedPayloadHashes.add(payloadHash);
+    _processedPayloadHashes[payloadHash] = true;
     if (_processedPayloadHashes.length > maxProcessedPayloadHashes) {
-      _processedPayloadHashes.remove(_processedPayloadHashes.first);
+      _processedPayloadHashes.remove(_processedPayloadHashes.keys.first);
     }
 
     try {

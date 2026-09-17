@@ -149,15 +149,15 @@ void main() {
         const t2 = HybridLogicalClock(physicalTime: 1050, logicalCounter: 0, nodeId: 'node-2');
         const t3 = HybridLogicalClock(physicalTime: 1100, logicalCounter: 0, nodeId: 'node-3');
 
-        final setA = const CrdtOrSet<String>()
+        final setA = const CrdtOrSet<String>.empty()
             .add('item-1', 'Longsword', t1)
             .add('item-2', 'Shield', t2);
 
-        final setB = const CrdtOrSet<String>()
+        final setB = const CrdtOrSet<String>.empty()
             .add('item-2', 'Shield +1', t3)
             .add('item-3', 'Potion of Healing', t1);
 
-        final setC = const CrdtOrSet<String>()
+        final setC = const CrdtOrSet<String>.empty()
             .remove('item-1', t3)
             .add('item-4', 'Ring of Protection', t2);
 
@@ -185,7 +185,7 @@ void main() {
         const tDel = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'node-B');
 
         // Node 1 receives deletion first (e.g. from Node B)
-        final node1 = const CrdtOrSet<String>()
+        final node1 = const CrdtOrSet<String>.empty()
             .add('goblin-1', 'Goblin Scout', tAdd)
             .remove('goblin-1', tDel);
 
@@ -193,7 +193,7 @@ void main() {
         expect(node1.tombstones.containsKey('goblin-1'), isTrue);
 
         // Node 2 has the stale addition only
-        final node2 = const CrdtOrSet<String>().add('goblin-1', 'Goblin Scout', tAdd);
+        final node2 = const CrdtOrSet<String>.empty().add('goblin-1', 'Goblin Scout', tAdd);
         expect(node2.activeValues, equals(['Goblin Scout']));
 
         // Merge stale node2 into node1: tombstone at tDel must suppress addition at tAdd
@@ -218,7 +218,7 @@ void main() {
         const tDel = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'node-B');
         const tRevive = HybridLogicalClock(physicalTime: 3000, logicalCounter: 0, nodeId: 'node-C');
 
-        final set = const CrdtOrSet<String>()
+        final set = const CrdtOrSet<String>.empty()
             .add('skeleton-1', 'Skeleton', tAdd)
             .remove('skeleton-1', tDel);
 
@@ -250,16 +250,16 @@ void main() {
         // Op6: Remove 'spell-2' (t6)
 
         final deltas = <CrdtOrSet<String>>[
-          const CrdtOrSet<String>().add('spell-1', 'Fireball', t1),
-          const CrdtOrSet<String>().add('spell-2', 'Mage Armor', t2),
-          const CrdtOrSet<String>().add('spell-1', 'Fireball', t1).remove('spell-1', t3),
-          const CrdtOrSet<String>().add('spell-1', 'Delayed Blast Fireball', t4),
-          const CrdtOrSet<String>().add('spell-3', 'Counterspell', t5),
-          const CrdtOrSet<String>().add('spell-2', 'Mage Armor', t2).remove('spell-2', t6),
+          const CrdtOrSet<String>.empty().add('spell-1', 'Fireball', t1),
+          const CrdtOrSet<String>.empty().add('spell-2', 'Mage Armor', t2),
+          const CrdtOrSet<String>.empty().add('spell-1', 'Fireball', t1).remove('spell-1', t3),
+          const CrdtOrSet<String>.empty().add('spell-1', 'Delayed Blast Fireball', t4),
+          const CrdtOrSet<String>.empty().add('spell-3', 'Counterspell', t5),
+          const CrdtOrSet<String>.empty().add('spell-2', 'Mage Armor', t2).remove('spell-2', t6),
         ];
 
         // Compute canonical merged state
-        var canonical = const CrdtOrSet<String>();
+        var canonical = const CrdtOrSet<String>.empty();
         for (final delta in deltas) {
           canonical = canonical.merge(delta);
         }
@@ -277,7 +277,7 @@ void main() {
         ];
 
         for (var i = 0; i < permutations.length; i++) {
-          var state = const CrdtOrSet<String>();
+          var state = const CrdtOrSet<String>.empty();
           for (final delta in permutations[i]) {
             state = state.merge(delta);
           }
@@ -298,7 +298,7 @@ void main() {
         final inboundStreamController = StreamController<CrdtOrSet<String>>.broadcast();
         final localOutboundController = StreamController<CrdtOrSet<String>>.broadcast();
 
-        var currentState = const CrdtOrSet<String>();
+        var currentState = const CrdtOrSet<String>.empty();
         final processedDeltas = <CrdtOrSet<String>>[];
 
         // Inbound subscription handles network payloads under Mutex protection
@@ -340,7 +340,7 @@ void main() {
               logicalCounter: 0,
               nodeId: nodeRemote,
             );
-            final remoteDelta = const CrdtOrSet<String>().add(
+            final remoteDelta = const CrdtOrSet<String>.empty().add(
               'remote-$step',
               'Remote Item $step',
               remoteHlc,

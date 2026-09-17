@@ -26,7 +26,7 @@ class HomebrewImportTelemetry {
     this.errors = const [],
     this.currentFileName,
     this.isCompleted = false,
-    this.crdtLedger = const CrdtOrSet<HomebrewEntity>(),
+    this.crdtLedger = const CrdtOrSet<HomebrewEntity>.empty(),
   });
 
   HomebrewImportTelemetry copyWith({
@@ -76,7 +76,7 @@ class HomebrewImportOrchestrator {
   final EntityBatchPersister? _batchPersister;
   final int _batchSize;
 
-  CrdtOrSet<HomebrewEntity> _ledger = const CrdtOrSet<HomebrewEntity>();
+  CrdtOrSet<HomebrewEntity> _ledger = const CrdtOrSet<HomebrewEntity>.empty();
   HybridLogicalClock _hlc;
 
   HomebrewImportOrchestrator({
@@ -107,7 +107,7 @@ class HomebrewImportOrchestrator {
         _persister = persister,
         _batchPersister = batchPersister,
         _batchSize = batchSize,
-        _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>(),
+        _ledger = initialLedger ?? const CrdtOrSet<HomebrewEntity>.empty(),
         _hlc = HybridLogicalClock.now(nodeId);
 
   /// Node identifier used for stamping CRDT clock ticks.

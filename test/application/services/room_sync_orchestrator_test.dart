@@ -301,10 +301,10 @@ void main() {
       const ts1 = HybridLogicalClock(physicalTime: 1000, logicalCounter: 0, nodeId: 'nodeA');
       const ts2 = HybridLogicalClock(physicalTime: 2000, logicalCounter: 0, nodeId: 'nodeB');
 
-      orchestrator.trackedRulesSet = const CrdtOrSet<String>().add('grapple', 'grapple', ts1);
+      orchestrator.trackedRulesSet = const CrdtOrSet<String>.empty().add('grapple', 'grapple', ts1);
 
       // Inbound remote delta has 'cover' (newer) and a tombstone for 'grapple' (newer ts2)
-      final remoteSet = const CrdtOrSet<String>()
+      final remoteSet = const CrdtOrSet<String>.empty()
           .add('cover', 'cover', ts2)
           .add('grapple', 'grapple', ts1)
           .remove('grapple', ts2);
@@ -354,7 +354,7 @@ void main() {
         nodeId: 'node-remote',
       );
 
-      hostOrchestrator.trackedRulesSet = const CrdtOrSet<String>(
+      hostOrchestrator.trackedRulesSet = CrdtOrSet<String>(
         items: {},
         tombstones: {
           'old_rule': oldTombstoneTs,

@@ -127,7 +127,7 @@ class CampaignProfile {
         description: 'Active DM session staging node.',
         entityLinks: const [],
         containers: const [],
-        activeEncounter: const CrdtOrSet<EncounterParticipant>(),
+        activeEncounter: const CrdtOrSet<EncounterParticipant>.empty(),
       ),
       partyCharacterIds: const [],
       pinnedRuleIds: const {
