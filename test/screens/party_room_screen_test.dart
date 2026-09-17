@@ -296,7 +296,9 @@ void main() {
       final orchestrator = RoomSyncOrchestrator(
         transportPort: transport,
         campaignRepo: LocalCampaignRepository(),
-        reconciliationService: RoomStateReconciliationService(),
+        reconciliationService: RoomStateReconciliationService(
+          networkTimeProvider: () => DateTime.now().toUtc().millisecondsSinceEpoch,
+        ),
         clockSyncService: ClockSyncService(networkTimePort: _MockTimePort()),
       );
 

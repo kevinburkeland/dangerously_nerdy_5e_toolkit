@@ -12,9 +12,8 @@ class RoomStateReconciliationService {
   final int Function() _networkTimeProvider;
 
   RoomStateReconciliationService({
-    int Function()? networkTimeProvider,
-  }) : _networkTimeProvider =
-            networkTimeProvider ?? (() => DateTime.now().toUtc().millisecondsSinceEpoch);
+    required int Function() networkTimeProvider,
+  }) : _networkTimeProvider = networkTimeProvider;
 
   /// Prunes an OR-Set only if the provided threshold timestamp has been globally
   /// acknowledged by the milestone snapshot ledger and is strictly older than network time.

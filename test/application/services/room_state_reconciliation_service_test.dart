@@ -27,7 +27,9 @@ void main() {
   });
 
   group('RoomStateReconciliationService Tests', () {
-    final service = RoomStateReconciliationService();
+    final service = RoomStateReconciliationService(
+      networkTimeProvider: () => DateTime.now().toUtc().millisecondsSinceEpoch,
+    );
 
     test('Pruning Safety Test: gracefully defers pruning when threshold physical time >= current network time', () {
       const now = 100000;

@@ -6,6 +6,7 @@ This project uses Convergent Replicated Data Types (CvRDTs) backed by Hybrid Log
 
 Located at `lib/domain/crdt/hybrid_logical_clock.dart`:
 - **Structure:** Combines physical millisecond timestamp (`l`), logical counter (`c`), and unique node identifier (`nodeId`).
+- **Cryptographic Node Identity Enforcement & Uniformity:** Orchestrators and services stamping CRDT registers (including `HomebrewImportOrchestrator` and `PartyRoomService`) must generate pure cryptographically secure UUID v4 fallback identifiers (e.g. via `package:uuid/uuid.dart` `const Uuid().v4()`) rather than physical wall-clock timestamps or prefixed strings to guarantee HLC tie-breaker determinism across simultaneous offline mesh imports.
 - **Comparable & Deterministic:**
   - Order priority: `l` (timestamp) first, then `c` (counter) if timestamps are equal.
   - **Tie-breaker:** If both `l` and `c` are identical across competing updates, `nodeId` (device ID string) is used as the strict lexicographical tie-breaker (`nodeId.compareTo(other.nodeId)`).
@@ -39,7 +40,7 @@ Located at `lib/domain/crdt/crdt_or_set.dart`:
 Located at `lib/application/services/room_state_reconciliation_service.dart`:
 - Event logs grow unbounded over time.
 - **Delta Fast-Forward Pattern:** Clients receive incremental state deltas. To derive current room state, the client takes the last stable milestone snapshot and applies incoming CRDT deltas on top using deterministic `merge()` logic.
-- **Authoritative Milestone Pruning:** Pruning must be decoupled from local client clocks to protect against clock drift or spoofing. Use `RoomStateReconciliationService.executeMilestonePrune(targetSet, serverAcknowledgedEpochMs, hostNodeId)` where the threshold is anchored strictly to an authoritative server/ledger snapshot timestamp.
+- **Strict Network Time Injection & Authoritative Milestone Pruning:** Pruning must be decoupled from local client clocks to protect against clock drift or spoofing. Use `RoomStateReconciliationService.executeMilestonePrune(targetSet, serverAcknowledgedEpochMs, hostNodeId)` where the threshold is anchored strictly to an authoritative server/ledger snapshot timestamp. `RoomStateReconciliationService` requires constructor injection of `networkTimeProvider` (sourced from `ClockSyncService.currentNetworkTimeMs`), eliminating local wall-clock spoofing vulnerabilities during pruning.
 - **Network Time Synchronization:**
   - `INetworkTimePort` in `lib/domain/ports/i_network_time_port.dart` abstracts external time resolution.
   - `ClockSyncService` calculates physical time skew (`offsetMs = networkTime - localTime`) and caches it, falling back to 0 on transport failure.
@@ -48,10 +49,10 @@ Located at `lib/application/services/room_state_reconciliation_service.dart`:
 
 ## 5. Transport Orchestration, Mutex Concurrency & Echo Loop Prevention
 
-Located at `lib/application/services/room_sync_orchestrator.dart`:
+Located at `lib/application/services/room_sync_orchestrator.dart` and `cascading_transport_router.dart`:
 - **Bidirectional Wiring:** Glues `IP2pTransportPort` with local persistence `ICampaignRepository` (`watchIncomingPayloads()` and `watchActiveProfile()`).
 - **Echo Loop Prevention Mutex & Deep Model Equality:** Uses `final Mutex _syncMutex = Mutex();` and `_lastInboundProfile` deduplication. Inbound payload parsing and saving are protected under `_syncMutex.protect()`. Outbound broadcasts skip synchronization if the emitted profile matches `_lastInboundProfile` or if the mutex is locked (`_syncMutex.isLocked`), eliminating microtask race conditions and recursive echo storms. Domain entities (`CampaignProfile`, `PartyPurse`) must provide deep value-based `operator ==` and `hashCode` implementations so that identical reconstructed state is safely skipped.
-- **Sliding Lookback Window & LRU Deduplication:** In `RoomSyncOrchestrator._handleIncomingPayload`, incoming `room_sync_full` payloads must pass a 30-second sliding lookback window (`inboundTimestamp >= localTime - 30000`). Exact duplicates are dropped via an in-memory 500-entry LRU cache of payload SHA-256 digests (`_processedPayloadHashes`), allowing legitimate out-of-order packets arriving with minor jitter or clock skew (< 30s) to reconcile without dropped state.
+- **Sliding Lookback Window & Bounded LRU Deduplication:** In `CascadingTransportRouter._handleIncomingPayload` and `RoomSyncOrchestrator._handleIncomingPayload`, incoming payloads enforce an asymmetric bounded 500-entry LRU deduplication cache tracking payload SHA-256 digests (`_processedPayloadHashes`), silently dropping duplicates while updating LRU order. `RoomSyncOrchestrator` also applies a 30-second sliding lookback window (`inboundTimestamp >= localTime - 30000`).
 - **Clock-Skew Corrected Outbound Sync:** Outbound broadcasts inject `clockSyncService.currentOffsetMs` into timestamps.
 - **Host Buffered Milestone Pruning Horizon:** Host DM nodes periodically execute milestone flushes via `executeHostMilestoneFlush()`. The pruning horizon is calculated by subtracting twice the heartbeat TTL (`heartbeatTtl.inMilliseconds * 2`) from the network-synchronized physical time (`nowEpoch - 2 * TTL`). This lookback buffer preserves tombstones for peers undergoing transient reconnection while safely pruning ancient tombstones.
 - **Connection Telemetry & Accessible Badge:** `RoomSyncOrchestrator.watchTelemetry()` combines transport state transitions and periodic peer heartbeat counts into `RoomConnectionTelemetry` (`isOffline`, `connectionLabel`, `peerCount`). Rendered via `RoomConnectionBadge` (`lib/presentation/widgets/room_connection_badge.dart`) with `Semantics` label expansion for screen readers.

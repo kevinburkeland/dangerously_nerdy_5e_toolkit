@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uuid/uuid.dart';
 import 'package:dangerously_nerdy_5e_toolkit/application/services/homebrew_import_orchestrator.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/models/homebrew_entity.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/homebrew/value_objects/github_repo_source.dart';
@@ -123,8 +124,8 @@ void main() {
         ingestorPort: adapter,
       );
 
-      expect(orchestrator.nodeId, startsWith('node_homebrew_'));
-      expect(orchestrator.nodeId, isNot(equals('node_homebrew')));
+      expect(Uuid.isValidUUID(fromString: orchestrator.nodeId), isTrue);
+      expect(orchestrator.nodeId, isNot(startsWith('node_homebrew')));
 
       final telemetry = await orchestrator.runImport(
         source: source,
@@ -137,9 +138,9 @@ void main() {
       final item = orchestrator.ledger.activeValues.first;
       final register = orchestrator.ledger.items[item.id];
       expect(register, isNotNull);
-      // HLC nodeId must precisely match orchestrator.nodeId and not fall back to 'node_homebrew'
+      // HLC nodeId must precisely match orchestrator.nodeId (pure UUIDv4)
       expect(register!.timestamp.nodeId, equals(orchestrator.nodeId));
-      expect(register.timestamp.nodeId, isNot(equals('node_homebrew')));
+      expect(Uuid.isValidUUID(fromString: register.timestamp.nodeId), isTrue);
     });
 
     test('batchPersister receives flushed batches of entities upon stream completion', () async {

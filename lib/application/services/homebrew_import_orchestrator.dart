@@ -88,7 +88,7 @@ class HomebrewImportOrchestrator {
     CrdtOrSet<HomebrewEntity>? initialLedger,
   }) : this._internal(
           ingestorPort: ingestorPort,
-          nodeId: nodeId ?? 'node_homebrew_${const Uuid().v4()}',
+          nodeId: nodeId ?? const Uuid().v4(),
           persister: persister,
           batchPersister: batchPersister,
           batchSize: batchSize,

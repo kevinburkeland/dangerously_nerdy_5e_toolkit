@@ -521,5 +521,108 @@ void main() {
       expect(router.peerLastSeen, isEmpty);
       expect(router.currentState, TransportState.offline);
     });
+
+    group('Asymmetric Deduplication Cache Tests', () {
+      test('silently drops duplicate incoming payloads and updates LRU order', () async {
+        await router.initializeRoom('ROOM-DEDUP', 'node-local');
+
+        final receivedPayloads = <String>[];
+        final sub = router.watchIncomingPayloads().listen(receivedPayloads.add);
+
+        const payloadA = '{"id":"msg-1","data":"hello"}';
+        const payloadB = '{"id":"msg-2","data":"world"}';
+
+        mockLocalWifi.emitPayload(payloadA);
+        await pumpEventQueue();
+
+        expect(receivedPayloads, equals([payloadA]));
+        expect(router.processedPayloadHashes.length, equals(1));
+
+        mockLocalWifi.emitPayload(payloadB);
+        await pumpEventQueue();
+
+        expect(receivedPayloads, equals([payloadA, payloadB]));
+        expect(router.processedPayloadHashes.length, equals(2));
+
+        // Duplicate payloadA arrives: should be dropped and moved to most recent LRU position
+        mockLocalWifi.emitPayload(payloadA);
+        await pumpEventQueue();
+
+        // Still only 2 emissions received
+        expect(receivedPayloads, equals([payloadA, payloadB]));
+        expect(router.processedPayloadHashes.length, equals(2));
+        // payloadA should now be the last (most recent) item in the LRU set
+        final hashes = router.processedPayloadHashes.toList();
+        expect(hashes.last, equals(router.payloadHasher(payloadA)));
+
+        await sub.cancel();
+        await router.disconnect();
+      });
+
+      test('bounded LRU cache evicts oldest entry when exceeding 500 items', () async {
+        await router.initializeRoom('ROOM-BOUNDED', 'node-local');
+
+        final receivedPayloads = <String>[];
+        final sub = router.watchIncomingPayloads().listen(receivedPayloads.add);
+
+        // Emit 500 unique payloads
+        for (int i = 0; i < 500; i++) {
+          mockLocalWifi.emitPayload('{"id":"msg-$i"}');
+        }
+        await pumpEventQueue();
+
+        expect(receivedPayloads.length, equals(500));
+        expect(router.processedPayloadHashes.length, equals(500));
+        final firstHash = router.payloadHasher('{"id":"msg-0"}');
+        expect(router.processedPayloadHashes.first, equals(firstHash));
+
+        // Emit 501st payload
+        mockLocalWifi.emitPayload('{"id":"msg-500"}');
+        await pumpEventQueue();
+
+        expect(receivedPayloads.length, equals(501));
+        expect(router.processedPayloadHashes.length, equals(500));
+        // First hash should have been evicted
+        expect(router.processedPayloadHashes.contains(firstHash), isFalse);
+
+        // Now msg-0 can be accepted again since it was evicted
+        mockLocalWifi.emitPayload('{"id":"msg-0"}');
+        await pumpEventQueue();
+
+        expect(receivedPayloads.length, equals(502));
+
+        await sub.cancel();
+        await router.disconnect();
+      });
+
+      test('custom injected payloadHasher is invoked to compute deduplication keys', () async {
+        int hashCallCount = 0;
+        final customRouter = CascadingTransportRouter(
+          localWifiAdapter: mockLocalWifi,
+          webRtcAdapter: mockWebRtc,
+          firebaseFallbackAdapter: mockFirebase,
+          payloadHasher: (p) {
+            hashCallCount++;
+            return 'custom_hash_${p.length}';
+          },
+        );
+
+        await customRouter.initializeRoom('ROOM-CUSTOM-HASH', 'node-local');
+        mockLocalWifi.emitPayload('test-payload');
+        await pumpEventQueue();
+
+        expect(hashCallCount, equals(1));
+        expect(customRouter.processedPayloadHashes, contains('custom_hash_12'));
+
+        // Emitting payload of same length results in same hash key and drops
+        mockLocalWifi.emitPayload('diff-payload');
+        await pumpEventQueue();
+
+        expect(hashCallCount, equals(2));
+        expect(customRouter.processedPayloadHashes.length, equals(1));
+
+        await customRouter.disconnect();
+      });
+    });
   });
 }

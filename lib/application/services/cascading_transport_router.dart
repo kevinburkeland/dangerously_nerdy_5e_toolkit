@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:meta/meta.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
+import '../../utils/crypto_utils.dart';
 
 export '../../domain/ports/transport_state.dart';
 
@@ -20,6 +21,10 @@ class CascadingTransportRouter implements IP2pTransportPort {
   final Duration stepUpProbeInterval;
   final Map<String, int> Function()? peerTimestampProvider;
   final void Function(String peerId)? onPeerPruned;
+  final String Function(String payload) payloadHasher;
+
+  static const int maxProcessedPayloadHashes = 500;
+  final Set<String> _processedPayloadHashes = <String>{};
 
   TransportState _currentState = TransportState.connecting;
   IP2pTransportPort? _activeAdapter;
@@ -59,6 +64,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     this.sequentialFailureThreshold = 3,
     this.peerTimestampProvider,
     this.onPeerPruned,
+    this.payloadHasher = CryptoUtils.sha256Hex,
   });
 
   @override
@@ -77,6 +83,11 @@ class CascadingTransportRouter implements IP2pTransportPort {
   /// Visible for testing step up timestamp.
   @visibleForTesting
   int get lastStepUpTimestamp => _lastStepUpTimestamp;
+
+  /// Tracked payload hashes for deduplication (exposed for testing).
+  @visibleForTesting
+  Set<String> get processedPayloadHashes =>
+      Set.unmodifiable(_processedPayloadHashes);
 
   @override
   Future<void> initializeRoom(String roomCode, String localNodeId) async {
@@ -109,6 +120,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
     _roomCode = cleanCode;
     _localNodeId = localNodeId;
     _peerLastSeen.clear();
+    _processedPayloadHashes.clear();
     _lastStepDownTimestamp = 0;
     _lastStepUpTimestamp = 0;
     _stepDownCountInWindow = 0;
@@ -165,6 +177,17 @@ class CascadingTransportRouter implements IP2pTransportPort {
   }
 
   void _handleIncomingPayload(String payload) {
+    final payloadHash = payloadHasher(payload);
+    if (_processedPayloadHashes.contains(payloadHash)) {
+      _processedPayloadHashes.remove(payloadHash);
+      _processedPayloadHashes.add(payloadHash);
+      return;
+    }
+    _processedPayloadHashes.add(payloadHash);
+    if (_processedPayloadHashes.length > maxProcessedPayloadHashes) {
+      _processedPayloadHashes.remove(_processedPayloadHashes.first);
+    }
+
     try {
       if (payload.startsWith('{')) {
         final decoded = jsonDecode(payload);
@@ -438,6 +461,7 @@ class CascadingTransportRouter implements IP2pTransportPort {
 
     _activeAdapter = null;
     _peerLastSeen.clear();
+    _processedPayloadHashes.clear();
     _changeState(TransportState.offline);
 
     await _payloadController.close();

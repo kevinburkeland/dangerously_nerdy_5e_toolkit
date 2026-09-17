@@ -211,19 +211,26 @@ void main() {
       expect(restored, equals(obj));
     });
 
-    test('Legacy in-place mutating methods throw StateError enforcing strict immutability', () {
+    test('Pure copy-transform methods return updated instances while preserving immutability', () {
       final obj = AnimatedObjectInstance(
         id: '1',
         name: 'Iron Golem Minion',
         size: ObjectSize.large,
-        currentHp: 50,
+        currentHp: 40,
         maxHp: 50,
       );
 
-      expect(() => obj.takeDamage(10), throwsA(isA<StateError>()));
-      expect(() => obj.heal(10), throwsA(isA<StateError>()));
-      expect(() => obj.applyHeal(10), throwsA(isA<StateError>()));
-      expect(() => obj.grantTempHp(10), throwsA(isA<StateError>()));
+      final damaged = obj.applyDamage(10);
+      expect(damaged.currentHp, equals(30));
+      expect(obj.currentHp, equals(40)); // original unchanged
+
+      final healed = obj.applyHealing(5);
+      expect(healed.currentHp, equals(45));
+      expect(obj.currentHp, equals(40)); // original unchanged
+
+      final withTemp = obj.applyTempHp(15);
+      expect(withTemp.tempHp, equals(15));
+      expect(obj.tempHp, equals(0)); // original unchanged
     });
   });
 }

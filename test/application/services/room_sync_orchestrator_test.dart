@@ -185,13 +185,16 @@ void main() {
       mockRepo = MockCampaignRepository();
       mockRepo.emitProfile(initialProfile);
 
-      reconciliationService = RoomStateReconciliationService();
       mockTimePort = MockNetworkTimePort(networkTimeMs: 1700000000500);
       clockSyncService = ClockSyncService(
         networkTimePort: mockTimePort,
         localTimeProvider: () => 1700000000000, // 500ms skew
       );
       await clockSyncService.synchronizeClock();
+
+      reconciliationService = RoomStateReconciliationService(
+        networkTimeProvider: () => clockSyncService.currentNetworkTimeMs,
+      );
 
       orchestrator = RoomSyncOrchestrator(
         router: router,
@@ -643,7 +646,7 @@ void main() {
     });
 
     test('Buffered Milestone Pruning Horizon: subtracts 2x heartbeat TTL from authoritative timestamp', () async {
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch + clockSyncService.currentOffsetMs;
+      final now = clockSyncService.currentNetworkTimeMs;
       final hostOrchestrator = RoomSyncOrchestrator(
         router: router,
         campaignRepo: mockRepo,

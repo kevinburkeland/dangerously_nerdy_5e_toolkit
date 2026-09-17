@@ -238,24 +238,6 @@ class AnimatedObjectInstance {
   AnimatedObjectInstance applyTempHp(int amount) =>
       copyWith(hitPoints: hitPoints.grantTempHp(amount));
 
-  @Deprecated('AnimatedObjectInstance is immutable. Use applyDamage(amount) instead.')
-  void takeDamage(int amount) {
-    throw StateError('AnimatedObjectInstance is strictly immutable. Use copyWith() or applyDamage() instead.');
-  }
-
-  @Deprecated('AnimatedObjectInstance is immutable. Use applyHealing(amount) instead.')
-  void heal(int amount) {
-    throw StateError('AnimatedObjectInstance is strictly immutable. Use copyWith() or applyDamage() instead.');
-  }
-
-  @Deprecated('AnimatedObjectInstance is immutable. Use applyHealing(amount) instead.')
-  void applyHeal(int healAmount) => heal(healAmount);
-
-  @Deprecated('AnimatedObjectInstance is immutable. Use applyTempHp(amount) instead.')
-  void grantTempHp(int amount) {
-    throw StateError('AnimatedObjectInstance is strictly immutable. Use copyWith() or applyDamage() instead.');
-  }
-
   AnimatedObjectInstance copyWith({
     String? id,
     String? name,

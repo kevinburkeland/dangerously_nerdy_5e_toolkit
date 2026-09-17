@@ -116,13 +116,17 @@ Future<void> initServiceLocator({
         campaignRepo: sl<ICampaignRepository>(),
       ));
 
-  sl.registerLazySingleton<RoomStateReconciliationService>(() => RoomStateReconciliationService());
-
   sl.registerLazySingleton<INetworkTimePort>(() => const SystemNetworkTimePort());
 
   sl.registerLazySingleton<ClockSyncService>(() => ClockSyncService(
         networkTimePort: sl<INetworkTimePort>(),
       ));
+
+  sl.registerLazySingleton<RoomStateReconciliationService>(
+    () => RoomStateReconciliationService(
+      networkTimeProvider: () => sl<ClockSyncService>().currentNetworkTimeMs,
+    ),
+  );
 
   if (p2pTransport != null) {
     sl.registerSingleton<IP2pTransportPort>(p2pTransport);
