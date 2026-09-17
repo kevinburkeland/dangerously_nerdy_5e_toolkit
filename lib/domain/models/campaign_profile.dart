@@ -5,9 +5,9 @@ import '../crdt/crdt_lww_register.dart';
 import '../crdt/crdt_or_set.dart';
 import '../crdt/hybrid_logical_clock.dart';
 import '../../models/dm_screen_data.dart';
-import '../../models/domain/session_graph_models.dart';
+import 'session_graph_models.dart';
 import '../../models/party/party_event.dart';
-import '../../models/party/party_purse.dart';
+import 'party_purse.dart';
 
 /// Immutable Campaign Profile representing an isolated campaign / DM workspace state.
 /// This is a pure Domain Entity devoid of persistence and serialization concerns.

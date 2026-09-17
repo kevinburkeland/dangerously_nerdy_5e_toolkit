@@ -1,4 +1,4 @@
-import '../../models/domain/character_models.dart';
+import '../models/character_models.dart';
 
 /// Port (interface) defining character persistence operations in the Domain layer.
 abstract class ICharacterRepository {

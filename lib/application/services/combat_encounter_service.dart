@@ -4,8 +4,8 @@ import '../../domain/models/campaign_profile.dart';
 import '../../domain/models/animated_object.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_character_repository.dart';
-import '../../models/domain/character_models.dart';
-import '../../models/domain/session_graph_models.dart';
+import '../../domain/models/character_models.dart';
+import '../../domain/models/session_graph_models.dart';
 import '../../services/rules/character_evaluation_engine.dart';
 
 /// Application Service orchestrating combat encounters, HP modifications,
@@ -13,11 +13,13 @@ import '../../services/rules/character_evaluation_engine.dart';
 class CombatEncounterService {
   final ICharacterRepository characterRepo;
   final ICampaignRepository campaignRepo;
+  final String localNodeId;
   final int Function() _networkTimeProvider;
 
   CombatEncounterService({
     required this.characterRepo,
     required this.campaignRepo,
+    required this.localNodeId,
     int Function()? networkTimeProvider,
   }) : _networkTimeProvider = networkTimeProvider ??
             (() => DateTime.now().toUtc().millisecondsSinceEpoch);
@@ -124,7 +126,7 @@ class CombatEncounterService {
 
     final updated = delta < 0 ? currentMinion.applyDamage(delta.abs()) : currentMinion.applyHealing(delta);
     final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp;
-    final hlc = _nextHlc(nodeId: profile.id, previousClock: prevTs);
+    final hlc = _nextHlc(nodeId: localNodeId, previousClock: prevTs);
     final updatedMinions = profile.roomState.activeMinions.add(minionId, updated, hlc);
     final updatedRoom = profile.roomState.copyWith(activeMinions: updatedMinions);
     final updatedProfile = profile.copyWith(roomState: updatedRoom);
@@ -140,7 +142,7 @@ class CombatEncounterService {
   }) async {
     final prevTs = profile.roomState.activeMinions.items[minion.id]?.timestamp ??
         profile.roomState.activeMinions.tombstones[minion.id];
-    final hlc = _nextHlc(nodeId: profile.id, previousClock: prevTs);
+    final hlc = _nextHlc(nodeId: localNodeId, previousClock: prevTs);
     final updatedMinions = profile.roomState.activeMinions.add(minion.id, minion, hlc);
     final updatedRoom = profile.roomState.copyWith(activeMinions: updatedMinions);
     final updatedProfile = profile.copyWith(roomState: updatedRoom);
@@ -156,7 +158,7 @@ class CombatEncounterService {
   }) async {
     final prevTs = profile.roomState.activeMinions.items[minionId]?.timestamp ??
         profile.roomState.activeMinions.tombstones[minionId];
-    final hlc = _nextHlc(nodeId: profile.id, previousClock: prevTs);
+    final hlc = _nextHlc(nodeId: localNodeId, previousClock: prevTs);
     final updatedMinions = profile.roomState.activeMinions.remove(minionId, hlc);
     final updatedRoom = profile.roomState.copyWith(activeMinions: updatedMinions);
     final updatedProfile = profile.copyWith(roomState: updatedRoom);
@@ -166,21 +168,22 @@ class CombatEncounterService {
   }
 
   HybridLogicalClock _nextHlc({
-    required String nodeId,
+    String? nodeId,
     HybridLogicalClock? previousClock,
   }) {
+    final effectiveNodeId = nodeId ?? localNodeId;
     final nowMs = _networkTimeProvider();
     if (previousClock != null && previousClock.physicalTime >= nowMs) {
       return HybridLogicalClock(
         physicalTime: previousClock.physicalTime,
         logicalCounter: previousClock.logicalCounter + 1,
-        nodeId: nodeId,
+        nodeId: effectiveNodeId,
       );
     }
     return HybridLogicalClock(
       physicalTime: nowMs,
       logicalCounter: 0,
-      nodeId: nodeId,
+      nodeId: effectiveNodeId,
     );
   }
 
@@ -298,14 +301,14 @@ class CombatEncounterService {
     for (final id in currentIds.difference(newIds)) {
       final prevTs = updatedEncounter.items[id]?.timestamp ?? updatedEncounter.tombstones[id];
       final base = (lastClock != null && (prevTs == null || lastClock.isAfter(prevTs))) ? lastClock : prevTs;
-      final hlc = _nextHlc(nodeId: profile.id, previousClock: base);
+      final hlc = _nextHlc(nodeId: localNodeId, previousClock: base);
       lastClock = hlc;
       updatedEncounter = updatedEncounter.remove(id, hlc);
     }
     for (final p in encounter) {
       final prevTs = updatedEncounter.items[p.participantId]?.timestamp ?? updatedEncounter.tombstones[p.participantId];
       final base = (lastClock != null && (prevTs == null || lastClock.isAfter(prevTs))) ? lastClock : prevTs;
-      final hlc = _nextHlc(nodeId: profile.id, previousClock: base);
+      final hlc = _nextHlc(nodeId: localNodeId, previousClock: base);
       lastClock = hlc;
       updatedEncounter = updatedEncounter.add(p.participantId, p, hlc);
     }

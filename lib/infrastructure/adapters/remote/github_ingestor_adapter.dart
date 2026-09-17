@@ -2,14 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import '../../../domain/homebrew/ports/i_github_ingestor_port.dart';
 import '../../../domain/homebrew/value_objects/github_repo_source.dart';
 import '../../../domain/homebrew/value_objects/ruleset_version.dart';
 import '../../dtos/homebrew_entity_dto.dart';
 import 'http_fetcher.dart';
-
-// Pure Dart compile-time constant for web detection (all JS numbers are double IEEE 754)
-const bool _isWeb = identical(0, 0.0);
 
 /// Concrete adapter fulfilling [IGithubIngestorPort] for GitHub homebrew repositories.
 ///
@@ -209,7 +208,7 @@ class GithubIngestorAdapter implements IGithubIngestorPort {
     RulesetVersion ruleset,
     String url,
   ) async {
-    if (!_isWeb && _useIsolate && jsonString.length >= isolateThresholdBytes) {
+    if (!kIsWeb && _useIsolate && jsonString.length >= isolateThresholdBytes) {
       try {
         return await Isolate.run(() => _unpackAndParsePayload(jsonString, ruleset, url));
       } on UnsupportedError {

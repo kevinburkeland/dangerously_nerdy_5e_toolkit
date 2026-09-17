@@ -1,0 +1,1953 @@
+import 'dart:math' as math;
+import 'package:collection/collection.dart';
+import 'package:meta/meta.dart';
+import '../../models/domain/core_types.dart';
+import '../../models/domain/entity_reference.dart';
+import '../../models/domain/feature_grant.dart';
+import '../../models/domain/spell_monster_equipment.dart';
+import '../../models/domain/homebrew_extended_entities.dart';
+import 'party_purse.dart';
+import '../../models/spellbook_data.dart';
+import '../../models/dm_screen_data.dart' show DmRulesEdition;
+import '../../models/characters/srd_classes_library.dart';
+import '../../services/rules/dnd_5e_rules_engine.dart';
+import '../../services/rules/character_evaluation_engine.dart';
+import '../../infrastructure/dtos/character_telemetry_dto.dart';
+import 'value_objects/hit_points.dart';
+
+bool listEquals<T>(List<T>? a, List<T>? b) => const ListEquality().equals(a, b);
+bool mapEquals<K, V>(Map<K, V>? a, Map<K, V>? b) => const MapEquality().equals(a, b);
+bool setEquals<T>(Set<T>? a, Set<T>? b) => const SetEquality().equals(a, b);
+
+/// 5e Core Ability Score Keys
+enum AbilityType {
+  strength,
+  dexterity,
+  constitution,
+  intelligence,
+  wisdom,
+  charisma;
+
+  String get shortName => switch (this) {
+        AbilityType.strength => 'STR',
+        AbilityType.dexterity => 'DEX',
+        AbilityType.constitution => 'CON',
+        AbilityType.intelligence => 'INT',
+        AbilityType.wisdom => 'WIS',
+        AbilityType.charisma => 'CHA',
+      };
+
+  /// Safely resolves a loose or unstructured string into a canonical [AbilityType].
+  static AbilityType fromLooseString(
+    String? key, [
+    AbilityType fallback = AbilityType.strength,
+  ]) {
+    if (key == null) return fallback;
+    final clean = key.trim().toLowerCase();
+    return switch (clean) {
+      'str' || 'strength' => AbilityType.strength,
+      'dex' || 'dexterity' => AbilityType.dexterity,
+      'con' || 'constitution' => AbilityType.constitution,
+      'int' || 'intelligence' => AbilityType.intelligence,
+      'wis' || 'wisdom' => AbilityType.wisdom,
+      'cha' || 'charisma' => AbilityType.charisma,
+      _ => AbilityType.values.firstWhere(
+          (a) => a.name.toLowerCase() == clean,
+          orElse: () => fallback,
+        ),
+    };
+  }
+}
+
+/// Immutable collection of the 6 core 5e Ability Scores
+@immutable
+class AbilityScores {
+  final int strength;
+  final int dexterity;
+  final int constitution;
+  final int intelligence;
+  final int wisdom;
+  final int charisma;
+
+  const AbilityScores({
+    this.strength = 10,
+    this.dexterity = 10,
+    this.constitution = 10,
+    this.intelligence = 10,
+    this.wisdom = 10,
+    this.charisma = 10,
+  });
+
+  const AbilityScores.standardArray()
+      : strength = 15,
+        dexterity = 14,
+        constitution = 13,
+        intelligence = 12,
+        wisdom = 10,
+        charisma = 8;
+
+  const AbilityScores.zero()
+      : strength = 0,
+        dexterity = 0,
+        constitution = 0,
+        intelligence = 0,
+        wisdom = 0,
+        charisma = 0;
+
+  int getScore(AbilityType ability) => switch (ability) {
+        AbilityType.strength => strength,
+        AbilityType.dexterity => dexterity,
+        AbilityType.constitution => constitution,
+        AbilityType.intelligence => intelligence,
+        AbilityType.wisdom => wisdom,
+        AbilityType.charisma => charisma,
+      };
+
+  int getModifier(AbilityType ability) => getScore(ability).dndModifier;
+
+  AbilityScores withBonus(AbilityScores bonus) {
+    return AbilityScores(
+      strength: strength + bonus.strength,
+      dexterity: dexterity + bonus.dexterity,
+      constitution: constitution + bonus.constitution,
+      intelligence: intelligence + bonus.intelligence,
+      wisdom: wisdom + bonus.wisdom,
+      charisma: charisma + bonus.charisma,
+    );
+  }
+
+  AbilityScores operator +(AbilityScores other) => withBonus(other);
+
+  AbilityScores copyWith({
+    int? strength,
+    int? dexterity,
+    int? constitution,
+    int? intelligence,
+    int? wisdom,
+    int? charisma,
+  }) {
+    return AbilityScores(
+      strength: strength ?? this.strength,
+      dexterity: dexterity ?? this.dexterity,
+      constitution: constitution ?? this.constitution,
+      intelligence: intelligence ?? this.intelligence,
+      wisdom: wisdom ?? this.wisdom,
+      charisma: charisma ?? this.charisma,
+    );
+  }
+
+  Map<String, int> toMap() => {
+        'strength': strength,
+        'dexterity': dexterity,
+        'constitution': constitution,
+        'intelligence': intelligence,
+        'wisdom': wisdom,
+        'charisma': charisma,
+      };
+
+  factory AbilityScores.fromMap(Map<String, dynamic> map) {
+    return AbilityScores(
+      strength: (map['strength'] as num?)?.toInt() ?? 10,
+      dexterity: (map['dexterity'] as num?)?.toInt() ?? 10,
+      constitution: (map['constitution'] as num?)?.toInt() ?? 10,
+      intelligence: (map['intelligence'] as num?)?.toInt() ?? 10,
+      wisdom: (map['wisdom'] as num?)?.toInt() ?? 10,
+      charisma: (map['charisma'] as num?)?.toInt() ?? 10,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AbilityScores &&
+          runtimeType == other.runtimeType &&
+          strength == other.strength &&
+          dexterity == other.dexterity &&
+          constitution == other.constitution &&
+          intelligence == other.intelligence &&
+          wisdom == other.wisdom &&
+          charisma == other.charisma;
+
+  @override
+  int get hashCode =>
+      strength.hashCode ^
+      dexterity.hashCode ^
+      constitution.hashCode ^
+      intelligence.hashCode ^
+      wisdom.hashCode ^
+      charisma.hashCode;
+}
+
+/// Standard 5e Skills
+enum SkillType {
+  acrobatics,
+  animalHandling,
+  arcana,
+  athletics,
+  deception,
+  history,
+  insight,
+  intimidation,
+  investigation,
+  medicine,
+  nature,
+  perception,
+  performance,
+  persuasion,
+  religion,
+  sleightOfHand,
+  stealth,
+  survival;
+
+  AbilityType get defaultAbility => switch (this) {
+        SkillType.athletics => AbilityType.strength,
+        SkillType.acrobatics ||
+        SkillType.sleightOfHand ||
+        SkillType.stealth => AbilityType.dexterity,
+        SkillType.arcana ||
+        SkillType.history ||
+        SkillType.investigation ||
+        SkillType.nature ||
+        SkillType.religion => AbilityType.intelligence,
+        SkillType.animalHandling ||
+        SkillType.insight ||
+        SkillType.medicine ||
+        SkillType.perception ||
+        SkillType.survival => AbilityType.wisdom,
+        SkillType.deception ||
+        SkillType.intimidation ||
+        SkillType.performance ||
+        SkillType.persuasion => AbilityType.charisma,
+      };
+
+  String get displayName => switch (this) {
+        SkillType.acrobatics => 'Acrobatics',
+        SkillType.animalHandling => 'Animal Handling',
+        SkillType.arcana => 'Arcana',
+        SkillType.athletics => 'Athletics',
+        SkillType.deception => 'Deception',
+        SkillType.history => 'History',
+        SkillType.insight => 'Insight',
+        SkillType.intimidation => 'Intimidation',
+        SkillType.investigation => 'Investigation',
+        SkillType.medicine => 'Medicine',
+        SkillType.nature => 'Nature',
+        SkillType.perception => 'Perception',
+        SkillType.performance => 'Performance',
+        SkillType.persuasion => 'Persuasion',
+        SkillType.religion => 'Religion',
+        SkillType.sleightOfHand => 'Sleight of Hand',
+        SkillType.stealth => 'Stealth',
+        SkillType.survival => 'Survival',
+      };
+
+  static SkillType? tryParse(String? value) {
+    if (value == null) return null;
+    final clean = value.trim().toLowerCase().replaceAll(RegExp(r'[\s_-]+'), '');
+    for (final s in SkillType.values) {
+      final sName = s.name.toLowerCase().replaceAll(RegExp(r'[\s_-]+'), '');
+      final sDisp = s.displayName.toLowerCase().replaceAll(RegExp(r'[\s_-]+'), '');
+      if (clean == sName || clean == sDisp) {
+        return s;
+      }
+    }
+    return null;
+  }
+
+  static SkillType fromLooseString(String? value, {SkillType fallback = SkillType.athletics}) {
+    return tryParse(value) ?? fallback;
+  }
+}
+
+/// Skill Proficiency Levels
+enum SkillProficiencyLevel {
+  none(0.0),
+  jackOfAllTrades(0.5),
+  proficient(1.0),
+  expertise(2.0);
+
+  final double multiplier;
+  const SkillProficiencyLevel(this.multiplier);
+}
+
+/// Equipment and Wearable Slots
+enum EquipmentSlot {
+  head,
+  cloak,
+  armor,
+  shield,
+  mainHand,
+  offHand,
+  twoHand,
+  ring1,
+  ring2,
+  boots,
+  wondrous;
+
+  String get displayName => switch (this) {
+        EquipmentSlot.head => 'Head',
+        EquipmentSlot.cloak => 'Cloak',
+        EquipmentSlot.armor => 'Armor',
+        EquipmentSlot.shield => 'Shield',
+        EquipmentSlot.mainHand => 'Main Hand',
+        EquipmentSlot.offHand => 'Off Hand',
+        EquipmentSlot.twoHand => 'Two-Handed',
+        EquipmentSlot.ring1 => 'Ring 1',
+        EquipmentSlot.ring2 => 'Ring 2',
+        EquipmentSlot.boots => 'Boots',
+        EquipmentSlot.wondrous => 'Wondrous',
+      };
+}
+
+/// Individual item instance in a character or container inventory
+@immutable
+class InventoryItemInstance {
+  final String instanceId;
+  final EntityReference<EquipmentItem> itemRef;
+  final int quantity;
+  final bool isEquipped;
+  final EquipmentSlot? equippedSlot;
+  final bool isAttuned;
+  final bool requiresAttunement;
+  final String? customName;
+  final String? notes;
+  final Map<String, dynamic> customProperties;
+
+  const InventoryItemInstance({
+    required this.instanceId,
+    required this.itemRef,
+    this.quantity = 1,
+    this.isEquipped = false,
+    this.equippedSlot,
+    this.isAttuned = false,
+    this.requiresAttunement = false,
+    this.customName,
+    this.notes,
+    this.customProperties = const {},
+  });
+
+  String get displayName => customName ?? itemRef.displayName;
+
+  InventoryItemInstance copyWith({
+    String? instanceId,
+    EntityReference<EquipmentItem>? itemRef,
+    int? quantity,
+    bool? isEquipped,
+    EquipmentSlot? equippedSlot,
+    bool? isAttuned,
+    bool? requiresAttunement,
+    String? customName,
+    String? notes,
+    Map<String, dynamic>? customProperties,
+  }) {
+    return InventoryItemInstance(
+      instanceId: instanceId ?? this.instanceId,
+      itemRef: itemRef ?? this.itemRef,
+      quantity: quantity ?? this.quantity,
+      isEquipped: isEquipped ?? this.isEquipped,
+      equippedSlot: isEquipped == false ? null : (equippedSlot ?? this.equippedSlot),
+      isAttuned: isAttuned ?? this.isAttuned,
+      requiresAttunement: requiresAttunement ?? this.requiresAttunement,
+      customName: customName ?? this.customName,
+      notes: notes ?? this.notes,
+      customProperties: customProperties ?? this.customProperties,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'instanceId': instanceId,
+        'itemRef': itemRef.toMap(),
+        'quantity': quantity,
+        'isEquipped': isEquipped,
+        'equippedSlot': equippedSlot?.name,
+        'isAttuned': isAttuned,
+        'requiresAttunement': requiresAttunement,
+        'customName': customName,
+        'notes': notes,
+        'customProperties': customProperties,
+      };
+
+  factory InventoryItemInstance.fromMap(Map<String, dynamic> map) {
+    EquipmentSlot? slot;
+    if (map['equippedSlot'] != null) {
+      final sStr = map['equippedSlot'].toString();
+      slot = EquipmentSlot.values.firstWhere(
+        (s) => s.name == sStr,
+        orElse: () => EquipmentSlot.wondrous,
+      );
+    }
+
+    return InventoryItemInstance(
+      instanceId: map['instanceId']?.toString() ?? '',
+      itemRef: EntityReference<EquipmentItem>.fromMap(
+          Map<String, dynamic>.from(map['itemRef'] as Map? ?? {})),
+      quantity: (map['quantity'] as num?)?.toInt() ?? 1,
+      isEquipped: map['isEquipped'] == true,
+      equippedSlot: slot,
+      isAttuned: map['isAttuned'] == true,
+      requiresAttunement: map['requiresAttunement'] == true,
+      customName: map['customName']?.toString(),
+      notes: map['notes']?.toString(),
+      customProperties:
+          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InventoryItemInstance &&
+          runtimeType == other.runtimeType &&
+          instanceId == other.instanceId &&
+          itemRef == other.itemRef &&
+          quantity == other.quantity &&
+          isEquipped == other.isEquipped &&
+          equippedSlot == other.equippedSlot &&
+          isAttuned == other.isAttuned &&
+          requiresAttunement == other.requiresAttunement &&
+          customName == other.customName &&
+          notes == other.notes &&
+          mapEquals(customProperties, other.customProperties);
+
+  @override
+  int get hashCode =>
+      instanceId.hashCode ^
+      itemRef.hashCode ^
+      quantity.hashCode ^
+      isEquipped.hashCode ^
+      (equippedSlot?.hashCode ?? 0) ^
+      isAttuned.hashCode ^
+      requiresAttunement.hashCode ^
+      (customName?.hashCode ?? 0) ^
+      (notes?.hashCode ?? 0) ^
+      customProperties.length.hashCode;
+}
+
+/// Single class progression slice (supporting single class or multiclassing)
+@immutable
+class ClassLevelProgression {
+  final EntityReference<DomainEntity> classRef;
+  final EntityReference<DomainEntity>? subclassRef;
+  final int level;
+  final String hitDie; // e.g. "d8", "d10", "d12", "d6"
+  final List<int> hitPointsRolled; // HP gained per level above 1st
+  final bool isStartingClass;
+  final Map<String, List<String>> selectedFeatureOptions; // decisionId -> [selectedOptionIds]
+
+  const ClassLevelProgression({
+    required this.classRef,
+    this.subclassRef,
+    this.level = 1,
+    required this.hitDie,
+    this.hitPointsRolled = const [],
+    this.isStartingClass = false,
+    this.selectedFeatureOptions = const {},
+  });
+
+  int get hitDieSides {
+    final clean = hitDie.replaceAll('d', '').trim();
+    return int.tryParse(clean) ?? 8;
+  }
+
+  int get averageHpPerLevel => (hitDieSides / 2).floor() + 1;
+
+  ClassLevelProgression copyWith({
+    EntityReference<DomainEntity>? classRef,
+    EntityReference<DomainEntity>? subclassRef,
+    int? level,
+    String? hitDie,
+    List<int>? hitPointsRolled,
+    bool? isStartingClass,
+    Map<String, List<String>>? selectedFeatureOptions,
+  }) {
+    return ClassLevelProgression(
+      classRef: classRef ?? this.classRef,
+      subclassRef: subclassRef ?? this.subclassRef,
+      level: level ?? this.level,
+      hitDie: hitDie ?? this.hitDie,
+      hitPointsRolled: hitPointsRolled != null ? List.unmodifiable(hitPointsRolled) : this.hitPointsRolled,
+      isStartingClass: isStartingClass ?? this.isStartingClass,
+      selectedFeatureOptions: selectedFeatureOptions != null
+          ? Map.unmodifiable(selectedFeatureOptions.map((k, v) => MapEntry(k, List<String>.unmodifiable(v))))
+          : this.selectedFeatureOptions,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'classRef': classRef.toMap(),
+        'subclassRef': subclassRef?.toMap(),
+        'level': level,
+        'hitDie': hitDie,
+        'hitPointsRolled': hitPointsRolled,
+        'isStartingClass': isStartingClass,
+        'selectedFeatureOptions': selectedFeatureOptions,
+      };
+
+  factory ClassLevelProgression.fromMap(Map<String, dynamic> map) {
+    final rawOptions = map['selectedFeatureOptions'];
+    final parsedOptions = <String, List<String>>{};
+    if (rawOptions is Map) {
+      rawOptions.forEach((key, val) {
+        if (val is List) {
+          parsedOptions[key.toString()] = val.map((e) => e.toString()).toList();
+        } else if (val != null) {
+          parsedOptions[key.toString()] = [val.toString()];
+        }
+      });
+    }
+
+    return ClassLevelProgression(
+      classRef: EntityReference<DomainEntity>.fromMap(
+          Map<String, dynamic>.from(map['classRef'] as Map? ?? {})),
+      subclassRef: map['subclassRef'] != null
+          ? EntityReference<DomainEntity>.fromMap(
+              Map<String, dynamic>.from(map['subclassRef'] as Map? ?? {}))
+          : null,
+      level: (map['level'] as num?)?.toInt() ?? 1,
+      hitDie: map['hitDie']?.toString() ?? 'd8',
+      hitPointsRolled: (map['hitPointsRolled'] as List? ?? [])
+          .whereType<num>()
+          .map((n) => n.toInt())
+          .toList(),
+      isStartingClass: map['isStartingClass'] == true,
+      selectedFeatureOptions: parsedOptions,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClassLevelProgression &&
+          runtimeType == other.runtimeType &&
+          classRef == other.classRef &&
+          subclassRef == other.subclassRef &&
+          level == other.level &&
+          hitDie == other.hitDie &&
+          listEquals(hitPointsRolled, other.hitPointsRolled) &&
+          isStartingClass == other.isStartingClass &&
+          mapEquals(selectedFeatureOptions, other.selectedFeatureOptions);
+
+  @override
+  int get hashCode =>
+      classRef.hashCode ^
+      (subclassRef?.hashCode ?? 0) ^
+      level.hashCode ^
+      hitDie.hashCode ^
+      Object.hashAll(hitPointsRolled) ^
+      isStartingClass.hashCode ^
+      selectedFeatureOptions.length.hashCode;
+}
+
+/// Overall Character Progression aggregating all class levels
+@immutable
+class CharacterProgression {
+  final List<ClassLevelProgression> classes;
+  final int experiencePoints;
+  final Map<int, int> manualHpRolls; // Character Level -> Rolled HP
+
+  const CharacterProgression({
+    required this.classes,
+    this.experiencePoints = 0,
+    this.manualHpRolls = const {},
+  });
+
+  int get totalLevel => classes.fold(0, (sum, c) => sum + c.level);
+
+  ClassLevelProgression? get startingClass =>
+      classes.where((c) => c.isStartingClass).firstOrNull ?? classes.firstOrNull;
+
+  ClassLevelProgression? getClass(String classSlug) =>
+      classes.where((c) => c.classRef.slug == classSlug).firstOrNull;
+
+  /// Retrieves all selected option IDs for a specific decision across all classes.
+  List<String> getSelectedOptionsForDecision(String decisionId) {
+    final results = <String>[];
+    for (final c in classes) {
+      final opts = c.selectedFeatureOptions[decisionId];
+      if (opts != null) results.addAll(opts);
+    }
+    return results;
+  }
+
+  /// Aggregates all selected feature option IDs across all classes.
+  Map<String, List<String>> getAllSelectedFeatureOptions() {
+    final merged = <String, List<String>>{};
+    for (final c in classes) {
+      final srdClass = SrdClassesLibrary.findBySlug(c.classRef.slug);
+      final validDecisionIds = srdClass?.featureDecisions.map((d) => d.id).toSet();
+      final classSlug = c.classRef.slug.toLowerCase();
+      c.selectedFeatureOptions.forEach((k, v) {
+        final normK = k.toLowerCase().replaceAll('-', '_');
+        if (validDecisionIds == null ||
+            validDecisionIds.contains(k) ||
+            validDecisionIds.contains(k.replaceAll('_', '-')) ||
+            k.startsWith('$classSlug-') ||
+            k.startsWith('feat-') ||
+            k.contains('invocation') ||
+            ((normK == 'fighting_style' || normK.contains('fighting_style')) &&
+                (classSlug == 'fighter' || classSlug == 'paladin' || classSlug == 'ranger' || srdClass == null))) {
+          merged.putIfAbsent(k, () => []).addAll(v);
+        }
+      });
+    }
+    return merged;
+  }
+
+  CharacterProgression copyWith({
+    List<ClassLevelProgression>? classes,
+    int? experiencePoints,
+    Map<int, int>? manualHpRolls,
+  }) {
+    return CharacterProgression(
+      classes: classes != null ? List.unmodifiable(classes) : this.classes,
+      experiencePoints: experiencePoints ?? this.experiencePoints,
+      manualHpRolls: manualHpRolls != null ? Map.unmodifiable(manualHpRolls) : this.manualHpRolls,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'classes': classes.map((c) => c.toMap()).toList(),
+        'experiencePoints': experiencePoints,
+        'manualHpRolls': manualHpRolls.map((k, v) => MapEntry(k.toString(), v)),
+      };
+
+  factory CharacterProgression.fromMap(Map<String, dynamic> map) {
+    final hpRolls = <int, int>{};
+    if (map['manualHpRolls'] is Map) {
+      (map['manualHpRolls'] as Map).forEach((k, v) {
+        final key = int.tryParse(k.toString());
+        if (key != null && v is num) hpRolls[key] = v.toInt();
+      });
+    }
+
+    return CharacterProgression(
+      classes: (map['classes'] as List? ?? [])
+          .whereType<Map>()
+          .map((c) => ClassLevelProgression.fromMap(Map<String, dynamic>.from(c)))
+          .toList(),
+      experiencePoints: (map['experiencePoints'] as num?)?.toInt() ?? 0,
+      manualHpRolls: hpRolls,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CharacterProgression &&
+          runtimeType == other.runtimeType &&
+          listEquals(classes, other.classes) &&
+          experiencePoints == other.experiencePoints &&
+          mapEquals(manualHpRolls, other.manualHpRolls);
+
+  @override
+  int get hashCode =>
+      Object.hashAll(classes) ^
+      experiencePoints.hashCode ^
+      manualHpRolls.length.hashCode;
+}
+
+/// Standard 5e Spell Slots Pool
+@immutable
+class SpellSlotPool {
+  final Map<int, int> currentSlots; // Level 1-9 available slots
+  final Map<int, int> maxSlots; // Level 1-9 max slots
+  final int pactMagicSlotLevel; // 1-5
+  final int pactMagicMax;
+  final int pactMagicCurrent;
+
+  const SpellSlotPool({
+    this.currentSlots = const {},
+    this.maxSlots = const {},
+    this.pactMagicSlotLevel = 0,
+    this.pactMagicMax = 0,
+    this.pactMagicCurrent = 0,
+  });
+
+  SpellSlotPool copyWith({
+    Map<int, int>? currentSlots,
+    Map<int, int>? maxSlots,
+    int? pactMagicSlotLevel,
+    int? pactMagicMax,
+    int? pactMagicCurrent,
+  }) {
+    return SpellSlotPool(
+      currentSlots: currentSlots != null ? Map.unmodifiable(currentSlots) : this.currentSlots,
+      maxSlots: maxSlots != null ? Map.unmodifiable(maxSlots) : this.maxSlots,
+      pactMagicSlotLevel: pactMagicSlotLevel ?? this.pactMagicSlotLevel,
+      pactMagicMax: pactMagicMax ?? this.pactMagicMax,
+      pactMagicCurrent: pactMagicCurrent ?? this.pactMagicCurrent,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'currentSlots': currentSlots.map((k, v) => MapEntry(k.toString(), v)),
+        'maxSlots': maxSlots.map((k, v) => MapEntry(k.toString(), v)),
+        'pactMagicSlotLevel': pactMagicSlotLevel,
+        'pactMagicMax': pactMagicMax,
+        'pactMagicCurrent': pactMagicCurrent,
+      };
+
+  factory SpellSlotPool.fromMap(Map<String, dynamic> map) {
+    final cur = <int, int>{};
+    if (map['currentSlots'] is Map) {
+      (map['currentSlots'] as Map).forEach((k, v) {
+        final key = int.tryParse(k.toString());
+        if (key != null && v is num) cur[key] = v.toInt();
+      });
+    }
+
+    final max = <int, int>{};
+    if (map['maxSlots'] is Map) {
+      (map['maxSlots'] as Map).forEach((k, v) {
+        final key = int.tryParse(k.toString());
+        if (key != null && v is num) max[key] = v.toInt();
+      });
+    }
+
+    return SpellSlotPool(
+      currentSlots: cur,
+      maxSlots: max,
+      pactMagicSlotLevel: (map['pactMagicSlotLevel'] as num?)?.toInt() ?? 0,
+      pactMagicMax: (map['pactMagicMax'] as num?)?.toInt() ?? 0,
+      pactMagicCurrent: (map['pactMagicCurrent'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SpellSlotPool &&
+          runtimeType == other.runtimeType &&
+          mapEquals(currentSlots, other.currentSlots) &&
+          mapEquals(maxSlots, other.maxSlots) &&
+          pactMagicSlotLevel == other.pactMagicSlotLevel &&
+          pactMagicMax == other.pactMagicMax &&
+          pactMagicCurrent == other.pactMagicCurrent;
+
+  @override
+  int get hashCode =>
+      mapEquals.hashCode ^
+      currentSlots.length.hashCode ^
+      maxSlots.length.hashCode ^
+      pactMagicSlotLevel.hashCode ^
+      pactMagicMax.hashCode ^
+      pactMagicCurrent.hashCode;
+}
+
+/// Character resource pools (HP, Hit Dice, Spell Slots, Class charges, Death Saves, Exhaustion, Inspiration)
+@immutable
+class CharacterResourcePool {
+  final int currentHp;
+  final int tempHp;
+  final Map<String, int> currentHitDice; // e.g. {"d8": 3, "d10": 1}
+  final SpellSlotPool spellSlots;
+  final Map<String, int> customResourcesCurrent; // e.g. {"ki": 4, "rage": 2}
+  final Map<String, int> customResourcesMax;
+  final int deathSaveSuccesses; // clamped 0-3
+  final int deathSaveFailures; // clamped 0-3
+  final int exhaustionLevel; // clamped 0-10
+  final bool hasHeroicInspiration;
+
+  HitPoints get hitPoints => HitPoints(
+        currentHp: currentHp,
+        maxHp: 9999,
+        tempHp: tempHp,
+      );
+
+  const CharacterResourcePool({
+    this.currentHp = 10,
+    this.tempHp = 0,
+    this.currentHitDice = const {},
+    this.spellSlots = const SpellSlotPool(),
+    this.customResourcesCurrent = const {},
+    this.customResourcesMax = const {},
+    int deathSaveSuccesses = 0,
+    int deathSaveFailures = 0,
+    int exhaustionLevel = 0,
+    this.hasHeroicInspiration = false,
+  })  : deathSaveSuccesses = deathSaveSuccesses < 0 ? 0 : (deathSaveSuccesses > 3 ? 3 : deathSaveSuccesses),
+        deathSaveFailures = deathSaveFailures < 0 ? 0 : (deathSaveFailures > 3 ? 3 : deathSaveFailures),
+        exhaustionLevel = exhaustionLevel < 0 ? 0 : (exhaustionLevel > 10 ? 10 : exhaustionLevel);
+
+  CharacterResourcePool copyWith({
+    HitPoints? hitPoints,
+    int? currentHp,
+    int? tempHp,
+    Map<String, int>? currentHitDice,
+    SpellSlotPool? spellSlots,
+    Map<String, int>? customResourcesCurrent,
+    Map<String, int>? customResourcesMax,
+    int? deathSaveSuccesses,
+    int? deathSaveFailures,
+    int? exhaustionLevel,
+    bool? hasHeroicInspiration,
+  }) {
+    final resolvedCurrentHp = hitPoints?.currentHp ?? currentHp ?? this.currentHp;
+    final resolvedTempHp = hitPoints?.tempHp ?? tempHp ?? this.tempHp;
+
+    return CharacterResourcePool(
+      currentHp: resolvedCurrentHp,
+      tempHp: resolvedTempHp,
+      currentHitDice: currentHitDice != null ? Map.unmodifiable(currentHitDice) : this.currentHitDice,
+      spellSlots: spellSlots ?? this.spellSlots,
+      customResourcesCurrent:
+          customResourcesCurrent != null ? Map.unmodifiable(customResourcesCurrent) : this.customResourcesCurrent,
+      customResourcesMax: customResourcesMax != null ? Map.unmodifiable(customResourcesMax) : this.customResourcesMax,
+      deathSaveSuccesses: deathSaveSuccesses ?? this.deathSaveSuccesses,
+      deathSaveFailures: deathSaveFailures ?? this.deathSaveFailures,
+      exhaustionLevel: exhaustionLevel ?? this.exhaustionLevel,
+      hasHeroicInspiration: hasHeroicInspiration ?? this.hasHeroicInspiration,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'currentHp': currentHp,
+        'tempHp': tempHp,
+        'currentHitDice': currentHitDice,
+        'spellSlots': spellSlots.toMap(),
+        'customResourcesCurrent': customResourcesCurrent,
+        'customResourcesMax': customResourcesMax,
+        'deathSaveSuccesses': deathSaveSuccesses,
+        'deathSaveFailures': deathSaveFailures,
+        'exhaustionLevel': exhaustionLevel,
+        'hasHeroicInspiration': hasHeroicInspiration,
+      };
+
+  factory CharacterResourcePool.fromMap(Map<String, dynamic> map) {
+    final curHp = (map['currentHp'] as num?)?.toInt() ?? 10;
+    final tHp = (map['tempHp'] as num?)?.toInt() ?? 0;
+    final hp = map['hitPoints'] is Map
+        ? HitPoints(
+            currentHp: ((map['hitPoints'] as Map)['currentHp'] as num?)?.toInt() ?? curHp,
+            maxHp: ((map['hitPoints'] as Map)['maxHp'] as num?)?.toInt() ?? 9999,
+            tempHp: ((map['hitPoints'] as Map)['tempHp'] as num?)?.toInt() ?? tHp,
+          )
+        : HitPoints(currentHp: curHp, maxHp: 9999, tempHp: tHp);
+
+    return CharacterResourcePool(
+      currentHp: hp.currentHp,
+      tempHp: hp.tempHp,
+      currentHitDice: Map<String, int>.from(map['currentHitDice'] as Map? ?? {}),
+      spellSlots: SpellSlotPool.fromMap(
+          Map<String, dynamic>.from(map['spellSlots'] as Map? ?? {})),
+      customResourcesCurrent:
+          Map<String, int>.from(map['customResourcesCurrent'] as Map? ?? {}),
+      customResourcesMax:
+          Map<String, int>.from(map['customResourcesMax'] as Map? ?? {}),
+      deathSaveSuccesses: (map['deathSaveSuccesses'] as num?)?.toInt() ?? 0,
+      deathSaveFailures: (map['deathSaveFailures'] as num?)?.toInt() ?? 0,
+      exhaustionLevel: (map['exhaustionLevel'] as num?)?.toInt() ?? 0,
+      hasHeroicInspiration: map['hasHeroicInspiration'] == true,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CharacterResourcePool &&
+          runtimeType == other.runtimeType &&
+          currentHp == other.currentHp &&
+          tempHp == other.tempHp &&
+          mapEquals(currentHitDice, other.currentHitDice) &&
+          spellSlots == other.spellSlots &&
+          mapEquals(customResourcesCurrent, other.customResourcesCurrent) &&
+          mapEquals(customResourcesMax, other.customResourcesMax) &&
+          deathSaveSuccesses == other.deathSaveSuccesses &&
+          deathSaveFailures == other.deathSaveFailures &&
+          exhaustionLevel == other.exhaustionLevel &&
+          hasHeroicInspiration == other.hasHeroicInspiration;
+
+  @override
+  int get hashCode =>
+      currentHp.hashCode ^
+      tempHp.hashCode ^
+      currentHitDice.length.hashCode ^
+      spellSlots.hashCode ^
+      customResourcesCurrent.length.hashCode ^
+      customResourcesMax.length.hashCode ^
+      deathSaveSuccesses.hashCode ^
+      deathSaveFailures.hashCode ^
+      exhaustionLevel.hashCode ^
+      hasHeroicInspiration.hashCode;
+}
+
+/// Active Condition and Temporary Status Effect
+@immutable
+class CharacterCondition {
+  final String conditionName; // e.g. "blinded", "poisoned", "haste"
+  final int durationSeconds; // 0 = indefinite
+  final String? source; // spell or effect name
+  final Map<String, dynamic> parameters;
+
+  const CharacterCondition({
+    required this.conditionName,
+    this.durationSeconds = 0,
+    this.source,
+    this.parameters = const {},
+  });
+
+  CharacterCondition copyWith({
+    String? conditionName,
+    int? durationSeconds,
+    String? source,
+    Map<String, dynamic>? parameters,
+  }) {
+    return CharacterCondition(
+      conditionName: conditionName ?? this.conditionName,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      source: source ?? this.source,
+      parameters: parameters != null ? Map.unmodifiable(parameters) : this.parameters,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'conditionName': conditionName,
+        'durationSeconds': durationSeconds,
+        'source': source,
+        'parameters': parameters,
+      };
+
+  factory CharacterCondition.fromMap(Map<String, dynamic> map) {
+    return CharacterCondition(
+      conditionName: map['conditionName']?.toString() ?? '',
+      durationSeconds: (map['durationSeconds'] as num?)?.toInt() ?? 0,
+      source: map['source']?.toString(),
+      parameters: Map<String, dynamic>.from(map['parameters'] as Map? ?? {}),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CharacterCondition &&
+          runtimeType == other.runtimeType &&
+          conditionName == other.conditionName &&
+          durationSeconds == other.durationSeconds &&
+          source == other.source &&
+          mapEquals(parameters, other.parameters);
+
+  @override
+  int get hashCode =>
+      conditionName.hashCode ^
+      durationSeconds.hashCode ^
+      (source?.hashCode ?? 0) ^
+      parameters.length.hashCode;
+}
+
+/// Root Character Domain Entity adhering to DomainEntity interface
+@immutable
+class Character extends DomainEntity {
+  @override
+  final EntityId id;
+  @override
+  final String name;
+  final EntityReference<DomainEntity> speciesRef;
+  final EntityReference<DomainEntity>? backgroundRef;
+  final CharacterProgression progression;
+  final AbilityScores baseScores;
+  final AbilityScores bonusScores; // Permanent bonuses from species/background/feats
+  final Map<SkillType, SkillProficiencyLevel> skillProficiencies;
+  final Set<AbilityType> savingThrowProficiencies;
+  final List<String> toolProficiencies;
+  final List<String> languages;
+  final List<InventoryItemInstance> inventory;
+  final PartyPurse purse;
+  final Map<String, List<EntityReference<Spell>>> allocatedSpells;
+  final List<EntityReference<Spell>> _cantrips;
+  final List<EntityReference<Spell>> _spellsKnown;
+  final List<EntityReference<Spell>> spellsPrepared;
+  final List<EntityReference<DomainEntity>> feats;
+  final CharacterResourcePool resources;
+  final List<CharacterCondition> conditions;
+  final int maxAttunementSlots;
+  final int baseSpeedFeet;
+  final DmRulesEdition rulesEdition;
+  @override
+  final Map<String, dynamic> customProperties;
+
+  const Character({
+    required this.id,
+    required this.name,
+    required this.speciesRef,
+    this.backgroundRef,
+    required this.progression,
+    required this.baseScores,
+    this.bonusScores = const AbilityScores(
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    ),
+    this.skillProficiencies = const {},
+    this.savingThrowProficiencies = const {},
+    this.toolProficiencies = const [],
+    this.languages = const ['Common'],
+    this.inventory = const [],
+    this.purse = const PartyPurse(),
+    this.allocatedSpells = const {},
+    List<EntityReference<Spell>> cantrips = const [],
+    List<EntityReference<Spell>> spellsKnown = const [],
+    this.spellsPrepared = const [],
+    this.feats = const [],
+    required this.resources,
+    this.conditions = const [],
+    this.maxAttunementSlots = 3,
+    this.baseSpeedFeet = 30,
+    this.rulesEdition = DmRulesEdition.v2014,
+    this.customProperties = const {},
+  })  : _cantrips = cantrips,
+        _spellsKnown = spellsKnown;
+
+  @override
+  EntityType get entityType => EntityType.character;
+
+  int get totalLevel => progression.totalLevel;
+  int get proficiencyBonus => totalLevel.dndProficiencyBonus;
+
+  String get classesSummary {
+    if (progression.classes.isEmpty) return 'Adventurer';
+    return progression.classes.map((c) => '${c.classRef.displayName} ${c.level}').join(' / ');
+  }
+
+  List<EntityReference<Spell>> get cantrips {
+    final list = <EntityReference<Spell>>[];
+    for (final spells in allocatedSpells.values) {
+      for (final s in spells) {
+        final spellDef = SpellbookLibrary.getSpellById(s.slug);
+        if (spellDef != null) {
+          if (spellDef.level == 0 && !list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        } else if (s.slug.toLowerCase().contains('cantrip')) {
+          if (!list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        }
+      }
+    }
+    for (final c in _cantrips) {
+      if (!list.any((e) => e.slug == c.slug)) {
+        list.add(c);
+      }
+    }
+    return List.unmodifiable(list);
+  }
+
+  List<EntityReference<Spell>> get spellsKnown {
+    final list = <EntityReference<Spell>>[];
+    for (final spells in allocatedSpells.values) {
+      for (final s in spells) {
+        final spellDef = SpellbookLibrary.getSpellById(s.slug);
+        if (spellDef != null) {
+          if (spellDef.level > 0 && !list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        } else if (!s.slug.toLowerCase().contains('cantrip')) {
+          if (!list.any((e) => e.slug == s.slug)) {
+            list.add(s);
+          }
+        }
+      }
+    }
+    for (final s in _spellsKnown) {
+      if (!list.any((e) => e.slug == s.slug)) {
+        list.add(s);
+      }
+    }
+    return List.unmodifiable(list);
+  }
+
+  /// Raw ability scores (base scores with permanent bonuses from species/ASI/feats)
+  AbilityScores get rawAbilityScores => baseScores.withBonus(bonusScores);
+
+  /// Returns the inherent maximum score allowed for [ability].
+  /// Defaults to standard tabletop 20, but accounts for Level 20 Barbarian capstone (24 for STR/CON)
+  /// and any permanent inherent maximum increases stored in [customProperties] under 'abilityMaximums'.
+  int getAbilityScoreMaximum(AbilityType ability) {
+    int maxCap = 20;
+    // Check Barbarian Level 20 Capstone
+    final isBarbarian20 = progression.classes.any(
+      (c) => c.classRef.slug.toLowerCase() == 'barbarian' && c.level >= 20,
+    );
+    if (isBarbarian20 && (ability == AbilityType.strength || ability == AbilityType.constitution)) {
+      maxCap = math.max(maxCap, 24);
+    }
+    // Check customProperties / permanent inherent tomes
+    if (customProperties['abilityMaximums'] is Map) {
+      final map = customProperties['abilityMaximums'] as Map;
+      final val = (map[ability.name] as num?)?.toInt();
+      if (val != null) {
+        maxCap = math.max(maxCap, val);
+      }
+    }
+    return maxCap.clamp(20, 30);
+  }
+
+  /// Effective ability scores (evaluates rawAbilityScores and applies hard overrides from attuned/equipped items or custom properties)
+  AbilityScores get effectiveAbilityScores {
+    var raw = rawAbilityScores;
+    var str = raw.strength;
+    var dex = raw.dexterity;
+    var con = raw.constitution;
+    var intl = raw.intelligence;
+    var wis = raw.wisdom;
+    var cha = raw.charisma;
+
+    for (final instance in equippedItems) {
+      if (instance.requiresAttunement && !instance.isAttuned) continue;
+      final props = instance.customProperties;
+      if (props['abilityOverrides'] is Map) {
+        final overrides = props['abilityOverrides'] as Map;
+        if (overrides['strength'] is num) {
+          str = math.max(str, (overrides['strength'] as num).toInt());
+        }
+        if (overrides['dexterity'] is num) {
+          dex = math.max(dex, (overrides['dexterity'] as num).toInt());
+        }
+        if (overrides['constitution'] is num) {
+          con = math.max(con, (overrides['constitution'] as num).toInt());
+        }
+        if (overrides['intelligence'] is num) {
+          intl = math.max(intl, (overrides['intelligence'] as num).toInt());
+        }
+        if (overrides['wisdom'] is num) {
+          wis = math.max(wis, (overrides['wisdom'] as num).toInt());
+        }
+        if (overrides['charisma'] is num) {
+          cha = math.max(cha, (overrides['charisma'] as num).toInt());
+        }
+      }
+      if (props['abilityBonuses'] is Map) {
+        final bonuses = props['abilityBonuses'] as Map;
+        str += (bonuses['strength'] as num?)?.toInt() ?? 0;
+        dex += (bonuses['dexterity'] as num?)?.toInt() ?? 0;
+        con += (bonuses['constitution'] as num?)?.toInt() ?? 0;
+        intl += (bonuses['intelligence'] as num?)?.toInt() ?? 0;
+        wis += (bonuses['wisdom'] as num?)?.toInt() ?? 0;
+        cha += (bonuses['charisma'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    if (customProperties['abilityOverrides'] is Map) {
+      final overrides = customProperties['abilityOverrides'] as Map;
+      if (overrides['strength'] is num) {
+        str = math.max(str, (overrides['strength'] as num).toInt());
+      }
+      if (overrides['dexterity'] is num) {
+        dex = math.max(dex, (overrides['dexterity'] as num).toInt());
+      }
+      if (overrides['constitution'] is num) {
+        con = math.max(con, (overrides['constitution'] as num).toInt());
+      }
+      if (overrides['intelligence'] is num) {
+        intl = math.max(intl, (overrides['intelligence'] as num).toInt());
+      }
+      if (overrides['wisdom'] is num) {
+        wis = math.max(wis, (overrides['wisdom'] as num).toInt());
+      }
+      if (overrides['charisma'] is num) {
+        cha = math.max(cha, (overrides['charisma'] as num).toInt());
+      }
+    }
+
+    return AbilityScores(
+      strength: str,
+      dexterity: dex,
+      constitution: con,
+      intelligence: intl,
+      wisdom: wis,
+      charisma: cha,
+    );
+  }
+
+  int get attunedItemCount =>
+      inventory.where((item) => item.isAttuned).length;
+
+  List<InventoryItemInstance> get equippedItems =>
+      inventory.where((item) => item.isEquipped).toList();
+
+  /// Evaluates whether the character has a specific capability flag enabled from any selected
+  /// feature option, feat, class feature, or custom properties.
+  bool hasCapabilityFlag(String flagKey) {
+    if (customProperties[flagKey] == true) return true;
+    final normalizedKey = flagKey.toLowerCase().replaceAll('-', '_');
+    final allSelectedOptions = progression.getAllSelectedFeatureOptions();
+    for (final optionIds in allSelectedOptions.values) {
+      for (final optId in optionIds) {
+        final normOptId = optId.toLowerCase().replaceAll('-', '_');
+        if (normOptId == normalizedKey) return true;
+        final opt = SrdFeatureOptions.allOptions.firstWhere(
+          (o) => o.id == optId || o.id == optId.replaceAll('-', '_'),
+          orElse: () => SrdFeatureOptions.allOptions.firstWhere(
+            (o) => o.name.toLowerCase() == optId.toLowerCase(),
+            orElse: () => const FeatureOption(id: '', name: '', descriptionMarkdown: ''),
+          ),
+        );
+        if (opt.id.toLowerCase().replaceAll('-', '_') == normalizedKey) return true;
+        if (opt.grants[flagKey] == true || opt.grants[normalizedKey] == true) {
+          return true;
+        }
+        if ((flagKey == 'eldritchBlastChaDamage' || flagKey == 'agonizing_blast') &&
+            (normOptId == 'agonizing_blast' || opt.name.toLowerCase() == 'agonizing blast')) {
+          return true;
+        }
+      }
+    }
+    for (final featRef in feats) {
+      final slug = featRef.slug.toLowerCase().replaceAll('-', '_');
+      final name = featRef.displayName.toLowerCase().replaceAll(' ', '_');
+      if ((flagKey == 'mediumArmorMaster' || flagKey == 'homebrewArmorExpert') &&
+          (slug.contains('medium_armor_master') ||
+           name.contains('medium_armor_master') ||
+           slug.contains('homebrew_armor_expert') ||
+           name.contains('homebrew_armor_expert') ||
+           slug.contains('armor_expert'))) {
+        return true;
+      }
+      if (flagKey == 'observant' &&
+          (slug.contains('observant') || name.contains('observant'))) {
+        return true;
+      }
+      if ((flagKey == 'alert' || flagKey == 'homebrewInitiativeBoost') &&
+          (slug.contains('alert') ||
+           name.contains('alert') ||
+           slug.contains('homebrew_initiative_boost') ||
+           name.contains('homebrew_initiative_boost') ||
+           slug.contains('initiative_boost'))) {
+        return true;
+      }
+      if (flagKey == 'jackOfAllTrades' &&
+          (slug.contains('jack_of_all_trades') || name.contains('jack_of_all_trades'))) {
+        return true;
+      }
+    }
+    if (flagKey == 'jackOfAllTrades') {
+      final bardClass = progression.classes
+          .where((c) =>
+              c.classRef.slug.toLowerCase().contains('bard') ||
+              c.classRef.displayName.toLowerCase().contains('bard'))
+          .firstOrNull;
+      if (bardClass != null && bardClass.level >= 2) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Dynamic Armor Class calculation taking into account equipped armor, shields,
+  /// ability scores, feats (e.g. Medium Armor Master), and unarmored defense.
+  int get armorClass {
+    final scores = effectiveAbilityScores;
+    final dexMod = scores.getModifier(AbilityType.dexterity);
+    final conMod = scores.getModifier(AbilityType.constitution);
+    final wisMod = scores.getModifier(AbilityType.wisdom);
+
+    bool hasArmor = false;
+    int armorBaseAc = 10;
+    String armorType = 'none';
+    int? armorMaxDex;
+    int armorMagicBonus = 0;
+    int shieldBonus = 0;
+    int magicAcBonus = 0;
+
+    for (final instance in equippedItems) {
+      if (instance.requiresAttunement && !instance.isAttuned) continue;
+      final props = instance.customProperties;
+      final nameLower = instance.displayName.toLowerCase();
+      final slugLower = instance.itemRef.slug.toLowerCase();
+
+      final isShield = instance.equippedSlot == EquipmentSlot.shield ||
+          props['isShield'] == true ||
+          nameLower.contains('shield') ||
+          slugLower.contains('shield');
+
+      if (isShield) {
+        final bonus = (props['acBonus'] as num?)?.toInt() ??
+            (props['shieldBonus'] as num?)?.toInt() ??
+            2;
+        final magic = (props['magicBonus'] as num?)?.toInt() ?? 0;
+        shieldBonus += (bonus + magic);
+        continue;
+      }
+
+      final isArmor = instance.equippedSlot == EquipmentSlot.armor ||
+          props['armorType'] != null ||
+          props['baseAc'] != null ||
+          _isStandardArmorName(nameLower, slugLower);
+
+      if (isArmor && !hasArmor) {
+        hasArmor = true;
+        int? baseAc = (props['baseAc'] as num?)?.toInt();
+        String? type = props['armorType']?.toString().toLowerCase();
+        int? maxDex = (props['maxDexBonus'] as num?)?.toInt();
+        int magic = (props['magicBonus'] as num?)?.toInt() ?? 0;
+
+        if (baseAc == null || baseAc == 0) {
+          final standard = resolveStandardArmor(nameLower, slugLower);
+          baseAc = standard.baseAc;
+          type ??= standard.armorType;
+          maxDex ??= standard.maxDex;
+        }
+
+        armorBaseAc = baseAc;
+        armorType = type ?? 'light';
+        armorMaxDex = maxDex;
+        armorMagicBonus = magic;
+      } else if (!isArmor && !isShield) {
+        if (props['acBonus'] is num) {
+          magicAcBonus += (props['acBonus'] as num).toInt();
+        }
+      }
+    }
+
+    // Defense Fighting Style (+1 AC while wearing armor)
+    if (hasArmor &&
+        (hasCapabilityFlag('defense') ||
+            hasCapabilityFlag('defenseFightingStyle') ||
+            hasCapabilityFlag('defense_fighting_style'))) {
+      magicAcBonus += 1;
+    }
+
+    int totalAc;
+    if (hasArmor) {
+      int dexContribution = dexMod;
+      if (armorType == 'heavy') {
+        dexContribution = 0;
+      } else if (armorType == 'medium') {
+        final hasMam = hasCapabilityFlag('mediumArmorMaster') || hasCapabilityFlag('homebrewArmorExpert');
+        final cap = hasMam ? 3 : (armorMaxDex ?? 2);
+        dexContribution = math.min(dexMod, cap);
+      }
+      totalAc = armorBaseAc + dexContribution + armorMagicBonus + shieldBonus + magicAcBonus;
+    } else {
+      // Unarmored hierarchy:
+      int unarmoredAc = 10 + dexMod;
+
+      // Barbarian: 10 + DEX + CON (allows shield)
+      final isBarbarian = progression.classes.any((c) =>
+              c.classRef.slug.toLowerCase().contains('barbarian') ||
+              c.classRef.displayName.toLowerCase().contains('barbarian')) ||
+          hasCapabilityFlag('unarmoredDefenseBarbarian');
+      if (isBarbarian) {
+        final barbarianAc = 10 + dexMod + conMod;
+        if (barbarianAc > unarmoredAc) {
+          unarmoredAc = barbarianAc;
+        }
+      }
+
+      // Monk: 10 + DEX + WIS (no shield)
+      final isMonk = progression.classes.any((c) =>
+              c.classRef.slug.toLowerCase().contains('monk') ||
+              c.classRef.displayName.toLowerCase().contains('monk')) ||
+          hasCapabilityFlag('unarmoredDefenseMonk');
+      if (isMonk && shieldBonus == 0) {
+        final monkAc = 10 + dexMod + wisMod;
+        if (monkAc > unarmoredAc) {
+          unarmoredAc = monkAc;
+        }
+      }
+
+      // Draconic Sorcerer: 13 + DEX
+      final isDraconic = progression.classes.any((c) =>
+              c.subclassRef?.slug.toLowerCase().contains('draconic') == true ||
+              c.subclassRef?.displayName.toLowerCase().contains('draconic') == true) ||
+          hasCapabilityFlag('draconicResilience');
+      if (isDraconic) {
+        final draconicAc = 13 + dexMod;
+        if (draconicAc > unarmoredAc) {
+          unarmoredAc = draconicAc;
+        }
+      }
+
+      totalAc = unarmoredAc + shieldBonus + magicAcBonus;
+    }
+
+    return totalAc;
+  }
+
+  static bool _isStandardArmorName(String name, String slug) {
+    final combined = '$name $slug'.toLowerCase().replaceAll('-', ' ');
+    return combined.contains('padded') ||
+        combined.contains('leather') ||
+        combined.contains('studded') ||
+        combined.contains('hide') ||
+        combined.contains('chain shirt') ||
+        combined.contains('elven chain') ||
+        combined.contains('scale mail') ||
+        combined.contains('breastplate') ||
+        combined.contains('half plate') ||
+        combined.contains('ring mail') ||
+        combined.contains('chain mail') ||
+        combined.contains('splint') ||
+        combined.contains('plate');
+  }
+
+  static ({int baseAc, String armorType, int? maxDex}) resolveStandardArmor(
+    String name,
+    String slug,
+  ) {
+    final combined = '$name $slug'.toLowerCase().replaceAll('-', ' ');
+    if (combined.contains('breastplate')) {
+      return (baseAc: 14, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('half plate')) {
+      return (baseAc: 15, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('plate')) {
+      return (baseAc: 18, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('splint')) {
+      return (baseAc: 17, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('chain mail')) {
+      return (baseAc: 16, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('ring mail')) {
+      return (baseAc: 14, armorType: 'heavy', maxDex: 0);
+    }
+    if (combined.contains('scale mail')) {
+      return (baseAc: 14, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('chain shirt') || combined.contains('elven chain')) {
+      return (baseAc: 13, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('hide')) {
+      return (baseAc: 12, armorType: 'medium', maxDex: 2);
+    }
+    if (combined.contains('studded leather') || combined.contains('studded')) {
+      return (baseAc: 12, armorType: 'light', maxDex: null);
+    }
+    if (combined.contains('padded') || combined.contains('leather')) {
+      return (baseAc: 11, armorType: 'light', maxDex: null);
+    }
+    return (baseAc: 11, armorType: 'light', maxDex: null);
+  }
+
+  /// Dynamic Initiative Bonus: DEX modifier + Alert feat bonus + Jack of All Trades (if untrained).
+  int get initiativeBonus {
+    final dexMod = effectiveAbilityScores.getModifier(AbilityType.dexterity);
+    int bonus = dexMod;
+
+    final hasAlert = hasCapabilityFlag('alert') || hasCapabilityFlag('homebrewInitiativeBoost');
+    if (hasAlert) {
+      if (rulesEdition == DmRulesEdition.v2024) {
+        bonus += proficiencyBonus;
+      } else {
+        bonus += 5;
+      }
+    } else if (hasCapabilityFlag('jackOfAllTrades')) {
+      // In 5e RAW, initiative is a Dexterity check. Jack of All Trades applies to any ability check
+      // that doesn't already include proficiency bonus.
+      bonus += (proficiencyBonus * 0.5).floor();
+    }
+
+    if (customProperties['initiativeBonus'] is num) {
+      bonus += (customProperties['initiativeBonus'] as num).toInt();
+    }
+
+    return bonus;
+  }
+
+  /// Dynamic Skill Modifier calculation factoring in ability modifiers, proficiency levels,
+  /// and Jack of All Trades.
+  int getSkillModifier(SkillType skill) {
+    final ability = skill.defaultAbility;
+    final baseMod = effectiveAbilityScores.getModifier(ability);
+    final profLevel = skillProficiencies[skill] ?? SkillProficiencyLevel.none;
+
+    int bonus = 0;
+    if (profLevel != SkillProficiencyLevel.none) {
+      bonus = (proficiencyBonus * profLevel.multiplier).floor();
+    } else if (hasCapabilityFlag('jackOfAllTrades')) {
+      bonus = (proficiencyBonus * 0.5).floor();
+    }
+
+    return baseMod + bonus;
+  }
+
+  /// Dynamic Saving Throw Modifier calculation factoring in ability modifiers and proficiency.
+  int getSaveModifier(AbilityType ability) {
+    final baseMod = effectiveAbilityScores.getModifier(ability);
+    int bonus = 0;
+    if (savingThrowProficiencies.contains(ability)) {
+      bonus = proficiencyBonus;
+    }
+    return baseMod + bonus;
+  }
+
+  /// Passive Perception (10 + Perception skill modifier + Observant feat bonus if present)
+  int get passivePerception =>
+      10 + getSkillModifier(SkillType.perception) + (hasCapabilityFlag('observant') ? 5 : 0);
+
+  /// Passive Investigation (10 + Investigation skill modifier + Observant feat bonus if present)
+  int get passiveInvestigation =>
+      10 + getSkillModifier(SkillType.investigation) + (hasCapabilityFlag('observant') ? 5 : 0);
+
+  /// Passive Insight (10 + Insight skill modifier + Observant feat bonus if present)
+  int get passiveInsight =>
+      10 + getSkillModifier(SkillType.insight) + (hasCapabilityFlag('observant') ? 5 : 0);
+
+  /// Resolves the effective [AbilityType] for attack and damage rolls with [weapon].
+  AbilityType getEffectiveAttackAbility(
+    InventoryItemInstance weapon, {
+    AbilityScores? scores,
+    List<FeatureGrant>? additionalGrants,
+  }) {
+    final effectiveScores = scores ?? effectiveAbilityScores;
+    return Character.resolveEffectiveAttackAbility(
+      scores: effectiveScores,
+      weapon: weapon,
+      character: this,
+      additionalGrants: additionalGrants,
+    );
+  }
+
+  /// Evaluates ability scores, weapon properties, and feature grants to determine the optimal attack ability.
+  static AbilityType resolveEffectiveAttackAbility({
+    required AbilityScores scores,
+    required InventoryItemInstance weapon,
+    Character? character,
+    List<FeatureGrant>? additionalGrants,
+  }) {
+    final props = weapon.customProperties;
+    final nameLower = weapon.displayName.toLowerCase();
+    final slugLower = weapon.itemRef.slug.toLowerCase();
+
+    // 1. Weapon Property Extraction
+    final isFinesse = props['isFinesse'] == true ||
+        props['finesse'] == true ||
+        (props['property'] != null && props['property'].toString().toLowerCase().contains('finesse')) ||
+        (props['properties'] != null && props['properties'].toString().toLowerCase().contains('finesse')) ||
+        nameLower.contains('shortsword') ||
+        nameLower.contains('rapier') ||
+        nameLower.contains('scimitar') ||
+        nameLower.contains('dagger') ||
+        nameLower.contains('whip');
+
+    final isRanged = props['isRanged'] == true ||
+        props['ranged'] == true ||
+        nameLower.contains('longbow') ||
+        nameLower.contains('shortbow') ||
+        nameLower.contains('crossbow') ||
+        nameLower.contains('blowgun') ||
+        nameLower.contains('sling');
+
+    final isThrown = props['isThrown'] == true ||
+        props['thrown'] == true ||
+        (props['property'] != null && props['property'].toString().toLowerCase().contains('thrown')) ||
+        (props['properties'] != null && props['properties'].toString().toLowerCase().contains('thrown')) ||
+        nameLower.contains('handaxe') ||
+        nameLower.contains('dagger') ||
+        nameLower.contains('javelin') ||
+        nameLower.contains('light hammer') ||
+        nameLower.contains('spear') ||
+        nameLower.contains('trident') ||
+        nameLower.contains('dart');
+
+    final isMagicWeapon = props['isMagic'] == true ||
+        props['magic'] == true ||
+        (props['magicBonus'] as num? ?? 0) > 0 ||
+        (props['attackBonus'] as num? ?? 0) > 0 ||
+        nameLower.contains('+1') ||
+        nameLower.contains('+2') ||
+        nameLower.contains('+3') ||
+        slugLower.contains('magic') ||
+        slugLower.contains('plus-');
+
+    // 2. Base Candidates
+    final candidates = <AbilityType>[];
+    if (isRanged && !isThrown) {
+      candidates.add(AbilityType.dexterity);
+    } else if (isFinesse) {
+      candidates.add(AbilityType.strength);
+      candidates.add(AbilityType.dexterity);
+    } else if (isThrown && !isRanged) {
+      candidates.add(AbilityType.strength);
+      if (isFinesse) {
+        candidates.add(AbilityType.dexterity);
+      }
+    } else {
+      candidates.add(AbilityType.strength);
+    }
+
+    // 3. Subclass / Feature Grants Substitution
+    bool isBattleSmith = false;
+    bool isHexblade = false;
+
+    if (character != null) {
+      for (final c in character.progression.classes) {
+        final subName = (c.subclassRef?.displayName ?? '').toLowerCase();
+        final subSlug = (c.subclassRef?.slug ?? '').toLowerCase();
+        if (subName.contains('battle smith') || subSlug.contains('battle-smith') || subSlug.contains('battle_smith')) {
+          isBattleSmith = true;
+        }
+        if (subName.contains('hexblade') || subSlug.contains('hexblade')) {
+          isHexblade = true;
+        }
+      }
+    }
+
+    if (isBattleSmith && isMagicWeapon) {
+      candidates.add(AbilityType.intelligence);
+    }
+
+    if (isHexblade) {
+      candidates.add(AbilityType.charisma);
+    }
+
+    if (additionalGrants != null) {
+      final grantSubs = GrantEvaluator.evaluateAttackAbilitySubstitutions(
+        additionalGrants,
+        isMagicWeapon: isMagicWeapon,
+      );
+      candidates.addAll(grantSubs);
+    }
+
+    // 4. Select the candidate that gives the highest score / modifier
+    AbilityType bestAbility = candidates.first;
+    int bestMod = scores.getModifier(bestAbility);
+
+    for (final ability in candidates.skip(1)) {
+      final mod = scores.getModifier(ability);
+      if (mod > bestMod) {
+        bestMod = mod;
+        bestAbility = ability;
+      }
+    }
+
+    return bestAbility;
+  }
+
+  /// Projects current combat state, vitality, and typed entity pointers (slugs) into a
+  /// lightweight [CharacterTelemetryDto] for room networking and DM HUD telemetry.
+  CharacterTelemetryDto toTelemetryDto() {
+    final classPointers = progression.classes.map((c) {
+      return ClassLevelPointerDto(
+        classSlug: c.classRef.slug,
+        subclassSlug: c.subclassRef?.slug,
+        level: c.level,
+      );
+    }).toList();
+
+    final activeSpellSlots = <String, int>{};
+    resources.spellSlots.currentSlots.forEach((lvl, curr) {
+      activeSpellSlots['cur_$lvl'] = curr;
+    });
+    resources.spellSlots.maxSlots.forEach((lvl, max) {
+      activeSpellSlots['max_$lvl'] = max;
+    });
+
+    final wisMod = effectiveAbilityScores.getModifier(AbilityType.wisdom);
+    final hasPerception = skillProficiencies.containsKey(SkillType.perception);
+    final profLevel = skillProficiencies[SkillType.perception] ?? SkillProficiencyLevel.none;
+    final percBonus = hasPerception ? (proficiencyBonus * profLevel.multiplier).floor() : 0;
+    final passivePerc = 10 + wisMod + percBonus;
+
+    final equippedSlugs = inventory
+        .where((i) => i.isEquipped)
+        .map((i) => i.itemRef.slug)
+        .toList();
+
+    int calculatedMaxHp = 10;
+    try {
+      calculatedMaxHp = CharacterEvaluationEngine.evaluate(this).maxHp;
+    } catch (_) {
+      calculatedMaxHp = math.max(10, resources.currentHp);
+    }
+
+    return CharacterTelemetryDto(
+      id: id.slug,
+      name: name,
+      speciesSlug: speciesRef.slug,
+      backgroundSlug: backgroundRef?.slug,
+      classPointers: classPointers,
+      currentHp: resources.currentHp,
+      maxHp: calculatedMaxHp,
+      tempHp: resources.tempHp,
+      armorClass: armorClass,
+      speed: baseSpeedFeet,
+      level: totalLevel,
+      passivePerception: passivePerc,
+      exhaustionLevel: resources.exhaustionLevel,
+      deathSaveSuccesses: resources.deathSaveSuccesses,
+      deathSaveFailures: resources.deathSaveFailures,
+      conditions: conditions.map((c) => c.conditionName).toList(),
+      spellSlots: activeSpellSlots,
+      featSlugs: feats.map((f) => f.slug).toList(),
+      equippedItemSlugs: equippedSlugs,
+      rulesEdition: rulesEdition.name,
+      timestamp: DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toMap() => {
+        'id': id.toMap(),
+        'name': name,
+        'speciesRef': speciesRef.toMap(),
+        'backgroundRef': backgroundRef?.toMap(),
+        'progression': progression.toMap(),
+        'baseScores': baseScores.toMap(),
+        'bonusScores': bonusScores.toMap(),
+        'skillProficiencies': skillProficiencies
+            .map((k, v) => MapEntry(k.name, v.name)),
+        'savingThrowProficiencies':
+            savingThrowProficiencies.map((a) => a.name).toList(),
+        'toolProficiencies': toolProficiencies,
+        'languages': languages,
+        'inventory': inventory.map((i) => i.toMap()).toList(),
+        'purse': purse.toMap(),
+        'allocatedSpells': allocatedSpells.map(
+          (k, v) => MapEntry(k, v.map((s) => s.toMap()).toList()),
+        ),
+        'cantrips': cantrips.map((c) => c.toMap()).toList(),
+        'spellsKnown': spellsKnown.map((s) => s.toMap()).toList(),
+        'spellsPrepared': spellsPrepared.map((s) => s.toMap()).toList(),
+        'feats': feats.map((f) => f.toMap()).toList(),
+        'resources': resources.toMap(),
+        'conditions': conditions.map((c) => c.toMap()).toList(),
+        'maxAttunementSlots': maxAttunementSlots,
+        'baseSpeedFeet': baseSpeedFeet,
+        'rulesEdition': rulesEdition.name,
+        'customProperties': customProperties,
+      };
+
+  factory Character.fromMap(Map<String, dynamic> map) {
+    final skills = <SkillType, SkillProficiencyLevel>{};
+    if (map['skillProficiencies'] is Map) {
+      (map['skillProficiencies'] as Map).forEach((k, v) {
+        final skill = SkillType.values.firstWhere(
+          (s) => s.name == k.toString(),
+          orElse: () => SkillType.perception,
+        );
+        final level = SkillProficiencyLevel.values.firstWhere(
+          (l) => l.name == v.toString(),
+          orElse: () => SkillProficiencyLevel.proficient,
+        );
+        skills[skill] = level;
+      });
+    }
+
+    final saves = <AbilityType>{};
+    if (map['savingThrowProficiencies'] is List) {
+      for (final s in (map['savingThrowProficiencies'] as List)) {
+        final ab = AbilityType.values.firstWhere(
+          (a) => a.name == s.toString(),
+          orElse: () => AbilityType.strength,
+        );
+        saves.add(ab);
+      }
+    }
+
+    final edition = map['rulesEdition'] != null
+        ? DmRulesEdition.values.firstWhere(
+            (e) => e.name == map['rulesEdition'].toString(),
+            orElse: () => DmRulesEdition.v2014,
+          )
+        : DmRulesEdition.v2014;
+
+    final rawAllocated = map['allocatedSpells'];
+    final parsedAllocated = <String, List<EntityReference<Spell>>>{};
+    if (rawAllocated is Map) {
+      rawAllocated.forEach((k, v) {
+        if (v is List) {
+          parsedAllocated[k.toString()] = v
+              .whereType<Map>()
+              .map((s) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(s)))
+              .toList();
+        }
+      });
+    }
+
+    final parsedCantrips = (map['cantrips'] as List? ?? [])
+        .whereType<Map>()
+        .map((c) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(c)))
+        .toList();
+
+    final parsedSpellsKnown = (map['spellsKnown'] as List? ?? [])
+        .whereType<Map>()
+        .map((s) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(s)))
+        .toList();
+
+    if (parsedAllocated.isEmpty) {
+      if (parsedCantrips.isNotEmpty) {
+        parsedAllocated['cantrips'] = parsedCantrips;
+      }
+      if (parsedSpellsKnown.isNotEmpty) {
+        parsedAllocated['spellsKnown'] = parsedSpellsKnown;
+      }
+    }
+
+    return Character(
+      id: map['id'] is Map
+          ? EntityId.fromMap(Map<String, dynamic>.from(map['id'] as Map))
+          : EntityId(slug: map['id']?.toString() ?? '', ruleset: RulesetVersion.v2024),
+      name: map['name']?.toString() ?? '',
+      speciesRef: EntityReference<DomainEntity>.fromMap(
+          Map<String, dynamic>.from(map['speciesRef'] as Map? ?? {})),
+      backgroundRef: map['backgroundRef'] != null
+          ? EntityReference<DomainEntity>.fromMap(
+              Map<String, dynamic>.from(map['backgroundRef'] as Map? ?? {}))
+          : null,
+      progression: CharacterProgression.fromMap(
+          Map<String, dynamic>.from(map['progression'] as Map? ?? {})),
+      baseScores: AbilityScores.fromMap(
+          Map<String, dynamic>.from(map['baseScores'] as Map? ?? {})),
+      bonusScores: AbilityScores.fromMap(
+          Map<String, dynamic>.from(map['bonusScores'] as Map? ?? {})),
+      skillProficiencies: skills,
+      savingThrowProficiencies: saves,
+      toolProficiencies: (map['toolProficiencies'] as List? ?? [])
+          .whereType<String>()
+          .toList(),
+      languages:
+          (map['languages'] as List? ?? ['Common']).whereType<String>().toList(),
+      inventory: (map['inventory'] as List? ?? [])
+          .whereType<Map>()
+          .map((i) =>
+              InventoryItemInstance.fromMap(Map<String, dynamic>.from(i)))
+          .toList(),
+      purse: map['purse'] != null
+          ? PartyPurse.fromMap(
+              Map<String, dynamic>.from(map['purse'] as Map? ?? {}))
+          : const PartyPurse(),
+      allocatedSpells: parsedAllocated,
+      cantrips: parsedCantrips,
+      spellsKnown: parsedSpellsKnown,
+      spellsPrepared: (map['spellsPrepared'] as List? ?? [])
+          .whereType<Map>()
+          .map((s) => EntityReference<Spell>.fromMap(Map<String, dynamic>.from(s)))
+          .toList(),
+      feats: (map['feats'] as List? ?? [])
+          .whereType<Map>()
+          .map((f) =>
+              EntityReference<DomainEntity>.fromMap(Map<String, dynamic>.from(f)))
+          .toList(),
+      resources: CharacterResourcePool.fromMap(
+          Map<String, dynamic>.from(map['resources'] as Map? ?? {})),
+      conditions: (map['conditions'] as List? ?? [])
+          .whereType<Map>()
+          .map((c) =>
+              CharacterCondition.fromMap(Map<String, dynamic>.from(c)))
+          .toList(),
+      maxAttunementSlots:
+          (map['maxAttunementSlots'] as num?)?.toInt() ?? 3,
+      baseSpeedFeet: (map['baseSpeedFeet'] as num?)?.toInt() ?? 30,
+      rulesEdition: edition,
+      customProperties:
+          Map<String, dynamic>.from(map['customProperties'] as Map? ?? {}),
+    );
+  }
+
+  Character copyWith({
+    EntityId? id,
+    String? name,
+    EntityReference<DomainEntity>? speciesRef,
+    EntityReference<DomainEntity>? backgroundRef,
+    CharacterProgression? progression,
+    AbilityScores? baseScores,
+    AbilityScores? bonusScores,
+    Map<SkillType, SkillProficiencyLevel>? skillProficiencies,
+    Set<AbilityType>? savingThrowProficiencies,
+    List<String>? toolProficiencies,
+    List<String>? languages,
+    List<InventoryItemInstance>? inventory,
+    PartyPurse? purse,
+    Map<String, List<EntityReference<Spell>>>? allocatedSpells,
+    List<EntityReference<Spell>>? cantrips,
+    List<EntityReference<Spell>>? spellsKnown,
+    List<EntityReference<Spell>>? spellsPrepared,
+    List<EntityReference<DomainEntity>>? feats,
+    CharacterResourcePool? resources,
+    List<CharacterCondition>? conditions,
+    int? maxAttunementSlots,
+    int? baseSpeedFeet,
+    DmRulesEdition? rulesEdition,
+    Map<String, dynamic>? customProperties,
+  }) {
+    return Character(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      speciesRef: speciesRef ?? this.speciesRef,
+      backgroundRef: backgroundRef ?? this.backgroundRef,
+      progression: progression ?? this.progression,
+      baseScores: baseScores ?? this.baseScores,
+      bonusScores: bonusScores ?? this.bonusScores,
+      skillProficiencies: skillProficiencies != null ? Map.unmodifiable(skillProficiencies) : this.skillProficiencies,
+      savingThrowProficiencies:
+          savingThrowProficiencies != null ? Set.unmodifiable(savingThrowProficiencies) : this.savingThrowProficiencies,
+      toolProficiencies: toolProficiencies != null ? List.unmodifiable(toolProficiencies) : this.toolProficiencies,
+      languages: languages != null ? List.unmodifiable(languages) : this.languages,
+      inventory: inventory != null ? List.unmodifiable(inventory) : this.inventory,
+      purse: purse ?? this.purse,
+      allocatedSpells: allocatedSpells != null
+          ? Map.unmodifiable(allocatedSpells.map((k, v) => MapEntry(k, List<EntityReference<Spell>>.unmodifiable(v))))
+          : this.allocatedSpells,
+      cantrips: cantrips != null ? List.unmodifiable(cantrips) : _cantrips,
+      spellsKnown: spellsKnown != null ? List.unmodifiable(spellsKnown) : _spellsKnown,
+      spellsPrepared: spellsPrepared != null ? List.unmodifiable(spellsPrepared) : this.spellsPrepared,
+      feats: feats != null ? List.unmodifiable(feats) : this.feats,
+      resources: resources ?? this.resources,
+      conditions: conditions != null ? List.unmodifiable(conditions) : this.conditions,
+      maxAttunementSlots: maxAttunementSlots ?? this.maxAttunementSlots,
+      baseSpeedFeet: baseSpeedFeet ?? this.baseSpeedFeet,
+      rulesEdition: rulesEdition ?? this.rulesEdition,
+      customProperties: customProperties != null ? Map.unmodifiable(customProperties) : this.customProperties,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Character &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          speciesRef == other.speciesRef &&
+          backgroundRef == other.backgroundRef &&
+          progression == other.progression &&
+          baseScores == other.baseScores &&
+          bonusScores == other.bonusScores &&
+          mapEquals(skillProficiencies, other.skillProficiencies) &&
+          setEquals(savingThrowProficiencies, other.savingThrowProficiencies) &&
+          listEquals(toolProficiencies, other.toolProficiencies) &&
+          listEquals(languages, other.languages) &&
+          listEquals(inventory, other.inventory) &&
+          purse == other.purse &&
+          mapEquals(allocatedSpells, other.allocatedSpells) &&
+          listEquals(spellsPrepared, other.spellsPrepared) &&
+          listEquals(feats, other.feats) &&
+          resources == other.resources &&
+          listEquals(conditions, other.conditions) &&
+          maxAttunementSlots == other.maxAttunementSlots &&
+          baseSpeedFeet == other.baseSpeedFeet &&
+          rulesEdition == other.rulesEdition &&
+          mapEquals(customProperties, other.customProperties);
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      speciesRef.hashCode ^
+      (backgroundRef?.hashCode ?? 0) ^
+      progression.hashCode ^
+      baseScores.hashCode ^
+      bonusScores.hashCode ^
+      skillProficiencies.length.hashCode ^
+      savingThrowProficiencies.length.hashCode ^
+      toolProficiencies.length.hashCode ^
+      languages.length.hashCode ^
+      inventory.length.hashCode ^
+      purse.hashCode ^
+      allocatedSpells.length.hashCode ^
+      spellsPrepared.length.hashCode ^
+      feats.length.hashCode ^
+      resources.hashCode ^
+      conditions.length.hashCode ^
+      maxAttunementSlots.hashCode ^
+      baseSpeedFeet.hashCode ^
+      rulesEdition.hashCode ^
+      customProperties.length.hashCode;
+}

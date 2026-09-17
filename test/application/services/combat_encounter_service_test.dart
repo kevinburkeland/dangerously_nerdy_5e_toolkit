@@ -118,6 +118,7 @@ void main() {
       service = CombatEncounterService(
         characterRepo: charRepo,
         campaignRepo: campaignRepo,
+        localNodeId: 'node-test-1',
       );
 
       testChar = const Character(
@@ -495,6 +496,7 @@ void main() {
       final timedService = CombatEncounterService(
         characterRepo: charRepo,
         campaignRepo: campaignRepo,
+        localNodeId: 'node-timed-test',
         networkTimeProvider: () => fixedNetworkTime,
       );
 
@@ -518,7 +520,7 @@ void main() {
       final encounterItem = updatedProfile.roomState.activeEncounter.items['p1'];
       expect(encounterItem, isNotNull);
       expect(encounterItem!.timestamp.physicalTime, equals(fixedNetworkTime));
-      expect(encounterItem.timestamp.nodeId, equals('camp_clock_test'));
+      expect(encounterItem.timestamp.nodeId, equals('node-timed-test'));
 
       // Now remove participant
       final removedProfile = await timedService.updateEncounterParticipants(

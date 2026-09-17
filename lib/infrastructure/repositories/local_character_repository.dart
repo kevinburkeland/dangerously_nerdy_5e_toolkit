@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/ports/i_character_repository.dart';
-import '../../models/domain/character_models.dart';
+import '../../domain/models/character_models.dart';
 import '../../services/app_services.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';

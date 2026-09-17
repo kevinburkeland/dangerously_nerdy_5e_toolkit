@@ -56,18 +56,21 @@ class DmDashboardController extends ChangeNotifier {
                 ? sl<ICharacterRepository>()
                 : CharacterPersistenceService()),
         _combatEncounterService = combatEncounterService ??
-            CombatEncounterService(
-              characterRepo: characterRepository ??
-                  characterPersistenceService ??
-                  (sl.isRegistered<ICharacterRepository>()
-                      ? sl<ICharacterRepository>()
-                      : CharacterPersistenceService()),
-              campaignRepo: campaignRepository ??
-                  campaignProfileService ??
-                  (sl.isRegistered<ICampaignRepository>()
-                      ? sl<ICampaignRepository>()
-                      : AppServices.instance.campaignProfileService),
-            ),
+            (sl.isRegistered<CombatEncounterService>()
+                ? sl<CombatEncounterService>()
+                : CombatEncounterService(
+                    characterRepo: characterRepository ??
+                        characterPersistenceService ??
+                        (sl.isRegistered<ICharacterRepository>()
+                            ? sl<ICharacterRepository>()
+                            : CharacterPersistenceService()),
+                    campaignRepo: campaignRepository ??
+                        campaignProfileService ??
+                        (sl.isRegistered<ICampaignRepository>()
+                            ? sl<ICampaignRepository>()
+                            : AppServices.instance.campaignProfileService),
+                    localNodeId: const Uuid().v4(),
+                  )),
         _roomSyncOrchestrator = roomSyncOrchestrator ??
             (sl.isRegistered<RoomSyncOrchestrator>()
                 ? sl<RoomSyncOrchestrator>()

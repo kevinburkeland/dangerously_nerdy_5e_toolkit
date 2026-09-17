@@ -1,3 +1,4 @@
+import 'package:uuid/uuid.dart';
 import '../../application/services/cascading_transport_router.dart';
 import '../../application/services/clock_sync_service.dart';
 import '../../application/services/combat_encounter_service.dart';
@@ -126,10 +127,13 @@ Future<void> initServiceLocator({
         networkTimePort: sl<INetworkTimePort>(),
       ));
 
+  final localNodeId = const Uuid().v4();
+
   sl.registerLazySingleton<CombatEncounterService>(() => CombatEncounterService(
         characterRepo: sl<ICharacterRepository>(),
         campaignRepo: sl<ICampaignRepository>(),
         networkTimeProvider: () => sl<ClockSyncService>().currentNetworkTimeMs,
+        localNodeId: localNodeId,
       ));
 
   sl.registerLazySingleton<RoomStateReconciliationService>(
@@ -159,5 +163,6 @@ Future<void> initServiceLocator({
         clockSyncService: sl<ClockSyncService>(),
         diceRoomService: DiceRoomService(),
         payloadMapper: sl<IRoomSyncPayloadPort>(),
+        localNodeId: localNodeId,
       ));
 }

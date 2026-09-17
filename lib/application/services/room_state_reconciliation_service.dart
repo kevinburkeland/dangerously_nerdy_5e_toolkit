@@ -3,7 +3,7 @@ import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/crdt/hybrid_logical_clock.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../models/domain/loot_models.dart';
-import '../../models/domain/session_graph_models.dart';
+import '../../domain/models/session_graph_models.dart';
 import '../../models/party/party_event.dart';
 
 /// Application service orchestrating safe CRDT state reconciliation, tombstone pruning,

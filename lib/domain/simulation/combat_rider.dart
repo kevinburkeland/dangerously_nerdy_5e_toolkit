@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:meta/meta.dart';
 import '../../models/arena/arena_condition.dart';
-import '../../models/domain/character_models.dart';
+import '../models/character_models.dart';
 
 /// Pure domain Abstract Syntax Tree (AST) representing an effect rider attached
 /// to a precomputed combat action.

@@ -2,7 +2,7 @@ import 'dart:convert';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_room_sync_payload_port.dart';
-import '../../models/party/party_purse.dart';
+import '../../domain/models/party_purse.dart';
 import '../../models/room_roll.dart';
 import '../../utils/crypto_utils.dart';
 import '../dtos/campaign_profile_dto.dart';

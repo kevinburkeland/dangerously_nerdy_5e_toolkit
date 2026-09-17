@@ -1,4 +1,4 @@
-import '../../models/domain/character_models.dart';
+import '../models/character_models.dart';
 import '../../models/dm_screen_data.dart';
 import '../../models/domain/character_draft.dart';
 

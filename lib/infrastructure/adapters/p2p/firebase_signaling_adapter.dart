@@ -278,9 +278,7 @@ class FirebaseSignalingAdapter {
     final authored = _peerAuthoredDocPaths.remove(peerId);
     final allForPeer = _peerTrackedDocPaths.remove(peerId);
 
-    final pathsToDelete = (authored != null && authored.isNotEmpty)
-        ? authored
-        : (allForPeer ?? <String>{});
+    final pathsToDelete = <String>{...?authored, ...?allForPeer};
     if (pathsToDelete.isEmpty) return;
 
     for (final path in List<String>.from(pathsToDelete)) {

@@ -1,7 +1,7 @@
 import 'package:meta/meta.dart';
 import '../crdt/crdt_or_set.dart';
 import '../models/campaign_profile.dart';
-import '../../models/party/party_purse.dart';
+import '../models/party_purse.dart';
 import '../../models/room_roll.dart';
 
 /// Sealed hierarchy of incoming network sync messages parsed from raw JSON transport payloads.

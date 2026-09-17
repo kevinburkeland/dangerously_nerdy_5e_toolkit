@@ -12,7 +12,7 @@ import 'cascading_transport_router.dart';
 import 'clock_sync_service.dart';
 import 'room_connection_telemetry.dart';
 import 'room_state_reconciliation_service.dart';
-import '../../models/party/party_purse.dart';
+import '../../domain/models/party_purse.dart';
 import '../../services/dice_room_service.dart';
 
 /// Application service orchestrating bidirectional synchronization between
@@ -28,7 +28,11 @@ class RoomSyncOrchestrator {
   final DiceRoomService diceRoomService;
   final IRoomSyncPayloadPort payloadMapper;
   final bool isHost;
-  final String hostNodeId;
+  final String localNodeId;
+
+  /// Backwards-compatible alias for [localNodeId].
+  @Deprecated('Use localNodeId instead')
+  String get hostNodeId => localNodeId;
   final Duration telemetryInterval;
   final Duration milestoneInterval;
   final Duration heartbeatTtl;
@@ -70,11 +74,13 @@ class RoomSyncOrchestrator {
     IRoomSyncPayloadPort? payloadMapper,
     int Function()? localTimeProvider,
     this.isHost = false,
-    this.hostNodeId = 'dm-host-prime',
+    String? localNodeId,
+    @Deprecated('Use localNodeId instead') String? hostNodeId,
     this.telemetryInterval = const Duration(seconds: 2),
     this.milestoneInterval = const Duration(minutes: 5),
     Duration? heartbeatTtl,
-  })  : transportPort = transportPort ?? router!,
+  })  : localNodeId = localNodeId ?? hostNodeId ?? 'dm-host-prime',
+        transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
         payloadMapper = payloadMapper ??
             IRoomSyncPayloadPort.defaultProvider?.call() ??
@@ -217,7 +223,7 @@ class RoomSyncOrchestrator {
       return;
     }
 
-    if (message.originNodeId.isNotEmpty && message.originNodeId == hostNodeId) {
+    if (message.originNodeId.isNotEmpty && message.originNodeId == localNodeId) {
       return;
     }
 
@@ -352,7 +358,7 @@ class RoomSyncOrchestrator {
       final payload = payloadMapper.serializePurseDelta(
         campaignId: profile.id,
         purse: profile.partyPurse,
-        originNodeId: hostNodeId,
+        originNodeId: localNodeId,
         originSeq: ++_localSequenceNumber,
         timestamp: _localTimeProvider(),
       );
@@ -374,7 +380,7 @@ class RoomSyncOrchestrator {
       final payload = payloadMapper.serializeOrSetDelta(
         campaignId: profile.id,
         rulesSet: _trackedRulesSet,
-        originNodeId: hostNodeId,
+        originNodeId: localNodeId,
         originSeq: ++_localSequenceNumber,
         timestamp: _localTimeProvider(),
       );
@@ -386,7 +392,7 @@ class RoomSyncOrchestrator {
 
     final payload = payloadMapper.serializeFullProfileSync(
       profile: profile,
-      originNodeId: hostNodeId,
+      originNodeId: localNodeId,
       originSeq: ++_localSequenceNumber,
       timestamp: _localTimeProvider(),
       trackedRulesSet: _trackedRulesSet,
@@ -417,7 +423,7 @@ class RoomSyncOrchestrator {
       _trackedRulesSet = reconciliationService.executeMilestonePrune<String>(
         _trackedRulesSet,
         authoritativeTimestamp,
-        hostNodeId,
+        localNodeId,
       );
     }
 
