@@ -199,6 +199,106 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     );
   }
 
+  Future<void> _confirmLeaveCampaign(String campaignName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.exit_to_app, color: Colors.orangeAccent),
+            SizedBox(width: 8),
+            Text('Leave Campaign'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to leave "$campaignName" ($_roomCode)?\n\n'
+          'Your active player status and local campaign link will be removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade800),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Leave Campaign'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      try {
+        await _partyService.leaveCampaign(
+          roomCode: _roomCode,
+          playerName: _playerName,
+        );
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Left campaign "$campaignName"')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error leaving campaign: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteCampaign(String campaignName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.delete_forever, color: Colors.redAccent),
+            SizedBox(width: 8),
+            Text('Delete Campaign'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to permanently delete "$campaignName" ($_roomCode)?\n\n'
+          'This will delete the room, party loot, and all cloud records for all participants. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade800),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete Permanently'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      try {
+        await _partyService.deleteCampaign(
+          roomCode: _roomCode,
+          hostKey: _currentMembership?.hostKey,
+        );
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Campaign "$campaignName" permanently deleted')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting campaign: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   CampaignMembership? get _currentMembership => _registry.getMembership(_roomCode);
   bool get _isDmOrCoDm => _currentMembership?.isDmOrCoDm ?? false;
 
@@ -411,6 +511,10 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                         );
                       } else if (val == 'passkey' && _currentMembership != null) {
                         ShareDmPasskeyDialog.show(context, _currentMembership!);
+                      } else if (val == 'leaveCampaign') {
+                        _confirmLeaveCampaign(campaignName);
+                      } else if (val == 'deleteCampaign') {
+                        _confirmDeleteCampaign(campaignName);
                       }
                     },
                     itemBuilder: (ctx) => [
@@ -454,7 +558,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                           ],
                         ),
                       ),
-                      if (!_isDmOrCoDm)
+                      if (!_isDmOrCoDm) ...[
                         const PopupMenuItem(
                           value: 'claimDm',
                           child: Row(
@@ -465,6 +569,18 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                             ],
                           ),
                         ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'leaveCampaign',
+                          child: Row(
+                            children: [
+                              Icon(Icons.exit_to_app, size: 18, color: Colors.orangeAccent),
+                              SizedBox(width: 8),
+                              Text('Leave Campaign', style: TextStyle(color: Colors.orangeAccent)),
+                            ],
+                          ),
+                        ),
+                      ],
                       if (_isDmOrCoDm) ...[
                         const PopupMenuItem(
                           value: 'dmDashboard',
@@ -483,6 +599,17 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                               Icon(Icons.key_outlined, size: 18, color: Colors.amber),
                               SizedBox(width: 8),
                               Text('Share DM Passkey'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'deleteCampaign',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_forever, size: 18, color: Colors.redAccent),
+                              SizedBox(width: 8),
+                              Text('Delete Campaign', style: TextStyle(color: Colors.redAccent)),
                             ],
                           ),
                         ),

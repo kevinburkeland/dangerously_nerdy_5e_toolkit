@@ -7,6 +7,7 @@ import '../providers/settings_provider.dart';
 import '../models/srd_summons/srd_summons_library.dart';
 import '../services/haptic_service.dart';
 import '../services/party/campaign_registry_service.dart';
+import '../services/party/party_room_service.dart';
 import '../utils/pwa_helper.dart';
 import '../widgets/dialogs/action_economy_dialog.dart';
 import '../widgets/dialogs/condition_reference_dialog.dart';
@@ -39,6 +40,7 @@ class _LandingScreenState extends State<LandingScreen> {
   void initState() {
     super.initState();
     _tools = LandingToolRegistry.defaultTools;
+    PartyRoomService().syncAllExistingCampaignsToFirestore();
   }
 
   @override
@@ -1115,6 +1117,86 @@ class _LandingScreenState extends State<LandingScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 2),
+                  SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      iconSize: 16,
+                      icon: Icon(Icons.more_vert, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8)),
+                      tooltip: 'Campaign Options',
+                      onSelected: (val) => _handleCampaignOption(context, m, val),
+                      itemBuilder: (ctx) => [
+                        const PopupMenuItem(
+                          value: 'open',
+                          child: Row(
+                            children: [
+                              Icon(Icons.meeting_room_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text('Open Campaign Room'),
+                            ],
+                          ),
+                        ),
+                        if (isDm) ...[
+                          const PopupMenuItem(
+                            value: 'dmScreen',
+                            child: Row(
+                              children: [
+                                Icon(Icons.dashboard_customize_outlined, size: 18, color: Colors.purpleAccent),
+                                SizedBox(width: 8),
+                                Text('Open DM Screen'),
+                              ],
+                            ),
+                          ),
+                          if (m.hasHostKey)
+                            const PopupMenuItem(
+                              value: 'shareKey',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.key, size: 18, color: Colors.amber),
+                                  SizedBox(width: 8),
+                                  Text('Share DM Passkey'),
+                                ],
+                              ),
+                            ),
+                          const PopupMenuDivider(),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_forever, size: 18, color: Colors.redAccent),
+                                SizedBox(width: 8),
+                                Text('Delete Campaign', style: TextStyle(color: Colors.redAccent)),
+                              ],
+                            ),
+                          ),
+                        ] else ...[
+                          const PopupMenuItem(
+                            value: 'claimKey',
+                            child: Row(
+                              children: [
+                                Icon(Icons.vpn_key_outlined, size: 18, color: Colors.amber),
+                                SizedBox(width: 8),
+                                Text('Claim DM / Enter Passkey'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuDivider(),
+                          const PopupMenuItem(
+                            value: 'leave',
+                            child: Row(
+                              children: [
+                                Icon(Icons.exit_to_app, size: 18, color: Colors.orangeAccent),
+                                SizedBox(width: 8),
+                                Text('Leave Campaign', style: TextStyle(color: Colors.orangeAccent)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ],
               ),
               Text(
@@ -1177,6 +1259,128 @@ class _LandingScreenState extends State<LandingScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleCampaignOption(BuildContext context, CampaignMembership m, String option) async {
+    HapticService.selectionTick(context);
+    switch (option) {
+      case 'open':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PartyRoomScreen(roomCode: m.roomCode),
+          ),
+        );
+      case 'dmScreen':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DmDashboardScreen(initialCampaignId: 'campaign_${m.roomCode}'),
+          ),
+        );
+      case 'shareKey':
+        ShareDmPasskeyDialog.show(context, m);
+      case 'claimKey':
+        ClaimDmPasskeyDialog.show(
+          context,
+          initialRoomCode: m.roomCode,
+          initialPlayerName: m.characterId,
+        );
+      case 'leave':
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.exit_to_app, color: Colors.orangeAccent),
+                SizedBox(width: 8),
+                Text('Leave Campaign'),
+              ],
+            ),
+            content: Text(
+              'Are you sure you want to leave "${m.campaignName}" (${m.roomCode})?\n\n'
+              'Your active character status and local membership will be removed.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade800),
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Leave Campaign'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true && context.mounted) {
+          try {
+            await PartyRoomService().leaveCampaign(
+              roomCode: m.roomCode,
+              playerName: m.characterId ?? 'Player',
+            );
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Left campaign "${m.campaignName}"')),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error leaving campaign: $e'), backgroundColor: Colors.red),
+              );
+            }
+          }
+        }
+      case 'delete':
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.delete_forever, color: Colors.redAccent),
+                SizedBox(width: 8),
+                Text('Delete Campaign'),
+              ],
+            ),
+            content: Text(
+              'Are you sure you want to permanently delete "${m.campaignName}" (${m.roomCode})?\n\n'
+              'This will delete the room, party loot, and all cloud records for all participants. This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Colors.red.shade800),
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Delete Permanently'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true && context.mounted) {
+          try {
+            await PartyRoomService().deleteCampaign(
+              roomCode: m.roomCode,
+              hostKey: m.hostKey,
+            );
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Campaign "${m.campaignName}" permanently deleted')),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error deleting campaign: $e'), backgroundColor: Colors.red),
+              );
+            }
+          }
+        }
+    }
   }
 
   String _formatLastPlayed(DateTime dt) {

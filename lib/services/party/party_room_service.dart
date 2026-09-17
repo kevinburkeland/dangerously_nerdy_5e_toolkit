@@ -74,6 +74,7 @@ class PartyOutboxAction {
   final String actionType; // 'addLoot', 'coinDelta', 'claimItem', 'archiveItem'
   final Map<String, dynamic> payload;
   final DateTime timestamp;
+  int retryCount;
 
   PartyOutboxAction({
     required this.id,
@@ -81,6 +82,7 @@ class PartyOutboxAction {
     required this.actionType,
     required this.payload,
     required this.timestamp,
+    this.retryCount = 0,
   });
 
   Map<String, dynamic> toMap() => {
@@ -89,6 +91,7 @@ class PartyOutboxAction {
     'actionType': actionType,
     'payload': payload,
     'timestamp': timestamp.toIso8601String(),
+    'retryCount': retryCount,
   };
 
   factory PartyOutboxAction.fromMap(Map<String, dynamic> map) => PartyOutboxAction(
@@ -99,6 +102,7 @@ class PartyOutboxAction {
     timestamp: map['timestamp'] != null
         ? DateTime.tryParse(map['timestamp'] as String) ?? DateTime.now()
         : DateTime.now(),
+    retryCount: (map['retryCount'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -217,6 +221,13 @@ class PartyRoomService {
           stackTrace,
           reason: 'Failed to write new room $roomCode to Firestore; fallback to local',
         );
+        _queueOutbox(PartyOutboxAction(
+          id: 'outbox_create_${DateTime.now().millisecondsSinceEpoch}',
+          roomCode: roomCode,
+          actionType: 'createRoom',
+          payload: session.toMap(),
+          timestamp: DateTime.now(),
+        ));
       }
     }
 
@@ -540,6 +551,7 @@ class PartyRoomService {
           'campaignName': cName,
           'isStateless': isStateless,
           'hostKeyHash': hostKeyHash,
+          'partyPurse': session.partyPurse.toMap(),
           'lastUpdated': now.toIso8601String(),
           'expiresAt': expiresAt.toIso8601String(),
         }, SetOptions(merge: true));
@@ -876,6 +888,131 @@ class PartyRoomService {
     return rehydrated;
   }
 
+  /// Leaves a campaign: removes player from active session and purges local membership
+  Future<void> leaveCampaign({
+    required String roomCode,
+    required String playerName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final trimmedPlayer = playerName.trim();
+
+    // 1. Remove from local membership registry
+    await _registry.removeMembership(clean);
+
+    // 2. In-memory update
+    final current = _localRooms[clean];
+    if (current != null) {
+      final updatedPlayers = List<String>.from(current.activePlayers)..remove(trimmedPlayer);
+      final updatedRoster = List<String>.from(current.characterRoster)..remove(trimmedPlayer);
+      final updatedSession = current.copyWith(
+        activePlayers: updatedPlayers,
+        characterRoster: updatedRoster,
+        lastUpdated: DateTime.now(),
+      );
+      _localRooms[clean] = updatedSession;
+      _emitSession(clean);
+    }
+
+    // 3. Log leave audit event
+    await logEvent(
+      roomCode: clean,
+      type: 'playerLeave',
+      playerName: trimmedPlayer.isNotEmpty ? trimmedPlayer : 'Player',
+      details: '$trimmedPlayer left the campaign session.',
+    );
+
+    // 4. Update Firestore
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.set({
+          'roomCode': clean,
+          'code': clean,
+          if (current != null) 'campaignName': current.campaignName,
+          'activePlayers': FieldValue.arrayRemove([trimmedPlayer]),
+          'characterRoster': FieldValue.arrayRemove([trimmedPlayer]),
+          'lastUpdated': DateTime.now().toIso8601String(),
+        }, SetOptions(merge: true));
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore leaveCampaign failed for $clean');
+      }
+    }
+
+    // 5. Cleanup dice room stream
+    _diceRoomService.disposeRoomStream(clean);
+  }
+
+  /// Permanently deletes a campaign: verifies host authority if key exists,
+  /// deletes from Firestore, and purges all local state and memberships.
+  Future<void> deleteCampaign({
+    required String roomCode,
+    String? hostKey,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final membership = _registry.getMembership(clean);
+
+    // Verify DM authority if hostKey is tracked
+    final keyToVerify = hostKey ?? membership?.hostKey;
+    final session = _localRooms[clean];
+    final expectedHash = session?.hostKeyHash ?? '';
+    if (expectedHash.isNotEmpty) {
+      if (keyToVerify == null || keyToVerify.isEmpty) {
+        throw UnauthorizedHostActionException('DM passkey is required to delete this campaign.');
+      }
+      final cleanKey = CryptoUtils.extractHostKey(keyToVerify);
+      final actualHash = CryptoUtils.sha256Hex(cleanKey);
+      if (actualHash != expectedHash) {
+        throw UnauthorizedHostActionException('Invalid DM passkey. Cannot delete campaign.');
+      }
+    }
+
+    // 1. Remove from local membership registry
+    await _registry.removeMembership(clean);
+
+    // 2. In-memory cleanup
+    _localRooms.remove(clean);
+    _localLoot.remove(clean);
+    _localEvents.remove(clean);
+    _outbox.remove(clean);
+    _updateOutboxCount();
+    _emitSession(clean);
+
+    // 3. Firestore deletion
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.delete();
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore deleteCampaign failed for $clean');
+      }
+    }
+
+    // 4. Cleanup dice room stream
+    _diceRoomService.disposeRoomStream(clean);
+  }
+
+  /// Automatically synchronizes all local campaign memberships into Firestore rooms
+  Future<void> syncAllExistingCampaignsToFirestore() async {
+    if (!isFirebaseAvailable) return;
+    try {
+      final memberships = _registry.memberships;
+      for (final m in memberships) {
+        try {
+          await ensureRoomExists(
+            roomCode: m.roomCode,
+            campaignName: m.campaignName,
+            hostKey: m.hostKey,
+            isStateless: false,
+          );
+        } catch (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'Failed to sync existing campaign ${m.roomCode} to Firestore');
+        }
+      }
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'syncAllExistingCampaignsToFirestore error');
+    }
+  }
+
   // =========================================================================
   // 3. SUBCOLLECTION-BASED STREAMING
   // =========================================================================
@@ -1068,10 +1205,14 @@ class PartyRoomService {
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.update({
+        final session = _localRooms[clean];
+        await docRef.set({
+          'roomCode': clean,
+          'code': clean,
+          if (session != null) 'campaignName': session.campaignName,
           'activePlayers': FieldValue.arrayUnion([trimmedName]),
           'lastUpdated': DateTime.now().toIso8601String(),
-        });
+        }, SetOptions(merge: true));
       } catch (e, st) {
         LoggingService().logNonFatal(e, st, reason: 'Firestore setActiveCharacter failed for $clean');
       }
@@ -1128,10 +1269,13 @@ class PartyRoomService {
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.update({
+        await docRef.set({
+          'roomCode': clean,
+          'code': clean,
+          'campaignName': current.campaignName,
           'characterRoster': FieldValue.arrayUnion([trimmed]),
           'lastUpdated': DateTime.now().toIso8601String(),
-        });
+        }, SetOptions(merge: true));
       } catch (e, st) {
         LoggingService().logNonFatal(e, st, reason: 'Firestore addCharacterToRoster failed for $clean');
       }
@@ -1310,15 +1454,20 @@ class PartyRoomService {
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.update({
-          'partyPurse.cp': FieldValue.increment(cp),
-          'partyPurse.sp': FieldValue.increment(sp),
-          'partyPurse.ep': FieldValue.increment(ep),
-          'partyPurse.gp': FieldValue.increment(gp),
-          'partyPurse.pp': FieldValue.increment(pp),
+        await docRef.set({
+          'roomCode': clean,
+          'code': clean,
+          'campaignName': current.campaignName,
+          'partyPurse': {
+            'cp': FieldValue.increment(cp),
+            'sp': FieldValue.increment(sp),
+            'ep': FieldValue.increment(ep),
+            'gp': FieldValue.increment(gp),
+            'pp': FieldValue.increment(pp),
+          },
           'version': FieldValue.increment(1),
           'lastUpdated': DateTime.now().toIso8601String(),
-        });
+        }, SetOptions(merge: true));
       } catch (e, st) {
         LoggingService().logNonFatal(e, st, reason: 'Firestore coin deposit failed; queuing outbox');
         _queueOutbox(PartyOutboxAction(
@@ -1458,15 +1607,20 @@ class PartyRoomService {
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.update({
-          'partyPurse.cp': FieldValue.increment(-cp),
-          'partyPurse.sp': FieldValue.increment(-sp),
-          'partyPurse.ep': FieldValue.increment(-ep),
-          'partyPurse.gp': FieldValue.increment(-gp),
-          'partyPurse.pp': FieldValue.increment(-pp),
+        await docRef.set({
+          'roomCode': clean,
+          'code': clean,
+          'campaignName': current.campaignName,
+          'partyPurse': {
+            'cp': FieldValue.increment(-cp),
+            'sp': FieldValue.increment(-sp),
+            'ep': FieldValue.increment(-ep),
+            'gp': FieldValue.increment(-gp),
+            'pp': FieldValue.increment(-pp),
+          },
           'version': FieldValue.increment(1),
           'lastUpdated': DateTime.now().toIso8601String(),
-        });
+        }, SetOptions(merge: true));
       } catch (e, st) {
         LoggingService().logNonFatal(e, st, reason: 'Firestore coin withdraw failed; queuing outbox');
         _queueOutbox(PartyOutboxAction(
@@ -2548,30 +2702,48 @@ class PartyRoomService {
     final batch = FirebaseFirestore.instance.batch();
     final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
 
+    int aggregateCp = 0;
+    int aggregateSp = 0;
+    int aggregateEp = 0;
+    int aggregateGp = 0;
+    int aggregatePp = 0;
+    bool hasCoinDelta = false;
+
     for (final action in toProcess) {
-      if (action.actionType == 'addLoot') {
+      if (action.actionType == 'createRoom') {
+        batch.set(docRef, action.payload, SetOptions(merge: true));
+      } else if (action.actionType == 'addLoot') {
         final lootDoc = docRef.collection('loot').doc(action.payload['id'] as String);
         batch.set(lootDoc, action.payload);
       } else if (action.actionType == 'claimLoot') {
         final lootDoc = docRef.collection('loot').doc(action.payload['lootId'] as String);
-        batch.update(lootDoc, {'claimedByPlayer': action.payload['claimedByPlayer']});
+        batch.set(lootDoc, {'claimedByPlayer': action.payload['claimedByPlayer']}, SetOptions(merge: true));
       } else if (action.actionType == 'coinDeposit' || action.actionType == 'coinWithdraw') {
-        final cp = (action.payload['cp'] as num?)?.toInt() ?? 0;
-        final sp = (action.payload['sp'] as num?)?.toInt() ?? 0;
-        final ep = (action.payload['ep'] as num?)?.toInt() ?? 0;
-        final gp = (action.payload['gp'] as num?)?.toInt() ?? 0;
-        final pp = (action.payload['pp'] as num?)?.toInt() ?? 0;
-
-        batch.update(docRef, {
-          'partyPurse.cp': FieldValue.increment(cp),
-          'partyPurse.sp': FieldValue.increment(sp),
-          'partyPurse.ep': FieldValue.increment(ep),
-          'partyPurse.gp': FieldValue.increment(gp),
-          'partyPurse.pp': FieldValue.increment(pp),
-          'version': FieldValue.increment(1),
-          'lastUpdated': DateTime.now().toIso8601String(),
-        });
+        hasCoinDelta = true;
+        aggregateCp += (action.payload['cp'] as num?)?.toInt() ?? 0;
+        aggregateSp += (action.payload['sp'] as num?)?.toInt() ?? 0;
+        aggregateEp += (action.payload['ep'] as num?)?.toInt() ?? 0;
+        aggregateGp += (action.payload['gp'] as num?)?.toInt() ?? 0;
+        aggregatePp += (action.payload['pp'] as num?)?.toInt() ?? 0;
       }
+    }
+
+    if (hasCoinDelta) {
+      final session = _localRooms[clean];
+      batch.set(docRef, {
+        'roomCode': clean,
+        'code': clean,
+        if (session != null) 'campaignName': session.campaignName,
+        'partyPurse': {
+          'cp': FieldValue.increment(aggregateCp),
+          'sp': FieldValue.increment(aggregateSp),
+          'ep': FieldValue.increment(aggregateEp),
+          'gp': FieldValue.increment(aggregateGp),
+          'pp': FieldValue.increment(aggregatePp),
+        },
+        'version': FieldValue.increment(1),
+        'lastUpdated': DateTime.now().toIso8601String(),
+      }, SetOptions(merge: true));
     }
 
     try {
@@ -2580,7 +2752,20 @@ class PartyRoomService {
       _updateOutboxCount();
     } catch (e, st) {
       LoggingService().logNonFatal(e, st, reason: 'Failed to flush outbox for room $clean');
+      for (final action in toProcess) {
+        action.retryCount++;
+      }
+      // Purge actions that failed repeatedly (max 3 retries) to unwedge the UI
+      pending.removeWhere((a) => a.retryCount >= 3);
+      _updateOutboxCount();
     }
+  }
+
+  /// Clears pending outbox queue for a room
+  void clearOutbox(String roomCode) {
+    final clean = roomCode.trim().toUpperCase();
+    _outbox.remove(clean);
+    _updateOutboxCount();
   }
 
   // =========================================================================

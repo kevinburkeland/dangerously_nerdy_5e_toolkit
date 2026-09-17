@@ -83,6 +83,7 @@ class FirebaseFallbackAdapter implements IP2pTransportPort {
           'code': _roomCode,
           'campaignName': 'Campaign $_roomCode',
           'isStateless': true,
+          'partyPurse': const {'cp': 0, 'sp': 0, 'ep': 0, 'gp': 0, 'pp': 0},
           'lastUpdated': now.toIso8601String(),
           'expiresAt': expiresAt.toIso8601String(),
         }, SetOptions(merge: true));

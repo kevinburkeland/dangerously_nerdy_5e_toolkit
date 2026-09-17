@@ -114,5 +114,30 @@ void main() {
       // 4. Hit Points: base CON (13) + bonus CON (1) = 14 (+2 mod). Level 1 d8 HP = 8 + 2 = 10
       expect(character.resources.currentHp, equals(10));
     });
+
+    test('Ingests 2014 custom background JSON without ASIs without throwing validation error', () {
+      final raw2014BackgroundJson = {
+        'name': 'Town Guard Veteran',
+        'entityType': 'background',
+        'skills': ['Athletics', 'Insight'],
+        'tools': ['Vehicles (land)', 'Dice set'],
+        'languages': ['Dwarvish'],
+        'startingEquipment': ['A spear', 'A horn', 'Common clothes'],
+        'entries': [
+          'You spent years walking the watch on city ramparts.'
+        ],
+      };
+
+      final parsedList = HomebrewIngestor.parseCustomBackgrounds(
+        [raw2014BackgroundJson],
+        ruleset: domain_rules.RulesetVersion.srd2014,
+      );
+
+      expect(parsedList, hasLength(1));
+      final bg = parsedList.first;
+      expect(bg.name, equals('Town Guard Veteran'));
+      expect(bg.skillProficiencies, containsAll(['Athletics', 'Insight']));
+      expect(bg.abilityScoreSummary, anyOf(isNull, isEmpty));
+    });
   });
 }

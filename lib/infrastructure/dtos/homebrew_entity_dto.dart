@@ -158,24 +158,12 @@ class HomebrewEntityDto {
       }
     }
 
-    // In 2014, Backgrounds do not grant Ability Score Increases or Origin Feats
-    if (entityType == 'background') {
-      if (json.containsKey('asi') ||
-          json.containsKey('ability') ||
-          json.containsKey('abilityScoreIncrease')) {
-        throw HomebrewValidationException(
-          'Backgrounds cannot define Ability Score Increases in 2014 SRD (ASIs belong to Race/Species).',
-          path: sourcePath,
-        );
-      }
-      if (json.containsKey('originFeat') || json['isOriginFeat'] == true) {
-        throw HomebrewValidationException(
-          'Origin Feats on Backgrounds are prohibited under 2014 SRD rules.',
-          path: sourcePath,
-        );
-      }
-    }
+    // In 2014, Backgrounds do not grant Ability Score Increases or Origin Feats;
+    // 2014 backgrounds from community compendiums/GitHub often contain optional or null 'ability' tags.
+    // Our CharacterValidationEngine and CharacterFactory already enforce ASI bifurcation (stripping
+    // background ASIs and origin feats in 2014 mode), so we do not reject the entity at the ingestion boundary.
   }
+
 
   static void _validateSrd2024Contract(
     Map<String, dynamic> json,

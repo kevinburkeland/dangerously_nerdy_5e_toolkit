@@ -24,13 +24,13 @@ service cloud.firestore {
     }
 
     function isValidRoomCode(code) {
-      return code is string && code.matches('^[A-Z0-9_-]{4,12}$');
+      return code is string && code.matches('^[a-zA-Z0-9_-]{3,32}$');
     }
 
     function isRecentTimestamp(ts) {
       return ts is number 
-        && ts >= (request.time.toMillis() - 60000)
-        && ts <= (request.time.toMillis() + 15000);
+        && ts >= (request.time.toMillis() - 3600000)
+        && ts <= (request.time.toMillis() + 3600000);
     }
 
     // --- ROOM DOCUMENT RULES ---
@@ -43,16 +43,25 @@ service cloud.firestore {
                     && isValidRoomCode(roomCode)
                     && request.resource.data.campaignName is string
                     && request.resource.data.campaignName.size() >= 1
-                    && request.resource.data.campaignName.size() <= 80
+                    && request.resource.data.campaignName.size() <= 100
                     && (!('hostKeyHash' in request.resource.data) || 
                        (request.resource.data.hostKeyHash is string && 
                         (request.resource.data.hostKeyHash.size() == 0 || request.resource.data.hostKeyHash.size() == 64)));
 
       allow update: if isAppCheckVerified()
-                    && (request.resource.data.roomCode == resource.data.roomCode || request.resource.data.code == resource.data.code)
-                    && (!('hostKeyHash' in resource.data) 
-                        ? !('hostKeyHash' in request.resource.data) 
-                        : request.resource.data.hostKeyHash == resource.data.hostKeyHash)
+                    && (
+                      (!('roomCode' in resource.data) && !('code' in resource.data))
+                      || request.resource.data.roomCode == resource.data.roomCode
+                      || request.resource.data.code == resource.data.code
+                      || request.resource.data.roomCode == roomCode
+                      || request.resource.data.code == roomCode
+                    )
+                    && (
+                      !('hostKeyHash' in resource.data)
+                      || resource.data.hostKeyHash == ''
+                      || !('hostKeyHash' in request.resource.data)
+                      || request.resource.data.hostKeyHash == resource.data.hostKeyHash
+                    )
                     && (!('partyPurse' in request.resource.data) || isValidCoinMap(request.resource.data.partyPurse))
                     && (!('memberPurses' in request.resource.data) 
                         || (request.resource.data.memberPurses is map && request.resource.data.memberPurses.size() <= 20))
@@ -61,7 +70,7 @@ service cloud.firestore {
                     && (!('partyTelemetry' in request.resource.data) 
                         || (request.resource.data.partyTelemetry is map && request.resource.data.partyTelemetry.size() <= 30));
 
-      allow delete: if false;
+      allow delete: if isAppCheckVerified();
 
       // --- SUBCOLLECTION: DEDICATED NODE SIGNALING MAILBOXES ---
       match /nodes/{toNodeId}/signals/{signalId} {
@@ -99,7 +108,8 @@ service cloud.firestore {
                       && request.resource.data.expireAt is timestamp
                       && request.resource.data.expireAt > request.time;
         
-        allow update, delete: if false; 
+        allow update: if false;
+        allow delete: if isAppCheckVerified(); 
       }
 
       // --- SUBCOLLECTION: LOOT VAULT ---
@@ -124,7 +134,7 @@ service cloud.firestore {
                       && (!('count' in request.resource.data) || (request.resource.data.count is int && request.resource.data.count >= 1 && request.resource.data.count <= 10000))
                       && (!('claimedByPlayer' in request.resource.data) || request.resource.data.claimedByPlayer == null || isValidName(request.resource.data.claimedByPlayer));
 
-        allow delete: if false;
+        allow delete: if isAppCheckVerified();
       }
 
       // --- SUBCOLLECTION: AUDIT EVENTS ---
@@ -134,12 +144,13 @@ service cloud.firestore {
         allow create: if isAppCheckVerified()
                       && request.resource.data.roomCode == roomCode
                       && request.resource.data.type is string
-                      && request.resource.data.type.size() <= 30
+                      && request.resource.data.type.size() <= 40
                       && isValidName(request.resource.data.playerName)
                       && request.resource.data.details is string
-                      && request.resource.data.details.size() <= 250;
+                      && request.resource.data.details.size() <= 1000;
 
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAppCheckVerified();
       }
 
       // --- SUBCOLLECTION: SHARED DICE ROLLS ---
@@ -156,7 +167,8 @@ service cloud.firestore {
                       && (!('details' in request.resource.data) || request.resource.data.details == null || (request.resource.data.details is list && request.resource.data.details.size() <= 100))
                       && (!('droppedRolls' in request.resource.data) || request.resource.data.droppedRolls == null || request.resource.data.droppedRolls is list);
 
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAppCheckVerified();
       }
     }
   }

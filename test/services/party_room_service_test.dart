@@ -630,5 +630,132 @@ void main() {
         throwsA(isA<UnauthorizedHostActionException>()),
       );
     });
+
+    test('depositCoins and withdrawCoins update purse and do not wedge outbox', () async {
+      final session = await partyService.ensureRoomExists(
+        roomCode: 'ROOM-COIN01',
+        campaignName: 'Treasure Vault',
+      );
+
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'Gimli',
+        gp: 50,
+        sp: 20,
+      );
+
+      final cached = partyService.getCachedSession(session.roomCode);
+      expect(cached, isNotNull);
+      expect(cached!.partyPurse.gp, equals(50));
+      expect(cached.partyPurse.sp, equals(20));
+
+      await partyService.withdrawCoins(
+        roomCode: session.roomCode,
+        playerName: 'Gimli',
+        gp: 10,
+      );
+
+      final afterWithdraw = partyService.getCachedSession(session.roomCode);
+      expect(afterWithdraw!.partyPurse.gp, equals(40));
+    });
+
+    test('clearOutbox removes pending items and updates pendingOutboxCount', () {
+      final action = PartyOutboxAction(
+        id: 'test_action_1',
+        roomCode: 'ROOM-OUTBOX',
+        actionType: 'coinDeposit',
+        payload: {'gp': 10},
+        timestamp: DateTime.now(),
+      );
+
+      expect(action.retryCount, equals(0));
+      final map = action.toMap();
+      expect(map['retryCount'], equals(0));
+
+      final restored = PartyOutboxAction.fromMap(map);
+      expect(restored.retryCount, equals(0));
+
+      // Test clearOutbox
+      partyService.clearOutbox('ROOM-OUTBOX');
+      expect(partyService.pendingOutboxCount.value, equals(0));
+    });
+
+    test('leaveCampaign removes player from active session, roster, and local registry', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Departure at Dawn',
+        playerName: 'DM Sarah',
+      );
+
+      // Add a player
+      await partyService.setActiveCharacter(
+        roomCode: session.roomCode,
+        characterName: 'Aramil',
+      );
+      await partyService.addCharacterToRoster(
+        roomCode: session.roomCode,
+        characterName: 'Aramil',
+        playerName: 'Aramil',
+      );
+
+      var cached = partyService.getCachedSession(session.roomCode);
+      expect(cached!.activePlayers, contains('Aramil'));
+      expect(cached.characterRoster, contains('Aramil'));
+
+      // Player leaves campaign
+      await partyService.leaveCampaign(
+        roomCode: session.roomCode,
+        playerName: 'Aramil',
+      );
+
+      cached = partyService.getCachedSession(session.roomCode);
+      expect(cached!.activePlayers, isNot(contains('Aramil')));
+      expect(cached.characterRoster, isNot(contains('Aramil')));
+      expect(registry.getMembership(session.roomCode), isNull);
+    });
+
+    test('deleteCampaign verifies host key authority and purges all local and session state', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Citadel of Doom',
+        playerName: 'DM Kevin',
+      );
+      final dmMembership = registry.getMembership(session.roomCode);
+      expect(dmMembership, isNotNull);
+      final hostKey = dmMembership!.hostKey!;
+
+      // Unauthorized deletion attempt throws exception
+      expect(
+        () => partyService.deleteCampaign(
+          roomCode: session.roomCode,
+          hostKey: 'invalid-dm-key',
+        ),
+        throwsA(isA<UnauthorizedHostActionException>()),
+      );
+
+      // Authorized deletion with DM hostKey succeeds
+      await partyService.deleteCampaign(
+        roomCode: session.roomCode,
+        hostKey: hostKey,
+      );
+
+      expect(registry.getMembership(session.roomCode), isNull);
+      expect(partyService.getCachedSession(session.roomCode), isNull);
+    });
+
+    test('syncAllExistingCampaignsToFirestore iterates through local memberships', () async {
+      await partyService.createCampaign(
+        campaignName: 'Syncable Campaign 1',
+        playerName: 'DM Alpha',
+      );
+      await partyService.createCampaign(
+        campaignName: 'Syncable Campaign 2',
+        playerName: 'DM Beta',
+      );
+
+      expect(registry.memberships.length, equals(2));
+
+      // Should complete cleanly without throwing
+      await partyService.syncAllExistingCampaignsToFirestore();
+    });
   });
 }
+
