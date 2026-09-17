@@ -136,6 +136,7 @@ class DprSimulator {
     required PrecomputedAttack attack,
     required int targetAc,
     int iterations = 10000,
+    int? seed,
   }) async {
     return await Isolate.run(() {
       const simulator = DprSimulator();
@@ -143,7 +144,7 @@ class DprSimulator {
         attack: attack,
         targetAc: targetAc,
         iterations: iterations,
-        rng: Random(),
+        rng: seed != null ? Random(seed) : Random(),
       );
     });
   }

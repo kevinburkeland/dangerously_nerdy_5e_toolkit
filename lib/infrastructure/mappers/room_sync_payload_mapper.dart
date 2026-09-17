@@ -2,96 +2,18 @@ import 'dart:convert';
 import 'package:meta/meta.dart';
 import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
+import '../../domain/ports/i_room_sync_payload_port.dart';
 import '../../models/party/party_purse.dart';
 import '../../models/room_roll.dart';
 import '../../utils/crypto_utils.dart';
 import '../dtos/campaign_profile_dto.dart';
 import '../dtos/crdt/crdt_or_set_dto.dart';
 
-/// Sealed hierarchy of incoming network sync messages parsed from raw JSON transport payloads.
-@immutable
-sealed class IncomingRoomSyncMessage {
-  final String originNodeId;
-  final int originSeq;
-  final int timestamp;
-
-  const IncomingRoomSyncMessage({
-    required this.originNodeId,
-    required this.originSeq,
-    required this.timestamp,
-  });
-}
-
-/// Full campaign profile broadcast message with optional embedded CRDT sets and purse deltas.
-@immutable
-class FullProfileSyncMessage extends IncomingRoomSyncMessage {
-  final CampaignProfile profile;
-  final PartyPurse? purseDelta;
-  final CrdtOrSet<String>? pinnedRulesDelta;
-
-  const FullProfileSyncMessage({
-    required super.originNodeId,
-    required super.originSeq,
-    required super.timestamp,
-    required this.profile,
-    this.purseDelta,
-    this.pinnedRulesDelta,
-  });
-}
-
-/// Focused CRDT currency delta message for high-frequency conflict-free purse convergence.
-@immutable
-class PurseDeltaSyncMessage extends IncomingRoomSyncMessage {
-  final String campaignId;
-  final PartyPurse purse;
-
-  const PurseDeltaSyncMessage({
-    required super.originNodeId,
-    required super.originSeq,
-    required super.timestamp,
-    required this.campaignId,
-    required this.purse,
-  });
-}
-
-/// Focused CRDT OR-Set delta message for pinned rules or generic set convergence.
-@immutable
-class OrSetDeltaSyncMessage extends IncomingRoomSyncMessage {
-  final String campaignId;
-  final CrdtOrSet<String> rulesSet;
-
-  const OrSetDeltaSyncMessage({
-    required super.originNodeId,
-    required super.originSeq,
-    required super.timestamp,
-    required this.campaignId,
-    required this.rulesSet,
-  });
-}
-
-/// Ephemeral room dice roll event broadcast.
-@immutable
-class DiceRollSyncMessage extends IncomingRoomSyncMessage {
-  final RoomRoll roll;
-
-  const DiceRollSyncMessage({
-    required super.originNodeId,
-    required super.originSeq,
-    required super.timestamp,
-    required this.roll,
-  });
-}
-
-/// Unrecognized or corrupt network payload.
-@immutable
-class UnknownSyncMessage extends IncomingRoomSyncMessage {
-  const UnknownSyncMessage()
-      : super(originNodeId: '', originSeq: 0, timestamp: 0);
-}
+export '../../domain/ports/i_room_sync_payload_port.dart';
 
 /// Infrastructure mapper responsible for parsing incoming network sync JSON into
 /// strongly-typed messages and serializing domain mutations into transport envelopes.
-class RoomSyncPayloadMapper {
+class RoomSyncPayloadMapper implements IRoomSyncPayloadPort {
   const RoomSyncPayloadMapper();
 
   /// Computes a deterministic SHA-256 hash string for payload deduplication.

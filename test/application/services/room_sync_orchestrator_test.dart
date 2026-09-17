@@ -14,6 +14,7 @@ import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_network_time_port.da
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/crdt/crdt_or_set_dto.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/session_graph_models.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
@@ -146,6 +147,10 @@ class MockNetworkTimePort implements INetworkTimePort {
 }
 
 void main() {
+  setUpAll(() {
+    IRoomSyncPayloadPort.defaultProvider = () => const RoomSyncPayloadMapper();
+  });
+
   group('RoomSyncOrchestrator Tests', () {
     late MockTransportPort mockWifi;
     late MockTransportPort mockWebRtc;
@@ -723,6 +728,24 @@ void main() {
 
       // Dropped at ingress; repo was not invoked
       expect(mockRepo.savedImmediateProfiles.length, equals(initialCount));
+    });
+
+    test('LRU Poisoning Prevention: Unknown or malformed payloads are discarded without polluting LRU cache', () async {
+      final initialHashes = orchestrator.processedPayloadHashes.length;
+
+      // Malformed JSON
+      await orchestrator.handleIncomingPayload('{not_valid_json');
+      expect(orchestrator.processedPayloadHashes.length, equals(initialHashes));
+
+      // Unknown message type
+      final unknownTypePayload = jsonEncode({
+        'type': 'unsupported_message_type_xyz',
+        'origin_node_id': 'rogue-node',
+        'payload': {'foo': 'bar'},
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+      await orchestrator.handleIncomingPayload(unknownTypePayload);
+      expect(orchestrator.processedPayloadHashes.length, equals(initialHashes));
     });
   });
 }

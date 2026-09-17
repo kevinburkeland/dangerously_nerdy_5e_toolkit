@@ -244,8 +244,10 @@ class WebRtcMeshAdapter implements IP2pTransportPort {
           rollbackSucceeded = false;
         }
         if (!rollbackSucceeded) {
-          // If driver/platform does not support rollback description, prune and re-instantiate cleanly
+          // If rollback fails or platform channels throw, prune and immediately initialize a clean RTCPeerConnection
           prunePeer(peerId);
+          final cleanPc = await _connectionFactory.createConnection(_rtcConfiguration);
+          _peerConnections[peerId] = cleanPc;
         }
       }
     }

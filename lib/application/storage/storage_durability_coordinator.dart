@@ -1,15 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:isolate';
 import 'dart:typed_data';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/storage/models/engine_profile.dart';
 import '../../domain/storage/models/storage_snapshot_bundle.dart';
 import '../../domain/storage/models/storage_telemetry_report.dart';
+import '../../domain/storage/ports/i_campaign_snapshot_serializer_port.dart';
 import '../../domain/storage/ports/i_physical_snapshot_port.dart';
 import '../../domain/storage/ports/i_storage_durability_port.dart';
-import '../../infrastructure/dtos/campaign_profile_dto.dart';
 
 /// Application coordinator governing browser storage persistence negotiation,
 /// ambient telemetry reporting, and tamper-evident cold storage backups.
@@ -17,6 +15,7 @@ class StorageDurabilityCoordinator {
   final IStorageDurabilityPort storagePort;
   final IPhysicalSnapshotPort snapshotPort;
   final ICampaignRepository campaignRepo;
+  final ICampaignSnapshotSerializerPort? serializer;
 
   final StreamController<StorageTelemetryReport> _telemetryController =
       StreamController<StorageTelemetryReport>.broadcast(sync: false);
@@ -28,7 +27,9 @@ class StorageDurabilityCoordinator {
     required this.storagePort,
     required this.snapshotPort,
     required this.campaignRepo,
-  });
+    ICampaignSnapshotSerializerPort? serializer,
+  }) : serializer = serializer ??
+            ICampaignSnapshotSerializerPort.defaultProvider?.call();
 
   /// Reactive stream broadcasting storage persistence, quota, and risk diagnostics.
   Stream<StorageTelemetryReport> get telemetryStream =>
@@ -97,9 +98,11 @@ class StorageDurabilityCoordinator {
       throw StateError('Cannot export cold storage: vault "$vaultId" not found.');
     }
 
-    final dto = CampaignProfileDto.fromDomain(profile);
-    final jsonStr = await Isolate.run(() => jsonEncode(dto.toJson()));
-    final payloadBytes = Uint8List.fromList(utf8.encode(jsonStr));
+    if (serializer == null) {
+      throw StateError('Cannot export cold storage: serializer port not provided.');
+    }
+
+    final payloadBytes = await serializer!.serializeToBytes(profile);
 
     final bundle = StorageSnapshotBundle.create(
       vaultId: vaultId,
@@ -126,15 +129,17 @@ class StorageDurabilityCoordinator {
       return false;
     }
 
-    // 2. Deserialize inbound campaign state
-    final jsonStr = utf8.decode(bundle.payloadBytes);
-    final decoded = await Isolate.run(() => jsonDecode(jsonStr));
-    if (decoded is! Map<String, dynamic>) {
+    if (serializer == null) {
       return false;
     }
 
-    final inboundDto = CampaignProfileDto.fromMap(decoded);
-    final inboundProfile = inboundDto.toDomain();
+    // 2. Deserialize inbound campaign state via snapshot serializer port
+    CampaignProfile inboundProfile;
+    try {
+      inboundProfile = await serializer!.deserializeFromBytes(bundle.payloadBytes);
+    } catch (_) {
+      return false;
+    }
 
     // User-initiated cold-storage snapshot restoration allows rollbacks;
     // cryptographic validity is already verified via bundle.isValid above.

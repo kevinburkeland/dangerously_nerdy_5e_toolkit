@@ -489,5 +489,46 @@ void main() {
       );
       expect(removed.first.activeConditions, equals(['stunned']));
     });
+
+    test('updateEncounterParticipants anchors HLC timestamps to injected networkTimeProvider', () async {
+      const fixedNetworkTime = 1715000000000;
+      final timedService = CombatEncounterService(
+        characterRepo: charRepo,
+        campaignRepo: campaignRepo,
+        networkTimeProvider: () => fixedNetworkTime,
+      );
+
+      const p1 = EncounterParticipant(
+        participantId: 'p1',
+        entityLink: RoomEntityLink(
+          refType: SessionRefType.character,
+          entityId: 'alice',
+          displayName: 'Alice',
+        ),
+        currentHp: 25,
+        maxHp: 25,
+      );
+
+      final profile = CampaignProfile.defaultProfile(id: 'camp_clock_test');
+      final updatedProfile = await timedService.updateEncounterParticipants(
+        profile: profile,
+        encounter: [p1],
+      );
+
+      final encounterItem = updatedProfile.roomState.activeEncounter.items['p1'];
+      expect(encounterItem, isNotNull);
+      expect(encounterItem!.timestamp.physicalTime, equals(fixedNetworkTime));
+      expect(encounterItem.timestamp.nodeId, equals('camp_clock_test'));
+
+      // Now remove participant
+      final removedProfile = await timedService.updateEncounterParticipants(
+        profile: updatedProfile,
+        encounter: [],
+      );
+      final tombstone = removedProfile.roomState.activeEncounter.tombstones['p1'];
+      expect(tombstone, isNotNull);
+      expect(tombstone!.physicalTime, equals(fixedNetworkTime));
+      expect(tombstone.logicalCounter, greaterThan(encounterItem.timestamp.logicalCounter));
+    });
   });
 }

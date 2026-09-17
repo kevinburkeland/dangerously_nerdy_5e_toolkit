@@ -10,6 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/domain/storage/models/storage_snaps
 import 'package:dangerously_nerdy_5e_toolkit/domain/storage/models/storage_telemetry_report.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/storage/ports/i_physical_snapshot_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/storage/ports/i_storage_durability_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/adapters/storage/campaign_snapshot_serializer_adapter.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/campaign_profile_dto.dart';
 
 class FakeStorageDurabilityPort implements IStorageDurabilityPort {
@@ -121,6 +122,10 @@ class FakeCampaignRepository implements ICampaignRepository {
 }
 
 void main() {
+  setUpAll(() {
+    CampaignSnapshotSerializerAdapter.registerDefault();
+  });
+
   group('StorageDurabilityCoordinator Lifecycle & Preflight', () {
     test('Silent preflight triggers requestPersistence on Chromium', () async {
       final storagePort = FakeStorageDurabilityPort(

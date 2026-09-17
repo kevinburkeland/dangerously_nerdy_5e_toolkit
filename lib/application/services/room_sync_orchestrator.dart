@@ -7,7 +7,7 @@ import '../../domain/crdt/crdt_or_set.dart';
 import '../../domain/models/campaign_profile.dart';
 import '../../domain/ports/i_campaign_repository.dart';
 import '../../domain/ports/i_p2p_transport_port.dart';
-import '../../infrastructure/mappers/room_sync_payload_mapper.dart';
+import '../../domain/ports/i_room_sync_payload_port.dart';
 import 'cascading_transport_router.dart';
 import 'clock_sync_service.dart';
 import 'room_connection_telemetry.dart';
@@ -26,7 +26,7 @@ class RoomSyncOrchestrator {
   final RoomStateReconciliationService reconciliationService;
   final ClockSyncService clockSyncService;
   final DiceRoomService diceRoomService;
-  final RoomSyncPayloadMapper payloadMapper;
+  final IRoomSyncPayloadPort payloadMapper;
   final bool isHost;
   final String hostNodeId;
   final Duration telemetryInterval;
@@ -67,7 +67,7 @@ class RoomSyncOrchestrator {
     required this.reconciliationService,
     required this.clockSyncService,
     DiceRoomService? diceRoomService,
-    RoomSyncPayloadMapper? payloadMapper,
+    IRoomSyncPayloadPort? payloadMapper,
     int Function()? localTimeProvider,
     this.isHost = false,
     this.hostNodeId = 'dm-host-prime',
@@ -76,7 +76,9 @@ class RoomSyncOrchestrator {
     Duration? heartbeatTtl,
   })  : transportPort = transportPort ?? router!,
         diceRoomService = diceRoomService ?? DiceRoomService(),
-        payloadMapper = payloadMapper ?? const RoomSyncPayloadMapper(),
+        payloadMapper = payloadMapper ??
+            IRoomSyncPayloadPort.defaultProvider?.call() ??
+            const _NoOpRoomSyncPayloadPort(),
         _localTimeProvider = localTimeProvider ?? (() => clockSyncService.currentNetworkTimeMs),
         heartbeatTtl = heartbeatTtl ?? (transportPort ?? router)!.heartbeatTtl,
         assert(
@@ -205,20 +207,26 @@ class RoomSyncOrchestrator {
   Future<void> handleIncomingPayload(String jsonPayload) => _handleIncomingPayload(jsonPayload);
 
   Future<void> _handleIncomingPayload(String jsonPayload) async {
+    // 1. Prevent LRU Deduplication Poisoning: parse payload first and discard
+    // unknown/malformed payloads prior to updating the LRU cache.
+    final message = payloadMapper.parsePayload(jsonPayload);
+    if (message is UnknownSyncMessage) return;
+
+    final payloadHash = payloadMapper.computePayloadHash(jsonPayload);
+    if (_isDuplicatePayload(payloadHash)) {
+      return;
+    }
+
+    if (message.originNodeId.isNotEmpty && message.originNodeId == hostNodeId) {
+      return;
+    }
+
+    CampaignProfile? profileToSave;
+
+    // 2. Narrow Critical Section: restrict mutex lock strictly to in-memory state
+    // reconciliation, vector clock updates, and CRDT joins.
     await _syncMutex.protect(() async {
       try {
-        final payloadHash = payloadMapper.computePayloadHash(jsonPayload);
-        if (_isDuplicatePayload(payloadHash)) {
-          return;
-        }
-
-        final message = payloadMapper.parsePayload(jsonPayload);
-        if (message is UnknownSyncMessage) return;
-
-        if (message.originNodeId.isNotEmpty && message.originNodeId == hostNodeId) {
-          return;
-        }
-
         // Per-node vector clock tracking: record maximum sequence observed per node
         // Out-of-order relays and offline burst mutations merge deterministically via CRDTs rather than being dropped
         if (message.originNodeId.isNotEmpty && message.originSeq > 0) {
@@ -260,14 +268,7 @@ class RoomSyncOrchestrator {
 
               _recordAppliedProfileHash(reconciledProfile.hashCode);
               _lastEmittedProfile = reconciledProfile;
-              _isApplyingRemoteSync = true;
-              try {
-                await campaignRepo.saveProfileImmediate(reconciledProfile);
-              } finally {
-                scheduleMicrotask(() {
-                  _isApplyingRemoteSync = false;
-                });
-              }
+              profileToSave = reconciledProfile;
             }
 
           case PurseDeltaSyncMessage msg:
@@ -279,14 +280,7 @@ class RoomSyncOrchestrator {
                 final updatedProfile = localProfile.copyWith(partyPurse: updatedPurse);
                 _recordAppliedProfileHash(updatedProfile.hashCode);
                 _lastEmittedProfile = updatedProfile;
-                _isApplyingRemoteSync = true;
-                try {
-                  await campaignRepo.saveProfileImmediate(updatedProfile);
-                } finally {
-                  scheduleMicrotask(() {
-                    _isApplyingRemoteSync = false;
-                  });
-                }
+                profileToSave = updatedProfile;
               }
             }
 
@@ -302,14 +296,7 @@ class RoomSyncOrchestrator {
 
               _recordAppliedProfileHash(updatedProfile.hashCode);
               _lastEmittedProfile = updatedProfile;
-              _isApplyingRemoteSync = true;
-              try {
-                await campaignRepo.saveProfileImmediate(updatedProfile);
-              } finally {
-                scheduleMicrotask(() {
-                  _isApplyingRemoteSync = false;
-                });
-              }
+              profileToSave = updatedProfile;
             }
 
           case DiceRollSyncMessage msg:
@@ -319,9 +306,21 @@ class RoomSyncOrchestrator {
             break;
         }
       } catch (_) {
-        // Safely ignore malformed network payloads
+        // Safely ignore errors during in-memory reconciliation
       }
     });
+
+    // 3. Decouple disk I/O and repository event dispatches outside the mutex lock
+    if (profileToSave != null) {
+      _isApplyingRemoteSync = true;
+      try {
+        await campaignRepo.saveProfileImmediate(profileToSave!);
+      } finally {
+        scheduleMicrotask(() {
+          _isApplyingRemoteSync = false;
+        });
+      }
+    }
   }
 
   /// Handles local profile changes emitted by the campaign repository.
@@ -460,3 +459,46 @@ class RoomSyncOrchestrator {
     }
   }
 }
+
+/// Fallback no-op implementation of [IRoomSyncPayloadPort] when not configured.
+class _NoOpRoomSyncPayloadPort implements IRoomSyncPayloadPort {
+  const _NoOpRoomSyncPayloadPort();
+
+  @override
+  String computePayloadHash(String jsonPayload) => '';
+
+  @override
+  IncomingRoomSyncMessage parsePayload(String jsonPayload) =>
+      const UnknownSyncMessage();
+
+  @override
+  String serializeFullProfileSync({
+    required CampaignProfile profile,
+    required String originNodeId,
+    required int originSeq,
+    required int timestamp,
+    CrdtOrSet<String>? trackedRulesSet,
+  }) =>
+      '';
+
+  @override
+  String serializePurseDelta({
+    required String campaignId,
+    required PartyPurse purse,
+    required String originNodeId,
+    required int originSeq,
+    required int timestamp,
+  }) =>
+      '';
+
+  @override
+  String serializeOrSetDelta({
+    required String campaignId,
+    required CrdtOrSet<String> rulesSet,
+    required String originNodeId,
+    required int originSeq,
+    required int timestamp,
+  }) =>
+      '';
+}
+

@@ -10,6 +10,7 @@ import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_network_time_port.da
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/models/campaign_profile.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/di/injection_container.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/room_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/dice_roll.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/dice_room_service.dart';
@@ -301,6 +302,7 @@ void main() {
         ),
         clockSyncService: ClockSyncService(networkTimePort: MockNetworkTimePort()),
         diceRoomService: diceService,
+        payloadMapper: const RoomSyncPayloadMapper(),
       );
 
       orchestrator.startSynchronization();

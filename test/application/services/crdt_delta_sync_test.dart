@@ -8,6 +8,7 @@ import 'package:dangerously_nerdy_5e_toolkit/domain/models/campaign_profile.dart
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_campaign_repository.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_network_time_port.dart';
 import 'package:dangerously_nerdy_5e_toolkit/domain/ports/i_p2p_transport_port.dart';
+import 'package:dangerously_nerdy_5e_toolkit/infrastructure/mappers/room_sync_payload_mapper.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
 
 class MockTransportPort implements IP2pTransportPort {
@@ -147,6 +148,7 @@ void main() {
         reconciliationService: reconciliationService,
         clockSyncService: clockSyncService,
         hostNodeId: 'node-orchestrator',
+        payloadMapper: const RoomSyncPayloadMapper(),
       );
     });
 

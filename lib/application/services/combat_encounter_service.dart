@@ -13,11 +13,14 @@ import '../../services/rules/character_evaluation_engine.dart';
 class CombatEncounterService {
   final ICharacterRepository characterRepo;
   final ICampaignRepository campaignRepo;
+  final int Function() _networkTimeProvider;
 
   CombatEncounterService({
     required this.characterRepo,
     required this.campaignRepo,
-  });
+    int Function()? networkTimeProvider,
+  }) : _networkTimeProvider = networkTimeProvider ??
+            (() => DateTime.now().toUtc().millisecondsSinceEpoch);
 
   // ==========================================
   // Character Vitals & Damage Routing
@@ -166,7 +169,7 @@ class CombatEncounterService {
     required String nodeId,
     HybridLogicalClock? previousClock,
   }) {
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final nowMs = _networkTimeProvider();
     if (previousClock != null && previousClock.physicalTime >= nowMs) {
       return HybridLogicalClock(
         physicalTime: previousClock.physicalTime,
@@ -276,19 +279,34 @@ class CombatEncounterService {
     required CampaignProfile profile,
     required List<EncounterParticipant> encounter,
   }) async {
-    final hlc = HybridLogicalClock(
-      physicalTime: DateTime.now().millisecondsSinceEpoch,
-      logicalCounter: 0,
-      nodeId: profile.id,
-    );
     var updatedEncounter = profile.roomState.activeEncounter;
     final currentIds = updatedEncounter.activeValues.map((p) => p.participantId).toSet();
     final newIds = encounter.map((p) => p.participantId).toSet();
 
+    HybridLogicalClock? lastClock;
+    for (final item in updatedEncounter.items.values) {
+      if (lastClock == null || item.timestamp.isAfter(lastClock)) {
+        lastClock = item.timestamp;
+      }
+    }
+    for (final ts in updatedEncounter.tombstones.values) {
+      if (lastClock == null || ts.isAfter(lastClock)) {
+        lastClock = ts;
+      }
+    }
+
     for (final id in currentIds.difference(newIds)) {
+      final prevTs = updatedEncounter.items[id]?.timestamp ?? updatedEncounter.tombstones[id];
+      final base = (lastClock != null && (prevTs == null || lastClock.isAfter(prevTs))) ? lastClock : prevTs;
+      final hlc = _nextHlc(nodeId: profile.id, previousClock: base);
+      lastClock = hlc;
       updatedEncounter = updatedEncounter.remove(id, hlc);
     }
     for (final p in encounter) {
+      final prevTs = updatedEncounter.items[p.participantId]?.timestamp ?? updatedEncounter.tombstones[p.participantId];
+      final base = (lastClock != null && (prevTs == null || lastClock.isAfter(prevTs))) ? lastClock : prevTs;
+      final hlc = _nextHlc(nodeId: profile.id, previousClock: base);
+      lastClock = hlc;
       updatedEncounter = updatedEncounter.add(p.participantId, p, hlc);
     }
 

@@ -68,12 +68,16 @@ class FakeRTCPeerConnection implements RTCPeerConnection {
   }
 
   bool rollbackCalled = false;
+  bool throwOnRollback = false;
 
   @override
   Future<void> setLocalDescription(RTCSessionDescription description) async {
     localDescription = description;
     if (description.type == 'rollback') {
       rollbackCalled = true;
+      if (throwOnRollback) {
+        throw StateError('Platform channel rollback failed');
+      }
     }
   }
 
@@ -362,6 +366,49 @@ void main() {
       // Existing PC accepted remote offer and created answer cleanly
       expect(inFlightPc.remoteDescription?.sdp, 'v=0\r\no=sdp-from-z');
       expect(inFlightPc.localDescription?.type, 'answer');
+
+      await adapterNodeA.disconnect();
+    });
+
+    test('WebRTC Glare Resolution: Rollback failure triggers peer pruning and clean connection re-initialization', () async {
+      final inFlightPc = FakeRTCPeerConnection()..throwOnRollback = true;
+      final cleanPc = FakeRTCPeerConnection();
+      var connectionCount = 0;
+      final dynamicFactory = _DynamicFactory((_) {
+        connectionCount++;
+        return connectionCount == 1 ? inFlightPc : cleanPc;
+      });
+
+      final adapterNodeA = WebRtcMeshAdapter(
+        signalingAdapter: signalingAdapter,
+        connectionFactory: dynamicFactory,
+      );
+
+      await adapterNodeA.initializeRoom('ROOM-GLARE-THROW', 'node-A');
+      await adapterNodeA.connectToPeer('node-Z');
+
+      expect(inFlightPc.isClosed, isFalse);
+
+      final collidingOffer = SignalingMessage(
+        id: 'offer-signal-from-z',
+        roomCode: 'ROOM-GLARE-THROW',
+        fromNodeId: 'node-Z',
+        toNodeId: 'node-A',
+        type: SignalingType.offer,
+        sdp: 'v=0\r\no=sdp-from-z',
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      signalingAdapter.emitIncomingSignal(collidingOffer);
+      await Future<void>.delayed(Duration.zero);
+
+      // Rollback was attempted and threw
+      expect(inFlightPc.rollbackCalled, isTrue);
+      // In-flight PC was pruned and closed
+      expect(inFlightPc.isClosed, isTrue);
+      // Clean PC was created and accepted the remote offer
+      expect(cleanPc.remoteDescription?.sdp, 'v=0\r\no=sdp-from-z');
+      expect(cleanPc.localDescription?.type, 'answer');
 
       await adapterNodeA.disconnect();
     });

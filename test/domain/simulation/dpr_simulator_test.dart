@@ -165,5 +165,30 @@ void main() {
       final critRoll = rider.rollDamage(rng2, isCrit: true);
       expect(critRoll, inInclusiveRange(9, 29)); // 4*1+5 to 4*6+5
     });
+
+    test('runInIsolate with identical seed produces bit-identical DprSimulationResult', () async {
+      const simulator = DprSimulator();
+      final result1 = await simulator.runInIsolate(
+        attack: testAttack,
+        targetAc: 16,
+        iterations: 5000,
+        seed: 12345,
+      );
+      final result2 = await simulator.runInIsolate(
+        attack: testAttack,
+        targetAc: 16,
+        iterations: 5000,
+        seed: 12345,
+      );
+
+      expect(result1.iterations, equals(result2.iterations));
+      expect(result1.hitCount, equals(result2.hitCount));
+      expect(result1.critCount, equals(result2.critCount));
+      expect(result1.missCount, equals(result2.missCount));
+      expect(result1.totalDamage, equals(result2.totalDamage));
+      expect(result1.meanDamage, equals(result2.meanDamage));
+      expect(result1.minDamage, equals(result2.minDamage));
+      expect(result1.maxDamage, equals(result2.maxDamage));
+    });
   });
 }

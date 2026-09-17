@@ -333,9 +333,12 @@ class FirebaseSignalingAdapter {
 
       if (isFirebaseAvailable && _roomCode != null) {
         try {
-          await _effectiveFirestore.doc(path).delete();
+          await _effectiveFirestore
+              .doc(path)
+              .delete()
+              .timeout(const Duration(seconds: 5));
         } catch (_) {
-          // Silently ignore if already deleted by peer or Firestore not-found
+          // Silently ignore if already deleted by peer, Firestore not-found, or network socket timeout
         }
       }
     } finally {

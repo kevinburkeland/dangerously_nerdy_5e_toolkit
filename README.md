@@ -347,11 +347,12 @@ dangerously_nerdy_5e_toolkit/
 │   │   ├── crdt/                   # CvRDTs: HybridLogicalClock, CrdtLwwRegister, CrdtOrSet
 │   │   ├── models/                 # Immutable entities: AnimatedObject, CampaignProfile, WeaponMastery
 │   │   │   └── value_objects/      # HitPoints value object
-│   │   ├── ports/                  # Abstract interfaces: ICampaignRepository, ICharacterRepository, IP2pTransportPort, INetworkTimePort
+│   │   ├── ports/                  # Abstract interfaces: ICampaignRepository, ICharacterRepository, IP2pTransportPort, INetworkTimePort, IRoomSyncPayloadPort
+│   │   ├── storage/ports/          # Storage durability contracts: ICampaignSnapshotSerializerPort, IStorageDurabilityPort, IPhysicalSnapshotPort
 │   │   ├── rules/                  # Pure mechanical contracts: RulesetContext
 │   │   └── simulation/             # Simulation contracts: DprSimulator, PrecomputedAttack
 │   ├── application/                # Use Cases & Orchestration
-│   │   └── services/               # RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator
+│   │   └── services/               # RoomStateReconciliationService, ClockSyncService, CombatEncounterService, PartyRoomService, RoomSyncOrchestrator, StorageDurabilityCoordinator
 │   ├── infrastructure/             # Adapters, DTOs & Concrete Storage
 │   │   ├── di/                     # Service Locator: injection_container.dart (sl)
 │   │   ├── dtos/                   # CharacterDto, CampaignProfileDto, AnimatedObjectDto
