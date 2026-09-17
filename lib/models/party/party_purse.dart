@@ -399,7 +399,7 @@ class PartyPurse {
           return PnCounter.fromMap(m);
         } catch (_) {}
       }
-      return scalarFallback > 0 ? PnCounter.withInitialValue(scalarFallback) : const PnCounter();
+      return scalarFallback > 0 ? PnCounter.withInitialValue(scalarFallback, nodeId: 'init') : const PnCounter();
     }
 
     var cpC = parseCounter(map['cpCounter'], cpVal);
@@ -410,18 +410,28 @@ class PartyPurse {
 
     // If the map provides scalar keys and they differ from the counter (e.g. updated
     // by atomic FieldValue.increment in Firestore), the scalar reflects the latest
-    // authoritative mutation and re-seeds the counter.
+    // authoritative mutation. We adjust the existing counter via a deterministic 'cloud'
+    // delta rather than wiping existing node vectors, strictly preserving CvRDT join idempotence.
+    PnCounter reconcileScalarWithCounter(bool hasScalar, int scalar, PnCounter counter) {
+      if (!hasScalar) return counter;
+      if (scalar == counter.value) return counter;
+      final diff = scalar - counter.value;
+      return diff > 0
+          ? counter.increment(diff, nodeId: 'cloud')
+          : counter.decrement(-diff, nodeId: 'cloud');
+    }
+
+    cpC = reconcileScalarWithCounter(hasCp, cpVal, cpC);
+    spC = reconcileScalarWithCounter(hasSp, spVal, spC);
+    epC = reconcileScalarWithCounter(hasEp, epVal, epC);
+    gpC = reconcileScalarWithCounter(hasGp, gpVal, gpC);
+    ppC = reconcileScalarWithCounter(hasPp, ppVal, ppC);
+
     final finalCp = hasCp ? cpVal : (cpC.positive.isNotEmpty || cpC.negative.isNotEmpty ? cpC.value : cpVal);
     final finalSp = hasSp ? spVal : (spC.positive.isNotEmpty || spC.negative.isNotEmpty ? spC.value : spVal);
     final finalEp = hasEp ? epVal : (epC.positive.isNotEmpty || epC.negative.isNotEmpty ? epC.value : epVal);
     final finalGp = hasGp ? gpVal : (gpC.positive.isNotEmpty || gpC.negative.isNotEmpty ? gpC.value : gpVal);
     final finalPp = hasPp ? ppVal : (ppC.positive.isNotEmpty || ppC.negative.isNotEmpty ? ppC.value : ppVal);
-
-    if (hasCp && cpVal != cpC.value) cpC = PnCounter.withInitialValue(cpVal);
-    if (hasSp && spVal != spC.value) spC = PnCounter.withInitialValue(spVal);
-    if (hasEp && epVal != epC.value) epC = PnCounter.withInitialValue(epVal);
-    if (hasGp && gpVal != gpC.value) gpC = PnCounter.withInitialValue(gpVal);
-    if (hasPp && ppVal != ppC.value) ppC = PnCounter.withInitialValue(ppVal);
 
     return PartyPurse(
       cp: finalCp,

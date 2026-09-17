@@ -438,6 +438,81 @@ void main() {
       expect(liveSession.partyPurse.gp, equals(134)); // 133 share + 1 remainder
     });
 
+    test('Disperse Vault Funds (isVaultDispersal: true) deducts character shares from party vault and conserves currency', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Vault Fund Dispersal Campaign',
+        playerName: 'DM',
+      );
+
+      // Initially deposit 100 GP into the party vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM',
+        gp: 100,
+      );
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp, equals(100));
+
+      final recipients = ['Legolas', 'Gimli'];
+      // 100 GP in vault, 2 characters + 1 party reserve = 3 shares.
+      // 100 ~/ 3 = 33 GP per share, 1 GP remainder.
+      // Legolas gets 33 GP, Gimli gets 33 GP.
+      // Withdrawn from vault = 33 * 2 = 66 GP.
+      // Vault remaining = 100 - 66 = 34 GP (33 reserve share + 1 remainder).
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: const PartyPurse(gp: 100),
+        recipientCharacters: recipients,
+        performedBy: 'DM',
+        includePartyReserve: true,
+        isVaultDispersal: true,
+      );
+
+      final liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession, isNotNull);
+      expect(liveSession!.getMemberPurse('Legolas').gp, equals(33));
+      expect(liveSession.getMemberPurse('Gimli').gp, equals(33));
+      expect(liveSession.partyPurse.gp, equals(34));
+
+      // Conservation of currency: 33 + 33 + 34 = 100 GP total (zero inflation / no compounding)
+      final totalPartyWealth = liveSession.getMemberPurse('Legolas').gp +
+          liveSession.getMemberPurse('Gimli').gp +
+          liveSession.partyPurse.gp;
+      expect(totalPartyWealth, equals(100));
+    });
+
+    test('Disperse Vault Funds without party reserve empties vault to characters', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Full Vault Dispersal Campaign',
+        playerName: 'DM',
+      );
+
+      // Initially deposit 50 GP into party vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM',
+        gp: 50,
+      );
+
+      final recipients = ['Legolas', 'Gimli'];
+      // 50 GP / 2 characters = 25 GP each, 0 remainder.
+      // Withdrawn from vault = 25 * 2 = 50 GP.
+      // Vault remaining = 0 GP.
+      await partyService.disperseCoinsToParty(
+        roomCode: session.roomCode,
+        purseToDisperse: const PartyPurse(gp: 50),
+        recipientCharacters: recipients,
+        performedBy: 'DM',
+        includePartyReserve: false,
+        isVaultDispersal: true,
+      );
+
+      final liveSession = await partyService.streamSession(session.roomCode).first;
+      expect(liveSession, isNotNull);
+      expect(liveSession!.getMemberPurse('Legolas').gp, equals(25));
+      expect(liveSession.getMemberPurse('Gimli').gp, equals(25));
+      expect(liveSession.partyPurse.gp, equals(0));
+    });
+
     test('Transfer between Member Store and Party Reserve', () async {
       final session = await partyService.createCampaign(
         campaignName: 'Vault Transfer Campaign',

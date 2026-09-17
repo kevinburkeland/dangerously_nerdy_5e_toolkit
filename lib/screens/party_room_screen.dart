@@ -1211,6 +1211,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                       initialRoomCode: _roomCode,
                       purse: purse,
                       sourceTitle: 'Vault Funds',
+                      isVaultDispersal: true,
                     );
                   },
                 ),
@@ -1455,6 +1456,7 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
                   purse: purse,
                   liquidatedGemsAndArtGp: gemsAndArtTotal,
                   sourceTitle: 'Party Vault Funds',
+                  isVaultDispersal: true,
                 ),
               ),
             ),

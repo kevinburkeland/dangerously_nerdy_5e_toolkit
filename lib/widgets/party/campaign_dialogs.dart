@@ -1825,6 +1825,7 @@ class DisperseLootDialog extends StatefulWidget {
   final PartyPurse purse;
   final double liquidatedGemsAndArtGp;
   final String? sourceTitle;
+  final bool isVaultDispersal;
 
   const DisperseLootDialog({
     super.key,
@@ -1832,6 +1833,7 @@ class DisperseLootDialog extends StatefulWidget {
     required this.purse,
     this.liquidatedGemsAndArtGp = 0.0,
     this.sourceTitle,
+    this.isVaultDispersal = false,
   });
 
   static Future<bool?> show(
@@ -1840,6 +1842,7 @@ class DisperseLootDialog extends StatefulWidget {
     required PartyPurse purse,
     double liquidatedGemsAndArtGp = 0.0,
     String? sourceTitle,
+    bool isVaultDispersal = false,
   }) {
     return showDialog<bool>(
       context: context,
@@ -1848,6 +1851,7 @@ class DisperseLootDialog extends StatefulWidget {
         purse: purse,
         liquidatedGemsAndArtGp: liquidatedGemsAndArtGp,
         sourceTitle: sourceTitle,
+        isVaultDispersal: isVaultDispersal,
       ),
     );
   }
@@ -1929,6 +1933,7 @@ class _DisperseLootDialogState extends State<DisperseLootDialog> {
         includePartyReserve: _includePartyReserve,
         liquidatedGemsAndArtGp: widget.liquidatedGemsAndArtGp,
         includeLiquidatedInSplit: _includeLiquidated,
+        isVaultDispersal: widget.isVaultDispersal,
       );
 
       if (mounted) {

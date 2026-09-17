@@ -283,5 +283,24 @@ void main() {
       expect(purse.gp, equals(25));
       expect(purse.effectiveGpCounter.value, equals(25));
     });
+
+    test('PartyPurse CvRDT merge does not compound or double balances across snapshots', () {
+      final p1 = PartyPurse.fromMap(const {
+        'gp': 100,
+      });
+      final p2 = PartyPurse.fromMap(const {
+        'gp': 100,
+      });
+
+      // Lattice join of identical snapshots must yield exactly 100 GP, NOT 200 GP
+      final merged = p1.merge(p2);
+      expect(merged.gp, equals(100));
+      expect(merged.effectiveGpCounter.value, equals(100));
+
+      // Merging repeatedly must remain strictly idempotent
+      final mergedAgain = merged.merge(p1).merge(p2);
+      expect(mergedAgain.gp, equals(100));
+      expect(mergedAgain.effectiveGpCounter.value, equals(100));
+    });
   });
 }

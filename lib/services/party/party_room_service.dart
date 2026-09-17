@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -1746,6 +1747,7 @@ class PartyRoomService {
     int ep = 0,
     int sp = 0,
     int cp = 0,
+    bool emitSession = true,
   }) async {
     try {
       final all = await _characterPersistenceService.loadCharacters();
@@ -1795,7 +1797,9 @@ class PartyRoomService {
             sharedCharacters: updatedShared,
             memberPurses: updatedPurses,
           );
-          _emitSession(clean);
+          if (emitSession) {
+            _emitSession(clean);
+          }
         }
       }
     } catch (e, st) {
@@ -1941,6 +1945,8 @@ class PartyRoomService {
   }
 
   /// Disperses coins/valuables among selected party member stores, with an optional share for the party reserve.
+  /// When [isVaultDispersal] is true, coins are distributed OUT OF the shared party vault (withdrawing
+  /// the shares given to characters), rather than being deposited as new external hoard loot.
   Future<void> disperseCoinsToParty({
     required String roomCode,
     required PartyPurse purseToDisperse,
@@ -1949,6 +1955,7 @@ class PartyRoomService {
     bool includePartyReserve = true,
     double liquidatedGemsAndArtGp = 0.0,
     bool includeLiquidatedInSplit = false,
+    bool isVaultDispersal = false,
   }) async {
     final clean = roomCode.trim().toUpperCase();
     final recipients = recipientCharacters.map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -1988,13 +1995,24 @@ class PartyRoomService {
           roomCode: clean,
           characterIdentifier: recipient,
           gp: perShareGp,
+          emitSession: false,
         );
       }
 
-      if (includePartyReserve) {
-        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: perShareGp + remainderGp, nodeId: localNodeId);
-      } else if (remainderGp > 0) {
-        updatedPartyPurse = updatedPartyPurse.depositCoins(gp: remainderGp, nodeId: localNodeId);
+      if (isVaultDispersal) {
+        // Vault funds distributed to characters: withdraw disbursed character shares from vault
+        final totalGpWithdrawn = perShareGp * recipients.length;
+        updatedPartyPurse = updatedPartyPurse.withdrawCoins(
+          gp: math.min(updatedPartyPurse.gp, totalGpWithdrawn),
+          nodeId: localNodeId,
+        );
+      } else {
+        // External loot drop: deposit reserve share or remainder
+        if (includePartyReserve) {
+          updatedPartyPurse = updatedPartyPurse.depositCoins(gp: perShareGp + remainderGp, nodeId: localNodeId);
+        } else if (remainderGp > 0) {
+          updatedPartyPurse = updatedPartyPurse.depositCoins(gp: remainderGp, nodeId: localNodeId);
+        }
       }
     } else {
       // Even denomination split across PP, GP, EP, SP, CP
@@ -2028,28 +2046,47 @@ class PartyRoomService {
           ep: epPerShare,
           sp: spPerShare,
           cp: cpPerShare,
+          emitSession: false,
         );
       }
 
-      if (includePartyReserve) {
-        updatedPartyPurse = updatedPartyPurse.depositCoins(
-          pp: ppPerShare + ppRem,
-          gp: gpPerShare + gpRem,
-          ep: epPerShare + epRem,
-          sp: spPerShare + spRem,
-          cp: cpPerShare + cpRem,
+      if (isVaultDispersal) {
+        // Vault funds distributed to characters: withdraw distributed shares from the vault
+        final ppWithdrawn = ppPerShare * recipients.length;
+        final gpWithdrawn = gpPerShare * recipients.length;
+        final epWithdrawn = epPerShare * recipients.length;
+        final spWithdrawn = spPerShare * recipients.length;
+        final cpWithdrawn = cpPerShare * recipients.length;
+        updatedPartyPurse = updatedPartyPurse.withdrawCoins(
+          pp: ppWithdrawn,
+          gp: gpWithdrawn,
+          ep: epWithdrawn,
+          sp: spWithdrawn,
+          cp: cpWithdrawn,
           nodeId: localNodeId,
         );
       } else {
-        // Remainder always goes to party reserve so nothing is lost
-        updatedPartyPurse = updatedPartyPurse.depositCoins(
-          pp: ppRem,
-          gp: gpRem,
-          ep: epRem,
-          sp: spRem,
-          cp: cpRem,
-          nodeId: localNodeId,
-        );
+        // External loot drop: deposit reserve share or remainder
+        if (includePartyReserve) {
+          updatedPartyPurse = updatedPartyPurse.depositCoins(
+            pp: ppPerShare + ppRem,
+            gp: gpPerShare + gpRem,
+            ep: epPerShare + epRem,
+            sp: spPerShare + spRem,
+            cp: cpPerShare + cpRem,
+            nodeId: localNodeId,
+          );
+        } else {
+          // Remainder always goes to party reserve so nothing is lost
+          updatedPartyPurse = updatedPartyPurse.depositCoins(
+            pp: ppRem,
+            gp: gpRem,
+            ep: epRem,
+            sp: spRem,
+            cp: cpRem,
+            nodeId: localNodeId,
+          );
+        }
       }
     }
 
