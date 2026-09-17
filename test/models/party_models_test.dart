@@ -245,5 +245,43 @@ void main() {
       expect(restored.getMemberPurse('Iselde').gp, equals(150));
       expect(restored.getMemberPurse('Kaelen').totalGpEquivalent, equals(350.0));
     });
+
+    test('PartyPurse.fromMap prioritizes scalar increment over stale counter and re-seeds', () {
+      // Simulate Firestore snapshot after FieldValue.increment added 20 GP (total 30 GP),
+      // while the nested gpCounter still had old {local: 10}.
+      final staleMap = <String, dynamic>{
+        'cp': 0,
+        'sp': 0,
+        'ep': 0,
+        'gp': 30, // Updated by atomic increment
+        'pp': 0,
+        'gpCounter': {
+          'positive': {'deviceA': 10},
+          'negative': {},
+        },
+      };
+
+      final purse = PartyPurse.fromMap(staleMap);
+      expect(purse.gp, equals(30), reason: 'Scalar value must take precedence over stale counter');
+      expect(purse.effectiveGpCounter.value, equals(30), reason: 'PN-counter must be re-seeded to 30');
+
+      // Subsequent deposit of 5 GP should compute 35 GP
+      final updated = purse.depositCoins(gp: 5, nodeId: 'deviceB');
+      expect(updated.gp, equals(35));
+    });
+
+    test('PartyPurse.fromMap safely parses generic Map<dynamic, dynamic> counters without TypeError', () {
+      final dynamicMap = <dynamic, dynamic>{
+        'gp': 25,
+        'gpCounter': <dynamic, dynamic>{
+          'positive': <dynamic, dynamic>{'deviceA': 25},
+          'negative': <dynamic, dynamic>{},
+        },
+      };
+
+      final purse = PartyPurse.fromMap(Map<String, dynamic>.from(dynamicMap));
+      expect(purse.gp, equals(25));
+      expect(purse.effectiveGpCounter.value, equals(25));
+    });
   });
 }

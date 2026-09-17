@@ -380,34 +380,55 @@ class PartyPurse {
   }
 
   factory PartyPurse.fromMap(Map<String, dynamic> map) {
+    final hasCp = map.containsKey('cp');
+    final hasSp = map.containsKey('sp');
+    final hasEp = map.containsKey('ep');
+    final hasGp = map.containsKey('gp');
+    final hasPp = map.containsKey('pp');
+
     final cpVal = (map['cp'] as num?)?.toInt() ?? 0;
     final spVal = (map['sp'] as num?)?.toInt() ?? 0;
     final epVal = (map['ep'] as num?)?.toInt() ?? 0;
     final gpVal = (map['gp'] as num?)?.toInt() ?? 0;
     final ppVal = (map['pp'] as num?)?.toInt() ?? 0;
 
-    final cpC = map['cpCounter'] is Map
-        ? PnCounter.fromMap(map['cpCounter'] as Map<String, dynamic>)
-        : (cpVal > 0 ? PnCounter.withInitialValue(cpVal) : const PnCounter());
-    final spC = map['spCounter'] is Map
-        ? PnCounter.fromMap(map['spCounter'] as Map<String, dynamic>)
-        : (spVal > 0 ? PnCounter.withInitialValue(spVal) : const PnCounter());
-    final epC = map['epCounter'] is Map
-        ? PnCounter.fromMap(map['epCounter'] as Map<String, dynamic>)
-        : (epVal > 0 ? PnCounter.withInitialValue(epVal) : const PnCounter());
-    final gpC = map['gpCounter'] is Map
-        ? PnCounter.fromMap(map['gpCounter'] as Map<String, dynamic>)
-        : (gpVal > 0 ? PnCounter.withInitialValue(gpVal) : const PnCounter());
-    final ppC = map['ppCounter'] is Map
-        ? PnCounter.fromMap(map['ppCounter'] as Map<String, dynamic>)
-        : (ppVal > 0 ? PnCounter.withInitialValue(ppVal) : const PnCounter());
+    PnCounter parseCounter(dynamic val, int scalarFallback) {
+      if (val is Map) {
+        try {
+          final m = val.map((k, v) => MapEntry(k.toString(), v));
+          return PnCounter.fromMap(m);
+        } catch (_) {}
+      }
+      return scalarFallback > 0 ? PnCounter.withInitialValue(scalarFallback) : const PnCounter();
+    }
+
+    var cpC = parseCounter(map['cpCounter'], cpVal);
+    var spC = parseCounter(map['spCounter'], spVal);
+    var epC = parseCounter(map['epCounter'], epVal);
+    var gpC = parseCounter(map['gpCounter'], gpVal);
+    var ppC = parseCounter(map['ppCounter'], ppVal);
+
+    // If the map provides scalar keys and they differ from the counter (e.g. updated
+    // by atomic FieldValue.increment in Firestore), the scalar reflects the latest
+    // authoritative mutation and re-seeds the counter.
+    final finalCp = hasCp ? cpVal : (cpC.positive.isNotEmpty || cpC.negative.isNotEmpty ? cpC.value : cpVal);
+    final finalSp = hasSp ? spVal : (spC.positive.isNotEmpty || spC.negative.isNotEmpty ? spC.value : spVal);
+    final finalEp = hasEp ? epVal : (epC.positive.isNotEmpty || epC.negative.isNotEmpty ? epC.value : epVal);
+    final finalGp = hasGp ? gpVal : (gpC.positive.isNotEmpty || gpC.negative.isNotEmpty ? gpC.value : gpVal);
+    final finalPp = hasPp ? ppVal : (ppC.positive.isNotEmpty || ppC.negative.isNotEmpty ? ppC.value : ppVal);
+
+    if (hasCp && cpVal != cpC.value) cpC = PnCounter.withInitialValue(cpVal);
+    if (hasSp && spVal != spC.value) spC = PnCounter.withInitialValue(spVal);
+    if (hasEp && epVal != epC.value) epC = PnCounter.withInitialValue(epVal);
+    if (hasGp && gpVal != gpC.value) gpC = PnCounter.withInitialValue(gpVal);
+    if (hasPp && ppVal != ppC.value) ppC = PnCounter.withInitialValue(ppVal);
 
     return PartyPurse(
-      cp: cpC.positive.isNotEmpty || cpC.negative.isNotEmpty ? cpC.value : cpVal,
-      sp: spC.positive.isNotEmpty || spC.negative.isNotEmpty ? spC.value : spVal,
-      ep: epC.positive.isNotEmpty || epC.negative.isNotEmpty ? epC.value : epVal,
-      gp: gpC.positive.isNotEmpty || gpC.negative.isNotEmpty ? gpC.value : gpVal,
-      pp: ppC.positive.isNotEmpty || ppC.negative.isNotEmpty ? ppC.value : ppVal,
+      cp: finalCp,
+      sp: finalSp,
+      ep: finalEp,
+      gp: finalGp,
+      pp: finalPp,
       cpCounter: cpC,
       spCounter: spC,
       epCounter: epC,

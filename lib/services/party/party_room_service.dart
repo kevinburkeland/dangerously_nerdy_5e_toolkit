@@ -154,6 +154,7 @@ class PartyRoomService {
   final Map<String, List<PartyEvent>> _localEvents = {};
 
   final Map<String, StreamController<PartySessionState?>> _sessionControllers = {};
+  final Map<String, StreamSubscription> _sessionSubscriptions = {};
   final Map<String, StreamController<List<PartyLootItem>>> _lootControllers = {};
   final Map<String, StreamController<List<PartyEvent>>> _eventControllers = {};
 
@@ -475,14 +476,22 @@ class PartyRoomService {
       _localRooms[matchedCode] = updatedSession;
       if (isFirebaseAvailable) {
         try {
+          final Map<String, dynamic> joinPayload = {
+            'roomCode': matchedCode,
+            'code': matchedCode,
+            'campaignName': updatedSession.campaignName,
+            'activePlayers': updatedSession.activePlayers,
+            'characterRoster': updatedSession.characterRoster,
+            'sharedCharacters': updatedSession.sharedCharacters,
+            'partyTelemetry': updatedSession.partyTelemetry.map((k, v) => MapEntry(k, v.toMap())),
+            'version': FieldValue.increment(1),
+            'lastUpdated': now.toIso8601String(),
+            'expiresAt': expiresAt.toIso8601String(),
+          };
           await FirebaseFirestore.instance
               .collection('rooms')
               .doc(matchedCode)
-              .set({
-                ...updatedSession.toMap(),
-                'lastUpdated': now.toIso8601String(),
-                'expiresAt': expiresAt.toIso8601String(),
-              }, SetOptions(merge: true));
+              .set(joinPayload, SetOptions(merge: true));
         } catch (e) {
           // Non-critical player union error
         }
@@ -533,7 +542,17 @@ class PartyRoomService {
     final now = DateTime.now();
     final expiresAt = now.add(defaultLootExpiration);
 
-    final existing = _localRooms[cleanCode];
+    var existing = _localRooms[cleanCode];
+    if (existing == null && isFirebaseAvailable) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('rooms').doc(cleanCode).get();
+        if (doc.exists && doc.data() != null) {
+          existing = PartySessionState.fromMap(doc.data()!);
+          _localRooms[cleanCode] = existing;
+        }
+      } catch (_) {}
+    }
+
     final cName = campaignName ?? existing?.campaignName ?? 'Shared Campaign ($cleanCode)';
     final hostKeyHash = hostKey != null && hostKey.isNotEmpty
         ? CryptoUtils.sha256Hex(CryptoUtils.extractHostKey(hostKey))
@@ -562,16 +581,19 @@ class PartyRoomService {
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(cleanCode);
-        await docRef.set({
+        final Map<String, dynamic> updateData = {
           'roomCode': cleanCode,
           'code': cleanCode,
           'campaignName': cName,
           'isStateless': isStateless,
-          'hostKeyHash': hostKeyHash,
-          'partyPurse': session.partyPurse.toMap(),
           'lastUpdated': now.toIso8601String(),
           'expiresAt': expiresAt.toIso8601String(),
-        }, SetOptions(merge: true));
+        };
+        if (hostKeyHash.isNotEmpty) {
+          updateData['hostKeyHash'] = hostKeyHash;
+        }
+        // CRITICAL: NEVER overwrite partyPurse with zeroes on lease renewal/stub touch
+        await docRef.set(updateData, SetOptions(merge: true));
       } catch (e, st) {
         LoggingService().logNonFatal(
           e,
@@ -615,6 +637,16 @@ class PartyRoomService {
 
     // 3. Update session
     var current = _localRooms[clean];
+    if (current == null && isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        final snapshot = await docRef.get();
+        if (snapshot.exists && snapshot.data() != null) {
+          current = PartySessionState.fromMap(snapshot.data()!);
+        }
+      } catch (_) {}
+    }
+
     if (current == null) {
       final membership = _registry.getMembership(clean);
       final telemetry = character.toTelemetryDto();
@@ -694,11 +726,23 @@ class PartyRoomService {
       LoggingService().logNonFatal(e, st, reason: 'Failed linking character to DM profile');
     }
 
-    // 5. Cloud update
+    // 5. Cloud update: update roster, telemetry, and member purses without clobbering shared party vault
     if (isFirebaseAvailable) {
       try {
         final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-        await docRef.set(current.toMap(), SetOptions(merge: true));
+        await docRef.set({
+          'roomCode': clean,
+          'code': clean,
+          'campaignName': current.campaignName,
+          'activePlayers': current.activePlayers,
+          'characterRoster': current.characterRoster,
+          'memberPurses': current.memberPurses.map((k, v) => MapEntry(k, v.toMap())),
+          'sharedCharacters': current.sharedCharacters,
+          'partyTelemetry': current.partyTelemetry.map((k, v) => MapEntry(k, v.toMap())),
+          'version': FieldValue.increment(1),
+          'lastUpdated': DateTime.now().toIso8601String(),
+          'expiresAt': current.expiresAt.toIso8601String(),
+        }, SetOptions(merge: true));
       } catch (e, st) {
         LoggingService().logNonFatal(e, st, reason: 'Firestore linkCharacterToCampaign failed for $clean');
       }
@@ -991,6 +1035,10 @@ class PartyRoomService {
     _localLoot.remove(clean);
     _localEvents.remove(clean);
     _outbox.remove(clean);
+    _sessionSubscriptions[clean]?.cancel();
+    _sessionSubscriptions.remove(clean);
+    _sessionControllers[clean]?.close();
+    _sessionControllers.remove(clean);
     _updateOutboxCount();
     _emitSession(clean);
 
@@ -1042,32 +1090,43 @@ class PartyRoomService {
   Stream<PartySessionState?> streamSession(String roomCode) {
     final clean = roomCode.trim().toUpperCase();
 
-    if (isFirebaseAvailable) {
-      try {
-        return FirebaseFirestore.instance
-            .collection('rooms')
-            .doc(clean)
-            .snapshots()
-            .map((snap) {
-          if (!snap.exists || snap.data() == null) return null;
-          final state = PartySessionState.fromMap(snap.data()!);
-          _localRooms[clean] = state;
-          return state;
-        }).handleError((e, st) {
-          LoggingService().logNonFatal(e, st, reason: 'streamSession error for $clean');
-          return _localRooms[clean];
-        });
-      } catch (e, st) {
-        LoggingService().logNonFatal(e, st, reason: 'Firestore streamSession init failed for $clean');
-      }
-    }
-
     final controller = _sessionControllers.putIfAbsent(
       clean,
       () => StreamController<PartySessionState?>.broadcast(),
     );
+
+    if (isFirebaseAvailable) {
+      _sessionSubscriptions.putIfAbsent(clean, () {
+        return FirebaseFirestore.instance
+            .collection('rooms')
+            .doc(clean)
+            .snapshots()
+            .listen((snap) {
+          if (!snap.exists || snap.data() == null) {
+            if (!controller.isClosed) controller.add(null);
+            return;
+          }
+          try {
+            final state = PartySessionState.fromMap(snap.data()!);
+            _localRooms[clean] = state;
+            if (!controller.isClosed) controller.add(state);
+          } catch (e, st) {
+            LoggingService().logNonFatal(e, st, reason: 'PartySessionState.fromMap error for $clean');
+            if (!controller.isClosed && _localRooms.containsKey(clean)) {
+              controller.add(_localRooms[clean]);
+            }
+          }
+        }, onError: (e, st) {
+          LoggingService().logNonFatal(e, st, reason: 'streamSession error for $clean');
+          if (!controller.isClosed && _localRooms.containsKey(clean)) {
+            controller.add(_localRooms[clean]);
+          }
+        });
+      });
+    }
+
     Future.microtask(() {
-      if (!controller.isClosed) {
+      if (!controller.isClosed && _localRooms.containsKey(clean)) {
         controller.add(_localRooms[clean]);
       }
     });
@@ -1344,7 +1403,19 @@ class PartyRoomService {
       if (isFirebaseAvailable) {
         try {
           final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+          final payload = <String, dynamic>{
+            'roomCode': clean,
+            'code': clean,
+            'campaignName': current.campaignName,
+            'characterRoster': updatedRoster,
+            'memberPurses': updatedPurses.map((k, v) => MapEntry(k, v.toMap())),
+            'version': FieldValue.increment(1),
+            'lastUpdated': DateTime.now().toIso8601String(),
+          };
+          if (deletedPurse != null && !deletedPurse.isEmpty) {
+            payload['partyPurse'] = updatedPartyPurse.toMap();
+          }
+          await docRef.set(payload, SetOptions(merge: true));
         } catch (e, st) {
           LoggingService().logNonFatal(e, st, reason: 'Firestore removeCharacterFromRoster failed for $clean');
         }
@@ -1396,7 +1467,19 @@ class PartyRoomService {
       if (isFirebaseAvailable) {
         try {
           final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+          final payload = <String, dynamic>{
+            'roomCode': clean,
+            'code': clean,
+            'campaignName': current.campaignName,
+            'characterRoster': cleanedRoster,
+            'memberPurses': updatedPurses.map((k, v) => MapEntry(k, v.toMap())),
+            'version': FieldValue.increment(1),
+            'lastUpdated': DateTime.now().toIso8601String(),
+          };
+          if (updatedPartyPurse != current.partyPurse) {
+            payload['partyPurse'] = updatedPartyPurse.toMap();
+          }
+          await docRef.set(payload, SetOptions(merge: true));
         } catch (e, st) {
           LoggingService().logNonFatal(e, st, reason: 'Firestore updateCharacterRoster failed for $clean');
         }
@@ -2043,7 +2126,14 @@ class PartyRoomService {
       if (isFirebaseAvailable) {
         try {
           final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
-          await docRef.set(updatedSession.toMap(), SetOptions(merge: true));
+          await docRef.set({
+            'roomCode': clean,
+            'code': clean,
+            'campaignName': current.campaignName,
+            'memberPurses': updatedMap.map((k, v) => MapEntry(k, v.toMap())),
+            'version': FieldValue.increment(1),
+            'lastUpdated': DateTime.now().toIso8601String(),
+          }, SetOptions(merge: true));
         } catch (e, st) {
           LoggingService().logNonFatal(e, st, reason: 'Firestore updateMemberPurse failed for $clean');
         }

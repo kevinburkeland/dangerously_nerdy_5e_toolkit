@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/core_types.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/campaign_membership.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_loot_item.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/party/party_purse.dart';
@@ -771,6 +774,78 @@ void main() {
       // In offline/in-memory mode, clearOutbox resets pendingOutboxCount
       partyService.clearOutbox('ROOM-AUTO01');
       expect(partyService.pendingOutboxCount.value, equals(0));
+    });
+
+    test('ensureRoomExists preserves existing party vault coins without zeroing', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Vault Protection Campaign',
+        playerName: 'DM Protection',
+      );
+
+      // Deposit 100 GP into vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM Protection',
+        gp: 100,
+      );
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp, equals(100));
+
+      // ensureRoomExists called on room mount or background sync
+      await partyService.ensureRoomExists(
+        roomCode: session.roomCode,
+        campaignName: session.campaignName,
+      );
+
+      // Must remain 100 GP, not wiped to zero
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp, equals(100));
+    });
+
+    test('linkCharacterToCampaign retains existing party vault balance', () async {
+      final session = await partyService.createCampaign(
+        campaignName: 'Roster Linking Campaign',
+        playerName: 'DM Lead',
+      );
+
+      // Deposit 50 GP into party vault
+      await partyService.depositCoins(
+        roomCode: session.roomCode,
+        playerName: 'DM Lead',
+        gp: 50,
+      );
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp, equals(50));
+
+      // A character links to the campaign
+      const dummyChar = Character(
+        id: EntityId(slug: 'test-link-char', ruleset: RulesetVersion.v2024),
+        name: 'Gimli Son of Gloin',
+        speciesRef: EntityReference(slug: 'dwarf', refType: EntityType.species, displayName: 'Dwarf'),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(slug: 'fighter', refType: EntityType.classDefinition, displayName: 'Fighter'),
+              level: 3,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: AbilityScores.standardArray(),
+        resources: CharacterResourcePool(currentHp: 25),
+        purse: PartyPurse(gp: 15),
+      );
+
+      final updated = await partyService.linkCharacterToCampaign(
+        roomCode: session.roomCode,
+        character: dummyChar,
+      );
+
+      // Character linked with personal purse of 15 GP
+      expect(updated.characterRoster, contains('Gimli Son of Gloin'));
+      expect(updated.getMemberPurse('Gimli Son of Gloin').gp, equals(15));
+
+      // Party vault MUST still have 50 GP!
+      expect(updated.partyPurse.gp, equals(50));
+      expect(partyService.getCachedSession(session.roomCode)!.partyPurse.gp, equals(50));
     });
   });
 }
