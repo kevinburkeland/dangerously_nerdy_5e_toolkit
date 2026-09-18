@@ -4,6 +4,7 @@ import '../../domain/ports/i_character_repository.dart';
 import '../../domain/models/character_models.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';
+import '../../services/rules/character_reparse_engine.dart';
 import '../dtos/character_dto.dart';
 
 /// Concrete infrastructure adapter implementing [ICharacterRepository]
@@ -170,5 +171,25 @@ class LocalCharacterRepository implements ICharacterRepository {
       await _db.delete(AppDatabaseService.boxCharacters, _kActiveCharacterIdKey);
     } catch (_) {}
   }
-}
 
+  /// Reparses and updates a single character against current compendiums and rules.
+  @override
+  Future<Character> reparseCharacter(Character character) async {
+    final updated = CharacterReparseEngine.reparse(character);
+    await saveCharacter(updated);
+    return updated;
+  }
+
+  /// Reparses and updates all characters in the roster against current compendiums and rules.
+  @override
+  Future<List<Character>> reparseAllCharacters() async {
+    final roster = await loadCharacters();
+    final updatedRoster = <Character>[];
+    for (final c in roster) {
+      final updated = CharacterReparseEngine.reparse(c);
+      updatedRoster.add(updated);
+    }
+    await saveRoster(updatedRoster);
+    return updatedRoster;
+  }
+}

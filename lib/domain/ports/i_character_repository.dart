@@ -31,4 +31,10 @@ abstract class ICharacterRepository {
 
   /// Clears the saved active character ID.
   Future<void> clearActiveCharacterId();
+
+  /// Reparses and updates a single character against current compendiums and rules.
+  Future<Character> reparseCharacter(Character character);
+
+  /// Reparses and updates all characters in the roster against current compendiums and rules.
+  Future<List<Character>> reparseAllCharacters();
 }

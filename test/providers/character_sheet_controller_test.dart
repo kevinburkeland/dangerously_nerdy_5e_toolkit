@@ -48,6 +48,16 @@ class _FakePersistenceService implements ICharacterRepository {
   Future<void> saveCharacters(List<Character> characters) async {
     if (characters.isNotEmpty) savedCharacter = characters.last;
   }
+
+  @override
+  Future<Character> reparseCharacter(Character character) async {
+    savedCharacter = character;
+    return character;
+  }
+
+  @override
+  Future<List<Character>> reparseAllCharacters() async =>
+      savedCharacter != null ? [savedCharacter!] : [];
 }
 
 void main() {

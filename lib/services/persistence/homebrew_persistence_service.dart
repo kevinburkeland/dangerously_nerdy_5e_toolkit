@@ -28,6 +28,7 @@ import '../acl/compendium_spell_parser.dart';
 import '../acl/homebrew_merge_resolver.dart';
 import '../acl/srd_equivalence_index.dart';
 import '../importers/community_compendium_adapters.dart';
+import 'character_persistence_service.dart';
 import '../ingestion/compendium_json_ingestion_pipeline.dart';
 import '../fluff/entity_fluff_service.dart';
 import '../logging_service.dart';
@@ -2859,6 +2860,13 @@ class HomebrewPersistenceService {
 
     await syncToLibraries();
     srdIndex.invalidate();
+
+    // Automatically reparse existing characters in roster to inherit updated homebrew
+    try {
+      await CharacterPersistenceService().reparseAllCharacters();
+    } catch (e, st) {
+      LoggingService().logNonFatal(e, st, reason: 'Failed to reparse character roster during homebrew reparse');
+    }
 
     return ReparseResult(
       updatedCount: updated,

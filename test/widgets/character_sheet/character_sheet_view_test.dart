@@ -217,5 +217,49 @@ void main() {
       expect(find.text('1 / 3 Attuned'), findsOneWidget);
       expect(controller.stats.attunedItemCount, equals(1));
     });
+
+    testWidgets('Tapping reparse button in AppBar triggers reparse and shows SnackBar', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CharacterSheetView(controller: controller),
+        ),
+      );
+      await tester.pump();
+
+      final reparseButton = find.byKey(const Key('reparse_sheet_appbar_button'));
+      expect(reparseButton, findsOneWidget);
+
+      await tester.tap(reparseButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Valerius sheet reparsed & updated!'), findsOneWidget);
+    });
+
+    testWidgets('Tapping reparse chip in Header Banner triggers reparse and shows SnackBar', (tester) async {
+      tester.view.physicalSize = const Size(1200, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CharacterSheetView(controller: controller),
+        ),
+      );
+      await tester.pump();
+
+      final reparseChip = find.byKey(const Key('reparse_sheet_chip'));
+      expect(reparseChip, findsOneWidget);
+
+      await tester.tap(reparseChip);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Valerius sheet reparsed & updated!'), findsOneWidget);
+    });
   });
 }

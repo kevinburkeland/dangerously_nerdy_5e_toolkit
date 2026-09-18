@@ -4,6 +4,7 @@ import '../../domain/ports/i_character_repository.dart';
 import '../../models/domain/character_models.dart';
 import '../../services/logging_service.dart';
 import '../rules/character_homebrew_validator.dart';
+import '../rules/character_reparse_engine.dart';
 import 'app_database_service.dart';
 
 /// Persistence service for saving, loading, and deleting characters in local storage.
@@ -196,5 +197,26 @@ class CharacterPersistenceService implements ICharacterRepository {
     } catch (e) {
       // Non-fatal
     }
+  }
+
+  /// Reparses and updates a single character against current compendiums and rules.
+  @override
+  Future<Character> reparseCharacter(Character character) async {
+    final updated = CharacterReparseEngine.reparse(character);
+    await saveCharacter(updated);
+    return updated;
+  }
+
+  /// Reparses and updates all characters in the roster against current compendiums and rules.
+  @override
+  Future<List<Character>> reparseAllCharacters() async {
+    final roster = await loadCharacters();
+    final updatedRoster = <Character>[];
+    for (final c in roster) {
+      final updated = CharacterReparseEngine.reparse(c);
+      updatedRoster.add(updated);
+    }
+    await saveRoster(updatedRoster);
+    return updatedRoster;
   }
 }

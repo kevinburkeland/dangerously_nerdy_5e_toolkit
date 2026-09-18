@@ -27,6 +27,10 @@ class _FakeCharRepo implements ICharacterRepository {
   Future<void> saveActiveCharacterId(String slug) async {}
   @override
   Future<void> clearActiveCharacterId() async {}
+  @override
+  Future<Character> reparseCharacter(Character c) async => c;
+  @override
+  Future<List<Character>> reparseAllCharacters() async => [];
 }
 
 void main() {

@@ -153,6 +153,22 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
+                IconButton(
+                  key: const Key('reparse_sheet_appbar_button'),
+                  icon: const Icon(Icons.sync),
+                  tooltip: 'Reparse & Update Sheet',
+                  onPressed: () async {
+                    await _controller.reparseActiveCharacter();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          behavior: SnackBarBehavior.floating,
+                          content: Text('${_controller.character.name} sheet reparsed & updated!'),
+                        ),
+                      );
+                    }
+                  },
+                ),
                 if (_controller.isSaving)
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),

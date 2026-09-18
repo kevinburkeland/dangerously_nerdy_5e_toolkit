@@ -60,6 +60,15 @@ class _MockPersistenceService implements CharacterPersistenceService {
       await saveCharacter(c);
     }
   }
+
+  @override
+  Future<Character> reparseCharacter(Character character) async {
+    savedCharacter = character;
+    return character;
+  }
+
+  @override
+  Future<List<Character>> reparseAllCharacters() async => roster;
 }
 
 void main() {

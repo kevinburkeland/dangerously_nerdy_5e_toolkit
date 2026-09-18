@@ -23,6 +23,7 @@ import '../services/repository/reference_resolver.dart';
 import '../services/rules/character_evaluation_engine.dart';
 import '../services/rules/character_homebrew_validator.dart';
 import '../services/rules/character_progression_engine.dart';
+import '../services/rules/character_reparse_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
 import '../services/rules/skill_trait_resolver.dart';
 import '../models/domain/feature_grant.dart';
@@ -93,6 +94,17 @@ class CharacterSheetController extends ChangeNotifier {
     _recalculateStats();
     notifyListeners();
     _schedulePersist();
+  }
+
+  /// Reparses and re-evaluates the active character against the latest compendiums and rules,
+  /// persisting the changes immediately to local storage.
+  Future<Character> reparseActiveCharacter() async {
+    final updated = CharacterReparseEngine.reparse(_character);
+    _character = updated;
+    _recalculateStats();
+    notifyListeners();
+    await _persistImmediate();
+    return _character;
   }
 
   /// Advances character level via [CharacterProgressionEngine] and immediately flushes persistence.

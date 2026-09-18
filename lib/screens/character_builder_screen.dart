@@ -498,6 +498,54 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
     }
   }
 
+  Future<void> _reparseCharacter(Character hero) async {
+    HapticService.selectionTick(context);
+    final reloaded = await _persistenceService.reparseCharacter(hero);
+    setState(() {
+      _characterRoster = _characterRoster
+          .map((c) => c.id.slug == reloaded.id.slug ? reloaded : c)
+          .toList();
+      if (_character?.id.slug == reloaded.id.slug) {
+        _character = reloaded;
+        _recalculateStats();
+      }
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF0F766E),
+          content: Text('${hero.name} reparsed and updated!'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _reparseAllCharacters() async {
+    HapticService.mediumImpact(context);
+    final updatedList = await _persistenceService.reparseAllCharacters();
+    setState(() {
+      _characterRoster = updatedList;
+      if (_character != null) {
+        final currentUpdated = updatedList.firstWhere(
+          (c) => c.id.slug == _character!.id.slug,
+          orElse: () => _character!,
+        );
+        _character = currentUpdated;
+        _recalculateStats();
+      }
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF0F766E),
+          content: Text('All ${updatedList.length} character sheets reparsed and updated!'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   void _recalculateStats() {
     final char = _character;
     if (char != null) {
@@ -756,21 +804,43 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                     ],
                   ),
                 ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.cyanAccent.shade700,
-                    foregroundColor: Colors.black,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  icon: const Icon(Icons.person_add_alt_1, size: 16),
-                  label: const Text('New Hero',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  onPressed: () {
-                    HapticService.selectionTick(context);
-                    _tabController.animateTo(1);
-                  },
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      key: const Key('reparse_all_roster_button'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.cyanAccent,
+                        side: const BorderSide(color: Colors.cyanAccent),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                      ),
+                      icon: const Icon(Icons.sync, size: 16),
+                      label: const Text('Reparse Roster',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12)),
+                      onPressed: _characterRoster.isEmpty
+                          ? null
+                          : _reparseAllCharacters,
+                    ),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.cyanAccent.shade700,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                      ),
+                      icon: const Icon(Icons.person_add_alt_1, size: 16),
+                      label: const Text('New Hero',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12)),
+                      onPressed: () {
+                        HapticService.selectionTick(context);
+                        _tabController.animateTo(1);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -969,6 +1039,13 @@ class _CharacterBuilderScreenState extends State<CharacterBuilderScreen>
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          key: ValueKey('reparse_character_${hero.id.slug}'),
+                          icon: const Icon(Icons.sync,
+                              color: Colors.cyanAccent, size: 20),
+                          tooltip: 'Reparse Character Sheet',
+                          onPressed: () => _reparseCharacter(hero),
                         ),
                         IconButton(
                           key: ValueKey('delete_character_${hero.id.slug}'),

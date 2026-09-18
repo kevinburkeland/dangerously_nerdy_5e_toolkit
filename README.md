@@ -52,6 +52,13 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - Ability-based dice rolling directly from the Languages and Tool Proficiencies section.
   - Dedicated **Armor & Weapon Proficiencies** dashboard tracking active light/medium/heavy armor, shield, and weapon proficiencies across class, species/subrace, feats, and custom attributes.
 * **Short Rest Recovery Dialog**: Intuitive hit dice expenditure with Constitution modifiers and automatic Pact Magic slot restoration.
+* **Self-Healing Character Reparse Engine & Sync**:
+  - `CharacterReparseEngine` refreshes and heals existing saved characters against updated compendiums and rulesets without requiring character deletion.
+  - Automatically re-evaluates and aggregates tool proficiencies across class, species, background, and feats while preserving player selections.
+  - Re-evaluates active armor and weapon proficiencies, resolves species lineage cantrips and bonus spells, cleanses contaminated skill choice pools, and populates 2014 narrative background features.
+  - Recomputes hit point maxima and clamps current hit points safely within bounds.
+  - Automated whole-roster re-parsing triggered instantly upon homebrew compendium reparse.
+  - One-tap UI reparse triggers in the live sheet AppBar, header banner, roster hero cards, and the character selector hero header.
 * **Missing Homebrew Asset Safeguards**: Built-in `CharacterHomebrewValidator` and `MissingHomebrewBadge` that detect and flag missing or unlinked custom assets in imported character sheets.
 
 ---

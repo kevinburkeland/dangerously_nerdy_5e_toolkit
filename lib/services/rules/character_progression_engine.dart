@@ -544,7 +544,7 @@ class CharacterProgressionEngine {
     );
 
     // 6. Recalculate derived combat stats (HP, Spell Slots) using RAW calculation
-    int newMaxHp = _computeMaxHp(candidate);
+    int newMaxHp = computeMaxHp(candidate);
     final newSlotPool = computeSpellSlots(
       candidate.progression.classes,
       edition: candidate.rulesEdition,
@@ -574,7 +574,7 @@ class CharacterProgressionEngine {
     // Calculate HP increase to add to current HP (including retroactive CON scaling)
     final oldMaxHp = resolver != null
         ? CharacterStatCalculator.compute(character, resolver).maxHp
-        : _computeMaxHp(character);
+        : computeMaxHp(character);
     final hpDelta = math.max(0, newMaxHp - oldMaxHp);
     final updatedCurrentHp = math.min(newMaxHp, character.resources.currentHp + hpDelta);
 
@@ -586,12 +586,12 @@ class CharacterProgressionEngine {
     );
   }
 
-  /// Internal max HP computation adhering strictly to 5e RAW rules:
+  /// Max HP computation adhering strictly to 5e RAW rules:
   /// - Starting class gets full hit die sides + CON at Level 1 (or manualHpRolls[1] if recorded).
   /// - Subsequent levels (and all multiclass levels) gain recorded manualHpRolls or rolled/average hit die + CON (min 1 per level).
   /// - Retroactive CON modifier adjustments apply automatically across all levels.
   /// - Feats (like Tough) add +2 HP per total character level.
-  static int _computeMaxHp(Character character) {
+  static int computeMaxHp(Character character) {
     int maxHp = 0;
     final totalCon = character.baseScores.constitution + character.bonusScores.constitution;
     final conMod = totalCon.dndModifier;

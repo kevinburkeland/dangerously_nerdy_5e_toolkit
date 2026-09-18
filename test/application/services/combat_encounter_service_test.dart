@@ -57,6 +57,12 @@ class _FakeCharRepo implements ICharacterRepository {
 
   @override
   Future<void> clearActiveCharacterId() async {}
+
+  @override
+  Future<Character> reparseCharacter(Character character) async => character;
+
+  @override
+  Future<List<Character>> reparseAllCharacters() async => storage.values.toList();
 }
 
 class _FakeCampaignRepo implements ICampaignRepository {
