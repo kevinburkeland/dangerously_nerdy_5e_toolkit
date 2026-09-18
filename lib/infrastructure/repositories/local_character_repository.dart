@@ -83,22 +83,11 @@ class LocalCharacterRepository implements ICharacterRepository {
   Future<void> _persistRosterToDisk(List<Character> roster) async {
     try {
       final listMaps = roster.map((c) => CharacterDto.fromDomain(c).toMap()).toList();
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        await _db.put(
-          AppDatabaseService.boxCharacters,
-          _kSavedRosterKey,
-          listMaps,
-        );
-      }
-
-      // Best-effort sync to SharedPreferences for backwards compatibility & fallback
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final encoded = json.encode(listMaps);
-        await prefs.setString(_kSavedRosterKey, encoded);
-      } catch (_) {
-        // Suppress quota errors from SharedPreferences
-      }
+      await _db.put(
+        AppDatabaseService.boxCharacters,
+        _kSavedRosterKey,
+        listMaps,
+      );
     } catch (e) {
       LoggingService().logWarning(
         'Failed to save characters roster to repository: $e',

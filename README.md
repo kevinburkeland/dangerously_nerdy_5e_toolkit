@@ -8,7 +8,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore-FFCA28?logo=firebase)](https://firebase.google.com)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Tests](https://img.shields.io/badge/Tests-1800%20Passing-brightgreen.svg)](test)
+[![Tests](https://img.shields.io/badge/Tests-1828%20Passing-brightgreen.svg)](test)
 [![SRD 5.1 & 5.2](https://img.shields.io/badge/Rules-SRD%205.1%20%26%205.2%20CC--BY--4.0-blueviolet.svg)](LEGAL_ATTRIBUTION_MODAL.md)
 
 A modern, high-performance Flutter application designed for 5th Edition (5e) tabletop RPG players and Game Masters. Built for seamless cross-edition play (supporting both **2014 RAW** and **2024 Revised SRD 5.1 & 5.2** rulesets), the toolkit provides a complete ecosystem of **core tabletop apps, character progression pipelines, compendiums, combat simulators, and real-time campaign hubs**.
@@ -42,12 +42,15 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - Unified multiclass spell slot progression matrix (Full, Half, and Artificer `ceil(Level / 2)`).
   - Warlock short-rest Pact Magic slot pool and Eldritch Invocation selection with full prerequisite gating (level requirements, pact boons, spell prerequisites).
   - Wizard spellbook scribing, cantrip scaling, and preparation limits verification.
-  - Ability Score Improvements (ASI) and Feat selection with mechanic and stat rider bonuses.
+  - Ability Score Improvements (ASI) and Feat selection with mechanic and stat rider bonuses, automated armor, weapon, and tool proficiency grants, and interactive artisan/tool choice selectors in `AddFeatDialog`.
 * **Dynamic Action Economy Framework**:
   - Powered by the `CharacterActionsResolver` and `CombatAction` model.
   - Dynamic categorization: **Actions**, **Bonus Actions**, **Reactions**, **Free Actions**, **Movement**, and **Special Features**.
   - Interactive roll action cards with instant attack, damage, and spell-save DC rolling.
-* **Interactive Proficiencies & Languages**: Ability-based dice rolling directly from the Languages and Tool Proficiencies section.
+  - Full propagation and level-gating of homebrew and compendium class features (e.g. `Helpful`, `Cunning Action`, `Second Wind`, `Infuse Item`, `Magical Tinkering`) directly into the combat action economy.
+* **Interactive Proficiencies, Armor, Weapons & Languages**:
+  - Ability-based dice rolling directly from the Languages and Tool Proficiencies section.
+  - Dedicated **Armor & Weapon Proficiencies** dashboard tracking active light/medium/heavy armor, shield, and weapon proficiencies across class, species/subrace, feats, and custom attributes.
 * **Short Rest Recovery Dialog**: Intuitive hit dice expenditure with Constitution modifiers and automatic Pact Magic slot restoration.
 * **Missing Homebrew Asset Safeguards**: Built-in `CharacterHomebrewValidator` and `MissingHomebrewBadge` that detect and flag missing or unlinked custom assets in imported character sheets.
 
@@ -419,7 +422,7 @@ dangerously_nerdy_5e_toolkit/
 │   └── widgets/                    # Modular UI components
 ├── scripts/
 │   └── build_web.sh                # PWA web build script with icon font packaging & cache-busting
-├── test/                           # Unit, widget, accessibility, & resilience test suites (1,800 tests)
+├── test/                           # Unit, widget, accessibility, & resilience test suites (1,828 tests)
 │   ├── accessibility/              # A11y & dynamic type scaling tests
 │   ├── application/                # Orchestration & reconciliation service tests
 │   ├── domain/                     # Domain purity & CRDT logic tests
@@ -494,7 +497,7 @@ flutter run
 
 ## 🧪 Running Tests
 
-To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,800 tests with 100% pass rate**):
+To execute the automated unit, widget, accessibility, spellcasting mechanics, character progression pipeline, conflict resolution, domain purity, and resilience test suite (**1,828 tests with 100% pass rate**):
 ```bash
 flutter test
 ```
@@ -511,7 +514,7 @@ flutter analyze
 This project was developed with the assistance of Artificial Intelligence tools. Specifically, **Google DeepMind's Antigravity / Gemini** models were utilized during the development lifecycle for:
 - Architecture design, state management planning, and code refactoring.
 - Implementation of multi-tier conflict resolution, CvRDT state replication, batch attack algorithms, RAW 5e upcasting rules, spellcasting math matrices, DPR binomial calculations, character progression pipelines, Anti-Corruption Layer (ACL) compendium parsers, and cryptographically secure RNG utilities.
-- Writing comprehensive unit, widget, domain purity, and resilience tests (1,800 automated tests).
+- Writing comprehensive unit, widget, domain purity, and resilience tests (1,828 automated tests).
 - UI styling, 3D dice physics, responsive layout refinements, and documentation.
 
 All AI-generated contributions were thoroughly audited, tested, verified, and refined by human developers to ensure high code quality, security, and accuracy to 5e RAW rules.

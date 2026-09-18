@@ -270,23 +270,64 @@ class CompendiumFeatParser {
       }
     }
 
+    // Armor Proficiencies
+    final armors = raw['armorProficiencies'] ?? custom['armorProficiencies'] ?? raw['armor'] ?? custom['armor'];
+    if (armors is List) {
+      for (final a in armors) {
+        if (a is String && a.isNotEmpty) {
+          final norm = _normalizeArmorName(a);
+          grants.add(FeatureGrant.armorProficiency(
+            norm,
+            grantId: 'feat-$slug-armor-${_slugify(norm)}',
+            label: '$norm Training',
+          ));
+        } else if (a is Map) {
+          a.forEach((armorKey, enabled) {
+            if (enabled == true || enabled == 1) {
+              final norm = _normalizeArmorName(armorKey.toString());
+              grants.add(FeatureGrant.armorProficiency(
+                norm,
+                grantId: 'feat-$slug-armor-${_slugify(norm)}',
+                label: '$norm Training',
+              ));
+            }
+          });
+        }
+      }
+    }
+
     // Tool Proficiencies
-    final tools = raw['toolProficiencies'] ?? custom['toolProficiencies'];
+    final tools = raw['toolProficiencies'] ?? custom['toolProficiencies'] ?? raw['tools'] ?? custom['tools'];
     if (tools is List) {
       for (final t in tools) {
         if (t is String && t.isNotEmpty) {
-          grants.add(FeatureGrant.weaponArmorProficiency(
-            t.trim(),
+          final tName = _capitalize(t.trim());
+          grants.add(FeatureGrant.bonusTool(
+            tName,
             grantId: 'feat-$slug-tool-${_slugify(t)}',
-            label: '$t Proficiency',
+            label: '$tName Proficiency',
           ));
         } else if (t is Map) {
           t.forEach((toolName, enabled) {
-            if (enabled == true || enabled == 1) {
+            final kStr = toolName.toString().trim();
+            if (kStr == 'anyArtisansTool') {
               grants.add(FeatureGrant.weaponArmorProficiency(
-                toolName.toString().trim(),
-                grantId: 'feat-$slug-tool-${_slugify(toolName.toString())}',
-                label: '${toolName.toString().trim()} Proficiency',
+                'Artisan\'s Tools',
+                grantId: 'feat-$slug-tool-any-artisan',
+                label: 'One type of Artisan\'s Tools of your choice',
+              ));
+            } else if (kStr == 'any') {
+              grants.add(FeatureGrant.weaponArmorProficiency(
+                'Tool',
+                grantId: 'feat-$slug-tool-any',
+                label: 'One tool of your choice',
+              ));
+            } else if (enabled == true || enabled == 1) {
+              final tName = _capitalize(kStr);
+              grants.add(FeatureGrant.bonusTool(
+                tName,
+                grantId: 'feat-$slug-tool-${_slugify(kStr)}',
+                label: '$tName Proficiency',
               ));
             }
           });
@@ -295,15 +336,27 @@ class CompendiumFeatParser {
     }
 
     // Weapon Proficiencies
-    final weapons = raw['weaponProficiencies'] ?? custom['weaponProficiencies'];
+    final weapons = raw['weaponProficiencies'] ?? custom['weaponProficiencies'] ?? raw['weapons'] ?? custom['weapons'];
     if (weapons is List) {
       for (final w in weapons) {
         if (w is String && w.isNotEmpty) {
+          final norm = _normalizeWeaponName(w);
           grants.add(FeatureGrant.weaponArmorProficiency(
-            w.trim(),
-            grantId: 'feat-$slug-weapon-${_slugify(w)}',
-            label: '$w Proficiency',
+            norm,
+            grantId: 'feat-$slug-weapon-${_slugify(norm)}',
+            label: '$norm Proficiency',
           ));
+        } else if (w is Map) {
+          w.forEach((wKey, enabled) {
+            if (enabled == true || enabled == 1) {
+              final norm = _normalizeWeaponName(wKey.toString());
+              grants.add(FeatureGrant.weaponArmorProficiency(
+                norm,
+                grantId: 'feat-$slug-weapon-${_slugify(norm)}',
+                label: '$norm Proficiency',
+              ));
+            }
+          });
         }
       }
     }
@@ -334,6 +387,26 @@ class CompendiumFeatParser {
   }
 
   String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+  String _normalizeArmorName(String name) {
+    final lower = name.toLowerCase().trim();
+    return switch (lower) {
+      'light' || 'light armor' => 'Light Armor',
+      'medium' || 'medium armor' => 'Medium Armor',
+      'heavy' || 'heavy armor' => 'Heavy Armor',
+      'shield' || 'shields' => 'Shields',
+      _ => _capitalize(name.trim()),
+    };
+  }
+
+  String _normalizeWeaponName(String name) {
+    final lower = name.toLowerCase().trim();
+    return switch (lower) {
+      'simple' || 'simple weapon' || 'simple weapons' => 'Simple Weapons',
+      'martial' || 'martial weapon' || 'martial weapons' => 'Martial Weapons',
+      _ => _capitalize(name.trim()),
+    };
+  }
 
   String _slugify(String name) {
     return name

@@ -315,20 +315,60 @@ class FeaturesTraitsSection extends StatelessWidget {
     );
   }
 
+  static final Map<String, String> _wellKnownClassFeatureDescriptions = {
+    'helpful': 'You can take the Help action as a bonus action.',
+    'cunning action': 'You can take a bonus action on each of your turns in combat to take the Dash, Disengage, or Hide action.',
+    'second wind': 'You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.',
+    'infuse item': 'Whenever you finish a long rest, you can touch a nonmagical object and imbue it with one of your infusions, turning it into a magic item.',
+    'magical tinkering': 'As an action, you can touch a Tiny nonmagical object and give it one of several magical properties.',
+    'action surge': 'On your turn, you can take one additional action on top of your regular action and a possible bonus action.',
+    'bardic inspiration': 'You can inspire others through stirring words or music. Use a bonus action on your turn to choose one creature within 60 feet.',
+    'rage': 'In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.',
+    'flurry of blows': 'Immediately after you take the Attack action on your turn, you can spend 1 ki point to make two unarmed strikes as a bonus action.',
+    'patient defense': 'You can spend 1 ki point to take the Dodge action as a bonus action on your turn.',
+    'step of the wind': 'You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn.',
+    'uncanny dodge': 'When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack\'s damage against you.',
+    'deflect missiles': 'You can use your reaction to deflect or catch the missile when you are hit by a ranged weapon attack.',
+  };
+
   static List<_ExtractedFeature> _extractFeaturesFromMarkdown(String markdown) {
     if (markdown.trim().isEmpty) return const [];
 
     final List<_ExtractedFeature> result = [];
 
+    // Case 0: Pipe-delimited feature strings (e.g. FeatureName|ClassName|Source|Level)
+    final pipeRegex = RegExp(r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)", multiLine: true);
+    final pipeMatches = pipeRegex.allMatches(markdown).toList();
+    if (pipeMatches.isNotEmpty) {
+      for (final match in pipeMatches) {
+        final featName = match.group(1)?.trim() ?? '';
+        final clsName = match.group(2)?.trim() ?? '';
+        final src = match.group(3)?.trim() ?? '';
+        final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
+        if (featName.isNotEmpty && !result.any((r) => r.name.toLowerCase() == featName.toLowerCase())) {
+          final fallbackDesc = _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
+          final desc = fallbackDesc != null
+              ? '**$featName**\n\n$fallbackDesc'
+              : '**$featName**\n\n*Class Feature granted by $clsName ($src) at Level $lvl.*';
+          result.add(_ExtractedFeature(
+            name: featName,
+            level: lvl,
+            descriptionMarkdown: desc,
+          ));
+        }
+      }
+      if (result.isNotEmpty) return result;
+    }
+
     // Case 1: Markdown with headers "### Feature Name (Level X)" or "### Feature Name"
-    if (markdown.contains(RegExp(r'(?:^|\n)###\s+'))) {
-      final blocks = markdown.split(RegExp(r'(?=(?:^|\n)###\s+)'));
+    if (markdown.contains(RegExp(r'(?:^|\n)#{1,4}\s+'))) {
+      final blocks = markdown.split(RegExp(r'(?=(?:^|\n)#{1,4}\s+)'));
       for (final block in blocks) {
         final trimmed = block.trim();
         if (trimmed.isEmpty) continue;
         final lines = trimmed.split('\n');
         final headerLine = lines.first.replaceAll(RegExp(r'^#+\s*'), '').trim();
-        final levelMatch = RegExp(r'^(.*?)(?:\s*\(Level\s+(\d+)\))?$').firstMatch(headerLine);
+        final levelMatch = RegExp(r'^(.*?)(?:\s*\((?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?\))?(?:\s*:\s*)?$', caseSensitive: false).firstMatch(headerLine);
         final name = levelMatch?.group(1)?.trim() ?? headerLine;
         final level = levelMatch?.group(2) != null ? int.tryParse(levelMatch!.group(2)!) : null;
         final body = lines.length > 1 ? lines.sublist(1).join('\n').trim() : '';
@@ -498,19 +538,46 @@ class FeaturesTraitsSection extends StatelessWidget {
               DndClassType.tryParse(cls.classRef.displayName) ??
               DndClassType.fighter;
 
-          widgets.add(_buildFeatureChip(
-            context,
-            name: '${cls.classRef.displayName} Features (Lvl ${cls.level})',
-            category: 'Class Feature',
-            descriptionMarkdown: classDesc,
-            glyphWidget: DndGlyph.classFeature(
-              classType: clsType,
-              size: 24,
-              isDarkMode: true,
-            ),
-            icon: Icons.shield,
-            color: theme.colorScheme.primary,
-          ));
+          final pipeRegex = RegExp(r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)", multiLine: true);
+          final hasPipeFeatures = pipeRegex.hasMatch(classDesc);
+
+          if (hasPipeFeatures) {
+            final extractedClassFeatures = _extractFeaturesFromMarkdown(classDesc);
+            final eligibleClassFeatures = extractedClassFeatures
+                .where((f) => f.level == null || f.level! <= cls.level)
+                .toList();
+
+            for (final feat in eligibleClassFeatures) {
+              widgets.add(_buildFeatureChip(
+                context,
+                name: feat.name,
+                category:
+                    '${cls.classRef.displayName} Feature${feat.level != null ? ' (Lvl ${feat.level})' : ''}',
+                descriptionMarkdown: feat.descriptionMarkdown,
+                glyphWidget: DndGlyph.classFeature(
+                  classType: clsType,
+                  size: 24,
+                  isDarkMode: true,
+                ),
+                icon: Icons.shield,
+                color: theme.colorScheme.primary,
+              ));
+            }
+          } else {
+            widgets.add(_buildFeatureChip(
+              context,
+              name: '${cls.classRef.displayName} Features (Lvl ${cls.level})',
+              category: 'Class Feature',
+              descriptionMarkdown: classDesc,
+              glyphWidget: DndGlyph.classFeature(
+                classType: clsType,
+                size: 24,
+                isDarkMode: true,
+              ),
+              icon: Icons.shield,
+              color: theme.colorScheme.primary,
+            ));
+          }
 
           // 2. Resolve Subclass (if selected)
           if (cls.subclassRef != null) {

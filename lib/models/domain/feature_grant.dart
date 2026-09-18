@@ -231,6 +231,23 @@ class FeatureGrant {
         label: label,
       );
 
+  /// Proficiency in a specific tool.
+  factory FeatureGrant.bonusTool(
+    String tool, {
+    required String grantId,
+    String? label,
+  }) =>
+      FeatureGrant(
+        type: GrantType.proficiency,
+        grantId: grantId,
+        payload: {
+          'tool': tool,
+          'proficiency': tool,
+          'category': 'tool',
+        },
+        label: label ?? '$tool Proficiency',
+      );
+
   /// Proficiency with weapon, armor, or tool category.
   factory FeatureGrant.weaponArmorProficiency(
     String proficiency, {
@@ -242,6 +259,19 @@ class FeatureGrant {
         grantId: grantId,
         payload: {'proficiency': proficiency},
         label: label,
+      );
+
+  /// Proficiency in an armor type or category (e.g. Light Armor, Medium Armor, Heavy Armor, Shields).
+  factory FeatureGrant.armorProficiency(
+    String armor, {
+    required String grantId,
+    String? label,
+  }) =>
+      FeatureGrant(
+        type: GrantType.proficiency,
+        grantId: grantId,
+        payload: {'proficiency': armor, 'category': 'armor'},
+        label: label ?? '$armor Proficiency',
       );
 
   /// Attack ability substitution (e.g. Battle Ready: Intelligence for magic weapons, Hex Warrior: Charisma).

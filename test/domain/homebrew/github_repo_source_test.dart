@@ -26,17 +26,17 @@ void main() {
     });
 
     test('Parses custom branch from /tree/:branch path', () {
-      final source = GithubRepoSource.parse('https://github.com/homebrewery/vault/tree/v2-development');
-      expect(source.owner, equals('homebrewery'));
+      final source = GithubRepoSource.parse('https://github.com/tabletop-vault/vault/tree/v2-development');
+      expect(source.owner, equals('tabletop-vault'));
       expect(source.repo, equals('vault'));
       expect(source.branch, equals('v2-development'));
       expect(
         source.apiTreeUri.toString(),
-        equals('https://api.github.com/repos/homebrewery/vault/git/trees/v2-development?recursive=1'),
+        equals('https://api.github.com/repos/tabletop-vault/vault/git/trees/v2-development?recursive=1'),
       );
       expect(
         source.rawFileUri('monsters/aberration.json').toString(),
-        equals('https://raw.githubusercontent.com/homebrewery/vault/v2-development/monsters/aberration.json'),
+        equals('https://raw.githubusercontent.com/tabletop-vault/vault/v2-development/monsters/aberration.json'),
       );
     });
 

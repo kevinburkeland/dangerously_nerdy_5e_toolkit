@@ -76,7 +76,7 @@ void main() {
       expect(cl.customProperties['classTableGroups'], isNotNull);
     });
 
-    test('parses starting skill proficiencies from 5eTools choose.from schema', () {
+    test('parses starting skill proficiencies from community choose.from schema', () {
       final raw = {
         'name': 'Scholar',
         'hd': {'number': 1, 'faces': 8},

@@ -24,6 +24,8 @@ import '../services/rules/character_evaluation_engine.dart';
 import '../services/rules/character_homebrew_validator.dart';
 import '../services/rules/character_progression_engine.dart';
 import '../services/rules/inventory_transaction_service.dart';
+import '../services/rules/skill_trait_resolver.dart';
+import '../models/domain/feature_grant.dart';
 import '../utils/secure_random.dart';
 
 /// State controller for managing an active Character sheet, handling live stat recalculation,
@@ -1273,7 +1275,7 @@ class CharacterSheetController extends ChangeNotifier {
   }
 
   /// Adds a feat to the character sheet, optionally granting ability score increases,
-  /// skill/expertise choices, or feature option choices (e.g. Eldritch Invocations, Fighting Styles).
+  /// skill/expertise choices, tool proficiencies, or feature option choices (e.g. Eldritch Invocations, Fighting Styles).
   Future<void> addFeat(
     EntityReference<DomainEntity> featRef, {
     String? reason,
@@ -1282,11 +1284,14 @@ class CharacterSheetController extends ChangeNotifier {
     SkillType? skillGrant,
     SkillType? expertiseGrant,
     List<String>? featureOptions,
+    String? toolGrant,
   }) async {
     final existingFeats = List<EntityReference<DomainEntity>>.from(_character.feats);
     if (!existingFeats.any((f) => f.slug == featRef.slug)) {
       existingFeats.add(featRef);
     }
+
+    final feat = SrdFeatsLibrary.findBySlug(featRef.slug);
 
     var newBonusScores = _character.bonusScores;
     if (abilityBonus != null) {
@@ -1309,6 +1314,51 @@ class CharacterSheetController extends ChangeNotifier {
       updatedSkills[expertiseGrant] = SkillProficiencyLevel.expertise;
     }
 
+    // Resolve tool proficiencies
+    final updatedTools = List<String>.from(_character.toolProficiencies);
+    if (toolGrant != null && toolGrant.trim().isNotEmpty) {
+      final t = toolGrant.trim();
+      if (!updatedTools.contains(t)) updatedTools.add(t);
+    }
+    if (feat != null) {
+      for (final g in feat.grants) {
+        if (g.type == GrantType.bonusTool) {
+          final tName = g.payload['tool']?.toString() ?? '';
+          if (tName.isNotEmpty && !updatedTools.contains(tName)) updatedTools.add(tName);
+        }
+      }
+      final rawTools = feat.customProperties['toolProficiencies'];
+      if (rawTools is List) {
+        for (final item in rawTools) {
+          if (item is String && item.isNotEmpty && !updatedTools.contains(item)) {
+            updatedTools.add(item);
+          } else if (item is Map) {
+            final tName = item.keys.firstWhere((k) => k != 'any' && k != 'anyArtisansTool', orElse: () => '');
+            if (tName.isNotEmpty && !updatedTools.contains(tName)) {
+              updatedTools.add(tName);
+            }
+          }
+        }
+      }
+    }
+
+    // Resolve armor and weapon proficiencies
+    final customProps = Map<String, dynamic>.from(_character.customProperties);
+    final allFeatSlugs = existingFeats.map((f) => f.slug).toList();
+    final primaryClassSlug = _character.progression.classes.firstOrNull?.classRef.slug;
+    customProps['armorProficiencies'] = SkillTraitResolver.resolveArmorProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: allFeatSlugs,
+      customProperties: customProps,
+    );
+    customProps['weaponProficiencies'] = SkillTraitResolver.resolveWeaponProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: allFeatSlugs,
+      customProperties: customProps,
+    );
+
     var updatedProgression = _character.progression;
     if (featureOptions != null && featureOptions.isNotEmpty && _character.progression.classes.isNotEmpty) {
       final featOptKey = 'feat-${featRef.slug}';
@@ -1330,7 +1380,9 @@ class CharacterSheetController extends ChangeNotifier {
       feats: existingFeats,
       bonusScores: newBonusScores,
       skillProficiencies: updatedSkills,
+      toolProficiencies: updatedTools,
       progression: updatedProgression,
+      customProperties: customProps,
     );
     _recalculateStats();
     notifyListeners();
@@ -1346,6 +1398,9 @@ class CharacterSheetController extends ChangeNotifier {
     } else {
       if (skillGrant != null) parts.add('Proficiency: ${skillGrant.displayName}');
       if (expertiseGrant != null) parts.add('Expertise: ${expertiseGrant.displayName}');
+    }
+    if (toolGrant != null && toolGrant.isNotEmpty) {
+      parts.add('Tool: $toolGrant');
     }
     if (featureOptions != null && featureOptions.isNotEmpty) {
       parts.add('Options: ${featureOptions.join(', ')}');
@@ -1405,10 +1460,64 @@ class CharacterSheetController extends ChangeNotifier {
       updatedProgression = updatedProgression.copyWith(classes: updatedClasses);
     }
 
+    // Re-resolve armor and weapon proficiencies without this feat
+    final remainingFeatSlugs = existingFeats.map((f) => f.slug).toList();
+    final customProps = Map<String, dynamic>.from(_character.customProperties);
+    final primaryClassSlug = _character.progression.classes.firstOrNull?.classRef.slug;
+    customProps['armorProficiencies'] = SkillTraitResolver.resolveArmorProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: remainingFeatSlugs,
+      customProperties: null,
+    );
+    customProps['weaponProficiencies'] = SkillTraitResolver.resolveWeaponProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: _character.speciesRef.slug,
+      featSlugs: remainingFeatSlugs,
+      customProperties: null,
+    );
+
+    // Remove tools granted by this feat unless still granted by another feat
+    final updatedTools = List<String>.from(_character.toolProficiencies);
+    final featTools = <String>{};
+    for (final g in feat.grants) {
+      if (g.type == GrantType.bonusTool) {
+        final tName = g.payload['tool']?.toString() ?? '';
+        if (tName.isNotEmpty) featTools.add(tName);
+      }
+    }
+    final rawTools = feat.customProperties['toolProficiencies'];
+    if (rawTools is List) {
+      for (final item in rawTools) {
+        if (item is String && item.isNotEmpty) {
+          featTools.add(item);
+        } else if (item is Map) {
+          final tName = item.keys.firstWhere((k) => k != 'any' && k != 'anyArtisansTool', orElse: () => '');
+          if (tName.isNotEmpty) featTools.add(tName);
+        }
+      }
+    }
+
+    final otherFeatTools = <String>{};
+    for (final fRef in existingFeats) {
+      final otherF = SrdFeatsLibrary.findBySlug(fRef.slug);
+      if (otherF != null) {
+        for (final g in otherF.grants) {
+          if (g.type == GrantType.bonusTool) {
+            final tName = g.payload['tool']?.toString() ?? '';
+            if (tName.isNotEmpty) otherFeatTools.add(tName);
+          }
+        }
+      }
+    }
+    updatedTools.removeWhere((t) => featTools.contains(t) && !otherFeatTools.contains(t));
+
     _character = _character.copyWith(
       feats: existingFeats,
       bonusScores: newBonusScores,
+      toolProficiencies: updatedTools,
       progression: updatedProgression,
+      customProperties: customProps,
     );
     _recalculateStats();
     notifyListeners();

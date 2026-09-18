@@ -31,9 +31,9 @@ https://creativecommons.org/licenses/by/4.0/legalcode
 ## 3. Product Identity & Trademark Audit Safeguards
 
 DangerouslyNerdy 5e Toolkit strictly excludes all Wizards of the Coast **Product Identity**, including:
-- **No Trademarked Monolith Monsters:** Mind Flayers, Beholders, Umber Hulks, Yuan-Ti, Gazer, Displacer Beasts, Carrion Crawlers, Slaad.
-- **No Named Lore Characters:** Bigby, Mordenkainen, Tasha, Otiluke, Evard, Rary, Leomund, Tenser, Drawmij.
-- **No Proprietary Setting Lore:** Forgotten Realms, Greyhawk, Ravenloft, Eberron, Dragonlance, Spelljammer.
+- **No Trademarked Monolith Monsters:** Proprietary or non-SRD creatures, aberrations, and trademarked monster identity names.
+- **No Named Lore Characters:** Proprietary named setting spellcasters and book author characters.
+- **No Proprietary Setting Lore:** Proprietary campaign settings, trademarked worlds, and realm-specific factions.
 - **No Official Logos:** No use of the stylized D&D ampersand or Wizards of the Coast corporate logos.
 
 All spell calculations, spell point tables, and dice mechanics in this tool adhere strictly to the unencumbered game mechanics set forth in the unencumbered SRD 5.1.

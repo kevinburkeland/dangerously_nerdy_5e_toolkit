@@ -373,7 +373,16 @@ class CompendiumClassParser {
           }
           return;
         }
-        if (f.contains('|') && !f.contains(' ')) {
+        if (f.contains('|')) {
+          final parts = f.split('|').map((p) => p.trim()).toList();
+          final fName = parts.isNotEmpty ? parts[0] : '';
+          final fClass = parts.length > 1 ? parts[1] : '';
+          final fSource = parts.length > 2 ? parts[2] : '';
+          final fLevel = parts.length > 3 ? int.tryParse(parts[3]) : null;
+          final levelStr = fLevel != null ? ' (Level $fLevel)' : '';
+          if (fName.isNotEmpty) {
+            featureBlocks.add('### $fName$levelStr\n*Source: $fSource • $fClass Feature*\n\nGranted to $fClass at level ${fLevel ?? 1}.');
+          }
           return;
         }
       } else if (f is Map && (f.containsKey('classFeature') || f.containsKey('subclassFeature'))) {
@@ -574,7 +583,7 @@ class CompendiumClassParser {
   }
 
   /// Extracts allowed skills and choice count from class definitions across
-  /// 5eTools schemas, startingProficiencies, direct properties, and text features.
+  /// community compendium schemas, startingProficiencies, direct properties, and text features.
   static ({List<String> allowedSkills, int skillChoiceCount}) parseClassSkills(Map<String, dynamic> raw) {
     final allowed = <String>{};
     int choiceCount = 2;
@@ -590,7 +599,8 @@ class CompendiumClassParser {
       }
     }
 
-    final sp = raw['startingProficiencies'] ?? raw['proficiency'] ?? raw['proficiencies'];
+    final sp = raw['startingProficiencies'] ??
+        (raw['proficiencies'] is Map ? raw['proficiencies'] : null);
     dynamic skillsData;
     if (sp is Map) {
       skillsData = sp['skills'] ?? sp['skill'];
@@ -678,6 +688,57 @@ class CompendiumClassParser {
             }
           }
         }
+      }
+    }
+
+    // Archetype fallbacks for known classes if allowed skills could not be extracted
+    final rawName = (raw['name'] ?? raw['id'] ?? raw['slug'] ?? '').toString().toLowerCase().trim();
+    if (allowed.isEmpty && !allowsAny) {
+      if (rawName.contains('artificer')) {
+        allowed.addAll([
+          SkillType.arcana.name,
+          SkillType.history.name,
+          SkillType.investigation.name,
+          SkillType.medicine.name,
+          SkillType.nature.name,
+          SkillType.perception.name,
+          SkillType.sleightOfHand.name,
+        ]);
+        choiceCount = 2;
+      } else if (rawName.contains('mystic')) {
+        allowed.addAll([
+          SkillType.arcana.name,
+          SkillType.history.name,
+          SkillType.insight.name,
+          SkillType.medicine.name,
+          SkillType.nature.name,
+          SkillType.perception.name,
+          SkillType.religion.name,
+        ]);
+        choiceCount = 2;
+      } else if (rawName.contains('warrior sidekick') || rawName == 'warrior-sidekick') {
+        allowed.addAll([
+          SkillType.acrobatics.name,
+          SkillType.animalHandling.name,
+          SkillType.athletics.name,
+          SkillType.intimidation.name,
+          SkillType.nature.name,
+          SkillType.perception.name,
+          SkillType.survival.name,
+        ]);
+        choiceCount = 1;
+      } else if (rawName.contains('spellcaster sidekick') || rawName == 'spellcaster-sidekick') {
+        allowed.addAll([
+          SkillType.arcana.name,
+          SkillType.history.name,
+          SkillType.insight.name,
+          SkillType.investigation.name,
+          SkillType.medicine.name,
+          SkillType.performance.name,
+          SkillType.religion.name,
+          SkillType.survival.name,
+        ]);
+        choiceCount = 2;
       }
     }
 

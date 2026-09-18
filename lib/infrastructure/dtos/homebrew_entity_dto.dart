@@ -101,6 +101,7 @@ class HomebrewEntityDto {
       'raceName', 'subrace', 'subraces', 'flexibleAbilities',
       'startingProficiencies', 'proficiencyChoices', 'flexibleSkills', 'skillProficiencies',
       'allowedSkills', 'skillChoiceCount', 'classFeatures', 'hitDie', 'hd', 'savingThrows', 'proficiency',
+      'armorProficiencies', 'toolProficiencies', 'weaponProficiencies', 'prerequisite', 'prereq',
     };
 
     final unparsed = <String, dynamic>{};
@@ -289,7 +290,14 @@ class HomebrewEntityDto {
     if (json.containsKey('speed') && (json.containsKey('size') || json.containsKey('subraces'))) {
       return 'race';
     }
-    if (json.containsKey('prerequisite') || json.containsKey('originFeat')) {
+    if (json.containsKey('prerequisite') ||
+        json.containsKey('prereq') ||
+        json.containsKey('originFeat') ||
+        json.containsKey('category') ||
+        json.containsKey('repeatable') ||
+        (json.containsKey('toolProficiencies') && !json.containsKey('startingProficiencies')) ||
+        (json.containsKey('armorProficiencies') && !json.containsKey('hitDie')) ||
+        (json.containsKey('weaponProficiencies') && !json.containsKey('hitDie'))) {
       return 'feat';
     }
     if (json.containsKey('startingEquipment') || json.containsKey('featureName')) {
@@ -377,6 +385,54 @@ class HomebrewEntityDto {
       }
     }
 
+    // Feat Ingestion: Armor, Weapon, and Tool Proficiencies
+    if (entityType == 'feat') {
+      final armorRaw = normalized['armorProficiencies'] ?? json['armorProficiencies'];
+      if (armorRaw is List) {
+        final armors = <String>[];
+        for (final a in armorRaw) {
+          if (a is String && a.trim().isNotEmpty) {
+            armors.add(a.trim());
+          } else if (a is Map) {
+            a.forEach((key, val) {
+              if (val == true || val == 1) armors.add(key.toString().trim());
+            });
+          }
+        }
+        if (armors.isNotEmpty) normalized['armorProficiencies'] = armors;
+      }
+
+      final toolsRaw = normalized['toolProficiencies'] ?? json['toolProficiencies'];
+      if (toolsRaw is List) {
+        final tools = <String>[];
+        for (final t in toolsRaw) {
+          if (t is String && t.trim().isNotEmpty) {
+            tools.add(t.trim());
+          } else if (t is Map) {
+            t.forEach((key, val) {
+              if (val == true || val == 1) tools.add(key.toString().trim());
+            });
+          }
+        }
+        if (tools.isNotEmpty) normalized['toolProficiencies'] = tools;
+      }
+
+      final weaponsRaw = normalized['weaponProficiencies'] ?? json['weaponProficiencies'];
+      if (weaponsRaw is List) {
+        final weapons = <String>[];
+        for (final w in weaponsRaw) {
+          if (w is String && w.trim().isNotEmpty) {
+            weapons.add(w.trim());
+          } else if (w is Map) {
+            w.forEach((key, val) {
+              if (val == true || val == 1) weapons.add(key.toString().trim());
+            });
+          }
+        }
+        if (weapons.isNotEmpty) normalized['weaponProficiencies'] = weapons;
+      }
+    }
+
     // Class Ingestion: Skills, Starting Proficiencies, and Choice Pools
     if (entityType == 'class') {
       final classSkills = _extractClassSkills(json);
@@ -414,13 +470,14 @@ class HomebrewEntityDto {
     int choiceCount = 2;
     Map<String, dynamic>? flexible;
 
-    // Check startingProficiencies (nested 5eTools format or flat map)
+    // Check startingProficiencies (nested community schema or flat map)
     final sources = <dynamic>[];
-    final sp = json['startingProficiencies'] ?? json['proficiency'] ?? json['proficiencies'];
+    final sp = json['startingProficiencies'] ??
+        (json['proficiencies'] is Map ? json['proficiencies'] : null);
     if (sp is Map) {
       if (sp['skills'] != null) sources.add(sp['skills']);
       if (sp['skill'] != null) sources.add(sp['skill']);
-    } else if (sp != null) {
+    } else if (sp != null && sp is! List) {
       sources.add(sp);
     }
     if (json['skills'] != null && json['skills'] != sp) sources.add(json['skills']);
@@ -554,9 +611,29 @@ class HomebrewEntityDto {
       };
     }
 
+    final className = (json['name'] ?? json['id'] ?? '').toString().toLowerCase().trim();
+    if (allowedSkills.isEmpty) {
+      if (className.contains('artificer')) {
+        allowedSkills.addAll(['arcana', 'history', 'investigation', 'medicine', 'nature', 'perception', 'sleight of hand']);
+        choiceCount = 2;
+      } else if (className.contains('mystic')) {
+        allowedSkills.addAll(['arcana', 'history', 'insight', 'medicine', 'nature', 'perception', 'religion']);
+        choiceCount = 2;
+      } else if (className.contains('warrior sidekick') || className == 'warrior-sidekick') {
+        allowedSkills.addAll(['acrobatics', 'animal handling', 'athletics', 'intimidation', 'nature', 'perception', 'survival']);
+        choiceCount = 1;
+      } else if (className.contains('spellcaster sidekick') || className == 'spellcaster-sidekick') {
+        allowedSkills.addAll(['arcana', 'history', 'insight', 'investigation', 'medicine', 'performance', 'religion', 'survival']);
+        choiceCount = 2;
+      } else if (className.contains('expert sidekick') || className == 'expert-sidekick') {
+        allowedSkills.addAll(_canonicalSkills);
+        choiceCount = 2;
+      }
+    }
+
     return (
       fixed: fixedSkills.toList(),
-      flexible: flexible,
+      flexible: flexible ?? (allowedSkills.isNotEmpty ? {'count': choiceCount, 'from': allowedSkills.toList()} : null),
       allowedSkills: allowedSkills.toList(),
       choiceCount: choiceCount,
     );

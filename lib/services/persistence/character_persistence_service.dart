@@ -24,21 +24,19 @@ class CharacterPersistenceService implements ICharacterRepository {
   @override
   Future<List<Character>> loadCharacters() async {
     try {
-      // 1. Check local IndexedDB / Hive database (if open)
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
-        if (raw != null) {
-          if (raw is List) {
-            return raw
-                .map((item) => Character.fromMap(
-                    Map<String, dynamic>.from(item is Map ? item : json.decode(item.toString()) as Map)))
-                .toList();
-          } else if (raw is String && raw.isNotEmpty) {
-            final decoded = json.decode(raw) as List<dynamic>;
-            return decoded
-                .map((item) => Character.fromMap(Map<String, dynamic>.from(item as Map)))
-                .toList();
-          }
+      // 1. Check local IndexedDB / Hive database
+      final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
+      if (raw != null) {
+        if (raw is List) {
+          return raw
+              .map((item) => Character.fromMap(
+                  Map<String, dynamic>.from(item is Map ? item : json.decode(item.toString()) as Map)))
+              .toList();
+        } else if (raw is String && raw.isNotEmpty) {
+          final decoded = json.decode(raw) as List<dynamic>;
+          return decoded
+              .map((item) => Character.fromMap(Map<String, dynamic>.from(item as Map)))
+              .toList();
         }
       }
 
@@ -51,14 +49,12 @@ class CharacterPersistenceService implements ICharacterRepository {
             .map((item) => Character.fromMap(Map<String, dynamic>.from(item as Map)))
             .toList();
         if (list.isNotEmpty) {
-          // One-time migration into database if open
-          if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-            await _db.put(
-              AppDatabaseService.boxCharacters,
-              _kSavedRosterKey,
-              list.map((c) => c.toMap()).toList(),
-            );
-          }
+          // One-time migration into database
+          await _db.put(
+            AppDatabaseService.boxCharacters,
+            _kSavedRosterKey,
+            list.map((c) => c.toMap()).toList(),
+          );
           return list;
         }
       }
@@ -76,13 +72,11 @@ class CharacterPersistenceService implements ICharacterRepository {
   Future<void> saveRoster(List<Character> roster) async {
     try {
       final listMaps = roster.map((c) => c.toMap()).toList();
-      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
-        await _db.put(
-          AppDatabaseService.boxCharacters,
-          _kSavedRosterKey,
-          listMaps,
-        );
-      }
+      await _db.put(
+        AppDatabaseService.boxCharacters,
+        _kSavedRosterKey,
+        listMaps,
+      );
 
       // Best-effort sync to SharedPreferences for backwards compatibility
       try {

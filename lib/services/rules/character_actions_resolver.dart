@@ -1306,7 +1306,68 @@ class CharacterActionsResolver {
     );
   }
 
+  static final Map<String, (ActionType, String)> _wellKnownFeatureFallbacks = {
+    'helpful': (
+      ActionType.bonusAction,
+      'You can take the Help action as a bonus action.',
+    ),
+    'cunning action': (
+      ActionType.bonusAction,
+      'You can take a bonus action on each of your turns in combat to take the Dash, Disengage, or Hide action.',
+    ),
+    'second wind': (
+      ActionType.bonusAction,
+      'You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.',
+    ),
+    'infuse item': (
+      ActionType.action,
+      'Whenever you finish a long rest, you can touch a nonmagical object and imbue it with one of your infusions, turning it into a magic item.',
+    ),
+    'magical tinkering': (
+      ActionType.action,
+      'As an action, you can touch a Tiny nonmagical object and give it one of several magical properties.',
+    ),
+    'action surge': (
+      ActionType.special,
+      'On your turn, you can take one additional action on top of your regular action and a possible bonus action.',
+    ),
+    'bardic inspiration': (
+      ActionType.bonusAction,
+      'You can inspire others through stirring words or music. Use a bonus action on your turn to choose one creature within 60 feet.',
+    ),
+    'rage': (
+      ActionType.bonusAction,
+      'In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.',
+    ),
+    'flurry of blows': (
+      ActionType.bonusAction,
+      'Immediately after you take the Attack action on your turn, you can spend 1 ki point to make two unarmed strikes as a bonus action.',
+    ),
+    'patient defense': (
+      ActionType.bonusAction,
+      'You can spend 1 ki point to take the Dodge action as a bonus action on your turn.',
+    ),
+    'step of the wind': (
+      ActionType.bonusAction,
+      'You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn.',
+    ),
+    'uncanny dodge': (
+      ActionType.reaction,
+      'When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack\'s damage against you.',
+    ),
+    'deflect missiles': (
+      ActionType.reaction,
+      'You can use your reaction to deflect or catch the missile when you are hit by a ranged weapon attack.',
+    ),
+  };
+
   static ActionType? _detectActionType(String title, String body) {
+    final cleanTitle = title.toLowerCase().trim();
+    final wellKnown = _wellKnownFeatureFallbacks[cleanTitle];
+    if (wellKnown != null) {
+      return wellKnown.$1;
+    }
+
     final combined = '$title\n$body'.toLowerCase();
 
     // 1. Bonus Action patterns
@@ -1352,6 +1413,29 @@ class CharacterActionsResolver {
     required void Function(CharacterCombatAction action) registerAction,
   }) {
     if (markdown.trim().isEmpty) return;
+
+    // Pattern 0: Pipe-delimited feature strings (e.g. FeatureName|ClassName|Source|Level)
+    final pipeRegex = RegExp(r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)", multiLine: true);
+    final pipeMatches = pipeRegex.allMatches(markdown).toList();
+    if (pipeMatches.isNotEmpty) {
+      for (final match in pipeMatches) {
+        final featName = match.group(1)?.trim() ?? '';
+        final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
+        if (featName.isNotEmpty) {
+          final fallback = _wellKnownFeatureFallbacks[featName.toLowerCase()];
+          final body = fallback?.$2 ?? 'Feature from $sourceName (Level $lvl)';
+          _processExtractedBlock(
+            rawName: featName,
+            body: body,
+            explicitLevel: lvl,
+            classLevel: classLevel,
+            sourceName: sourceName,
+            dispatchRoll: dispatchRoll,
+            registerAction: registerAction,
+          );
+        }
+      }
+    }
 
     // Pattern 1: Header blocks (### Feature Name (Level X) or ## Feature Name)
     if (markdown.contains(RegExp(r'(?:^|\n)#{1,4}\s+'))) {
@@ -1531,6 +1615,12 @@ class CharacterActionsResolver {
         ? 'Bonus Action'
         : (actionType == ActionType.reaction ? 'Reaction' : (actionType == ActionType.special ? 'Special' : 'Action'));
 
+    var finalBody = body;
+    final fallback = _wellKnownFeatureFallbacks[cleanName.toLowerCase()];
+    if (fallback != null && (body.startsWith('Feature from ') || body.startsWith('Class Feature from ') || body.trim().length < 30)) {
+      finalBody = fallback.$2;
+    }
+
     registerAction(
       CharacterCombatAction(
         id: 'feature-$slug',
@@ -1538,7 +1628,7 @@ class CharacterActionsResolver {
         actionType: actionType,
         category: CombatActionCategory.feature,
         subtitle: '$sourceName • $typeLabel • $lvlSubtitle',
-        description: body.trim(),
+        description: finalBody.trim(),
         damageFormula: formula,
         damageType: formula != null ? dmgType : null,
         dealsDamage: formula != null,
@@ -1568,7 +1658,24 @@ class CharacterActionsResolver {
     }
 
     for (final entry in entriesList) {
-      if (entry is Map) {
+      if (entry is String) {
+        final pipeMatch = RegExp(r"^([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)").firstMatch(entry.trim());
+        if (pipeMatch != null) {
+          final featName = pipeMatch.group(1)?.trim() ?? '';
+          final lvl = int.tryParse(pipeMatch.group(4) ?? '1') ?? 1;
+          final fallback = _wellKnownFeatureFallbacks[featName.toLowerCase()];
+          final bodyText = fallback?.$2 ?? 'Class Feature from $sourceName (Level $lvl)';
+          _processExtractedBlock(
+            rawName: featName,
+            body: bodyText,
+            explicitLevel: lvl,
+            classLevel: classLevel,
+            sourceName: sourceName,
+            dispatchRoll: dispatchRoll,
+            registerAction: registerAction,
+          );
+        }
+      } else if (entry is Map) {
         final name = entry['name']?.toString() ?? '';
         final level = (entry['level'] as num?)?.toInt() ?? (entry['subclassLevel'] as num?)?.toInt();
         final rawBody = entry['entries'];

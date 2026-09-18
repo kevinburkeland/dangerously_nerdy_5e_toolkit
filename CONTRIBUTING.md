@@ -123,7 +123,7 @@ This repository maintains a strict separation between software implementation an
 | :--- | :--- | :--- |
 | **Software Implementation & Code** | **GNU AGPLv3** | All Dart code, Flutter UI widgets, state architecture, simulation engines (combat arena, Monte Carlo rollers, DPR calculators), Anti-Corruption Layer (ACL) parsers, build scripts, and automated test suites. |
 | **D&D 5e Rules Content & Game Mechanics** | **Creative Commons CC-BY-4.0** | All stat blocks, spells, spell slot matrices, creature attributes, item tables, and rules text derived from the System Reference Document 5.1 & 5.2 (SRD 5.1 & 5.2). |
-| **Third-Party Product Identity** | **STRICTLY PROHIBITED** | No trademarked monolith creatures (Mind Flayers, Beholders, Displacer Beasts, Yuan-Ti), no named lore wizards (Bigby, Mordenkainen, Tasha), and no proprietary campaign setting lore. |
+| **Third-Party Product Identity** | **STRICTLY PROHIBITED** | No trademarked monolith creatures, no named lore wizards, and no proprietary campaign setting lore. |
 
 ### Signing Off Commits (`git commit -s`)
 

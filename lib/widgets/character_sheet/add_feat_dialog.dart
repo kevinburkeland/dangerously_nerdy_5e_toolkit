@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../models/characters/srd_classes_library.dart';
 import '../../models/characters/srd_feats_library.dart';
+import '../../models/characters/srd_proficiencies_library.dart';
 import '../../models/domain/character_models.dart';
 import '../../models/domain/core_types.dart';
 import '../../models/domain/entity_reference.dart';
+import '../../models/domain/feature_grant.dart';
 import '../../models/domain/homebrew_extended_entities.dart';
 import '../../providers/character_sheet_controller.dart';
 import '../../services/haptic_service.dart';
@@ -52,11 +54,13 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
   SkillType? _chosenSkill;
   SkillType? _chosenExpertise;
   String? _chosenOptionId;
+  String? _chosenTool;
 
   // Custom feat properties
   AbilityType? _customAbility;
   SkillType? _customSkill;
   SkillType? _customExpertise;
+  String? _customTool;
 
   @override
   void initState() {
@@ -134,6 +138,75 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
     } else {
       _chosenOptionId = null;
     }
+
+    // Default tool choice
+    final toolChoices = _getEligibleToolChoices(feat);
+    if (toolChoices.isNotEmpty) {
+      _chosenTool = toolChoices.first;
+    } else {
+      _chosenTool = null;
+    }
+  }
+
+  List<String> _getEligibleToolChoices(Feat feat) {
+    for (final g in feat.grants) {
+      if (g.type == GrantType.bonusTool && (g.payload['tool'] == null || g.payload['tool'].toString().isEmpty)) {
+        return SrdProficienciesLibrary.artisansTools;
+      }
+    }
+    final rawTools = feat.customProperties['toolProficiencies'];
+    if (rawTools is List) {
+      for (final item in rawTools) {
+        if (item is Map && (item.containsKey('anyArtisansTool') || item.containsKey('any'))) {
+          return SrdProficienciesLibrary.artisansTools;
+        }
+      }
+    }
+    final desc = feat.descriptionMarkdown.toLowerCase();
+    if (desc.contains("artisan's tools of your choice") ||
+        desc.contains("one type of artisan's tools of your choice") ||
+        desc.contains("artisan's tool of your choice") ||
+        desc.contains("musical instrument of your choice") ||
+        desc.contains("tool of your choice")) {
+      return SrdProficienciesLibrary.artisansTools;
+    }
+    return const [];
+  }
+
+  List<String> _getFixedGrantedProficiencies(Feat feat) {
+    final granted = <String>[];
+    for (final g in feat.grants) {
+      if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
+        final p = g.payload['proficiency'].toString();
+        if (p.isNotEmpty && !granted.contains(p)) granted.add(p);
+      } else if (g.type == GrantType.bonusTool && g.payload['tool'] != null) {
+        final t = g.payload['tool'].toString();
+        if (t.isNotEmpty && !granted.contains(t)) granted.add(t);
+      }
+    }
+    final rawArmor = feat.customProperties['armorProficiencies'];
+    if (rawArmor is List) {
+      for (final a in rawArmor) {
+        if (a is String && a.isNotEmpty && !granted.contains(a)) granted.add(a);
+      }
+    }
+    final rawWeapons = feat.customProperties['weaponProficiencies'];
+    if (rawWeapons is List) {
+      for (final w in rawWeapons) {
+        if (w is String && w.isNotEmpty && !granted.contains(w)) granted.add(w);
+      }
+    }
+    final rawTools = feat.customProperties['toolProficiencies'];
+    if (rawTools is List) {
+      for (final t in rawTools) {
+        if (t is String && t.isNotEmpty && !granted.contains(t)) granted.add(t);
+        if (t is Map) {
+          final tName = t.keys.firstWhere((k) => k != 'any' && k != 'anyArtisansTool', orElse: () => '');
+          if (tName.isNotEmpty && !granted.contains(tName)) granted.add(tName);
+        }
+      }
+    }
+    return granted;
   }
 
   /// Calculates eligible invocations under RAW rules for a character taking Eldritch Adept.
@@ -223,6 +296,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
         bonusAmount: 1,
         skillGrant: _customSkill,
         expertiseGrant: _customExpertise,
+        toolGrant: _customTool,
       );
     } else if (_selectedFeat != null) {
       final feat = _selectedFeat!;
@@ -247,6 +321,7 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
         skillGrant: _chosenSkill,
         expertiseGrant: feat.hasExpertiseChoice ? finalExpertise : null,
         featureOptions: _chosenOptionId != null ? [_chosenOptionId!] : null,
+        toolGrant: _chosenTool,
       );
     }
   }
@@ -579,6 +654,82 @@ class _AddFeatDialogState extends State<AddFeatDialog> {
             ),
           ),
           const SizedBox(height: 12),
+
+          // Granted Proficiencies Banner
+          () {
+            final fixedGrants = _getFixedGrantedProficiencies(feat);
+            if (fixedGrants.isEmpty) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.cyan.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.shield_outlined, size: 16, color: Colors.cyanAccent),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Grants: ${fixedGrants.join(', ')}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }(),
+
+          // Tool Proficiency Choice
+          () {
+            final toolChoices = _getEligibleToolChoices(feat);
+            if (toolChoices.isEmpty) return const SizedBox.shrink();
+            final activeTool = toolChoices.contains(_chosenTool)
+                ? _chosenTool
+                : toolChoices.first;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.construction, color: Colors.orangeAccent, size: 16),
+                    SizedBox(width: 6),
+                    Text(
+                      "Choose Tool Proficiency:",
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orangeAccent),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: activeTool,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    isDense: true,
+                  ),
+                  items: toolChoices.map((tool) {
+                    return DropdownMenuItem(
+                      value: tool,
+                      child: Text(tool, style: const TextStyle(fontSize: 13)),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _chosenTool = val);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            );
+          }(),
 
           // 1. Ability Score Improvement Choice
           if (feat.hasAbilityScoreIncrease) ...[

@@ -6,6 +6,7 @@ import '../../providers/character_sheet_controller.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/haptic_service.dart';
 import '../../theme/app_theme.dart';
+import '../../services/rules/skill_trait_resolver.dart';
 import '../../utils/secure_random.dart';
 
 /// Interactive Languages Known and Tool Proficiencies section with live dice rolling,
@@ -105,6 +106,20 @@ class LanguagesToolsSection extends StatelessWidget {
     final customColors = theme.extension<TabletopColors>();
     final languages = controller.character.languages;
     final tools = controller.character.toolProficiencies;
+    final primaryClassSlug = controller.character.progression.classes.firstOrNull?.classRef.slug;
+    final allFeatSlugs = controller.character.feats.map((f) => f.slug).toList();
+    final armors = SkillTraitResolver.resolveArmorProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: controller.character.speciesRef.slug,
+      featSlugs: allFeatSlugs,
+      customProperties: controller.character.customProperties,
+    );
+    final weapons = SkillTraitResolver.resolveWeaponProficiencies(
+      classSlug: primaryClassSlug,
+      speciesSlug: controller.character.speciesRef.slug,
+      featSlugs: allFeatSlugs,
+      customProperties: controller.character.customProperties,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,6 +351,103 @@ class LanguagesToolsSection extends StatelessWidget {
                     );
                   },
                 ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // ==========================================
+        // 3. ARMOR & WEAPON PROFICIENCIES CARD
+        // ==========================================
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: customColors?.cardBorder ?? theme.colorScheme.outlineVariant,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.shield, size: 18, color: Colors.blueAccent),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Armor & Weapon Proficiencies',
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${armors.length + weapons.length}',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (armors.isEmpty && weapons.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'No armor or weapon proficiencies recorded.',
+                    style: TextStyle(fontSize: 12, color: Colors.white54, fontStyle: FontStyle.italic),
+                  ),
+                )
+              else ...[
+                if (armors.isNotEmpty) ...[
+                  const Text(
+                    'ARMOR & SHIELDS',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 0.6),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: armors.map((armor) {
+                      return Chip(
+                        avatar: const Icon(Icons.shield_outlined, size: 14, color: Colors.blueAccent),
+                        label: Text(
+                          armor,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                        backgroundColor: Colors.white.withValues(alpha: 0.06),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                if (weapons.isNotEmpty) ...[
+                  const Text(
+                    'WEAPONS',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.deepOrangeAccent, letterSpacing: 0.6),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: weapons.map((wpn) {
+                      return Chip(
+                        avatar: const Icon(Icons.sports_martial_arts, size: 14, color: Colors.deepOrangeAccent),
+                        label: Text(
+                          wpn,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                        backgroundColor: Colors.white.withValues(alpha: 0.06),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ],
             ],
           ),
         ),

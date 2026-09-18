@@ -466,6 +466,54 @@ class CharacterClass extends DomainEntity {
 
   /// List of skills allowed for this class at level 1. If not specified or unconstrained, defaults to all 18 skills.
   List<SkillType> get allowedSkills {
+    final cleanSlug = id.slug.toLowerCase().trim();
+    final cleanName = name.toLowerCase().trim();
+
+    // Archetype fallbacks for known classes to prevent accidental pollution by all 18 skills
+    List<SkillType>? archetypeFallback;
+    if (cleanSlug.contains('artificer') || cleanName.contains('artificer')) {
+      archetypeFallback = const [
+        SkillType.arcana,
+        SkillType.history,
+        SkillType.investigation,
+        SkillType.medicine,
+        SkillType.nature,
+        SkillType.perception,
+        SkillType.sleightOfHand,
+      ];
+    } else if (cleanSlug.contains('mystic') || cleanName.contains('mystic')) {
+      archetypeFallback = const [
+        SkillType.arcana,
+        SkillType.history,
+        SkillType.insight,
+        SkillType.medicine,
+        SkillType.nature,
+        SkillType.perception,
+        SkillType.religion,
+      ];
+    } else if (cleanSlug.contains('warrior sidekick') || cleanSlug == 'warrior-sidekick' || cleanName.contains('warrior sidekick')) {
+      archetypeFallback = const [
+        SkillType.acrobatics,
+        SkillType.animalHandling,
+        SkillType.athletics,
+        SkillType.intimidation,
+        SkillType.nature,
+        SkillType.perception,
+        SkillType.survival,
+      ];
+    } else if (cleanSlug.contains('spellcaster sidekick') || cleanSlug == 'spellcaster-sidekick' || cleanName.contains('spellcaster sidekick')) {
+      archetypeFallback = const [
+        SkillType.arcana,
+        SkillType.history,
+        SkillType.insight,
+        SkillType.investigation,
+        SkillType.medicine,
+        SkillType.performance,
+        SkillType.religion,
+        SkillType.survival,
+      ];
+    }
+
     final rawList = customProperties['allowedSkills'];
     if (rawList is List && rawList.isNotEmpty) {
       final parsed = <SkillType>[];
@@ -475,10 +523,17 @@ class CharacterClass extends DomainEntity {
           parsed.add(st);
         }
       }
+      // If parsed list contains all 18 skills but class has an archetype fallback, favor archetype fallback
+      if (parsed.length == SkillType.values.length && archetypeFallback != null) {
+        return archetypeFallback;
+      }
       if (parsed.isNotEmpty) return parsed;
     }
-    // Check startingProficiencies in customProperties if allowedSkills not explicitly present
-    final sp = customProperties['startingProficiencies'] ?? customProperties['proficiency'];
+
+    // Check startingProficiencies in customProperties or nested rawJson
+    final sp = customProperties['startingProficiencies'] ??
+        (customProperties['rawJson'] is Map ? customProperties['rawJson']['startingProficiencies'] : null) ??
+        (customProperties['proficiency'] is Map ? customProperties['proficiency'] : null);
     if (sp is Map) {
       final skillsData = sp['skills'] ?? sp['skill'];
       if (skillsData != null) {
@@ -486,14 +541,24 @@ class CharacterClass extends DomainEntity {
         if (extracted.isNotEmpty) return extracted;
       }
     }
+
+    if (archetypeFallback != null) {
+      return archetypeFallback;
+    }
+
     return SkillType.values;
   }
 
   /// Number of skill choices allowed for this class at level 1. Defaults to 2.
   int get skillChoiceCount {
+    final cleanSlug = id.slug.toLowerCase().trim();
+    final cleanName = name.toLowerCase().trim();
+
     final rawCount = customProperties['skillChoiceCount'];
     if (rawCount is num) return rawCount.toInt();
-    final sp = customProperties['startingProficiencies'] ?? customProperties['proficiency'];
+    final sp = customProperties['startingProficiencies'] ??
+        (customProperties['rawJson'] is Map ? customProperties['rawJson']['startingProficiencies'] : null) ??
+        (customProperties['proficiency'] is Map ? customProperties['proficiency'] : null);
     if (sp is Map) {
       final skillsData = sp['skills'] ?? sp['skill'];
       if (skillsData is Map) {
@@ -510,6 +575,9 @@ class CharacterClass extends DomainEntity {
           return (first['choose']['count'] as num).toInt();
         }
       }
+    }
+    if (cleanSlug.contains('warrior sidekick') || cleanSlug == 'warrior-sidekick' || cleanName.contains('warrior sidekick')) {
+      return 1;
     }
     return 2;
   }

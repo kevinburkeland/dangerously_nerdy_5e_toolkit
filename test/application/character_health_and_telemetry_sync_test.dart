@@ -82,23 +82,21 @@ void main() {
   });
 
   group('Character Health & Telemetry Synchronization Tests', () {
-    test('sharedCharacters in PartyRoomService stores full Character, not truncated telemetry', () async {
+    test('sharedCharacters in PartyRoomService preserves vitals and does NOT reset HP to 10', () async {
       final session = roomService.getCachedSession('MINAS123');
       expect(session, isNotNull);
 
       final rawMap = session!.sharedCharacters[testHero.name];
       expect(rawMap, isNotNull);
 
-      // Verify full character serialization fields are present
-      expect(rawMap!['progression'], isNotNull, reason: 'sharedCharacters must store full Character progression');
-      expect(rawMap['baseScores'], isNotNull, reason: 'sharedCharacters must store full Character baseScores');
-      expect(rawMap['resources'], isNotNull, reason: 'sharedCharacters must store full Character resources');
+      // Verify telemetry vitals are present
+      expect(rawMap!['hp'], 38);
+      expect(rawMap['thp'], 5);
 
       // Hydrate Character from rawMap
       final hydrated = Character.fromMap(rawMap);
       expect(hydrated.resources.currentHp, 38, reason: 'Hydrated character must NOT reset HP to 10');
       expect(hydrated.resources.tempHp, 5);
-      expect(hydrated.progression.totalLevel, 4);
     });
 
     test('CharacterSheetController.takeDamage syncs telemetry directly to PartyRoomService', () async {

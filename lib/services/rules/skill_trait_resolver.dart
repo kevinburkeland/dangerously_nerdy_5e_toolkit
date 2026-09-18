@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../models/characters/srd_backgrounds_library.dart';
+import '../../models/characters/srd_classes_library.dart';
+import '../../models/characters/srd_feats_library.dart';
 import '../../models/characters/srd_species_library.dart';
 import '../../models/dm_screen_data.dart' show DmRulesEdition;
 import '../../models/domain/core_types.dart';
@@ -442,12 +444,14 @@ class SkillTraitResolver {
   }
 
   /// Resolves and aggregates tool proficiencies across class, species/subrace, and background.
+  /// Resolves and aggregates tool proficiencies across class, species/subrace, background, and feats.
   static List<String> resolveTools({
     List<String> draftTools = const [],
     String? classSlug,
     String? speciesSlug,
     String? subraceSlug,
     String? backgroundSlug,
+    List<String> featSlugs = const [],
     Map<String, dynamic>? customProperties,
   }) {
     final tools = <String>{};
@@ -490,7 +494,7 @@ class SkillTraitResolver {
         for (final g in sp.grants) {
           if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
             final prof = g.payload['proficiency'].toString();
-            if (!tools.any((t) => t.toLowerCase() == prof.toLowerCase())) {
+            if (_isToolProficiency(prof) && !tools.any((t) => t.toLowerCase() == prof.toLowerCase())) {
               tools.add(prof);
             }
           }
@@ -504,7 +508,7 @@ class SkillTraitResolver {
         for (final g in sub.grants) {
           if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
             final prof = g.payload['proficiency'].toString();
-            if (!tools.any((t) => t.toLowerCase() == prof.toLowerCase())) {
+            if (_isToolProficiency(prof) && !tools.any((t) => t.toLowerCase() == prof.toLowerCase())) {
               tools.add(prof);
             }
           }
@@ -512,7 +516,245 @@ class SkillTraitResolver {
       }
     }
 
+    // Feat Tool Proficiencies
+    for (final fSlug in featSlugs) {
+      final feat = SrdFeatsLibrary.findBySlug(fSlug);
+      if (feat != null) {
+        for (final g in feat.grants) {
+          if (g.type == GrantType.bonusTool && g.payload['tool'] != null) {
+            final tName = g.payload['tool'].toString().trim();
+            if (tName.isNotEmpty && !tools.any((t) => t.toLowerCase() == tName.toLowerCase())) {
+              tools.add(tName);
+            }
+          } else if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
+            final pName = g.payload['proficiency'].toString().trim();
+            if (_isToolProficiency(pName) && !tools.any((t) => t.toLowerCase() == pName.toLowerCase())) {
+              tools.add(pName);
+            }
+          }
+        }
+        // Direct property fallback
+        final featTools = feat.customProperties['toolProficiencies'] ??
+            (feat.customProperties['rawJson'] is Map ? feat.customProperties['rawJson']['toolProficiencies'] : null);
+        if (featTools is List) {
+          for (final t in featTools) {
+            if (t is String && t.trim().isNotEmpty) {
+              final tStr = t.trim();
+              if (!tools.any((existing) => existing.toLowerCase() == tStr.toLowerCase())) {
+                tools.add(tStr);
+              }
+            } else if (t is Map) {
+              t.forEach((toolName, enabled) {
+                if (enabled == true || enabled == 1) {
+                  final tStr = toolName.toString().trim();
+                  if (tStr != 'any' && tStr != 'anyArtisansTool' && !tools.any((existing) => existing.toLowerCase() == tStr.toLowerCase())) {
+                    tools.add(tStr);
+                  }
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+
     return tools.toList();
+  }
+
+  static bool _isToolProficiency(String name) {
+    final lower = name.toLowerCase().trim();
+    return lower.contains('tool') ||
+        lower.contains('kit') ||
+        lower.contains('supplies') ||
+        lower.contains('utensil') ||
+        lower.contains('instrument') ||
+        lower.contains('set') ||
+        lower.contains('vehicle');
+  }
+
+  /// Resolves and aggregates armor proficiencies across class, species/subrace, feats, and custom properties.
+  static List<String> resolveArmorProficiencies({
+    String? classSlug,
+    String? speciesSlug,
+    String? subraceSlug,
+    List<String> featSlugs = const [],
+    Map<String, dynamic>? customProperties,
+  }) {
+    final armors = <String>{};
+
+    // 1. Class
+    if (classSlug != null && classSlug.isNotEmpty) {
+      final cls = SrdClassesLibrary.findBySlug(classSlug);
+      if (cls != null) {
+        for (final a in cls.armorProficiencies) {
+          armors.add(_normalizeArmor(a));
+        }
+      }
+    }
+
+    // 2. Species / Subrace
+    void extractFromGrants(List<FeatureGrant> grants) {
+      for (final g in grants) {
+        if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
+          final p = g.payload['proficiency'].toString();
+          if (_isArmorProficiency(p)) {
+            armors.add(_normalizeArmor(p));
+          }
+        }
+      }
+    }
+
+    if (speciesSlug != null && speciesSlug.isNotEmpty) {
+      final sp = SrdSpeciesLibrary.findBySlug(speciesSlug);
+      if (sp != null) extractFromGrants(sp.grants);
+    }
+    if (subraceSlug != null && subraceSlug.isNotEmpty) {
+      final sub = SrdSpeciesLibrary.findSubraceBySlug(subraceSlug);
+      if (sub != null) extractFromGrants(sub.grants);
+    }
+
+    // 3. Feats
+    for (final fSlug in featSlugs) {
+      final feat = SrdFeatsLibrary.findBySlug(fSlug);
+      if (feat != null) {
+        extractFromGrants(feat.grants);
+        final featArmors = feat.customProperties['armorProficiencies'] ??
+            (feat.customProperties['rawJson'] is Map ? feat.customProperties['rawJson']['armorProficiencies'] : null);
+        if (featArmors is List) {
+          for (final a in featArmors) {
+            if (a is String && a.trim().isNotEmpty) {
+              armors.add(_normalizeArmor(a.trim()));
+            } else if (a is Map) {
+              a.forEach((key, val) {
+                if (val == true || val == 1) {
+                  armors.add(_normalizeArmor(key.toString().trim()));
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Custom Properties
+    if (customProperties != null && customProperties['armorProficiencies'] is List) {
+      for (final a in customProperties['armorProficiencies'] as List) {
+        armors.add(_normalizeArmor(a.toString()));
+      }
+    }
+
+    // Canonical ordering: Light Armor, Medium Armor, Heavy Armor, Shields, then others
+    const order = ['Light Armor', 'Medium Armor', 'Heavy Armor', 'Shields'];
+    final sorted = armors.toList()
+      ..sort((a, b) {
+        final idxA = order.indexOf(a);
+        final idxB = order.indexOf(b);
+        if (idxA != -1 && idxB != -1) return idxA.compareTo(idxB);
+        if (idxA != -1) return -1;
+        if (idxB != -1) return 1;
+        return a.compareTo(b);
+      });
+
+    return sorted;
+  }
+
+  static bool _isArmorProficiency(String name) {
+    final lower = name.toLowerCase().trim();
+    return lower.contains('armor') || lower.contains('shield');
+  }
+
+  static String _normalizeArmor(String name) {
+    final lower = name.toLowerCase().trim();
+    return switch (lower) {
+      'light' || 'light armor' => 'Light Armor',
+      'medium' || 'medium armor' => 'Medium Armor',
+      'heavy' || 'heavy armor' => 'Heavy Armor',
+      'shield' || 'shields' => 'Shields',
+      _ => name.trim(),
+    };
+  }
+
+  /// Resolves and aggregates weapon proficiencies across class, species/subrace, feats, and custom properties.
+  static List<String> resolveWeaponProficiencies({
+    String? classSlug,
+    String? speciesSlug,
+    String? subraceSlug,
+    List<String> featSlugs = const [],
+    Map<String, dynamic>? customProperties,
+  }) {
+    final weapons = <String>{};
+
+    // 1. Class
+    if (classSlug != null && classSlug.isNotEmpty) {
+      final cls = SrdClassesLibrary.findBySlug(classSlug);
+      if (cls != null) {
+        for (final w in cls.weaponProficiencies) {
+          weapons.add(_normalizeWeapon(w));
+        }
+      }
+    }
+
+    // 2. Species / Subrace
+    void extractFromGrants(List<FeatureGrant> grants) {
+      for (final g in grants) {
+        if (g.type == GrantType.proficiency && g.payload['proficiency'] != null) {
+          final p = g.payload['proficiency'].toString();
+          if (!_isArmorProficiency(p) && !_isToolProficiency(p)) {
+            weapons.add(_normalizeWeapon(p));
+          }
+        }
+      }
+    }
+
+    if (speciesSlug != null && speciesSlug.isNotEmpty) {
+      final sp = SrdSpeciesLibrary.findBySlug(speciesSlug);
+      if (sp != null) extractFromGrants(sp.grants);
+    }
+    if (subraceSlug != null && subraceSlug.isNotEmpty) {
+      final sub = SrdSpeciesLibrary.findSubraceBySlug(subraceSlug);
+      if (sub != null) extractFromGrants(sub.grants);
+    }
+
+    // 3. Feats
+    for (final fSlug in featSlugs) {
+      final feat = SrdFeatsLibrary.findBySlug(fSlug);
+      if (feat != null) {
+        extractFromGrants(feat.grants);
+        final featWeapons = feat.customProperties['weaponProficiencies'] ??
+            (feat.customProperties['rawJson'] is Map ? feat.customProperties['rawJson']['weaponProficiencies'] : null);
+        if (featWeapons is List) {
+          for (final w in featWeapons) {
+            if (w is String && w.trim().isNotEmpty) {
+              weapons.add(_normalizeWeapon(w.trim()));
+            } else if (w is Map) {
+              w.forEach((key, val) {
+                if (val == true || val == 1) {
+                  weapons.add(_normalizeWeapon(key.toString().trim()));
+                }
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Custom Properties
+    if (customProperties != null && customProperties['weaponProficiencies'] is List) {
+      for (final w in customProperties['weaponProficiencies'] as List) {
+        weapons.add(_normalizeWeapon(w.toString()));
+      }
+    }
+
+    return weapons.toList()..sort();
+  }
+
+  static String _normalizeWeapon(String name) {
+    final lower = name.toLowerCase().trim();
+    return switch (lower) {
+      'simple' || 'simple weapon' || 'simple weapons' => 'Simple Weapons',
+      'martial' || 'martial weapon' || 'martial weapons' => 'Martial Weapons',
+      _ => name.trim(),
+    };
   }
 
   /// Derives native physical and sensory traits from species

@@ -441,8 +441,8 @@ class PartyRoomService {
         final telemetry = characterSnapshot.toTelemetryDto();
         updatedTelemetry[characterSnapshot.id.slug] = telemetry;
         updatedTelemetry[targetRosterName] = telemetry;
-        updatedShared[characterSnapshot.id.slug] = characterSnapshot.toMap();
-        updatedShared[targetRosterName] = characterSnapshot.toMap();
+        updatedShared[characterSnapshot.id.slug] = telemetry.toMap();
+        updatedShared[targetRosterName] = telemetry.toMap();
         await _characterPersistenceService.saveCharacter(characterSnapshot);
 
         // Sync with DM profile if active profile matches
@@ -663,8 +663,8 @@ class PartyRoomService {
           character.id.slug: character.purse,
         },
         sharedCharacters: {
-          character.id.slug: character.toMap(),
-          targetName: character.toMap(),
+          character.id.slug: telemetry.toMap(),
+          targetName: telemetry.toMap(),
         },
         partyTelemetry: {
           character.id.slug: telemetry,
@@ -682,8 +682,8 @@ class PartyRoomService {
       final telemetry = character.toTelemetryDto();
       final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
       final updatedTelemetry = Map<String, CharacterTelemetryDto>.from(current.partyTelemetry);
-      updatedShared[character.id.slug] = character.toMap();
-      updatedShared[targetName] = character.toMap();
+      updatedShared[character.id.slug] = telemetry.toMap();
+      updatedShared[targetName] = telemetry.toMap();
       updatedTelemetry[character.id.slug] = telemetry;
       updatedTelemetry[targetName] = telemetry;
 

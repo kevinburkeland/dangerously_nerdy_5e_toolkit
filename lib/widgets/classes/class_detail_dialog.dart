@@ -426,9 +426,28 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
     );
   }
 
+  static final Map<String, String> _wellKnownClassFeatureDescriptions = {
+    'helpful': 'You can take the Help action as a bonus action.',
+    'cunning action': 'You can take a bonus action on each of your turns in combat to take the Dash, Disengage, or Hide action.',
+    'second wind': 'You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.',
+    'infuse item': 'Whenever you finish a long rest, you can touch a nonmagical object and imbue it with one of your infusions, turning it into a magic item.',
+    'magical tinkering': 'As an action, you can touch a Tiny nonmagical object and give it one of several magical properties.',
+    'action surge': 'On your turn, you can take one additional action on top of your regular action and a possible bonus action.',
+    'bardic inspiration': 'You can inspire others through stirring words or music. Use a bonus action on your turn to choose one creature within 60 feet.',
+    'rage': 'In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.',
+    'flurry of blows': 'Immediately after you take the Attack action on your turn, you can spend 1 ki point to make two unarmed strikes as a bonus action.',
+    'patient defense': 'You can spend 1 ki point to take the Dodge action as a bonus action on your turn.',
+    'step of the wind': 'You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn.',
+    'uncanny dodge': 'When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack\'s damage against you.',
+    'deflect missiles': 'You can use your reaction to deflect or catch the missile when you are hit by a ranged weapon attack.',
+  };
+
   Widget _buildFeaturesTab(BuildContext context, Color accentColor) {
     final theme = Theme.of(context);
     final cls = widget.characterClass;
+
+    final pipeRegex = RegExp(r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)", multiLine: true);
+    final pipeMatches = pipeRegex.allMatches(cls.featuresMarkdown).toList();
 
     return SingleChildScrollView(
       child: Column(
@@ -448,14 +467,75 @@ class _ClassDetailDialogState extends State<ClassDetailDialog> with SingleTicker
           ),
           const SizedBox(height: 8),
 
-          FormattedMarkdownText(
-            cls.featuresMarkdown,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
-              fontSize: 13.5,
-              height: 1.45,
+          if (pipeMatches.isNotEmpty)
+            ...pipeMatches.map((m) {
+              final name = m.group(1)?.trim() ?? '';
+              final className = m.group(2)?.trim() ?? '';
+              final src = m.group(3)?.trim() ?? '';
+              final lvl = int.tryParse(m.group(4) ?? '1') ?? 1;
+              final fallback = _wellKnownClassFeatureDescriptions[name.toLowerCase()];
+              final desc = fallback ??
+                  '*Class Feature granted by $className${src.isNotEmpty ? " ($src)" : ""} at Level $lvl.*';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: accentColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: accentColor.withValues(alpha: 0.5)),
+                          ),
+                          child: Text(
+                            'Level $lvl',
+                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: accentColor),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    FormattedMarkdownText(
+                      desc,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+                        fontSize: 12.5,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            })
+          else
+            FormattedMarkdownText(
+              cls.featuresMarkdown,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                fontSize: 13.5,
+                height: 1.45,
+              ),
             ),
-          ),
         ],
       ),
     );

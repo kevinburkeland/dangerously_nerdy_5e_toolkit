@@ -277,14 +277,36 @@ class CharacterFactory {
       }
     }
 
+    final featSlugs = draft.originFeats.map((f) => f.slug).toList();
     final compiledTools = SkillTraitResolver.resolveTools(
       draftTools: draft.toolProficiencies,
       classSlug: draft.startingClassRef?.slug,
       speciesSlug: draft.speciesRef?.slug,
       subraceSlug: draft.subraceRef?.slug,
       backgroundSlug: draft.backgroundRef?.slug,
+      featSlugs: featSlugs,
       customProperties: draft.speciesRef?.customProperties,
     );
+
+    final compiledArmor = SkillTraitResolver.resolveArmorProficiencies(
+      classSlug: draft.startingClassRef?.slug,
+      speciesSlug: draft.speciesRef?.slug,
+      subraceSlug: draft.subraceRef?.slug,
+      featSlugs: featSlugs,
+    );
+    if (compiledArmor.isNotEmpty) {
+      customProps['armorProficiencies'] = compiledArmor;
+    }
+
+    final compiledWeapons = SkillTraitResolver.resolveWeaponProficiencies(
+      classSlug: draft.startingClassRef?.slug,
+      speciesSlug: draft.speciesRef?.slug,
+      subraceSlug: draft.subraceRef?.slug,
+      featSlugs: featSlugs,
+    );
+    if (compiledWeapons.isNotEmpty) {
+      customProps['weaponProficiencies'] = compiledWeapons;
+    }
 
     final compiledCantrips = List<EntityReference<Spell>>.from(draft.cantrips);
     final compiledSpellsKnown = List<EntityReference<Spell>>.from(draft.spellsKnown);
