@@ -63,6 +63,49 @@ class PartyPurse {
 
   bool get isEmpty => cp == 0 && sp == 0 && ep == 0 && gp == 0 && pp == 0;
 
+  /// Sets coin amounts directly while preserving CvRDT PN-counter convergence.
+  /// Applies differential increments or decrements under [nodeId] so that decreases
+  /// are recorded as negative counts rather than being lost during lattice joins.
+  PartyPurse setCoins({
+    int? cp,
+    int? sp,
+    int? ep,
+    int? gp,
+    int? pp,
+    String nodeId = 'local',
+  }) {
+    PnCounter updateCounter(PnCounter current, int? targetVal) {
+      if (targetVal == null) return current;
+      final clampedTarget = targetVal.clamp(0, 9999999);
+      final diff = clampedTarget - current.value;
+      if (diff > 0) {
+        return current.increment(diff, nodeId: nodeId);
+      } else if (diff < 0) {
+        return current.decrement(-diff, nodeId: nodeId);
+      }
+      return current;
+    }
+
+    final newCpCounter = updateCounter(effectiveCpCounter, cp);
+    final newSpCounter = updateCounter(effectiveSpCounter, sp);
+    final newEpCounter = updateCounter(effectiveEpCounter, ep);
+    final newGpCounter = updateCounter(effectiveGpCounter, gp);
+    final newPpCounter = updateCounter(effectivePpCounter, pp);
+
+    return PartyPurse(
+      cp: newCpCounter.value,
+      sp: newSpCounter.value,
+      ep: newEpCounter.value,
+      gp: newGpCounter.value,
+      pp: newPpCounter.value,
+      cpCounter: newCpCounter,
+      spCounter: newSpCounter,
+      epCounter: newEpCounter,
+      gpCounter: newGpCounter,
+      ppCounter: newPpCounter,
+    );
+  }
+
   PartyPurse copyWith({
     int? cp,
     int? sp,
@@ -74,24 +117,36 @@ class PartyPurse {
     PnCounter? epCounter,
     PnCounter? gpCounter,
     PnCounter? ppCounter,
+    String nodeId = 'local',
   }) {
-    final resolvedCp = cp ?? (cpCounter != null ? cpCounter.value : this.cp);
-    final resolvedSp = sp ?? (spCounter != null ? spCounter.value : this.sp);
-    final resolvedEp = ep ?? (epCounter != null ? epCounter.value : this.ep);
-    final resolvedGp = gp ?? (gpCounter != null ? gpCounter.value : this.gp);
-    final resolvedPp = pp ?? (ppCounter != null ? ppCounter.value : this.pp);
+    PnCounter resolveCounter(PnCounter? explicitCounter, PnCounter effectiveCounter, int? scalar) {
+      if (explicitCounter != null) return explicitCounter;
+      if (scalar != null) {
+        final clamped = scalar.clamp(0, 9999999);
+        final diff = clamped - effectiveCounter.value;
+        if (diff > 0) return effectiveCounter.increment(diff, nodeId: nodeId);
+        if (diff < 0) return effectiveCounter.decrement(-diff, nodeId: nodeId);
+      }
+      return effectiveCounter;
+    }
+
+    final newCpCounter = resolveCounter(cpCounter, effectiveCpCounter, cp);
+    final newSpCounter = resolveCounter(spCounter, effectiveSpCounter, sp);
+    final newEpCounter = resolveCounter(epCounter, effectiveEpCounter, ep);
+    final newGpCounter = resolveCounter(gpCounter, effectiveGpCounter, gp);
+    final newPpCounter = resolveCounter(ppCounter, effectivePpCounter, pp);
 
     return PartyPurse(
-      cp: resolvedCp,
-      sp: resolvedSp,
-      ep: resolvedEp,
-      gp: resolvedGp,
-      pp: resolvedPp,
-      cpCounter: cpCounter ?? (cp != null ? PnCounter.withInitialValue(cp) : this.cpCounter),
-      spCounter: spCounter ?? (sp != null ? PnCounter.withInitialValue(sp) : this.spCounter),
-      epCounter: epCounter ?? (ep != null ? PnCounter.withInitialValue(ep) : this.epCounter),
-      gpCounter: gpCounter ?? (gp != null ? PnCounter.withInitialValue(gp) : this.gpCounter),
-      ppCounter: ppCounter ?? (pp != null ? PnCounter.withInitialValue(pp) : this.ppCounter),
+      cp: newCpCounter.value,
+      sp: newSpCounter.value,
+      ep: newEpCounter.value,
+      gp: newGpCounter.value,
+      pp: newPpCounter.value,
+      cpCounter: newCpCounter,
+      spCounter: newSpCounter,
+      epCounter: newEpCounter,
+      gpCounter: newGpCounter,
+      ppCounter: newPpCounter,
     );
   }
 

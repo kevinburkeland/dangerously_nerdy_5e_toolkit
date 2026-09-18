@@ -163,3 +163,20 @@ Located at `lib/services/party/party_room_service.dart`, `lib/infrastructure/ada
 - **30-Day Lease Auto-Renewal on Connect:** Whenever any participant connects (host room initialization, player join, or `PartyRoomScreen` mount), `PartyRoomService.ensureRoomExists`, `FirebaseSignalingAdapter.initialize`, and `FirebaseFallbackAdapter.initializeRoom` rehydrate/touch `/rooms/{roomCode}` with `isStateless: true` and reset the 30-day lease (`expiresAt: now + 30 days`, `lastUpdated: now`) via `SetOptions(merge: true)`.
 - **Anti-Ghost Record Defense:** Rooms with no root document, no active signaling nodes, no relay messages, and no local DM credentials are confirmed non-existent and throw `CampaignNotFoundException`, ensuring invalid room codes never generate phantom database stubs.
 - **Security Rules Parity:** `firestore.rules` allows `partyPurse` PN-counter map structures (`cpCounter`, etc.) and stateless lease renewals without permission failures.
+
+## 19. CvRDT PN-Counter Reduction Invariant & Differential Updates
+Located at `lib/domain/models/party_purse.dart`:
+- **Differential Decrement Enforcement:** In `PartyPurse`, all reductions to coin balances (via `setCoins`, `modifyCoin`, or `copyWith`) MUST calculate the delta against `effectiveCounter` and record negative decrements (`counter.decrement(nodeId, delta)`) rather than re-seeding the counter with a positive scalar via `PnCounter.withInitialValue(val)`.
+- **Monotonic Grow-Only Defect Prevention:** Re-seeding with an initial value leaves the negative register empty. On subsequent CvRDT lattice joins (`max(pos1, pos2)` across replicas), the merge treats the reduction as missing positive tokens and snaps back to the maximum balance, turning the counter into an unintended grow-only register.
+
+## 20. Party Room Full Character Storage & Resilient Vitals Hydration
+Located at `lib/services/party/party_room_service.dart` and `lib/domain/models/character_models.dart`:
+- **Complete Character Serialization in Shared Collections:** In `PartyRoomService`, `session.sharedCharacters` must store the full `character.toMap()` payload rather than truncated `CharacterTelemetryDto.toMap()`. Serializing telemetry into `sharedCharacters` strips the `resources` map, causing downstream character sheet hydration to fall back to default values (such as 10 HP).
+- **Defensive Unnested Vitals Fallbacks:** `Character.toMap()` explicitly includes evaluated `maxHp`, `currentHp`, `tempHp`, and `armorClass`. `Character.fromMap()` and `CharacterResourcePool.fromMap()` defensively fall back to top-level `hp`/`currentHp`, `thp`/`tempHp`, `deathSaveSuccesses`, and `deathSaveFailures` so that legacy or unnested maps never reset vital stats.
+
+## 21. Local Persistence Priority & Zero-Cache Split-Brain Elimination
+Located at `lib/infrastructure/repositories/local_character_repository.dart`, `lib/screens/party_room_screen.dart`, and `lib/widgets/party/campaign_dialogs.dart`:
+- **Local Storage Priority on Sheet Open:** UI consumers opening character sheets in party rooms must check local persistent storage (`CharacterPersistenceService.getCharacter`) first before remote `session.sharedCharacters`, preventing stale remote stubs from overwriting newer local edits.
+- **Route Pop & Sheet Controller Auto-Sync:** Character sheet controllers and screen navigators must push updated character telemetry and member purses back to the party room on state modifications and on route return (even if the user swiped back and `result == null`).
+- **Repository Zero In-Memory Cache Invariant:** `LocalCharacterRepository` maintains zero unsynchronized in-memory caches, persisting immediately and synchronously mirroring to both Hive and `SharedPreferences` to ensure complete read-after-write consistency across services.
+

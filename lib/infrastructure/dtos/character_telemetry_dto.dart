@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:meta/meta.dart';
 
 /// Lightweight pointer representing a single class progression level.
@@ -259,15 +260,16 @@ class CharacterTelemetryDto {
     if (totalLevel == 0) totalLevel = 1;
 
     final resources = map['resources'] is Map ? map['resources'] as Map : const {};
-    final currentHp = _asInt(resources['currentHp'], fallback: 10).clamp(0, 999);
-    final maxHp = _asInt(resources['maxHp'], fallback: 10).clamp(1, 999);
-    final tempHp = _asInt(resources['tempHp'], fallback: 0).clamp(0, 999);
-    final armorClass = _asInt(resources['armorClassOverride'], fallback: 10).clamp(1, 50);
-    final exhaustionLevel = _asInt(resources['exhaustionLevel'], fallback: 0).clamp(0, 6);
+    final currentHp = _asInt(resources['currentHp'] ?? map['currentHp'] ?? map['hp'], fallback: 10).clamp(0, 999);
+    final rawMaxHp = map['maxHp'] ?? map['mhp'] ?? resources['maxHp'] ?? resources['mhp'];
+    final maxHp = _asInt(rawMaxHp, fallback: math.max(10, currentHp)).clamp(1, 999);
+    final tempHp = _asInt(resources['tempHp'] ?? map['tempHp'] ?? map['thp'], fallback: 0).clamp(0, 999);
+    final armorClass = _asInt(resources['armorClassOverride'] ?? map['armorClass'] ?? map['ac'], fallback: 10).clamp(1, 50);
+    final exhaustionLevel = _asInt(resources['exhaustionLevel'] ?? map['exhaustionLevel'] ?? map['exh'], fallback: 0).clamp(0, 6);
 
     final deathSaves = resources['deathSaves'] is Map ? resources['deathSaves'] as Map : const {};
-    final deathSaveSuccesses = _asInt(deathSaves['successes'], fallback: 0).clamp(0, 3);
-    final deathSaveFailures = _asInt(deathSaves['failures'], fallback: 0).clamp(0, 3);
+    final deathSaveSuccesses = _asInt(resources['deathSaveSuccesses'] ?? deathSaves['successes'] ?? map['dss'], fallback: 0).clamp(0, 3);
+    final deathSaveFailures = _asInt(resources['deathSaveFailures'] ?? deathSaves['failures'] ?? map['dsf'], fallback: 0).clamp(0, 3);
 
     final speed = _asInt(map['baseSpeedFeet'], fallback: 30).clamp(0, 300);
 

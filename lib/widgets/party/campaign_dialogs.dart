@@ -1557,23 +1557,22 @@ class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
   }
 
   Future<void> _openSheetForRosterCharacter(String name) async {
+    // 1. Check local device persistence first
+    final localChars = await CharacterPersistenceService().loadCharacters();
+    Character? targetChar = localChars.where((c) =>
+      c.name.toLowerCase() == name.toLowerCase() ||
+      c.id.slug == name
+    ).firstOrNull;
+
+    // 2. Fall back to sharedCharacters only if not present locally
     final session = _partyService.getCachedSession(widget.roomCode);
-    Character? targetChar;
-    if (session != null && session.sharedCharacters.isNotEmpty) {
+    if (targetChar == null && session != null && session.sharedCharacters.isNotEmpty) {
       final rawMap = session.sharedCharacters[name];
       if (rawMap != null) {
         try {
           targetChar = Character.fromMap(rawMap);
         } catch (_) {}
       }
-    }
-
-    if (targetChar == null) {
-      final localChars = await CharacterPersistenceService().loadCharacters();
-      targetChar = localChars.where((c) =>
-        c.name.toLowerCase() == name.toLowerCase() ||
-        c.id.slug == name
-      ).firstOrNull;
     }
 
     if (!mounted) return;
@@ -1588,12 +1587,24 @@ class _ManagePartyRosterDialogState extends State<ManagePartyRosterDialog> {
       ),
     );
 
-    if (updated != null) {
+    // 3. Reload latest from persistence and sync to room
+    final localCharsAfter = await CharacterPersistenceService().loadCharacters();
+    final latestChar = localCharsAfter.where((c) =>
+      c.name.toLowerCase() == name.toLowerCase() ||
+      c.id.slug == (targetChar?.id.slug ?? name)
+    ).firstOrNull ?? updated ?? targetChar;
+
+    if (latestChar != null) {
       await _partyService.linkCharacterToCampaign(
         roomCode: widget.roomCode,
-        character: updated,
+        character: latestChar,
         existingRosterName: name,
         isNewImport: false,
+      );
+      await _partyService.updateCharacterTelemetry(
+        roomCode: widget.roomCode,
+        character: latestChar,
+        existingRosterName: name,
       );
     }
   }

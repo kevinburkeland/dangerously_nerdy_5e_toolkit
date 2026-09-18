@@ -814,13 +814,23 @@ class CharacterResourcePool {
       };
 
   factory CharacterResourcePool.fromMap(Map<String, dynamic> map) {
-    final curHp = (map['currentHp'] as num?)?.toInt() ?? 10;
-    final tHp = (map['tempHp'] as num?)?.toInt() ?? 0;
+    final rawHp = map['currentHp'] ?? map['hp'];
+    final curHp = (rawHp as num?)?.toInt() ?? 10;
+    final rawThp = map['tempHp'] ?? map['thp'];
+    final tHp = (rawThp as num?)?.toInt() ?? 0;
     final hp = map['hitPoints'] is Map
         ? HitPoints(
-            currentHp: ((map['hitPoints'] as Map)['currentHp'] as num?)?.toInt() ?? curHp,
-            maxHp: ((map['hitPoints'] as Map)['maxHp'] as num?)?.toInt() ?? 9999,
-            tempHp: ((map['hitPoints'] as Map)['tempHp'] as num?)?.toInt() ?? tHp,
+            currentHp: ((map['hitPoints'] as Map)['currentHp'] as num?)?.toInt() ??
+                ((map['hitPoints'] as Map)['hp'] as num?)?.toInt() ??
+                curHp,
+            maxHp: ((map['hitPoints'] as Map)['maxHp'] as num?)?.toInt() ??
+                ((map['hitPoints'] as Map)['mhp'] as num?)?.toInt() ??
+                (map['maxHp'] as num?)?.toInt() ??
+                (map['mhp'] as num?)?.toInt() ??
+                9999,
+            tempHp: ((map['hitPoints'] as Map)['tempHp'] as num?)?.toInt() ??
+                ((map['hitPoints'] as Map)['thp'] as num?)?.toInt() ??
+                tHp,
           )
         : HitPoints(currentHp: curHp, maxHp: 9999, tempHp: tHp);
 
@@ -1707,6 +1717,16 @@ class Character extends DomainEntity {
         'spellsPrepared': spellsPrepared.map((s) => s.toMap()).toList(),
         'feats': feats.map((f) => f.toMap()).toList(),
         'resources': resources.toMap(),
+        'currentHp': resources.currentHp,
+        'maxHp': (() {
+          try {
+            return CharacterEvaluationEngine.evaluate(this).maxHp;
+          } catch (_) {
+            return math.max(10, resources.currentHp);
+          }
+        })(),
+        'tempHp': resources.tempHp,
+        'armorClass': armorClass,
         'conditions': conditions.map((c) => c.toMap()).toList(),
         'maxAttunementSlots': maxAttunementSlots,
         'baseSpeedFeet': baseSpeedFeet,
@@ -1826,7 +1846,20 @@ class Character extends DomainEntity {
               EntityReference<DomainEntity>.fromMap(Map<String, dynamic>.from(f)))
           .toList(),
       resources: CharacterResourcePool.fromMap(
-          Map<String, dynamic>.from(map['resources'] as Map? ?? {})),
+          map['resources'] is Map && (map['resources'] as Map).isNotEmpty
+              ? Map<String, dynamic>.from(map['resources'] as Map)
+              : <String, dynamic>{
+                  if (map['currentHp'] != null) 'currentHp': map['currentHp'],
+                  if (map['hp'] != null) 'currentHp': map['hp'],
+                  if (map['tempHp'] != null) 'tempHp': map['tempHp'],
+                  if (map['thp'] != null) 'tempHp': map['thp'],
+                  if (map['deathSaveSuccesses'] != null) 'deathSaveSuccesses': map['deathSaveSuccesses'],
+                  if (map['dss'] != null) 'deathSaveSuccesses': map['dss'],
+                  if (map['deathSaveFailures'] != null) 'deathSaveFailures': map['deathSaveFailures'],
+                  if (map['dsf'] != null) 'deathSaveFailures': map['dsf'],
+                  if (map['exhaustionLevel'] != null) 'exhaustionLevel': map['exhaustionLevel'],
+                  if (map['exh'] != null) 'exhaustionLevel': map['exh'],
+                }),
       conditions: (map['conditions'] as List? ?? [])
           .whereType<Map>()
           .map((c) =>

@@ -36,7 +36,7 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - Full SRD 2014 and 2024 starting equipment package selection.
   - Reactive AC engine with unarmored defense (Barbarian Con, Monk Wis), shields, and plate armor classification.
   - Automated equipment slot management (equipped armor, weapons, and 3-item attunement tracking).
-  - Currency purse (`CP`, `SP`, `EP`, `GP`, `PP`) and direct two-way item/gold transfers with the campaign party vault.
+  - Currency purse (`CP`, `SP`, `EP`, `GP`, `PP`) with differential CvRDT reduction safety (preventing spend rollbacks) and direct two-way deposit/withdrawal flows with the live campaign party vault directly from the Inventory tab.
 * **Multiclassing & Level-Up Studio Pipeline**:
   - Multi-tier level progression (levels 1–20) with hit dice pooling and max HP calculation.
   - Unified multiclass spell slot progression matrix (Full, Half, and Artificer `ceil(Level / 2)`).
@@ -118,9 +118,8 @@ Key capabilities include an interactive **Character Generator & Live Sheet** wit
   - **Purse Overdraft Clamping**: Prevents negative coin balances by clamping overdrawn spends to zero and logging high-priority warning alerts.
 * **Decentralized CvRDT State Synchronization**:
   - Peer-to-peer and cloud synchronization powered by Convergent Replicated Data Types (`HybridLogicalClock`, `CrdtLwwRegister`, `CrdtOrSet`, `PnCounter`).
-  - Strict lexicographical tie-breaking by device `nodeId` guarantees deterministic convergence across offline partitions.
-  - **State-Based Positive-Negative Counter Currency (`PnCounter`)**: Party purse denominations (`CP`, `SP`, `EP`, `GP`, `PP`) track positive increments and negative decrements per device node ID. Reconciling party funds unconditionally executes a CvRDT lattice join (`local.merge(remote)`), eradicating scalar Last-Write-Wins overwriting and preventing spent currency from resurrecting.
-  - **Focused Delta Protocol (`crdt_purse_delta`)**: High-frequency currency changes emit lightweight delta frames rather than whole-room snapshots, enabling instantaneous convergence across partitions with minimal network overhead.
+  - **State-Based Positive-Negative Counter Currency (`PnCounter`)**: Party purse denominations (`CP`, `SP`, `EP`, `GP`, `PP`) track positive increments and negative decrements per device node ID. Reconciling party funds unconditionally executes a CvRDT lattice join (`local.merge(remote)`), eradicating scalar Last-Write-Wins overwriting. Coin reductions calculate the differential delta against `effectiveCounter` and record negative decrements, preventing spent gold from monotonically resetting to historical maximums upon state merges.
+  - **Resilient Character Vitals & Session Telemetry**: Shared party characters store complete character models across room collections rather than truncated telemetry, preserving hit points, temporary HP, death saves, exhaustion levels, and spell slots across route switches and party room sessions without resetting to default 10 HP.
   - Delta fast-forwarding and milestone snapshots via `RoomStateReconciliationService` with strict constructor `networkTimeProvider` injection and automatic tombstone pruning to prevent memory leaks and wall-clock spoofing.
   - **Vectorized Reconnection Ordering & Offline Causal Convergence**: `RoomSyncOrchestrator` eliminates strict scalar sequence drops (`originSeq <= lastSeq`) in favor of per-node sequence vector clocks (`_nodeSequenceVectors`) and offline mutation tracking. Out-of-order packet relays and partitioned burst edits converge deterministically into local state without dropping valid mutations.
   - **Pure CRDT Room State Reconciliation**: Replaces scalar wall-clock comparisons (`inboundTimestamp >= localTimestamp`) with pure CRDT joins. Minions and encounters reconcile via `CrdtOrSet` with HLC tombstones, campaign notes merge via `CrdtLwwRegister<String>`, and party purse converges via `PnCounter`.

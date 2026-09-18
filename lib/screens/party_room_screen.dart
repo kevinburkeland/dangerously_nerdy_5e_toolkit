@@ -143,6 +143,23 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
     // Flush any pending outbox actions immediately upon entering the room
     unawaited(_partyService.flushOutbox(_roomCode));
 
+    // Push active local character telemetry to room immediately upon entering
+    try {
+      final localChars = await CharacterPersistenceService().loadCharacters();
+      final myChar = localChars.where((c) =>
+        c.id.slug == _currentMembership?.characterId ||
+        c.name.toLowerCase() == _playerName.toLowerCase()
+      ).firstOrNull;
+      if (myChar != null) {
+        unawaited(_partyService.linkCharacterToCampaign(
+          roomCode: _roomCode,
+          character: myChar,
+          existingRosterName: _playerName,
+          isNewImport: false,
+        ));
+      }
+    } catch (_) {}
+
     if (widget.orchestrator != null) {
       _orchestrator = widget.orchestrator;
       _router = widget.router;
@@ -778,8 +795,15 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
   }
 
   Future<void> _openActiveCharacterSheet(PartySessionState? session) async {
-    Character? targetChar;
-    if (session != null && session.sharedCharacters.isNotEmpty) {
+    // 1. Always prioritize authoritative local storage for this player's character
+    final localChars = await CharacterPersistenceService().loadCharacters();
+    Character? targetChar = localChars.where((c) =>
+      c.id.slug == _currentMembership?.characterId ||
+      c.name.toLowerCase() == _playerName.toLowerCase()
+    ).firstOrNull;
+
+    // 2. Fall back to sharedCharacters only if not found locally (e.g. DM viewing remote player)
+    if (targetChar == null && session != null && session.sharedCharacters.isNotEmpty) {
       final rawMap = session.sharedCharacters[_playerName] ??
           (_currentMembership?.characterId != null
               ? session.sharedCharacters[_currentMembership!.characterId]
@@ -789,14 +813,6 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
           targetChar = Character.fromMap(rawMap);
         } catch (_) {}
       }
-    }
-
-    if (targetChar == null) {
-      final localChars = await CharacterPersistenceService().loadCharacters();
-      targetChar = localChars.where((c) =>
-        c.name.toLowerCase() == _playerName.toLowerCase() ||
-        c.id.slug == _currentMembership?.characterId
-      ).firstOrNull;
     }
 
     if (!mounted) return;
@@ -811,12 +827,25 @@ class _PartyRoomScreenState extends State<PartyRoomScreen> with SingleTickerProv
       ),
     );
 
-    if (updated != null) {
+    // 3. Regardless of whether updated is null (e.g. popped via swipe/system gesture),
+    // reload latest state from persistence and sync to room
+    final localCharsAfter = await CharacterPersistenceService().loadCharacters();
+    final latestChar = localCharsAfter.where((c) =>
+      c.id.slug == (targetChar?.id.slug ?? _currentMembership?.characterId) ||
+      c.name.toLowerCase() == _playerName.toLowerCase()
+    ).firstOrNull ?? updated ?? targetChar;
+
+    if (latestChar != null) {
       await _partyService.linkCharacterToCampaign(
         roomCode: _roomCode,
-        character: updated,
+        character: latestChar,
         existingRosterName: _playerName,
         isNewImport: false,
+      );
+      await _partyService.updateCharacterTelemetry(
+        roomCode: _roomCode,
+        character: latestChar,
+        existingRosterName: _playerName,
       );
       if (mounted) setState(() {});
     }

@@ -6,6 +6,8 @@ import '../../models/domain/entity_reference.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../../models/party/campaign_membership.dart';
 import '../../models/party/party_purse.dart';
+import '../../models/party/party_session_state.dart';
+import '../../services/party/party_room_service.dart';
 import '../../models/magic_items/magic_item_library.dart';
 import '../../models/spellbook_data.dart';
 import '../../providers/character_sheet_controller.dart';
@@ -659,6 +661,9 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
           },
         ),
 
+        // Campaign Stash & Shared Vault (if linked)
+        _buildCampaignStashSection(context, theme),
+
         // Coin Purse Card
         Container(
           margin: const EdgeInsets.only(bottom: 14),
@@ -896,18 +901,317 @@ class _CharacterSheetTabsState extends State<CharacterSheetTabs>
                 final sp = int.tryParse(spCtrl.text.trim()) ?? cur.sp;
                 final cp = int.tryParse(cpCtrl.text.trim()) ?? cur.cp;
 
-                final updated = PartyPurse(
-                  pp: pp.clamp(0, 9999999),
-                  gp: gp.clamp(0, 9999999),
-                  ep: ep.clamp(0, 9999999),
-                  sp: sp.clamp(0, 9999999),
-                  cp: cp.clamp(0, 9999999),
+                final updated = cur.setCoins(
+                  pp: pp,
+                  gp: gp,
+                  ep: ep,
+                  sp: sp,
+                  cp: cp,
+                  nodeId: 'local',
                 );
 
                 await widget.controller.updatePurse(updated);
                 if (ctx.mounted) Navigator.pop(ctx);
               },
               child: const Text('Save Coins'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCampaignStashSection(BuildContext context, ThemeData theme) {
+    final linkedCampaigns = widget.controller.getLinkedCampaigns();
+    if (linkedCampaigns.isEmpty) return const SizedBox.shrink();
+
+    final activeLinked = linkedCampaigns.first;
+    return _buildCampaignStashCard(context, activeLinked, theme);
+  }
+
+  Widget _buildCampaignStashCard(
+    BuildContext context,
+    CampaignMembership membership,
+    ThemeData theme,
+  ) {
+    return StreamBuilder<PartySessionState?>(
+      stream: PartyRoomService().streamSession(membership.roomCode),
+      builder: (context, snapshot) {
+        final session = snapshot.data;
+        final stashPurse = session?.partyPurse ?? const PartyPurse();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFEAB308).withValues(alpha: 0.5)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.savings_outlined, size: 18, color: Color(0xFFEAB308)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Campaign Stash (${membership.campaignName})',
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAB308).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFEAB308).withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      '~${stashPurse.totalGpEquivalent.toStringAsFixed(1)} GP Vault',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFEAB308),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _buildCoinPill('PP', stashPurse.pp, const Color(0xFFCBD5E1), theme, 'pp'),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('GP', stashPurse.gp, const Color(0xFFEAB308), theme, 'gp'),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('EP', stashPurse.ep, const Color(0xFF94A3B8), theme, 'ep'),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('SP', stashPurse.sp, const Color(0xFF94A3B8), theme, 'sp'),
+                  const SizedBox(width: 6),
+                  _buildCoinPill('CP', stashPurse.cp, const Color(0xFFB45309), theme, 'cp'),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.arrow_upward, size: 14, color: Color(0xFFEAB308)),
+                    label: const Text('Deposit to Stash', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _showDepositToStashDialog(context, membership),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.arrow_downward, size: 14, color: Colors.greenAccent),
+                    label: const Text('Withdraw from Stash', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _showWithdrawFromStashDialog(context, membership, stashPurse),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showDepositToStashDialog(BuildContext context, CampaignMembership membership) async {
+    final cur = widget.controller.character.purse;
+    final ppCtrl = TextEditingController(text: '0');
+    final gpCtrl = TextEditingController(text: '0');
+    final epCtrl = TextEditingController(text: '0');
+    final spCtrl = TextEditingController(text: '0');
+    final cpCtrl = TextEditingController(text: '0');
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.arrow_upward, color: Color(0xFFEAB308)),
+              SizedBox(width: 8),
+              Text('Deposit to Campaign Stash', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Move coins from your personal purse into the shared party vault (${membership.campaignName}).',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                _buildCoinInputField('Platinum (Max ${cur.pp})', ppCtrl, const Color(0xFFCBD5E1)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Gold (Max ${cur.gp})', gpCtrl, const Color(0xFFEAB308)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Electrum (Max ${cur.ep})', epCtrl, const Color(0xFF94A3B8)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Silver (Max ${cur.sp})', spCtrl, const Color(0xFF94A3B8)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Copper (Max ${cur.cp})', cpCtrl, const Color(0xFFB45309)),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final pp = (int.tryParse(ppCtrl.text.trim()) ?? 0).clamp(0, cur.pp);
+                final gp = (int.tryParse(gpCtrl.text.trim()) ?? 0).clamp(0, cur.gp);
+                final ep = (int.tryParse(epCtrl.text.trim()) ?? 0).clamp(0, cur.ep);
+                final sp = (int.tryParse(spCtrl.text.trim()) ?? 0).clamp(0, cur.sp);
+                final cp = (int.tryParse(cpCtrl.text.trim()) ?? 0).clamp(0, cur.cp);
+
+                if (pp == 0 && gp == 0 && ep == 0 && sp == 0 && cp == 0) {
+                  Navigator.pop(ctx);
+                  return;
+                }
+
+                await PartyRoomService().depositCoins(
+                  roomCode: membership.roomCode,
+                  playerName: widget.controller.character.name,
+                  pp: pp,
+                  gp: gp,
+                  ep: ep,
+                  sp: sp,
+                  cp: cp,
+                );
+
+                final updatedPersonal = cur.withdrawCoins(
+                  pp: pp,
+                  gp: gp,
+                  ep: ep,
+                  sp: sp,
+                  cp: cp,
+                  nodeId: 'local',
+                );
+                await widget.controller.updatePurse(updatedPersonal);
+
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Coins deposited to campaign stash!')),
+                  );
+                }
+              },
+              child: const Text('Deposit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showWithdrawFromStashDialog(
+    BuildContext context,
+    CampaignMembership membership,
+    PartyPurse stashPurse,
+  ) async {
+    final ppCtrl = TextEditingController(text: '0');
+    final gpCtrl = TextEditingController(text: '0');
+    final epCtrl = TextEditingController(text: '0');
+    final spCtrl = TextEditingController(text: '0');
+    final cpCtrl = TextEditingController(text: '0');
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.arrow_downward, color: Colors.greenAccent),
+              SizedBox(width: 8),
+              Text('Withdraw from Stash', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Withdraw coins from the shared party vault into your personal purse.',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                _buildCoinInputField('Platinum (Max ${stashPurse.pp})', ppCtrl, const Color(0xFFCBD5E1)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Gold (Max ${stashPurse.gp})', gpCtrl, const Color(0xFFEAB308)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Electrum (Max ${stashPurse.ep})', epCtrl, const Color(0xFF94A3B8)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Silver (Max ${stashPurse.sp})', spCtrl, const Color(0xFF94A3B8)),
+                const SizedBox(height: 8),
+                _buildCoinInputField('Copper (Max ${stashPurse.cp})', cpCtrl, const Color(0xFFB45309)),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final pp = (int.tryParse(ppCtrl.text.trim()) ?? 0).clamp(0, stashPurse.pp);
+                final gp = (int.tryParse(gpCtrl.text.trim()) ?? 0).clamp(0, stashPurse.gp);
+                final ep = (int.tryParse(epCtrl.text.trim()) ?? 0).clamp(0, stashPurse.ep);
+                final sp = (int.tryParse(spCtrl.text.trim()) ?? 0).clamp(0, stashPurse.sp);
+                final cp = (int.tryParse(cpCtrl.text.trim()) ?? 0).clamp(0, stashPurse.cp);
+
+                if (pp == 0 && gp == 0 && ep == 0 && sp == 0 && cp == 0) {
+                  Navigator.pop(ctx);
+                  return;
+                }
+
+                await PartyRoomService().withdrawCoins(
+                  roomCode: membership.roomCode,
+                  playerName: widget.controller.character.name,
+                  pp: pp,
+                  gp: gp,
+                  ep: ep,
+                  sp: sp,
+                  cp: cp,
+                );
+
+                final cur = widget.controller.character.purse;
+                final updatedPersonal = cur.depositCoins(
+                  pp: pp,
+                  gp: gp,
+                  ep: ep,
+                  sp: sp,
+                  cp: cp,
+                  nodeId: 'local',
+                );
+                await widget.controller.updatePurse(updatedPersonal);
+
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Coins withdrawn from campaign stash!')),
+                  );
+                }
+              },
+              child: const Text('Withdraw'),
             ),
           ],
         );

@@ -441,8 +441,8 @@ class PartyRoomService {
         final telemetry = characterSnapshot.toTelemetryDto();
         updatedTelemetry[characterSnapshot.id.slug] = telemetry;
         updatedTelemetry[targetRosterName] = telemetry;
-        updatedShared[characterSnapshot.id.slug] = telemetry.toMap();
-        updatedShared[targetRosterName] = telemetry.toMap();
+        updatedShared[characterSnapshot.id.slug] = characterSnapshot.toMap();
+        updatedShared[targetRosterName] = characterSnapshot.toMap();
         await _characterPersistenceService.saveCharacter(characterSnapshot);
 
         // Sync with DM profile if active profile matches
@@ -663,8 +663,8 @@ class PartyRoomService {
           character.id.slug: character.purse,
         },
         sharedCharacters: {
-          character.id.slug: telemetry.toMap(),
-          targetName: telemetry.toMap(),
+          character.id.slug: character.toMap(),
+          targetName: character.toMap(),
         },
         partyTelemetry: {
           character.id.slug: telemetry,
@@ -682,8 +682,8 @@ class PartyRoomService {
       final telemetry = character.toTelemetryDto();
       final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
       final updatedTelemetry = Map<String, CharacterTelemetryDto>.from(current.partyTelemetry);
-      updatedShared[character.id.slug] = telemetry.toMap();
-      updatedShared[targetName] = telemetry.toMap();
+      updatedShared[character.id.slug] = character.toMap();
+      updatedShared[targetName] = character.toMap();
       updatedTelemetry[character.id.slug] = telemetry;
       updatedTelemetry[targetName] = telemetry;
 
@@ -757,6 +757,70 @@ class PartyRoomService {
     );
 
     return current;
+  }
+
+  /// Updates real-time telemetry and shared character snapshot for a character in an active room.
+  /// Seamlessly synchronizes HP, Temp HP, spell slots, conditions, and death saves across all peers.
+  Future<void> updateCharacterTelemetry({
+    required String roomCode,
+    required Character character,
+    String? existingRosterName,
+  }) async {
+    final clean = roomCode.trim().toUpperCase();
+    final targetName = (existingRosterName != null && existingRosterName.trim().isNotEmpty)
+        ? existingRosterName.trim()
+        : character.name.trim();
+
+    var current = _localRooms[clean];
+    if (current == null && isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        final snapshot = await docRef.get();
+        if (snapshot.exists && snapshot.data() != null) {
+          current = PartySessionState.fromMap(snapshot.data()!);
+        }
+      } catch (_) {}
+    }
+
+    if (current == null) return;
+
+    final telemetry = character.toTelemetryDto();
+    final updatedTelemetry = Map<String, CharacterTelemetryDto>.from(current.partyTelemetry);
+    updatedTelemetry[character.id.slug] = telemetry;
+    updatedTelemetry[targetName] = telemetry;
+
+    final updatedShared = Map<String, Map<String, dynamic>>.from(current.sharedCharacters);
+    updatedShared[character.id.slug] = character.toMap();
+    updatedShared[targetName] = character.toMap();
+
+    final updatedMemberPurses = Map<String, PartyPurse>.from(current.memberPurses);
+    updatedMemberPurses[targetName] = character.purse;
+    updatedMemberPurses[character.id.slug] = character.purse;
+
+    final updated = current.copyWith(
+      partyTelemetry: updatedTelemetry,
+      sharedCharacters: updatedShared,
+      memberPurses: updatedMemberPurses,
+      lastUpdated: DateTime.now(),
+    );
+
+    _localRooms[clean] = updated;
+    _emitSession(clean);
+
+    if (isFirebaseAvailable) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('rooms').doc(clean);
+        await docRef.set({
+          'roomCode': clean,
+          'partyTelemetry': updated.partyTelemetry.map((k, v) => MapEntry(k, v.toMap())),
+          'sharedCharacters': updated.sharedCharacters,
+          'memberPurses': updated.memberPurses.map((k, v) => MapEntry(k, v.toMap())),
+          'lastUpdated': updated.lastUpdated.toIso8601String(),
+        }, SetOptions(merge: true));
+      } catch (e, st) {
+        LoggingService().logNonFatal(e, st, reason: 'Firestore updateCharacterTelemetry failed for $clean');
+      }
+    }
   }
 
   /// Validates a DM passkey / host key against a room session and promotes local membership to DM / Co-DM

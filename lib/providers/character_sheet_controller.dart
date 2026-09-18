@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import '../models/dice_roll.dart';
@@ -132,31 +133,27 @@ class CharacterSheetController extends ChangeNotifier {
         _character = _character.copyWith(customProperties: updatedCp);
       }
       await _persistenceService.saveCharacter(_character);
+      unawaited(_syncTelemetryToLinkedCampaigns());
     } finally {
       _isSaving = false;
       notifyListeners();
     }
   }
 
-  /// Updates the character's coin purse directly and triggers debounced persistence.
+  /// Updates the character's coin purse directly and triggers debounced persistence and room sync.
   Future<void> updatePurse(PartyPurse newPurse) async {
     if (_character.purse == newPurse) return;
     _character = _character.copyWith(purse: newPurse);
     _recalculateStats();
     notifyListeners();
     _schedulePersist();
+    unawaited(_syncPurseToLinkedCampaigns());
   }
 
   /// Modifies a single coin denomination in the character's purse (clamped >= 0).
   Future<void> modifyPurseCoin(String coinKey, int delta) async {
     final curPurse = _character.purse;
-    final newPurse = PartyPurse(
-      cp: coinKey == 'cp' ? (curPurse.cp + delta).clamp(0, 9999999) : curPurse.cp,
-      sp: coinKey == 'sp' ? (curPurse.sp + delta).clamp(0, 9999999) : curPurse.sp,
-      ep: coinKey == 'ep' ? (curPurse.ep + delta).clamp(0, 9999999) : curPurse.ep,
-      gp: coinKey == 'gp' ? (curPurse.gp + delta).clamp(0, 9999999) : curPurse.gp,
-      pp: coinKey == 'pp' ? (curPurse.pp + delta).clamp(0, 9999999) : curPurse.pp,
-    );
+    final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: 'local');
     await updatePurse(newPurse);
   }
 
@@ -1245,6 +1242,34 @@ class CharacterSheetController extends ChangeNotifier {
       type: type,
       details: details,
     );
+  }
+
+  /// Synchronizes live telemetry (HP, Temp HP, spell slots, conditions, death saves) to any linked campaigns.
+  Future<void> _syncTelemetryToLinkedCampaigns() async {
+    final memberships = getLinkedCampaigns();
+    for (final m in memberships) {
+      try {
+        await PartyRoomService().updateCharacterTelemetry(
+          roomCode: m.roomCode,
+          character: _character,
+        );
+      } catch (_) {}
+    }
+  }
+
+  /// Synchronizes personal purse balance to any linked campaigns.
+  Future<void> _syncPurseToLinkedCampaigns() async {
+    final memberships = getLinkedCampaigns();
+    for (final m in memberships) {
+      try {
+        await PartyRoomService().updateMemberPurse(
+          roomCode: m.roomCode,
+          characterName: _character.name,
+          newPurse: _character.purse,
+          performedBy: _character.name,
+        );
+      } catch (_) {}
+    }
   }
 
   /// Adds a feat to the character sheet, optionally granting ability score increases,

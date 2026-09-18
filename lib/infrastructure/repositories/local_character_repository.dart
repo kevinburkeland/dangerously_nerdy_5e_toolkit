@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/ports/i_character_repository.dart';
 import '../../domain/models/character_models.dart';
-import '../../services/app_services.dart';
 import '../../services/logging_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../dtos/character_dto.dart';
@@ -14,17 +13,12 @@ class LocalCharacterRepository implements ICharacterRepository {
   static const String _kActiveCharacterIdKey = 'saved_active_character_id_v1';
 
   final AppDatabaseService _db;
-  List<Character>? _cachedRoster;
 
   LocalCharacterRepository({AppDatabaseService? db})
       : _db = db ?? AppDatabaseService.instance;
 
   @override
   Future<List<Character>> loadCharacters() async {
-    if (_cachedRoster != null) {
-      return List<Character>.from(_cachedRoster!);
-    }
-
     try {
       // 1. Check local IndexedDB / Hive database
       final raw = _db.get(AppDatabaseService.boxCharacters, _kSavedRosterKey);
@@ -34,14 +28,12 @@ class LocalCharacterRepository implements ICharacterRepository {
               .map((item) => CharacterDto.fromMap(
                   Map<String, dynamic>.from(item is Map ? item : json.decode(item.toString()) as Map)).toDomain())
               .toList();
-          _cachedRoster = List<Character>.from(roster);
           return roster;
         } else if (raw is String && raw.isNotEmpty) {
           final decoded = json.decode(raw) as List<dynamic>;
           final roster = decoded
               .map((item) => CharacterDto.fromMap(Map<String, dynamic>.from(item as Map)).toDomain())
               .toList();
-          _cachedRoster = List<Character>.from(roster);
           return roster;
         }
       }
@@ -56,7 +48,6 @@ class LocalCharacterRepository implements ICharacterRepository {
             .toList();
         if (list.isNotEmpty) {
           await _persistRosterToDisk(list);
-          _cachedRoster = List<Character>.from(list);
           return list;
         }
       }
@@ -66,7 +57,6 @@ class LocalCharacterRepository implements ICharacterRepository {
         e,
       );
     }
-    _cachedRoster = <Character>[];
     return <Character>[];
   }
 
@@ -93,11 +83,22 @@ class LocalCharacterRepository implements ICharacterRepository {
   Future<void> _persistRosterToDisk(List<Character> roster) async {
     try {
       final listMaps = roster.map((c) => CharacterDto.fromDomain(c).toMap()).toList();
-      await _db.put(
-        AppDatabaseService.boxCharacters,
-        _kSavedRosterKey,
-        listMaps,
-      );
+      if (_db.isBoxOpen(AppDatabaseService.boxCharacters)) {
+        await _db.put(
+          AppDatabaseService.boxCharacters,
+          _kSavedRosterKey,
+          listMaps,
+        );
+      }
+
+      // Best-effort sync to SharedPreferences for backwards compatibility & fallback
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final encoded = json.encode(listMaps);
+        await prefs.setString(_kSavedRosterKey, encoded);
+      } catch (_) {
+        // Suppress quota errors from SharedPreferences
+      }
     } catch (e) {
       LoggingService().logWarning(
         'Failed to save characters roster to repository: $e',
@@ -108,7 +109,6 @@ class LocalCharacterRepository implements ICharacterRepository {
 
   @override
   Future<void> saveRoster(List<Character> roster) async {
-    _cachedRoster = List<Character>.from(roster);
     await _persistRosterToDisk(roster);
   }
 
@@ -125,14 +125,7 @@ class LocalCharacterRepository implements ICharacterRepository {
       roster.add(character);
     }
 
-    _cachedRoster = List<Character>.from(roster);
-
-    // Save in-memory cache and debounce disk I/O
-    AppServices.instance.debouncedStorage.scheduleWrite(
-      'save_character_roster',
-      () => _persistRosterToDisk(roster),
-      duration: const Duration(milliseconds: 300),
-    );
+    await _persistRosterToDisk(roster);
   }
 
   @override
@@ -149,14 +142,7 @@ class LocalCharacterRepository implements ICharacterRepository {
       }
     }
 
-    _cachedRoster = List<Character>.from(roster);
-
-    // Save in-memory cache and debounce disk I/O
-    AppServices.instance.debouncedStorage.scheduleWrite(
-      'save_character_roster',
-      () => _persistRosterToDisk(roster),
-      duration: const Duration(milliseconds: 300),
-    );
+    await _persistRosterToDisk(roster);
   }
 
   @override
@@ -165,7 +151,6 @@ class LocalCharacterRepository implements ICharacterRepository {
     roster.removeWhere(
       (c) => c.id.slug == characterId || c.name == characterId,
     );
-    _cachedRoster = List<Character>.from(roster);
     await _persistRosterToDisk(roster);
   }
 

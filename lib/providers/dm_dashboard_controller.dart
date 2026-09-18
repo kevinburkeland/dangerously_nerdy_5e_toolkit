@@ -17,6 +17,7 @@ import '../infrastructure/resolvers/character_telemetry_resolver.dart';
 import '../infrastructure/di/injection_container.dart';
 import '../application/services/room_connection_telemetry.dart';
 import '../application/services/room_sync_orchestrator.dart';
+import '../services/party/party_room_service.dart';
 
 /// State management controller for DM Dashboard.
 /// Refactored to depend on abstract Ports ([ICampaignRepository], [ICharacterRepository])
@@ -210,7 +211,17 @@ class DmDashboardController extends ChangeNotifier {
     );
 
     _partyCharactersMap[characterId] = updatedChar;
+    _resolvedTelemetryMap.remove(characterId);
     notifyListeners();
+
+    if (_activeProfile != null) {
+      try {
+        await PartyRoomService().updateCharacterTelemetry(
+          roomCode: _activeProfile!.id,
+          character: updatedChar,
+        );
+      } catch (_) {}
+    }
   }
 
   /// Toggles a character's spell slot and persists ONLY to [CharacterPersistenceService].
@@ -235,9 +246,19 @@ class DmDashboardController extends ChangeNotifier {
     final updatedChar = char.copyWith(resources: updatedPool);
 
     _partyCharactersMap[characterId] = updatedChar;
+    _resolvedTelemetryMap.remove(characterId);
     notifyListeners();
 
     await _characterPersistenceService.saveCharacter(updatedChar);
+
+    if (_activeProfile != null) {
+      try {
+        await PartyRoomService().updateCharacterTelemetry(
+          roomCode: _activeProfile!.id,
+          character: updatedChar,
+        );
+      } catch (_) {}
+    }
   }
 
   /// Adds a new or existing character to the active campaign's party roster pointer list.
@@ -394,8 +415,20 @@ class DmDashboardController extends ChangeNotifier {
     final newPurse = curPurse.modifyCoin(coinKey, delta, nodeId: _nodeId);
     final updated = char.copyWith(purse: newPurse);
     _partyCharactersMap[characterId] = updated;
+    _resolvedTelemetryMap.remove(characterId);
     notifyListeners();
     await _characterPersistenceService.saveCharacter(updated);
+
+    if (_activeProfile != null) {
+      try {
+        await PartyRoomService().updateMemberPurse(
+          roomCode: _activeProfile!.id,
+          characterName: updated.name,
+          newPurse: updated.purse,
+          performedBy: 'DM',
+        );
+      } catch (_) {}
+    }
   }
 
   /// Sets or updates a linked character's personal coin purse directly.
@@ -405,8 +438,20 @@ class DmDashboardController extends ChangeNotifier {
 
     final updated = char.copyWith(purse: newPurse);
     _partyCharactersMap[characterId] = updated;
+    _resolvedTelemetryMap.remove(characterId);
     notifyListeners();
     await _characterPersistenceService.saveCharacter(updated);
+
+    if (_activeProfile != null) {
+      try {
+        await PartyRoomService().updateMemberPurse(
+          roomCode: _activeProfile!.id,
+          characterName: updated.name,
+          newPurse: updated.purse,
+          performedBy: 'DM',
+        );
+      } catch (_) {}
+    }
   }
 
   /// Updates room state (encounter participants, descriptions, links).
