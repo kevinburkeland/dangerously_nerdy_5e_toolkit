@@ -815,23 +815,36 @@ class CompendiumJsonIngestionPipeline {
       final className = (feat['className']?.toString() ?? feat['class']?.toString() ?? '').toLowerCase().trim();
       final subShort = (feat['subclassShortName']?.toString() ?? feat['shortName']?.toString() ?? '').toLowerCase().trim();
       final source = (feat['source']?.toString() ?? '').toLowerCase().trim();
+      final classSource = (feat['classSource']?.toString() ?? '').toLowerCase().trim();
       final subSource = (feat['subclassSource']?.toString() ?? source).toLowerCase().trim();
       final level = (feat['level']?.toString() ?? '').trim();
 
       if (name.isNotEmpty) {
         subclassFeatureMap[name] = feat;
+        final nameSlug = name.replaceAll(' ', '-');
+        subclassFeatureMap[nameSlug] = feat;
         if (subShort.isNotEmpty) {
+          final subSlug = subShort.replaceAll(' ', '-');
           subclassFeatureMap['$name|$subShort'] = feat;
+          subclassFeatureMap['$name|$subSlug'] = feat;
           if (className.isNotEmpty) {
             subclassFeatureMap['$name|$className|$subShort'] = feat;
+            subclassFeatureMap['$name|$className|$subSlug'] = feat;
           }
           if (level.isNotEmpty) {
             subclassFeatureMap['$name|$subShort|$level'] = feat;
+            subclassFeatureMap['$name|$subSlug|$level'] = feat;
             if (className.isNotEmpty) {
               subclassFeatureMap['$name|$className|$subShort|$level'] = feat;
+              subclassFeatureMap['$name|$className|$subSlug|$level'] = feat;
+              if (classSource.isNotEmpty) {
+                subclassFeatureMap['$name|$className|$classSource|$subShort|$subSource|$level'] = feat;
+                subclassFeatureMap['$name|$className|$classSource|$subShort||$level'] = feat;
+              }
               if (source.isNotEmpty) {
                 subclassFeatureMap['$name|$className|$source|$subShort|$subSource|$level'] = feat;
               }
+              subclassFeatureMap['$name|$className||$subShort||$level'] = feat;
             }
           }
         }
@@ -1123,7 +1136,10 @@ class CompendiumJsonIngestionPipeline {
             }
           }
           if (featureBlocks.isNotEmpty) {
-            final combinedMarkdown = sub.featuresMarkdown.isEmpty || (sub.featuresMarkdown.contains('|') && !sub.featuresMarkdown.contains('\n'))
+            final isOnlyFallback = sub.featuresMarkdown.isEmpty ||
+                !sub.featuresMarkdown.contains('\n\n') ||
+                sub.featuresMarkdown.contains('Feature*\n\nGranted at level');
+            final combinedMarkdown = isOnlyFallback
                 ? featureBlocks.join('\n\n')
                 : '${sub.featuresMarkdown}\n\n${featureBlocks.join('\n\n')}';
             subclasses[i] = Subclass(

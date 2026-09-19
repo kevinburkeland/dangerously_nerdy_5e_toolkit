@@ -202,7 +202,14 @@ class CompendiumClassParser {
         raw['description'] ??
         raw['subclassFeature'];
 
-    final featuresMarkdown = _parseSubclassFeatures(entriesData, ruleset, subclassFeatureMap);
+    var featuresMarkdown = _parseSubclassFeatures(entriesData, ruleset, subclassFeatureMap);
+    final rawMarkdown = raw['featuresMarkdown']?.toString().trim() ?? '';
+    final isOnlyFallback = featuresMarkdown.isEmpty ||
+        !featuresMarkdown.contains('\n\n') ||
+        featuresMarkdown.contains('Feature*\n\nGranted at level');
+    if (isOnlyFallback && rawMarkdown.isNotEmpty && !rawMarkdown.contains('Feature*\n\nGranted at level')) {
+      featuresMarkdown = rawMarkdown;
+    }
 
     final customProperties = <String, dynamic>{};
     raw.forEach((key, value) {
@@ -318,12 +325,16 @@ class CompendiumClassParser {
       final slugName = _slugify(name);
 
       String? className;
+      String? classSource;
       String? subShort;
+      String? subSource;
       String? level;
 
       if (parts.length >= 6) {
         className = parts[1];
+        classSource = parts[2];
         subShort = parts[3];
+        subSource = parts[4];
         level = parts[5];
       } else if (parts.length >= 4) {
         className = parts[1];
@@ -337,14 +348,25 @@ class CompendiumClassParser {
       }
 
       final candidates = <String>[
+        if (subShort != null && level != null && className != null && classSource != null && subSource != null)
+          '$name|$className|$classSource|$subShort|$subSource|$level',
+        if (subShort != null && level != null && className != null && classSource != null)
+          '$name|$className|$classSource|$subShort||$level',
+        if (subShort != null && level != null && className != null)
+          '$name|$className||$subShort||$level',
         if (subShort != null && level != null && className != null) '$name|$className|$subShort|$level',
+        if (subShort != null && level != null && className != null) '$name|${_slugify(className)}|${_slugify(subShort)}|$level',
         if (subShort != null && level != null) '$name|$subShort|$level',
+        if (subShort != null && level != null) '$name|${_slugify(subShort)}|$level',
         if (subShort != null && level != null) '$slugName|${_slugify(subShort)}|$level',
         if (subShort != null && className != null) '$name|$className|$subShort',
+        if (subShort != null && className != null) '$name|${_slugify(className)}|${_slugify(subShort)}',
         if (subShort != null) '$name|$subShort',
         if (subShort != null) '$name|${_slugify(subShort)}',
         if (className != null && level != null) '$name|$className|$level',
+        if (className != null && level != null) '$name|${_slugify(className)}|$level',
         if (className != null) '$name|$className',
+        if (className != null) '$name|${_slugify(className)}',
         if (level != null) '$name|$level',
         name,
         slugName,
@@ -514,7 +536,18 @@ class CompendiumClassParser {
           }
           return;
         }
+        final rawEntries = f['entries'] ?? f['entry'] ?? f['desc'] ?? f['description'];
         final ptr = (f['subclassFeature'] ?? f['classFeature']).toString();
+        if (rawEntries != null) {
+          final ptrName = ptr.contains('|') ? ptr.split('|')[0].trim() : '';
+          final fName = f['name']?.toString().trim() ?? (ptrName.isNotEmpty ? ptrName : 'Feature');
+          final level = f['level'] != null ? ' (Level ${f['level']})' : '';
+          final fContent = transformer.transformEntries(rawEntries, defaultRuleset: ruleset).markdown;
+          if (fName.isNotEmpty || fContent.isNotEmpty) {
+            featureBlocks.add('### $fName$level\n$fContent');
+            return;
+          }
+        }
         if (ptr.contains('|')) {
           final parts = ptr.split('|').map((p) => p.trim()).toList();
           final fName = parts.isNotEmpty ? parts[0] : '';

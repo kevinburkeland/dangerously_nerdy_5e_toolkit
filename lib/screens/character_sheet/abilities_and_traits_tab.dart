@@ -231,66 +231,89 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
     );
   }
 
+  static final Map<String, String> _wellKnownClassFeatureDescriptions = {
+    'helpful': 'You can take the Help action as a bonus action.',
+    'cunning action': 'You can take a bonus action on each of your turns in combat to take the Dash, Disengage, or Hide action.',
+    'second wind': 'You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.',
+    'infuse item': 'Whenever you finish a long rest, you can touch a nonmagical object and imbue it with one of your infusions, turning it into a magic item.',
+    'magical tinkering': 'As an action, you can touch a Tiny nonmagical object and give it one of several magical properties.',
+    'action surge': 'On your turn, you can take one additional action on top of your regular action and a possible bonus action.',
+    'bardic inspiration': 'You can inspire others through stirring words or music. Use a bonus action on your turn to choose one creature within 60 feet.',
+    'rage': 'In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.',
+    'flurry of blows': 'Immediately after you take the Attack action on your turn, you can spend 1 ki point to make two unarmed strikes as a bonus action.',
+    'patient defense': 'You can spend 1 ki point to take the Dodge action as a bonus action on your turn.',
+    'step of the wind': 'You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn.',
+    'uncanny dodge': 'When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack\'s damage against you.',
+    'deflect missiles': 'You can use your reaction to deflect or catch the missile when you are hit by a ranged weapon attack.',
+  };
+
   static List<_FeatureDefinition> _extractFeaturesFromMarkdown(
     String markdown, {
     required String defaultCategory,
+    int defaultPb = 2,
   }) {
     if (markdown.trim().isEmpty) return const [];
     final List<_FeatureDefinition> result = [];
 
-    // Case 0: Pipe-delimited feature strings (e.g. FeatureName|ClassName|ClassSource|SubShort|SubSource|Level or FeatureName|ClassName|Source|Level)
-    final pipeRegex6 = RegExp(
-      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
-      multiLine: true,
-    );
-    final pipeMatches6 = pipeRegex6.allMatches(markdown).toList();
-    if (pipeMatches6.isNotEmpty) {
-      for (final match in pipeMatches6) {
-        final featName = match.group(1)?.trim() ?? '';
-        final subShort = match.group(4)?.trim() ?? '';
-        final lvl = int.tryParse(match.group(6) ?? '1') ?? 1;
-        if (featName.isNotEmpty && !result.any((r) => r.name.toLowerCase() == featName.toLowerCase())) {
-          final isAct = _isFeatureActive(featName, '');
-          final maxCharges = _inferMaxCharges(featName, '');
-          result.add(_FeatureDefinition(
-            name: featName,
-            category: subShort.isNotEmpty ? '$subShort Feature' : defaultCategory,
-            descriptionMarkdown: '**$featName**\n\n*Granted at level $lvl.*',
-            level: lvl,
+    const nonFeatureTitles = {
+      'action',
+      'bonus action',
+      'reaction',
+      'special',
+      'at higher levels',
+      'hit',
+      'miss',
+      'note',
+      'saving throw',
+      'damage',
+    };
+
+    void addOrUpdateFeature({
+      required String name,
+      required String category,
+      required String descriptionMarkdown,
+      int? level,
+      bool? explicitIsActive,
+      int? explicitMaxCharges,
+    }) {
+      final cleanName = name.trim();
+      if (cleanName.isEmpty) return;
+      if (nonFeatureTitles.contains(cleanName.toLowerCase())) return;
+
+      final isAct = explicitIsActive ?? _isFeatureActive(cleanName, descriptionMarkdown);
+      final maxCharges = explicitMaxCharges ?? _inferMaxCharges(cleanName, descriptionMarkdown, defaultPb: defaultPb);
+
+      final existingIndex = result.indexWhere((r) => r.name.toLowerCase() == cleanName.toLowerCase());
+      if (existingIndex >= 0) {
+        final existing = result[existingIndex];
+        final existingIsStub = existing.descriptionMarkdown.contains('Granted at level') ||
+            existing.descriptionMarkdown.length < 50;
+        final newHasContent = descriptionMarkdown.trim().isNotEmpty &&
+            !descriptionMarkdown.contains('Granted at level');
+
+        if (existingIsStub && newHasContent) {
+          result[existingIndex] = _FeatureDefinition(
+            name: cleanName,
+            category: category.isNotEmpty ? category : existing.category,
+            descriptionMarkdown: descriptionMarkdown,
+            level: level ?? existing.level,
             isActive: isAct,
             defaultMaxCharges: maxCharges,
-          ));
+          );
         }
+      } else {
+        result.add(_FeatureDefinition(
+          name: cleanName,
+          category: category.isNotEmpty ? category : defaultCategory,
+          descriptionMarkdown: descriptionMarkdown,
+          level: level,
+          isActive: isAct,
+          defaultMaxCharges: maxCharges,
+        ));
       }
-      if (result.isNotEmpty) return result;
     }
 
-    final pipeRegex4 = RegExp(
-      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
-      multiLine: true,
-    );
-    final pipeMatches4 = pipeRegex4.allMatches(markdown).toList();
-    if (pipeMatches4.isNotEmpty) {
-      for (final match in pipeMatches4) {
-        final featName = match.group(1)?.trim() ?? '';
-        final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
-        if (featName.isNotEmpty && !result.any((r) => r.name.toLowerCase() == featName.toLowerCase())) {
-          final isAct = _isFeatureActive(featName, '');
-          final maxCharges = _inferMaxCharges(featName, '');
-          result.add(_FeatureDefinition(
-            name: featName,
-            category: defaultCategory,
-            descriptionMarkdown: '**$featName**\n\n*Granted at level $lvl.*',
-            level: lvl,
-            isActive: isAct,
-            defaultMaxCharges: maxCharges,
-          ));
-        }
-      }
-      if (result.isNotEmpty) return result;
-    }
-
-    // Case 1: Markdown with headers (# to ####) e.g. "### Feature Name (Level X)" or "#### Feature Name (3rd Level)"
+    // Pass 1: Header blocks (# to ####) e.g. "### Feature Name (Level X)"
     if (markdown.contains(RegExp(r'(?:^|\n)#{1,4}\s+'))) {
       final blocks = markdown.split(RegExp(r'(?=(?:^|\n)#{1,4}\s+)'));
       for (final block in blocks) {
@@ -299,11 +322,9 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
         final lines = trimmed.split('\n');
         final headerLine = lines.first.replaceAll(RegExp(r'^#+\s*'), '').trim();
 
-        // Extract level and clean name from header
         String name = headerLine;
         int? level;
 
-        // Pattern 1: Trailing level suffix e.g. "Feature Name (Level 3)", "Feature Name (3rd Level)", "Feature Name: 3rd Level"
         final trailingLevel = RegExp(
           r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
           caseSensitive: false,
@@ -314,7 +335,6 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
           final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
           if (lvlStr != null) level = int.tryParse(lvlStr);
         } else {
-          // Pattern 2: Leading level prefix e.g. "3rd Level: Feature Name", "Level 3 - Feature Name"
           final leadingLevel = RegExp(
             r'^(?:(?:Level|Lvl)\s*(\d+)|(\d+)(?:st|nd|rd|th)\s*(?:-|–)?\s*(?:Level|lvl))\s*[:\-\)]\s*(.*)$',
             caseSensitive: false,
@@ -328,7 +348,6 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
 
         final body = lines.length > 1 ? lines.sublist(1).join('\n').trim() : '';
 
-        // If level not yet found in header, check first 300 chars of body
         if (level == null && body.isNotEmpty) {
           final sample = body.length > 300 ? body.substring(0, 300) : body;
           final bodyLvlMatch = RegExp(
@@ -340,66 +359,120 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
           }
         }
 
-        if (name.isNotEmpty && !result.any((r) => r.name.toLowerCase() == name.toLowerCase())) {
-          final isAct = _isFeatureActive(name, body);
-          final maxCharges = _inferMaxCharges(name, body);
-          result.add(_FeatureDefinition(
+        // Check if this header block contains bold sub-features
+        final boldRegex = RegExp(r'(?:^|\n)\s*(?:[-*]\s*)?\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
+        final subMatches = boldRegex.allMatches(body).where((m) {
+          final t = m.group(1)?.trim() ?? '';
+          return t.isNotEmpty && !nonFeatureTitles.contains(t.toLowerCase());
+        }).toList();
+
+        if (subMatches.length >= 2) {
+          for (final subM in subMatches) {
+            final subTitle = subM.group(1)?.trim() ?? '';
+            final subBody = subM.group(2)?.trim() ?? '';
+            addOrUpdateFeature(
+              name: subTitle,
+              category: defaultCategory,
+              descriptionMarkdown: '**$subTitle.** $subBody',
+              level: level,
+            );
+          }
+        } else {
+          addOrUpdateFeature(
             name: name,
             category: defaultCategory,
             descriptionMarkdown: body.isNotEmpty ? body : trimmed,
             level: level,
-            isActive: isAct,
-            defaultMaxCharges: maxCharges,
-          ));
+          );
         }
       }
-      if (result.isNotEmpty) return result;
     }
 
-    // Case 2: Markdown with bold bullet / section markers "**Feature Name.** Description..." or "**Feature Name:** Description..." or "**Feature Name**\nDescription..."
-    final boldRegex = RegExp(r'\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
+    // Pass 2: Bold bullet / section markers "**Feature Name.** Description..."
+    final boldRegex = RegExp(r'(?:^|\n)\s*(?:[-*]\s*)?\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
     final matches = boldRegex.allMatches(markdown).toList();
     if (matches.isNotEmpty) {
       for (final match in matches) {
         var title = match.group(1)?.trim() ?? '';
         final body = match.group(2)?.trim() ?? '';
-        if (title.isNotEmpty && !result.any((r) => r.name.toLowerCase() == title.toLowerCase())) {
-          int? level;
-          final trailingLevel = RegExp(
-            r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
-            caseSensitive: false,
-          ).firstMatch(title);
-          if (trailingLevel != null) {
-            title = trailingLevel.group(1)?.trim() ?? title;
-            final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
-            if (lvlStr != null) level = int.tryParse(lvlStr);
-          }
-          if (level == null && body.isNotEmpty) {
-            final sample = body.length > 300 ? body.substring(0, 300) : body;
-            final lvlMatch = RegExp(
-              r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
-              caseSensitive: false,
-            ).firstMatch(sample);
-            if (lvlMatch != null) {
-              level = int.tryParse(lvlMatch.group(1)!);
-            }
-          }
-          final isAct = _isFeatureActive(title, body);
-          final maxCharges = _inferMaxCharges(title, body);
-          result.add(_FeatureDefinition(
-            name: title,
-            category: defaultCategory,
-            descriptionMarkdown: '**$title.** $body',
-            level: level,
-            isActive: isAct,
-            defaultMaxCharges: maxCharges,
-          ));
+        if (title.isEmpty || nonFeatureTitles.contains(title.toLowerCase())) continue;
+
+        int? level;
+        final trailingLevel = RegExp(
+          r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
+          caseSensitive: false,
+        ).firstMatch(title);
+        if (trailingLevel != null) {
+          title = trailingLevel.group(1)?.trim() ?? title;
+          final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
+          if (lvlStr != null) level = int.tryParse(lvlStr);
         }
+        if (level == null && body.isNotEmpty) {
+          final sample = body.length > 300 ? body.substring(0, 300) : body;
+          final lvlMatch = RegExp(
+            r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
+            caseSensitive: false,
+          ).firstMatch(sample);
+          if (lvlMatch != null) {
+            level = int.tryParse(lvlMatch.group(1)!);
+          }
+        }
+        addOrUpdateFeature(
+          name: title,
+          category: defaultCategory,
+          descriptionMarkdown: '**$title.** $body',
+          level: level,
+        );
       }
-      if (result.isNotEmpty) return result;
     }
 
-    return const [];
+    // Pass 3: Pipe-delimited feature strings (fallback / stubs for unexpanded items)
+    final pipeRegex6 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex6.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final subShort = match.group(4)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(6) ?? '1') ?? 1;
+      if (featName.isNotEmpty) {
+        final fallback = _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
+        final desc = fallback != null
+            ? '**$featName**\n\n$fallback'
+            : '**$featName**\n\n*Granted at level $lvl.*';
+        addOrUpdateFeature(
+          name: featName,
+          category: subShort.isNotEmpty ? '$subShort Feature' : defaultCategory,
+          descriptionMarkdown: desc,
+          level: lvl,
+        );
+      }
+    }
+
+    final pipeRegex4 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex4.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final clsName = match.group(2)?.trim() ?? '';
+      final src = match.group(3)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
+      if (featName.isNotEmpty) {
+        final fallback = _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
+        final desc = fallback != null
+            ? '**$featName**\n\n$fallback'
+            : '**$featName**\n\n*Class Feature granted by $clsName ($src) at level $lvl.*';
+        addOrUpdateFeature(
+          name: featName,
+          category: defaultCategory,
+          descriptionMarkdown: desc,
+          level: lvl,
+        );
+      }
+    }
+
+    return result;
   }
 
   static bool _isFeatureActive(String name, String body) {
@@ -422,20 +495,28 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
       return true;
     }
 
-    if (lowerBody.contains('short rest') ||
-        lowerBody.contains('long rest') ||
-        lowerBody.contains('times per') ||
-        lowerBody.contains('charges') ||
-        lowerBody.contains('as an action') ||
-        lowerBody.contains('as a bonus action') ||
-        lowerBody.contains('as a reaction')) {
+    // Action requirement indicators
+    if (RegExp(r'\b(?:bonus\s+action|reaction)\b', caseSensitive: false).hasMatch(lowerBody) ||
+        RegExp(r'\b(?:as\s+an\s+action|takes?\s+an\s+action|use\s+(?:your\s+)?action|using\s+(?:an|your)\s+action|\baction\s*:|\baction\s*\.|\b1\s+action\b)', caseSensitive: false).hasMatch(lowerBody)) {
+      return true;
+    }
+
+    // Limited use / charge / rest recovery indicators
+    if (RegExp(r'\b(?:short\s+rest|long\s+rest|charges|times\s+per|uses?\s+per|regains?\s+all\s+expended\s+uses|regains?\s+expended\s+uses|number\s+of\s+times\s+equal\s+to|once\s+per\s+turn|once\s+on\s+each\s+of\s+your\s+turns|\b\d+\s*\/\s*(?:day|rest))\b', caseSensitive: false).hasMatch(lowerBody)) {
+      return true;
+    }
+
+    if (lowerName.contains('(action)') ||
+        lowerName.contains('(bonus action)') ||
+        lowerName.contains('(reaction)') ||
+        lowerName.contains('(special)')) {
       return true;
     }
 
     return false;
   }
 
-  static int _inferMaxCharges(String name, String body) {
+  static int _inferMaxCharges(String name, String body, {int defaultPb = 2, int defaultStatMod = 3}) {
     final lower = name.toLowerCase();
     if (lower.contains('action surge')) return 1;
     if (lower.contains('second wind')) return 1;
@@ -444,6 +525,35 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
     if (lower.contains('wild shape')) return 2;
     if (lower.contains('rage')) return 3;
     if (lower.contains('bardic inspiration')) return 3;
+
+    final lowerBody = body.toLowerCase();
+
+    // Check for proficiency bonus
+    if (lowerBody.contains('proficiency bonus')) {
+      return defaultPb;
+    }
+
+    // Check for ability modifier
+    if (RegExp(r'(?:wisdom|charisma|intelligence|constitution|strength|dexterity)\s+modifier', caseSensitive: false).hasMatch(lowerBody)) {
+      return defaultStatMod;
+    }
+
+    // Check for "twice per" / "three times per" / "once per"
+    if (RegExp(r'\btwice\b', caseSensitive: false).hasMatch(lowerBody)) {
+      return 2;
+    }
+    if (RegExp(r'\bthree\s+times\b', caseSensitive: false).hasMatch(lowerBody)) {
+      return 3;
+    }
+    if (RegExp(r'\bfour\s+times\b', caseSensitive: false).hasMatch(lowerBody)) {
+      return 4;
+    }
+
+    // Check for "X/day" or "X / day" or "X/long rest"
+    final slashMatch = RegExp(r'\b(\d+)\s*\/\s*(?:day|long\s+rest|short\s+rest)\b', caseSensitive: false).firstMatch(body);
+    if (slashMatch != null) {
+      return int.tryParse(slashMatch.group(1)!) ?? 1;
+    }
 
     final match = RegExp(r'(\d+)\s+(?:times|charges|uses)', caseSensitive: false).firstMatch(body);
     if (match != null) {
@@ -765,6 +875,7 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
           final extractedClassFeatures = _extractFeaturesFromMarkdown(
             classDesc,
             defaultCategory: '${cls.classRef.displayName} Feature',
+            defaultPb: character.proficiencyBonus,
           );
 
           for (final feat in extractedClassFeatures) {
@@ -803,6 +914,7 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
             final extractedSub = _extractFeaturesFromMarkdown(
               subFeaturesMarkdown,
               defaultCategory: '$subName Feature',
+              defaultPb: character.proficiencyBonus,
             );
 
             final subclassMinLevel = srdClass?.getSubclassLevel(is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024) ?? 3;
@@ -856,7 +968,7 @@ class AbilitiesAndTraitsTab extends StatelessWidget {
               category: displayCategory,
               descriptionMarkdown: opt.descriptionMarkdown,
               isActive: isAct,
-              defaultMaxCharges: _inferMaxCharges(opt.name, opt.descriptionMarkdown),
+              defaultMaxCharges: _inferMaxCharges(opt.name, opt.descriptionMarkdown, defaultPb: character.proficiencyBonus),
             );
 
             if (isAct) {

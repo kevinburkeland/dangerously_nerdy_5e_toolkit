@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/characters/srd_classes_library.dart';
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/character_models.dart';
@@ -6,6 +7,11 @@ import 'package:dangerously_nerdy_5e_toolkit/models/domain/entity_reference.dart
 import 'package:dangerously_nerdy_5e_toolkit/models/domain/homebrew_extended_entities.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_class_parser.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/ingestion/compendium_json_ingestion_pipeline.dart';
+import 'package:dangerously_nerdy_5e_toolkit/providers/character_sheet_controller.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_adapters.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/importers/community_compendium_importer_service.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_resolver.dart';
+import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_homebrew_validator.dart';
 
 void main() {
@@ -221,6 +227,176 @@ You can absorb the ephemeral energy of your echo to regain hit points.
       expect(sub!.featuresMarkdown, contains('Manifest Echo'));
       expect(sub.featuresMarkdown, contains('Shadow Martyr'));
       expect(sub.featuresMarkdown, contains('Reclaim Potential'));
+    });
+
+    test('CommunityCompendiumImporterService preserves subclass feature rules text from external feature map', () async {
+      final service = CommunityCompendiumImporterService(adapters: CommunityCompendiumAdapters());
+      final payload = {
+        'subclass': [
+          {
+            'name': 'Void Warden',
+            'className': 'Fighter',
+            'shortName': 'Void Warden',
+            'source': 'Homebrew',
+            'subclassFeatures': [
+              'Void Step|Fighter|Homebrew|Void Warden|Homebrew|3',
+              'Shadow Barrier|Fighter|Homebrew|Void Warden|Homebrew|3',
+            ],
+          }
+        ],
+        'subclassFeature': [
+          {
+            'name': 'Void Step',
+            'className': 'Fighter',
+            'subclassShortName': 'Void Warden',
+            'level': 3,
+            'source': 'Homebrew',
+            'entries': [
+              'You can use a bonus action to magically teleport up to 30 feet to an unoccupied space you can see.',
+            ],
+          },
+          {
+            'name': 'Shadow Barrier',
+            'className': 'Fighter',
+            'subclassShortName': 'Void Warden',
+            'level': 3,
+            'source': 'Homebrew',
+            'entries': [
+              'When an attacker hits you with an attack, you can use your reaction to halve the attack damage against you.',
+            ],
+          }
+        ],
+      };
+
+      final result = await service.importJsonString(json.encode(payload), persistAndSync: false);
+      expect(result.subclasses, hasLength(1));
+      final importedSub = result.subclasses.first;
+      expect(importedSub.name, equals('Void Warden'));
+      expect(importedSub.featuresMarkdown, contains('### Void Step (Level 3)'));
+      expect(importedSub.featuresMarkdown, contains('You can use a bonus action to magically teleport'));
+      expect(importedSub.featuresMarkdown, contains('### Shadow Barrier (Level 3)'));
+      expect(importedSub.featuresMarkdown, contains('you can use your reaction to halve the attack damage'));
+      expect(importedSub.featuresMarkdown, isNot(contains('Granted at level 3.')));
+    });
+
+    test('CharacterActionsResolver extracts Action, Bonus Action, and Reaction from subclass features markdown', () {
+      const customSub = Subclass(
+        id: EntityId(slug: 'fighter-void-warden', ruleset: RulesetVersion.homebrew),
+        name: 'Void Warden',
+        classSlug: 'fighter',
+        shortName: 'Void Warden',
+        featuresMarkdown: '''
+### Void Step (Level 3)
+You can use a bonus action to magically teleport up to 30 feet to an unoccupied space.
+
+### Shadow Barrier (Level 3)
+When an attacker hits you with an attack, you can use your reaction to deflect the attack.
+
+### Void Blast (Level 3)
+As an action, you unleash spatial distortion dealing 2d8 force damage to all nearby creatures.
+''',
+      );
+      SrdClassesLibrary.addCustomSubclass(customSub);
+
+      const character = Character(
+        id: EntityId(slug: 'test-char', ruleset: RulesetVersion.homebrew),
+        name: 'Void Warrior',
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'fighter', displayName: 'Fighter'),
+              subclassRef: EntityReference(
+                refType: EntityType.subclass,
+                slug: 'void-warden',
+                displayName: 'Void Warden',
+                rulesetPreferred: RulesetVersion.homebrew,
+              ),
+              level: 3,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: AbilityScores(strength: 16, dexterity: 14, constitution: 14, intelligence: 10, wisdom: 12, charisma: 8),
+        resources: CharacterResourcePool(currentHp: 28),
+      );
+
+      final controller = CharacterSheetController(character: character);
+      final stats = CharacterEvaluationEngine.evaluate(character);
+      final resolved = CharacterActionsResolver.resolve(
+        character: character,
+        stats: stats,
+        controller: controller,
+      );
+
+      final bonusActions = resolved.bonusActions.map((a) => a.name).toList();
+      final reactions = resolved.reactions.map((a) => a.name).toList();
+      final actions = resolved.actions.map((a) => a.name).toList();
+
+      expect(bonusActions, contains('Void Step'));
+      expect(reactions, contains('Shadow Barrier'));
+      expect(actions, contains('Void Blast'));
+
+      final voidBlastAction = resolved.actions.firstWhere((a) => a.name == 'Void Blast');
+      expect(voidBlastAction.damageFormula, equals('2d8'));
+      expect(voidBlastAction.damageType, equals(DamageType.force));
+      expect(voidBlastAction.description, contains('As an action, you unleash spatial distortion'));
+    });
+
+    test('CharacterActionsResolver extracts bold sub-actions inside a single header block', () {
+      const customSub = Subclass(
+        id: EntityId(slug: 'fighter-astral-knight', ruleset: RulesetVersion.homebrew),
+        name: 'Astral Knight',
+        classSlug: 'fighter',
+        shortName: 'Astral Knight',
+        featuresMarkdown: '''
+### Astral Knight Specializations (Level 3)
+*Astral Knight Feature*
+
+**Astral Jaunt.** You can use a bonus action to shift ethereal planes.
+**Starlight Aegis.** In response to taking damage, you can use your reaction to gain 10 temporary hit points.
+''',
+      );
+      SrdClassesLibrary.addCustomSubclass(customSub);
+
+      const character = Character(
+        id: EntityId(slug: 'test-astral-char', ruleset: RulesetVersion.homebrew),
+        name: 'Astral Sentinel',
+        speciesRef: EntityReference(refType: EntityType.species, slug: 'human', displayName: 'Human'),
+        progression: CharacterProgression(
+          classes: [
+            ClassLevelProgression(
+              classRef: EntityReference(refType: EntityType.classDefinition, slug: 'fighter', displayName: 'Fighter'),
+              subclassRef: EntityReference(
+                refType: EntityType.subclass,
+                slug: 'astral-knight',
+                displayName: 'Astral Knight',
+                rulesetPreferred: RulesetVersion.homebrew,
+              ),
+              level: 3,
+              hitDie: 'd10',
+              isStartingClass: true,
+            ),
+          ],
+        ),
+        baseScores: AbilityScores.standardArray(),
+        resources: CharacterResourcePool(currentHp: 28),
+      );
+
+      final controller = CharacterSheetController(character: character);
+      final stats = CharacterEvaluationEngine.evaluate(character);
+      final resolved = CharacterActionsResolver.resolve(
+        character: character,
+        stats: stats,
+        controller: controller,
+      );
+
+      final bonusActions = resolved.bonusActions.map((a) => a.name).toList();
+      final reactions = resolved.reactions.map((a) => a.name).toList();
+
+      expect(bonusActions, contains('Astral Jaunt'));
+      expect(reactions, contains('Starlight Aegis'));
     });
   });
 }

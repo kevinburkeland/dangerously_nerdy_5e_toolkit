@@ -336,51 +336,53 @@ class FeaturesTraitsSection extends StatelessWidget {
 
     final List<_ExtractedFeature> result = [];
 
-    // Case 0: Pipe-delimited feature strings
-    final pipeRegex6 = RegExp(
-      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
-      multiLine: true,
-    );
-    final pipeMatches6 = pipeRegex6.allMatches(markdown).toList();
-    if (pipeMatches6.isNotEmpty) {
-      for (final match in pipeMatches6) {
-        final featName = match.group(1)?.trim() ?? '';
-        final lvl = int.tryParse(match.group(6) ?? '1') ?? 1;
-        if (featName.isNotEmpty && !result.any((r) => r.name.toLowerCase() == featName.toLowerCase())) {
-          result.add(_ExtractedFeature(
-            name: featName,
-            level: lvl,
-            descriptionMarkdown: '**$featName**\n\n*Granted at Level $lvl.*',
-          ));
+    const nonFeatureTitles = {
+      'action',
+      'bonus action',
+      'reaction',
+      'special',
+      'at higher levels',
+      'hit',
+      'miss',
+      'note',
+      'saving throw',
+      'damage',
+    };
+
+    void addOrUpdateFeature({
+      required String name,
+      required String descriptionMarkdown,
+      int? level,
+    }) {
+      final cleanName = name.trim();
+      if (cleanName.isEmpty) return;
+      if (nonFeatureTitles.contains(cleanName.toLowerCase())) return;
+
+      final existingIndex = result.indexWhere((r) => r.name.toLowerCase() == cleanName.toLowerCase());
+      if (existingIndex >= 0) {
+        final existing = result[existingIndex];
+        final existingIsStub = existing.descriptionMarkdown.contains('Granted at level') ||
+            existing.descriptionMarkdown.length < 50;
+        final newHasContent = descriptionMarkdown.trim().isNotEmpty &&
+            !descriptionMarkdown.contains('Granted at level');
+
+        if (existingIsStub && newHasContent) {
+          result[existingIndex] = _ExtractedFeature(
+            name: cleanName,
+            level: level ?? existing.level,
+            descriptionMarkdown: descriptionMarkdown,
+          );
         }
+      } else {
+        result.add(_ExtractedFeature(
+          name: cleanName,
+          level: level,
+          descriptionMarkdown: descriptionMarkdown,
+        ));
       }
-      if (result.isNotEmpty) return result;
     }
 
-    final pipeRegex = RegExp(r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)", multiLine: true);
-    final pipeMatches = pipeRegex.allMatches(markdown).toList();
-    if (pipeMatches.isNotEmpty) {
-      for (final match in pipeMatches) {
-        final featName = match.group(1)?.trim() ?? '';
-        final clsName = match.group(2)?.trim() ?? '';
-        final src = match.group(3)?.trim() ?? '';
-        final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
-        if (featName.isNotEmpty && !result.any((r) => r.name.toLowerCase() == featName.toLowerCase())) {
-          final fallbackDesc = _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
-          final desc = fallbackDesc != null
-              ? '**$featName**\n\n$fallbackDesc'
-              : '**$featName**\n\n*Class Feature granted by $clsName ($src) at Level $lvl.*';
-          result.add(_ExtractedFeature(
-            name: featName,
-            level: lvl,
-            descriptionMarkdown: desc,
-          ));
-        }
-      }
-      if (result.isNotEmpty) return result;
-    }
-
-    // Case 1: Markdown with headers (# to ####)
+    // Pass 1: Header blocks (# to ####) e.g. "### Feature Name (Level X)"
     if (markdown.contains(RegExp(r'(?:^|\n)#{1,4}\s+'))) {
       final blocks = markdown.split(RegExp(r'(?=(?:^|\n)#{1,4}\s+)'));
       for (final block in blocks) {
@@ -426,56 +428,114 @@ class FeaturesTraitsSection extends StatelessWidget {
           }
         }
 
-        if (name.isNotEmpty && !result.any((r) => r.name.toLowerCase() == name.toLowerCase())) {
-          result.add(_ExtractedFeature(
+        // Check if this header block contains bold sub-features
+        final boldRegex = RegExp(r'(?:^|\n)\s*(?:[-*]\s*)?\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
+        final subMatches = boldRegex.allMatches(body).where((m) {
+          final t = m.group(1)?.trim() ?? '';
+          return t.isNotEmpty && !nonFeatureTitles.contains(t.toLowerCase());
+        }).toList();
+
+        if (subMatches.length >= 2) {
+          for (final subM in subMatches) {
+            final subTitle = subM.group(1)?.trim() ?? '';
+            final subBody = subM.group(2)?.trim() ?? '';
+            addOrUpdateFeature(
+              name: subTitle,
+              descriptionMarkdown: '**$subTitle.** $subBody',
+              level: level,
+            );
+          }
+        } else {
+          addOrUpdateFeature(
             name: name,
-            level: level,
             descriptionMarkdown: body.isNotEmpty ? body : trimmed,
-          ));
+            level: level,
+          );
         }
       }
-      if (result.isNotEmpty) return result;
     }
 
-    // Case 2: Markdown with bold bullet / section markers
-    final boldRegex = RegExp(r'\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
+    // Pass 2: Bold bullet / section markers "**Feature Name.** Description..."
+    final boldRegex = RegExp(r'(?:^|\n)\s*(?:[-*]\s*)?\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
     final matches = boldRegex.allMatches(markdown).toList();
     if (matches.isNotEmpty) {
       for (final match in matches) {
         var title = match.group(1)?.trim() ?? '';
         final body = match.group(2)?.trim() ?? '';
-        if (title.isNotEmpty && !result.any((r) => r.name.toLowerCase() == title.toLowerCase())) {
-          int? level;
-          final trailingLevel = RegExp(
-            r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
-            caseSensitive: false,
-          ).firstMatch(title);
-          if (trailingLevel != null) {
-            title = trailingLevel.group(1)?.trim() ?? title;
-            final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
-            if (lvlStr != null) level = int.tryParse(lvlStr);
-          }
-          if (level == null && body.isNotEmpty) {
-            final sample = body.length > 300 ? body.substring(0, 300) : body;
-            final lvlMatch = RegExp(
-              r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
-              caseSensitive: false,
-            ).firstMatch(sample);
-            if (lvlMatch != null) {
-              level = int.tryParse(lvlMatch.group(1)!);
-            }
-          }
-          result.add(_ExtractedFeature(
-            name: title,
-            level: level,
-            descriptionMarkdown: '**$title.** $body',
-          ));
+        if (title.isEmpty || nonFeatureTitles.contains(title.toLowerCase())) continue;
+
+        int? level;
+        final trailingLevel = RegExp(
+          r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
+          caseSensitive: false,
+        ).firstMatch(title);
+        if (trailingLevel != null) {
+          title = trailingLevel.group(1)?.trim() ?? title;
+          final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
+          if (lvlStr != null) level = int.tryParse(lvlStr);
         }
+        if (level == null && body.isNotEmpty) {
+          final sample = body.length > 300 ? body.substring(0, 300) : body;
+          final lvlMatch = RegExp(
+            r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
+            caseSensitive: false,
+          ).firstMatch(sample);
+          if (lvlMatch != null) {
+            level = int.tryParse(lvlMatch.group(1)!);
+          }
+        }
+        addOrUpdateFeature(
+          name: title,
+          level: level,
+          descriptionMarkdown: '**$title.** $body',
+        );
       }
-      if (result.isNotEmpty) return result;
     }
 
-    return const [];
+    // Pass 3: Pipe-delimited feature strings (fallback / stubs for unexpanded items)
+    final pipeRegex6 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex6.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(6) ?? '1') ?? 1;
+      if (featName.isNotEmpty) {
+        final fallbackDesc = _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
+        final desc = fallbackDesc != null
+            ? '**$featName**\n\n$fallbackDesc'
+            : '**$featName**\n\n*Granted at Level $lvl.*';
+        addOrUpdateFeature(
+          name: featName,
+          level: lvl,
+          descriptionMarkdown: desc,
+        );
+      }
+    }
+
+    final pipeRegex4 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex4.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final clsName = match.group(2)?.trim() ?? '';
+      final src = match.group(3)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
+      if (featName.isNotEmpty) {
+        final fallbackDesc = _wellKnownClassFeatureDescriptions[featName.toLowerCase()];
+        final desc = fallbackDesc != null
+            ? '**$featName**\n\n$fallbackDesc'
+            : '**$featName**\n\n*Class Feature granted by $clsName ($src) at Level $lvl.*';
+        addOrUpdateFeature(
+          name: featName,
+          level: lvl,
+          descriptionMarkdown: desc,
+        );
+      }
+    }
+
+    return result;
   }
 
   @override

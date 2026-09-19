@@ -1079,6 +1079,7 @@ class CharacterActionsResolver {
           subSlug,
           classSlug: cls.classRef.slug,
           displayName: subDisplayName,
+          ruleset: edition == DmRulesEdition.v2014 ? RulesetVersion.v2014 : RulesetVersion.v2024,
         );
 
         final subName = resolvedSubclass?.name ?? subDisplayName;
@@ -1371,7 +1372,11 @@ class CharacterActionsResolver {
 
     // 1. Bonus Action patterns
     final baRegex = RegExp(
-      r'\b(?:as\s+a|takes?\s+a|use\s+(?:your\s+)?a?)\s*bonus\s*action\b|\bbonus\s*action\s*(?::|to\b)|\ba\s*bonus\s*action\s*on\s*each\s*of\s*your\s*turns\b|\bcasting\s*time:\s*1\s*bonus\s*action\b',
+      r'\b(?:as\s+a|takes?\s+a|use\s+(?:your\s+)?a?|using\s+(?:a|your)?)\s*bonus\s*action\b|'
+      r'\bbonus\s*action\s*(?::|\.|\b|to\b|—|-)|'
+      r'\ba\s*bonus\s*action\s*on\s*each\s*of\s*your\s*turns\b|'
+      r'\b(?:casting\s*time|activation|cost):\s*(?:1\s*)?bonus\s*action\b',
+      caseSensitive: false,
     );
     if (baRegex.hasMatch(combined) || title.toLowerCase().contains('(bonus action)')) {
       return ActionType.bonusAction;
@@ -1379,7 +1384,13 @@ class CharacterActionsResolver {
 
     // 2. Reaction patterns
     final rxRegex = RegExp(
-      r'\b(?:as\s+a|takes?\s+a|use\s+(?:your\s+)?a?)\s*reaction\b|\breaction\s*(?::|when\b|to\b)|\bin\s*response\s*to\b|\bwhen\s+a\s+creature\b.*\breaction\b|\bwhen\s+you\s+(?:are\s+hit|take\s+damage)\b|\bcasting\s*time:\s*1\s*reaction\b',
+      r'\b(?:as\s+a|takes?\s+a|use\s+(?:your\s+)?a?|using\s+(?:a|your)?)\s*reaction\b|'
+      r'\breaction\s*(?::|\.|\b|when\b|to\b|—|-)|'
+      r'\bin\s*response\s*to\b|'
+      r'\bwhen\s+a\s+creature\b.*\breaction\b|'
+      r'\bwhen\s+you\s+(?:are\s+hit|take\s+damage)\b|'
+      r'\b(?:casting\s*time|activation|cost):\s*(?:1\s*)?reaction\b',
+      caseSensitive: false,
     );
     if (rxRegex.hasMatch(combined) || title.toLowerCase().contains('(reaction)')) {
       return ActionType.reaction;
@@ -1387,7 +1398,13 @@ class CharacterActionsResolver {
 
     // 3. Action patterns
     final actRegex = RegExp(
-      r'\b(?:as\s+an|takes?\s+an|use\s+(?:your\s+)?an?)\s*action\b|\baction\s*(?::|to\b)|\b1\s*action\b|\byou\s*can\s*use\s*your\s*action\b|\byou\s+can\s+cast\b',
+      r'\b(?:as\s+an|takes?\s+an|use\s+(?:your\s+)?an?|using\s+(?:an|your)?)\s*action\b|'
+      r'\baction\s*(?::|\.|\b|to\b|—|-)|'
+      r'\b1\s*action\b|'
+      r'\byou\s*can\s*use\s*your\s*action\b|'
+      r'\byou\s+can\s+cast\b|'
+      r'\b(?:casting\s*time|activation|cost):\s*(?:1\s*)?action\b',
+      caseSensitive: false,
     );
     if (actRegex.hasMatch(combined) || title.toLowerCase().contains('(action)')) {
       return ActionType.action;
@@ -1395,7 +1412,13 @@ class CharacterActionsResolver {
 
     // 4. Special / Free / On-Hit patterns
     final spRegex = RegExp(
-      r'\bonce\s+(?:per|on\s+each\s+of\s+your)\s+turn\b|\bwhen\s+you\s+hit\b|\bfree\s+action\b|\bno\s+action\s+required\b',
+      r'\bonce\s+(?:per|on\s+each\s+of\s+your)\s+turn\b|'
+      r'\bwhen\s+you\s+hit\b|'
+      r'\bfree\s+action\b|'
+      r'\bno\s+action\s+required\b|'
+      r'\bteleport\s*(?:up\s+to)?\b|'
+      r'\bmagically\s+manifest\b',
+      caseSensitive: false,
     );
     if (spRegex.hasMatch(combined)) {
       return ActionType.special;
@@ -1403,6 +1426,19 @@ class CharacterActionsResolver {
 
     return null;
   }
+
+  static const Set<String> _nonActionTitles = {
+    'action',
+    'bonus action',
+    'reaction',
+    'special',
+    'at higher levels',
+    'hit',
+    'miss',
+    'note',
+    'saving throw',
+    'damage',
+  };
 
   static void _extractActionsFromMarkdown({
     required String markdown,
@@ -1413,30 +1449,14 @@ class CharacterActionsResolver {
   }) {
     if (markdown.trim().isEmpty) return;
 
-    // Pattern 0: Pipe-delimited feature strings (e.g. FeatureName|ClassName|Source|Level)
-    final pipeRegex = RegExp(r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)", multiLine: true);
-    final pipeMatches = pipeRegex.allMatches(markdown).toList();
-    if (pipeMatches.isNotEmpty) {
-      for (final match in pipeMatches) {
-        final featName = match.group(1)?.trim() ?? '';
-        final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
-        if (featName.isNotEmpty) {
-          final fallback = _wellKnownFeatureFallbacks[featName.toLowerCase()];
-          final body = fallback?.$2 ?? 'Feature from $sourceName (Level $lvl)';
-          _processExtractedBlock(
-            rawName: featName,
-            body: body,
-            explicitLevel: lvl,
-            classLevel: classLevel,
-            sourceName: sourceName,
-            dispatchRoll: dispatchRoll,
-            registerAction: registerAction,
-          );
-        }
-      }
+    final processedNames = <String>{};
+
+    void recordAction(CharacterCombatAction action) {
+      processedNames.add(action.name.toLowerCase().trim());
+      registerAction(action);
     }
 
-    // Pattern 1: Header blocks (### Feature Name (Level X) or ## Feature Name)
+    // Pattern 1: Header blocks (### Feature Name (Level X) or ## Feature Name) - prioritized first for rich rules text!
     if (markdown.contains(RegExp(r'(?:^|\n)#{1,4}\s+'))) {
       final blocks = markdown.split(RegExp(r'(?=(?:^|\n)#{1,4}\s+)'));
       for (final block in blocks) {
@@ -1451,17 +1471,39 @@ class CharacterActionsResolver {
         final headerLevel = levelMatch?.group(2) != null ? int.tryParse(levelMatch!.group(2)!) : null;
         final body = lines.length > 1 ? lines.sublist(1).join('\n').trim() : '';
 
-        _processExtractedBlock(
-          rawName: name,
-          body: body.isNotEmpty ? body : trimmed,
-          explicitLevel: headerLevel,
-          classLevel: classLevel,
-          sourceName: sourceName,
-          dispatchRoll: dispatchRoll,
-          registerAction: registerAction,
-        );
+        // Check if body contains distinct bold sub-actions (e.g. **SubAction.** Description...)
+        final boldSubRegex = RegExp(r'(?:^|\n)\s*(?:[-*]\s*)?\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*(?:[-*]\s*)?\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
+        final subMatches = boldSubRegex.allMatches(body).where((m) {
+          final t = m.group(1)?.trim() ?? '';
+          return t.isNotEmpty && !_nonActionTitles.contains(t.toLowerCase());
+        }).toList();
+
+        if (subMatches.length >= 2) {
+          for (final subM in subMatches) {
+            final subTitle = subM.group(1)?.trim() ?? '';
+            final subBody = subM.group(2)?.trim() ?? '';
+            _processExtractedBlock(
+              rawName: subTitle,
+              body: subBody,
+              explicitLevel: headerLevel,
+              classLevel: classLevel,
+              sourceName: sourceName,
+              dispatchRoll: dispatchRoll,
+              registerAction: recordAction,
+            );
+          }
+        } else {
+          _processExtractedBlock(
+            rawName: name,
+            body: body.isNotEmpty ? body : trimmed,
+            explicitLevel: headerLevel,
+            classLevel: classLevel,
+            sourceName: sourceName,
+            dispatchRoll: dispatchRoll,
+            registerAction: recordAction,
+          );
+        }
       }
-      return;
     }
 
     // Pattern 2: Bold lead-in blocks: **Feature Name.** Description...
@@ -1471,6 +1513,8 @@ class CharacterActionsResolver {
       for (final match in boldMatches) {
         final rawTitle = match.group(1)?.trim() ?? '';
         final body = match.group(2)?.trim() ?? '';
+        if (rawTitle.isEmpty || _nonActionTitles.contains(rawTitle.toLowerCase())) continue;
+        if (processedNames.contains(rawTitle.toLowerCase())) continue;
         _processExtractedBlock(
           rawName: rawTitle,
           body: body,
@@ -1478,10 +1522,9 @@ class CharacterActionsResolver {
           classLevel: classLevel,
           sourceName: sourceName,
           dispatchRoll: dispatchRoll,
-          registerAction: registerAction,
+          registerAction: recordAction,
         );
       }
-      return;
     }
 
     // Pattern 3: Colon / Dash list items: Feature Name: Description or - Feature Name: Description
@@ -1491,6 +1534,8 @@ class CharacterActionsResolver {
       for (final match in listMatches) {
         final rawTitle = match.group(1)?.trim() ?? '';
         final body = match.group(2)?.trim() ?? '';
+        if (rawTitle.isEmpty || _nonActionTitles.contains(rawTitle.toLowerCase())) continue;
+        if (processedNames.contains(rawTitle.toLowerCase())) continue;
         _processExtractedBlock(
           rawName: rawTitle,
           body: body,
@@ -1498,7 +1543,52 @@ class CharacterActionsResolver {
           classLevel: classLevel,
           sourceName: sourceName,
           dispatchRoll: dispatchRoll,
-          registerAction: registerAction,
+          registerAction: recordAction,
+        );
+      }
+    }
+
+    // Pattern 0: Pipe-delimited feature strings (6-part or 4-part) as fallback
+    final pipeRegex6 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex6.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(6) ?? '1') ?? 1;
+      if (featName.isNotEmpty && !processedNames.contains(featName.toLowerCase())) {
+        final fallback = _wellKnownFeatureFallbacks[featName.toLowerCase()];
+        final body = fallback?.$2 ?? 'Feature from $sourceName (Level $lvl)';
+        _processExtractedBlock(
+          rawName: featName,
+          body: body,
+          explicitLevel: lvl,
+          classLevel: classLevel,
+          sourceName: sourceName,
+          dispatchRoll: dispatchRoll,
+          registerAction: recordAction,
+        );
+      }
+    }
+
+    final pipeRegex4 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    for (final match in pipeRegex4.allMatches(markdown)) {
+      final featName = match.group(1)?.trim() ?? '';
+      final lvl = int.tryParse(match.group(4) ?? '1') ?? 1;
+      if (featName.isNotEmpty && !processedNames.contains(featName.toLowerCase())) {
+        final fallback = _wellKnownFeatureFallbacks[featName.toLowerCase()];
+        final body = fallback?.$2 ?? 'Feature from $sourceName (Level $lvl)';
+        _processExtractedBlock(
+          rawName: featName,
+          body: body,
+          explicitLevel: lvl,
+          classLevel: classLevel,
+          sourceName: sourceName,
+          dispatchRoll: dispatchRoll,
+          registerAction: recordAction,
         );
       }
     }
@@ -1517,6 +1607,7 @@ class CharacterActionsResolver {
 
     // Clean up name
     var cleanName = rawName.replaceAll(RegExp(r'[:#*]'), '').trim();
+    if (_nonActionTitles.contains(cleanName.toLowerCase())) return;
     int? detectedLevel = explicitLevel;
 
     // Check level in name: e.g. "Astral Jaunt (Level 3)" or "Astral Jaunt (3rd Level)"
@@ -1658,10 +1749,13 @@ class CharacterActionsResolver {
 
     for (final entry in entriesList) {
       if (entry is String) {
-        final pipeMatch = RegExp(r"^([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)").firstMatch(entry.trim());
-        if (pipeMatch != null) {
-          final featName = pipeMatch.group(1)?.trim() ?? '';
-          final lvl = int.tryParse(pipeMatch.group(4) ?? '1') ?? 1;
+        final pipeMatch6 = RegExp(r"^([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)").firstMatch(entry.trim());
+        final pipeMatch4 = RegExp(r"^([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)").firstMatch(entry.trim());
+        final match = pipeMatch6 ?? pipeMatch4;
+        if (match != null) {
+          final featName = match.group(1)?.trim() ?? '';
+          final lvlStr = match.groupCount >= 6 && pipeMatch6 != null ? match.group(6) : match.group(4);
+          final lvl = int.tryParse(lvlStr ?? '1') ?? 1;
           final fallback = _wellKnownFeatureFallbacks[featName.toLowerCase()];
           final bodyText = fallback?.$2 ?? 'Class Feature from $sourceName (Level $lvl)';
           _processExtractedBlock(

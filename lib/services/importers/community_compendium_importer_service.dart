@@ -4,6 +4,7 @@ import '../../models/domain/homebrew_extended_entities.dart';
 import '../../models/domain/spell_monster_equipment.dart';
 import '../logging_service.dart';
 import '../persistence/homebrew_persistence_service.dart';
+import '../acl/compendium_class_parser.dart';
 import 'community_compendium_adapters.dart';
 
 /// Identified classification of community compendium JSON payloads.
@@ -253,11 +254,115 @@ class CommunityCompendiumImporterService {
       processedAsBundle = true;
     }
 
+    // Collect class features & subclass features if present
+    final rawSubclassFeatures = <Map<String, dynamic>>[];
+    final rawClassFeatures = <Map<String, dynamic>>[];
+
+    void addRawFeatures(dynamic list, bool isSubclassDefault) {
+      if (list is List) {
+        for (final item in list) {
+          if (item is Map) {
+            final m = Map<String, dynamic>.from(item);
+            final isSub = isSubclassDefault ||
+                m['subclassShortName'] != null ||
+                m['subclass'] != null ||
+                m['subclassName'] != null ||
+                m['gainSubclassFeature'] == true;
+            if (isSub) {
+              rawSubclassFeatures.add(m);
+            } else {
+              rawClassFeatures.add(m);
+            }
+          }
+        }
+      }
+    }
+
+    addRawFeatures(map['subclassFeature'] ?? map['subclassFeatures'] ?? map['subclassfeature'] ?? map['subclassfeatures'], true);
+    addRawFeatures(map['classFeature'] ?? map['classFeatures'] ?? map['classfeature'] ?? map['classfeatures'], false);
+
+    final classFeatureMap = <String, Map<String, dynamic>>{};
+    for (final feat in rawClassFeatures) {
+      final name = feat['name']?.toString().toLowerCase().trim() ?? '';
+      final className = (feat['className']?.toString() ?? feat['class']?.toString() ?? '').toLowerCase().trim();
+      final source = (feat['source']?.toString() ?? '').toLowerCase().trim();
+      final level = (feat['level']?.toString() ?? '').trim();
+      if (name.isNotEmpty) {
+        classFeatureMap[name] = feat;
+        classFeatureMap[name.replaceAll(' ', '-')] = feat;
+        if (className.isNotEmpty) {
+          classFeatureMap['$name|$className'] = feat;
+          if (level.isNotEmpty) {
+            classFeatureMap['$name|$className|$level'] = feat;
+            if (source.isNotEmpty) {
+              classFeatureMap['$name|$className|$source|$level'] = feat;
+            }
+          }
+        }
+      }
+    }
+
+    final subclassFeatureMap = <String, Map<String, dynamic>>{};
+    for (final feat in rawSubclassFeatures) {
+      final name = feat['name']?.toString().toLowerCase().trim() ?? '';
+      final className = (feat['className']?.toString() ?? feat['class']?.toString() ?? '').toLowerCase().trim();
+      final subShort = (feat['subclassShortName']?.toString() ?? feat['shortName']?.toString() ?? '').toLowerCase().trim();
+      final source = (feat['source']?.toString() ?? '').toLowerCase().trim();
+      final classSource = (feat['classSource']?.toString() ?? '').toLowerCase().trim();
+      final subSource = (feat['subclassSource']?.toString() ?? source).toLowerCase().trim();
+      final level = (feat['level']?.toString() ?? '').trim();
+
+      if (name.isNotEmpty) {
+        subclassFeatureMap[name] = feat;
+        final nameSlug = name.replaceAll(' ', '-');
+        subclassFeatureMap[nameSlug] = feat;
+        if (subShort.isNotEmpty) {
+          final subSlug = subShort.replaceAll(' ', '-');
+          subclassFeatureMap['$name|$subShort'] = feat;
+          subclassFeatureMap['$name|$subSlug'] = feat;
+          if (className.isNotEmpty) {
+            subclassFeatureMap['$name|$className|$subShort'] = feat;
+            subclassFeatureMap['$name|$className|$subSlug'] = feat;
+          }
+          if (level.isNotEmpty) {
+            subclassFeatureMap['$name|$subShort|$level'] = feat;
+            subclassFeatureMap['$name|$subSlug|$level'] = feat;
+            if (className.isNotEmpty) {
+              subclassFeatureMap['$name|$className|$subShort|$level'] = feat;
+              subclassFeatureMap['$name|$className|$subSlug|$level'] = feat;
+              if (classSource.isNotEmpty) {
+                subclassFeatureMap['$name|$className|$classSource|$subShort|$subSource|$level'] = feat;
+                subclassFeatureMap['$name|$className|$classSource|$subShort||$level'] = feat;
+              }
+              if (source.isNotEmpty) {
+                subclassFeatureMap['$name|$className|$source|$subShort|$subSource|$level'] = feat;
+              }
+              subclassFeatureMap['$name|$className||$subShort||$level'] = feat;
+            }
+          }
+        }
+        if (className.isNotEmpty) {
+          subclassFeatureMap['$name|$className'] = feat;
+          if (level.isNotEmpty) {
+            subclassFeatureMap['$name|$className|$level'] = feat;
+          }
+        }
+        if (level.isNotEmpty) {
+          subclassFeatureMap['$name|$level'] = feat;
+        }
+      }
+    }
+
     if (map['class'] is List) {
       for (final e in map['class']) {
         if (e is Map<String, dynamic>) {
           try {
-            classes.add(adapters.parseClass(e, forceRuleset: forceRuleset));
+            classes.add(adapters.parseClass(
+              e,
+              forceRuleset: forceRuleset,
+              classFeatureMap: classFeatureMap,
+              subclassFeatureMap: subclassFeatureMap,
+            ));
           } catch (err) {
             warnings.add('Skipped class ${e['name']}: $err');
           }
@@ -270,13 +375,85 @@ class CommunityCompendiumImporterService {
       for (final e in map['subclass']) {
         if (e is Map<String, dynamic>) {
           try {
-            subclasses.add(adapters.parseSubclass(e, forceRuleset: forceRuleset));
+            subclasses.add(adapters.parseSubclass(
+              e,
+              forceRuleset: forceRuleset,
+              subclassFeatureMap: subclassFeatureMap,
+            ));
           } catch (err) {
             warnings.add('Skipped subclass ${e['name']}: $err');
           }
         }
       }
       processedAsBundle = true;
+    }
+
+    // Stitch external subclass features into Subclasses
+    if (rawSubclassFeatures.isNotEmpty) {
+      final classParser = CompendiumClassParser();
+      for (int i = 0; i < subclasses.length; i++) {
+        final sub = subclasses[i];
+        final cleanSubName = sub.name.toLowerCase().trim();
+        final cleanSubShort = sub.shortName.toLowerCase().trim();
+        final cleanClass = sub.classSlug.toLowerCase().trim();
+
+        final matchingFeatures = rawSubclassFeatures.where((f) {
+          final fClass = (f['className']?.toString() ?? f['class']?.toString() ?? '').toLowerCase().trim();
+          String fSubShort = '';
+          if (f['subclassShortName'] != null) {
+            fSubShort = f['subclassShortName'].toString().toLowerCase().trim();
+          } else if (f['subclassName'] != null) {
+            fSubShort = f['subclassName'].toString().toLowerCase().trim();
+          } else if (f['subclass'] != null) {
+            if (f['subclass'] is Map) {
+              fSubShort = (f['subclass']['shortName'] ?? f['subclass']['name'] ?? '').toString().toLowerCase().trim();
+            } else {
+              fSubShort = f['subclass'].toString().toLowerCase().trim();
+            }
+          } else if (f['shortName'] != null) {
+            fSubShort = f['shortName'].toString().toLowerCase().trim();
+          }
+
+          final matchesClass = fClass.isEmpty || cleanClass.isEmpty || fClass == cleanClass || cleanClass.contains(fClass) || fClass.contains(cleanClass);
+          final matchesSub = fSubShort.isNotEmpty && (
+              fSubShort == cleanSubShort ||
+              fSubShort == cleanSubName ||
+              cleanSubName.contains(fSubShort) ||
+              cleanSubShort.contains(fSubShort) ||
+              sub.id.slug.toLowerCase().contains(fSubShort.replaceAll(' ', '-')));
+
+          return matchesClass && matchesSub;
+        }).toList();
+
+        if (matchingFeatures.isNotEmpty) {
+          matchingFeatures.sort((a, b) => ((a['level'] as num?) ?? 0).compareTo((b['level'] as num?) ?? 0));
+          final featureBlocks = <String>[];
+          for (final feat in matchingFeatures) {
+            final fName = feat['name']?.toString() ?? '';
+            final level = feat['level'] != null ? ' (Level ${feat['level']})' : '';
+            final fContent = classParser.transformer.transformEntries(feat['entries'] ?? feat['entry'] ?? feat['desc'] ?? feat['description']).markdown;
+            if (fName.isNotEmpty || fContent.isNotEmpty) {
+              featureBlocks.add('### $fName$level\n$fContent');
+            }
+          }
+          if (featureBlocks.isNotEmpty) {
+            final isOnlyFallback = sub.featuresMarkdown.isEmpty ||
+                !sub.featuresMarkdown.contains('\n\n') ||
+                sub.featuresMarkdown.contains('Feature*\n\nGranted at level');
+            final combinedMarkdown = isOnlyFallback
+                ? featureBlocks.join('\n\n')
+                : '${sub.featuresMarkdown}\n\n${featureBlocks.join('\n\n')}';
+            subclasses[i] = Subclass(
+              id: sub.id,
+              name: sub.name,
+              classSlug: sub.classSlug,
+              shortName: sub.shortName,
+              featuresMarkdown: combinedMarkdown.trim(),
+              customProperties: sub.customProperties,
+            );
+          }
+        }
+      }
     }
 
     if (map['race'] is List) {

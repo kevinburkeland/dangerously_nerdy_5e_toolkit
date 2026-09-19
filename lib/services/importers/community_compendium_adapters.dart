@@ -363,14 +363,27 @@ class CommunityCompendiumAdapters {
   }
 
   /// Parses community compendium Class map into canonical [CharacterClass].
-  CharacterClass parseClass(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
+  CharacterClass parseClass(
+    Map<String, dynamic> json, {
+    RulesetVersion? forceRuleset,
+    Map<String, Map<String, dynamic>>? classFeatureMap,
+    Map<String, Map<String, dynamic>>? subclassFeatureMap,
+  }) {
+    if (classFeatureMap != null || subclassFeatureMap != null) {
+      return CompendiumClassParser().parseClass(
+        json,
+        forceRuleset: forceRuleset,
+        classFeatureMap: classFeatureMap,
+        subclassFeatureMap: subclassFeatureMap,
+      );
+    }
     final name = json['name']?.toString() ?? 'Unnamed Class';
     final source = json['source']?.toString();
     final ruleset = forceRuleset ?? parser.detectRuleset(source);
     final slug = _slugify(name);
 
-    final hdObj = json['hd'];
     String hitDie = 'd8';
+    final hdObj = json['hd'];
     if (hdObj is Map) {
       final faces = hdObj['faces'];
       if (faces != null) hitDie = 'd$faces';
@@ -441,8 +454,16 @@ class CommunityCompendiumAdapters {
   }
 
   /// Parses community compendium Subclass map into canonical [Subclass].
-  Subclass parseSubclass(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
-    return CompendiumClassParser().parseSubclass(json, forceRuleset: forceRuleset);
+  Subclass parseSubclass(
+    Map<String, dynamic> json, {
+    RulesetVersion? forceRuleset,
+    Map<String, Map<String, dynamic>>? subclassFeatureMap,
+  }) {
+    return CompendiumClassParser().parseSubclass(
+      json,
+      forceRuleset: forceRuleset,
+      subclassFeatureMap: subclassFeatureMap,
+    );
   }
 
   /// Parses community compendium Race map into canonical [Race].
