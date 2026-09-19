@@ -315,18 +315,45 @@ class CompendiumClassParser {
     final parts = lower.split('|').map((p) => p.trim()).toList();
     if (parts.isNotEmpty) {
       final name = parts[0];
-      if (parts.length >= 4) {
-        final c1 = '$name|${parts[1]}|${parts[3]}';
-        if (featureMap.containsKey(c1)) return featureMap[c1];
-        final c2 = '$name|${parts[1]}|${parts[2]}|${parts[3]}';
-        if (featureMap.containsKey(c2)) return featureMap[c2];
+      final slugName = _slugify(name);
+
+      String? className;
+      String? subShort;
+      String? level;
+
+      if (parts.length >= 6) {
+        className = parts[1];
+        subShort = parts[3];
+        level = parts[5];
+      } else if (parts.length >= 4) {
+        className = parts[1];
+        subShort = parts[2];
+        level = parts[3];
+      } else if (parts.length >= 3) {
+        subShort = parts[1];
+        level = parts[2];
+      } else if (parts.length >= 2) {
+        subShort = parts[1];
       }
-      if (parts.length >= 2) {
-        final c3 = '$name|${parts[1]}';
-        if (featureMap.containsKey(c3)) return featureMap[c3];
-      }
-      if (featureMap.containsKey(name)) {
-        return featureMap[name];
+
+      final candidates = <String>[
+        if (subShort != null && level != null && className != null) '$name|$className|$subShort|$level',
+        if (subShort != null && level != null) '$name|$subShort|$level',
+        if (subShort != null && level != null) '$slugName|${_slugify(subShort)}|$level',
+        if (subShort != null && className != null) '$name|$className|$subShort',
+        if (subShort != null) '$name|$subShort',
+        if (subShort != null) '$name|${_slugify(subShort)}',
+        if (className != null && level != null) '$name|$className|$level',
+        if (className != null) '$name|$className',
+        if (level != null) '$name|$level',
+        name,
+        slugName,
+      ];
+
+      for (final key in candidates) {
+        if (featureMap.containsKey(key)) {
+          return featureMap[key];
+        }
       }
     }
     return null;
@@ -460,7 +487,17 @@ class CompendiumClassParser {
           }
           return;
         }
-        if (f.contains('|') && !f.contains(' ')) {
+        if (f.contains('|')) {
+          final parts = f.split('|').map((p) => p.trim()).toList();
+          final fName = parts.isNotEmpty ? parts[0] : '';
+          final fClass = parts.length > 1 ? parts[1] : '';
+          final fSubShort = parts.length > 3 ? parts[3] : '';
+          final fLevel = parts.length > 5 ? int.tryParse(parts[5]) : (parts.length > 3 ? int.tryParse(parts[3]) : null);
+          final levelStr = fLevel != null ? ' (Level $fLevel)' : '';
+          final subTitle = fSubShort.isNotEmpty ? fSubShort : (fClass.isNotEmpty ? '$fClass Subclass' : 'Subclass');
+          if (fName.isNotEmpty) {
+            featureBlocks.add('### $fName$levelStr\n*$subTitle Feature*\n\nGranted at level ${fLevel ?? 1}.');
+          }
           return;
         }
       } else if (f is Map && (f.containsKey('subclassFeature') || f.containsKey('classFeature'))) {
@@ -477,6 +514,31 @@ class CompendiumClassParser {
           }
           return;
         }
+        final ptr = (f['subclassFeature'] ?? f['classFeature']).toString();
+        if (ptr.contains('|')) {
+          final parts = ptr.split('|').map((p) => p.trim()).toList();
+          final fName = parts.isNotEmpty ? parts[0] : '';
+          final fClass = parts.length > 1 ? parts[1] : '';
+          final fSubShort = parts.length > 3 ? parts[3] : '';
+          final fLevel = parts.length > 5 ? int.tryParse(parts[5]) : (parts.length > 3 ? int.tryParse(parts[3]) : null);
+          final levelStr = fLevel != null ? ' (Level $fLevel)' : '';
+          final subTitle = fSubShort.isNotEmpty ? fSubShort : (fClass.isNotEmpty ? '$fClass Subclass' : 'Subclass');
+          if (fName.isNotEmpty) {
+            featureBlocks.add('### $fName$levelStr\n*$subTitle Feature*\n\nGranted at level ${fLevel ?? 1}.');
+          }
+          return;
+        }
+      } else if (f is Map && f.containsKey('name') && (f.containsKey('entries') || f.containsKey('desc') || f.containsKey('description') || f.containsKey('entry'))) {
+        final fName = f['name']?.toString().trim() ?? '';
+        final level = f['level'] != null ? ' (Level ${f['level']})' : '';
+        final fContent = transformer.transformEntries(
+          f['entries'] ?? f['entry'] ?? f['desc'] ?? f['description'],
+          defaultRuleset: ruleset,
+        ).markdown;
+        if (fName.isNotEmpty || fContent.isNotEmpty) {
+          featureBlocks.add('### $fName$level\n$fContent');
+        }
+        return;
       }
       otherEntries.add(f);
     }

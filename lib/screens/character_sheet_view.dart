@@ -4,6 +4,7 @@ import '../models/domain/entity_reference.dart';
 import '../models/domain/character_models.dart';
 import '../providers/character_sheet_controller.dart';
 import '../services/persistence/character_persistence_service.dart';
+import '../services/persistence/homebrew_persistence_service.dart';
 import '../widgets/character_sheet/character_header_banner.dart';
 import '../widgets/character_sheet/character_vitals_hud.dart';
 import '../widgets/character_sheet/ability_scores_ribbon.dart';
@@ -35,6 +36,9 @@ class _CharacterSheetViewState extends State<CharacterSheetView> {
   @override
   void initState() {
     super.initState();
+    HomebrewPersistenceService().syncToLibraries().then((_) {
+      if (mounted) setState(() {});
+    });
     if (widget.controller != null) {
       _controller = widget.controller!;
       _isLoading = false;

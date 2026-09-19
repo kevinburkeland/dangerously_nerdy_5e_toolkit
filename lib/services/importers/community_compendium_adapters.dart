@@ -442,26 +442,7 @@ class CommunityCompendiumAdapters {
 
   /// Parses community compendium Subclass map into canonical [Subclass].
   Subclass parseSubclass(Map<String, dynamic> json, {RulesetVersion? forceRuleset}) {
-    final name = json['name']?.toString() ?? 'Unnamed Subclass';
-    final className = json['className']?.toString() ?? 'Fighter';
-    final source = json['source']?.toString();
-    final ruleset = forceRuleset ?? parser.detectRuleset(source);
-    final slug = _slugify('$className-$name');
-    final classSlug = _slugify(className);
-
-    final parsed = parser.parseEntries(json['subclassFeatures'] ?? json['entries'], defaultRuleset: ruleset);
-
-    return Subclass(
-      id: EntityId(slug: slug, ruleset: ruleset),
-      name: name,
-      classSlug: classSlug,
-      shortName: json['shortName']?.toString() ?? name,
-      featuresMarkdown: parsed.cleanMarkdown,
-      customProperties: {
-        'source': source ?? 'HOMEBREW',
-        'rawJson': json,
-      },
-    );
+    return CompendiumClassParser().parseSubclass(json, forceRuleset: forceRuleset);
   }
 
   /// Parses community compendium Race map into canonical [Race].

@@ -190,17 +190,13 @@ class CharacterTelemetryResolver {
       String? subclassName;
       if (pointer.subclassSlug != null && pointer.subclassSlug!.trim().isNotEmpty) {
         final scSlug = pointer.subclassSlug!.trim().toLowerCase();
-        final srdSubclass = SrdClassesLibrary.allSubclasses.where((s) => s.id.slug == scSlug || s.name.toLowerCase() == scSlug).firstOrNull;
-        if (srdSubclass != null) {
-          subclassName = srdSubclass.name;
+        final matchedSub = SrdClassesLibrary.findSubclass(scSlug, classSlug: cSlug) ??
+            customSubclasses.where((s) => s.id.slug.toLowerCase() == scSlug || s.name.toLowerCase() == scSlug).firstOrNull;
+        if (matchedSub != null) {
+          subclassName = matchedSub.name;
         } else {
-          final customSubMatch = customSubclasses.where((s) => s.id.slug.toLowerCase() == scSlug).firstOrNull;
-          if (customSubMatch != null) {
-            subclassName = customSubMatch.name;
-          } else {
-            subclassName = formatSlugToTitle(scSlug);
-            unresolved.add(scSlug);
-          }
+          subclassName = formatSlugToTitle(scSlug);
+          unresolved.add(scSlug);
         }
       }
 

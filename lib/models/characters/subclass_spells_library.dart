@@ -1,6 +1,7 @@
 import '../../models/spellbook_data.dart';
 import '../dm_screen_data.dart';
 import '../domain/feature_grant.dart';
+import '../domain/homebrew_extended_entities.dart';
 import 'srd_classes_library.dart';
 
 /// Central repository and lookup engine for 5e Subclass Expanded Spells & Patron Spell Lists.
@@ -308,19 +309,27 @@ class SubclassSpellsLibrary {
     }
 
     // Dynamic resolution from loaded subclasses (including homebrew)
-    final matchedSubs = SrdClassesLibrary.allSubclasses.where((s) {
-      final sSlug = s.id.slug.toLowerCase().trim();
-      final sName = s.name.toLowerCase().trim();
-      final sShort = s.shortName.toLowerCase().trim();
-      return sSlug == cleanSubHyphen ||
-          sSlug == cleanSub ||
-          sName == cleanSub ||
-          sName == cleanSubHyphen ||
-          sShort == cleanSub ||
-          sShort == cleanSubHyphen ||
-          cleanSub.contains(sSlug) ||
-          cleanSubHyphen.contains(sSlug);
-    });
+    final matchedSub = SrdClassesLibrary.findSubclass(
+      cleanSubHyphen,
+      classSlug: classSlug,
+    );
+    final matchedSubs = <Subclass>[
+      if (matchedSub != null) matchedSub,
+      ...SrdClassesLibrary.allSubclasses.where((s) {
+        final sSlug = s.id.slug.toLowerCase().trim();
+        final sName = s.name.toLowerCase().trim();
+        final sShort = s.shortName.toLowerCase().trim();
+        return s != matchedSub && (
+            sSlug == cleanSubHyphen ||
+            sSlug == cleanSub ||
+            sName == cleanSub ||
+            sName == cleanSubHyphen ||
+            sShort == cleanSub ||
+            sShort == cleanSubHyphen ||
+            cleanSub.contains(sSlug) ||
+            cleanSubHyphen.contains(sSlug));
+      }),
+    ];
 
     for (final sub in matchedSubs) {
       for (final g in sub.grants) {
@@ -404,11 +413,7 @@ class SubclassSpellsLibrary {
     if (slug == 'cleric' || slug == 'paladin' || slug == 'druid') return true;
 
     if (subclassSlug != null && subclassSlug.isNotEmpty) {
-      final cleanSub = subclassSlug.toLowerCase().replaceAll('_', '-').trim();
-      final match = SrdClassesLibrary.allSubclasses.where((s) {
-        final sSlug = s.id.slug.toLowerCase().trim();
-        return sSlug == cleanSub || s.name.toLowerCase().trim() == cleanSub;
-      }).firstOrNull;
+      final match = SrdClassesLibrary.findSubclass(subclassSlug, classSlug: classSlug);
       if (match != null) {
         final addSpells = match.customProperties['additionalSpells'];
         if (addSpells is List) {

@@ -336,7 +336,27 @@ class FeaturesTraitsSection extends StatelessWidget {
 
     final List<_ExtractedFeature> result = [];
 
-    // Case 0: Pipe-delimited feature strings (e.g. FeatureName|ClassName|Source|Level)
+    // Case 0: Pipe-delimited feature strings
+    final pipeRegex6 = RegExp(
+      r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)",
+      multiLine: true,
+    );
+    final pipeMatches6 = pipeRegex6.allMatches(markdown).toList();
+    if (pipeMatches6.isNotEmpty) {
+      for (final match in pipeMatches6) {
+        final featName = match.group(1)?.trim() ?? '';
+        final lvl = int.tryParse(match.group(6) ?? '1') ?? 1;
+        if (featName.isNotEmpty && !result.any((r) => r.name.toLowerCase() == featName.toLowerCase())) {
+          result.add(_ExtractedFeature(
+            name: featName,
+            level: lvl,
+            descriptionMarkdown: '**$featName**\n\n*Granted at Level $lvl.*',
+          ));
+        }
+      }
+      if (result.isNotEmpty) return result;
+    }
+
     final pipeRegex = RegExp(r"(?:^|\n)\s*([A-Za-z0-9\s\(\)'-]+?)\|([A-Za-z0-9\s\(\)'-]*)\|([A-Za-z0-9\s\(\)'-]*)\|(\d+)", multiLine: true);
     final pipeMatches = pipeRegex.allMatches(markdown).toList();
     if (pipeMatches.isNotEmpty) {
@@ -360,7 +380,7 @@ class FeaturesTraitsSection extends StatelessWidget {
       if (result.isNotEmpty) return result;
     }
 
-    // Case 1: Markdown with headers "### Feature Name (Level X)" or "### Feature Name"
+    // Case 1: Markdown with headers (# to ####)
     if (markdown.contains(RegExp(r'(?:^|\n)#{1,4}\s+'))) {
       final blocks = markdown.split(RegExp(r'(?=(?:^|\n)#{1,4}\s+)'));
       for (final block in blocks) {
@@ -368,10 +388,43 @@ class FeaturesTraitsSection extends StatelessWidget {
         if (trimmed.isEmpty) continue;
         final lines = trimmed.split('\n');
         final headerLine = lines.first.replaceAll(RegExp(r'^#+\s*'), '').trim();
-        final levelMatch = RegExp(r'^(.*?)(?:\s*\((?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?\))?(?:\s*:\s*)?$', caseSensitive: false).firstMatch(headerLine);
-        final name = levelMatch?.group(1)?.trim() ?? headerLine;
-        final level = levelMatch?.group(2) != null ? int.tryParse(levelMatch!.group(2)!) : null;
+
+        String name = headerLine;
+        int? level;
+
+        final trailingLevel = RegExp(
+          r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
+          caseSensitive: false,
+        ).firstMatch(headerLine);
+
+        if (trailingLevel != null) {
+          name = trailingLevel.group(1)?.trim() ?? headerLine;
+          final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
+          if (lvlStr != null) level = int.tryParse(lvlStr);
+        } else {
+          final leadingLevel = RegExp(
+            r'^(?:(?:Level|Lvl)\s*(\d+)|(\d+)(?:st|nd|rd|th)\s*(?:-|–)?\s*(?:Level|lvl))\s*[:\-\)]\s*(.*)$',
+            caseSensitive: false,
+          ).firstMatch(headerLine);
+          if (leadingLevel != null) {
+            final lvlStr = leadingLevel.group(1) ?? leadingLevel.group(2);
+            if (lvlStr != null) level = int.tryParse(lvlStr);
+            name = leadingLevel.group(3)?.trim() ?? headerLine;
+          }
+        }
+
         final body = lines.length > 1 ? lines.sublist(1).join('\n').trim() : '';
+
+        if (level == null && body.isNotEmpty) {
+          final sample = body.length > 300 ? body.substring(0, 300) : body;
+          final bodyLvlMatch = RegExp(
+            r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
+            caseSensitive: false,
+          ).firstMatch(sample);
+          if (bodyLvlMatch != null) {
+            level = int.tryParse(bodyLvlMatch.group(1)!);
+          }
+        }
 
         if (name.isNotEmpty && !result.any((r) => r.name.toLowerCase() == name.toLowerCase())) {
           result.add(_ExtractedFeature(
@@ -384,18 +437,33 @@ class FeaturesTraitsSection extends StatelessWidget {
       if (result.isNotEmpty) return result;
     }
 
-    // Case 2: Markdown with bold bullet / section markers "**Feature Name.** Description..."
-    final boldRegex = RegExp(r'\*\*([^*]+?)\.\*\*\s*([\s\S]*?)(?=(?:\n\s*\*\*[^*]+?\.\*)|$)');
+    // Case 2: Markdown with bold bullet / section markers
+    final boldRegex = RegExp(r'\*\*([^*]+?)(?:\.|\:)?\*\*\s*([\s\S]*?)(?=(?:\n\s*\*\*[^*]+?(?:\.|\:)?\*\*)|$)');
     final matches = boldRegex.allMatches(markdown).toList();
     if (matches.isNotEmpty) {
       for (final match in matches) {
-        final title = match.group(1)?.trim() ?? '';
+        var title = match.group(1)?.trim() ?? '';
         final body = match.group(2)?.trim() ?? '';
         if (title.isNotEmpty && !result.any((r) => r.name.toLowerCase() == title.toLowerCase())) {
           int? level;
-          final lvlMatch = RegExp(r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level', caseSensitive: false).firstMatch(body);
-          if (lvlMatch != null) {
-            level = int.tryParse(lvlMatch.group(1)!);
+          final trailingLevel = RegExp(
+            r'^(.*?)(?:\s*[\(:-]\s*(?:(?:Level|Lvl)?\s*(\d+)(?:st|nd|rd|th)?(?:\s*Level)?|(\d+)(?:st|nd|rd|th)?\s*(?:-|–)?\s*(?:Level|lvl))\s*\)?)$',
+            caseSensitive: false,
+          ).firstMatch(title);
+          if (trailingLevel != null) {
+            title = trailingLevel.group(1)?.trim() ?? title;
+            final lvlStr = trailingLevel.group(2) ?? trailingLevel.group(3);
+            if (lvlStr != null) level = int.tryParse(lvlStr);
+          }
+          if (level == null && body.isNotEmpty) {
+            final sample = body.length > 300 ? body.substring(0, 300) : body;
+            final lvlMatch = RegExp(
+              r'(?:starting at|beginning at|at)\s+(\d+)(?:st|nd|rd|th)\s+level',
+              caseSensitive: false,
+            ).firstMatch(sample);
+            if (lvlMatch != null) {
+              level = int.tryParse(lvlMatch.group(1)!);
+            }
           }
           result.add(_ExtractedFeature(
             name: title,
@@ -583,20 +651,22 @@ class FeaturesTraitsSection extends StatelessWidget {
           if (cls.subclassRef != null) {
             final subSlug = cls.subclassRef!.slug.toLowerCase().trim();
             final subDisplayName = cls.subclassRef!.displayName.trim();
-            final subNameLower = subDisplayName.toLowerCase();
 
-            final resolvedSubclass = SrdClassesLibrary.allSubclasses.where((s) =>
-                s.id.slug.toLowerCase().trim() == subSlug ||
-                s.name.toLowerCase().trim() == subNameLower ||
-                s.shortName.toLowerCase().trim() == subNameLower,
-            ).firstOrNull;
+            final resolvedSubclass = SrdClassesLibrary.findSubclass(
+              subSlug,
+              classSlug: cls.classRef.slug,
+              displayName: subDisplayName,
+              ruleset: is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024,
+            );
 
             final subName = resolvedSubclass?.name ?? subDisplayName;
             final subFeaturesMarkdown = resolvedSubclass?.featuresMarkdown ?? '';
 
             final extractedSubFeatures = _extractFeaturesFromMarkdown(subFeaturesMarkdown);
+            final subclassMinLevel = srdClass?.getSubclassLevel(is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024) ?? 3;
+
             final eligibleSubFeatures = extractedSubFeatures
-                .where((f) => f.level == null || f.level! <= cls.level)
+                .where((f) => (f.level ?? subclassMinLevel) <= cls.level)
                 .toList();
 
             if (eligibleSubFeatures.isNotEmpty) {
@@ -617,33 +687,37 @@ class FeaturesTraitsSection extends StatelessWidget {
                 ));
               }
             } else if (subFeaturesMarkdown.isNotEmpty) {
-              widgets.add(_buildFeatureChip(
-                context,
-                name: '$subName (Lvl ${cls.level})',
-                category: '${cls.classRef.displayName} Subclass',
-                descriptionMarkdown: subFeaturesMarkdown,
-                glyphWidget: DndGlyph.classFeature(
-                  classType: clsType,
-                  size: 24,
-                  isDarkMode: true,
-                ),
-                icon: Icons.workspace_premium,
-                color: Colors.cyanAccent,
-              ));
+              if (cls.level >= subclassMinLevel) {
+                widgets.add(_buildFeatureChip(
+                  context,
+                  name: '$subName (Lvl ${cls.level})',
+                  category: '${cls.classRef.displayName} Subclass',
+                  descriptionMarkdown: subFeaturesMarkdown,
+                  glyphWidget: DndGlyph.classFeature(
+                    classType: clsType,
+                    size: 24,
+                    isDarkMode: true,
+                  ),
+                  icon: Icons.workspace_premium,
+                  color: Colors.cyanAccent,
+                ));
+              }
             } else {
-              widgets.add(_buildFeatureChip(
-                context,
-                name: subName,
-                category: '${cls.classRef.displayName} Subclass',
-                descriptionMarkdown: 'Archetype and specialization chosen for ${cls.classRef.displayName}.',
-                glyphWidget: DndGlyph.classFeature(
-                  classType: clsType,
-                  size: 24,
-                  isDarkMode: true,
-                ),
-                icon: Icons.workspace_premium,
-                color: Colors.cyanAccent,
-              ));
+              if (cls.level >= subclassMinLevel) {
+                widgets.add(_buildFeatureChip(
+                  context,
+                  name: subName,
+                  category: '${cls.classRef.displayName} Subclass',
+                  descriptionMarkdown: 'Archetype and specialization chosen for ${cls.classRef.displayName}.',
+                  glyphWidget: DndGlyph.classFeature(
+                    classType: clsType,
+                    size: 24,
+                    isDarkMode: true,
+                  ),
+                  icon: Icons.workspace_premium,
+                  color: Colors.cyanAccent,
+                ));
+              }
             }
           }
 

@@ -1194,11 +1194,21 @@ class SrdClassesLibrary {
     }).toList();
   }
 
-  /// Dynamic list of all available subclasses across all classes
+  /// Dynamic list of all available subclasses across all classes (core SRD + attached & standalone custom homebrew)
   static List<Subclass> get allSubclasses {
     final all = <Subclass>[];
+    final seen = <String>{};
     for (final c in allClasses) {
-      all.addAll(c.subclasses);
+      for (final s in c.subclasses) {
+        if (seen.add('${s.id.slug.toLowerCase().trim()}_${s.id.ruleset.name}')) {
+          all.add(s);
+        }
+      }
+    }
+    for (final s in _customSubclasses) {
+      if (seen.add('${s.id.slug.toLowerCase().trim()}_${s.id.ruleset.name}')) {
+        all.add(s);
+      }
     }
     return all;
   }
@@ -1245,6 +1255,144 @@ class SrdClassesLibrary {
       if (match != null) return match;
     }
     return allClasses.where((c) => c.id.slug == clean || c.name.toLowerCase() == clean).firstOrNull;
+  }
+
+  /// Finds a subclass across core SRD classes and all custom homebrew subclasses.
+  ///
+  /// Supports exact slug matching, prefix-stripped slug matching (e.g. "fighter-echo-knight"
+  /// matching "echo-knight" and vice-versa), name / shortName matching, and
+  /// punctuation/space-normalization.
+  static Subclass? findSubclass(
+    String query, {
+    String? classSlug,
+    String? displayName,
+    RulesetVersion? ruleset,
+  }) {
+    if (query.trim().isEmpty && (displayName == null || displayName.trim().isEmpty)) {
+      return null;
+    }
+
+    final cleanQuery = query.toLowerCase().trim();
+    final cleanDisplay = displayName?.toLowerCase().trim() ?? '';
+    final cleanClass = classSlug?.toLowerCase().trim() ?? '';
+
+    // Collect all candidates across allClasses AND _customSubclasses
+    final pool = allSubclasses;
+
+    // Pass 1: Strict ruleset match if specified
+    if (ruleset != null) {
+      final match = _matchSubclassInList(
+        pool.where((s) => s.id.ruleset == ruleset),
+        cleanQuery,
+        cleanDisplay,
+        cleanClass,
+      );
+      if (match != null) return match;
+    }
+
+    // Pass 2: General match across full pool
+    return _matchSubclassInList(pool, cleanQuery, cleanDisplay, cleanClass);
+  }
+
+  static Subclass? _matchSubclassInList(
+    Iterable<Subclass> candidates,
+    String cleanQuery,
+    String cleanDisplay,
+    String cleanClass,
+  ) {
+    // 1. Exact slug match
+    for (final s in candidates) {
+      final sSlug = s.id.slug.toLowerCase().trim();
+      if (sSlug == cleanQuery && (cleanClass.isEmpty || s.classSlug.isEmpty || _classSlugsMatch(s.classSlug, cleanClass))) {
+        return s;
+      }
+    }
+
+    // 2. Class-prefix tolerance:
+    // e.g. cleanQuery is "echo-knight" and sSlug is "fighter-echo-knight"
+    // or cleanQuery is "fighter-echo-knight" and sSlug is "echo-knight"
+    for (final s in candidates) {
+      final sSlug = s.id.slug.toLowerCase().trim();
+      final sClass = s.classSlug.toLowerCase().trim();
+
+      final strippedSSlug = (cleanClass.isNotEmpty && sSlug.startsWith('$cleanClass-'))
+          ? sSlug.substring(cleanClass.length + 1)
+          : (sClass.isNotEmpty && sSlug.startsWith('$sClass-'))
+              ? sSlug.substring(sClass.length + 1)
+              : sSlug;
+
+      final strippedQuery = (cleanClass.isNotEmpty && cleanQuery.startsWith('$cleanClass-'))
+          ? cleanQuery.substring(cleanClass.length + 1)
+          : (sClass.isNotEmpty && cleanQuery.startsWith('$sClass-'))
+              ? cleanQuery.substring(sClass.length + 1)
+              : cleanQuery;
+
+      if (strippedSSlug == cleanQuery ||
+          sSlug == strippedQuery ||
+          strippedSSlug == strippedQuery ||
+          (cleanClass.isNotEmpty && sSlug == '$cleanClass-$cleanQuery') ||
+          (sClass.isNotEmpty && cleanQuery == '$sClass-$sSlug')) {
+        if (cleanClass.isEmpty || s.classSlug.isEmpty || _classSlugsMatch(s.classSlug, cleanClass)) {
+          return s;
+        }
+      }
+    }
+
+    // 3. Name or shortName exact / normalized match
+    final queryNormalized = cleanQuery.replaceAll(RegExp(r'[-_]'), ' ').trim();
+    final displayNormalized = cleanDisplay.replaceAll(RegExp(r'[-_]'), ' ').trim();
+
+    for (final s in candidates) {
+      final sName = s.name.toLowerCase().trim();
+      final sShort = s.shortName.toLowerCase().trim();
+      final sNameNorm = sName.replaceAll(RegExp(r'[-_]'), ' ');
+
+      if ((cleanDisplay.isNotEmpty && (sName == cleanDisplay || sShort == cleanDisplay || sNameNorm == displayNormalized)) ||
+          (cleanQuery.isNotEmpty && (sName == cleanQuery || sShort == cleanQuery || sNameNorm == queryNormalized))) {
+        if (cleanClass.isEmpty || s.classSlug.isEmpty || _classSlugsMatch(s.classSlug, cleanClass)) {
+          return s;
+        }
+      }
+    }
+
+    // 4. Slugified name match
+    for (final s in candidates) {
+      final sSlugName = _slugifyName(s.name);
+      if (sSlugName == cleanQuery || (cleanDisplay.isNotEmpty && sSlugName == _slugifyName(cleanDisplay))) {
+        if (cleanClass.isEmpty || s.classSlug.isEmpty || _classSlugsMatch(s.classSlug, cleanClass)) {
+          return s;
+        }
+      }
+    }
+
+    // 5. Fallback contains match if class matches
+    if (cleanClass.isNotEmpty) {
+      for (final s in candidates) {
+        if (_classSlugsMatch(s.classSlug, cleanClass)) {
+          final sSlug = s.id.slug.toLowerCase().trim();
+          final sName = s.name.toLowerCase().trim();
+          if (sSlug.contains(cleanQuery) || cleanQuery.contains(sSlug) || (queryNormalized.isNotEmpty && sName.contains(queryNormalized))) {
+            return s;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  static bool _classSlugsMatch(String a, String b) {
+    final ca = a.toLowerCase().trim().replaceAll('-', '').replaceAll(' ', '');
+    final cb = b.toLowerCase().trim().replaceAll('-', '').replaceAll(' ', '');
+    return ca == cb || ca.contains(cb) || cb.contains(ca);
+  }
+
+  static String _slugifyName(String name) {
+    return name
+        .toLowerCase()
+        .replaceAll(RegExp(r"['’]"), '')
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
   }
 
   /// All feature options across all classes, custom invocations, pact boons, infusions, and character options

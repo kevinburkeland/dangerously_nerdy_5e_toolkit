@@ -1074,13 +1074,12 @@ class CharacterActionsResolver {
       if (cls.subclassRef != null) {
         final subSlug = cls.subclassRef!.slug.toLowerCase().trim();
         final subDisplayName = cls.subclassRef!.displayName.trim();
-        final subNameLower = subDisplayName.toLowerCase();
 
-        final resolvedSubclass = SrdClassesLibrary.allSubclasses.where((s) =>
-            s.id.slug.toLowerCase().trim() == subSlug ||
-            s.name.toLowerCase().trim() == subNameLower ||
-            s.shortName.toLowerCase().trim() == subNameLower,
-        ).firstOrNull;
+        final resolvedSubclass = SrdClassesLibrary.findSubclass(
+          subSlug,
+          classSlug: cls.classRef.slug,
+          displayName: subDisplayName,
+        );
 
         final subName = resolvedSubclass?.name ?? subDisplayName;
         if (resolvedSubclass != null && resolvedSubclass.featuresMarkdown.isNotEmpty) {

@@ -225,10 +225,11 @@ class CharacterHomebrewValidator {
       if (subRef != null && subRef.slug.isNotEmpty) {
         final subSlug = subRef.slug.toLowerCase().trim();
         final subName = subRef.displayName.toLowerCase().trim();
-        final foundSub = SrdClassesLibrary.allSubclasses.any((s) =>
-            s.id.slug.toLowerCase() == subSlug ||
-            s.name.toLowerCase() == subName ||
-            s.id.slug.toLowerCase() == subName.replaceAll(' ', '-'));
+        final foundSub = SrdClassesLibrary.findSubclass(
+          subSlug,
+          classSlug: clsProg.classRef.slug,
+          displayName: subName,
+        ) != null;
         if (!foundSub) {
           final item = MissingHomebrewItem(
             type: HomebrewEntityType.subclassType,
@@ -415,10 +416,10 @@ class CharacterHomebrewValidator {
         return found == null;
 
       case HomebrewEntityType.subclassType:
-        final found = SrdClassesLibrary.allSubclasses.any((s) =>
-            s.id.slug.toLowerCase() == cleanSlug ||
-            s.name.toLowerCase() == cleanName ||
-            s.id.slug.toLowerCase() == cleanName.replaceAll(' ', '-'));
+        final found = SrdClassesLibrary.findSubclass(
+          cleanSlug,
+          displayName: cleanName,
+        ) != null;
         return !found;
 
       case HomebrewEntityType.speciesType:

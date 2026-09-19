@@ -316,5 +316,24 @@ To ensure regex-free simulation in hot loops (DPR Monte Carlo runs):
   - `HomebrewIngestor.mapBackgroundFromDto()` and `parseCustomBackgrounds()` map raw JSON into domain `Background` entities.
   - `CharacterFactory.buildFromDraft()` grants background skills into `character.skillProficiencies`, instantiates background starting equipment into `character.inventory`, applies 2024 ASIs (`bonusScores`), and factors Constitution modifiers into starting HP calculation.
 
+## 21. Subclass Feature Propagation, Ingestion Stitching, & Unified Multi-Permutation Resolution
 
-
+- **Multi-Permutation Subclass Matching (`SrdClassesLibrary.findSubclass`):**
+  - In community compendiums and homebrew packs, subclasses may be identified by plain slug (`echo-knight`), class-prefixed slug (`fighter-echo-knight`), display name (`Echo Knight`), or short name.
+  - `SrdClassesLibrary.findSubclass(query, {classSlug, displayName, ruleset})` tests exact slug, class-prefix stripped slugs, name/shortName matches, space/hyphen/underscore normalization, and optional ruleset filtering.
+  - Custom subclasses (`_customSubclasses`) remain indexed in `allSubclasses` even if unattached to a known base class, ensuring orphan and standalone subclasses resolve cleanly.
+- **Robust Subclass Feature Ingestion & Stitching:**
+  - In 5etools schemas, subclass feature pointers are typically 6-part or 4-part pipe-delimited strings (`Name|Class|ClassSource|SubShort|SubSource|Level`). External feature records associate via `subclassShortName`, `subclassName`, `shortName`, or `subclass` map rather than the feature's own name (`f['name']`).
+  - `CompendiumClassParser` and `CompendiumJsonIngestionPipeline` resolve external features against candidate permutations:
+    1. Exact normalized key (`name.toLowerCase()`)
+    2. `$name|$subShort|$level`
+    3. `$name|$className|$subShort|$level`
+    4. `$name|$subShort`
+    5. `$name|$className`
+    6. Subclass-prefixed slug name
+  - Inline feature maps (`name` + `entries` + optional `level`) are parsed directly into `### $name (Level $level)`.
+  - Unresolved pointers generate formatted fallback feature cards (`### $name (Level $level)\n*Subclass feature from $subShort.*`) rather than being dropped silently.
+- **Character Sheet Feature Propagation & Milestone Gates:**
+  - `AbilitiesAndTraitsTab` and `FeaturesTraitsSection` resolve subclasses using `SrdClassesLibrary.findSubclass`.
+  - Markdown feature extractors support `#` through `####` markdown headers, flexible level tokens (`(Level 3)`, `(3rd Level)`, `(Lvl 3)`, `(3rd-level)`, `Level 3: Name`), bold lead patterns (`**Feature Name.**`), and fallback milestone level gating (`subclassMinLevel = srdClass?.getSubclassLevel(...) ?? 3`) to prevent un-leveled subclass features from leaking prematurely while ensuring they display at the appropriate level milestones.
+  - `CharacterHomebrewValidator`, `CharacterActionsResolver`, `CharacterTelemetryResolver`, and `SubclassSpellsLibrary` utilize `SrdClassesLibrary.findSubclass` to eliminate false "Missing Homebrew" reports and propagate actions and spells accurately.

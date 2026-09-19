@@ -822,6 +822,9 @@ class CompendiumJsonIngestionPipeline {
         subclassFeatureMap[name] = feat;
         if (subShort.isNotEmpty) {
           subclassFeatureMap['$name|$subShort'] = feat;
+          if (className.isNotEmpty) {
+            subclassFeatureMap['$name|$className|$subShort'] = feat;
+          }
           if (level.isNotEmpty) {
             subclassFeatureMap['$name|$subShort|$level'] = feat;
             if (className.isNotEmpty) {
@@ -831,6 +834,15 @@ class CompendiumJsonIngestionPipeline {
               }
             }
           }
+        }
+        if (className.isNotEmpty) {
+          subclassFeatureMap['$name|$className'] = feat;
+          if (level.isNotEmpty) {
+            subclassFeatureMap['$name|$className|$level'] = feat;
+          }
+        }
+        if (level.isNotEmpty) {
+          subclassFeatureMap['$name|$level'] = feat;
         }
       }
     }
@@ -1073,15 +1085,28 @@ class CompendiumJsonIngestionPipeline {
 
         final matchingFeatures = rawSubclassFeatures.where((f) {
           final fClass = (f['className']?.toString() ?? f['class']?.toString() ?? '').toLowerCase().trim();
-          final fSubShort = (f['subclassShortName'] ?? f['shortName'] ?? f['subclass'])?.toString().toLowerCase().trim() ?? '';
-          final fSubName = (f['subclassName'] ?? f['name'])?.toString().toLowerCase().trim() ?? '';
+          String fSubShort = '';
+          if (f['subclassShortName'] != null) {
+            fSubShort = f['subclassShortName'].toString().toLowerCase().trim();
+          } else if (f['subclassName'] != null) {
+            fSubShort = f['subclassName'].toString().toLowerCase().trim();
+          } else if (f['subclass'] != null) {
+            if (f['subclass'] is Map) {
+              fSubShort = (f['subclass']['shortName'] ?? f['subclass']['name'] ?? '').toString().toLowerCase().trim();
+            } else {
+              fSubShort = f['subclass'].toString().toLowerCase().trim();
+            }
+          } else if (f['shortName'] != null) {
+            fSubShort = f['shortName'].toString().toLowerCase().trim();
+          }
 
           final matchesClass = fClass.isEmpty || cleanClass.isEmpty || fClass == cleanClass || cleanClass.contains(fClass) || fClass.contains(cleanClass);
-          final matchesSub = fSubShort == cleanSubShort ||
+          final matchesSub = fSubShort.isNotEmpty && (
+              fSubShort == cleanSubShort ||
               fSubShort == cleanSubName ||
-              fSubName == cleanSubName ||
-              fSubName == cleanSubShort ||
-              (fSubShort.isNotEmpty && (cleanSubName.contains(fSubShort) || cleanSubShort.contains(fSubShort)));
+              cleanSubName.contains(fSubShort) ||
+              cleanSubShort.contains(fSubShort) ||
+              sub.id.slug.toLowerCase().contains(fSubShort.replaceAll(' ', '-')));
 
           return matchesClass && matchesSub;
         }).toList();
