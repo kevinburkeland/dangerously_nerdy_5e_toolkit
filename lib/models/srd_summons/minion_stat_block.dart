@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vtt_engine_core/models/animated_object.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import '../../services/rules/dnd_5e_rules_engine.dart';
 import '../../utils/dice_formatters.dart';
 import '../../widgets/glyphs/glyph_tokens.dart';

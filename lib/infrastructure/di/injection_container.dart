@@ -12,7 +12,7 @@ import 'package:vtt_engine_core/ports/i_p2p_transport_port.dart';
 import 'package:vtt_engine_core/storage/ports/i_campaign_snapshot_serializer_port.dart';
 import 'package:vtt_engine_core/storage/ports/i_physical_snapshot_port.dart';
 import 'package:vtt_engine_core/storage/ports/i_storage_durability_port.dart';
-import 'package:vtt_engine_core/models/animated_object.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 import '../../services/dice_room_service.dart';
 import '../../services/persistence/app_database_service.dart';
 import '../adapters/p2p/firebase_fallback_adapter.dart';

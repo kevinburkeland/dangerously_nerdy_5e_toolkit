@@ -1,4 +1,4 @@
-import 'package:vtt_engine_core/models/animated_object.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 
 /// Concrete D&D 5e Ruleset Adapter supplying standard Animate Objects baseline metrics.
 class Dnd5eAnimatedObjectAdapter {

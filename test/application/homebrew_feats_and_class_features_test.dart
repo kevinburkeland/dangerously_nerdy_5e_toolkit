@@ -12,7 +12,7 @@ import 'package:dangerously_nerdy_5e_toolkit/services/acl/compendium_feat_parser
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_actions_resolver.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/character_evaluation_engine.dart';
 import 'package:dangerously_nerdy_5e_toolkit/services/rules/skill_trait_resolver.dart';
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/dm_screen_data.dart';
 import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/homebrew_entity_dto.dart';
 
 void main() {

@@ -1,3 +1,4 @@
+import 'package:vtt_engine_core/rules/ruleset_edition.dart';
 import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/homebrew/models/homebrew_entity.dart';
 import 'package:vtt_engine_core/homebrew/value_objects/ruleset_version.dart';
@@ -45,9 +46,14 @@ class HomebrewEntityDto {
   /// Throws [HomebrewValidationException] on cross-ruleset violations or schema defects.
   factory HomebrewEntityDto.fromJson(
     Map<String, dynamic> json, {
-    required RulesetVersion ruleset,
+    required dynamic ruleset,
     String? sourcePath,
   }) {
+    final effectiveRuleset = ruleset is RulesetVersion
+        ? ruleset
+        : (ruleset is RulesetEdition
+            ? (ruleset.is2014 ? RulesetVersion.v2014 : RulesetVersion.v2024)
+            : RulesetVersion.fromString(ruleset.toString()));
     // 1. Mandatory Name Validation with fallback fields (title, label, header)
     final rawName =
         (json['name'] ?? json['title'] ?? json['label'] ?? json['header'])
@@ -63,7 +69,7 @@ class HomebrewEntityDto {
     // 2. Explicit Ruleset Mismatch Detection
     final declaredRuleset = json['ruleset']?.toString().toLowerCase();
     if (declaredRuleset != null) {
-      if (ruleset == RulesetVersion.srd2014 &&
+      if (effectiveRuleset == RulesetVersion.srd2014 &&
           (declaredRuleset.contains('2024') ||
               declaredRuleset.contains('5.2') ||
               declaredRuleset.contains('xphb'))) {
@@ -72,7 +78,7 @@ class HomebrewEntityDto {
           path: sourcePath,
         );
       }
-      if (ruleset == RulesetVersion.srd2024 &&
+      if (effectiveRuleset == RulesetVersion.srd2024 &&
           (declaredRuleset.contains('2014') ||
               declaredRuleset.contains('5.1') ||
               declaredRuleset.contains('phb14'))) {
@@ -87,7 +93,7 @@ class HomebrewEntityDto {
     final entityType = _detectEntityType(json);
 
     // 4. Strict Ruleset Mechanical Boundary Enforcement
-    if (ruleset == RulesetVersion.srd2014) {
+    if (effectiveRuleset == RulesetVersion.srd2014) {
       _validateSrd2014Contract(json, entityType, sourcePath);
     } else {
       _validateSrd2024Contract(json, entityType, sourcePath);
@@ -176,7 +182,7 @@ class HomebrewEntityDto {
       id: id,
       name: rawName,
       entityType: entityType,
-      ruleset: ruleset,
+      ruleset: effectiveRuleset,
       rawPayload: Map<String, dynamic>.from(json),
       normalizedData: normalized,
       unparsedPayload: unparsed,

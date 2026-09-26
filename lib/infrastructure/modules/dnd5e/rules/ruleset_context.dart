@@ -1,5 +1,5 @@
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
-export 'package:vtt_engine_core/rules/ruleset_edition.dart';
+import 'ruleset_edition.dart';
+export 'ruleset_edition.dart';
 
 /// Canonical RulesetEdition alias for backward compatibility.
 typedef RulesetVersion = RulesetEdition;

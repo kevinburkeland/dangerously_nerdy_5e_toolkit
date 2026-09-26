@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vtt_engine_core/models/animated_object.dart';
-import 'package:dangerously_nerdy_5e_toolkit/infrastructure/dtos/animated_object_dto.dart';
+import 'package:dangerously_nerdy_5e_toolkit/models/animated_object.dart';
 
 void main() {
   group('AnimatedObjectDto Serialization & Clamping Tests', () {

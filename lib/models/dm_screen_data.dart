@@ -1,7 +1,7 @@
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
+import '../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 import 'package:vtt_engine_core/models/character_models.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-export 'package:vtt_engine_core/rules/ruleset_edition.dart';
+export '../infrastructure/modules/dnd5e/rules/ruleset_edition.dart';
 
 /// Canonical RulesetEdition alias for DM screen reference data and UI selectors.
 typedef DmRulesEdition = RulesetEdition;
@@ -15,7 +15,7 @@ extension Character5eRulesetExtension on Character {
 }
 
 extension CampaignProfile5eRulesetExtension on CampaignProfile {
-  DmRulesEdition get rulesEdition => edition;
+  DmRulesEdition get rulesEdition => edition is DmRulesEdition ? (edition as DmRulesEdition) : DmRulesEdition.fromString(rulesetId);
 }
 
 extension RulesetString5eExtension on String {

@@ -8,7 +8,7 @@ import '../models/domain/entity_reference.dart';
 import '../models/characters/srd_backgrounds_library.dart';
 import '../models/characters/srd_species_library.dart';
 import '../services/rules/character_factory.dart';
-import 'package:vtt_engine_core/rules/character_validation_engine.dart';
+import '../services/rules/character_validation_engine.dart';
 
 /// State manager for 5e Character Builder attribute generation, consumable resource pools,
 /// progression validation, skill overlap refunds, and character draft state.

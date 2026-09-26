@@ -3,14 +3,13 @@ import 'package:meta/meta.dart';
 import 'package:vtt_engine_core/crdt/crdt_lww_register.dart';
 import 'package:vtt_engine_core/crdt/hybrid_logical_clock.dart';
 import 'package:vtt_engine_core/models/campaign_profile.dart';
-import 'package:vtt_engine_core/models/animated_object.dart';
-import 'package:vtt_engine_core/rules/ruleset_edition.dart';
+import '../../models/animated_object.dart';
+import '../modules/dnd5e/rules/ruleset_edition.dart';
 import 'package:vtt_engine_core/models/character_models.dart';
 import 'package:vtt_engine_core/models/session_graph_models.dart';
 import '../../models/party/party_event.dart';
 import 'package:vtt_engine_core/models/party_purse.dart';
 import '../../services/logging_service.dart';
-import 'animated_object_dto.dart';
 import 'character_dto.dart';
 import 'crdt/crdt_lww_register_dto.dart';
 
@@ -59,7 +58,7 @@ class CampaignProfileDto {
     return CampaignProfileDto(
       id: profile.id,
       name: profile.name,
-      edition: profile.edition.name,
+      edition: profile.edition is Enum ? (profile.edition as Enum).name : profile.edition.toString(),
       createdAt: profile.createdAt.toIso8601String(),
       lastPlayedAt: profile.lastPlayedAt.toIso8601String(),
       roomState: profile.roomState.toMap(),
